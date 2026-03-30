@@ -112,6 +112,7 @@ logger.error("Something went wrong");
 
 Because SSJS lacks classes, modules, or proper encapsulation, the **Revealing Module Pattern** is the recommended approach for building reusable utilities:
 
+{% raw %}
 ```javascript
 /**
  * Creates a DataExtension helper module.
@@ -145,6 +146,7 @@ var subscribers = DEHelper("Subscribers");
 var email = subscribers.lookup("Email", "SubscriberKey", sk);
 subscribers.upsert(["SubscriberKey"], [sk], ["LastSeen"], [Platform.Function.Now()]);
 ```
+{% endraw %}
 
 Key properties of this pattern:
 - Calling `DEHelper()` **without `new`** is safe — no `this` binding issues
