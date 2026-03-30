@@ -14,13 +14,14 @@
   var documents = [];
 
   // Load search index
-  function loadIndex() {
+  function loadIndex(onReady) {
     var url = (typeof siteBaseUrl !== 'undefined' ? siteBaseUrl : '') + '/search-index.json';
     fetch(url)
       .then(function (r) { return r.json(); })
       .then(function (data) {
         documents = data;
         index = buildIndex(data);
+        if (onReady) onReady();
       })
       .catch(function () {
         // Silent fail - search just won't work
@@ -118,7 +119,7 @@
     }
     debounceTimer = setTimeout(function () {
       if (!index) {
-        loadIndex();
+        loadIndex(function () { renderResults(search(q), q); });
         return;
       }
       renderResults(search(q), q);
@@ -126,10 +127,14 @@
   });
 
   searchInput.addEventListener('focus', function () {
-    if (searchInput.value.trim() && index) {
-      renderResults(search(searchInput.value.trim()), searchInput.value.trim());
+    var q = searchInput.value.trim();
+    if (q && index) {
+      renderResults(search(q), q);
+    } else if (q && !index) {
+      loadIndex(function () { renderResults(search(q), q); });
+    } else if (!index) {
+      loadIndex();
     }
-    if (!index) loadIndex();
   });
 
   document.addEventListener('click', function (e) {
