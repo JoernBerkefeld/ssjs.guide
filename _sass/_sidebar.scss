@@ -3,28 +3,16 @@
 .sidebar {
   position: fixed;
   top: $header-height;
+  bottom: 0;
   left: 0;
   width: $sidebar-width;
-  height: calc(100vh - $header-height);
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background-color: $bg-surface;
   border-right: 1px solid $border-muted;
   z-index: $z-sidebar;
   transition: transform $transition-normal;
-
-  // Custom scrollbar
-  &::-webkit-scrollbar {
-    width: 4px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background-color: $border-default;
-    border-radius: $radius-full;
-  }
 
   // Hidden on mobile by default
   @media (max-width: 1023px) {
@@ -39,7 +27,29 @@
 }
 
 .sidebar-inner {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
   padding: $space-6 0 $space-12;
+
+  // Custom scrollbar (scroll container is inner, not .sidebar)
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: $border-default;
+    border-radius: $radius-full;
+  }
 }
 
 // ── Sidebar section ───────────────────────────────────────────────────────────

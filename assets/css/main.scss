@@ -173,6 +173,11 @@
   background-color: $bg-surface;
   border-top: 1px solid $border-muted;
   margin-top: $space-12;
+
+  // Align with .layout-content: fixed sidebar would otherwise cover the footer on desktop.
+  @media (min-width: 1024px) {
+    padding-left: $sidebar-width;
+  }
 }
 
 .footer-inner {
