@@ -159,7 +159,7 @@ description: "The complete reference for Server-Side JavaScript (SSJS) in Salesf
   <span class="section-heading__line"></span>
 </div>
 
-<div class="prose">
+<div class="prose" markdown="1">
 
 A minimal SSJS CloudPage:
 
