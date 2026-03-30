@@ -3,6 +3,7 @@ layout: page
 title: proxy.delete
 parent: WSProxy
 parent_url: /wsproxy/
+permalink: /wsproxy/delete-item/
 description: Delete an SFMC object via the SOAP API.
 ---
 
@@ -72,7 +73,7 @@ var result = proxy.delete("DataExtensionObject[MyDE_Key]", {
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
-  <li><a href="/wsproxy/create/">proxy.create</a></li>
-  <li><a href="/wsproxy/update/">proxy.update</a></li>
+  <li><a href="/wsproxy/create-item/">proxy.create</a></li>
+  <li><a href="/wsproxy/update-item/">proxy.update</a></li>
 </ul>
 </div>

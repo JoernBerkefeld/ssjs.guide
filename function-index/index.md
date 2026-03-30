@@ -175,16 +175,16 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 | [`Platform.Variable.GetValue(name)`](/platform-objects/platform-variable/) | Platform Object | string | Read AMPscript variable |
 | [`Platform.Variable.SetValue(name, val)`](/platform-objects/platform-variable/) | Platform Object | void | Write AMPscript variable |
 | [`Platform.Function.ProperCase(val)`](/platform-functions/propercase/) | Platform Functions | string | Title case a string |
-| [`proxy.create(type, props)`](/wsproxy/create/) | WSProxy | object | SOAP Create |
-| [`proxy.createBatch(type, arr)`](/wsproxy/createbatch/) | WSProxy | object | SOAP batch Create |
-| [`proxy.delete(type, props)`](/wsproxy/delete/) | WSProxy | object | SOAP Delete |
+| [`proxy.create(type, props)`](/wsproxy/create-item/) | WSProxy | object | SOAP Create |
+| [`proxy.createBatch(type, arr)`](/wsproxy/create-batch/) | WSProxy | object | SOAP batch Create |
+| [`proxy.delete(type, props)`](/wsproxy/delete-item/) | WSProxy | object | SOAP Delete |
 | [`proxy.execute(type, props)`](/wsproxy/execute/) | WSProxy | object | SOAP Execute |
 | [`proxy.perform(type, action, props)`](/wsproxy/perform/) | WSProxy | object | SOAP Perform |
 | [`proxy.retrieve(type, cols, filter)`](/wsproxy/retrieve/) | WSProxy | object | SOAP Retrieve |
-| [`proxy.retrieveBatch(type, cols, filter)`](/wsproxy/retrievebatch/) | WSProxy | object | SOAP Retrieve (paginated) |
-| [`proxy.setClientId(clientId)`](/wsproxy/setclientid/) | WSProxy | void | Set BU context |
-| [`proxy.update(type, props, opts)`](/wsproxy/update/) | WSProxy | object | SOAP Update |
-| [`proxy.updateBatch(type, arr, opts)`](/wsproxy/updatebatch/) | WSProxy | object | SOAP batch Update |
+| [`proxy.retrieveBatch(type, cols, filter)`](/wsproxy/retrieve-all/) | WSProxy | object | SOAP Retrieve (paginated) |
+| [`proxy.setClientId(clientId)`](/wsproxy/set-client-id/) | WSProxy | void | Set BU context |
+| [`proxy.update(type, props, opts)`](/wsproxy/update-item/) | WSProxy | object | SOAP Update |
+| [`proxy.updateBatch(type, arr, opts)`](/wsproxy/update-batch/) | WSProxy | object | SOAP batch Update |
 
 ---
 

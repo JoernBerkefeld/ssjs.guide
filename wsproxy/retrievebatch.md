@@ -3,6 +3,7 @@ layout: page
 title: proxy.retrieveBatch
 parent: WSProxy
 parent_url: /wsproxy/
+permalink: /wsproxy/retrieve-all/
 description: Retrieve all SFMC objects of a type with automatic pagination — handles HasMoreRows internally so you get a complete result set.
 ---
 

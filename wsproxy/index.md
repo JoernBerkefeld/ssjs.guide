@@ -32,15 +32,15 @@ var items = result.Results;
 |--------|-------------|
 | [`new Script.Util.WSProxy()`](/wsproxy/constructor/) | Create a WSProxy instance |
 | [`proxy.retrieve(objectType, columns, filter)`](/wsproxy/retrieve/) | Retrieve SFMC objects |
-| [`proxy.retrieveBatch(objectType, columns, filter)`](/wsproxy/retrievebatch/) | Retrieve large sets with pagination |
-| [`proxy.create(objectType, properties)`](/wsproxy/create/) | Create a new SFMC object |
-| [`proxy.createBatch(objectType, propertiesArray)`](/wsproxy/createbatch/) | Create multiple objects |
-| [`proxy.update(objectType, properties, filter)`](/wsproxy/update/) | Update existing objects |
-| [`proxy.updateBatch(objectType, propertiesArray)`](/wsproxy/updatebatch/) | Update multiple objects |
-| [`proxy.delete(objectType, properties)`](/wsproxy/delete/) | Delete an SFMC object |
+| [`proxy.retrieveBatch(objectType, columns, filter)`](/wsproxy/retrieve-all/) | Retrieve large sets with pagination |
+| [`proxy.create(objectType, properties)`](/wsproxy/create-item/) | Create a new SFMC object |
+| [`proxy.createBatch(objectType, propertiesArray)`](/wsproxy/create-batch/) | Create multiple objects |
+| [`proxy.update(objectType, properties, filter)`](/wsproxy/update-item/) | Update existing objects |
+| [`proxy.updateBatch(objectType, propertiesArray)`](/wsproxy/update-batch/) | Update multiple objects |
+| [`proxy.delete(objectType, properties)`](/wsproxy/delete-item/) | Delete an SFMC object |
 | [`proxy.execute(objectType, properties)`](/wsproxy/execute/) | Execute an operation |
 | [`proxy.perform(objectType, action, properties)`](/wsproxy/perform/) | Perform an action (start, pause, etc.) |
-| [`proxy.setClientId(clientId)`](/wsproxy/setclientid/) | Set Business Unit for parent BU access |
+| [`proxy.setClientId(clientId)`](/wsproxy/set-client-id/) | Set Business Unit for parent BU access |
 
 ---
 

@@ -41,6 +41,6 @@ By default, WSProxy operates in the context of the currently executing Business 
 <h4>See Also</h4>
 <ul>
   <li><a href="/wsproxy/retrieve/">proxy.retrieve</a></li>
-  <li><a href="/wsproxy/setclientid/">proxy.setClientId</a></li>
+  <li><a href="/wsproxy/set-client-id/">proxy.setClientId</a></li>
 </ul>
 </div>

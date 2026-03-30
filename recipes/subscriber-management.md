@@ -179,6 +179,6 @@ if (result.Status !== "OK") {
 <ul>
   <li><a href="/core-library/subscriber/">Subscriber</a></li>
   <li><a href="/core-library/list/">List</a></li>
-  <li><a href="/wsproxy/update/">WSProxy.update</a></li>
+  <li><a href="/wsproxy/update-item/">WSProxy.update</a></li>
 </ul>
 </div>

@@ -123,7 +123,7 @@ var sub = result.Results[0];
 
 ## Notes
 
-- Returns up to ~2,500 rows per call. When `HasMoreRows` is true, use [`retrieveBatch`](/wsproxy/retrievebatch/) to get all results.
+- Returns up to ~2,500 rows per call. When `HasMoreRows` is true, use [`retrieveBatch`](/wsproxy/retrieve-all/) to get all results.
 - The `DataExtensionObject[CustomerKey]` syntax is used for retrieving rows from a specific DE. Replace `CustomerKey` with the DE's external key.
 
 ## See Also
@@ -131,7 +131,7 @@ var sub = result.Results[0];
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
-  <li><a href="/wsproxy/retrievebatch/">proxy.retrieveBatch</a></li>
-  <li><a href="/wsproxy/create/">proxy.create</a></li>
+  <li><a href="/wsproxy/retrieve-all/">proxy.retrieveBatch</a></li>
+  <li><a href="/wsproxy/create-item/">proxy.create</a></li>
 </ul>
 </div>
