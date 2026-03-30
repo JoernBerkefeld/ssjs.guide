@@ -4,6 +4,7 @@ url: "https://ssjs.guide"
 baseurl: ""
 
 # Build settings
+permalink: pretty
 markdown: kramdown
 highlighter: rouge
 kramdown:
