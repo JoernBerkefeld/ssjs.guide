@@ -101,6 +101,35 @@
     });
   });
 
+  // ── Heading anchor copy links ────────────────────────────────────────────────
+
+  var LINK_ICON = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">'
+    + '<path d="M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0'
+    + ' .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25z'
+    + 'M3.085 12.915a2 2 0 010-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5'
+    + 'a3.5 3.5 0 004.95 4.95l1.25-1.25a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83 0z"'
+    + ' fill="currentColor"/></svg>';
+
+  document.querySelectorAll('.prose h2[id], .prose h3[id], .prose h4[id], .prose h5[id], .prose h6[id]').forEach(function (heading) {
+    var anchor = document.createElement('a');
+    anchor.className = 'header-anchor';
+    anchor.href = '#' + heading.id;
+    anchor.setAttribute('aria-label', 'Copy link to this section');
+    anchor.innerHTML = LINK_ICON;
+    heading.appendChild(anchor);
+
+    anchor.addEventListener('click', function (e) {
+      e.preventDefault();
+      var url = window.location.href.split('#')[0] + '#' + heading.id;
+      navigator.clipboard.writeText(url).then(function () {
+        anchor.classList.add('is-copied');
+        setTimeout(function () { anchor.classList.remove('is-copied'); }, 2000);
+      }).catch(function () {
+        window.location.hash = heading.id;
+      });
+    });
+  });
+
   // ── Keyboard shortcut for search ────────────────────────────────────────────
 
   document.addEventListener('keydown', function (e) {

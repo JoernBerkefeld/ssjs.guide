@@ -34,24 +34,27 @@ This section documents every known limitation along with practical workarounds.
 | `JSON.parse()` | `Platform.Function.ParseJSON(str + "")` |
 | `JSON.stringify()` | `Stringify(obj)` |
 | `Array.isArray()` | `Object.prototype.toString.call(v) === "[object Array]"` |
-| `arr.forEach()` | `for` loop — or add the `forEach` polyfill |
-| `arr.map()` | Manual loop — or add the `map` polyfill |
-| `arr.filter()` | Manual loop — or add the `filter` polyfill |
-| `arr.indexOf()` | Manual loop — or add the `indexOf` polyfill |
-| `str.trim()` | `str.replace(/^\s+\|\s+$/g, "")` — or add the `trim` polyfill |
-| `str.startsWith()` | `str.indexOf(sub) === 0` — or add the polyfill |
-| `str.endsWith()` | Manual substring check — or add the polyfill |
+| `arr.forEach()` | `for` loop — or add the [`forEach` polyfill](/engine-limitations/polyfills/#foreach) |
+| `arr.map()` | Manual loop — or add the [`map` polyfill](/engine-limitations/polyfills/#map) |
+| `arr.filter()` | Manual loop — or add the [`filter` polyfill](/engine-limitations/polyfills/#filter) |
+| `arr.indexOf()` | Manual loop — or add the [`indexOf` polyfill](/engine-limitations/polyfills/#indexof-array) |
+| `str.trim()` | `str.replace(/^\s+\|\s+$/g, "")` — or add the [`trim` polyfill](/engine-limitations/polyfills/#trim) |
+| `str.startsWith()` | `str.indexOf(sub) === 0` — or add the [polyfill](/engine-limitations/polyfills/#startswith) |
+| `str.endsWith()` | Manual substring check — or add the [polyfill](/engine-limitations/polyfills/#endswith) |
 
 ## ESLint Plugin
 
 The `eslint-plugin-sfmc` package includes rules that detect all unsupported syntax in your SSJS files. Install it to get editor warnings before deploying.
 
-```json
-{
-  "plugins": ["sfmc"],
-  "rules": {
-    "sfmc/ssjs-no-unsupported-syntax": "error",
-    "sfmc/ssjs-no-unavailable-method": "warn"
-  }
-}
+```js
+// eslint.config.js
+import sfmc from 'eslint-plugin-sfmc';
+
+export default [
+    // Lint standalone .ampscript/.amp and .ssjs files
+    ...sfmc.configs.recommended,
+
+    // Lint AMPscript + SSJS embedded in .html files
+    ...sfmc.configs.embedded,
+];
 ```
