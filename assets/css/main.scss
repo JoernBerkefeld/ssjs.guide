@@ -221,10 +221,21 @@
 
 .footer-link-group {
   h4.footer-link-heading {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
     font-size: $text-sm;
     font-weight: 700;
     color: $text-primary;
     margin-bottom: $space-3;
+  }
+
+  .footer-heading-icon {
+    flex-shrink: 0;
+    display: block;
+    width: 18px;
+    height: 18px;
+    opacity: 0.88;
   }
 
   ul {
