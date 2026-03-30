@@ -282,6 +282,23 @@
     }
   }
 
+  .footer-social-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    vertical-align: baseline;
+  }
+
+  .footer-social-icon {
+    flex-shrink: 0;
+    display: block;
+    opacity: 0.9;
+  }
+
+  a.footer-social-link:hover .footer-social-icon {
+    opacity: 1;
+  }
+
   @media (max-width: 640px) {
     flex-direction: column;
     align-items: flex-start;
