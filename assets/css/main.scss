@@ -167,6 +167,86 @@
   }
 }
 
+// ── Footer ────────────────────────────────────────────────────────────────────
+
+.site-footer {
+  background-color: $bg-surface;
+  border-top: 1px solid $border-muted;
+  margin-top: $space-12;
+}
+
+.footer-inner {
+  padding: $space-8 $space-6;
+
+  @media (min-width: 768px) {
+    padding: $space-8 $space-8;
+  }
+}
+
+.footer-brand {
+  margin-bottom: $space-6;
+}
+
+.footer-brand-link {
+  font-size: $text-xl;
+  font-weight: 700;
+  color: $text-primary;
+
+  &:hover {
+    color: $accent-light;
+    text-decoration: none;
+  }
+}
+
+.footer-tagline {
+  font-size: $text-sm;
+  color: $text-secondary;
+  margin-top: $space-2;
+}
+
+.footer-links {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $space-6;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.footer-link-group {
+  h4.footer-link-heading {
+    font-size: $text-sm;
+    font-weight: 700;
+    color: $text-primary;
+    margin-bottom: $space-3;
+  }
+
+  ul {
+    list-style: disc;
+    padding-left: $space-5;
+    margin: 0;
+  }
+
+  li {
+    font-size: $text-sm;
+    color: $text-secondary;
+    margin-bottom: $space-2;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  a {
+    color: $text-link;
+
+    &:hover {
+      color: $text-link-hover;
+    }
+  }
+}
+
 // ── Footer copyright bar ─────────────────────────────────────────────────────
 
 .footer-copyright {
