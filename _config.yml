@@ -1,0 +1,65 @@
+title: "ssjs.guide"
+description: "The complete Server-Side JavaScript reference for Salesforce Marketing Cloud"
+url: "https://ssjs.guide"
+baseurl: ""
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+# Sass
+sass:
+  sass_dir: _sass
+  style: compressed
+
+# Plugins
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+# Exclude from processing
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - .git
+  - README.md
+
+# Collections
+collections:
+  docs:
+    output: true
+    permalink: /:path/
+
+# Navigation sections (for sidebar)
+nav_sections:
+  - title: Getting Started
+    url: /getting-started/
+  - title: Language Guide
+    url: /language/
+  - title: Engine Limitations
+    url: /engine-limitations/
+  - title: Global Functions
+    url: /global-functions/
+  - title: Platform Functions
+    url: /platform-functions/
+  - title: Platform Objects
+    url: /platform-objects/
+  - title: Core Library
+    url: /core-library/
+  - title: WSProxy
+    url: /wsproxy/
+  - title: HTTP & REST
+    url: /http/
+  - title: ECMAScript Builtins
+    url: /ecmascript-builtins/
+  - title: Best Practices
+    url: /best-practices/
+  - title: Recipes
+    url: /recipes/
+  - title: Function Index
+    url: /function-index/

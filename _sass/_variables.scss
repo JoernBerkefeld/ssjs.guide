@@ -1,0 +1,109 @@
+// ── Color Palette ────────────────────────────────────────────────────────────
+
+// Dark background scale (charcoal/navy)
+$bg-base:          #0d1117;  // body
+$bg-surface:       #161b22;  // sidebar, cards
+$bg-elevated:      #1c2433;  // headers, code blocks
+$bg-overlay:       #21262d;  // modals, hover states
+$bg-hover:         #30363d;  // interactive hover
+
+// Border
+$border-muted:     #21262d;
+$border-default:   #30363d;
+$border-emphasis:  #58a6ff;
+
+// Text
+$text-primary:     #e6edf3;
+$text-secondary:   #8b949e;
+$text-muted:       #6e7681;
+$text-link:        #58a6ff;
+$text-link-hover:  #79c0ff;
+
+// Brand accent (teal/cyan)
+$accent-primary:   #0ea5e9;
+$accent-light:     #38bdf8;
+$accent-dim:       rgba(14, 165, 233, 0.15);
+
+// Semantic colors
+$color-success:    #3fb950;
+$color-warning:    #d29922;
+$color-danger:     #f85149;
+$color-info:       #58a6ff;
+$color-purple:     #a371f7;
+$color-orange:     #f0883e;
+
+// Code syntax colors
+$syntax-keyword:   #ff7b72;   // keywords
+$syntax-string:    #a5d6ff;   // strings
+$syntax-number:    #79c0ff;   // numbers
+$syntax-comment:   #6e7681;   // comments
+$syntax-function:  #d2a8ff;   // function names
+$syntax-variable:  #ffa657;   // variables
+$syntax-builtin:   #79c0ff;   // builtins
+
+// ── Spacing ───────────────────────────────────────────────────────────────────
+
+$space-1:  0.25rem;   // 4px
+$space-2:  0.5rem;    // 8px
+$space-3:  0.75rem;   // 12px
+$space-4:  1rem;      // 16px
+$space-5:  1.25rem;   // 20px
+$space-6:  1.5rem;    // 24px
+$space-8:  2rem;      // 32px
+$space-10: 2.5rem;    // 40px
+$space-12: 3rem;      // 48px
+$space-16: 4rem;      // 64px
+$space-20: 5rem;      // 80px
+
+// ── Typography ────────────────────────────────────────────────────────────────
+
+$font-sans:  'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+$font-mono:  'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+
+$text-xs:   0.75rem;
+$text-sm:   0.875rem;
+$text-base: 1rem;
+$text-lg:   1.125rem;
+$text-xl:   1.25rem;
+$text-2xl:  1.5rem;
+$text-3xl:  1.875rem;
+$text-4xl:  2.25rem;
+
+$leading-tight:  1.25;
+$leading-normal: 1.6;
+$leading-relaxed:1.75;
+
+// ── Layout ────────────────────────────────────────────────────────────────────
+
+$header-height:  3.5rem;
+$sidebar-width:  17rem;
+$content-max:    52rem;
+$toc-width:      14rem;
+
+// ── Border radius ─────────────────────────────────────────────────────────────
+
+$radius-sm:  0.25rem;
+$radius-md:  0.5rem;
+$radius-lg:  0.75rem;
+$radius-xl:  1rem;
+$radius-full: 9999px;
+
+// ── Shadows ───────────────────────────────────────────────────────────────────
+
+$shadow-sm:  0 1px 2px rgba(0, 0, 0, 0.4);
+$shadow-md:  0 4px 12px rgba(0, 0, 0, 0.5);
+$shadow-lg:  0 8px 32px rgba(0, 0, 0, 0.6);
+
+// ── Transitions ───────────────────────────────────────────────────────────────
+
+$transition-fast:   150ms ease;
+$transition-normal: 250ms ease;
+$transition-slow:   400ms ease;
+
+// ── Z-index ───────────────────────────────────────────────────────────────────
+
+$z-sidebar:  100;
+$z-header:   200;
+$z-overlay:  300;
+$z-modal:    400;
+$z-tooltip:  500;

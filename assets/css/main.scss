@@ -1,0 +1,256 @@
+---
+---
+
+@import "variables";
+@import "layout";
+@import "typography";
+@import "header";
+@import "sidebar";
+@import "code";
+@import "callouts";
+@import "search";
+
+// ── Utility classes ───────────────────────────────────────────────────────────
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.text-mono { font-family: $font-mono; }
+.text-sm   { font-size: $text-sm; }
+.text-muted { color: $text-muted; }
+.text-secondary { color: $text-secondary; }
+
+// ── Tag list (function categories) ───────────────────────────────────────────
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+  margin: $space-4 0;
+}
+
+.tag {
+  display: inline-block;
+  font-size: $text-xs;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.2em 0.6em;
+  border-radius: $radius-full;
+  border: 1px solid $border-default;
+  color: $text-muted;
+  background-color: $bg-elevated;
+  text-decoration: none;
+
+  &:hover {
+    color: $accent-light;
+    border-color: rgba($accent-primary, 0.5);
+    text-decoration: none;
+  }
+}
+
+// ── Function card grid (category pages) ──────────────────────────────────────
+
+.function-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: $space-4;
+  margin: $space-6 0;
+}
+
+.function-card {
+  display: flex;
+  flex-direction: column;
+  padding: $space-4 $space-5;
+  background-color: $bg-surface;
+  border: 1px solid $border-muted;
+  border-radius: $radius-md;
+  text-decoration: none;
+  transition: border-color $transition-fast, background-color $transition-fast;
+
+  &:hover {
+    border-color: $accent-primary;
+    background-color: $bg-elevated;
+    text-decoration: none;
+  }
+
+  .fn-name {
+    font-family: $font-mono;
+    font-size: $text-sm;
+    font-weight: 600;
+    color: $accent-light;
+    margin-bottom: $space-2;
+  }
+
+  .fn-desc {
+    font-size: $text-sm;
+    color: $text-secondary;
+    line-height: $leading-relaxed;
+    flex: 1;
+  }
+
+  .fn-return {
+    font-family: $font-mono;
+    font-size: $text-xs;
+    color: $text-muted;
+    margin-top: $space-2;
+  }
+}
+
+// ── Deprecation / version notice ─────────────────────────────────────────────
+
+.version-notice {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-2;
+  font-size: $text-xs;
+  font-weight: 600;
+  padding: 0.2em 0.6em;
+  border-radius: $radius-full;
+  border: 1px solid rgba($color-warning, 0.4);
+  color: $color-warning;
+  background-color: rgba($color-warning, 0.08);
+  margin-bottom: $space-4;
+}
+
+// ── "See Also" list ───────────────────────────────────────────────────────────
+
+.see-also {
+  margin: $space-8 0 $space-4;
+  padding: $space-4 $space-5;
+  background-color: $bg-surface;
+  border: 1px solid $border-muted;
+  border-radius: $radius-md;
+
+  h4 {
+    font-size: $text-sm;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: $text-muted;
+    margin-bottom: $space-3;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-2;
+  }
+
+  li a {
+    display: inline-block;
+    font-family: $font-mono;
+    font-size: $text-sm;
+    padding: 0.2em 0.6em;
+    background-color: $bg-elevated;
+    border: 1px solid $border-default;
+    border-radius: $radius-md;
+    color: $accent-light;
+    text-decoration: none;
+
+    &:hover {
+      border-color: $accent-primary;
+      background-color: $accent-dim;
+    }
+  }
+}
+
+// ── Footer copyright bar ─────────────────────────────────────────────────────
+
+.footer-copyright {
+  border-top: 1px solid $border-muted;
+  margin-top: $space-4;
+  padding: $space-3 $space-6;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-2;
+  background-color: $bg-base;
+
+  p {
+    font-size: $text-xs;
+    color: $text-muted;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  a {
+    color: $text-muted;
+    text-decoration: none;
+    font-weight: 500;
+
+    &:hover {
+      color: $accent-light;
+    }
+  }
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: $space-3 $space-4;
+  }
+}
+
+// ── Function-index A-Z ────────────────────────────────────────────────────────
+
+.az-index {
+  .az-section {
+    margin-bottom: $space-8;
+
+    h2 {
+      font-family: $font-mono;
+      font-size: $text-2xl;
+      font-weight: 700;
+      color: $accent-primary;
+      margin-bottom: $space-4;
+      border-bottom: 1px solid $border-muted;
+      padding-bottom: $space-2;
+    }
+  }
+
+  .az-list {
+    list-style: none;
+    padding: 0;
+    columns: 2;
+    column-gap: $space-6;
+
+    @media (min-width: 768px) {
+      columns: 3;
+    }
+
+    li {
+      break-inside: avoid;
+      margin-bottom: $space-2;
+
+      a {
+        font-family: $font-mono;
+        font-size: $text-sm;
+        color: $text-secondary;
+
+        &:hover {
+          color: $accent-light;
+        }
+
+        .fn-category {
+          font-size: $text-xs;
+          color: $text-muted;
+          font-family: $font-sans;
+          margin-left: $space-2;
+        }
+      }
+    }
+  }
+}

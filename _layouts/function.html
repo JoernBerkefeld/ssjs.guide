@@ -1,0 +1,73 @@
+---
+layout: default
+---
+
+<main class="page-content function-page" aria-label="Function reference">
+  <div class="page-header">
+    {% if page.parent %}
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="{{ '/' | relative_url }}">Home</a>
+        <span aria-hidden="true">›</span>
+        <a href="{{ page.parent_url | default: '#' | relative_url }}">{{ page.parent }}</a>
+        <span aria-hidden="true">›</span>
+        <span aria-current="page">{{ page.title }}</span>
+      </nav>
+    {% endif %}
+
+    <div class="function-header">
+      <h1 class="page-title function-title">{{ page.title }}</h1>
+      {% if page.return_type %}
+        <span class="function-return-badge">→ {{ page.return_type }}</span>
+      {% endif %}
+    </div>
+
+    {% if page.description %}
+      <p class="page-description">{{ page.description }}</p>
+    {% endif %}
+
+    {% if page.availability %}
+      {% include availability.html %}
+    {% endif %}
+  </div>
+
+  {% if page.syntax %}
+    <div class="function-syntax">
+      <h2 class="function-syntax-label">Syntax</h2>
+      <div class="function-syntax-block">
+        <pre><code class="language-javascript">{{ page.syntax }}</code></pre>
+        {% if page.min_args and page.max_args %}
+          <div class="function-arity">
+            {% if page.min_args == page.max_args %}
+              <span class="arity-badge">{{ page.min_args }} argument{% if page.min_args != 1 %}s{% endif %}</span>
+            {% elsif page.max_args == "Infinity" or page.max_args > 100 %}
+              <span class="arity-badge">{{ page.min_args }}+ arguments</span>
+            {% else %}
+              <span class="arity-badge">{{ page.min_args }}–{{ page.max_args }} arguments</span>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="page-body prose">
+    {{ content }}
+  </div>
+
+  <div class="page-nav">
+    {% if page.prev_page %}
+      <a href="{{ page.prev_page.url | relative_url }}" class="page-nav-link page-nav-link--prev">
+        <span class="page-nav-label">Previous</span>
+        <span class="page-nav-title">← {{ page.prev_page.title }}</span>
+      </a>
+    {% else %}
+      <span></span>
+    {% endif %}
+    {% if page.next_page %}
+      <a href="{{ page.next_page.url | relative_url }}" class="page-nav-link page-nav-link--next">
+        <span class="page-nav-label">Next</span>
+        <span class="page-nav-title">{{ page.next_page.title }} →</span>
+      </a>
+    {% endif %}
+  </div>
+</main>

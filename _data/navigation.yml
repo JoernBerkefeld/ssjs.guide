@@ -1,0 +1,420 @@
+- title: Getting Started
+  url: /getting-started/
+  children:
+    - title: What is SSJS?
+      url: /getting-started/what-is-ssjs/
+    - title: Where SSJS Runs
+      url: /getting-started/where-ssjs-runs/
+    - title: Embedding SSJS
+      url: /getting-started/embedding-ssjs/
+    - title: Execution Contexts
+      url: /getting-started/execution-contexts/
+    - title: Platform vs Core
+      url: /getting-started/platform-vs-core/
+
+- title: Language Guide
+  url: /language/
+  children:
+    - title: Variables
+      url: /language/variables/
+    - title: Data Types
+      url: /language/data-types/
+    - title: Operators
+      url: /language/operators/
+    - title: Control Flow
+      url: /language/control-flow/
+    - title: Loops
+      url: /language/loops/
+    - title: Functions & Scope
+      url: /language/functions-and-scope/
+    - title: Objects & JSON
+      url: /language/objects-and-json/
+    - title: Error Handling
+      url: /language/error-handling/
+    - title: Regular Expressions
+      url: /language/regular-expressions/
+
+- title: Engine Limitations
+  url: /engine-limitations/
+  children:
+    - title: Unsupported Syntax
+      url: /engine-limitations/unsupported-syntax/
+    - title: Missing Methods
+      url: /engine-limitations/missing-methods/
+    - title: Polyfills
+      url: /engine-limitations/polyfills/
+    - title: Known Bugs
+      url: /engine-limitations/known-bugs/
+
+- title: Global Functions
+  url: /global-functions/
+  children:
+    - title: Write
+      url: /global-functions/write/
+    - title: Stringify
+      url: /global-functions/stringify/
+    - title: String
+      url: /global-functions/string/
+    - title: Error
+      url: /global-functions/error/
+    - title: ContentBlockByKey
+      url: /global-functions/contentblockbykey/
+    - title: ContentBlockByName
+      url: /global-functions/contentblockbyname/
+    - title: ContentBlockByID
+      url: /global-functions/contentblockbyid/
+    - title: ContentAreaByKey
+      url: /global-functions/contentareabykey/
+    - title: TreatAsContent
+      url: /global-functions/treatascontent/
+    - title: TreatAsContentArea
+      url: /global-functions/treatascontent-area/
+    - title: Variable (global)
+      url: /global-functions/variable/
+    - title: Attribute (global)
+      url: /global-functions/attribute/
+
+- title: Platform Functions
+  url: /platform-functions/
+  children:
+    - title: "— Data Extensions —"
+      url: /platform-functions/#data-extensions
+    - title: Lookup
+      url: /platform-functions/lookup/
+    - title: LookupRows
+      url: /platform-functions/lookuprows/
+    - title: LookupOrderedRows
+      url: /platform-functions/lookuporderedrows/
+    - title: InsertData
+      url: /platform-functions/insertdata/
+    - title: InsertDE
+      url: /platform-functions/insertde/
+    - title: UpdateData
+      url: /platform-functions/updatedata/
+    - title: UpdateDE
+      url: /platform-functions/updatede/
+    - title: UpsertData
+      url: /platform-functions/upsertdata/
+    - title: UpsertDE
+      url: /platform-functions/upsertde/
+    - title: DeleteData
+      url: /platform-functions/deletedata/
+    - title: DeleteDE
+      url: /platform-functions/deletede/
+    - title: DataExtensionRowCount
+      url: /platform-functions/dataextensionrowcount/
+    - title: "— Strings —"
+      url: /platform-functions/#strings
+    - title: Substring
+      url: /platform-functions/substring/
+    - title: Trim
+      url: /platform-functions/trim/
+    - title: Replace
+      url: /platform-functions/replace/
+    - title: IndexOf
+      url: /platform-functions/indexof/
+    - title: Length
+      url: /platform-functions/length/
+    - title: Uppercase
+      url: /platform-functions/uppercase/
+    - title: Lowercase
+      url: /platform-functions/lowercase/
+    - title: ProperCase
+      url: /platform-functions/propercase/
+    - title: Char
+      url: /platform-functions/char/
+    - title: Concat
+      url: /platform-functions/concat/
+    - title: Format
+      url: /platform-functions/format/
+    - title: "— Dates —"
+      url: /platform-functions/#dates
+    - title: Now
+      url: /platform-functions/now/
+    - title: DateAdd
+      url: /platform-functions/dateadd/
+    - title: DateDiff
+      url: /platform-functions/datediff/
+    - title: DateParse
+      url: /platform-functions/dateparse/
+    - title: FormatDate
+      url: /platform-functions/formatdate/
+    - title: SystemDateToLocalDate
+      url: /platform-functions/systemdatetolocaldate/
+    - title: "— Logic & Utility —"
+      url: /platform-functions/#logic
+    - title: IsEmailAddress
+      url: /platform-functions/isemailaddress/
+    - title: IsNull
+      url: /platform-functions/isnull/
+    - title: Empty
+      url: /platform-functions/empty/
+    - title: IIf
+      url: /platform-functions/iif/
+    - title: GUID
+      url: /platform-functions/guid/
+    - title: ParseJSON
+      url: /platform-functions/parsejson/
+    - title: URLEncode
+      url: /platform-functions/urlencode/
+    - title: AttributeValue
+      url: /platform-functions/attributevalue/
+    - title: CloudPagesURL
+      url: /platform-functions/cloudpagesurl/
+    - title: MicrositeURL
+      url: /platform-functions/micrositeurl/
+    - title: "— Crypto —"
+      url: /platform-functions/#crypto
+    - title: Base64Encode
+      url: /platform-functions/base64encode/
+    - title: Base64Decode
+      url: /platform-functions/base64decode/
+    - title: SHA256
+      url: /platform-functions/sha256/
+    - title: SHA512
+      url: /platform-functions/sha512/
+    - title: MD5
+      url: /platform-functions/md5/
+    - title: EncryptSymmetric
+      url: /platform-functions/encryptsymmetric/
+    - title: DecryptSymmetric
+      url: /platform-functions/decryptsymmetric/
+    - title: "— AMPscript Bridge —"
+      url: /platform-functions/#ampscript
+    - title: GetValue
+      url: /platform-functions/getvalue/
+    - title: SetValue
+      url: /platform-functions/setvalue/
+    - title: TreatAsContent
+      url: /platform-functions/treatascontent/
+    - title: "— SOAP API —"
+      url: /platform-functions/#soap
+    - title: CreateObject
+      url: /platform-functions/createobject/
+    - title: SetObjectProperty
+      url: /platform-functions/setobjectproperty/
+    - title: AddObjectArrayItem
+      url: /platform-functions/addobjectarrayitem/
+    - title: InvokeCreate
+      url: /platform-functions/invokecreate/
+    - title: InvokeRetrieve
+      url: /platform-functions/invokeretrieve/
+    - title: InvokeUpdate
+      url: /platform-functions/invokeupdate/
+    - title: InvokeDelete
+      url: /platform-functions/invokedelete/
+    - title: InvokePerform
+      url: /platform-functions/invokeperform/
+    - title: InvokeConfigure
+      url: /platform-functions/invokeconfigure/
+    - title: InvokeExecute
+      url: /platform-functions/invokeexecute/
+    - title: "— HTTP —"
+      url: /platform-functions/#http
+    - title: HTTPGet
+      url: /platform-functions/httpget/
+    - title: HTTPPost
+      url: /platform-functions/httppost/
+    - title: HTTPRequestHeader
+      url: /platform-functions/httprequestheader/
+    - title: "— Content —"
+      url: /platform-functions/#content
+    - title: ContentBlockByKey
+      url: /platform-functions/contentblockbykey/
+    - title: ContentBlockByName
+      url: /platform-functions/contentblockbyname/
+    - title: ContentBlockByID
+      url: /platform-functions/contentblockbyid/
+    - title: RaiseError
+      url: /platform-functions/raiseerror/
+    - title: Redirect
+      url: /platform-functions/redirect/
+
+- title: Platform Objects
+  url: /platform-objects/
+  children:
+    - title: Platform.Load
+      url: /platform-objects/platform-load/
+    - title: Platform.Variable
+      url: /platform-objects/platform-variable/
+    - title: Platform.Response
+      url: /platform-objects/platform-response/
+    - title: Platform.Request
+      url: /platform-objects/platform-request/
+    - title: Platform.ClientBrowser
+      url: /platform-objects/platform-clientbrowser/
+
+- title: Core Library
+  url: /core-library/
+  children:
+    - title: Overview
+      url: /core-library/
+    - title: DataExtension
+      url: /core-library/dataextension/
+    - title: DataExtension.Fields
+      url: /core-library/dataextension-fields/
+    - title: DataExtension.Rows
+      url: /core-library/dataextension-rows/
+    - title: Subscriber
+      url: /core-library/subscriber/
+    - title: Email
+      url: /core-library/email/
+    - title: TriggeredSend
+      url: /core-library/triggeredsend/
+    - title: List
+      url: /core-library/list/
+    - title: List.Subscribers
+      url: /core-library/list-subscribers/
+    - title: Send
+      url: /core-library/send/
+    - title: Template
+      url: /core-library/template/
+    - title: ContentArea
+      url: /core-library/contentarea/
+    - title: Folder
+      url: /core-library/folder/
+    - title: QueryDefinition
+      url: /core-library/querydefinition/
+    - title: FilterDefinition
+      url: /core-library/filterdefinition/
+    - title: SendDefinition
+      url: /core-library/senddefinition/
+    - title: SendClassification
+      url: /core-library/sendclassification/
+    - title: DeliveryProfile
+      url: /core-library/deliveryprofile/
+    - title: SenderProfile
+      url: /core-library/senderprofile/
+    - title: Account
+      url: /core-library/account/
+    - title: AccountUser
+      url: /core-library/accountuser/
+    - title: Portfolio
+      url: /core-library/portfolio/
+    - title: "— Tracking Events —"
+      url: /core-library/#events
+    - title: BounceEvent
+      url: /core-library/bounceevent/
+    - title: ClickEvent
+      url: /core-library/clickevent/
+    - title: OpenEvent
+      url: /core-library/openevent/
+    - title: SentEvent
+      url: /core-library/sentevent/
+    - title: UnsubEvent
+      url: /core-library/unsubevent/
+    - title: NotSentEvent
+      url: /core-library/notsentevent/
+    - title: ForwardedEmailEvent
+      url: /core-library/forwardedemailvent/
+    - title: ForwardedEmailOptInEvent
+      url: /core-library/forwardedemailoptinevent/
+    - title: SurveyEvent
+      url: /core-library/surveyevent/
+
+- title: WSProxy
+  url: /wsproxy/
+  children:
+    - title: Overview & Constructor
+      url: /wsproxy/
+    - title: retrieve
+      url: /wsproxy/retrieve/
+    - title: retrieveAll
+      url: /wsproxy/retrieve-all/
+    - title: createItem
+      url: /wsproxy/create-item/
+    - title: updateItem
+      url: /wsproxy/update-item/
+    - title: createBatch
+      url: /wsproxy/create-batch/
+    - title: updateBatch
+      url: /wsproxy/update-batch/
+    - title: deleteItem
+      url: /wsproxy/delete-item/
+    - title: execute
+      url: /wsproxy/execute/
+    - title: perform
+      url: /wsproxy/perform/
+    - title: setClientId
+      url: /wsproxy/set-client-id/
+    - title: resetClientIds
+      url: /wsproxy/reset-client-ids/
+
+- title: HTTP & REST
+  url: /http/
+  children:
+    - title: HTTP Methods Overview
+      url: /http/
+    - title: HTTP.Get
+      url: /http/http-get/
+    - title: HTTP.Post
+      url: /http/http-post/
+    - title: HTTP.GetRequest
+      url: /http/http-getrequest/
+    - title: HTTP.PostRequest
+      url: /http/http-postrequest/
+    - title: Platform.Function.HTTPGet
+      url: /http/platform-httpget/
+    - title: Platform.Function.HTTPPost
+      url: /http/platform-httppost/
+    - title: Script.Util.HttpRequest
+      url: /http/script-util-httprequest/
+    - title: Script.Util.HttpGet
+      url: /http/script-util-httpget/
+    - title: Script.Util.HttpPost
+      url: /http/script-util-httppost/
+    - title: Request Instance Methods
+      url: /http/request-methods/
+
+- title: ECMAScript Builtins
+  url: /ecmascript-builtins/
+  children:
+    - title: Overview
+      url: /ecmascript-builtins/
+    - title: Array Methods
+      url: /ecmascript-builtins/array-methods/
+    - title: String Methods
+      url: /ecmascript-builtins/string-methods/
+    - title: Math
+      url: /ecmascript-builtins/math/
+
+- title: Best Practices
+  url: /best-practices/
+  children:
+    - title: Debugging
+      url: /best-practices/debugging/
+    - title: Performance
+      url: /best-practices/performance/
+    - title: Security
+      url: /best-practices/security/
+    - title: Style Guide
+      url: /best-practices/style-guide/
+    - title: Defensive Coding
+      url: /best-practices/defensive-coding/
+    - title: Error Logging
+      url: /best-practices/error-logging/
+
+- title: Recipes
+  url: /recipes/
+  children:
+    - title: Cloud Page Apps
+      url: /recipes/cloud-page-apps/
+    - title: AMPscript Bridge
+      url: /recipes/ampscript-bridge/
+    - title: REST API Calls
+      url: /recipes/rest-api-calls/
+    - title: DE CRUD Patterns
+      url: /recipes/de-crud-patterns/
+    - title: Subscriber Management
+      url: /recipes/subscriber-management/
+    - title: WSProxy Patterns
+      url: /recipes/wsproxy-patterns/
+    - title: Date & Time
+      url: /recipes/date-and-time/
+    - title: Anti-CSRF
+      url: /recipes/anti-csrf/
+    - title: Encryption
+      url: /recipes/encryption/
+
+- title: Function Index
+  url: /function-index/

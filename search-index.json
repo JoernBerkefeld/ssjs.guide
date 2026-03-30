@@ -1,0 +1,16 @@
+---
+layout: null
+---
+[
+  {% assign all_pages = site.pages | concat: site.documents %}
+  {% for p in all_pages %}
+    {% unless p.layout == nil or p.title == nil %}
+    {
+      "title": {{ p.title | jsonify }},
+      "url": {{ p.url | relative_url | jsonify }},
+      "section": {{ p.parent | default: p.layout | jsonify }},
+      "content": {{ p.content | strip_html | truncate: 300 | jsonify }}
+    }{% unless forloop.last %},{% endunless %}
+    {% endunless %}
+  {% endfor %}
+]

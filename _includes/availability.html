@@ -1,0 +1,45 @@
+{% comment %}
+  Renders availability badges for a function page.
+  Usage: {% include availability.html email=true cloudpage=true automation=true triggered_send=false %}
+  Or via page front matter: page.availability.email, page.availability.cloudpage, etc.
+{% endcomment %}
+
+{% assign avail = include.availability | default: page.availability %}
+
+<div class="availability-badges" aria-label="Availability">
+  <span class="availability-label">Available in:</span>
+
+  <span class="availability-badge {% if avail.email %}is-available{% else %}is-unavailable{% endif %}"
+        title="{% if avail.email %}Available in Email sends{% else %}Not available in Email sends{% endif %}">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <rect x="1" y="3" width="10" height="7" rx="1" stroke="currentColor" stroke-width="1.2"/>
+      <path d="M1 4l5 3.5L11 4" stroke="currentColor" stroke-width="1.2"/>
+    </svg>
+    Email
+  </span>
+
+  <span class="availability-badge {% if avail.cloudpage %}is-available{% else %}is-unavailable{% endif %}"
+        title="{% if avail.cloudpage %}Available in CloudPages{% else %}Not available in CloudPages{% endif %}">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <path d="M9.5 8H3.5a2.5 2.5 0 110-5 2.5 2.5 0 014.9.5A2 2 0 119.5 8z" stroke="currentColor" stroke-width="1.2"/>
+    </svg>
+    CloudPage
+  </span>
+
+  <span class="availability-badge {% if avail.automation %}is-available{% else %}is-unavailable{% endif %}"
+        title="{% if avail.automation %}Available in Automation Studio{% else %}Not available in Automation Studio{% endif %}">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.2"/>
+      <path d="M6 3v3l2 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+    </svg>
+    Automation
+  </span>
+
+  <span class="availability-badge {% if avail.triggered_send %}is-available{% else %}is-unavailable{% endif %}"
+        title="{% if avail.triggered_send %}Available in Triggered Sends{% else %}Not available in Triggered Sends{% endif %}">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Triggered Send
+  </span>
+</div>
