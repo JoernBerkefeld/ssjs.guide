@@ -13,6 +13,7 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
+| [`Platform.Function.AddObjectArrayItem(obj, prop, val)`](/platform-functions/addobjectarrayitem/) | Platform Functions | void | Append item to a SOAP API object array property |
 | [`Attribute.Value(name)`](/global-functions/attribute/) | Global Object | string | Read subscriber attribute in email context |
 
 ---
@@ -116,6 +117,8 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 | [`InsertDE(...)`](/platform-functions/insertde/) | Platform Functions | number | Alias for InsertData |
 | [`Platform.Function.InvokeCreate(obj, ...)`](/platform-functions/invokecreate/) | Platform Functions | object | SOAP Create (legacy) |
 | [`Platform.Function.InvokeDelete(obj, ...)`](/platform-functions/invokedelete/) | Platform Functions | object | SOAP Delete (legacy) |
+| [`Platform.Function.InvokeExecute(obj, method, ...)`](/platform-functions/invokeexecute/) | Platform Functions | string | SOAP Execute call (legacy) |
+| [`Platform.Function.InvokePerform(obj, action, ...)`](/platform-functions/invokeperform/) | Platform Functions | string | SOAP Perform action (legacy) |
 | [`Platform.Function.InvokeRetrieve(obj)`](/platform-functions/invokeretrieve/) | Platform Functions | object[] | SOAP Retrieve (legacy) |
 | [`Platform.Function.InvokeUpdate(obj, ...)`](/platform-functions/invokeupdate/) | Platform Functions | object | SOAP Update (legacy) |
 | [`Platform.Function.IsEmailAddress(val)`](/platform-functions/isemailaddress/) | Platform Functions | boolean | Validate email format |
@@ -178,6 +181,7 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 | [`proxy.create(type, props)`](/wsproxy/create-item/) | WSProxy | object | SOAP Create |
 | [`proxy.createBatch(type, arr)`](/wsproxy/create-batch/) | WSProxy | object | SOAP batch Create |
 | [`proxy.delete(type, props)`](/wsproxy/delete-item/) | WSProxy | object | SOAP Delete |
+| [`proxy.describe(objectType)`](/wsproxy/describe/) | WSProxy | object | Return SOAP object metadata |
 | [`proxy.execute(type, props)`](/wsproxy/execute/) | WSProxy | object | SOAP Execute |
 | [`proxy.perform(type, action, props)`](/wsproxy/perform/) | WSProxy | object | SOAP Perform |
 | [`proxy.retrieve(type, cols, filter)`](/wsproxy/retrieve/) | WSProxy | object | SOAP Retrieve |
