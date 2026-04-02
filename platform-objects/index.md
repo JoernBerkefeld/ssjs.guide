@@ -17,6 +17,7 @@ The `Platform` namespace exposes a set of objects beyond `Platform.Function.*` t
 | [`Platform.Response`](/platform-objects/platform-response/) | Control HTTP response (status, redirect, content-type) |
 | [`Platform.Request`](/platform-objects/platform-request/) | Read HTTP request data (query string, POST, headers, cookies) |
 | [`Platform.ClientBrowser`](/platform-objects/platform-clientbrowser/) | Detect browser type, version, and capabilities |
+| [`Platform.Recipient`](/platform-objects/platform-recipient/) | Read subscriber attributes and sendable DE fields for the current recipient |
 
 ---
 
