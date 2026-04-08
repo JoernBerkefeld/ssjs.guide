@@ -3,13 +3,13 @@ layout: page
 title: proxy.retrieve
 parent: WSProxy
 parent_url: /wsproxy/
-description: Retrieve SFMC objects of a given type using an optional filter. Returns up to ~2500 rows per call; use retrieveBatch for pagination.
+description: Retrieve SFMC objects of a given type using an optional filter. Returns up to ~2500 rows per call; use retrieveBatch or getNextBatch for pagination.
 ---
 
 ## Syntax
 
 ```javascript
-var result = proxy.retrieve(objectType, columns [, filter]);
+var result = proxy.retrieve(objectType, columns [, filter [, retrieveOptions [, requestProps]]]);
 ```
 
 ## Parameters
@@ -19,6 +19,8 @@ var result = proxy.retrieve(objectType, columns [, filter]);
 | `objectType` | string | Yes | SOAP API object type (e.g., `"DataExtension"`, `"Subscriber"`, `"DataExtensionObject[CustomerKey]"`) |
 | `columns` | string[] | Yes | Array of property names to return |
 | `filter` | object | No | SimpleFilterPart or ComplexFilterPart |
+| `retrieveOptions` | object | No | Properties to set on the SOAP `RetrieveOptions` object (e.g. `{ BatchSize: 500 }`) |
+| `requestProps` | object | No | Additional request-level properties such as `{ QueryAllAccounts: true }` |
 
 ## Filter Types
 
@@ -121,17 +123,44 @@ var result = proxy.retrieve(
 var sub = result.Results[0];
 ```
 
+### Retrieve across all business units
+
+```javascript
+var proxy = new Script.Util.WSProxy();
+var result = proxy.retrieve(
+    "DataExtension",
+    ["Name", "CustomerKey"],
+    {},
+    null,
+    { QueryAllAccounts: true }
+);
+```
+
+### Manual pagination with getNextBatch
+
+```javascript
+var proxy = new Script.Util.WSProxy();
+var result = proxy.retrieve("DataExtension", ["Name", "CustomerKey"]);
+
+while (result.HasMoreRows) {
+    // process result.Results ...
+    result = proxy.getNextBatch("DataExtension", result.RequestID);
+}
+```
+
 ## Notes
 
-- Returns up to ~2,500 rows per call. When `HasMoreRows` is true, use [`retrieveBatch`](/wsproxy/retrieve-all/) to get all results.
+- Returns up to ~2,500 rows per call. When `HasMoreRows` is `true`, call [`getNextBatch`](/wsproxy/getnextbatch/) with the `RequestID` to fetch subsequent pages, or use [`retrieveBatch`](/wsproxy/retrieve-all/) which handles pagination automatically.
 - The `DataExtensionObject[CustomerKey]` syntax is used for retrieving rows from a specific DE. Replace `CustomerKey` with the DE's external key.
+- `retrieveOptions` and `requestProps` are only needed for advanced SOAP scenarios. Most scripts only require the first three parameters.
 
 ## See Also
 
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
+  <li><a href="/wsproxy/getnextbatch/">proxy.getNextBatch</a></li>
   <li><a href="/wsproxy/retrieve-all/">proxy.retrieveBatch</a></li>
-  <li><a href="/wsproxy/create-item/">proxy.create</a></li>
+  <li><a href="/wsproxy/create/">proxy.create</a></li>
 </ul>
 </div>
