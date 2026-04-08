@@ -3,10 +3,10 @@ layout: function
 title: EndImpressionRegion
 parent: Platform Functions
 parent_url: /platform-functions/
-description: Marks the end of an impression tracking region previously opened with BeginImpressionRegion. Optionally closes all nested regions at once.
+description: Marks the end of an impression region opened with BeginImpressionRegion. Optionally closes all nested regions in one call.
 availability:
   email: true
-  cloudpage: false
+  cloudpage: true
   automation: false
   triggered_send: true
 syntax: "Platform.Function.EndImpressionRegion([closeAll])"
@@ -19,29 +19,22 @@ max_args: 1
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `closeAll` | boolean | No | When `true`, closes all nested open impression regions. When `false` or omitted, closes only the most recently opened region. |
+| `closeAll` | boolean | No | When `true`, closes every nested impression region still open |
 
 ## Examples
 
 ```javascript
-// Basic usage — close the most recently opened region
-Platform.Function.BeginImpressionRegion("promo-block");
-Write(promoContent);
+Platform.Function.BeginImpressionRegion("sidebar");
+Write(sidebarBlocks);
 Platform.Function.EndImpressionRegion();
 ```
 
 ```javascript
-// Close all nested regions at once
 Platform.Function.BeginImpressionRegion("outer");
 Platform.Function.BeginImpressionRegion("inner");
-Write(content);
-Platform.Function.EndImpressionRegion(true); // closes both "inner" and "outer"
+Write(nestedContent);
+Platform.Function.EndImpressionRegion(true);
 ```
-
-## Notes
-
-- Must always be paired with a preceding `BeginImpressionRegion` call.
-- Passing `true` for `closeAll` is useful when exiting from nested content generation where the exact nesting depth is not known.
 
 ## See Also
 

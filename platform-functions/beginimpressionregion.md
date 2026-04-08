@@ -3,10 +3,10 @@ layout: function
 title: BeginImpressionRegion
 parent: Platform Functions
 parent_url: /platform-functions/
-description: Marks the start of a named impression tracking region within email or CloudPage content. Use with EndImpressionRegion to wrap trackable content areas.
+description: Marks the start of a named impression region in rendered content. Pair with EndImpressionRegion for analytics that attribute views to specific sections.
 availability:
   email: true
-  cloudpage: false
+  cloudpage: true
   automation: false
   triggered_send: true
 syntax: "Platform.Function.BeginImpressionRegion(name)"
@@ -19,37 +19,21 @@ max_args: 1
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `name` | string | Yes | Unique name identifying this impression tracking region |
+| `name` | string | Yes | Identifier for the impression region |
 
 ## Examples
 
 ```javascript
-// Track impressions on a specific content area
-Platform.Function.BeginImpressionRegion("hero-banner");
-Write(heroContent);
+Platform.Function.BeginImpressionRegion("hero");
+Write(heroHtml);
 Platform.Function.EndImpressionRegion();
 ```
 
 ```javascript
-// Track multiple distinct regions in a single email
-Platform.Function.BeginImpressionRegion("header");
-Write(headerContent);
-Platform.Function.EndImpressionRegion();
-
-Platform.Function.BeginImpressionRegion("product-recommendations");
-Write(productContent);
-Platform.Function.EndImpressionRegion();
-
-Platform.Function.BeginImpressionRegion("footer-cta");
-Write(footerContent);
-Platform.Function.EndImpressionRegion();
+Platform.Function.BeginImpressionRegion("promo-slot-1");
+Write(promoContent);
+Platform.Function.EndImpressionRegion(true);
 ```
-
-## Notes
-
-- Every call to `BeginImpressionRegion` must have a corresponding `EndImpressionRegion` call.
-- Impression regions are primarily used in email sends — Marketing Cloud records which regions were rendered for each subscriber.
-- Region names must be unique within a single send.
 
 ## See Also
 

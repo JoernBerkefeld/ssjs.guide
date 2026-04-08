@@ -3,11 +3,11 @@ layout: function
 title: ContentImageByID
 parent: Platform Functions
 parent_url: /platform-functions/
-description: Returns a complete HTML img tag for a Content Builder image identified by its numeric ID. Includes title, alt, and border attributes from the image asset.
+description: Returns an HTML img element pointing at a Content Builder image identified by numeric asset ID. Optionally supply a fallback ID if the primary asset is missing.
 availability:
   email: true
   cloudpage: true
-  automation: false
+  automation: true
   triggered_send: true
 syntax: "Platform.Function.ContentImageByID(id[, fallbackId])"
 return_type: string
@@ -19,31 +19,24 @@ max_args: 2
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `id` | number | Yes | Numeric ID of the Content Builder image asset |
-| `fallbackId` | number | No | Numeric ID of a fallback image to use when the primary image cannot be found |
+| `id` | number | Yes | Numeric ID of the image in Content Builder |
+| `fallbackId` | number | No | ID of a replacement image when the primary cannot be resolved |
 
-## Return Value
+## Return value
 
-Returns a complete HTML `<img>` tag string including the image `src`, `title`, `alt`, and `border` attributes. Returns an empty string if neither the primary nor fallback ID resolves to a valid image.
+A string containing an `img` tag (including typical attributes such as `src`, `alt`, and `title` as provided by the platform).
 
 ## Examples
 
 ```javascript
-// Insert a Content Builder image by numeric ID
-var imgTag = Platform.Function.ContentImageByID(98765);
-Write(imgTag);
+var banner = Platform.Function.ContentImageByID(1234567);
+Write(banner);
 ```
 
 ```javascript
-// Provide a fallback image ID
-var imgTag = Platform.Function.ContentImageByID(98765, 11111);
-Write(imgTag);
+var icon = Platform.Function.ContentImageByID(555, 999);
+Write(icon);
 ```
-
-## Notes
-
-- The returned `<img>` tag is ready to embed in HTML output — no additional wrapping needed.
-- Use `ContentImageByKey` when you have the external key of the asset rather than the numeric ID.
 
 ## See Also
 
@@ -51,7 +44,6 @@ Write(imgTag);
 <h4>See Also</h4>
 <ul>
   <li><a href="/platform-functions/contentimagebykey/">ContentImageByKey</a></li>
-  <li><a href="/platform-functions/contentblockbyid/">ContentBlockByID</a></li>
-  <li><a href="/platform-functions/contentblockbykey/">ContentBlockByKey</a></li>
+  <li><a href="/global-functions/contentblockbyid/">ContentBlockByID</a></li>
 </ul>
 </div>

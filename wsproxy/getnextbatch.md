@@ -3,10 +3,11 @@ layout: page
 title: proxy.getNextBatch
 parent: WSProxy
 parent_url: /wsproxy/
-description: Retrieve the next page of results from a previous retrieve call when HasMoreRows is true. Use for manual pagination over large result sets.
+permalink: /wsproxy/getnextbatch/
+description: Fetches the next page of SOAP retrieve results after a prior retrieve returned HasMoreRows true. Pass the same object type and the RequestID from the previous response.
 ---
 
-`proxy.getNextBatch()` continues a retrieve operation when the previous response had `HasMoreRows: true`. It uses the `RequestID` from the prior response to fetch the next batch of records.
+`proxy.getNextBatch(objectType, requestId)` continues a paginated [`retrieve`](/wsproxy/retrieve/) sequence. Use it when you manage pagination manually instead of using [`retrieveBatch`](/wsproxy/retrieve-all/).
 
 ## Syntax
 
@@ -18,70 +19,35 @@ var result = proxy.getNextBatch(objectType, requestId);
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `objectType` | string | Yes | SOAP API object type — must match the type used in the original `retrieve` call |
-| `requestId` | string | Yes | The `RequestID` value returned in the previous retrieve response |
+| `objectType` | string | Yes | Same SOAP object type passed to the original `retrieve` call |
+| `requestId` | string | Yes | `RequestID` value from the previous `retrieve` or `getNextBatch` response |
 
-## Return Value
+## Return value
 
-Returns the same structure as `retrieve()`:
-
-```javascript
-{
-    Status: "OK",
-    RequestID: "...",
-    Results: [...],
-    HasMoreRows: false   // false when no further pages remain
-}
-```
+Same shape as [`retrieve`](/wsproxy/retrieve/): `Status`, `RequestID`, `Results`, and `HasMoreRows`.
 
 ## Examples
 
-### Paginate through all Data Extensions
+### Loop until all rows are read
 
 ```javascript
 var proxy = new Script.Util.WSProxy();
-var allResults = [];
-
 var result = proxy.retrieve("DataExtension", ["Name", "CustomerKey"]);
-for (var i = 0; i < result.Results.length; i++) {
-    allResults.push(result.Results[i]);
-}
 
-while (result.HasMoreRows) {
-    result = proxy.getNextBatch("DataExtension", result.RequestID);
+while (result.Status === "OK") {
     for (var i = 0; i < result.Results.length; i++) {
-        allResults.push(result.Results[i]);
+        Write(result.Results[i].Name + "<br>");
     }
-}
-
-Write("Total DEs found: " + allResults.length);
-```
-
-### Retrieve all active subscribers with pagination
-
-```javascript
-var proxy = new Script.Util.WSProxy();
-var filter = {
-    Property: "Status",
-    SimpleOperator: "equals",
-    Value: "Active"
-};
-
-var result = proxy.retrieve("Subscriber", ["EmailAddress", "SubscriberKey"], filter);
-var rows = result.Results;
-
-while (result.HasMoreRows) {
-    result = proxy.getNextBatch("Subscriber", result.RequestID);
-    rows = rows.concat(result.Results);
+    if (!result.HasMoreRows) {
+        break;
+    }
+    result = proxy.getNextBatch("DataExtension", result.RequestID);
 }
 ```
 
 ## Notes
 
-{% include callout.html type="note" content="For most pagination scenarios, `proxy.retrieveBatch()` is simpler — it handles `getNextBatch` internally and returns the complete result set in one call. Use `getNextBatch` directly when you need to process results in chunks or apply logic between pages." %}
-
-- Each page typically contains up to 2,500 records, though the exact count depends on the object type and account configuration.
-- Do not change the `objectType` between calls for the same pagination sequence.
+{% include callout.html type="note" content="For most scripts, [`retrieveBatch`](/wsproxy/retrieve-all/) is simpler because it wraps the retrieve / getNextBatch loop." %}
 
 ## See Also
 
@@ -90,6 +56,5 @@ while (result.HasMoreRows) {
 <ul>
   <li><a href="/wsproxy/retrieve/">proxy.retrieve</a></li>
   <li><a href="/wsproxy/retrieve-all/">proxy.retrieveBatch</a></li>
-  <li><a href="/wsproxy/constructor/">WSProxy Constructor</a></li>
 </ul>
 </div>

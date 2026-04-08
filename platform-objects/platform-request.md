@@ -20,9 +20,10 @@ description: Read HTTP request data including query string parameters, POST body
 |--------|---------|-------------|
 | [`GetQueryStringParameter(name)`](#getquerystringparameter) | string | Read a URL query parameter |
 | [`GetFormField(name)`](#getformfield) | string | Read a form field (POST or GET) |
-| [`GetPostData()`](#getpostdata) | string | Read raw POST body |
+| [`GetPostData([encoding])`](#getpostdata) | string | Read raw POST body (optional character encoding) |
 | [`GetRequestHeader(name)`](#getrequestheader) | string | Read a request header |
 | [`GetCookieValue(name)`](#getcookievalue) | string | Read a cookie value |
+| [`GetUserLanguages()`](#getuserlanguages) | string | Read the browser `Accept-Language` header value |
 | [`GetResolvedURL()`](#getresolvedurl) | string | Get the full resolved URL of the current page |
 
 ---
@@ -60,6 +61,8 @@ Platform.Request.GetFormField(fieldName)
 
 Reads a field from either a GET query string or POST form body (application/x-www-form-urlencoded or multipart/form-data).
 
+Some references use the name `GetFormData` for the same behavior; treat it as an alternate identifier for this request API.
+
 ### Examples
 
 ```javascript
@@ -72,10 +75,12 @@ var firstName = Platform.Request.GetFormField("firstName");
 ## Method: GetPostData
 
 ```javascript
-Platform.Request.GetPostData()
+Platform.Request.GetPostData([encoding])
 ```
 
 Returns the raw POST body as a string. Typically used for JSON or XML payloads sent with content-type `application/json`.
+
+When `encoding` is omitted, the platform default applies (often a legacy Windows code page). Pass an encoding name such as `"UTF-8"` when the client sends UTF-8.
 
 {% include callout.html type="warning" content="`GetPostData()` can only be called **once per request**. Calling it a second time returns an empty string. Read it into a variable immediately at the top of your script." %}
 
@@ -100,6 +105,25 @@ if (Platform.Request.Method === "POST") {
         var data = Platform.Function.ParseJSON(rawBody + "");
         // process data
     }
+}
+```
+
+---
+
+## Method: GetUserLanguages
+
+```javascript
+Platform.Request.GetUserLanguages()
+```
+
+Returns the raw value of the HTTP `Accept-Language` header (for example a comma-separated list with quality values). Returns `null` when the header is absent.
+
+### Examples
+
+```javascript
+var langs = Platform.Request.GetUserLanguages();
+if (langs) {
+    Write("<!-- Accept-Language: " + langs + " -->");
 }
 ```
 

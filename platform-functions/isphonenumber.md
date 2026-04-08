@@ -3,7 +3,7 @@ layout: function
 title: IsPhoneNumber
 parent: Platform Functions
 parent_url: /platform-functions/
-description: Evaluates whether a string contains a valid phone number. Returns a boolean.
+description: Evaluates whether a string contains a valid phone number. Returns a boolean suitable for form validation on CloudPages.
 availability:
   email: true
   cloudpage: true
@@ -24,22 +24,21 @@ max_args: 1
 ## Examples
 
 ```javascript
-var phone = Platform.Request.GetFormField("phoneNumber");
+var phone = Platform.Request.GetFormField("phone");
 
 if (!Platform.Function.IsPhoneNumber(phone)) {
     Write('<p class="error">Please enter a valid phone number.</p>');
 } else {
-    Platform.Function.UpsertData("Contacts", ["Phone"], [phone], ["Status"], ["pending"]);
-    Platform.Response.Redirect("/thank-you");
+    Platform.Function.UpsertData("Leads", ["Phone"], [phone], ["Source"], ["web"]);
 }
 ```
 
 ```javascript
-// In a validation helper
-function validateContact(input) {
-    if (!input.phone) { return "Phone is required"; }
-    if (!Platform.Function.IsPhoneNumber(input.phone)) { return "Invalid phone number"; }
-    return null;
+function normalizeContact(raw) {
+    if (!Platform.Function.IsPhoneNumber(raw.mobile)) {
+        return { ok: false, msg: "Invalid mobile number" };
+    }
+    return { ok: true };
 }
 ```
 
@@ -49,7 +48,6 @@ function validateContact(input) {
 <h4>See Also</h4>
 <ul>
   <li><a href="/platform-functions/isemailaddress/">IsEmailAddress</a></li>
-  <li><a href="/platform-functions/isnull/">IsNull</a></li>
-  <li><a href="/platform-functions/empty/">Empty</a></li>
+  <li><a href="/platform-objects/platform-request/">Platform.Request</a></li>
 </ul>
 </div>

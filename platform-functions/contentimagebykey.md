@@ -3,11 +3,11 @@ layout: function
 title: ContentImageByKey
 parent: Platform Functions
 parent_url: /platform-functions/
-description: Returns a complete HTML img tag for a Content Builder image identified by its external key. Includes title, alt, and border attributes from the image asset.
+description: Returns an HTML img element pointing at a Content Builder image identified by external key. Optionally supply a fallback key if the primary asset is missing.
 availability:
   email: true
   cloudpage: true
-  automation: false
+  automation: true
   triggered_send: true
 syntax: "Platform.Function.ContentImageByKey(key[, fallbackKey])"
 return_type: string
@@ -19,34 +19,24 @@ max_args: 2
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `key` | string | Yes | External key of the Content Builder image asset |
-| `fallbackKey` | string | No | External key of a fallback image to use when the primary image cannot be found |
+| `key` | string | Yes | External key of the image in Content Builder |
+| `fallbackKey` | string | No | External key of a replacement image when the primary cannot be resolved |
 
-## Return Value
+## Return value
 
-Returns a complete HTML `<img>` tag string including the image `src`, `title`, `alt`, and `border` attributes. Returns an empty string if neither the primary nor fallback key resolves to a valid image.
+A string containing an `img` tag (including typical attributes such as `src`, `alt`, and `title` as provided by the platform).
 
 ## Examples
 
 ```javascript
-// Insert a Content Builder image by key
-var imgTag = Platform.Function.ContentImageByKey("hero-banner-2024");
-Write(imgTag);
+var hero = Platform.Function.ContentImageByKey("hero-2026-campaign");
+Write(hero);
 ```
 
 ```javascript
-// Use a fallback if the personalised image might not exist
-var personalisedImg = Platform.Function.ContentImageByKey(
-    "banner-" + subscriberKey,
-    "banner-default"
-);
-Write(personalisedImg);
+var thumb = Platform.Function.ContentImageByKey("product-thumb", "product-thumb-default");
+Write(thumb);
 ```
-
-## Notes
-
-- The returned `<img>` tag is ready to embed in HTML output — no additional wrapping needed.
-- Use `ContentImageByID` when you have the numeric asset ID rather than the external key.
 
 ## See Also
 
@@ -54,7 +44,6 @@ Write(personalisedImg);
 <h4>See Also</h4>
 <ul>
   <li><a href="/platform-functions/contentimagebyid/">ContentImageByID</a></li>
-  <li><a href="/platform-functions/contentblockbykey/">ContentBlockByKey</a></li>
-  <li><a href="/platform-functions/contentblockbyid/">ContentBlockByID</a></li>
+  <li><a href="/global-functions/contentblockbykey/">ContentBlockByKey</a></li>
 </ul>
 </div>

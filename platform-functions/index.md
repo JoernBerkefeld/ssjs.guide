@@ -58,6 +58,7 @@ Read and write rows in SFMC Data Extensions.
   <a href="/platform-functions/parsejson/" class="function-card"><div class="fn-name">ParseJSON</div><div class="fn-desc">Parse a JSON string to a JavaScript object. SSJS equivalent of JSON.parse().</div><div class="fn-return">→ object</div></a>
   <a href="/platform-functions/guid/" class="function-card"><div class="fn-name">GUID</div><div class="fn-desc">Generate a new globally unique identifier string.</div><div class="fn-return">→ string</div></a>
   <a href="/platform-functions/isemailaddress/" class="function-card"><div class="fn-name">IsEmailAddress</div><div class="fn-desc">Validate a string as an email address format.</div><div class="fn-return">→ boolean</div></a>
+  <a href="/platform-functions/isphonenumber/" class="function-card"><div class="fn-name">IsPhoneNumber</div><div class="fn-desc">Evaluate whether a string is a valid phone number.</div><div class="fn-return">→ boolean</div></a>
   <a href="/platform-functions/isnull/" class="function-card"><div class="fn-name">IsNull</div><div class="fn-desc">Check if a value is null.</div><div class="fn-return">→ boolean</div></a>
   <a href="/platform-functions/empty/" class="function-card"><div class="fn-name">Empty</div><div class="fn-desc">Check if a string is null, empty, or whitespace.</div><div class="fn-return">→ boolean</div></a>
   <a href="/platform-functions/iif/" class="function-card"><div class="fn-name">IIf</div><div class="fn-desc">Inline if — return one of two values based on a condition.</div><div class="fn-return">→ any</div></a>
@@ -104,6 +105,8 @@ Low-level SOAP API wrappers. For most SOAP operations, prefer `WSProxy` instead.
   <a href="/platform-functions/invokeperform/" class="function-card"><div class="fn-name">InvokePerform</div><div class="fn-desc">Execute a SOAP Perform action.</div><div class="fn-return">→ string</div></a>
   <a href="/platform-functions/invokeconfigure/" class="function-card"><div class="fn-name">InvokeConfigure</div><div class="fn-desc">Execute a SOAP Configure call.</div><div class="fn-return">→ string</div></a>
   <a href="/platform-functions/invokeexecute/" class="function-card"><div class="fn-name">InvokeExecute</div><div class="fn-desc">Execute a SOAP Execute call.</div><div class="fn-return">→ string</div></a>
+  <a href="/platform-functions/invokeextract/" class="function-card"><div class="fn-name">InvokeExtract</div><div class="fn-desc">Execute a SOAP Extract call.</div><div class="fn-return">→ string</div></a>
+  <a href="/platform-functions/invokeschedule/" class="function-card"><div class="fn-name">InvokeSchedule</div><div class="fn-desc">Execute a SOAP Schedule call.</div><div class="fn-return">→ string</div></a>
 </div>
 
 ## HTTP {#http}
@@ -119,7 +122,11 @@ Simple HTTP functions — for full REST support see [Script.Util.HttpRequest](/h
 ## Content {#content}
 
 <div class="function-grid">
-  <a href="/platform-functions/contentblockbykey/" class="function-card"><div class="fn-name">ContentBlockByKey</div><div class="fn-desc">Render a Content Builder asset by customer key.</div><div class="fn-return">→ string</div></a>
-  <a href="/platform-functions/contentblockbyname/" class="function-card"><div class="fn-name">ContentBlockByName</div><div class="fn-desc">Render a Content Builder asset by folder path and name.</div><div class="fn-return">→ string</div></a>
-  <a href="/platform-functions/contentblockbyid/" class="function-card"><div class="fn-name">ContentBlockByID</div><div class="fn-desc">Render a Content Builder asset by numeric ID.</div><div class="fn-return">→ string</div></a>
+  <a href="/global-functions/contentblockbykey/" class="function-card"><div class="fn-name">ContentBlockByKey</div><div class="fn-desc">Render a Content Builder asset by customer key (global).</div><div class="fn-return">→ string</div></a>
+  <a href="/global-functions/contentblockbyname/" class="function-card"><div class="fn-name">ContentBlockByName</div><div class="fn-desc">Render a Content Builder asset by folder path and name (global).</div><div class="fn-return">→ string</div></a>
+  <a href="/global-functions/contentblockbyid/" class="function-card"><div class="fn-name">ContentBlockByID</div><div class="fn-desc">Render a Content Builder asset by numeric ID (global).</div><div class="fn-return">→ string</div></a>
+  <a href="/platform-functions/contentimagebykey/" class="function-card"><div class="fn-name">ContentImageByKey</div><div class="fn-desc">Output an img tag for a Content Builder image by external key.</div><div class="fn-return">→ string</div></a>
+  <a href="/platform-functions/contentimagebyid/" class="function-card"><div class="fn-name">ContentImageByID</div><div class="fn-desc">Output an img tag for a Content Builder image by numeric ID.</div><div class="fn-return">→ string</div></a>
+  <a href="/platform-functions/beginimpressionregion/" class="function-card"><div class="fn-name">BeginImpressionRegion</div><div class="fn-desc">Start a named impression tracking region.</div><div class="fn-return">→ void</div></a>
+  <a href="/platform-functions/endimpressionregion/" class="function-card"><div class="fn-name">EndImpressionRegion</div><div class="fn-desc">End an impression region (optionally close all nested).</div><div class="fn-return">→ void</div></a>
 </div>

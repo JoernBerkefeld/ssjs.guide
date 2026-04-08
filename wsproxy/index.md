@@ -32,6 +32,7 @@ var items = result.Results;
 |--------|-------------|
 | [`new Script.Util.WSProxy()`](/wsproxy/constructor/) | Create a WSProxy instance |
 | [`proxy.retrieve(objectType, columns, filter)`](/wsproxy/retrieve/) | Retrieve SFMC objects |
+| [`proxy.getNextBatch(objectType, requestId)`](/wsproxy/getnextbatch/) | Continue a paginated retrieve after `HasMoreRows` |
 | [`proxy.retrieveBatch(objectType, columns, filter)`](/wsproxy/retrieve-all/) | Retrieve large sets with pagination |
 | [`proxy.create(objectType, properties)`](/wsproxy/create-item/) | Create a new SFMC object |
 | [`proxy.createBatch(objectType, propertiesArray)`](/wsproxy/create-batch/) | Create multiple objects |
@@ -41,6 +42,7 @@ var items = result.Results;
 | [`proxy.execute(objectType, properties)`](/wsproxy/execute/) | Execute an operation |
 | [`proxy.perform(objectType, action, properties)`](/wsproxy/perform/) | Perform an action (start, pause, etc.) |
 | [`proxy.setClientId(clientId)`](/wsproxy/set-client-id/) | Set Business Unit for parent BU access |
+| [`proxy.resetClientIds()`](/wsproxy/reset-client-ids/) | Clear BU context set by `setClientId` |
 
 ---
 

@@ -24,6 +24,7 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 |------|----------|---------|-------------|
 | [`Platform.Function.Base64Decode(value)`](/platform-functions/base64decode/) | Platform Functions | string | Decode Base64 string |
 | [`Platform.Function.Base64Encode(value)`](/platform-functions/base64encode/) | Platform Functions | string | Encode string to Base64 |
+| [`Platform.Function.BeginImpressionRegion(name)`](/platform-functions/beginimpressionregion/) | Platform Functions | void | Start a named impression region |
 
 ---
 
@@ -38,6 +39,8 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 | [`ContentBlockByID(id)`](/global-functions/contentblockbyid/) | Global Functions | string | Render Content Builder block by ID |
 | [`ContentBlockByKey(key)`](/global-functions/contentblockbykey/) | Global Functions | string | Render Content Builder block by key |
 | [`ContentBlockByName(path)`](/global-functions/contentblockbyname/) | Global Functions | string | Render Content Builder block by name |
+| [`Platform.Function.ContentImageByID(id[, fallback])`](/platform-functions/contentimagebyid/) | Platform Functions | string | img tag for Content Builder image by ID |
+| [`Platform.Function.ContentImageByKey(key[, fallback])`](/platform-functions/contentimagebykey/) | Platform Functions | string | img tag for Content Builder image by key |
 | [`Platform.Function.CreateObject(type)`](/platform-functions/createobject/) | Platform Functions | object | Create SOAP API object (legacy) |
 
 ---
@@ -71,6 +74,7 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 | [`Platform.Function.Empty(val)`](/platform-functions/empty/) | Platform Functions | boolean | Check null/empty/whitespace |
 | [`Platform.Function.EncryptAsymmetric(val, key)`](/platform-functions/encryptasymmetric/) | Platform Functions | string | Encrypt with public key |
 | [`Platform.Function.EncryptSymmetric(val, alg, ...)`](/platform-functions/encryptsymmetric/) | Platform Functions | string | Encrypt with symmetric cipher |
+| [`Platform.Function.EndImpressionRegion([closeAll])`](/platform-functions/endimpressionregion/) | Platform Functions | void | End an impression region |
 | [`Error(message)`](/global-functions/error/) | Global Functions | Error | Create Error object |
 | [`Platform.Function.ExecuteFilter(name)`](/platform-functions/executefilter/) | Platform Functions | object[] | Execute saved DE filter |
 
@@ -115,13 +119,17 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 | [`Platform.Function.IndexOf(val, sub)`](/platform-functions/indexof/) | Platform Functions | number | Find substring position |
 | [`Platform.Function.InsertData(de, cols, vals)`](/platform-functions/insertdata/) | Platform Functions | number | Insert DE row |
 | [`InsertDE(...)`](/platform-functions/insertde/) | Platform Functions | number | Alias for InsertData |
+| [`Platform.Function.InvokeConfigure(obj, action, ...)`](/platform-functions/invokeconfigure/) | Platform Functions | string | SOAP Configure call (legacy) |
 | [`Platform.Function.InvokeCreate(obj, ...)`](/platform-functions/invokecreate/) | Platform Functions | object | SOAP Create (legacy) |
 | [`Platform.Function.InvokeDelete(obj, ...)`](/platform-functions/invokedelete/) | Platform Functions | object | SOAP Delete (legacy) |
 | [`Platform.Function.InvokeExecute(obj, method, ...)`](/platform-functions/invokeexecute/) | Platform Functions | string | SOAP Execute call (legacy) |
+| [`Platform.Function.InvokeExtract(obj, statusArr, ...)`](/platform-functions/invokeextract/) | Platform Functions | string | SOAP Extract call (legacy) |
 | [`Platform.Function.InvokePerform(obj, action, ...)`](/platform-functions/invokeperform/) | Platform Functions | string | SOAP Perform action (legacy) |
 | [`Platform.Function.InvokeRetrieve(obj)`](/platform-functions/invokeretrieve/) | Platform Functions | object[] | SOAP Retrieve (legacy) |
+| [`Platform.Function.InvokeSchedule(obj, action, sched, ...)`](/platform-functions/invokeschedule/) | Platform Functions | string | SOAP Schedule call (legacy) |
 | [`Platform.Function.InvokeUpdate(obj, ...)`](/platform-functions/invokeupdate/) | Platform Functions | object | SOAP Update (legacy) |
 | [`Platform.Function.IsEmailAddress(val)`](/platform-functions/isemailaddress/) | Platform Functions | boolean | Validate email format |
+| [`Platform.Function.IsPhoneNumber(val)`](/platform-functions/isphonenumber/) | Platform Functions | boolean | Validate phone number format |
 | [`Platform.Function.IsNull(val)`](/platform-functions/isnull/) | Platform Functions | boolean | Check for null |
 
 ---
@@ -167,9 +175,10 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 | [`Platform.Load(lib, version)`](/platform-objects/platform-load/) | Platform Object | void | Load Core library |
 | [`Platform.Request.GetCookieValue(name)`](/platform-objects/platform-request/) | Platform Object | string | Read cookie |
 | [`Platform.Request.GetFormField(name)`](/platform-objects/platform-request/) | Platform Object | string | Read form field |
-| [`Platform.Request.GetPostData()`](/platform-objects/platform-request/) | Platform Object | string | Read raw POST body |
+| [`Platform.Request.GetPostData([encoding])`](/platform-objects/platform-request/) | Platform Object | string | Read raw POST body |
 | [`Platform.Request.GetQueryStringParameter(name)`](/platform-objects/platform-request/) | Platform Object | string | Read URL query param |
 | [`Platform.Request.GetRequestHeader(name)`](/platform-objects/platform-request/) | Platform Object | string | Read request header |
+| [`Platform.Request.GetUserLanguages()`](/platform-objects/platform-request/) | Platform Object | string | Read Accept-Language header |
 | [`Platform.Request.Method`](/platform-objects/platform-request/) | Platform Object | string | HTTP method (GET/POST) |
 | [`Platform.Response.Redirect(url)`](/platform-objects/platform-response/) | Platform Object | void | Redirect browser |
 | [`Platform.Response.SetContentType(mime)`](/platform-objects/platform-response/) | Platform Object | void | Set Content-Type |
@@ -183,7 +192,9 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 | [`proxy.delete(type, props)`](/wsproxy/delete-item/) | WSProxy | object | SOAP Delete |
 | [`proxy.describe(objectType)`](/wsproxy/describe/) | WSProxy | object | Return SOAP object metadata |
 | [`proxy.execute(type, props)`](/wsproxy/execute/) | WSProxy | object | SOAP Execute |
+| [`proxy.getNextBatch(type, requestId)`](/wsproxy/getnextbatch/) | WSProxy | object | Next page after retrieve |
 | [`proxy.perform(type, action, props)`](/wsproxy/perform/) | WSProxy | object | SOAP Perform |
+| [`proxy.resetClientIds()`](/wsproxy/reset-client-ids/) | WSProxy | void | Clear BU context from setClientId |
 | [`proxy.retrieve(type, cols, filter)`](/wsproxy/retrieve/) | WSProxy | object | SOAP Retrieve |
 | [`proxy.retrieveBatch(type, cols, filter)`](/wsproxy/retrieve-all/) | WSProxy | object | SOAP Retrieve (paginated) |
 | [`proxy.setClientId(clientId)`](/wsproxy/set-client-id/) | WSProxy | void | Set BU context |
