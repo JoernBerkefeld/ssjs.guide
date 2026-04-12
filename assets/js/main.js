@@ -130,6 +130,47 @@
     });
   });
 
+  // ── Service worker registration ─────────────────────────────────────────────
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/sw.js');
+    });
+  }
+
+  // ── iOS "Add to Home Screen" guidance tooltip ────────────────────────────────
+  // iOS Safari does not fire the beforeinstallprompt event, so we show a
+  // one-per-session banner guiding the user to Share → Add to Home Screen.
+
+  var isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  var isInStandaloneMode = (window.navigator.standalone === true);
+  var iosBannerShown = sessionStorage.getItem('iosBannerShown');
+
+  if (isIos && !isInStandaloneMode && !iosBannerShown) {
+    var iosBanner = document.createElement('div');
+    iosBanner.className = 'pwa-ios-banner';
+    iosBanner.setAttribute('role', 'status');
+    iosBanner.innerHTML =
+      '<span class="pwa-ios-banner__text">'
+      + '<svg class="pwa-ios-banner__share-icon" viewBox="0 0 50 50" fill="currentColor" aria-hidden="true">'
+      + '<path d="M30.3 13.7L25 8.4l-5.3 5.3-1.4-1.4L25 5.6l6.7 6.7z"/>'
+      + '<path d="M24 7h2v21h-2z"/>'
+      + '<path d="M35 40H15c-1.7 0-3-1.3-3-3V19c0-1.7 1.3-3 3-3h7v2h-7c-.6 0-1 .4-1 1v18c0 .6.4 1 1 1h20c.6 0 1-.4 1-1V19c0-.6-.4-1-1-1h-7v-2h7c1.7 0 3 1.3 3 3v18c0 1.7-1.3 3-3 3z"/>'
+      + '</svg>'
+      + 'Tap <strong>Share</strong> then <strong>Add to Home Screen</strong> to install'
+      + '</span>'
+      + '<button class="pwa-ios-banner__close" aria-label="Dismiss">'
+      + '<svg viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><path d="M13 1L1 13M1 1l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
+      + '</button>';
+
+    document.body.appendChild(iosBanner);
+    sessionStorage.setItem('iosBannerShown', '1');
+
+    iosBanner.querySelector('.pwa-ios-banner__close').addEventListener('click', function () {
+      iosBanner.classList.add('pwa-ios-banner--hidden');
+    });
+  }
+
   // ── Keyboard shortcut for search ────────────────────────────────────────────
 
   document.addEventListener('keydown', function (e) {

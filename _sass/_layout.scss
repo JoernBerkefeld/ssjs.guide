@@ -315,3 +315,84 @@ img {
     font-family: $font-mono;
   }
 }
+
+// ── iOS PWA install guidance banner ──────────────────────────────────────────
+
+.pwa-ios-banner {
+  position: fixed;
+  bottom: $space-4;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: $z-modal;
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  padding: $space-3 $space-4;
+  background: $bg-elevated;
+  border: 1px solid $border-default;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-lg;
+  max-width: calc(100vw - #{$space-8});
+  animation: pwa-banner-slide-up $transition-normal forwards;
+
+  &--hidden {
+    display: none;
+  }
+
+  &__text {
+    font-size: $text-sm;
+    color: $text-secondary;
+    line-height: $leading-normal;
+
+    strong {
+      color: $text-primary;
+      font-weight: 600;
+    }
+  }
+
+  &__share-icon {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    vertical-align: -0.15em;
+    margin-right: $space-1;
+    color: $accent-primary;
+  }
+
+  &__close {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: $radius-sm;
+    color: $text-muted;
+    cursor: pointer;
+    transition: color $transition-fast, background $transition-fast;
+
+    svg {
+      width: 0.75rem;
+      height: 0.75rem;
+    }
+
+    &:hover {
+      color: $text-primary;
+      background: $bg-hover;
+    }
+  }
+}
+
+@keyframes pwa-banner-slide-up {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY($space-4);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
