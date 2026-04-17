@@ -45,8 +45,6 @@ Read and write rows in SFMC Data Extensions.
 
 <div class="function-grid">
   <a href="/platform-functions/now/" class="function-card"><div class="fn-name">Now</div><div class="fn-desc">Current SFMC server date and time.</div><div class="fn-return">→ string</div></a>
-  <a href="/platform-functions/dateparse/" class="function-card"><div class="fn-name">DateParse</div><div class="fn-desc">Convert a string to a date object.</div><div class="fn-return">→ object</div></a>
-  <a href="/platform-functions/formatdate/" class="function-card"><div class="fn-name">FormatDate</div><div class="fn-desc">Format a date into a string pattern.</div><div class="fn-return">→ string</div></a>
   <a href="/platform-functions/systemdatetolocaldate/" class="function-card"><div class="fn-name">SystemDateToLocalDate</div><div class="fn-desc">Convert system date to subscriber's local timezone.</div><div class="fn-return">→ string</div></a>
 </div>
 
