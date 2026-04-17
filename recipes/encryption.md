@@ -152,7 +152,6 @@ if (match) {
   <li><a href="/platform-functions/encryptsymmetric/">EncryptSymmetric</a></li>
   <li><a href="/platform-functions/decryptsymmetric/">DecryptSymmetric</a></li>
   <li><a href="/platform-functions/sha256/">SHA256</a></li>
-  <li><a href="/platform-functions/hmac/">HMAC</a></li>
   <li><a href="/best-practices/security/">Security Best Practices</a></li>
 </ul>
 </div>

@@ -106,7 +106,6 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 | [`Platform.Function.HTTPPost(url, ct, body, ...)`](/platform-functions/httppost/) | Platform Functions | string | HTTP POST (no Core required) |
 | [`HTTP.Post(url, ct, body, ...)`](/http/http-post/) | Core HTTP | string | Simple HTTP POST |
 | [`HTTP.PostRequest(url, ct, body, sc, ...)`](/http/http-postrequest/) | Core HTTP | string | HTTP POST with status code |
-| [`Platform.Function.HMAC(alg, secret, msg)`](/platform-functions/hmac/) | Platform Functions | string | Compute HMAC signature |
 
 ---
 

@@ -109,20 +109,6 @@ if (Platform.Function.Empty(receivedToken) || receivedToken !== expectedToken) {
 }
 ```
 
-For HMAC-signed requests:
-
-```javascript
-var secret = Platform.Function.Lookup("AppConfig", "value", "key", "webhookSecret");
-var body = Platform.Request.GetPostData();
-var expectedSig = Platform.Function.HMAC("sha256", secret, body);
-var receivedSig = Platform.Request.GetRequestHeader("X-Signature");
-
-if (expectedSig !== receivedSig) {
-    Write(Stringify({ status: 401, statusMessage: "Unauthorized", error: "Invalid signature" }));
-    return;
-}
-```
-
 ---
 
 ## 6. Output Encoding

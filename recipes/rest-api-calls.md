@@ -161,52 +161,6 @@ function callWithRetry(url, method, payload, token, maxRetries) {
 }
 ```
 
----
-
-## Webhook Receiver
-
-```javascript
-<script runat="server">
-Platform.Response.SetContentType("application/json");
-
-var rawBody = Platform.Request.GetPostData();
-
-// Verify HMAC signature
-var secret = Platform.Function.Lookup("Config", "value", "key", "webhookSecret");
-var sig = Platform.Request.GetRequestHeader("X-Webhook-Signature");
-var expected = Platform.Function.HMAC("sha256", secret, rawBody);
-
-if (!sig || sig !== expected) {
-    Write(Stringify({ status: 401, statusMessage: "Unauthorized", error: "Invalid signature" }));
-    return;
-}
-
-var event = Platform.Function.ParseJSON(rawBody + "");
-
-if (!event || !event.type) {
-    Write(Stringify({ status: 400, statusMessage: "Bad Request", error: "Missing event type" }));
-    return;
-}
-
-// Route event
-if (event.type === "order.created") {
-    Platform.Function.InsertData("Orders",
-        ["OrderId", "Email", "Total", "ReceivedAt"],
-        [event.data.orderId, event.data.email,
-         event.data.total, Platform.Function.Now()]
-    );
-} else if (event.type === "subscription.cancelled") {
-    Platform.Function.UpdateData("Contacts",
-        ["Status", "CancelledAt"],
-        ["inactive", Platform.Function.Now()],
-        ["Email"], [event.data.email]
-    );
-}
-
-Write(Stringify({ received: true, type: event.type }));
-</script>
-```
-
 ## See Also
 
 <div class="see-also">
@@ -214,7 +168,6 @@ Write(Stringify({ received: true, type: event.type }));
 <ul>
   <li><a href="/http/script-util-httprequest/">Script.Util.HttpRequest</a></li>
   <li><a href="/platform-functions/httppost/">Platform.Function.HTTPPost</a></li>
-  <li><a href="/platform-functions/hmac/">HMAC</a></li>
   <li><a href="/best-practices/security/">Security Best Practices</a></li>
 </ul>
 </div>
