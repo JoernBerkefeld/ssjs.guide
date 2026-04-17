@@ -48,8 +48,7 @@ if (!session) {
 Platform.Response.SetContentType("application/json");
 var method = Platform.Request.Method;
 if (method !== "POST") {
-    Platform.Response.SetResponseCode(405, "Method Not Allowed");
-    Write(Stringify({ error: "POST required" }));
+    Write(Stringify({ status: 405, statusMessage: "Method Not Allowed", error: "POST required" }));
     return;
 }
 var body = Platform.Function.ParseJSON(Platform.Request.GetPostData() + "");

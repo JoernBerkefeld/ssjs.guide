@@ -17,8 +17,7 @@ var email = Platform.Request.GetFormField("email");
 
 // Validate email format
 if (!Platform.Function.IsEmailAddress(email)) {
-    Platform.Response.SetResponseCode(400, "Bad Request");
-    Write(Stringify({ error: "Invalid email address" }));
+    Write(Stringify({ status: 400, statusMessage: "Bad Request", error: "Invalid email address" }));
     return;
 }
 
@@ -26,8 +25,7 @@ var id = Platform.Request.GetQueryStringParameter("id");
 
 // Validate numeric ID
 if (!id || !/^\d+$/.test(id)) {
-    Platform.Response.SetResponseCode(400, "Bad Request");
-    Write(Stringify({ error: "Invalid id" }));
+    Write(Stringify({ status: 400, statusMessage: "Bad Request", error: "Invalid id" }));
     return;
 }
 id = parseInt(id, 10);
@@ -87,8 +85,7 @@ if (Platform.Request.Method === "POST") {
     var tokenFromForm = Platform.Request.GetFormField("csrf_token");
 
     if (!tokenFromCookie || tokenFromCookie !== tokenFromForm) {
-        Platform.Response.SetResponseCode(403, "Forbidden");
-        Write(Stringify({ error: "CSRF validation failed" }));
+        Write(Stringify({ status: 403, statusMessage: "Forbidden", error: "CSRF validation failed" }));
         return;
     }
     // Process form...
@@ -107,8 +104,7 @@ var receivedToken = Platform.Request.GetRequestHeader("X-API-Token");
 var expectedToken = Platform.Function.Lookup("AppConfig", "value", "key", "apiSecret");
 
 if (Platform.Function.Empty(receivedToken) || receivedToken !== expectedToken) {
-    Platform.Response.SetResponseCode(401, "Unauthorized");
-    Write(Stringify({ error: "Unauthorized" }));
+    Write(Stringify({ status: 401, statusMessage: "Unauthorized", error: "Unauthorized" }));
     return;
 }
 ```
@@ -122,8 +118,7 @@ var expectedSig = Platform.Function.HMAC("sha256", secret, body);
 var receivedSig = Platform.Request.GetRequestHeader("X-Signature");
 
 if (expectedSig !== receivedSig) {
-    Platform.Response.SetResponseCode(401, "Unauthorized");
-    Write(Stringify({ error: "Invalid signature" }));
+    Write(Stringify({ status: 401, statusMessage: "Unauthorized", error: "Invalid signature" }));
     return;
 }
 ```
@@ -169,8 +164,7 @@ Don't expose internal identifiers, full DE records, or stack traces in error res
         ["timestamp", "message", "stack"],
         [Platform.Function.Now(), e.message, e.stack || ""]
     );
-    Platform.Response.SetResponseCode(500, "Internal Server Error");
-    Write(Stringify({ error: "An internal error occurred" }));
+    Write(Stringify({ status: 500, statusMessage: "Internal Server Error", error: "An internal error occurred" }));
 }
 ```
 
@@ -191,8 +185,7 @@ var hitCount = Platform.Function.Lookup("RateLimit", "count", "key", key);
 hitCount = parseInt(hitCount, 10) || 0;
 
 if (hitCount >= 10) { // 10 requests per minute
-    Platform.Response.SetResponseCode(429, "Too Many Requests");
-    Write(Stringify({ error: "Rate limit exceeded" }));
+    Write(Stringify({ status: 429, statusMessage: "Too Many Requests", error: "Rate limit exceeded" }));
     return;
 }
 

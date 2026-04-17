@@ -52,8 +52,7 @@ if (statusCode[0] >= 200 && statusCode[0] < 300) {
     var result = Platform.Function.ParseJSON(response + "");
     Write(Stringify({ status: "ok", id: result.id }));
 } else {
-    Platform.Response.SetResponseCode(statusCode[0], "Upstream Error");
-    Write(Stringify({ error: "Upstream returned " + statusCode[0] }));
+    Write(Stringify({ status: statusCode[0], statusMessage: "Upstream Error", error: "Upstream returned " + statusCode[0] }));
 }
 ```
 

@@ -177,16 +177,14 @@ var sig = Platform.Request.GetRequestHeader("X-Webhook-Signature");
 var expected = Platform.Function.HMAC("sha256", secret, rawBody);
 
 if (!sig || sig !== expected) {
-    Platform.Response.SetResponseCode(401, "Unauthorized");
-    Write(Stringify({ error: "Invalid signature" }));
+    Write(Stringify({ status: 401, statusMessage: "Unauthorized", error: "Invalid signature" }));
     return;
 }
 
 var event = Platform.Function.ParseJSON(rawBody + "");
 
 if (!event || !event.type) {
-    Platform.Response.SetResponseCode(400, "Bad Request");
-    Write(Stringify({ error: "Missing event type" }));
+    Write(Stringify({ status: 400, statusMessage: "Bad Request", error: "Missing event type" }));
     return;
 }
 

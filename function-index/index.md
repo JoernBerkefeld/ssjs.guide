@@ -182,7 +182,6 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 | [`Platform.Response.Redirect(url)`](/platform-objects/platform-response/) | Platform Object | void | Redirect browser |
 | [`Platform.Response.SetContentType(mime)`](/platform-objects/platform-response/) | Platform Object | void | Set Content-Type |
 | [`Platform.Response.SetCookie(name, val, ...)`](/platform-objects/platform-response/) | Platform Object | void | Set response cookie |
-| [`Platform.Response.SetResponseCode(code)`](/platform-objects/platform-response/) | Platform Object | void | Set HTTP status code |
 | [`Platform.Variable.GetValue(name)`](/platform-objects/platform-variable/) | Platform Object | string | Read AMPscript variable |
 | [`Platform.Variable.SetValue(name, val)`](/platform-objects/platform-variable/) | Platform Object | void | Write AMPscript variable |
 | [`Platform.Function.ProperCase(val)`](/platform-functions/propercase/) | Platform Functions | string | Title case a string |

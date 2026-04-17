@@ -79,7 +79,6 @@ try {
 } catch(e) {
     logError(PAGE_NAME, e.message, e.stack, requestSnapshot, "");
 
-    Platform.Response.SetResponseCode(500, "Internal Server Error");
     Platform.Response.SetContentType("application/json");
     Write(Stringify({ error: "An error occurred. Please try again." }));
 }

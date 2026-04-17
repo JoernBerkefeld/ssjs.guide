@@ -70,12 +70,10 @@ try {
         Platform.Response.SetContentType("application/json");
         Write(Stringify(data));
     } else {
-        Platform.Response.SetResponseCode(resp.statusCode, "Upstream Error");
-        Write(Stringify({ error: resp.statusCode }));
+        Write(Stringify({ status: resp.statusCode, statusMessage: "Upstream Error", error: resp.statusCode }));
     }
 } catch(e) {
-    Platform.Response.SetResponseCode(500, "Server Error");
-    Write(Stringify({ error: e.message }));
+    Write(Stringify({ status: 500, statusMessage: "Internal Server Error", error: e.message }));
 }
 ```
 

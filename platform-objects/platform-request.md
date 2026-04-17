@@ -148,8 +148,7 @@ var customToken = Platform.Request.GetRequestHeader("X-API-Token");
 var token = Platform.Request.GetRequestHeader("X-Auth-Token");
 var expectedToken = Platform.Function.Lookup("Config", "value", "key", "apiToken");
 if (token !== expectedToken) {
-    Platform.Response.SetResponseCode(401, "Unauthorized");
-    Write(Stringify({ error: "Unauthorized" }));
+    Write(Stringify({ status: 401, statusMessage: "Unauthorized", error: "Unauthorized" }));
     return;
 }
 ```
@@ -201,8 +200,7 @@ var method = Platform.Request.Method;
 if (method === "GET") {
     var id = Platform.Request.GetQueryStringParameter("id");
     if (Platform.Function.Empty(id)) {
-        Platform.Response.SetResponseCode(400, "Bad Request");
-        Write(Stringify({ error: "id is required" }));
+        Write(Stringify({ status: 400, statusMessage: "Bad Request", error: "id is required" }));
     } else {
         var record = Platform.Function.Lookup("Records", "data", "id", id);
         Platform.Response.SetContentType("application/json");
@@ -216,8 +214,7 @@ if (method === "GET") {
         Platform.Response.SetContentType("application/json");
         Write(Stringify({ status: "ok" }));
     } catch(e) {
-        Platform.Response.SetResponseCode(400, "Bad Request");
-        Write(Stringify({ error: "Invalid JSON" }));
+        Write(Stringify({ status: 400, statusMessage: "Bad Request", error: "Invalid JSON" }));
     }
 }
 </script>

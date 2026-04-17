@@ -131,8 +131,7 @@ try {
     Platform.Response.SetContentType("application/json");
     Write(Stringify({ status: "subscribed", email: email }));
 } catch(e) {
-    Platform.Response.SetResponseCode(500, "Internal Server Error");
-    Write(Stringify({ error: "Subscription failed", message: e.message }));
+    Write(Stringify({ status: 500, statusMessage: "Internal Server Error", error: "Subscription failed", message: e.message }));
 }
 ```
 

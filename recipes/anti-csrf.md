@@ -73,8 +73,7 @@ var submittedToken = Platform.Request.GetFormField("csrfToken");
 var subKey = Platform.Variable.GetValue("@SubscriberKey");
 
 if (!submittedToken) {
-    Platform.Response.SetResponseCode(403, "Forbidden");
-    Write("Missing security token.");
+    Write(Stringify({status: 403, statusMessage: "Forbidden", error: "Missing security token."}));
     Platform.Function.RaiseError("Missing CSRF token", true);
 }
 
@@ -84,8 +83,7 @@ var storedKey = Platform.Function.Lookup(
 );
 
 if (!storedKey || storedKey !== subKey) {
-    Platform.Response.SetResponseCode(403, "Forbidden");
-    Write("Invalid or expired security token.");
+    Write(Stringify({status: 403, statusMessage: "Forbidden", error:"Invalid or expired security token."}));
     Platform.Function.RaiseError("CSRF token mismatch", true);
 }
 

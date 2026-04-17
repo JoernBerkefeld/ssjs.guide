@@ -187,8 +187,7 @@ try {
 } catch(e) {
     // Log and handle gracefully
     logError("http_request", e.message);
-    Platform.Response.SetResponseCode(502, "Bad Gateway");
-    Write(Stringify({ error: "External API unavailable" }));
+    Write(Stringify({ status: 502, statusMessage: "Bad Gateway", error: "External API unavailable" }));
     return;
 }
 ```

@@ -12,50 +12,9 @@ description: Control the HTTP response from CloudPages and JSON Code Resources â
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| [`SetResponseCode(code [, description])`](#setresponsecode) | void | Set HTTP status code |
 | [`SetContentType(mimeType)`](#setcontenttype) | void | Set the Content-Type header |
 | [`SetCookie(name, value [, expires [, path [, domain [, secure]]]])`](#setcookie) | void | Set a response cookie |
 | [`Redirect(url [, permanent])`](#redirect) | void | Redirect the browser |
-
----
-
-## Method: SetResponseCode
-
-```javascript
-Platform.Response.SetResponseCode(statusCode [, statusDescription])
-```
-
-Sets the HTTP response status code. Call this **before** writing any output.
-
-### Parameters
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `statusCode` | number | Yes | HTTP status code (200, 400, 401, 403, 404, 500, etc.) |
-| `statusDescription` | string | No | Optional status text |
-
-### Examples
-
-```javascript
-Platform.Response.SetResponseCode(200, "OK");
-Platform.Response.SetResponseCode(400, "Bad Request");
-Platform.Response.SetResponseCode(401, "Unauthorized");
-Platform.Response.SetResponseCode(404, "Not Found");
-Platform.Response.SetResponseCode(500, "Internal Server Error");
-```
-
-### API Response Pattern
-
-```javascript
-Platform.Response.SetContentType("application/json");
-if (!isAuthenticated) {
-    Platform.Response.SetResponseCode(401, "Unauthorized");
-    Write(Stringify({ error: "Authentication required" }));
-} else {
-    Platform.Response.SetResponseCode(200, "OK");
-    Write(Stringify({ data: result }));
-}
-```
 
 ---
 

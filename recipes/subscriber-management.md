@@ -16,8 +16,7 @@ var firstName = Platform.Request.GetFormField("firstName");
 var listKey = "MainNewsletter_PublicList";
 
 if (!Platform.Function.IsEmailAddress(email)) {
-    Platform.Response.SetResponseCode(400, "Bad Request");
-    Write(Stringify({ error: "Invalid email" }));
+    Write(Stringify({ status: 400, statusMessage: "Bad Request", error: "Invalid email" }));
     return;
 }
 
@@ -39,8 +38,7 @@ try {
     Platform.Response.SetContentType("application/json");
     Write(Stringify({ status: "subscribed", email: email }));
 } catch(e) {
-    Platform.Response.SetResponseCode(500, "Server Error");
-    Write(Stringify({ error: "Subscription failed" }));
+    Write(Stringify({ status: 500, statusMessage: "Internal Server Error", error: "Subscription failed" }));
 }
 ```
 

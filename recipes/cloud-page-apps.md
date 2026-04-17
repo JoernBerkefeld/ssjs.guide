@@ -8,7 +8,7 @@ description: Patterns for building CloudPage applications — request routing, s
 
 ## Basic Request Router
 
-```javascript
+```html
 <script runat="server">
 Platform.Load("core", "1.1.5");
 
@@ -20,8 +20,7 @@ if (method === "GET") {
 } else if (method === "POST") {
     handlePost(Platform.Function.ParseJSON(rawBody + ""));
 } else {
-    Platform.Response.SetResponseCode(405, "Method Not Allowed");
-    Write(Stringify({ error: "Method not allowed" }));
+    Write(Stringify({ status: 405, statusMessage: "Method Not Allowed", error: "Method not allowed" }));
 }
 
 function handleGet() {
@@ -34,8 +33,7 @@ function handleGet() {
     var record = Platform.Function.Lookup("Records", "data", "id", id);
     Platform.Response.SetContentType("application/json");
     if (Platform.Function.Empty(record)) {
-        Platform.Response.SetResponseCode(404, "Not Found");
-        Write(Stringify({ error: "Record not found" }));
+        Write(Stringify({ status: 404, statusMessage: "Not Found", error: "Record not found" }));
     } else {
         Write(Stringify({ id: id, data: record }));
     }
@@ -43,13 +41,11 @@ function handleGet() {
 
 function handlePost(body) {
     if (!body || !body.email) {
-        Platform.Response.SetResponseCode(400, "Bad Request");
-        Write(Stringify({ error: "email is required" }));
+        Write(Stringify({ status: 400, statusMessage: "Bad Request", error: "email is required" }));
         return;
     }
     if (!Platform.Function.IsEmailAddress(body.email)) {
-        Platform.Response.SetResponseCode(400, "Bad Request");
-        Write(Stringify({ error: "Invalid email format" }));
+        Write(Stringify({ status: 400, statusMessage: "Bad Request", error: "Invalid email format" }));
         return;
     }
     Platform.Function.InsertData("Submissions",
@@ -66,7 +62,7 @@ function handlePost(body) {
 
 ## Session Management
 
-```javascript
+```html
 <script runat="server">
 var SESSION_COOKIE = "sfmc_session";
 var SESSION_DE = "Sessions";
@@ -126,7 +122,6 @@ Write("Hello, user " + session.userId);
 ## Multi-Step Form
 
 ```javascript
-<script runat="server">
 var step = parseInt(Platform.Request.GetQueryStringParameter("step") || "1", 10);
 var sessionToken = Platform.Request.GetCookieValue("formSession");
 
@@ -160,7 +155,6 @@ if (Platform.Request.Method === "POST") {
         Write("Form complete!");
     }
 }
-</script>
 ```
 
 ## See Also
