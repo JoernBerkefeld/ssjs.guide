@@ -44,11 +44,3 @@ TreatAsContent("%%[Set @encoded = URLEncode(@val, 1, 1)]%%");
 var encoded = Variable.GetValue("@encoded");
 ```
 
-## See Also
-
-<div class="see-also">
-<h4>See Also</h4>
-<ul>
-  <li><a href="/platform-functions/cloudpagesurl/">CloudPagesURL</a></li>
-</ul>
-</div>

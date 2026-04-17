@@ -84,7 +84,7 @@ if (!subscriberKey) {
 </script>
 ```
 
-**Encrypted parameters:** Use `Platform.Function.CloudPagesURL()` to generate URLs with encrypted parameters. Decrypt with `Platform.Function.DecryptSymmetric()` or rely on SFMC's built-in decryption for `CloudPagesURL`-generated links.
+**Encrypted parameters:** Use AMPscript's `CloudPagesURL()` to generate URLs with encrypted parameters. Decrypt with AMPscript's `DecryptSymmetric()` or rely on SFMC's built-in decryption for `CloudPagesURL`-generated links.
 
 ## POST Body
 

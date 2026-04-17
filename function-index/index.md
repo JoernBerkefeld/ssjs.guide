@@ -33,7 +33,6 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
 | [`Platform.Function.Char(ascii)`](/platform-functions/char/) | Platform Functions | string | Get character from ASCII code |
-| [`Platform.Function.CloudPagesURL(pageId, ...)`](/platform-functions/cloudpagesurl/) | Platform Functions | string | Generate encrypted CloudPages URL |
 | [`Platform.Function.Concat(...values)`](/platform-functions/concat/) | Platform Functions | string | Concatenate strings |
 | [`ContentAreaByKey(key)`](/global-functions/contentareabykey/) | Global Functions | string | Render classic content area |
 | [`ContentBlockByID(id)`](/global-functions/contentblockbyid/) | Global Functions | string | Render Content Builder block by ID |

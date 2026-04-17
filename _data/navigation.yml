@@ -159,8 +159,6 @@
       url: /platform-functions/urlencode/
     - title: AttributeValue
       url: /platform-functions/attributevalue/
-    - title: CloudPagesURL
-      url: /platform-functions/cloudpagesurl/
     - title: MicrositeURL
       url: /platform-functions/micrositeurl/
     - title: "— Crypto —"
