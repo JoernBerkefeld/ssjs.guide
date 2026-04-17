@@ -73,12 +73,19 @@ function dateAdd(timestamp,intervalToAdd,intervalType) {
     Platform.Variable.SetValue("@dateAdd_type",intervalType);
     return TreatAsContent("%%=DateAdd(@dateAdd_ts, @dateAdd_add, @dateAdd_type)=%%");
 }
+function formatDate(dateString,dateFormat,timeFormat,isoLocale) {
+    Platform.Variable.SetValue("@formatDate_string",dateString);
+    Platform.Variable.SetValue("@formatDate_date",dateFormat);
+    Platform.Variable.SetValue("@formatDate_time",timeFormat);
+    Platform.Variable.SetValue("@formatDate_iso",isoLocale);
+    return TreatAsContent("%%=FormatDate(@formatDate_string, @formatDate_date, @formatDate_time, @formatDate_iso)=%%");
+}
 
 function createSession(userId, data) {
     var token = Platform.Function.GUID();
-    var expires = Platform.Function.FormatDate(
+    var expires = formatDate(
         dateAdd(Platform.Function.Now(), 30, "D"),
-        "MM/DD/YYYY HH:mm:ss"
+        "MM/DD/YYYY","HH:mm:ss"
     );
     Platform.Function.InsertData(SESSION_DE,
         ["token", "userId", "data", "expires"],

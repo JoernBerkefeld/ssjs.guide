@@ -30,5 +30,13 @@ Converts the SFMC system date to the subscriber's local timezone, using the subs
 ```javascript
 var serverTime = Platform.Function.Now();
 var localTime  = Platform.Function.SystemDateToLocalDate(serverTime);
-Write("Your local time: " + Platform.Function.FormatDate(localTime, "M/D/YYYY H:MM"));
+function formatDate(dateString,dateFormat,timeFormat,isoLocale) {
+    Platform.Variable.SetValue("@formatDate_string",dateString);
+    Platform.Variable.SetValue("@formatDate_date",dateFormat);
+    Platform.Variable.SetValue("@formatDate_time",timeFormat);
+    Platform.Variable.SetValue("@formatDate_iso",isoLocale);
+    return TreatAsContent("%%=FormatDate(@formatDate_string, @formatDate_date, @formatDate_time, @formatDate_iso)=%%");
+}
+
+Write("Your local time: " + formatDate(localTime, "M/D/YYYY H:MM"));
 ```

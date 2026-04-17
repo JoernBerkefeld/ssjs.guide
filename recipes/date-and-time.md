@@ -11,13 +11,21 @@ description: Date manipulation patterns in SSJS — formatting, calculating diff
 ```javascript
 var now = Platform.Function.Now();  // "3/30/2026 10:15:00 AM" (SFMC server time)
 
+function formatDate(dateString,dateFormat,timeFormat,isoLocale) {
+    Platform.Variable.SetValue("@formatDate_string",dateString);
+    Platform.Variable.SetValue("@formatDate_date",dateFormat);
+    Platform.Variable.SetValue("@formatDate_time",timeFormat);
+    Platform.Variable.SetValue("@formatDate_iso",isoLocale);
+    return TreatAsContent("%%=FormatDate(@formatDate_string, @formatDate_date, @formatDate_time, @formatDate_iso)=%%");
+}
+
 // Format for display
-var displayDate = Platform.Function.FormatDate(now, "MM/DD/YYYY", "en-US");
-var isoDate = Platform.Function.FormatDate(now, "YYYY-MM-DD", "en-US");
-var fullDateTime = Platform.Function.FormatDate(now, "MM/DD/YYYY HH:mm:ss", "en-US");
+var displayDate = formatDate(now, "MM/DD/YYYY", "en-US");
+var isoDate = formatDate(now, "YYYY-MM-DD", "en-US");
+var fullDateTime = formatDate(now, "MM/DD/YYYY HH:mm:ss", "en-US");
 
 // For cookies/HTTP headers
-var httpDate = Platform.Function.FormatDate(now, "ddd, DD MMM YYYY HH:mm:ss", "en-US") + " GMT";
+var httpDate = formatDate(now, "ddd, DD MMM YYYY HH:mm:ss", "en-US") + " GMT";
 ```
 
 ---
@@ -56,9 +64,16 @@ function dateAdd(timestamp,intervalToAdd,intervalType) {
     Platform.Variable.SetValue("@dateAdd_type",intervalType);
     return TreatAsContent("%%=DateAdd(@dateAdd_ts, @dateAdd_add, @dateAdd_type)=%%");
 }
+function formatDate(dateString,dateFormat,timeFormat,isoLocale) {
+    Platform.Variable.SetValue("@formatDate_string",dateString);
+    Platform.Variable.SetValue("@formatDate_date",dateFormat);
+    Platform.Variable.SetValue("@formatDate_time",timeFormat);
+    Platform.Variable.SetValue("@formatDate_iso",isoLocale);
+    return TreatAsContent("%%=FormatDate(@formatDate_string, @formatDate_date, @formatDate_time, @formatDate_iso)=%%");
+}
 
 // Cookie expiry 30 days from now
-var expiry = Platform.Function.FormatDate(
+var expiry = formatDate(
     dateAdd(Platform.Function.Now(), 30, "D"),
     "ddd, DD MMM YYYY HH:mm:ss",
     "en-US"
@@ -71,10 +86,18 @@ Platform.Response.SetCookie("session", token, expiry, "/", "", true);
 ## Timezone Conversion
 
 ```javascript
+function formatDate(dateString,dateFormat,timeFormat,isoLocale) {
+    Platform.Variable.SetValue("@formatDate_string",dateString);
+    Platform.Variable.SetValue("@formatDate_date",dateFormat);
+    Platform.Variable.SetValue("@formatDate_time",timeFormat);
+    Platform.Variable.SetValue("@formatDate_iso",isoLocale);
+    return TreatAsContent("%%=FormatDate(@formatDate_string, @formatDate_date, @formatDate_time, @formatDate_iso)=%%");
+}
+
 // Convert SFMC server time to subscriber's local time
 var serverTime = Platform.Function.Now();
 var localTime = Platform.Function.SystemDateToLocalDate(serverTime);
-var localDisplay = Platform.Function.FormatDate(localTime, "MM/DD/YYYY h:mm a", "en-US");
+var localDisplay = formatDate(localTime, "MM/DD/YYYY h:mm a", "en-US");
 Write("Your local time: " + localDisplay);
 ```
 
@@ -89,9 +112,16 @@ function dateAdd(timestamp,intervalToAdd,intervalType) {
     Platform.Variable.SetValue("@dateAdd_type",intervalType);
     return TreatAsContent("%%=DateAdd(@dateAdd_ts, @dateAdd_add, @dateAdd_type)=%%");
 }
+function formatDate(dateString,dateFormat,timeFormat,isoLocale) {
+    Platform.Variable.SetValue("@formatDate_string",dateString);
+    Platform.Variable.SetValue("@formatDate_date",dateFormat);
+    Platform.Variable.SetValue("@formatDate_time",timeFormat);
+    Platform.Variable.SetValue("@formatDate_iso",isoLocale);
+    return TreatAsContent("%%=FormatDate(@formatDate_string, @formatDate_date, @formatDate_time, @formatDate_iso)=%%");
+}
 
 // Get records from the last 7 days
-var sevenDaysAgo = Platform.Function.FormatDate(
+var sevenDaysAgo = formatDate(
     dateAdd(Platform.Function.Now(), -7, "D"),
     "MM/DD/YYYY HH:mm:ss"
 );
@@ -115,7 +145,7 @@ var result = proxy.retrieve(
         RightOperand: {
             Property: "CreatedAt",
             SimpleOperator: "lessThan",
-            Value: Platform.Function.FormatDate(Platform.Function.Now(), "MM/DD/YYYY HH:mm:ss")
+            Value: formatDate(Platform.Function.Now(), "MM/DD/YYYY HH:mm:ss")
         }
     }
 );
@@ -127,16 +157,23 @@ var result = proxy.retrieve(
 
 ```javascript
 var now = Platform.Function.Now();
+function formatDate(dateString,dateFormat,timeFormat,isoLocale) {
+    Platform.Variable.SetValue("@formatDate_string",dateString);
+    Platform.Variable.SetValue("@formatDate_date",dateFormat);
+    Platform.Variable.SetValue("@formatDate_time",timeFormat);
+    Platform.Variable.SetValue("@formatDate_iso",isoLocale);
+    return TreatAsContent("%%=FormatDate(@formatDate_string, @formatDate_date, @formatDate_time, @formatDate_iso)=%%");
+}
 
 // DE-compatible format (consistent, sortable)
-var deFormat = Platform.Function.FormatDate(now, "MM/DD/YYYY HH:mm:ss", "en-US");
+var deFormat = formatDate(now, "MM/DD/YYYY","HH:mm:ss", "en-US");
 
 // User-friendly display
-var displayFormat = Platform.Function.FormatDate(now, "MMMM D, YYYY", "en-US");
+var displayFormat = formatDate(now, "MMMM D, YYYY", "", "en-US");
 // "March 30, 2026"
 
 // ISO 8601 (for APIs, JSON)
-var isoFormat = Platform.Function.FormatDate(now, "YYYY-MM-DDTHH:mm:ss", "en-US");
+var isoFormat = formatDate(now, "YYYY-MM-DD", "THH:mm:ss", "en-US");
 // "2026-03-30T10:15:00"
 ```
 

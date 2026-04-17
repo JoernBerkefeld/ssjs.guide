@@ -143,12 +143,20 @@ function getAccessToken() {
     Platform.Function.UpsertData("TokenCache",
         ["service"], ["sfmcRest"],
         ["token", "expires"],
-        [token.access_token, Platform.Function.FormatDate(
+        [token.access_token, formatDate(
             dateAdd(Now(), token.expires_in - 60, "S"),
             "MM/DD/YYYY HH:mm:ss")]
     );
 
     return token.access_token;
+}
+
+function formatDate(dateString,dateFormat,timeFormat,isoLocale) {
+    Platform.Variable.SetValue("@formatDate_string",dateString);
+    Platform.Variable.SetValue("@formatDate_date",dateFormat);
+    Platform.Variable.SetValue("@formatDate_time",timeFormat);
+    Platform.Variable.SetValue("@formatDate_iso",isoLocale);
+    return TreatAsContent("%%=FormatDate(@formatDate_string, @formatDate_date, @formatDate_time, @formatDate_iso)=%%");
 }
 ```
 

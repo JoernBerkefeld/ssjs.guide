@@ -161,10 +161,18 @@ Don't expose internal identifiers, full DE records, or stack traces in error res
 CloudPages don't have built-in rate limiting. Implement it with a DE:
 
 ```javascript
+function formatDate(dateString,dateFormat,timeFormat,isoLocale) {
+    Platform.Variable.SetValue("@formatDate_string",dateString);
+    Platform.Variable.SetValue("@formatDate_date",dateFormat);
+    Platform.Variable.SetValue("@formatDate_time",timeFormat);
+    Platform.Variable.SetValue("@formatDate_iso",isoLocale);
+    return TreatAsContent("%%=FormatDate(@formatDate_string, @formatDate_date, @formatDate_time, @formatDate_iso)=%%");
+}
+
 var ip = Platform.Request.GetRequestHeader("X-Forwarded-For")
        || Platform.Request.GetRequestHeader("REMOTE_ADDR")
        || "unknown";
-var timeWindow = Platform.Function.FormatDate(Platform.Function.Now(), "MM/DD/YYYY HH:mm");
+var timeWindow = formatDate(Platform.Function.Now(), "MM/DD/YYYY HH:mm");
 var key = ip + "|" + timeWindow;
 
 var hitCount = Platform.Function.Lookup("RateLimit", "count", "key", key);
@@ -189,7 +197,6 @@ Platform.Function.UpsertData("RateLimit",
 <ul>
   <li><a href="/best-practices/defensive-coding/">Defensive Coding</a></li>
   <li><a href="/global-functions/treatascontent/">TreatAsContent</a></li>
-  <li><a href="/platform-functions/hmac/">HMAC</a></li>
   <li><a href="/platform-functions/encryptsymmetric/">EncryptSymmetric</a></li>
 </ul>
 </div>

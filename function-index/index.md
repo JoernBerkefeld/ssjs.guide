@@ -49,7 +49,6 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
 | [`Platform.Function.DataExtensionRowCount(de)`](/platform-functions/dataextensionrowcount/) | Platform Functions | number | Count rows in a DE |
-| [`Platform.Function.DateParse(str, fmt)`](/platform-functions/dateparse/) | Platform Functions | date | Parse date string |
 | [`DataExtension.Init(key)`](/core-library/dataextension/) | Core Library | DataExtension | Initialize DE object |
 | [`de.Rows.Add(obj)`](/core-library/dataextension-rows/) | Core Library | number | Insert DE row |
 | [`de.Rows.Remove(col, val)`](/core-library/dataextension-rows/) | Core Library | number | Delete DE rows |
@@ -82,8 +81,6 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
 | [`Platform.Function.Format(val, fmt)`](/platform-functions/format/) | Platform Functions | string | Format number/string (.NET style) |
-| [`Platform.Function.FormatDate(date, fmt, locale)`](/platform-functions/formatdate/) | Platform Functions | string | Format a date value |
-
 ---
 
 ## G

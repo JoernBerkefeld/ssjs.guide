@@ -132,8 +132,16 @@ function dateAdd(timestamp,intervalToAdd,intervalType) {
     Platform.Variable.SetValue("@dateAdd_type",intervalType);
     return TreatAsContent("%%=DateAdd(@dateAdd_ts, @dateAdd_add, @dateAdd_type)=%%");
 }
+function formatDate(dateString,dateFormat,timeFormat,isoLocale) {
+    Platform.Variable.SetValue("@formatDate_string",dateString);
+    Platform.Variable.SetValue("@formatDate_date",dateFormat);
+    Platform.Variable.SetValue("@formatDate_time",timeFormat);
+    Platform.Variable.SetValue("@formatDate_iso",isoLocale);
+    return TreatAsContent("%%=FormatDate(@formatDate_string, @formatDate_date, @formatDate_time, @formatDate_iso)=%%");
+}
+
 var expiry = dateAdd(Now(), 30, "D");
-var expiryStr = Platform.Function.FormatDate(expiry, "M/D/YYYY H:MM:SS");
+var expiryStr = formatDate(expiry, "M/D/YYYY","H:MM:SS");
 Platform.Response.SetCookie("session_token", tokenValue, expiryStr, true);
 // Parameters: name, value, expiration-string, https-only
 ```

@@ -131,8 +131,6 @@
       url: /platform-functions/#dates
     - title: Now
       url: /platform-functions/now/
-    - title: FormatDate
-      url: /platform-functions/formatdate/
     - title: SystemDateToLocalDate
       url: /platform-functions/systemdatetolocaldate/
     - title: "— Logic & Utility —"

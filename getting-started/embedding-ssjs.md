@@ -72,9 +72,17 @@ A single page can have multiple `<script runat="server">` blocks. They all **sha
 // Block 1: Load libraries and declare helpers
 Platform.Load("core", "1.1.5");
 
-function formatDate(dateStr) {
-    return Platform.Function.FormatDate(dateStr, "MM/DD/YYYY");
+function formatDate(dateString,dateFormat,timeFormat,isoLocale) {
+    if(!dateFormat) {
+      dateFormat = "MM/DD/YYYY";
+    }
+    Platform.Variable.SetValue("@formatDate_string",dateString);
+    Platform.Variable.SetValue("@formatDate_date",dateFormat);
+    Platform.Variable.SetValue("@formatDate_time",timeFormat);
+    Platform.Variable.SetValue("@formatDate_iso",isoLocale);
+    return TreatAsContent("%%=FormatDate(@formatDate_string, @formatDate_date, @formatDate_time, @formatDate_iso)=%%");
 }
+
 </script>
 
 <h1>Welcome</h1>

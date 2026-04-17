@@ -45,11 +45,6 @@ Use function declarations for utilities, function expressions for callbacks (whe
 function validateEmail(email) {
     return Platform.Function.IsEmailAddress(email);
 }
-
-// Named function expression
-var formatDate = function(date, format) {
-    return Platform.Function.FormatDate(date, format, "en-US");
-};
 ```
 
 Group related functions. Use the **Revealing Module Pattern** for namespacing:

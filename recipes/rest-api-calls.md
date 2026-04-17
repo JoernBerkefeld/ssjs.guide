@@ -15,6 +15,13 @@ function dateAdd(timestamp,intervalToAdd,intervalType) {
     Platform.Variable.SetValue("@dateAdd_type",intervalType);
     return TreatAsContent("%%=DateAdd(@dateAdd_ts, @dateAdd_add, @dateAdd_type)=%%");
 }
+function formatDate(dateString,dateFormat,timeFormat,isoLocale) {
+    Platform.Variable.SetValue("@formatDate_string",dateString);
+    Platform.Variable.SetValue("@formatDate_date",dateFormat);
+    Platform.Variable.SetValue("@formatDate_time",timeFormat);
+    Platform.Variable.SetValue("@formatDate_iso",isoLocale);
+    return TreatAsContent("%%=FormatDate(@formatDate_string, @formatDate_date, @formatDate_time, @formatDate_iso)=%%");
+}
 
 function getOAuthToken(authUrl, clientId, clientSecret) {
     // Check cached token in DE
@@ -42,13 +49,13 @@ function getOAuthToken(authUrl, clientId, clientSecret) {
     }
 
     // Cache token (expire 60s early for safety)
-    var expiresAt = Platform.Function.FormatDate(
+    var expiresAt = formatDate(
         dateAdd(
             Platform.Function.Now(),
             tokenData.expires_in - 60,
             "S"
         ),
-        "MM/DD/YYYY HH:mm:ss"
+        "MM/DD/YYYY","HH:mm:ss"
     );
     Platform.Function.UpsertData("TokenCache",
         ["service"], ["oauth_" + clientId],

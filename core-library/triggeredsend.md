@@ -83,6 +83,14 @@ Platform.Load("core", "1.1.5");
 var rawBody = Platform.Request.GetPostData();
 var order = Platform.Function.ParseJSON(rawBody + "");
 
+function formatDate(dateString,dateFormat,timeFormat,isoLocale) {
+    Platform.Variable.SetValue("@formatDate_string",dateString);
+    Platform.Variable.SetValue("@formatDate_date",dateFormat);
+    Platform.Variable.SetValue("@formatDate_time",timeFormat);
+    Platform.Variable.SetValue("@formatDate_iso",isoLocale);
+    return TreatAsContent("%%=FormatDate(@formatDate_string, @formatDate_date, @formatDate_time, @formatDate_iso)=%%");
+}
+
 var ts = TriggeredSend.Init("OrderConfirmation_TSD");
 ts.Send({
     EmailAddress: order.email,
@@ -91,7 +99,7 @@ ts.Send({
         OrderNumber: order.orderNumber,
         Total: order.total,
         ShippingAddress: order.shippingAddress,
-        OrderDate: Platform.Function.FormatDate(Platform.Function.Now(), "MM/DD/YYYY", "en-US")
+        OrderDate: formatDate(Platform.Function.Now(), "MM/DD/YYYY", "en-US")
     }
 });
 
@@ -114,12 +122,19 @@ function dateAdd(timestamp,intervalToAdd,intervalType) {
     Platform.Variable.SetValue("@dateAdd_type",intervalType);
     return TreatAsContent("%%=DateAdd(@dateAdd_ts, @dateAdd_add, @dateAdd_type)=%%");
 }
+function formatDate(dateString,dateFormat,timeFormat,isoLocale) {
+    Platform.Variable.SetValue("@formatDate_string",dateString);
+    Platform.Variable.SetValue("@formatDate_date",dateFormat);
+    Platform.Variable.SetValue("@formatDate_time",timeFormat);
+    Platform.Variable.SetValue("@formatDate_iso",isoLocale);
+    return TreatAsContent("%%=FormatDate(@formatDate_string, @formatDate_date, @formatDate_time, @formatDate_iso)=%%");
+}
 
 // Store token
 Platform.Function.InsertData(
     "PasswordResetTokens",
     ["Email", "Token", "Expires"],
-    [email, token, Platform.Function.FormatDate(expiry, "MM/DD/YYYY HH:mm:ss")]
+    [email, token, formatDate(expiry, "MM/DD/YYYY HH:mm:ss")]
 );
 
 // Send reset email

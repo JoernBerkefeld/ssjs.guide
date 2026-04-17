@@ -83,7 +83,14 @@ function dateAdd(timestamp,intervalToAdd,intervalType) {
 }
 
 // Persistent cookie with expiry
-var expiry = Platform.Function.FormatDate(
+function formatDate(dateString,dateFormat,timeFormat,isoLocale) {
+    Platform.Variable.SetValue("@formatDate_string",dateString);
+    Platform.Variable.SetValue("@formatDate_date",dateFormat);
+    Platform.Variable.SetValue("@formatDate_time",timeFormat);
+    Platform.Variable.SetValue("@formatDate_iso",isoLocale);
+    return TreatAsContent("%%=FormatDate(@formatDate_string, @formatDate_date, @formatDate_time, @formatDate_iso)=%%");
+}
+var expiry = formatDate(
     dateAdd(Now(), 30, "D"),
     "ddd, DD MMM YYYY HH:mm:ss",
     "en-US"
