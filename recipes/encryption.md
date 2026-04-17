@@ -3,10 +3,10 @@ layout: page
 title: Encryption
 parent: Recipes
 parent_url: /recipes/
-description: Symmetric and asymmetric encryption patterns in SFMC SSJS — store and retrieve sensitive data safely using Platform.Function.EncryptSymmetric and DecryptSymmetric.
+description: Symmetric and asymmetric encryption patterns in SFMC SSJS — store and retrieve sensitive data safely using AMPscript's EncryptSymmetric and DecryptSymmetric.
 ---
 
-SFMC provides built-in symmetric and asymmetric encryption through `Platform.Function.EncryptSymmetric` / `DecryptSymmetric` and `Platform.Function.EncryptAsymmetric` / `DecryptAsymmetric`. Keys are registered in **Setup → Security → Key Management** and referenced by name — the key material never appears in script code.
+SFMC provides built-in symmetric and asymmetric encryption through `EncryptSymmetric` / `DecryptSymmetric` - but not in SSJS. Keys are registered in **Setup → Security → Key Management** and referenced by name — the key material never appears in script code.
 
 ---
 
@@ -17,11 +17,11 @@ SFMC provides built-in symmetric and asymmetric encryption through `Platform.Fun
 ```javascript
 var plainText = "sensitive data";
 
-var encrypted = Platform.Function.EncryptSymmetric(
+var encrypted = encryptSymmetric(
     plainText,
     "AES",
-    "MyKeyName", "",   // key name in Key Management, no salt
-    "MyIVName",  ""    // initialization vector name, no salt
+    "MyKeyName", "",   // key name in Key Management
+    "MyIVName",  ""    // initialization vector name
 );
 
 // Store the ciphertext
@@ -41,12 +41,26 @@ var cipherText = Platform.Function.Lookup(
     "SecureStorage", "CipherText", "SubscriberKey", subscriberKey
 );
 
-var plainText = Platform.Function.DecryptSymmetric(
-    cipherText,
-    "AES",
-    "MyKeyName", "",
-    "MyIVName",  ""
+var plainText = decryptSymmetric(
+    cipherText, "AES","","mypw", "", "mysalt"
 );
+
+function decryptSymmetric(encryptedString, algorithm, passwordKey, passwordValue,saltKey, saltValue, vectorKey, vectorValue) {
+    Platform.Variable.SetValue("@decrypt_string", encryptedString);
+    Platform.Variable.SetValue("@decrypt_algo",algorithm);
+    Platform.Variable.SetValue("@decrypt_pw",passwordValue || "");
+    Platform.Variable.SetValue("@decrypt_salt",saltValue || "");
+    Platform.Variable.SetValue("@decrypt_vector",vectorValue || "");
+    return TreatAsContent("%%=DecryptSymmetric(@decrypt_string, @decrypt_algo, @null,@decrypt_pw, @null, @decrypt_salt, @null, @decrypt_vector)=%%");
+}
+function encryptSymmetric(encryptedString, algorithm, passwordKey, passwordValue,saltKey, saltValue, vectorKey, vectorValue) {
+    Platform.Variable.SetValue("@encrypt_string", encryptedString);
+    Platform.Variable.SetValue("@encrypt_algo",algorithm);
+    Platform.Variable.SetValue("@encrypt_pw",passwordValue || "");
+    Platform.Variable.SetValue("@encrypt_salt",saltValue || "");
+    Platform.Variable.SetValue("@encrypt_vector",vectorValue || "");
+    return TreatAsContent("%%=EncryptSymmetric(@encrypt_string, @encrypt_algo, @null,@encrypt_pw, @null, @encrypt_salt, @null, @encrypt_vector)=%%");
+}
 ```
 
 ---
@@ -57,22 +71,34 @@ When you want an additional layer of derivation on top of the stored key:
 
 ```javascript
 // Encrypt with a per-record salt derived from the subscriber key
-var salt = Platform.Function.MD5(subscriberKey);
+var salt = subscriberKey;
 
-var encrypted = Platform.Function.EncryptSymmetric(
-    sensitiveValue,
-    "AES",
-    "MyKeyName", salt,
-    "MyIVName",  salt
+var encrypted = encryptSymmetric(
+    sensitiveValue, "AES", "","mypw", "", salt, ""
 );
 
 // Decrypt — must use the same salt
-var plainText = Platform.Function.DecryptSymmetric(
-    encrypted,
-    "AES",
-    "MyKeyName", salt,
-    "MyIVName",  salt
+var plainText = decryptSymmetric(
+    encrypted, "AES", "","mypw", "", salt, ""
 );
+
+function encryptSymmetric(encryptedString, algorithm, passwordKey, passwordValue,saltKey, saltValue, vectorKey, vectorValue) {
+    Platform.Variable.SetValue("@encrypt_string", encryptedString);
+    Platform.Variable.SetValue("@encrypt_algo",algorithm);
+    Platform.Variable.SetValue("@encrypt_pw",passwordValue || "");
+    Platform.Variable.SetValue("@encrypt_salt",saltValue || "");
+    Platform.Variable.SetValue("@encrypt_vector",vectorValue || "");
+    return TreatAsContent("%%=EncryptSymmetric(@encrypt_string, @encrypt_algo, @null,@encrypt_pw, @null, @encrypt_salt, @null, @encrypt_vector)=%%");
+}
+
+function decryptSymmetric(encryptedString, algorithm, passwordKey, passwordValue,saltKey, saltValue, vectorKey, vectorValue) {
+    Platform.Variable.SetValue("@decrypt_string", encryptedString);
+    Platform.Variable.SetValue("@decrypt_algo",algorithm);
+    Platform.Variable.SetValue("@decrypt_pw",passwordValue || "");
+    Platform.Variable.SetValue("@decrypt_salt",saltValue || "");
+    Platform.Variable.SetValue("@decrypt_vector",vectorValue || "");
+    return TreatAsContent("%%=DecryptSymmetric(@decrypt_string, @decrypt_algo, @null,@decrypt_pw, @null, @decrypt_salt, @null, @decrypt_vector)=%%");
+}
 ```
 
 ---
@@ -100,10 +126,19 @@ var encPhone = Platform.Function.Lookup(
     "ContactsSecure", "PhoneEncrypted", "SubscriberKey", subscriberKey
 );
 if (encPhone) {
-    var phone = Platform.Function.DecryptSymmetric(
+    var phone = decryptSymmetric(
         encPhone, "AES", "PIIKey", "", "PIIiv", ""
     );
     Write("Phone: " + phone);
+}
+
+function decryptSymmetric(encryptedString, algorithm, passwordKey, passwordValue,saltKey, saltValue, vectorKey, vectorValue) {
+    Platform.Variable.SetValue("@decrypt_string", encryptedString);
+    Platform.Variable.SetValue("@decrypt_algo",algorithm);
+    Platform.Variable.SetValue("@decrypt_pw",passwordValue || "");
+    Platform.Variable.SetValue("@decrypt_salt",saltValue || "");
+    Platform.Variable.SetValue("@decrypt_vector",vectorValue || "");
+    return TreatAsContent("%%=DecryptSymmetric(@decrypt_string, @decrypt_algo, @null,@decrypt_pw, @null, @decrypt_salt, @null, @decrypt_vector)=%%");
 }
 ```
 
@@ -115,7 +150,7 @@ For values that only need to be compared (passwords, tokens), prefer a hash rath
 
 ```javascript
 // SHA-256 hash — cannot be reversed
-var hashed = Platform.Function.SHA256(rawValue + "");
+var hashed = rawValue + "";
 
 // Store the hash
 Platform.Function.UpsertData(
@@ -127,7 +162,7 @@ Platform.Function.UpsertData(
 );
 
 // Verify: hash the submitted value and compare
-var submittedHash = Platform.Function.SHA256(submittedValue + "");
+var submittedHash = submittedValue + "";
 var match = Platform.Function.Lookup("TokenStore", "SubscriberKey", "Token", submittedHash);
 if (match) {
     Write("Token valid for: " + match);
@@ -142,16 +177,13 @@ if (match) {
 
 - Key names in `EncryptSymmetric` / `DecryptSymmetric` refer to the **external key** (name) of the key registered in Key Management, not the key value itself.
 - `EncryptSymmetric` and `DecryptSymmetric` are available in all SFMC execution contexts (Email, Cloud Page, Automation, Triggered Send).
-- For hashing without the need for decryption, prefer `Platform.Function.SHA256` over encryption.
+- For hashing without the need for decryption, prefer AMPscript's `SHA256` over encryption.
 
 ## See Also
 
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
-  <li><a href="/platform-functions/encryptsymmetric/">EncryptSymmetric</a></li>
-  <li><a href="/platform-functions/decryptsymmetric/">DecryptSymmetric</a></li>
-  <li><a href="/platform-functions/sha256/">SHA256</a></li>
   <li><a href="/best-practices/security/">Security Best Practices</a></li>
 </ul>
 </div>

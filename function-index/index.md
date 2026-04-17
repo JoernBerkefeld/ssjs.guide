@@ -54,8 +54,6 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 | [`de.Rows.Remove(col, val)`](/core-library/dataextension-rows/) | Core Library | number | Delete DE rows |
 | [`de.Rows.Retrieve([filter])`](/core-library/dataextension-rows/) | Core Library | object[] | Read DE rows |
 | [`de.Rows.Update(vals, keys, keyVals)`](/core-library/dataextension-rows/) | Core Library | number | Update DE rows |
-| [`Platform.Function.DecryptAsymmetric(val, key)`](/platform-functions/decryptasymmetric/) | Platform Functions | string | Decrypt with private key |
-| [`Platform.Function.DecryptSymmetric(val, alg, ...)`](/platform-functions/decryptsymmetric/) | Platform Functions | string | Decrypt symmetric cipher |
 | [`Platform.Function.DeleteData(de, keys, vals)`](/platform-functions/deletedata/) | Platform Functions | number | Delete DE rows |
 | [`DeleteDE(...)`](/platform-functions/deletede/) | Platform Functions | number | Alias for DeleteData |
 
@@ -68,8 +66,6 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 | [`Email.Init(emailId)`](/core-library/email/) | Core Library | Email | Initialize email object |
 | [`email.Send(sub, opts)`](/core-library/email/) | Core Library | number | Send email |
 | [`Platform.Function.Empty(val)`](/platform-functions/empty/) | Platform Functions | boolean | Check null/empty/whitespace |
-| [`Platform.Function.EncryptAsymmetric(val, key)`](/platform-functions/encryptasymmetric/) | Platform Functions | string | Encrypt with public key |
-| [`Platform.Function.EncryptSymmetric(val, alg, ...)`](/platform-functions/encryptsymmetric/) | Platform Functions | string | Encrypt with symmetric cipher |
 | [`Platform.Function.EndImpressionRegion([closeAll])`](/platform-functions/endimpressionregion/) | Platform Functions | void | End an impression region |
 | [`Error(message)`](/global-functions/error/) | Global Functions | Error | Create Error object |
 | [`Platform.Function.ExecuteFilter(name)`](/platform-functions/executefilter/) | Platform Functions | object[] | Execute saved DE filter |
@@ -143,14 +139,6 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 
 ---
 
-## M
-
-| Name | Category | Returns | Description |
-|------|----------|---------|-------------|
-| [`Platform.Function.MD5(val)`](/platform-functions/md5/) | Platform Functions | string | MD5 hash |
-
----
-
 ## N
 
 | Name | Category | Returns | Description |
@@ -211,7 +199,6 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 | [`Script.Util.HttpRequest`](/http/script-util-httprequest/) | HTTP | HttpRequest | Full HTTP request object |
 | [`new Script.Util.WSProxy()`](/wsproxy/constructor/) | WSProxy | WSProxy | Create WSProxy instance |
 | [`Platform.Function.SetObjectProperty(obj, name, val)`](/platform-functions/setobjectproperty/) | Platform Functions | void | Set SOAP object property (legacy) |
-| [`Platform.Function.SHA256(val)`](/platform-functions/sha256/) | Platform Functions | string | SHA-256 hash |
 | [`String(val)`](/global-functions/string/) | Global Functions | string | Convert CLR string to JS string |
 | [`Stringify(obj)`](/global-functions/stringify/) | Global Functions | string | Object to JSON string |
 | [`sub.Attributes.Add(name, val)`](/core-library/subscriber/) | Core Library | void | Add subscriber attribute |

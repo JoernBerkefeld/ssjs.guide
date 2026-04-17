@@ -61,7 +61,15 @@ var token = Platform.Function.Lookup("AppConfig", "value", "key", "apiToken");
 
 // BETTER — load from encrypted field
 var encryptedToken = Platform.Function.Lookup("AppConfig", "encryptedToken", "key", "apiToken");
-var token = Platform.Function.DecryptSymmetric(encryptedToken, "AES", "myKey", "", "myIV", "");
+function decryptSymmetric(encryptedString, algorithm, passwordKey, passwordValue,saltKey, saltValue, vectorKey, vectorValue) {
+    Platform.Variable.SetValue("@decrypt_string", encryptedString);
+    Platform.Variable.SetValue("@decrypt_algo",algorithm);
+    Platform.Variable.SetValue("@decrypt_pw",passwordValue || "");
+    Platform.Variable.SetValue("@decrypt_salt",saltValue || "");
+    Platform.Variable.SetValue("@decrypt_vector",vectorValue || "");
+    return TreatAsContent("%%=DecryptSymmetric(@decrypt_string, @decrypt_algo, @null,@decrypt_pw, @null, @decrypt_salt, @null, @decrypt_vector)=%%");
+}
+var token = decryptSymmetric(encryptedToken, "AES", "myKey", "myIV");
 ```
 
 ---
@@ -197,6 +205,5 @@ Platform.Function.UpsertData("RateLimit",
 <ul>
   <li><a href="/best-practices/defensive-coding/">Defensive Coding</a></li>
   <li><a href="/global-functions/treatascontent/">TreatAsContent</a></li>
-  <li><a href="/platform-functions/encryptsymmetric/">EncryptSymmetric</a></li>
 </ul>
 </div>

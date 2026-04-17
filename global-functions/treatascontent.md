@@ -48,12 +48,24 @@ var result = Variable.GetValue("@result");
 
 ```javascript
 // Decrypt a value using AMPscript's DecryptSymmetric
-Variable.SetValue("@encryptedValue", encryptedString);
 TreatAsContent(
     '%%[Set @decrypted = DecryptSymmetric(@encryptedValue, "AES", ' +
     '@empty, "myPassword", @empty, "mySalt", @empty, "myIV")]%%'
 );
 var decrypted = Variable.GetValue("@decrypted");
+```
+
+or
+
+```js
+function decryptSymmetric(encryptedString, algorithm, passwordKey, passwordValue,saltKey, saltValue, vectorKey, vectorValue) {
+    Platform.Variable.SetValue("@decrypt_string", encryptedString);
+    Platform.Variable.SetValue("@decrypt_algo",algorithm);
+    Platform.Variable.SetValue("@decrypt_pw",passwordValue || "");
+    Platform.Variable.SetValue("@decrypt_salt",saltValue || "");
+    Platform.Variable.SetValue("@decrypt_vector",vectorValue || "");
+    return TreatAsContent("%%=DecryptSymmetric(@decrypt_string, @decrypt_algo, @null,@decrypt_pw, @null, @decrypt_salt, @null, @decrypt_vector)=%%");
+}
 ```
 
 ### URLEncode with extra options

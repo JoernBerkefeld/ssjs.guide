@@ -45,7 +45,6 @@ Available without any loading. Call directly as `Platform.Function.MethodName(..
 // No Platform.Load needed
 var email = Platform.Function.Lookup("Subscribers", "Email", "SubscriberKey", sk);
 var now   = Platform.Function.Now();
-var hash  = Platform.Function.SHA256(email);
 ```
 
 ## Core Library

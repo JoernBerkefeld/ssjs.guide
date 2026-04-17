@@ -159,16 +159,6 @@
       url: /platform-functions/base64encode/
     - title: Base64Decode
       url: /platform-functions/base64decode/
-    - title: SHA256
-      url: /platform-functions/sha256/
-    - title: SHA512
-      url: /platform-functions/sha512/
-    - title: MD5
-      url: /platform-functions/md5/
-    - title: EncryptSymmetric
-      url: /platform-functions/encryptsymmetric/
-    - title: DecryptSymmetric
-      url: /platform-functions/decryptsymmetric/
     - title: "— AMPscript Bridge —"
       url: /platform-functions/#ampscript
     - title: GetValue

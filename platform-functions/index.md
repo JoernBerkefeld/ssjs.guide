@@ -70,11 +70,6 @@ Read and write rows in SFMC Data Extensions.
 <div class="function-grid">
   <a href="/platform-functions/base64encode/" class="function-card"><div class="fn-name">Base64Encode</div><div class="fn-desc">Encode a string to Base64.</div><div class="fn-return">→ string</div></a>
   <a href="/platform-functions/base64decode/" class="function-card"><div class="fn-name">Base64Decode</div><div class="fn-desc">Decode a Base64-encoded string.</div><div class="fn-return">→ string</div></a>
-  <a href="/platform-functions/sha256/" class="function-card"><div class="fn-name">SHA256</div><div class="fn-desc">Compute the SHA-256 hash of a string.</div><div class="fn-return">→ string</div></a>
-  <a href="/platform-functions/sha512/" class="function-card"><div class="fn-name">SHA512</div><div class="fn-desc">Compute the SHA-512 hash of a string.</div><div class="fn-return">→ string</div></a>
-  <a href="/platform-functions/md5/" class="function-card"><div class="fn-name">MD5</div><div class="fn-desc">Compute the MD5 hash of a string.</div><div class="fn-return">→ string</div></a>
-  <a href="/platform-functions/encryptsymmetric/" class="function-card"><div class="fn-name">EncryptSymmetric</div><div class="fn-desc">Encrypt a string with AES or other symmetric algorithm.</div><div class="fn-return">→ string</div></a>
-  <a href="/platform-functions/decryptsymmetric/" class="function-card"><div class="fn-name">DecryptSymmetric</div><div class="fn-desc">Decrypt a symmetrically encrypted string.</div><div class="fn-return">→ string</div></a>
 </div>
 
 ## AMPscript Bridge {#ampscript}
