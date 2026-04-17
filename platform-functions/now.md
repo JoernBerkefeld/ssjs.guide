@@ -29,7 +29,13 @@ Write("Server time: " + now);
 Platform.Function.InsertData("Log", "Timestamp", Platform.Function.Now(), "Event", "page_view");
 
 // Use with DateAdd for expiry calculations
-var expiry = Platform.Function.DateAdd(Platform.Function.Now(), 30, "D");
+function dateAdd(timestamp,intervalToAdd,intervalType) {
+    Platform.Variable.SetValue("@dateAdd_ts",timestamp);
+    Platform.Variable.SetValue("@dateAdd_add",intervalToAdd);
+    Platform.Variable.SetValue("@dateAdd_type",intervalType);
+    return TreatAsContent("%%=DateAdd(@dateAdd_ts, @dateAdd_add, @dateAdd_type)=%%");
+}
+var expiry = dateAdd(Now(), 30, "D");
 Write("Expires: " + expiry);
 ```
 
@@ -42,8 +48,6 @@ For time-sensitive calculations, note that `Now()` returns the SFMC server time 
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
-  <li><a href="/platform-functions/dateadd/">DateAdd</a></li>
-  <li><a href="/platform-functions/formatdate/">FormatDate</a></li>
   <li><a href="/platform-functions/systemdatetolocaldate/">SystemDateToLocalDate</a></li>
   <li><a href="/recipes/date-and-time/">Date & Time recipes</a></li>
 </ul>

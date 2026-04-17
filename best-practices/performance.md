@@ -115,6 +115,13 @@ var prefs = user.prefs;
 Cache auth tokens in a DE rather than fetching a new token on every page load:
 
 ```javascript
+function dateAdd(timestamp,intervalToAdd,intervalType) {
+    Platform.Variable.SetValue("@dateAdd_ts",timestamp);
+    Platform.Variable.SetValue("@dateAdd_add",intervalToAdd);
+    Platform.Variable.SetValue("@dateAdd_type",intervalType);
+    return TreatAsContent("%%=DateAdd(@dateAdd_ts, @dateAdd_add, @dateAdd_type)=%%");
+}
+
 function getAccessToken() {
     // Check for valid cached token
     var cached = Platform.Function.Lookup("TokenCache", "token",
@@ -137,8 +144,7 @@ function getAccessToken() {
         ["service"], ["sfmcRest"],
         ["token", "expires"],
         [token.access_token, Platform.Function.FormatDate(
-            Platform.Function.DateAdd(Platform.Function.Now(),
-                token.expires_in - 60, "S"),
+            dateAdd(Now(), token.expires_in - 60, "S"),
             "MM/DD/YYYY HH:mm:ss")]
     );
 

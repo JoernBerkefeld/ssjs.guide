@@ -126,7 +126,13 @@ The `+ ""` coercion prevents `ParseJSON` from throwing a 500 error on `null`/`un
 var token = Platform.Request.GetCookieValue("session_token");
 
 // Set a cookie
-var expiry = Platform.Function.DateAdd(Platform.Function.Now(), 30, "D");
+function dateAdd(timestamp,intervalToAdd,intervalType) {
+    Platform.Variable.SetValue("@dateAdd_ts",timestamp);
+    Platform.Variable.SetValue("@dateAdd_add",intervalToAdd);
+    Platform.Variable.SetValue("@dateAdd_type",intervalType);
+    return TreatAsContent("%%=DateAdd(@dateAdd_ts, @dateAdd_add, @dateAdd_type)=%%");
+}
+var expiry = dateAdd(Now(), 30, "D");
 var expiryStr = Platform.Function.FormatDate(expiry, "M/D/YYYY H:MM:SS");
 Platform.Response.SetCookie("session_token", tokenValue, expiryStr, true);
 // Parameters: name, value, expiration-string, https-only

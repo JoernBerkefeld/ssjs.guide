@@ -9,6 +9,13 @@ description: Complete patterns for calling external REST APIs and SFMC's own RES
 ## OAuth2 Client Credentials Flow
 
 ```javascript
+function dateAdd(timestamp,intervalToAdd,intervalType) {
+    Platform.Variable.SetValue("@dateAdd_ts",timestamp);
+    Platform.Variable.SetValue("@dateAdd_add",intervalToAdd);
+    Platform.Variable.SetValue("@dateAdd_type",intervalType);
+    return TreatAsContent("%%=DateAdd(@dateAdd_ts, @dateAdd_add, @dateAdd_type)=%%");
+}
+
 function getOAuthToken(authUrl, clientId, clientSecret) {
     // Check cached token in DE
     var cached = Platform.Function.LookupRows("TokenCache",
@@ -36,7 +43,7 @@ function getOAuthToken(authUrl, clientId, clientSecret) {
 
     // Cache token (expire 60s early for safety)
     var expiresAt = Platform.Function.FormatDate(
-        Platform.Function.DateAdd(
+        dateAdd(
             Platform.Function.Now(),
             tokenData.expires_in - 60,
             "S"

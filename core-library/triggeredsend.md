@@ -106,7 +106,14 @@ Platform.Load("core", "1.1.5");
 
 var email = Platform.Request.GetFormField("email");
 var token = Platform.Function.GUID();
-var expiry = Platform.Function.DateAdd(Platform.Function.Now(), 1, "H");
+var expiry = dateAdd(Platform.Function.Now(), 1, "H");
+
+function dateAdd(timestamp,intervalToAdd,intervalType) {
+    Platform.Variable.SetValue("@dateAdd_ts",timestamp);
+    Platform.Variable.SetValue("@dateAdd_add",intervalToAdd);
+    Platform.Variable.SetValue("@dateAdd_type",intervalType);
+    return TreatAsContent("%%=DateAdd(@dateAdd_ts, @dateAdd_add, @dateAdd_type)=%%");
+}
 
 // Store token
 Platform.Function.InsertData(

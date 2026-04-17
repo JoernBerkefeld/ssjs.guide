@@ -75,9 +75,16 @@ Sets a cookie in the response.
 // Session cookie (expires when browser closes)
 Platform.Response.SetCookie("sessionToken", token);
 
+function dateAdd(timestamp,intervalToAdd,intervalType) {
+    Platform.Variable.SetValue("@dateAdd_ts",timestamp);
+    Platform.Variable.SetValue("@dateAdd_add",intervalToAdd);
+    Platform.Variable.SetValue("@dateAdd_type",intervalType);
+    return TreatAsContent("%%=DateAdd(@dateAdd_ts, @dateAdd_add, @dateAdd_type)=%%");
+}
+
 // Persistent cookie with expiry
 var expiry = Platform.Function.FormatDate(
-    Platform.Function.DateAdd(Platform.Function.Now(), 30, "D"),
+    dateAdd(Now(), 30, "D"),
     "ddd, DD MMM YYYY HH:mm:ss",
     "en-US"
 ) + " GMT";

@@ -101,7 +101,13 @@ Tokens should not accumulate. Run this in an Automation on a schedule (e.g. hour
 
 ```javascript
 var proxy = new Script.Util.WSProxy();
-var cutoff = Platform.Function.DateAdd(Platform.Function.Now(), -30, "MI");
+function dateAdd(timestamp,intervalToAdd,intervalType) {
+    Platform.Variable.SetValue("@dateAdd_ts",timestamp);
+    Platform.Variable.SetValue("@dateAdd_add",intervalToAdd);
+    Platform.Variable.SetValue("@dateAdd_type",intervalType);
+    return TreatAsContent("%%=DateAdd(@dateAdd_ts, @dateAdd_add, @dateAdd_type)=%%");
+}
+var cutoff = dateAdd(Platform.Function.Now(), -30, "MI");
 var filter = {
     Property: "CreatedAt",
     SimpleOperator: "lessThan",

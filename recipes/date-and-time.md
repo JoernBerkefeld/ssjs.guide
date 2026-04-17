@@ -27,13 +27,20 @@ var httpDate = Platform.Function.FormatDate(now, "ddd, DD MMM YYYY HH:mm:ss", "e
 ```javascript
 var now = Platform.Function.Now();
 
+function dateAdd(timestamp,intervalToAdd,intervalType) {
+    Platform.Variable.SetValue("@dateAdd_ts",timestamp);
+    Platform.Variable.SetValue("@dateAdd_add",intervalToAdd);
+    Platform.Variable.SetValue("@dateAdd_type",intervalType);
+    return TreatAsContent("%%=DateAdd(@dateAdd_ts, @dateAdd_add, @dateAdd_type)=%%");
+}
+
 // Add/subtract time
-var tomorrow = Platform.Function.DateAdd(now, 1, "D");
-var nextWeek = Platform.Function.DateAdd(now, 7, "D");
-var nextMonth = Platform.Function.DateAdd(now, 1, "M");
-var nextYear = Platform.Function.DateAdd(now, 1, "Y");
-var inTwoHours = Platform.Function.DateAdd(now, 2, "H");
-var tenMinutesAgo = Platform.Function.DateAdd(now, -10, "MI");
+var tomorrow = dateAdd(now, 1, "D");
+var nextWeek = dateAdd(now, 7, "D");
+var nextMonth = dateAdd(now, 1, "M");
+var nextYear = dateAdd(now, 1, "Y");
+var inTwoHours = dateAdd(now, 2, "H");
+var tenMinutesAgo = dateAdd(now, -10, "MI");
 
 // Date parts: Y=year, M=month, D=day, H=hour, MI=minute, S=second
 ```
@@ -43,9 +50,16 @@ var tenMinutesAgo = Platform.Function.DateAdd(now, -10, "MI");
 ## Cookie Expiry Date
 
 ```javascript
+function dateAdd(timestamp,intervalToAdd,intervalType) {
+    Platform.Variable.SetValue("@dateAdd_ts",timestamp);
+    Platform.Variable.SetValue("@dateAdd_add",intervalToAdd);
+    Platform.Variable.SetValue("@dateAdd_type",intervalType);
+    return TreatAsContent("%%=DateAdd(@dateAdd_ts, @dateAdd_add, @dateAdd_type)=%%");
+}
+
 // Cookie expiry 30 days from now
 var expiry = Platform.Function.FormatDate(
-    Platform.Function.DateAdd(Platform.Function.Now(), 30, "D"),
+    dateAdd(Platform.Function.Now(), 30, "D"),
     "ddd, DD MMM YYYY HH:mm:ss",
     "en-US"
 ) + " GMT";
@@ -69,9 +83,16 @@ Write("Your local time: " + localDisplay);
 ## Date Range Filter
 
 ```javascript
+function dateAdd(timestamp,intervalToAdd,intervalType) {
+    Platform.Variable.SetValue("@dateAdd_ts",timestamp);
+    Platform.Variable.SetValue("@dateAdd_add",intervalToAdd);
+    Platform.Variable.SetValue("@dateAdd_type",intervalType);
+    return TreatAsContent("%%=DateAdd(@dateAdd_ts, @dateAdd_add, @dateAdd_type)=%%");
+}
+
 // Get records from the last 7 days
 var sevenDaysAgo = Platform.Function.FormatDate(
-    Platform.Function.DateAdd(Platform.Function.Now(), -7, "D"),
+    dateAdd(Platform.Function.Now(), -7, "D"),
     "MM/DD/YYYY HH:mm:ss"
 );
 
@@ -127,8 +148,6 @@ var isoFormat = Platform.Function.FormatDate(now, "YYYY-MM-DDTHH:mm:ss", "en-US"
 <h4>See Also</h4>
 <ul>
   <li><a href="/platform-functions/now/">Platform.Function.Now</a></li>
-  <li><a href="/platform-functions/dateadd/">Platform.Function.DateAdd</a></li>
-  <li><a href="/platform-functions/formatdate/">Platform.Function.FormatDate</a></li>
   <li><a href="/platform-functions/systemdatetolocaldate/">Platform.Function.SystemDateToLocalDate</a></li>
 </ul>
 </div>
