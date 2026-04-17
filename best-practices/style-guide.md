@@ -157,7 +157,7 @@ var data = Platform.Function.ParseJSON(responseBody + "");
 
 ## Platform.Function Aliases
 
-When using `InsertDE`, `UpdateDE`, `UpsertDE`, `DeleteDE` (aliases for `InsertData` etc.) — prefer the full names for clarity:
+When using `InsertData`, `UpdateData`, `UpsertData`, `DeleteData` prefer the full names for clarity:
 
 ```javascript
 // Preferred — function intent is obvious

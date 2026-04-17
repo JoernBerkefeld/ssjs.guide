@@ -64,7 +64,7 @@ if (exists) {
 ## Notes
 
 - Returns `0` when no rows match (not an error)
-- `DeleteDE` is an alias with identical behavior
+- `DeleteDE` is an alias with identical behavior — however it is limited to emails.
 - **Irreversible** — SFMC DEs have no built-in undo. Always verify the filter before deleting.
 
 ## See Also

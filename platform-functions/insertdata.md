@@ -93,7 +93,7 @@ if (Platform.Request.Method === "POST") {
 ## Notes
 
 - `InsertData` always creates a new row — use `UpsertData` to avoid duplicate errors
-- The `InsertDE` function is an alias with identical behavior
+- The `InsertDE` function is an alias with identical behavior, however it is limited to emails.
 - Returns `1` on success, throws on failure
 
 ## See Also

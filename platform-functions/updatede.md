@@ -3,11 +3,11 @@ layout: function
 title: Updatede
 parent: Platform Functions
 parent_url: /platform-functions/
-description: Alias for Updatedata. Identical behavior — use either name.
+description: Alias for Updatedata. Identical behavior — however this is limited to emails.
 availability:
   email: true
-  cloudpage: true
-  automation: true
+  cloudpage: false
+  automation: false
   triggered_send: true
 syntax: "Platform.Function.Updatede(...)"
 return_type: number
@@ -15,7 +15,7 @@ min_args: 3
 max_args: Infinity
 ---
 
-This function is an alias for [Updatedata](/platform-functions/updatedata/). They have identical signatures and behavior.
+This function is an alias for [Updatedata](/platform-functions/updatedata/). They have identical signatures and behavior. However, this is limited to emails.
 
 Prefer $title when you are used to the legacy AMPscript naming convention, or $baseTitle for the more descriptive name.
 

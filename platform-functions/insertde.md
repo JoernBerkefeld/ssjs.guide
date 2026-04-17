@@ -3,11 +3,11 @@ layout: function
 title: Insertde
 parent: Platform Functions
 parent_url: /platform-functions/
-description: Alias for Insertdata. Identical behavior — use either name.
+description: Alias for Insertdata. Identical behavior — however this is limited to emails.
 availability:
   email: true
-  cloudpage: true
-  automation: true
+  cloudpage: false
+  automation: false
   triggered_send: true
 syntax: "Platform.Function.Insertde(...)"
 return_type: number
