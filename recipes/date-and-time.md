@@ -36,11 +36,6 @@ var inTwoHours = Platform.Function.DateAdd(now, 2, "H");
 var tenMinutesAgo = Platform.Function.DateAdd(now, -10, "MI");
 
 // Date parts: Y=year, M=month, D=day, H=hour, MI=minute, S=second
-
-// Calculate difference
-var startDate = "01/01/2026";
-var daysSince = Platform.Function.DateDiff(startDate, now, "D");
-var monthsSince = Platform.Function.DateDiff(startDate, now, "M");
 ```
 
 ---
@@ -55,31 +50,6 @@ var expiry = Platform.Function.FormatDate(
     "en-US"
 ) + " GMT";
 Platform.Response.SetCookie("session", token, expiry, "/", "", true);
-```
-
----
-
-## Expiry Check
-
-```javascript
-var storedExpiry = Platform.Function.Lookup("Sessions", "expires", "token", token);
-if (!storedExpiry) {
-    Write("Session not found");
-    return;
-}
-
-// Compare using DateDiff
-var secondsLeft = Platform.Function.DateDiff(
-    Platform.Function.Now(),
-    storedExpiry,
-    "S"
-);
-
-if (secondsLeft <= 0) {
-    Write(Stringify({ status: "expired" }));
-} else {
-    Write(Stringify({ status: "valid", expiresInSeconds: secondsLeft }));
-}
 ```
 
 ---
@@ -100,7 +70,6 @@ Write("Your local time: " + localDisplay);
 
 ```javascript
 // Get records from the last 7 days
-// Note: SSJS DateDiff works with strings, not Date objects
 var sevenDaysAgo = Platform.Function.FormatDate(
     Platform.Function.DateAdd(Platform.Function.Now(), -7, "D"),
     "MM/DD/YYYY HH:mm:ss"
@@ -152,15 +121,6 @@ var isoFormat = Platform.Function.FormatDate(now, "YYYY-MM-DDTHH:mm:ss", "en-US"
 
 ---
 
-## Age Calculation
-
-```javascript
-var birthDate = Platform.Function.DateParse("1990-05-15", "YYYY-MM-DD");
-var today = Platform.Function.Now();
-var ageYears = Platform.Function.DateDiff(birthDate, today, "Y");
-Write("Age: " + ageYears);
-```
-
 ## See Also
 
 <div class="see-also">
@@ -168,7 +128,6 @@ Write("Age: " + ageYears);
 <ul>
   <li><a href="/platform-functions/now/">Platform.Function.Now</a></li>
   <li><a href="/platform-functions/dateadd/">Platform.Function.DateAdd</a></li>
-  <li><a href="/platform-functions/datediff/">Platform.Function.DateDiff</a></li>
   <li><a href="/platform-functions/formatdate/">Platform.Function.FormatDate</a></li>
   <li><a href="/platform-functions/systemdatetolocaldate/">Platform.Function.SystemDateToLocalDate</a></li>
 </ul>

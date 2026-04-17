@@ -133,8 +133,6 @@
       url: /platform-functions/now/
     - title: DateAdd
       url: /platform-functions/dateadd/
-    - title: DateDiff
-      url: /platform-functions/datediff/
     - title: DateParse
       url: /platform-functions/dateparse/
     - title: FormatDate

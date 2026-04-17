@@ -43,7 +43,6 @@ For time-sensitive calculations, note that `Now()` returns the SFMC server time 
 <h4>See Also</h4>
 <ul>
   <li><a href="/platform-functions/dateadd/">DateAdd</a></li>
-  <li><a href="/platform-functions/datediff/">DateDiff</a></li>
   <li><a href="/platform-functions/formatdate/">FormatDate</a></li>
   <li><a href="/platform-functions/systemdatetolocaldate/">SystemDateToLocalDate</a></li>
   <li><a href="/recipes/date-and-time/">Date & Time recipes</a></li>

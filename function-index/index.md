@@ -50,7 +50,6 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 |------|----------|---------|-------------|
 | [`Platform.Function.DataExtensionRowCount(de)`](/platform-functions/dataextensionrowcount/) | Platform Functions | number | Count rows in a DE |
 | [`Platform.Function.DateAdd(date, n, unit)`](/platform-functions/dateadd/) | Platform Functions | date | Add time to a date |
-| [`Platform.Function.DateDiff(d1, d2, unit)`](/platform-functions/datediff/) | Platform Functions | number | Calculate date difference |
 | [`Platform.Function.DateParse(str, fmt)`](/platform-functions/dateparse/) | Platform Functions | date | Parse date string |
 | [`DataExtension.Init(key)`](/core-library/dataextension/) | Core Library | DataExtension | Initialize DE object |
 | [`de.Rows.Add(obj)`](/core-library/dataextension-rows/) | Core Library | number | Insert DE row |

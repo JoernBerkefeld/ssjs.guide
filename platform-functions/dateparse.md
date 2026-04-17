@@ -31,10 +31,4 @@ var dateObj = Platform.Function.DateParse(dateStr);
 // Use the parsed date with other functions
 var formatted = Platform.Function.FormatDate(dateObj, "MMMM D, YYYY");
 Write(formatted); // "March 30, 2026"
-
-// Check if a stored date is in the future
-var expiryDate = Platform.Function.Lookup("Tokens", "ExpiresAt", "Token", token);
-var expiry = Platform.Function.DateParse(expiryDate);
-var diff = Platform.Function.DateDiff(Platform.Function.Now(), expiry, "H");
-var isValid = diff > 0;
 ```
