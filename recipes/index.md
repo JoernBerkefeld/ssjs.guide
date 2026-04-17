@@ -38,7 +38,7 @@ var subKey = Platform.Variable.GetValue("@_subscriberkey")
 var session = Platform.Request.GetCookieValue("session");
 if (!session) {
     Platform.Response.Redirect("/login?next="
-        + Platform.Function.URLEncode(Platform.Request.GetResolvedURL()));
+        + Platform.Function.URLEncode(Platform.Request.RequestURL()));
 }
 ```
 

@@ -24,7 +24,7 @@ description: Read HTTP request data including query string parameters, POST body
 | [`GetRequestHeader(name)`](#getrequestheader) | string | Read a request header |
 | [`GetCookieValue(name)`](#getcookievalue) | string | Read a cookie value |
 | [`GetUserLanguages()`](#getuserlanguages) | string | Read the browser `Accept-Language` header value |
-| [`GetResolvedURL()`](#getresolvedurl) | string | Get the full resolved URL of the current page |
+| [`RequestURL()`](#requesturl) | string | Get the full resolved URL of the current page |
 
 ---
 
@@ -175,10 +175,10 @@ if (Platform.Function.Empty(sessionId)) {
 
 ---
 
-## Method: GetResolvedURL
+## Method: RequestURL
 
 ```javascript
-Platform.Request.GetResolvedURL()
+Platform.Request.RequestURL()
 ```
 
 Returns the full URL of the current CloudPage as it was resolved, including CloudPages URL encryption parameters.
@@ -186,7 +186,7 @@ Returns the full URL of the current CloudPage as it was resolved, including Clou
 ### Examples
 
 ```javascript
-var currentUrl = Platform.Request.GetResolvedURL();
+var currentUrl = Platform.Request.RequestURL();
 ```
 
 ---
