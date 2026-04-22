@@ -20,10 +20,8 @@ max_args: Infinity
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `deName` | string | Yes | Data Extension name or external key |
-| `field1` | string[] | Yes | First column name |
-| `value1` | string[] | Yes | Value for the first column |
-| `field2` | string[] | No | Second column name |
-| `value2` | string[] | No | Value for the second column |
+| `columsToInsert` | string[] | Yes | First column name |
+| `valuesToInsert` | string[] | Yes | Value for the first column |
 
 Additional field/value pairs can be provided to set more columns.
 
