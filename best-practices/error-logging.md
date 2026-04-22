@@ -60,7 +60,7 @@ Wrap your entire CloudPage in a try/catch:
 <script runat="server">
 var PAGE_NAME = "checkout-form";
 var requestSnapshot = "method=" + Platform.Request.Method
-    + " qs=" + Platform.Request.GetResolvedURL();
+    + " qs=" + Platform.Request.RequestURL();
 
 try {
     Platform.Load("core", "1.1.5");

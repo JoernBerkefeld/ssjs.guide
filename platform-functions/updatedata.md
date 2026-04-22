@@ -20,10 +20,10 @@ max_args: Infinity
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `deName` | string | Yes | Data Extension name or external key |
-| `updateField` | string | Yes | Column to update |
-| `updateValue` | string | Yes | New value for the column |
-| `filterField` | string | Yes | Column to filter on (identifies which rows to update) |
-| `filterValue` | string | Yes | Filter value |
+| `updateField` | string[] | Yes | Column to update |
+| `updateValue` | string[] | Yes | New value for the column |
+| `filterField` | string[] | Yes | Column to filter on (identifies which rows to update) |
+| `filterValue` | string[] | Yes | Filter value |
 
 Additional `updateField`/`updateValue` pairs can be appended before the filter pair for updating multiple columns.
 
@@ -34,8 +34,8 @@ Additional `updateField`/`updateValue` pairs can be appended before the filter p
 ```javascript
 var affected = Platform.Function.UpdateData(
     "Subscribers",
-    "Status",         "unsubscribed",   // column to update
-    "SubscriberKey",  subscriberKey     // filter
+    ["Status"],         ["unsubscribed"],   // column to update
+    ["SubscriberKey"],  [subscriberKey]     // filter
 );
 Write(affected + " row(s) updated.");
 ```
@@ -45,10 +45,9 @@ Write(affected + " row(s) updated.");
 ```javascript
 Platform.Function.UpdateData(
     "Subscribers",
-    "LastLogin",  Platform.Function.Now(),
-    "LoginCount", loginCount + 1,
-    "Status",     "active",
-    "Email",      email   // filter: update rows where Email = email
+    ["LastLogin","LoginCount","Status"],
+    [Now(), loginCount + 1, "active"],
+    ["Email"],      [email]   // filter: update rows where Email = email
 );
 ```
 
@@ -58,8 +57,8 @@ Platform.Function.UpdateData(
 try {
     var updated = Platform.Function.UpdateData(
         "Orders",
-        "ShippedDate", Platform.Function.Now(),
-        "OrderID",     orderId
+        ["ShippedDate"], [Now()],
+        ["OrderID"],     [orderId]
     );
     if (updated === 0) {
         Write("No order found with ID: " + orderId);

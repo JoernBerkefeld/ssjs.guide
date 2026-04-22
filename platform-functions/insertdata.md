@@ -20,10 +20,10 @@ max_args: Infinity
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `deName` | string | Yes | Data Extension name or external key |
-| `field1` | string | Yes | First column name |
-| `value1` | string | Yes | Value for the first column |
-| `field2` | string | No | Second column name |
-| `value2` | string | No | Value for the second column |
+| `field1` | string[] | Yes | First column name |
+| `value1` | string[] | Yes | Value for the first column |
+| `field2` | string[] | No | Second column name |
+| `value2` | string[] | No | Value for the second column |
 
 Additional field/value pairs can be provided to set more columns.
 
@@ -40,10 +40,7 @@ If the DE has a primary key and a row with the same key already exists, `InsertD
 ```javascript
 var rowsAffected = Platform.Function.InsertData(
     "FormSubmissions",
-    "SubscriberKey", subscriberKey,
-    "Email",         email,
-    "Name",          name,
-    "Timestamp",     Platform.Function.Now()
+    ["SubscriberKey","Email","Name","Timestamp"], [subscriberKey, email, name,Now()]
 );
 
 if (rowsAffected === 1) {
@@ -57,9 +54,8 @@ if (rowsAffected === 1) {
 try {
     Platform.Function.InsertData(
         "EventRegistrations",
-        "Email",   email,
-        "EventID", eventId,
-        "Status",  "registered"
+        ["Email", "EventID", "Status"],
+        [email, eventId, "registered"]
     );
 } catch (e) {
     // Duplicate primary key or other error
@@ -80,9 +76,8 @@ if (Platform.Request.Method === "POST") {
     if (Platform.Function.IsEmailAddress(email)) {
         Platform.Function.InsertData(
             "ContactForm",
-            "Email",     email,
-            "Message",   message,
-            "CreatedAt", Platform.Function.Now()
+            ["Email", "Message", "CreatedAt"],
+            [email, message, Now()],
         );
         Platform.Response.Redirect("/thank-you");
     }
