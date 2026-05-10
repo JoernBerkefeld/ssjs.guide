@@ -234,26 +234,8 @@
       url: /core-library/accountuser/
     - title: Portfolio
       url: /core-library/portfolio/
-    - title: "— Tracking Events —"
-      url: /core-library/#events
-    - title: BounceEvent
-      url: /core-library/bounceevent/
-    - title: ClickEvent
-      url: /core-library/clickevent/
-    - title: OpenEvent
-      url: /core-library/openevent/
-    - title: SentEvent
-      url: /core-library/sentevent/
-    - title: UnsubEvent
-      url: /core-library/unsubevent/
-    - title: NotSentEvent
-      url: /core-library/notsentevent/
-    - title: ForwardedEmailEvent
-      url: /core-library/forwardedemailevent/
-    - title: ForwardedEmailOptInEvent
-      url: /core-library/forwardedemailoptinevent/
-    - title: SurveyEvent
-      url: /core-library/surveyevent/
+    - title: Tracking events
+      url: /core-library/events/
 
 - title: WSProxy
   url: /wsproxy/

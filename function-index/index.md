@@ -29,7 +29,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
 | [`Platform.Function.BeginImpressionRegion(name)`](/platform-functions/beginimpressionregion/) | Platform Functions | void | Start a named impression region |
-| [`BounceEvent.Retrieve(filter)`](/core-library/bounceevent/) | Core Library | object[] | Bounce tracking events |
+| [`BounceEvent.Retrieve(filter)`](/core-library/events/#bounce-event) | Core Library | object[] | Bounce tracking events |
 
 ---
 
@@ -43,7 +43,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`Platform.Function.ContentImageByID(id[, fallback])`](/platform-functions/contentimagebyid/) | Platform Functions | string | img tag for Content Builder image by ID |
 | [`Platform.Function.ContentImageByKey(key[, fallback])`](/platform-functions/contentimagebykey/) | Platform Functions | string | img tag for Content Builder image by key |
 | [`Platform.Function.CreateObject(type)`](/platform-functions/createobject/) | Platform Functions | object | Create SOAP API object (legacy) |
-| [`ClickEvent.Retrieve(filter)`](/core-library/clickevent/) | Core Library | object[] | Click tracking events |
+| [`ClickEvent.Retrieve(filter)`](/core-library/events/#click-event) | Core Library | object[] | Click tracking events |
 | [`ContentAreaObj.Init(key)`](/core-library/contentareaobj/) | Core Library | ContentAreaObjInstance | Classic Content Area object (**deprecated**) |
 
 ---
@@ -87,8 +87,8 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
 | [`FilterDefinition.Init(key)`](/core-library/filterdefinition/) | Core Library | FilterDefinitionInstance | Initialize filter definition |
-| [`ForwardedEmailEvent.Retrieve(filter)`](/core-library/forwardedemailevent/) | Core Library | object[] | Forwarded-email events |
-| [`ForwardedEmailOptInEvent.Retrieve(filter)`](/core-library/forwardedemailoptinevent/) | Core Library | object[] | Forwarded opt-in events |
+| [`ForwardedEmailEvent.Retrieve(filter)`](/core-library/events/#forwarded-email-event) | Core Library | object[] | Forwarded-email events |
+| [`ForwardedEmailOptInEvent.Retrieve(filter)`](/core-library/events/#forwarded-email-opt-in-event) | Core Library | object[] | Forwarded opt-in events |
 
 ---
 
@@ -157,7 +157,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`NotSentEvent.Retrieve(filter)`](/core-library/notsentevent/) | Core Library | object[] | Not-sent events |
+| [`NotSentEvent.Retrieve(filter)`](/core-library/events/#not-sent-event) | Core Library | object[] | Not-sent events |
 | [`Platform.Function.Now()`](/platform-functions/now/) | Platform Functions | string | Current SFMC server date/time |
 
 ---
@@ -166,7 +166,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`OpenEvent.Retrieve(filter)`](/core-library/openevent/) | Core Library | object[] | Open tracking events |
+| [`OpenEvent.Retrieve(filter)`](/core-library/events/#open-event) | Core Library | object[] | Open tracking events |
 
 ---
 
@@ -238,8 +238,8 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`Send.Definition.Init(key)`](/core-library/senddefinition/) | Core Library | SendDefinitionInstance | Initialize send definition |
 | [`Send.Definition.Add(esdParams, sendClassificationKey, emailKey, listIds)`](/core-library/senddefinition/) | Core Library | SendDefinitionInstance | Create send definition |
 | [`<SendDefinitionInstance>.Send()`](/core-library/senddefinition/) | Core Library | string | Execute send definition |
-| [`SentEvent.Retrieve(filter)`](/core-library/sentevent/) | Core Library | object[] | Sent events |
-| [`SurveyEvent.Retrieve(filter)`](/core-library/surveyevent/) | Core Library | object[] | Survey events |
+| [`SentEvent.Retrieve(filter)`](/core-library/events/#sent-event) | Core Library | object[] | Sent events |
+| [`SurveyEvent.Retrieve(filter)`](/core-library/events/#survey-event) | Core Library | object[] | Survey events |
 | [`Platform.Function.SystemDateToLocalDate(date)`](/platform-functions/systemdatetolocaldate/) | Platform Functions | string | Server to subscriber local time |
 
 ---
@@ -268,7 +268,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`UnsubEvent.Retrieve(filter)`](/core-library/unsubevent/) | Core Library | object[] | Unsubscribe events |
+| [`UnsubEvent.Retrieve(filter)`](/core-library/events/#unsub-event) | Core Library | object[] | Unsubscribe events |
 | [`Platform.Function.UpdateData(...)`](/platform-functions/updatedata/) | Platform Functions | number | Update DE rows |
 | [`UpdateDE(...)`](/platform-functions/updatede/) | Platform Functions | number | Alias for UpdateData |
 | [`Platform.Function.UrlEncode(url[, encodeReservedKeywords])`](/platform-functions/urlencode/) | Platform Functions | string | Percent-encode a full URL |

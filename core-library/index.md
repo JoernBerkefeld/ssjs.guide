@@ -55,15 +55,17 @@ SOAP-style tracking event objects expose `Retrieve(filter)` for send metrics:
 
 | Object | Page |
 |--------|------|
-| [`BounceEvent`](/core-library/bounceevent/) | Bounce events |
-| [`ClickEvent`](/core-library/clickevent/) | Click events |
-| [`OpenEvent`](/core-library/openevent/) | Open events |
-| [`SentEvent`](/core-library/sentevent/) | Sent events |
-| [`UnsubEvent`](/core-library/unsubevent/) | Unsubscribe events |
-| [`NotSentEvent`](/core-library/notsentevent/) | Not-sent events |
-| [`ForwardedEmailEvent`](/core-library/forwardedemailevent/) | Forwarded email events |
-| [`ForwardedEmailOptInEvent`](/core-library/forwardedemailoptinevent/) | Forwarded opt-in events |
-| [`SurveyEvent`](/core-library/surveyevent/) | Survey events |
+| [`BounceEvent`](/core-library/events/#bounce-event) | Bounce events |
+| [`ClickEvent`](/core-library/events/#click-event) | Click events |
+| [`OpenEvent`](/core-library/events/#open-event) | Open events |
+| [`SentEvent`](/core-library/events/#sent-event) | Sent events |
+| [`UnsubEvent`](/core-library/events/#unsub-event) | Unsubscribe events |
+| [`NotSentEvent`](/core-library/events/#not-sent-event) | Not-sent events |
+| [`ForwardedEmailEvent`](/core-library/events/#forwarded-email-event) | Forwarded email events |
+| [`ForwardedEmailOptInEvent`](/core-library/events/#forwarded-email-opt-in-event) | Forwarded opt-in events |
+| [`SurveyEvent`](/core-library/events/#survey-event) | Survey events |
+
+See **[Tracking events](/core-library/events/)** for full documentation on every type.
 
 ---
 
