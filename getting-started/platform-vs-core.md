@@ -18,7 +18,7 @@ SSJS Runtime
 │   ├── Platform.Variable.*    (AMPscript bridge)
 │   ├── Platform.Response.*    (HTTP response)
 │   ├── Platform.Request.*     (HTTP request)
-│   └── Platform.ClientBrowser.*
+│   └── Platform.Recipient.*
 └── Core library         (requires Platform.Load("core", "1.1.5"))
     ├── DataExtension, DataExtension.Rows, DataExtension.Fields
     ├── Subscriber, Email, TriggeredSend
@@ -35,8 +35,7 @@ Available without any loading. Call directly as `Platform.Function.MethodName(..
 
 **Best for:**
 - Data Extension lookups and writes in CloudPages and emails
-- String/date/math operations
-- Crypto (Base64, SHA, AES encryption)
+- String/date helpers exposed as `Platform.Function.*`
 - HTTP GET/POST calls
 - JSON parsing, URL encoding
 - AMPscript variable bridge
@@ -76,7 +75,7 @@ for (var i = 0; i < rows.length; i++) {
 For SOAP API operations, `WSProxy` (available without Platform.Load) is usually the best choice:
 
 ```javascript
-var proxy = new WSProxy();
+var proxy = new Script.Util.WSProxy();
 var cols  = ["Name", "CustomerKey", "RowCount"];
 var result = proxy.retrieve("DataExtension", cols);
 ```

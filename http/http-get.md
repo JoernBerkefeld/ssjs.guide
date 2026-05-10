@@ -3,51 +3,51 @@ layout: page
 title: HTTP.Get
 parent: HTTP & REST APIs
 parent_url: /http/
-description: Core library simple HTTP GET — sends a GET request and returns the response body as a string. Requires Platform.Load.
+description: Core library HTTP GET — returns status and response body as an object. Requires Platform.Load.
 ---
 
-`HTTP.Get` is a simple HTTP GET method from the Core library.
+`HTTP.Get` performs a GET request and returns a **single object** with numeric status information and the response payload (see official SOAP/Core HTTP documentation for the exact shape in your stack).
 
 {% include callout.html type="warning" content="Requires `Platform.Load(\"core\", \"1.1.5\")` before use." %}
 
 ## Syntax
 
 ```javascript
-var body = HTTP.Get(url);
+var response = HTTP.Get(url[, headerNames, headerValues]);
 ```
+
+When you omit `headerNames` and `headerValues`, pass **nothing** after `url`. When you include them, both arrays must have the same length and parallel ordering.
 
 ## Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `url` | string | Yes | Target URL |
+| `url` | string | Yes | Destination URL |
+| `headerNames` | string[] | No | Header names to send |
+| `headerValues` | string[] | No | Values paired with `headerNames` |
 
-## Return Value
+## Return value
 
-Returns the response body as a string.
+Returns an **object** (not a bare string). Official samples describe fields such as numeric status and string `Content` holding the body—inspect `Stringify(response)` when integrating a new endpoint.
 
-## Examples
+## Example
 
 ```javascript
 Platform.Load("core", "1.1.5");
 
-var body = HTTP.Get("https://api.example.com/products");
-var products = Platform.Function.ParseJSON(body + "");
-for (var i = 0; i < products.length; i++) {
-    Write(products[i].name + "<br>");
-}
+var response = HTTP.Get("https://api.example.com/data");
+Write(Stringify(response));
+
+var parsed = Platform.Function.ParseJSON(String(response.Content));
 ```
 
-## Notes
-
-`HTTP.Get` does not expose the HTTP status code. Use [`HTTP.GetRequest`](/http/http-getrequest/) if you need to inspect the response status.
+To inspect HTTP status codes with full control, prefer [`Script.Util.HttpRequest`](/http/script-util-httprequest/).
 
 ## See Also
 
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
-  <li><a href="/http/http-getrequest/">HTTP.GetRequest</a></li>
   <li><a href="/http/http-post/">HTTP.Post</a></li>
   <li><a href="/http/script-util-httprequest/">Script.Util.HttpRequest</a></li>
   <li><a href="/platform-functions/httpget/">Platform.Function.HTTPGet</a></li>

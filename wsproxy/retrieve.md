@@ -150,7 +150,7 @@ while (result.HasMoreRows) {
 
 ## Notes
 
-- Returns up to ~2,500 rows per call. When `HasMoreRows` is `true`, call [`getNextBatch`](/wsproxy/getnextbatch/) with the `RequestID` to fetch subsequent pages, or use [`retrieveBatch`](/wsproxy/retrieve-all/) which handles pagination automatically.
+- Returns up to ~2,500 rows per call. When `HasMoreRows` is `true`, call [`getNextBatch`](/wsproxy/getnextbatch/) with the `RequestID` to fetch subsequent pages (see that page for a full loop example).
 - The `DataExtensionObject[CustomerKey]` syntax is used for retrieving rows from a specific DE. Replace `CustomerKey` with the DE's external key.
 - `retrieveOptions` and `requestProps` are only needed for advanced SOAP scenarios. Most scripts only require the first three parameters.
 
@@ -160,7 +160,6 @@ while (result.HasMoreRows) {
 <h4>See Also</h4>
 <ul>
   <li><a href="/wsproxy/getnextbatch/">proxy.getNextBatch</a></li>
-  <li><a href="/wsproxy/retrieve-all/">proxy.retrieveBatch</a></li>
-  <li><a href="/wsproxy/create/">proxy.create</a></li>
+  <li><a href="/wsproxy/create-item/">proxy.createItem</a></li>
 </ul>
 </div>

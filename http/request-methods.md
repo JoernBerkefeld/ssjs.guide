@@ -133,6 +133,6 @@ try {
   <li><a href="/http/script-util-httprequest/">Script.Util.HttpRequest (full docs)</a></li>
   <li><a href="/http/script-util-httpget/">Script.Util.HttpGet</a></li>
   <li><a href="/http/script-util-httppost/">Script.Util.HttpPost</a></li>
-  <li><a href="/http/http-getrequest/">HTTP.GetRequest</a></li>
+  <li><a href="/http/http-get/">HTTP.Get</a></li>
 </ul>
 </div>

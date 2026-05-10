@@ -1,15 +1,20 @@
 ---
 layout: page
-title: proxy.perform
+title: proxy.performItem
 parent: WSProxy
 parent_url: /wsproxy/
-description: Perform a lifecycle action on an SFMC object — start, pause, stop, or resume automation, journeys, and other objects.
+permalink: /wsproxy/perform/
+description: Run a SOAP Perform action on one SFMC object (start automations, query activities, and other perform-capable types).
 ---
+
+SFMC exposes SOAP **Perform** for lifecycle actions. WSProxy surfaces this as **`performItem`** for one target row and **`performBatch`** for many (see [`proxy.performBatch`](/wsproxy/perform-batch/)).
+
+There is **no** method named `proxy.perform` — older samples used informal shorthand.
 
 ## Syntax
 
 ```javascript
-var result = proxy.perform(objectType, action, properties);
+var result = proxy.performItem(objectType, properties, action[, performOptions]);
 ```
 
 ## Parameters
@@ -17,53 +22,42 @@ var result = proxy.perform(objectType, action, properties);
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `objectType` | string | Yes | SOAP API object type |
-| `action` | string | Yes | Action to perform: `"start"`, `"pause"`, `"stop"`, `"resume"`, `"publish"` |
-| `properties` | object | Yes | Object identifying the target |
+| `properties` | object | Yes | Fields identifying the target (e.g. `{ CustomerKey: "..." }` or `{ ObjectID: "..." }`) |
+| `action` | string | Yes | Must be `"Start"` where applicable (lowercase `"start"` fails) |
+| `performOptions` | object | No | SOAP `PerformOptions` |
+
+## Return value
+
+Object with `Status`, `StatusMessage`, `RequestID`, and `Results`.
 
 ## Examples
 
-### Start an Automation
+### Start a Query Definition
 
 ```javascript
 var proxy = new Script.Util.WSProxy();
-var result = proxy.perform("Automation", "start", {
-    CustomerKey: "MyAutomation_Key"
-});
-if (result.Status === "OK") {
-    Write("Automation started.");
-}
+var result = proxy.performItem(
+    "QueryDefinition",
+    { ObjectID: queryObjectId },
+    "Start"
+);
+Write(result.Status);
 ```
 
-### Pause a Triggered Send Definition
+### Start an Automation (example shape)
 
 ```javascript
 var proxy = new Script.Util.WSProxy();
-proxy.perform("TriggeredSendDefinition", "pause", {
-    CustomerKey: "WelcomeEmail_TSD"
-});
+var result = proxy.performItem(
+    "Automation",
+    { CustomerKey: "MyAutomation_Key" },
+    "Start"
+);
 ```
 
-### Start a Triggered Send Definition
-
-```javascript
-var proxy = new Script.Util.WSProxy();
-proxy.perform("TriggeredSendDefinition", "start", {
-    CustomerKey: "WelcomeEmail_TSD"
-});
-```
-
-## Common action/objectType Combinations
-
-| Object Type | Actions |
-|-------------|---------|
-| `"Automation"` | `"start"`, `"pause"`, `"stop"`, `"resume"` |
-| `"TriggeredSendDefinition"` | `"start"`, `"pause"` |
+Use the SOAP object type and property shape required for that object (see SFMC SOAP docs for valid `action` values per type).
 
 ## See Also
 
-<div class="see-also">
-<h4>See Also</h4>
-<ul>
-  <li><a href="/wsproxy/execute/">proxy.execute</a></li>
-</ul>
-</div>
+- [`proxy.performBatch`](/wsproxy/perform-batch/)
+- [`proxy.execute`](/wsproxy/execute/) — different API (`LogUnsubEvent`, etc.)

@@ -7,7 +7,7 @@ permalink: /wsproxy/getnextbatch/
 description: Fetches the next page of SOAP retrieve results after a prior retrieve returned HasMoreRows true. Pass the same object type and the RequestID from the previous response.
 ---
 
-`proxy.getNextBatch(objectType, requestId)` continues a paginated [`retrieve`](/wsproxy/retrieve/) sequence. Use it when you manage pagination manually instead of using [`retrieveBatch`](/wsproxy/retrieve-all/).
+`proxy.getNextBatch(objectType, requestId)` continues a paginated [`retrieve`](/wsproxy/retrieve/) sequence after `HasMoreRows` is true.
 
 ## Syntax
 
@@ -47,7 +47,7 @@ while (result.Status === "OK") {
 
 ## Notes
 
-{% include callout.html type="note" content="For most scripts, [`retrieveBatch`](/wsproxy/retrieve-all/) is simpler because it wraps the retrieve / getNextBatch loop." %}
+{% include callout.html type="note" content="Implement a <code>retrieve</code> / <code>getNextBatch</code> loop (see examples below) or wrap it in your own helper — SFMC does not ship a single built-in <code>retrieveBatch</code> convenience on <code>WSProxy</code>." %}
 
 ## See Also
 
@@ -55,6 +55,6 @@ while (result.Status === "OK") {
 <h4>See Also</h4>
 <ul>
   <li><a href="/wsproxy/retrieve/">proxy.retrieve</a></li>
-  <li><a href="/wsproxy/retrieve-all/">proxy.retrieveBatch</a></li>
+  <li><a href="/wsproxy/set-batch-size/">proxy.setBatchSize</a></li>
 </ul>
 </div>

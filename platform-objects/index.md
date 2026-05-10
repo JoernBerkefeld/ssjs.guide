@@ -1,7 +1,7 @@
 ---
 layout: category
 title: Platform Objects
-description: Global Platform namespace objects for loading libraries, bridging AMPscript variables, managing HTTP responses, reading requests, and detecting client environments.
+description: Global Platform namespace objects for loading libraries, bridging AMPscript variables, managing HTTP responses, reading requests, Core-library helpers (HTTPHeader, DateTime.TimeZone, ErrorUtil), and recipient context.
 nav_order: 5
 has_children: true
 ---
@@ -16,8 +16,10 @@ The `Platform` namespace exposes a set of objects beyond `Platform.Function.*` t
 | [`Platform.Variable`](/platform-objects/platform-variable/) | Read and write AMPscript variables |
 | [`Platform.Response`](/platform-objects/platform-response/) | Control HTTP response (status, redirect, content-type) |
 | [`Platform.Request`](/platform-objects/platform-request/) | Read HTTP request data (query string, POST, headers, cookies) |
-| [`Platform.ClientBrowser`](/platform-objects/platform-clientbrowser/) | Detect browser type, version, and capabilities |
 | [`Platform.Recipient`](/platform-objects/platform-recipient/) | Read subscriber attributes and sendable DE fields for the current recipient |
+| [`HTTPHeader`](/platform-objects/httpheader/) | Core-library helpers for HTTP headers (requires Core load) |
+| [`DateTime.TimeZone`](/platform-objects/datetime-timezone/) | Retrieve time zone definitions (requires Core load) |
+| [`ErrorUtil`](/platform-objects/errorutil/) | Throw on WSProxy error status (requires Core load) |
 
 ---
 

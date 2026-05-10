@@ -131,7 +131,7 @@ Platform.Response.Redirect("https://new-domain.com/page", true);
 var isLoggedIn = !Platform.Function.Empty(Platform.Request.GetCookieValue("session"));
 if (!isLoggedIn) {
     Platform.Response.Redirect("/login?next=" +
-        Platform.Function.URLEncode(Platform.Request.RequestURL()));
+        Platform.Function.UrlEncode(Platform.Request.RequestURL()));
 }
 ```
 

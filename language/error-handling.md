@@ -71,7 +71,7 @@ try {
     var email = getSubscriber(subscriberKey);
     Write(email);
 } catch (e) {
-    Platform.Response.Redirect("/error?msg=" + Platform.Function.URLEncode(e.message));
+    Platform.Response.Redirect("/error?msg=" + Platform.Function.UrlEncode(e.message));
 }
 ```
 

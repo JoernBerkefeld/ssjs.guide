@@ -1,11 +1,11 @@
 ---
 layout: page
 title: Function Index
-description: Complete A–Z index of every SSJS function, method, and object across all sections — global functions, Platform.Function, Core library, WSProxy, HTTP, and ECMAScript built-ins.
+description: Complete A–Z index of SSJS functions, methods, and objects documented in this reference — global functions, Platform.Function, Core library, WSProxy, HTTP, and Platform objects.
 nav_order: 12
 ---
 
-A comprehensive alphabetical listing of all SSJS functions and objects documented in this reference.
+Alphabetical listing of APIs covered in this guide. For category browsing, see [Platform Functions](/platform-functions/), [Global Functions](/global-functions/), [WSProxy](/wsproxy/), and [HTTP](/http/).
 
 ---
 
@@ -22,8 +22,6 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`Platform.Function.Base64Decode(value)`](/platform-functions/base64decode/) | Platform Functions | string | Decode Base64 string |
-| [`Platform.Function.Base64Encode(value)`](/platform-functions/base64encode/) | Platform Functions | string | Encode string to Base64 |
 | [`Platform.Function.BeginImpressionRegion(name)`](/platform-functions/beginimpressionregion/) | Platform Functions | void | Start a named impression region |
 
 ---
@@ -32,9 +30,6 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`Platform.Function.Char(ascii)`](/platform-functions/char/) | Platform Functions | string | Get character from ASCII code |
-| [`Platform.Function.Concat(...values)`](/platform-functions/concat/) | Platform Functions | string | Concatenate strings |
-| [`ContentAreaByKey(key)`](/global-functions/contentareabykey/) | Global Functions | string | Render classic content area |
 | [`ContentBlockByID(id)`](/global-functions/contentblockbyid/) | Global Functions | string | Render Content Builder block by ID |
 | [`ContentBlockByKey(key)`](/global-functions/contentblockbykey/) | Global Functions | string | Render Content Builder block by key |
 | [`ContentBlockByName(path)`](/global-functions/contentblockbyname/) | Global Functions | string | Render Content Builder block by name |
@@ -48,13 +43,13 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`Platform.Function.DataExtensionRowCount(de)`](/platform-functions/dataextensionrowcount/) | Platform Functions | number | Count rows in a DE |
+| [`DateTime.TimeZone.Retrieve(filter)`](/platform-objects/datetime-timezone/) | Platform Object | object[] | Retrieve time zone definitions (requires Core load) |
 | [`DataExtension.Init(key)`](/core-library/dataextension/) | Core Library | DataExtension | Initialize DE object |
 | [`de.Rows.Add(obj)`](/core-library/dataextension-rows/) | Core Library | number | Insert DE row |
 | [`de.Rows.Remove(col, val)`](/core-library/dataextension-rows/) | Core Library | number | Delete DE rows |
 | [`de.Rows.Retrieve([filter])`](/core-library/dataextension-rows/) | Core Library | object[] | Read DE rows |
 | [`de.Rows.Update(vals, keys, keyVals)`](/core-library/dataextension-rows/) | Core Library | number | Update DE rows |
-| [`Platform.Function.DeleteData(de, keys, vals)`](/platform-functions/deletedata/) | Platform Functions | number | Delete DE rows |
+| [`Platform.Function.DeleteData(...)`](/platform-functions/deletedata/) | Platform Functions | number | Delete DE rows |
 | [`DeleteDE(...)`](/platform-functions/deletede/) | Platform Functions | number | Alias for DeleteData |
 
 ---
@@ -65,18 +60,10 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 |------|----------|---------|-------------|
 | [`Email.Init(emailId)`](/core-library/email/) | Core Library | Email | Initialize email object |
 | [`email.Send(sub, opts)`](/core-library/email/) | Core Library | number | Send email |
-| [`Platform.Function.Empty(val)`](/platform-functions/empty/) | Platform Functions | boolean | Check null/empty/whitespace |
 | [`Platform.Function.EndImpressionRegion([closeAll])`](/platform-functions/endimpressionregion/) | Platform Functions | void | End an impression region |
 | [`Error(message)`](/global-functions/error/) | Global Functions | Error | Create Error object |
-| [`Platform.Function.ExecuteFilter(name)`](/platform-functions/executefilter/) | Platform Functions | object[] | Execute saved DE filter |
+| [`ErrorUtil.ThrowWSProxyError(result)`](/platform-objects/errorutil/) | Platform Object | void | Throw when WSProxy status indicates failure |
 
----
-
-## F
-
-| Name | Category | Returns | Description |
-|------|----------|---------|-------------|
-| [`Platform.Function.Format(val, fmt)`](/platform-functions/format/) | Platform Functions | string | Format number/string (.NET style) |
 ---
 
 ## G
@@ -91,12 +78,13 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`HTTP.Get(url)`](/http/http-get/) | Core HTTP | string | Simple HTTP GET |
-| [`HTTP.GetRequest(url, statusCode, ...)`](/http/http-getrequest/) | Core HTTP | string | HTTP GET with status code |
-| [`Platform.Function.HTTPGet(url, ...)`](/platform-functions/httpget/) | Platform Functions | string | HTTP GET (no Core required) |
-| [`Platform.Function.HTTPPost(url, ct, body, ...)`](/platform-functions/httppost/) | Platform Functions | string | HTTP POST (no Core required) |
-| [`HTTP.Post(url, ct, body, ...)`](/http/http-post/) | Core HTTP | string | Simple HTTP POST |
-| [`HTTP.PostRequest(url, ct, body, sc, ...)`](/http/http-postrequest/) | Core HTTP | string | HTTP POST with status code |
+| [`HTTP.Get(url[, headerNames, headerValues])`](/http/http-get/) | Core HTTP | object | HTTP GET — structured status + body |
+| [`HTTP.Post(url, ct, payload[, headerNames, headerValues])`](/http/http-post/) | Core HTTP | object | HTTP POST — structured status + body |
+| [`HTTPHeader.GetValue(name)`](/platform-objects/httpheader/) | Platform Object | string | Read HTTP header value (Core load) |
+| [`HTTPHeader.SetValue(name, value)`](/platform-objects/httpheader/) | Platform Object | void | Set HTTP header value (Core load) |
+| [`HTTPHeader.Remove(headerName)`](/platform-objects/httpheader/) | Platform Object | string | Remove HTTP header (Core load) |
+| [`Platform.Function.HTTPGet(url, ...)`](/platform-functions/httpget/) | Platform Functions | string | HTTP GET — body string only |
+| [`Platform.Function.HTTPPost(url, ct, body, ...)`](/platform-functions/httppost/) | Platform Functions | string | HTTP POST — body string only |
 
 ---
 
@@ -104,22 +92,20 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`Platform.Function.IIf(cond, t, f)`](/platform-functions/iif/) | Platform Functions | any | Inline conditional (ternary) |
-| [`Platform.Function.IndexOf(val, sub)`](/platform-functions/indexof/) | Platform Functions | number | Find substring position |
-| [`Platform.Function.InsertData(de, cols, vals)`](/platform-functions/insertdata/) | Platform Functions | number | Insert DE row |
+| [`Platform.Function.InsertData(...)`](/platform-functions/insertdata/) | Platform Functions | number | Insert DE row |
 | [`InsertDE(...)`](/platform-functions/insertde/) | Platform Functions | number | Alias for InsertData |
-| [`Platform.Function.InvokeConfigure(obj, action, ...)`](/platform-functions/invokeconfigure/) | Platform Functions | string | SOAP Configure call (legacy) |
-| [`Platform.Function.InvokeCreate(obj, ...)`](/platform-functions/invokecreate/) | Platform Functions | object | SOAP Create (legacy) |
-| [`Platform.Function.InvokeDelete(obj, ...)`](/platform-functions/invokedelete/) | Platform Functions | object | SOAP Delete (legacy) |
-| [`Platform.Function.InvokeExecute(obj, method, ...)`](/platform-functions/invokeexecute/) | Platform Functions | string | SOAP Execute call (legacy) |
-| [`Platform.Function.InvokeExtract(obj, statusArr, ...)`](/platform-functions/invokeextract/) | Platform Functions | string | SOAP Extract call (legacy) |
-| [`Platform.Function.InvokePerform(obj, action, ...)`](/platform-functions/invokeperform/) | Platform Functions | string | SOAP Perform action (legacy) |
-| [`Platform.Function.InvokeRetrieve(obj)`](/platform-functions/invokeretrieve/) | Platform Functions | object[] | SOAP Retrieve (legacy) |
-| [`Platform.Function.InvokeSchedule(obj, action, sched, ...)`](/platform-functions/invokeschedule/) | Platform Functions | string | SOAP Schedule call (legacy) |
-| [`Platform.Function.InvokeUpdate(obj, ...)`](/platform-functions/invokeupdate/) | Platform Functions | object | SOAP Update (legacy) |
+| [`Platform.Function.InvokeConfigure(...)`](/platform-functions/invokeconfigure/) | Platform Functions | string | SOAP Configure call (legacy) |
+| [`Platform.Function.InvokeCreate(...)`](/platform-functions/invokecreate/) | Platform Functions | object | SOAP Create (legacy) |
+| [`Platform.Function.InvokeDelete(...)`](/platform-functions/invokedelete/) | Platform Functions | object | SOAP Delete (legacy) |
+| [`Platform.Function.InvokeExecute(...)`](/platform-functions/invokeexecute/) | Platform Functions | string | SOAP Execute call (legacy) |
+| [`Platform.Function.InvokeExtract(...)`](/platform-functions/invokeextract/) | Platform Functions | string | SOAP Extract call (legacy) |
+| [`Platform.Function.InvokePerform(...)`](/platform-functions/invokeperform/) | Platform Functions | string | SOAP Perform action (legacy) |
+| [`Platform.Function.InvokeRetrieve(...)`](/platform-functions/invokeretrieve/) | Platform Functions | object[] | SOAP Retrieve (legacy) |
+| [`Platform.Function.InvokeSchedule(...)`](/platform-functions/invokeschedule/) | Platform Functions | string | SOAP Schedule call (legacy) |
+| [`Platform.Function.InvokeUpdate(...)`](/platform-functions/invokeupdate/) | Platform Functions | object | SOAP Update (legacy) |
 | [`Platform.Function.IsEmailAddress(val)`](/platform-functions/isemailaddress/) | Platform Functions | boolean | Validate email format |
 | [`Platform.Function.IsPhoneNumber(val)`](/platform-functions/isphonenumber/) | Platform Functions | boolean | Validate phone number format |
-| [`Platform.Function.IsNull(val)`](/platform-functions/isnull/) | Platform Functions | boolean | Check for null |
+| [`Platform.Function.IsCHTMLBrowser(ua)`](/platform-functions/ischtmlbrowser/) | Platform Functions | boolean | Detect CHTML / feature-phone browsers |
 
 ---
 
@@ -127,15 +113,13 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`Platform.Function.Length(val)`](/platform-functions/length/) | Platform Functions | number | Get string length |
 | [`List.Init(key)`](/core-library/list/) | Core Library | List | Initialize list object |
 | [`list.Subscribers.Add(email, attrs)`](/core-library/list/) | Core Library | void | Add subscriber to list |
 | [`list.Subscribers.Remove(email)`](/core-library/list/) | Core Library | void | Remove subscriber from list |
-| [`Platform.Function.LogDataExtension(de, cols, vals)`](/platform-functions/logdataextension/) | Platform Functions | void | Log entry to DE |
-| [`Platform.Function.Lookup(de, col, keyCol, keyVal)`](/platform-functions/lookup/) | Platform Functions | string | Single-value DE lookup |
-| [`Platform.Function.LookupOrderedRows(de, count, sort, ...)`](/platform-functions/lookuporderedrows/) | Platform Functions | object[] | Sorted/limited DE rows |
-| [`Platform.Function.LookupRows(de, col, val)`](/platform-functions/lookuprows/) | Platform Functions | object[] | Multiple DE rows |
-| [`Platform.Function.Lowercase(val)`](/platform-functions/lowercase/) | Platform Functions | string | Convert to lowercase |
+| [`Platform.Function.LocalDateToSystemDate(dateString)`](/platform-functions/localdatetosystemdate/) | Platform Functions | string | Local date/time to system CST |
+| [`Platform.Function.Lookup(...)`](/platform-functions/lookup/) | Platform Functions | string | Single-value DE lookup |
+| [`Platform.Function.LookupOrderedRows(...)`](/platform-functions/lookuporderedrows/) | Platform Functions | object[] | Sorted/limited DE rows |
+| [`Platform.Function.LookupRows(...)`](/platform-functions/lookuprows/) | Platform Functions | object[] | Multiple DE rows |
 
 ---
 
@@ -143,7 +127,7 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`Platform.Function.Now()`](/platform-functions/now/) | Platform Functions | date | Current SFMC server date/time |
+| [`Platform.Function.Now()`](/platform-functions/now/) | Platform Functions | string | Current SFMC server date/time |
 
 ---
 
@@ -152,34 +136,26 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
 | [`Platform.Function.ParseJSON(str)`](/platform-functions/parsejson/) | Platform Functions | object | Parse JSON string to object |
-| [`Platform.ClientBrowser.Name`](/platform-objects/platform-clientbrowser/) | Platform Object | string | Browser name |
 | [`Platform.Load(lib, version)`](/platform-objects/platform-load/) | Platform Object | void | Load Core library |
-| [`Platform.Request.GetCookieValue(name)`](/platform-objects/platform-request/) | Platform Object | string | Read cookie |
-| [`Platform.Request.GetFormField(name)`](/platform-objects/platform-request/) | Platform Object | string | Read form field |
-| [`Platform.Request.GetPostData([encoding])`](/platform-objects/platform-request/) | Platform Object | string | Read raw POST body |
-| [`Platform.Request.GetQueryStringParameter(name)`](/platform-objects/platform-request/) | Platform Object | string | Read URL query param |
-| [`Platform.Request.GetRequestHeader(name)`](/platform-objects/platform-request/) | Platform Object | string | Read request header |
-| [`Platform.Request.GetUserLanguages()`](/platform-objects/platform-request/) | Platform Object | string | Read Accept-Language header |
-| [`Platform.Request.Method`](/platform-objects/platform-request/) | Platform Object | string | HTTP method (GET/POST) |
-| [`Platform.Response.Redirect(url)`](/platform-objects/platform-response/) | Platform Object | void | Redirect browser |
-| [`Platform.Response.SetContentType(mime)`](/platform-objects/platform-response/) | Platform Object | void | Set Content-Type |
-| [`Platform.Response.SetCookie(name, val, ...)`](/platform-objects/platform-response/) | Platform Object | void | Set response cookie |
-| [`Platform.Variable.GetValue(name)`](/platform-objects/platform-variable/) | Platform Object | string | Read AMPscript variable |
-| [`Platform.Variable.SetValue(name, val)`](/platform-objects/platform-variable/) | Platform Object | void | Write AMPscript variable |
-| [`Platform.Function.ProperCase(val)`](/platform-functions/propercase/) | Platform Functions | string | Title case a string |
-| [`proxy.create(type, props)`](/wsproxy/create-item/) | WSProxy | object | SOAP Create |
-| [`proxy.createBatch(type, arr)`](/wsproxy/create-batch/) | WSProxy | object | SOAP batch Create |
-| [`proxy.delete(type, props)`](/wsproxy/delete-item/) | WSProxy | object | SOAP Delete |
-| [`proxy.describe(objectType)`](/wsproxy/describe/) | WSProxy | object | Return SOAP object metadata |
-| [`proxy.execute(type, props)`](/wsproxy/execute/) | WSProxy | object | SOAP Execute |
-| [`proxy.getNextBatch(type, requestId)`](/wsproxy/getnextbatch/) | WSProxy | object | Next page after retrieve |
-| [`proxy.perform(type, action, props)`](/wsproxy/perform/) | WSProxy | object | SOAP Perform |
-| [`proxy.resetClientIds()`](/wsproxy/reset-client-ids/) | WSProxy | void | Clear BU context from setClientId |
-| [`proxy.retrieve(type, cols, filter)`](/wsproxy/retrieve/) | WSProxy | object | SOAP Retrieve |
-| [`proxy.retrieveBatch(type, cols, filter)`](/wsproxy/retrieve-all/) | WSProxy | object | SOAP Retrieve (paginated) |
-| [`proxy.setClientId(clientId)`](/wsproxy/set-client-id/) | WSProxy | void | Set BU context |
-| [`proxy.update(type, props, opts)`](/wsproxy/update-item/) | WSProxy | object | SOAP Update |
-| [`proxy.updateBatch(type, arr, opts)`](/wsproxy/update-batch/) | WSProxy | object | SOAP batch Update |
+| [`Platform.Request.*`](/platform-objects/platform-request/) | Platform Object | various | HTTP request (query, POST, headers, cookies) |
+| [`Platform.Response.*`](/platform-objects/platform-response/) | Platform Object | various | HTTP response (redirect, cookies, content type) |
+| [`Platform.Variable.*`](/platform-objects/platform-variable/) | Platform Object | various | AMPscript variable bridge |
+| [`Platform.Recipient.*`](/platform-objects/platform-recipient/) | Platform Object | various | Current-recipient attributes |
+| [`proxy.createItem(...)`](/wsproxy/create-item/) | WSProxy | object | SOAP Create |
+| [`proxy.updateItem(...)`](/wsproxy/update-item/) | WSProxy | object | SOAP Update |
+| [`proxy.deleteItem(...)`](/wsproxy/delete-item/) | WSProxy | object | SOAP Delete |
+| [`proxy.createBatch(...)`](/wsproxy/create-batch/) | WSProxy | object | SOAP batch Create |
+| [`proxy.updateBatch(...)`](/wsproxy/update-batch/) | WSProxy | object | SOAP batch Update |
+| [`proxy.deleteBatch(...)`](/wsproxy/delete-batch/) | WSProxy | object | SOAP batch Delete |
+| [`proxy.describe(...)`](/wsproxy/describe/) | WSProxy | object | SOAP object metadata |
+| [`proxy.execute(...)`](/wsproxy/execute/) | WSProxy | object | SOAP Execute |
+| [`proxy.getNextBatch(...)`](/wsproxy/getnextbatch/) | WSProxy | object | Next retrieve page |
+| [`proxy.performItem(...)`](/wsproxy/perform/) | WSProxy | object | SOAP Perform (single) |
+| [`proxy.performBatch(...)`](/wsproxy/perform-batch/) | WSProxy | object | SOAP Perform (batch) |
+| [`proxy.resetClientIds()`](/wsproxy/reset-client-ids/) | WSProxy | void | Clear BU override |
+| [`proxy.retrieve(...)`](/wsproxy/retrieve/) | WSProxy | object | SOAP Retrieve |
+| [`proxy.setBatchSize(...)`](/wsproxy/set-batch-size/) | WSProxy | void | Retrieve page size |
+| [`proxy.setClientId(...)`](/wsproxy/set-client-id/) | WSProxy | void | Target another BU |
 
 ---
 
@@ -188,7 +164,7 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
 | [`Platform.Function.RaiseError(msg, skip)`](/platform-functions/raiseerror/) | Platform Functions | void | Halt execution with error |
-| [`Platform.Function.Replace(val, search, rep)`](/platform-functions/replace/) | Platform Functions | string | Replace all occurrences |
+| [`Platform.Function.RedirectTo(url)`](/platform-functions/redirectto/) | Platform Functions | void | Email href redirect helper |
 
 ---
 
@@ -198,16 +174,11 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 |------|----------|---------|-------------|
 | [`Script.Util.HttpRequest`](/http/script-util-httprequest/) | HTTP | HttpRequest | Full HTTP request object |
 | [`new Script.Util.WSProxy()`](/wsproxy/constructor/) | WSProxy | WSProxy | Create WSProxy instance |
-| [`Platform.Function.SetObjectProperty(obj, name, val)`](/platform-functions/setobjectproperty/) | Platform Functions | void | Set SOAP object property (legacy) |
+| [`Platform.Function.SetObjectProperty(...)`](/platform-functions/setobjectproperty/) | Platform Functions | void | Set SOAP object property (legacy) |
 | [`String(val)`](/global-functions/string/) | Global Functions | string | Convert CLR string to JS string |
 | [`Stringify(obj)`](/global-functions/stringify/) | Global Functions | string | Object to JSON string |
-| [`sub.Attributes.Add(name, val)`](/core-library/subscriber/) | Core Library | void | Add subscriber attribute |
-| [`sub.Attributes.Remove(name)`](/core-library/subscriber/) | Core Library | void | Remove subscriber attribute |
-| [`sub.Lists.Add(listKey)`](/core-library/subscriber/) | Core Library | void | Add subscriber to list |
-| [`sub.Lists.Remove(listKey)`](/core-library/subscriber/) | Core Library | void | Remove subscriber from list |
 | [`Subscriber.Init(key)`](/core-library/subscriber/) | Core Library | Subscriber | Initialize subscriber object |
-| [`Platform.Function.Substring(val, start, len)`](/platform-functions/substring/) | Platform Functions | string | Extract substring (1-based) |
-| [`Platform.Function.SystemDateToLocalDate(date)`](/platform-functions/systemdatetolocaldate/) | Platform Functions | date | Server to local timezone |
+| [`Platform.Function.SystemDateToLocalDate(date)`](/platform-functions/systemdatetolocaldate/) | Platform Functions | string | Server to subscriber local time |
 
 ---
 
@@ -215,12 +186,9 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`TreatAsContent(str)`](/global-functions/treatascontent/) | Global Functions | void | Evaluate AMPscript in string |
-| [`TreatAsContentArea(str)`](/global-functions/treatascontent-area/) | Global Functions | void | Evaluate classic content |
-| [`Platform.Function.Trim(val)`](/platform-functions/trim/) | Platform Functions | string | Trim whitespace |
+| [`TreatAsContent(str)`](/global-functions/treatascontent/) | Global Functions | string | Evaluate AMPscript/HTML via SSJS |
 | [`TriggeredSend.Init(key)`](/core-library/triggeredsend/) | Core Library | TriggeredSend | Initialize TS object |
 | [`ts.Send(subscriber)`](/core-library/triggeredsend/) | Core Library | number | Send triggered email |
-| [`Platform.Function.TriggeredSend(key, email, subKey, attrs)`](/platform-functions/triggeredsend/) | Platform Functions | void | Fire a triggered send |
 
 ---
 
@@ -228,11 +196,10 @@ A comprehensive alphabetical listing of all SSJS functions and objects documente
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`Platform.Function.UpdateData(de, cols, vals, keys, keyVals)`](/platform-functions/updatedata/) | Platform Functions | number | Update DE rows |
+| [`Platform.Function.UpdateData(...)`](/platform-functions/updatedata/) | Platform Functions | number | Update DE rows |
 | [`UpdateDE(...)`](/platform-functions/updatede/) | Platform Functions | number | Alias for UpdateData |
-| [`Platform.Function.Uppercase(val)`](/platform-functions/uppercase/) | Platform Functions | string | Convert to uppercase |
-| [`Platform.Function.URLEncode(val)`](/platform-functions/urlencode/) | Platform Functions | string | URL-encode a string |
-| [`Platform.Function.UpsertData(de, keys, keyVals, cols, vals)`](/platform-functions/upsertdata/) | Platform Functions | number | Insert or update DE row |
+| [`Platform.Function.UrlEncode(url[, encodeReservedKeywords])`](/platform-functions/urlencode/) | Platform Functions | string | Percent-encode a full URL |
+| [`Platform.Function.UpsertData(...)`](/platform-functions/upsertdata/) | Platform Functions | number | Insert or update DE row |
 | [`UpsertDE(...)`](/platform-functions/upsertde/) | Platform Functions | number | Alias for UpsertData |
 
 ---

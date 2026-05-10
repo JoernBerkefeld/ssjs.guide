@@ -3,17 +3,17 @@ layout: page
 title: HTTP.Post
 parent: HTTP & REST APIs
 parent_url: /http/
-description: Core library simple HTTP POST — sends a POST request with a body and returns the response.
+description: Core library HTTP POST — posts a payload and returns status and body as an object. Requires Platform.Load.
 ---
 
-`HTTP.Post` is a simple HTTP POST method from the Core library.
+`HTTP.Post` sends a POST with the given content type and body. It returns an **object** that includes status information and the response body (see Core HTTP documentation for the exact shape).
 
 {% include callout.html type="warning" content="Requires `Platform.Load(\"core\", \"1.1.5\")` before use." %}
 
 ## Syntax
 
 ```javascript
-var body = HTTP.Post(url, contentType, payload [, headerNames, headerValues]);
+var response = HTTP.Post(url, contentType, payload[, headerNames, headerValues]);
 ```
 
 ## Parameters
@@ -24,13 +24,13 @@ var body = HTTP.Post(url, contentType, payload [, headerNames, headerValues]);
 | `contentType` | string | Yes | MIME type of the request body |
 | `payload` | string | Yes | Request body string |
 | `headerNames` | string[] | No | Additional header names |
-| `headerValues` | string[] | No | Corresponding header values |
+| `headerValues` | string[] | No | Values paired with `headerNames` |
 
-## Return Value
+## Return value
 
-Returns the response body as a string. Does not expose status code — use `HTTP.PostRequest` if needed.
+Returns an **object** (not a bare string). Parse `Content` or equivalent field after coercing with `String(...)`.
 
-## Examples
+## Example
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -48,7 +48,8 @@ var response = HTTP.Post(
     ["X-API-Key"],
     ["mysecretkey"]
 );
-var result = Platform.Function.ParseJSON(response + "");
+
+var result = Platform.Function.ParseJSON(String(response.Content));
 ```
 
 ## See Also
@@ -56,7 +57,6 @@ var result = Platform.Function.ParseJSON(response + "");
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
-  <li><a href="/http/http-postrequest/">HTTP.PostRequest</a></li>
   <li><a href="/http/http-get/">HTTP.Get</a></li>
   <li><a href="/http/script-util-httprequest/">Script.Util.HttpRequest</a></li>
   <li><a href="/platform-functions/httppost/">Platform.Function.HTTPPost</a></li>

@@ -44,11 +44,11 @@ var response2 = Platform.Function.HTTPGet(
 );
 ```
 
-{% include callout.html type="note" content="For more control over request options, use `Script.Util.HttpRequest` or `HTTP.Get()`/`HTTP.GetRequest()` from the Core library." %}
+{% include callout.html type="note" content="For status codes or full transport control, use `HTTP.Get` (Core) or `Script.Util.HttpRequest`." %}
 
 ## Return Value
 
-Returns the response body as a string. Throws on connection failure. Does not expose status code — use `HTTP.GetRequest()` for status codes.
+Returns the response body as a string. Throws on connection failure. Does not expose an HTTP status code on this overload.
 
 ## See Also
 

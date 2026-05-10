@@ -1,7 +1,7 @@
 ---
 layout: category
 title: HTTP & REST APIs
-description: Three approaches to making HTTP requests from SSJS — Platform.Function.HTTPGet/HTTPPost, the Core HTTP object, and Script.Util.HttpRequest for full control.
+description: Three approaches to making HTTP requests from SSJS — Platform.Function.HTTPGet/HTTPPost, Core HTTP.Get/HTTP.Post, and Script.Util.HttpRequest for full control.
 nav_order: 8
 has_children: true
 ---
@@ -10,23 +10,22 @@ SSJS offers three different ways to make HTTP requests. Choose based on how much
 
 | API | Control Level | Best For |
 |-----|--------------|----------|
-| `Platform.Function.HTTPGet/HTTPPost` | Basic | Simple GET/POST, no status code needed |
-| `HTTP.Get / HTTP.Post / HTTP.GetRequest / HTTP.PostRequest` | Medium | When you need response status codes |
-| `Script.Util.HttpRequest` | Full | Custom methods, headers, auth, timeouts |
+| `Platform.Function.HTTPGet` / `HTTPPost` | Basic | Simple GET/POST; response body only |
+| `HTTP.Get` / `HTTP.Post` (Core) | Medium | Same transport as syndicated HTTP docs — returns a **status + body object** |
+| `Script.Util.HttpRequest` | Full | Custom methods, headers, auth, timeouts, status codes |
 
 ---
 
 ## Quick Comparison
 
 ```javascript
-// 1. Platform.Function — simplest, body only
+// 1. Platform.Function — simplest, body string
 var body = Platform.Function.HTTPGet("https://api.example.com/data");
 
-// 2. Core HTTP — status code + body (requires Platform.Load)
+// 2. Core HTTP — object with status + Content (requires Platform.Load)
 Platform.Load("core", "1.1.5");
-var statusCode = [0];
-var body = HTTP.Get(["https://api.example.com/data"], statusCode);
-Write("Status: " + statusCode[0] + ", Body: " + body);
+var response = HTTP.Get("https://api.example.com/data");
+Write(Stringify(response));
 
 // 3. Script.Util.HttpRequest — full control
 var req = new Script.Util.HttpRequest("https://api.example.com/data");
@@ -42,13 +41,11 @@ Write("Status: " + resp.statusCode + ", Body: " + String(resp.content));
 
 | Page | Description |
 |------|-------------|
-| [HTTP.Get](/http/http-get/) | Core library simple GET request |
-| [HTTP.Post](/http/http-post/) | Core library simple POST request |
-| [HTTP.GetRequest](/http/http-getrequest/) | Core library GET with status code |
-| [HTTP.PostRequest](/http/http-postrequest/) | Core library POST with status code |
+| [HTTP.Get](/http/http-get/) | Core library GET — returns response object |
+| [HTTP.Post](/http/http-post/) | Core library POST — returns response object |
 | [Script.Util.HttpRequest](/http/script-util-httprequest/) | Full-featured HTTP request object |
-
-The `Platform.Function.HTTPGet` and `Platform.Function.HTTPPost` equivalents are documented in the [Platform Functions](/platform-functions/) section.
+| [Platform.Function.HTTPGet](/http/platform-httpget/) | Simple GET without Core load |
+| [Platform.Function.HTTPPost](/http/platform-httppost/) | Simple POST without Core load |
 
 ---
 
@@ -67,11 +64,12 @@ var data = Platform.Function.ParseJSON(String(resp.content));
 
 ### Basic Auth
 
+Core SSJS does not expose `Platform.Function.Base64Encode`. Build a Basic token outside the runtime (secret store, token service) or derive it via AMPscript inside `TreatAsContent`, then pass the finished `Authorization: Basic …` header:
+
 ```javascript
-var credentials = Platform.Function.Base64Encode("username:password");
 var req = new Script.Util.HttpRequest("https://api.example.com/resource");
 req.method = "GET";
-req.setHeader("Authorization", "Basic " + credentials);
+req.setHeader("Authorization", "Basic " + basicCredentialsFromSecureStorage);
 var resp = req.send();
 ```
 

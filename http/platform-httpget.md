@@ -27,7 +27,7 @@ var body = Platform.Function.HTTPGet(url [, encoding [, followRedirects [, heade
 
 ## Return Value
 
-Returns the response body as a string. Throws on connection failure. Does not expose the HTTP status code — use [`HTTP.GetRequest`](/http/http-getrequest/) or [`Script.Util.HttpRequest`](/http/script-util-httprequest/) if you need status code inspection.
+Returns the response body as a string. Throws on connection failure. Does not expose the HTTP status code — use [`HTTP.Get`](/http/http-get/) (Core, returns a structured response object) or [`Script.Util.HttpRequest`](/http/script-util-httprequest/) when you need explicit status codes.
 
 ## Examples
 
@@ -55,7 +55,7 @@ var result = Platform.Function.ParseJSON(body + "");
 
 ## Notes
 
-{% include callout.html type="note" content="`Platform.Function.HTTPGet` does not expose the HTTP status code. Use `Script.Util.HttpRequest` or `HTTP.GetRequest` when you need to inspect the response code." %}
+{% include callout.html type="note" content="`Platform.Function.HTTPGet` returns only the response body string. Use `HTTP.Get` or `Script.Util.HttpRequest` when you need transport metadata." %}
 
 Available in all SSJS execution contexts — no `Platform.Load` required.
 
@@ -67,7 +67,6 @@ Available in all SSJS execution contexts — no `Platform.Load` required.
   <li><a href="/platform-functions/httpget/">Platform.Function.HTTPGet (full API reference)</a></li>
   <li><a href="/http/platform-httppost/">Platform.Function.HTTPPost</a></li>
   <li><a href="/http/http-get/">HTTP.Get</a></li>
-  <li><a href="/http/http-getrequest/">HTTP.GetRequest</a></li>
   <li><a href="/http/script-util-httprequest/">Script.Util.HttpRequest</a></li>
 </ul>
 </div>

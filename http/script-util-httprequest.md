@@ -157,8 +157,8 @@ if (result.status === 200) {
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
-  <li><a href="/http/http-getrequest/">HTTP.GetRequest</a></li>
-  <li><a href="/http/http-postrequest/">HTTP.PostRequest</a></li>
+  <li><a href="/http/http-get/">HTTP.Get</a></li>
+  <li><a href="/http/http-post/">HTTP.Post</a></li>
   <li><a href="/platform-functions/httpget/">Platform.Function.HTTPGet</a></li>
   <li><a href="/platform-functions/httppost/">Platform.Function.HTTPPost</a></li>
   <li><a href="/best-practices/security/">Security Best Practices</a></li>

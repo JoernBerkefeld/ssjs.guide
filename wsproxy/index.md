@@ -15,7 +15,7 @@ WSProxy is the recommended way to interact with the SFMC SOAP API from SSJS. It 
 ```javascript
 var proxy = new Script.Util.WSProxy();
 
-// Retrieve all active triggered sends
+// Retrieve active triggered sends
 var cols = ["Name", "CustomerKey", "Status"];
 var filter = {
     Property: "Status",
@@ -31,18 +31,21 @@ var items = result.Results;
 | Method | Description |
 |--------|-------------|
 | [`new Script.Util.WSProxy()`](/wsproxy/constructor/) | Create a WSProxy instance |
-| [`proxy.retrieve(objectType, columns, filter)`](/wsproxy/retrieve/) | Retrieve SFMC objects |
-| [`proxy.getNextBatch(objectType, requestId)`](/wsproxy/getnextbatch/) | Continue a paginated retrieve after `HasMoreRows` |
-| [`proxy.retrieveBatch(objectType, columns, filter)`](/wsproxy/retrieve-all/) | Retrieve large sets with pagination |
-| [`proxy.create(objectType, properties)`](/wsproxy/create-item/) | Create a new SFMC object |
-| [`proxy.createBatch(objectType, propertiesArray)`](/wsproxy/create-batch/) | Create multiple objects |
-| [`proxy.update(objectType, properties, filter)`](/wsproxy/update-item/) | Update existing objects |
-| [`proxy.updateBatch(objectType, propertiesArray)`](/wsproxy/update-batch/) | Update multiple objects |
-| [`proxy.delete(objectType, properties)`](/wsproxy/delete-item/) | Delete an SFMC object |
-| [`proxy.execute(objectType, properties)`](/wsproxy/execute/) | Execute an operation |
-| [`proxy.perform(objectType, action, properties)`](/wsproxy/perform/) | Perform an action (start, pause, etc.) |
-| [`proxy.setClientId(clientId)`](/wsproxy/set-client-id/) | Set Business Unit for parent BU access |
-| [`proxy.resetClientIds()`](/wsproxy/reset-client-ids/) | Clear BU context set by `setClientId` |
+| [`proxy.retrieve(...)`](/wsproxy/retrieve/) | Retrieve SFMC objects (paginate with `getNextBatch` when `HasMoreRows`) |
+| [`proxy.getNextBatch(...)`](/wsproxy/getnextbatch/) | Continue a paginated retrieve |
+| [`proxy.setBatchSize(...)`](/wsproxy/set-batch-size/) | Change retrieve page size |
+| [`proxy.createItem(...)`](/wsproxy/create-item/) | Create a new SFMC object |
+| [`proxy.updateItem(...)`](/wsproxy/update-item/) | Update an existing object |
+| [`proxy.deleteItem(...)`](/wsproxy/delete-item/) | Delete an object |
+| [`proxy.createBatch(...)`](/wsproxy/create-batch/) | Create multiple objects |
+| [`proxy.updateBatch(...)`](/wsproxy/update-batch/) | Update multiple objects |
+| [`proxy.deleteBatch(...)`](/wsproxy/delete-batch/) | Delete multiple objects |
+| [`proxy.describe(...)`](/wsproxy/describe/) | SOAP object metadata |
+| [`proxy.execute(...)`](/wsproxy/execute/) | Named execute requests (e.g. `LogUnsubEvent`) |
+| [`proxy.performItem(...)`](/wsproxy/perform/) | SOAP Perform on one object |
+| [`proxy.performBatch(...)`](/wsproxy/perform-batch/) | SOAP Perform on many objects |
+| [`proxy.setClientId(...)`](/wsproxy/set-client-id/) | Target another business unit |
+| [`proxy.resetClientIds()`](/wsproxy/reset-client-ids/) | Clear BU override |
 
 ---
 
@@ -66,7 +69,7 @@ var rows = result.Results;
 
 ```javascript
 var proxy = new Script.Util.WSProxy();
-proxy.create("Subscriber", {
+proxy.createItem("Subscriber", {
     EmailAddress: "jane@example.com",
     SubscriberKey: "sub_jane",
     Lists: [{ ID: 123, Status: "Active" }]
@@ -90,10 +93,10 @@ All WSProxy methods return an object with the following shape:
 
 ```javascript
 {
-    Status: "OK",          // "OK" or "Error"
+    Status: "OK",          // "OK" or an error status
     RequestID: "...",      // SFMC request ID
-    Results: [...],        // Array of result objects (retrieve) or created/updated objects
-    HasMoreRows: false     // true when pagination is needed (retrieve)
+    Results: [...],      // Array of result objects (retrieve) or affected rows
+    HasMoreRows: false    // true when pagination is needed (retrieve)
 }
 ```
 
@@ -120,5 +123,5 @@ if (result.Status !== "OK") {
 | Code verbosity | Concise | Verbose |
 | Native JS objects | Yes | No (SFMC objects) |
 | Error handling | Returns Status | Sets output variables |
-| Pagination | Built-in (HasMoreRows) | Manual |
+| Pagination | Built-in (`HasMoreRows`) | Manual |
 | Recommended | Yes | Legacy |

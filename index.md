@@ -59,7 +59,7 @@ description: "The complete reference for Server-Side JavaScript (SSJS) in Salesf
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 3L3 7v6l7 4 7-4V7l-7-4z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
     </div>
     <div class="card-title">Platform Objects</div>
-    <div class="card-description"><code>Platform.Load</code>, <code>Platform.Variable</code>, <code>Platform.Response</code>, <code>Platform.Request</code>, and <code>Platform.ClientBrowser</code>.</div>
+    <div class="card-description"><code>Platform.Load</code>, <code>Platform.Variable</code>, <code>Platform.Response</code>, <code>Platform.Request</code>, and <code>Platform.Recipient</code>.</div>
     <div class="card-count">5 objects · 22 methods</div>
   </a>
 

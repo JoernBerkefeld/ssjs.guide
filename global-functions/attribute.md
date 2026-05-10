@@ -19,7 +19,7 @@ max_args: 1
 
 The global `Attribute` object provides access to subscriber attribute (profile attribute) values when SSJS runs in an email or triggered send context. It is not available in CloudPages.
 
-For CloudPages use `Platform.Function.AttributeValue()` or look up subscriber data from a Data Extension via `Platform.Function.Lookup()`.
+For CloudPages, read subscriber data from a Data Extension via `Platform.Function.Lookup()` / `LookupRows()`, or use [`Platform.Recipient.GetAttributeValue`](/platform-objects/platform-recipient/) in recipient-aware contexts.
 
 ## Example
 

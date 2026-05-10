@@ -70,7 +70,6 @@ Write(ContentBlockByKey("page-footer"));
 <ul>
   <li><a href="/global-functions/contentblockbyname/">ContentBlockByName</a></li>
   <li><a href="/global-functions/contentblockbyid/">ContentBlockByID</a></li>
-  <li><a href="/global-functions/contentareabykey/">ContentAreaByKey</a></li>
   <li><a href="/platform-functions/contentblockbykey/">Platform.Function.ContentBlockByKey</a></li>
 </ul>
 </div>

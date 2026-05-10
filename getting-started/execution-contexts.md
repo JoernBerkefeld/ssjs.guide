@@ -20,7 +20,7 @@ var method = Platform.Request.Method;
 
 if (method === "POST") {
     // Handle form submission
-    var email = Platform.Request.GetFormData("email");
+    var email = Platform.Request.GetFormField("email");
     // ... process the form ...
     Write("<p>Thanks! We received: " + email + "</p>");
 } else {
@@ -43,11 +43,10 @@ In CloudPages, these built-in names are available:
 |----------|-------------|
 | `Platform.Request.Method` | `"GET"` or `"POST"` |
 | `Platform.Request.GetQueryStringParameter(name)` | Value from URL query string |
-| `Platform.Request.GetFormData(name)` | Value from POST body (form-encoded) |
+| `Platform.Request.GetFormField(name)` | Value from POST body (application/x-www-form-urlencoded) |
 | `Platform.Request.GetPostData()` | Entire raw POST body (call only once) |
 | `Platform.Request.GetCookieValue(name)` | Cookie value |
 | `Platform.Request.GetRequestHeader(name)` | HTTP request header |
-| `Platform.Request.HTTPRequestHeader(name)` | Same as above |
 
 ## Detecting the Environment
 
@@ -92,7 +91,7 @@ The POST body is available via two methods:
 
 ```javascript
 // Get a specific form field (application/x-www-form-urlencoded)
-var email = Platform.Request.GetFormData("email");
+var email = Platform.Request.GetFormField("email");
 
 // Get the entire raw POST body
 var rawBody = Platform.Request.GetPostData();

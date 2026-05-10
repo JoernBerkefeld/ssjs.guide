@@ -159,7 +159,7 @@ for (var c = 0; c < allRows.length; c += chunkSize) {
 <h4>See Also</h4>
 <ul>
   <li><a href="/wsproxy/">WSProxy Overview</a></li>
-  <li><a href="/wsproxy/retrieve-all/">proxy.retrieveBatch</a></li>
+  <li><a href="/wsproxy/getnextbatch/">proxy.getNextBatch</a></li>
   <li><a href="/wsproxy/create-batch/">proxy.createBatch</a></li>
   <li><a href="/wsproxy/update-item/">proxy.update</a></li>
   <li><a href="/wsproxy/set-client-id/">proxy.setClientId</a></li>

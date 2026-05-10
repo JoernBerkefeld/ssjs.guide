@@ -42,19 +42,9 @@ These functions and objects are available globally in any SSJS script block with
     <div class="fn-desc">Render a Content Builder asset by its numeric identifier.</div>
     <div class="fn-return">→ string</div>
   </a>
-  <a href="/global-functions/contentareabykey/" class="function-card">
-    <div class="fn-name">ContentAreaByKey()</div>
-    <div class="fn-desc">Render a classic content area by its external key.</div>
-    <div class="fn-return">→ string</div>
-  </a>
   <a href="/global-functions/treatascontent/" class="function-card">
     <div class="fn-name">TreatAsContent()</div>
     <div class="fn-desc">Evaluate a string containing AMPscript or HTML and return the rendered result. Security note: never pass unvalidated user input.</div>
-    <div class="fn-return">→ string</div>
-  </a>
-  <a href="/global-functions/treatascontent-area/" class="function-card">
-    <div class="fn-name">TreatAsContentArea()</div>
-    <div class="fn-desc">Render a classic content area stored in the system.</div>
     <div class="fn-return">→ string</div>
   </a>
   <a href="/global-functions/variable/" class="function-card">

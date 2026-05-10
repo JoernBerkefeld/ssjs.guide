@@ -91,7 +91,7 @@ Available in all SSJS execution contexts — no `Platform.Load` required.
   <li><a href="/platform-functions/httppost/">Platform.Function.HTTPPost (full API reference)</a></li>
   <li><a href="/http/platform-httpget/">Platform.Function.HTTPGet</a></li>
   <li><a href="/http/http-post/">HTTP.Post</a></li>
-  <li><a href="/http/http-postrequest/">HTTP.PostRequest</a></li>
+  <li><a href="/http/http-post/">HTTP.Post</a></li>
   <li><a href="/http/script-util-httprequest/">Script.Util.HttpRequest</a></li>
 </ul>
 </div>
