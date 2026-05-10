@@ -3,17 +3,282 @@ layout: page
 title: Send.Definition
 parent: Core Library
 parent_url: /core-library/
-description: Manages reusable Send Definition configurations (Core library).
+description: Core library namespace Send.Definition — create, configure, query, update, remove, and execute user-initiated send definitions.
 ---
 
-The navigation label **SendDefinition** refers to the `Send.Definition` namespace.
+`Send.Definition` is the Core library namespace for **Email Studio send definitions** (reusable send configurations). Call static methods without an instance, or use `Send.Definition.Init` when you need instance methods (`Update`, `Remove`, `Send`).
 
 {% include callout.html type="warning" content="Requires `Platform.Load(\"core\", \"1.1.5\")` before use." %}
 
-## Summary
-
-Manages reusable Send Definition configurations that define content, audience, and delivery settings for a send.
-
 ## Methods
 
-`Init`, `Add`, `AddWithDE`, `AddWithFilterDefinition`, `Retrieve`, `Update`, `Remove`, `Send`
+| Method | Returns | Description |
+|--------|---------|-------------|
+| [`Send.Definition.Init(key)`](#init) | SendDefinitionInstance | Bind to a send definition by external key |
+| [`Send.Definition.Add(esdParams, sendClassificationKey, emailKey, listIds)`](#send-definition-add) | string | Create send definition (lists) |
+| [`Send.Definition.AddWithDE(...)`](#send-definition-addwithde) | string | Create send definition targeting a sendable DE |
+| [`Send.Definition.AddWithFilterDefinition(...)`](#send-definition-addwithfilterdefinition) | string | Create send definition using a filter definition |
+| [`Send.Definition.Retrieve([filter])`](#send-definition-retrieve) | object[] | Query send definitions |
+| [`<SendDefinitionInstance>.Update(properties)`](#update) | string | Update the initialized send definition |
+| [`<SendDefinitionInstance>.Remove()`](#remove) | string | Delete the send definition |
+| [`<SendDefinitionInstance>.Send()`](#send) | string | Execute the send |
+
+---
+
+## Init
+
+### Syntax
+
+```javascript
+Send.Definition.Init(key)
+```
+
+### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `key` | string | Yes | External key of the send definition |
+
+### Return value
+
+`SendDefinitionInstance`
+
+### Examples
+
+```javascript
+Platform.Load("core", "1.1.5");
+var esd = Send.Definition.Init("myESD");
+```
+
+---
+
+## Send.Definition.Add
+
+### Syntax
+
+```javascript
+Send.Definition.Add(esdParams, sendClassificationKey, emailKey, listIds)
+```
+
+Creates a send definition. `esdParams` includes `CustomerKey`, `Name`, and `EmailSubject`.
+
+### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `esdParams` | object | Yes | `CustomerKey`, `Name`, `EmailSubject` for the new send definition |
+| `sendClassificationKey` | string | Yes | Customer key of the send classification |
+| `emailKey` | string | Yes | Customer key of the email |
+| `listIds` | array | Yes | Target list IDs |
+
+### Return value
+
+`"OK"` on success.
+
+### Examples
+
+```javascript
+Platform.Load("core", "1");
+var esdParams = {
+    CustomerKey: "example_esd",
+    Name: "Example Send Definition",
+    EmailSubject: "Sent By Example Send Definition"
+};
+Send.Definition.Add(esdParams, "example_sc_key", "example_email_key", [12345, 12346]);
+```
+
+---
+
+## Send.Definition.AddWithDE
+
+### Syntax
+
+```javascript
+Send.Definition.AddWithDE(esdParams, sendClassificationKey, emailKey, sendableDataExtensionKey, publicationListKey)
+```
+
+Creates a send definition that sends to a **sendable Data Extension**.
+
+### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `esdParams` | object | Yes | `CustomerKey`, `Name`, `EmailSubject` |
+| `sendClassificationKey` | string | Yes | Send classification customer key |
+| `emailKey` | string | Yes | Email customer key |
+| `sendableDataExtensionKey` | string | Yes | Sendable DE customer key |
+| `publicationListKey` | string | Yes | Publication list customer key |
+
+### Return value
+
+`"OK"` on success.
+
+### Examples
+
+```javascript
+Platform.Load("core", "1.1.5");
+var esdParams = {
+    CustomerKey: "ssjs_de_esd_1c",
+    Name: "SSJS DE Test ESD3",
+    EmailSubject: "Third send By Test DE Send Definition"
+};
+var status = Send.Definition.AddWithDE(esdParams, "scKey", "test_email", "deKey", "myPubList");
+```
+
+---
+
+## Send.Definition.AddWithFilterDefinition
+
+### Syntax
+
+```javascript
+Send.Definition.AddWithFilterDefinition(esdParams, sendClassificationKey, emailKey, filterDefinitionKey, listId)
+```
+
+Creates a send definition whose audience comes from a **filter definition**.
+
+### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `esdParams` | object | Yes | `CustomerKey`, `Name`, `EmailSubject` |
+| `sendClassificationKey` | string | Yes | Send classification customer key |
+| `emailKey` | string | Yes | Email customer key |
+| `filterDefinitionKey` | string | Yes | Filter definition customer key |
+| `listId` | number | Yes | List ID the filter applies to |
+
+### Return value
+
+`"OK"` on success.
+
+### Examples
+
+```javascript
+Platform.Load("core", "1.1.5");
+var esdParams = {
+    CustomerKey: "filterDef_esd",
+    Name: "Example Filtered Send Definition",
+    EmailSubject: "Sent By Filtered Send Definition"
+};
+var status = Send.Definition.AddWithFilterDefinition(esdParams, "scKey", "test_email", "fdKey", 144);
+```
+
+---
+
+## Send.Definition.Retrieve
+
+### Syntax
+
+```javascript
+Send.Definition.Retrieve([filter])
+```
+
+Returns send definitions. Omit `filter` to return all definitions visible in context.
+
+### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `filter` | object | No | Optional WSProxy-style filter |
+
+### Return value
+
+`object[]`
+
+### Examples
+
+```javascript
+Platform.Load("core", "1.1.5");
+var esd = Send.Definition.Retrieve({
+    Property: "CustomerKey",
+    SimpleOperator: "equals",
+    Value: "ssjs_test_esd"
+});
+```
+
+---
+
+## Update
+
+### Syntax
+
+```javascript
+<SendDefinitionInstance>.Update(properties)
+```
+
+### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `properties` | object | Yes | Properties to change |
+
+### Return value
+
+`"OK"` on success.
+
+### Examples
+
+```javascript
+Platform.Load("core", "1.1.5");
+var sendDef = Send.Definition.Init("MY_SEND_DEF_KEY");
+var result = sendDef.Update({ Name: "Updated Send Definition Name" });
+```
+
+---
+
+## Remove
+
+### Syntax
+
+```javascript
+<SendDefinitionInstance>.Remove()
+```
+
+Deletes the send definition bound to this instance.
+
+### Return value
+
+`"OK"` on success.
+
+### Examples
+
+```javascript
+Platform.Load("core", "1.1.5");
+var esd = Send.Definition.Init("myESD");
+var status = esd.Remove();
+```
+
+---
+
+## Send
+
+### Syntax
+
+```javascript
+<SendDefinitionInstance>.Send()
+```
+
+Sends using the lists or audience configured on this send definition.
+
+### Return value
+
+`"OK"` on success.
+
+### Examples
+
+```javascript
+Platform.Load("core", "1.1.5");
+var esd = Send.Definition.Init("myESD");
+var status = esd.Send();
+```
+
+## See also
+
+<div class="see-also">
+<h4>See Also</h4>
+<ul>
+  <li><a href="/core-library/send/">Send</a></li>
+  <li><a href="/core-library/sendclassification/">SendClassification</a></li>
+  <li><a href="/core-library/email/">Email</a></li>
+</ul>
+</div>

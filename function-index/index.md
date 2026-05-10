@@ -5,7 +5,7 @@ description: Complete A–Z index of SSJS functions, methods, and objects docume
 nav_order: 12
 ---
 
-Alphabetical listing of APIs covered in this guide. **Instance-style Core and WSProxy calls** use the **syntax** shapes from the SSJS tooling catalog (`ssjs-data`, same monorepo as this guide): placeholders such as `<WSProxyInstance>` mean “your initialized variable,” not a literal prefix like `proxy.`.
+Alphabetical listing of APIs covered in this guide. **Instance-style Core and WSProxy calls** use placeholders such as `<WSProxyInstance>` for the variable you initialized (for example from `new Script.Util.WSProxy()`). That name is documentation shorthand — it is not a literal prefix like `proxy.` that you must type.
 
 For category browsing, see [Platform Functions](/platform-functions/), [Global Functions](/global-functions/), [WSProxy](/wsproxy/), [HTTP](/http/), and [Core Library](/core-library/).
 

@@ -220,7 +220,7 @@
       url: /core-library/querydefinition/
     - title: FilterDefinition
       url: /core-library/filterdefinition/
-    - title: SendDefinition
+    - title: Send.Definition
       url: /core-library/senddefinition/
     - title: SendClassification
       url: /core-library/sendclassification/

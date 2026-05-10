@@ -3,10 +3,10 @@ layout: page
 title: List
 parent: Core Library
 parent_url: /core-library/
-description: Core library object for managing publication lists — initialize a list and manage subscriber membership.
+description: Core library object for publication lists — create and query lists, remove a list instance, and work with list subscribers.
 ---
 
-The `List` Core library object provides an object-oriented interface for working with SFMC publication lists.
+The `List` Core library object provides an object-oriented interface for SFMC publication lists: static methods create or look up lists, an initialized instance can delete itself, and the [`Subscribers`](/core-library/list-subscribers/) namespace manages membership on that instance.
 
 {% include callout.html type="warning" content="Requires `Platform.Load(\"core\", \"1.1.5\")` before use." %}
 
@@ -14,75 +14,144 @@ The `List` Core library object provides an object-oriented interface for working
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| [`List.Init(listKey)`](#init) | List | Initialize a list object |
-| [`list.Subscribers.Add(email, attributes)`](#subscribersadd) | void | Add a subscriber to the list |
-| [`list.Subscribers.Remove(email)`](#subscribersremove) | void | Remove a subscriber from the list |
+| [`List.Init(key)`](#init) | ListInstance | Bind to a list by external key |
+| [`List.Add(properties)`](#list-add) | ListInstance | Create a new list from properties |
+| [`List.Retrieve(filter)`](#list-retrieve) | object[] | Query lists with a filter |
+| [`<ListInstance>.Remove()`](#remove) | string | Delete the list represented by the instance |
+| [`<ListInstance>.Subscribers.*`](/core-library/list-subscribers/) | — | Add, retrieve, unsubscribe, update, upsert subscribers (see dedicated page) |
 
 ---
 
-## List.Init
+## Init
+
+### Syntax
 
 ```javascript
-var list = List.Init(listExternalKey);
+List.Init(key)
 ```
 
-Initializes a List object using the list's External Key.
+Initializes a list instance using the list external key. Required before calling instance methods such as `Remove()` or `Subscribers.*`.
 
 ### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `listExternalKey` | string | Yes | External key of the publication list |
+| `key` | string | Yes | External key of the publication list |
+
+### Return value
+
+`ListInstance` — object bound to that list.
+
+### Examples
+
+```javascript
+Platform.Load("core", "1");
+var myList = List.Init("myList");
+```
 
 ---
 
-## Subscribers.Add
+## List.Add
+
+### Syntax
 
 ```javascript
-list.Subscribers.Add(emailAddress, attributes)
+List.Add(properties)
 ```
 
-Adds a subscriber to the list. Creates the subscriber in All Subscribers if they don't exist.
+Creates a new list from the supplied JSON properties (`CustomerKey`, `Name`, `Description`, …). Unlike many Core `Add` methods, this returns an initialized `ListInstance`, not `"OK"`.
 
 ### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `emailAddress` | string | Yes | Email address |
-| `attributes` | object | No | Key-value object of profile attributes |
+| `properties` | object | Yes | Object describing the new list |
+
+### Return value
+
+`ListInstance` — handle for the newly created list.
 
 ### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
-var list = List.Init("WelcomeSeries_List");
-list.Subscribers.Add("jane@example.com", {
-    FirstName: "Jane",
-    LastName: "Doe"
+var myNewList = List.Add({
+    CustomerKey: "libList",
+    Name: "testLib",
+    Description: "desc"
 });
 ```
 
 ---
 
-## Subscribers.Remove
+## List.Retrieve
+
+### Syntax
 
 ```javascript
-list.Subscribers.Remove(emailAddress)
+List.Retrieve(filter)
 ```
 
-Removes a subscriber from the list (unsubscribes them from this list only).
+Returns array of list objects matching the WSProxy-style filter.
+
+### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `filter` | object | Yes | `{ Property, SimpleOperator, Value }` (or compatible compound filter) |
+
+### Return value
+
+`object[]` — matching lists.
 
 ### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
-var list = List.Init("WelcomeSeries_List");
-list.Subscribers.Remove("jane@example.com");
+var lists = List.Retrieve({
+    Property: "ListName",
+    SimpleOperator: "equals",
+    Value: "BirthdayList"
+});
 ```
 
 ---
 
-## Complete Subscribe/Unsubscribe Pattern
+## Remove
+
+### Syntax
+
+```javascript
+<ListInstance>.Remove()
+```
+
+Deletes the list bound to this instance (the publication list itself).
+
+### Parameters
+
+None.
+
+### Return value
+
+`"OK"` on success, or throws on failure.
+
+### Examples
+
+```javascript
+Platform.Load("core", "1.1.5");
+var myList = List.Init("myList");
+var status = myList.Remove();
+```
+
+---
+
+## Subscribers
+
+Subscriber membership operations are invoked on `list.Subscribers` after `List.Init`. See **[List.Subscribers](/core-library/list-subscribers/)** for `Add`, `Retrieve`, `Unsubscribe`, `Update`, `Upsert`, and `Subscribers.Tracking.Retrieve`.
+
+---
+
+## Subscribe / unsubscribe pattern
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -97,25 +166,26 @@ if (!Platform.Function.IsEmailAddress(email)) {
     var list = List.Init(listKey);
     try {
         if (action === "subscribe") {
-            list.Subscribers.Add(email, {
+            list.Subscribers.Upsert(email, {
                 SubscribedAt: Platform.Function.Now()
             });
             Write(Stringify({ status: "subscribed" }));
         } else if (action === "unsubscribe") {
-            list.Subscribers.Remove(email);
+            list.Subscribers.Unsubscribe(email);
             Write(Stringify({ status: "unsubscribed" }));
         }
-    } catch(e) {
+    } catch (e) {
         Write(Stringify({ status: 500, statusMessage: "Internal Server Error", error: e.message }));
     }
 }
 ```
 
-## See Also
+## See also
 
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
+  <li><a href="/core-library/list-subscribers/">List.Subscribers</a></li>
   <li><a href="/core-library/subscriber/">Subscriber</a></li>
 </ul>
 </div>
