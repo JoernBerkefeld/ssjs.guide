@@ -9,8 +9,8 @@ availability:
   cloudpage: false
   automation: false
   triggered_send: true
-syntax: "Attribute.Value(attributeName)"
-return_type: object
+syntax: "Attribute.GetValue(name)"
+return_type: string
 min_args: 1
 max_args: 1
 ---
@@ -21,11 +21,13 @@ The global `Attribute` object provides access to subscriber attribute (profile a
 
 For CloudPages, read subscriber data from a Data Extension via `Platform.Function.Lookup()` / `LookupRows()`, or use [`Platform.Recipient.GetAttributeValue`](/platform-objects/platform-recipient/) in recipient-aware contexts.
 
+The AMPscript parallel is `AttributeValue()` (different language); SSJS uses `Attribute.GetValue(name)`.
+
 ## Example
 
 ```javascript
-var firstName = Attribute.Value("FirstName");
-var city      = Attribute.Value("City");
+var firstName = Attribute.GetValue("FirstName");
+var city      = Attribute.GetValue("City");
 
 if (firstName) {
     Write("<p>Hello, " + firstName + "!</p>");
@@ -37,7 +39,7 @@ if (firstName) {
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
-  <li><a href="/platform-functions/attributevalue/">Platform.Function.AttributeValue</a></li>
   <li><a href="/platform-functions/lookup/">Platform.Function.Lookup</a></li>
+  <li><a href="/platform-objects/platform-recipient/">Platform.Recipient</a></li>
 </ul>
 </div>

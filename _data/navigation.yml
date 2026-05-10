@@ -212,8 +212,8 @@
       url: /core-library/send/
     - title: Template
       url: /core-library/template/
-    - title: ContentArea
-      url: /core-library/contentarea/
+    - title: ContentAreaObj
+      url: /core-library/contentareaobj/
     - title: Folder
       url: /core-library/folder/
     - title: QueryDefinition
@@ -249,7 +249,7 @@
     - title: NotSentEvent
       url: /core-library/notsentevent/
     - title: ForwardedEmailEvent
-      url: /core-library/forwardedemailvent/
+      url: /core-library/forwardedemailevent/
     - title: ForwardedEmailOptInEvent
       url: /core-library/forwardedemailoptinevent/
     - title: SurveyEvent

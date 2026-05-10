@@ -97,7 +97,7 @@ var city = Platform.Variable.GetValue("@city");
 var language = Platform.Variable.GetValue("@language") || "en";
 
 // Or use the global Attribute object directly
-var city2 = Attribute.Value("City");
+var city2 = Attribute.GetValue("City");
 </script>
 ```
 

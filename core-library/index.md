@@ -19,11 +19,26 @@ Platform.Load("core", "1.1.5");
 | Object | Description |
 |--------|-------------|
 | [`DataExtension`](/core-library/dataextension/) | Initialize and work with Data Extensions |
+| [`DataExtension.Fields`](/core-library/dataextension-fields/) | Field definitions on a DE |
 | [`DataExtension.Rows`](/core-library/dataextension-rows/) | Retrieve, Add, Update, Remove rows |
 | [`Subscriber`](/core-library/subscriber/) | Manage All Subscribers list entries |
 | [`List`](/core-library/list/) | Work with publication lists |
-| [`Email`](/core-library/email/) | Send emails programmatically |
-| [`TriggeredSend`](/core-library/triggeredsend/) | Initiate triggered send definitions |
+| [`List.Subscribers`](/core-library/list-subscribers/) | Subscribers on a specific list |
+| [`Email`](/core-library/email/) | Email message definitions and programmatic send |
+| [`TriggeredSend`](/core-library/triggeredsend/) | Triggered send definitions and sends |
+| [`Send`](/core-library/send/) | Email sends |
+| [`Send.Definition`](/core-library/senddefinition/) | Send Definition configurations |
+| [`Template`](/core-library/template/) | Email templates |
+| [`Folder`](/core-library/folder/) | Content folders |
+| [`QueryDefinition`](/core-library/querydefinition/) | SQL query activities |
+| [`FilterDefinition`](/core-library/filterdefinition/) | Data filters |
+| [`SendClassification`](/core-library/sendclassification/) | Send classifications |
+| [`DeliveryProfile`](/core-library/deliveryprofile/) | Delivery profiles |
+| [`SenderProfile`](/core-library/senderprofile/) | Sender profiles |
+| [`Account`](/core-library/account/) | Account settings |
+| [`AccountUser`](/core-library/accountuser/) | Users in the business unit |
+| [`Portfolio`](/core-library/portfolio/) | Portfolio (file) assets |
+| [`ContentAreaObj`](/core-library/contentareaobj/) | Classic Content Areas (**deprecated** object — not `ContentArea()` global) |
 
 HTTP utilities are also part of the Core library but documented separately:
 
@@ -31,6 +46,24 @@ HTTP utilities are also part of the Core library but documented separately:
 |--------|-------------|
 | [`HTTP`](/http/http-get/) | Simple HTTP GET and POST |
 | [`Script.Util`](/http/script-util-httprequest/) | Advanced HTTP with request objects |
+
+---
+
+## Tracking events {#events}
+
+SOAP-style tracking event objects expose `Retrieve(filter)` for send metrics:
+
+| Object | Page |
+|--------|------|
+| [`BounceEvent`](/core-library/bounceevent/) | Bounce events |
+| [`ClickEvent`](/core-library/clickevent/) | Click events |
+| [`OpenEvent`](/core-library/openevent/) | Open events |
+| [`SentEvent`](/core-library/sentevent/) | Sent events |
+| [`UnsubEvent`](/core-library/unsubevent/) | Unsubscribe events |
+| [`NotSentEvent`](/core-library/notsentevent/) | Not-sent events |
+| [`ForwardedEmailEvent`](/core-library/forwardedemailevent/) | Forwarded email events |
+| [`ForwardedEmailOptInEvent`](/core-library/forwardedemailoptinevent/) | Forwarded opt-in events |
+| [`SurveyEvent`](/core-library/surveyevent/) | Survey events |
 
 ---
 
