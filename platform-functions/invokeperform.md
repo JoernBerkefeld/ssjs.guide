@@ -9,9 +9,9 @@ availability:
   cloudpage: true
   automation: true
   triggered_send: false
-syntax: "Platform.Function.InvokePerform(apiObject, action[, statusMessage, errorCode])"
-return_type: string
-min_args: 2
+syntax: "Platform.Function.InvokePerform(apiObject, method, status, options)"
+return_type: object
+min_args: 4
 max_args: 4
 ---
 
@@ -20,9 +20,9 @@ max_args: 4
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `apiObject` | object | Yes | SOAP object built with `CreateObject` and configured with `SetObjectProperty` |
-| `action` | string | Yes | Action to perform (e.g. `"start"`, `"pause"`, `"stop"`) |
-| `statusMessage` | string | No | Variable (passed by reference) that receives the status message |
-| `errorCode` | string | No | Variable (passed by reference) that receives the error code |
+| `method` | string | Yes | Method to perform on the object |
+| `status` | array | Yes | Array that receives the status, error code, and perform response of the API call (e.g. `[0, 0, 0]`) |
+| `options` | object | Yes | API configure options to include in the call. Can contain a `null` value. |
 
 ## Examples
 
@@ -30,14 +30,11 @@ max_args: 4
 var sendDef = Platform.Function.CreateObject("TriggeredSendDefinition");
 Platform.Function.SetObjectProperty(sendDef, "CustomerKey", "WelcomeEmail_TSD");
 
-var status = "";
-var code = "";
-var result = Platform.Function.InvokePerform(sendDef, "start", status, code);
-if (code !== "0") {
-    Write("Error " + code + ": " + status);
-} else {
-    Write("Triggered send definition started.");
-}
+var StatusAndRequestID = [0, 0, 0];
+var result = Platform.Function.InvokePerform(sendDef, "start", StatusAndRequestID, null);
+var statusMessage = StatusAndRequestID[0];
+var errorCode = StatusAndRequestID[1];
+var performResponse = StatusAndRequestID[2];
 ```
 
 {% include callout.html type="note" content="WSProxy is recommended over InvokePerform for most use cases — it is simpler, uses native JS objects, and handles serialization automatically." %}

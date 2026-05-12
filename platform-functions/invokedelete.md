@@ -9,20 +9,19 @@ availability:
   cloudpage: true
   automation: true
   triggered_send: false
-syntax: "Platform.Function.InvokeDelete(object, statusMsg, errorCode, errorMsg)"
+syntax: "Platform.Function.InvokeDelete(apiObject, status, options)"
 return_type: object
-min_args: 4
-max_args: 4
+min_args: 3
+max_args: 3
 ---
 
 ## Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `object` | object | Yes | SOAP object built with CreateObject/SetObjectProperty |
-| `statusMsg` | string | Yes | Receives status |
-| `errorCode` | string | Yes | Receives error code |
-| `errorMsg` | string | Yes | Receives error message |
+| `apiObject` | object | Yes | SOAP object built with `CreateObject`/`SetObjectProperty` |
+| `status` | array | Yes | Array that receives the status and request ID of the API call (e.g. `[0, 0]`) |
+| `options` | object | Yes | API configure options to include in the call. Can contain a `null` value. |
 
 ## Examples
 
@@ -30,10 +29,10 @@ max_args: 4
 var sub = Platform.Function.CreateObject("Subscriber");
 Platform.Function.SetObjectProperty(sub, "SubscriberKey", "sub_123");
 
-var status = "";
-var code = "";
-var msg = "";
-Platform.Function.InvokeDelete(sub, status, code, msg);
+var StatusAndRequestID = [0, 0];
+var result = Platform.Function.InvokeDelete(sub, StatusAndRequestID, null);
+var status = StatusAndRequestID[0];
+var requestID = StatusAndRequestID[1];
 ```
 
 ## See Also

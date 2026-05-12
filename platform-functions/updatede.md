@@ -9,10 +9,10 @@ availability:
   cloudpage: false
   automation: false
   triggered_send: true
-syntax: "Platform.Function.Updatede(...)"
+syntax: "Platform.Function.UpdateDE(deName, whereFieldNames, whereFieldValues, fieldNames, fieldValues)"
 return_type: number
-min_args: 3
-max_args: Infinity
+min_args: 5
+max_args: 5
 ---
 
 This function is an alias for [Updatedata](/platform-functions/updatedata/). They have identical signatures and behavior. However, this is limited to emails.

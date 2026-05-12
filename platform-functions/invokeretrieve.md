@@ -9,32 +9,34 @@ availability:
   cloudpage: true
   automation: true
   triggered_send: false
-syntax: "Platform.Function.InvokeRetrieve(object)"
+syntax: "Platform.Function.InvokeRetrieve(apiObject, status)"
 return_type: object[]
-min_args: 1
-max_args: 1
+min_args: 2
+max_args: 2
 ---
 
 ## Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `object` | object | Yes | Configured Retrieve request object |
+| `apiObject` | object | Yes | Configured Retrieve request object |
+| `status` | array | Yes | Array that receives the status and request ID of the API call (e.g. `[0, 0]`) |
 
 ## Examples
 
 ```javascript
-var req = Platform.Function.CreateObject("RetrieveRequest");
-Platform.Function.SetObjectProperty(req, "ObjectType", "DataExtensionObject[MyDE]");
-Platform.Function.SetObjectProperty(req, "Properties", ["Email", "FirstName"]);
+var RetrieveRequest = Platform.Function.CreateObject("RetrieveRequest");
+Platform.Function.SetObjectProperty(RetrieveRequest, "ObjectType", "Email");
+Platform.Function.AddObjectArrayItem(RetrieveRequest, "Properties", "Email.Name");
 
 var filter = Platform.Function.CreateObject("SimpleFilterPart");
 Platform.Function.SetObjectProperty(filter, "Property", "Status");
 Platform.Function.SetObjectProperty(filter, "SimpleOperator", "equals");
 Platform.Function.SetObjectProperty(filter, "Value", "Active");
-Platform.Function.SetObjectProperty(req, "Filter", filter);
+Platform.Function.SetObjectProperty(RetrieveRequest, "Filter", filter);
 
-var results = Platform.Function.InvokeRetrieve(req);
+var StatusAndRequestID = [0, 0];
+var Emails = Platform.Function.InvokeRetrieve(RetrieveRequest, StatusAndRequestID);
 ```
 
 {% include callout.html type="note" content="WSProxy.retrieve() is simpler and preferred for new code." %}

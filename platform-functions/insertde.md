@@ -9,10 +9,10 @@ availability:
   cloudpage: false
   automation: false
   triggered_send: true
-syntax: "Platform.Function.Insertde(...)"
+syntax: "Platform.Function.InsertDE(deName, fieldNames, fieldValues)"
 return_type: number
 min_args: 3
-max_args: Infinity
+max_args: 3
 ---
 
 This function is an alias for [Insertdata](/platform-functions/insertdata/). They have identical signatures and behavior.

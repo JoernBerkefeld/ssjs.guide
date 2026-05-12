@@ -9,10 +9,10 @@ availability:
   cloudpage: true
   automation: true
   triggered_send: true
-syntax: "Platform.Function.UpsertData(deName, keyFields, keyValues, dataFields, dataValues)"
+syntax: "Platform.Function.UpsertData(deName, whereFieldNames, whereFieldValues, fieldNames, fieldValues)"
 return_type: number
 min_args: 5
-max_args: Infinity
+max_args: 5
 ---
 
 ## Parameters
@@ -22,10 +22,10 @@ The standard `UpsertData` signature accepts:
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `deName` | string | Yes | Data Extension name or external key |
-| `keyFields` | array | Yes | Array of primary key column names |
-| `keyValues` | array | Yes | Array of primary key values |
-| `dataFields` | array | Yes | Array of column names to set |
-| `dataValues` | array | Yes | Array of values for those columns |
+| `whereFieldNames` | string\|string[] | Yes | Column name(s) to identify whether the row exists; use an array for composite keys |
+| `whereFieldValues` | string\|array | Yes | Value(s) matching `whereFieldNames`; must be an array of equal length when `whereFieldNames` is an array |
+| `fieldNames` | string[] | Yes | Array of column names to insert or update |
+| `fieldValues` | array | Yes | Array of values aligned to `fieldNames` |
 
 Alternatively, use the flat variadic signature:
 
@@ -50,10 +50,10 @@ This is the most robust write operation for Data Extensions — use it instead o
 ```javascript
 var rowsAffected = Platform.Function.UpsertData(
     "Subscribers",
-    ["SubscriberKey"],              // key columns (array)
-    [subscriberKey],                // key values (array)
-    ["Email", "FirstName", "City"], // data columns (array)
-    [email, firstName, city]        // data values (array)
+    ["SubscriberKey"],              // whereFieldNames (filter/identity)
+    [subscriberKey],                // whereFieldValues
+    ["Email", "FirstName", "City"], // fieldNames (data columns)
+    [email, firstName, city]        // fieldValues
 );
 ```
 
@@ -62,10 +62,10 @@ var rowsAffected = Platform.Function.UpsertData(
 ```javascript
 Platform.Function.UpsertData(
     "OrderItems",
-    ["OrderID", "ProductSKU"],   // composite key
-    [orderId, sku],
-    ["Quantity", "Price"],
-    [qty, price]
+    ["OrderID", "ProductSKU"],   // whereFieldNames: composite key
+    [orderId, sku],              // whereFieldValues
+    ["Quantity", "Price"],       // fieldNames
+    [qty, price]                 // fieldValues
 );
 ```
 

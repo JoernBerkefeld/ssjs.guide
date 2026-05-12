@@ -9,10 +9,10 @@ availability:
   cloudpage: false
   automation: false
   triggered_send: true
-syntax: "Platform.Function.Deletede(...)"
+syntax: "Platform.Function.DeleteDE(deName, whereFieldNames, whereFieldValues)"
 return_type: number
 min_args: 3
-max_args: Infinity
+max_args: 3
 ---
 
 This function is an alias for [Deletedata](/platform-functions/deletedata/). They have identical signatures and behavior.  However, this is limited to emails.

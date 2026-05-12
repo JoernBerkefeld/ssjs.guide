@@ -9,7 +9,7 @@ availability:
   cloudpage: true
   automation: true
   triggered_send: true
-syntax: "Platform.Function.RaiseError(errorMessage [, skipOnError [, sourceType, sourceID]])"
+syntax: "Platform.Function.RaiseError(message[, currentRecipientOnly[, errorCode[, errorNumber]]])"
 return_type: void
 min_args: 1
 max_args: 4
@@ -19,10 +19,10 @@ max_args: 4
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `errorMessage` | string | Yes | Message describing the error |
-| `skipOnError` | boolean | No | When `true`, skips the send record rather than causing a hard bounce (email send context). Default: `false` |
-| `sourceType` | string | No | Source type identifier for logging |
-| `sourceID` | string | No | Source ID for logging |
+| `message` | string | Yes | Message describing the error |
+| `currentRecipientOnly` | boolean | No | When `true`, the error applies only to the current recipient. When `false`, the entire send job stops. |
+| `errorCode` | string | No | Short user-defined code identifying the error type |
+| `errorNumber` | number | No | User-defined numeric error code for reference |
 
 ## Examples
 

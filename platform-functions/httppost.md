@@ -9,8 +9,8 @@ availability:
   cloudpage: true
   automation: true
   triggered_send: true
-syntax: "Platform.Function.HTTPPost(url, contentType, payload [, headerNames, headerValues [, returnCodeAndResponse]])"
-return_type: string
+syntax: "Platform.Function.HTTPPost(url, contentType, payload[, headerNames, headerValues, response])"
+return_type: number
 min_args: 3
 max_args: 6
 ---
@@ -24,38 +24,44 @@ max_args: 6
 | `payload` | string | Yes | Request body |
 | `headerNames` | string[] | No | Array of additional header names |
 | `headerValues` | string[] | No | Array of corresponding header values |
-| `returnCodeAndResponse` | boolean | No | When `true`, returns an array `[statusCode, body]` instead of just the body |
+| `response` | array | No | Array that receives the response body from the POST request |
 
 ## Examples
 
 ```javascript
 // Simple JSON POST
 var payload = Stringify({ event: "pageview", page: "/home" });
-var response = Platform.Function.HTTPPost(
+var response = [];
+var statusCode = Platform.Function.HTTPPost(
     "https://api.example.com/events",
     "application/json",
-    payload
+    payload,
+    null,
+    null,
+    response
 );
-var result = Platform.Function.ParseJSON(response + "");
+var body = response[0];
+var result = Platform.Function.ParseJSON(body + "");
 
-// POST with auth header and status code
+// POST with auth header
 var headers = ["Authorization"];
 var vals = ["Bearer " + token];
-var res = Platform.Function.HTTPPost(
+var res = [];
+var code = Platform.Function.HTTPPost(
     "https://api.example.com/track",
     "application/json",
     payload,
     headers,
     vals,
-    true // [statusCode, body]
+    res
 );
-var statusCode = res[0];
-var body = res[1];
+var statusCode = code; // HTTP status code (number)
+var body = res[0];    // response body string
 ```
 
 ## Return Value
 
-By default, returns the response body as a string. When `returnCodeAndResponse` is `true`, returns a two-element array: `[httpStatusCode, responseBody]`.
+Returns the HTTP status code as a number. The response body is written into the `response` array argument (if provided) as `response[0]`.
 
 ## See Also
 

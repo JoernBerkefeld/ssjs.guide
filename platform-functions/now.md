@@ -9,11 +9,17 @@ availability:
   cloudpage: true
   automation: true
   triggered_send: true
-syntax: "Platform.Function.Now()"
+syntax: "Platform.Function.Now([useContextTime])"
 return_type: string
 min_args: 0
-max_args: 0
+max_args: 1
 ---
+
+## Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `useContextTime` | boolean | No | When `true`, returns the time the triggering send or activity was initiated. When `false` or omitted, returns the current system clock time. |
 
 ## Description
 

@@ -9,10 +9,10 @@ availability:
   cloudpage: true
   automation: true
   triggered_send: true
-syntax: "Platform.Function.DeleteData(deName, filterField, filterValue [, filterField2, filterValue2, ...])"
+syntax: "Platform.Function.DeleteData(deName, whereFieldNames, whereFieldValues)"
 return_type: number
 min_args: 3
-max_args: Infinity
+max_args: 3
 ---
 
 ## Parameters
@@ -20,10 +20,8 @@ max_args: Infinity
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `deName` | string | Yes | Data Extension name or external key |
-| `filterField` | string | Yes | Column name to filter on |
-| `filterValue` | string | Yes | Value to match for deletion |
-| `filterField2` | string | No | Additional filter column (AND) |
-| `filterValue2` | string | No | Additional filter value |
+| `whereFieldNames` | string[] | Yes | Array of column names to match for deletion |
+| `whereFieldValues` | array | Yes | Array of values aligned to `whereFieldNames` that identify rows to delete |
 
 ## Examples
 
@@ -32,7 +30,7 @@ max_args: Infinity
 ```javascript
 var deleted = Platform.Function.DeleteData(
     "TempSessions",
-    "SessionToken", token
+    ["SessionToken"], [token]
 );
 Write("Deleted " + deleted + " session(s).");
 ```
@@ -43,8 +41,8 @@ Write("Deleted " + deleted + " session(s).");
 // Delete expired AND inactive records
 Platform.Function.DeleteData(
     "TempData",
-    "Status",     "expired",
-    "Active",     "0"
+    ["Status", "Active"],
+    ["expired", "0"]
 );
 ```
 
@@ -54,7 +52,7 @@ Platform.Function.DeleteData(
 // Verify the record exists before deleting
 var exists = Platform.Function.Lookup("Orders", "OrderID", "OrderID", orderId);
 if (exists) {
-    var count = Platform.Function.DeleteData("Orders", "OrderID", orderId);
+    var count = Platform.Function.DeleteData("Orders", ["OrderID"], [orderId]);
     Write("Deleted " + count + " order(s).");
 } else {
     Write("Order not found.");

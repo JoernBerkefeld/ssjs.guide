@@ -9,30 +9,29 @@ availability:
   cloudpage: true
   automation: true
   triggered_send: false
-syntax: "Platform.Function.InvokeCreate(object, statusMsg, errorCode, errorMsg)"
+syntax: "Platform.Function.InvokeCreate(apiObject, status, options)"
 return_type: object
-min_args: 4
-max_args: 4
+min_args: 3
+max_args: 3
 ---
 
 ## Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `object` | object | Yes | SOAP object built with CreateObject/SetObjectProperty |
-| `statusMsg` | string | Yes | Variable (passed by ref) that receives the status |
-| `errorCode` | string | Yes | Variable (passed by ref) that receives error code |
-| `errorMsg` | string | Yes | Variable (passed by ref) that receives error message |
+| `apiObject` | object | Yes | SOAP object built with `CreateObject`/`SetObjectProperty` |
+| `status` | array | Yes | Array that receives the status and request ID of the API call (e.g. `[0, 0]`) |
+| `options` | object | Yes | API configure options to include in the call. Can contain a `null` value. |
 
 ## Examples
 
 ```javascript
-var status = "";
-var code = "";
-var message = "";
-var result = Platform.Function.InvokeCreate(deObject, status, code, message);
-if (code !== "0") {
-    Write("Error: " + message);
+var StatusAndRequestID = [0, 0];
+var result = Platform.Function.InvokeCreate(deObject, StatusAndRequestID, null);
+var status = StatusAndRequestID[0];
+var requestID = StatusAndRequestID[1];
+if (status !== "OK") {
+    Write("Error — RequestID: " + requestID);
 }
 ```
 

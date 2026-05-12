@@ -9,10 +9,10 @@ availability:
   cloudpage: false
   automation: false
   triggered_send: true
-syntax: "Platform.Function.Upsertde(...)"
+syntax: "Platform.Function.UpsertDE(deName, whereFieldNames, whereFieldValues, fieldNames, fieldValues)"
 return_type: number
-min_args: 3
-max_args: Infinity
+min_args: 5
+max_args: 5
 ---
 
 This function is an alias for [Upsertdata](/platform-functions/upsertdata/). They have identical signatures and behavior. However, this is limited to emails.

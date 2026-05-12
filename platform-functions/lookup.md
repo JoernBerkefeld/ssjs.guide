@@ -9,10 +9,10 @@ availability:
   cloudpage: true
   automation: true
   triggered_send: true
-syntax: "Platform.Function.Lookup(deName, returnField, filterField, filterValue [, filterField2, filterValue2, ...])"
+syntax: "Platform.Function.Lookup(deName, returnField, whereFieldNames, whereFieldValues)"
 return_type: string
 min_args: 4
-max_args: Infinity
+max_args: 4
 ---
 
 ## Parameters
@@ -21,12 +21,8 @@ max_args: Infinity
 |------|------|----------|-------------|
 | `deName` | string | Yes | Data Extension name or external key |
 | `returnField` | string | Yes | Column name whose value to return |
-| `filterField` | string | Yes | Column name to filter on |
-| `filterValue` | string | Yes | Value to match in the filter column |
-| `filterField2` | string | No | Additional filter column (AND logic) |
-| `filterValue2` | string | No | Additional filter value |
-
-Additional field/value pairs can be appended for multi-column AND filters.
+| `whereFieldNames` | string\|string[] | Yes | Filter field name, or an array of field names connected with AND logic |
+| `whereFieldValues` | string\|array | Yes | Filter field value matching `whereFieldNames`; must be an array of equal length when `whereFieldNames` is an array |
 
 ## Description
 
@@ -56,11 +52,11 @@ if (email) {
 ### Multi-filter lookup (AND logic)
 
 ```javascript
-var price = Platform.Function.Lookup(
-    "Products",
-    "Price",
-    "SKU",    "ABC123",   // filter 1
-    "Active", "1"         // filter 2 (AND)
+var phone = Platform.Function.Lookup(
+    "CustomerData",
+    "Phone",
+    ["FirstName", "LastName"],       // array of filter fields
+    ["Carolyn", "Baumgartner"]       // matching array of values
 );
 ```
 

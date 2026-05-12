@@ -9,10 +9,10 @@ availability:
   cloudpage: true
   automation: true
   triggered_send: true
-syntax: "Platform.Function.LookupOrderedRows(deName, sortCount, sortField, sortOrder, filterField, filterValue [, filterField2, filterValue2, ...])"
+syntax: "Platform.Function.LookupOrderedRows(deName, count, orderBy, whereFieldNames, whereFieldValues)"
 return_type: "object[]"
-min_args: 6
-max_args: Infinity
+min_args: 5
+max_args: 5
 ---
 
 ## Parameters
@@ -20,13 +20,10 @@ max_args: Infinity
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `deName` | string | Yes | Data Extension name or external key |
-| `sortCount` | number | Yes | Maximum number of rows to return |
-| `sortField` | string | Yes | Column name to sort by |
-| `sortOrder` | string | Yes | `"ASC"` for ascending, `"DESC"` for descending |
-| `filterField` | string | Yes | Column name to filter on |
-| `filterValue` | string | Yes | Value to match in the filter column |
-| `filterField2` | string | No | Additional filter column |
-| `filterValue2` | string | No | Additional filter value |
+| `count` | number | Yes | Maximum number of rows to return; values below 1 return up to 2,000 |
+| `orderBy` | string | Yes | Sort expression using `"ColumnName ASC"` or `"ColumnName DESC"` syntax (e.g. `"LastName ASC, FirstName ASC"`) |
+| `whereFieldNames` | string\|string[] | Yes | Filter field name, or an array of field names connected with AND logic |
+| `whereFieldValues` | string\|array | Yes | Filter field value matching `whereFieldNames`; must be an array of equal length when `whereFieldNames` is an array |
 
 ## Description
 
@@ -42,11 +39,10 @@ max_args: Infinity
 ```javascript
 var recentOrders = Platform.Function.LookupOrderedRows(
     "Orders",
-    10,             // max rows
-    "OrderDate",    // sort by
-    "DESC",         // newest first
-    "Status",       // filter field
-    "complete"      // filter value
+    10,                 // max rows
+    "OrderDate DESC",  // sort expression
+    "Status",          // filter field
+    "complete"         // filter value
 );
 
 for (var i = 0, len = recentOrders.length; i < len; i++) {
@@ -60,23 +56,33 @@ for (var i = 0, len = recentOrders.length; i < len; i++) {
 var topProducts = Platform.Function.LookupOrderedRows(
     "Products",
     5,
-    "Price",
-    "DESC",
+    "Price DESC",
     "Active", "1"
 );
 ```
 
 ### All rows sorted (no effective limit)
 
-Use a large `sortCount` to retrieve all matching rows in order:
+Use `0` for `count` to retrieve all matching rows in order:
 
 ```javascript
 var allRows = Platform.Function.LookupOrderedRows(
     "Customers",
-    2000,         // effectively all
-    "LastName",
-    "ASC",
+    0,               // returns up to 2,000
+    "LastName ASC",
     "Active", "1"
+);
+```
+
+### Multiple filters (AND logic)
+
+```javascript
+var rows = Platform.Function.LookupOrderedRows(
+    "CustomerData",
+    0,
+    "LastName ASC",
+    ["PreferredLanguage", "RewardsTier"],
+    ["English", "Silver"]
 );
 ```
 

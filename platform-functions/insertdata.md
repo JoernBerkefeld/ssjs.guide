@@ -9,10 +9,10 @@ availability:
   cloudpage: true
   automation: true
   triggered_send: true
-syntax: "Platform.Function.InsertData(deName, field1, value1 [, field2, value2, ...])"
+syntax: "Platform.Function.InsertData(deName, fieldNames, fieldValues)"
 return_type: number
-min_args: 4
-max_args: Infinity
+min_args: 3
+max_args: 3
 ---
 
 ## Parameters
@@ -20,10 +20,8 @@ max_args: Infinity
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `deName` | string | Yes | Data Extension name or external key |
-| `columsToInsert` | string[] | Yes | First column name |
-| `valuesToInsert` | string[] | Yes | Value for the first column |
-
-Additional field/value pairs can be provided to set more columns.
+| `fieldNames` | string[] | Yes | Array of column names to populate |
+| `fieldValues` | array | Yes | Array of values aligned to `fieldNames` |
 
 ## Description
 

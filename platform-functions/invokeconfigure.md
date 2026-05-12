@@ -9,9 +9,9 @@ availability:
   cloudpage: true
   automation: true
   triggered_send: false
-syntax: "Platform.Function.InvokeConfigure(apiObject, action[, statusArray, options])"
-return_type: string
-min_args: 2
+syntax: "Platform.Function.InvokeConfigure(apiObject, method, status, options)"
+return_type: object
+min_args: 4
 max_args: 4
 ---
 
@@ -20,9 +20,9 @@ max_args: 4
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `apiObject` | object | Yes | SOAP API object built with `CreateObject` and configured with `SetObjectProperty` |
-| `action` | string | Yes | Configure action to perform on the object |
-| `statusArray` | array | No | Array that receives the status and RequestID of the API call |
-| `options` | object | No | Additional API options; may be null |
+| `method` | string | Yes | Configure action to perform on the object |
+| `status` | array | Yes | Array that receives the status and request ID of the API call (e.g. `[0, 0]`) |
+| `options` | object | Yes | Additional API options to include in the call. Can contain a `null` value. |
 
 ## Examples
 
@@ -32,9 +32,10 @@ Platform.Function.SetObjectProperty(configObj, "CustomerKey", "MyDE");
 Platform.Function.SetObjectProperty(configObj, "DataRetentionPeriod", "6");
 Platform.Function.SetObjectProperty(configObj, "DataRetentionPeriodLength", "Months");
 
-var status = [];
-var result = Platform.Function.InvokeConfigure(configObj, "set", status, null);
-Write("Status: " + result);
+var StatusAndRequestID = [0, 0];
+var result = Platform.Function.InvokeConfigure(configObj, "create", StatusAndRequestID, null);
+var status = StatusAndRequestID[0];
+var requestID = StatusAndRequestID[1];
 ```
 
 {% include callout.html type="note" content="WSProxy is the recommended approach for most SOAP API interactions. Use InvokeConfigure only when the Configure SOAP verb is specifically required." %}

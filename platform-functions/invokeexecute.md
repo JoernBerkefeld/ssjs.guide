@@ -9,10 +9,10 @@ availability:
   cloudpage: true
   automation: true
   triggered_send: false
-syntax: "Platform.Function.InvokeExecute(apiObject, method[, statusMessage, errorCode])"
-return_type: string
-min_args: 2
-max_args: 4
+syntax: "Platform.Function.InvokeExecute(apiObject, status, options)"
+return_type: object
+min_args: 3
+max_args: 3
 ---
 
 ## Parameters
@@ -20,9 +20,8 @@ max_args: 4
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `apiObject` | object | Yes | SOAP object built with `CreateObject` and configured with `SetObjectProperty` |
-| `method` | string | Yes | Execute method name to invoke |
-| `statusMessage` | string | No | Variable (passed by reference) that receives the status message |
-| `errorCode` | string | No | Variable (passed by reference) that receives the error code |
+| `status` | array | Yes | Array that receives the status and request ID of the API call (e.g. `[0, 0]`) |
+| `options` | object | Yes | API configure options to include in the call. Can contain a `null` value. |
 
 ## Examples
 
@@ -30,12 +29,10 @@ max_args: 4
 var execObj = Platform.Function.CreateObject("ExecuteRequest");
 Platform.Function.SetObjectProperty(execObj, "Name", "LogUnsubEvent");
 
-var status = "";
-var code = "";
-var result = Platform.Function.InvokeExecute(execObj, "LogUnsubEvent", status, code);
-if (code !== "0") {
-    Write("Error " + code + ": " + status);
-}
+var StatusAndRequestID = [0, 0];
+var result = Platform.Function.InvokeExecute(execObj, StatusAndRequestID, null);
+var status = StatusAndRequestID[0];
+var requestID = StatusAndRequestID[1];
 ```
 
 {% include callout.html type="note" content="WSProxy is recommended over InvokeExecute for most use cases — it is simpler, uses native JS objects, and handles serialization automatically." %}

@@ -9,10 +9,10 @@ availability:
   cloudpage: true
   automation: true
   triggered_send: true
-syntax: "Platform.Function.LookupRows(deName, filterField, filterValue [, filterField2, filterValue2, ...])"
+syntax: "Platform.Function.LookupRows(deName, whereFieldNames, whereFieldValues)"
 return_type: "object[]"
 min_args: 3
-max_args: Infinity
+max_args: 3
 ---
 
 ## Parameters
@@ -20,10 +20,8 @@ max_args: Infinity
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `deName` | string | Yes | Data Extension name or external key |
-| `filterField` | string | Yes | Column name to filter on |
-| `filterValue` | string | Yes | Value to match in the filter column |
-| `filterField2` | string | No | Additional filter column (AND logic) |
-| `filterValue2` | string | No | Additional filter value |
+| `whereFieldNames` | string\|string[] | Yes | Filter field name, or an array of field names connected with AND logic |
+| `whereFieldValues` | string\|array | Yes | Filter field value matching `whereFieldNames`; must be an array of equal length when `whereFieldNames` is an array |
 
 ## Description
 
@@ -55,9 +53,9 @@ Write("</ul>");
 
 ```javascript
 var rows = Platform.Function.LookupRows(
-    "Orders",
-    "Status",  "pending",
-    "Country", "US"
+    "CustomerData",
+    ["PreferredLanguage", "RewardsTier"],    // array of filter fields
+    ["English", "Gold"]                      // matching array of values
 );
 
 for (var i = 0; i < rows.length; i++) {
