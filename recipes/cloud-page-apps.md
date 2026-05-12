@@ -25,14 +25,14 @@ if (method === "GET") {
 
 function handleGet() {
     var id = Platform.Request.GetQueryStringParameter("id");
-    if (Platform.Function.Empty(id)) {
+    if (!id) {
         Platform.Response.SetContentType("application/json");
         Write(Stringify({ message: "Welcome to the API" }));
         return;
     }
     var record = Platform.Function.Lookup("Records", "data", "id", id);
     Platform.Response.SetContentType("application/json");
-    if (Platform.Function.Empty(record)) {
+    if (!record) {
         Write(Stringify({ status: 404, statusMessage: "Not Found", error: "Record not found" }));
     } else {
         Write(Stringify({ id: id, data: record }));

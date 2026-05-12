@@ -111,7 +111,7 @@ For JSON endpoints called by other services:
 var receivedToken = Platform.Request.GetRequestHeader("X-API-Token");
 var expectedToken = Platform.Function.Lookup("AppConfig", "value", "key", "apiSecret");
 
-if (Platform.Function.Empty(receivedToken) || receivedToken !== expectedToken) {
+if (!receivedToken || receivedToken !== expectedToken) {
     Write(Stringify({ status: 401, statusMessage: "Unauthorized", error: "Unauthorized" }));
     return;
 }

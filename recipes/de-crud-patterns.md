@@ -121,7 +121,7 @@ de.Rows.Remove("SubscriberKey", subKey);
 var existing = Platform.Function.Lookup(
     "UserProfiles", "SubscriberKey", "SubscriberKey", subKey);
 
-if (Platform.Function.Empty(existing)) {
+if (!existing) {
     // Insert
     Platform.Function.InsertData("UserProfiles",
         ["SubscriberKey", "Email", "CreatedAt"],

@@ -110,7 +110,7 @@ A common pattern: encrypt PII at write time, decrypt only when needed.
 ```javascript
 // --- Write path (e.g. form submission) ---
 var rawPhone = Platform.Request.GetFormField("phone");
-var encPhone = Platform.Function.EncryptSymmetric(
+var encPhone = encryptSymmetric(
     rawPhone, "AES", "PIIKey", "", "PIIiv", ""
 );
 Platform.Function.UpsertData(

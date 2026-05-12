@@ -37,14 +37,9 @@ var email = Platform.Function.Lookup("Contacts", "Email", "Id", contactId);
 if (email === null) { ... }
 
 // CORRECT
-if (Platform.Function.Empty(email)) {
+if (!email) {
     Write("Contact not found");
     return;
-}
-
-// Or
-if (!email) {
-    // handles both "" and null
 }
 ```
 

@@ -13,6 +13,7 @@ description: Read HTTP request data including query string parameters, POST body
 | Property | Type | Description |
 |----------|------|-------------|
 | `Platform.Request.Method` | string | HTTP method: `"GET"` or `"POST"` |
+| `Platform.Request.RequestURL` | string | Full resolved URL of the current page |
 
 ## Methods
 
@@ -24,7 +25,6 @@ description: Read HTTP request data including query string parameters, POST body
 | [`GetRequestHeader(name)`](#getrequestheader) | string | Read a request header |
 | [`GetCookieValue(name)`](#getcookievalue) | string | Read a cookie value |
 | [`GetUserLanguages()`](#getuserlanguages) | string | Read the browser `Accept-Language` header value |
-| [`RequestURL()`](#requesturl) | string | Get the full resolved URL of the current page |
 
 ---
 
@@ -101,7 +101,7 @@ var b = Platform.Request.GetPostData(); // b === ""
 ```javascript
 if (Platform.Request.Method === "POST") {
     var rawBody = Platform.Request.GetPostData();
-    if (!Platform.Function.Empty(rawBody)) {
+    if (rawBody) {
         var data = Platform.Function.ParseJSON(rawBody + "");
         // process data
     }
@@ -167,7 +167,7 @@ Returns the value of a cookie sent with the request.
 
 ```javascript
 var sessionId = Platform.Request.GetCookieValue("sfmc_session");
-if (Platform.Function.Empty(sessionId)) {
+if (!sessionId) {
     // No session — redirect to login
     Platform.Response.Redirect("/login");
 }
@@ -175,10 +175,10 @@ if (Platform.Function.Empty(sessionId)) {
 
 ---
 
-## Method: RequestURL
+## Property: RequestURL
 
 ```javascript
-Platform.Request.RequestURL()
+Platform.Request.RequestURL
 ```
 
 Returns the full URL of the current CloudPage as it was resolved, including CloudPages URL encryption parameters.
@@ -186,7 +186,7 @@ Returns the full URL of the current CloudPage as it was resolved, including Clou
 ### Examples
 
 ```javascript
-var currentUrl = Platform.Request.RequestURL();
+var currentUrl = Platform.Request.RequestURL;
 ```
 
 ---
@@ -199,7 +199,7 @@ var method = Platform.Request.Method;
 
 if (method === "GET") {
     var id = Platform.Request.GetQueryStringParameter("id");
-    if (Platform.Function.Empty(id)) {
+    if (!id) {
         Write(Stringify({ status: 400, statusMessage: "Bad Request", error: "id is required" }));
     } else {
         var record = Platform.Function.Lookup("Records", "data", "id", id);

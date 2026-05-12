@@ -52,7 +52,7 @@ Group related functions. Use the **Revealing Module Pattern** for namespacing:
 ```javascript
 var FormHandler = (function() {
     function validate(data) {
-        if (Platform.Function.Empty(data.email)) return false;
+        if (!data.email) return false;
         if (!Platform.Function.IsEmailAddress(data.email)) return false;
         return true;
     }
