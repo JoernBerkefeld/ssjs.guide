@@ -45,6 +45,10 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
+| [`Base64Decode(encodedString)`](/global-functions/base64decode/) | Global Functions | string | Decode Base64 string to plain text (requires Platform.Load) |
+| [`Platform.Function.Base64Decode(encodedString[, charset])`](/platform-functions/base64decode/) | Platform Functions | string | Decode a Base64-encoded string |
+| [`Base64Encode(string)`](/global-functions/base64encode/) | Global Functions | string | Encode plain text to Base64 (requires Platform.Load) |
+| [`Platform.Function.Base64Encode(string[, charset])`](/platform-functions/base64encode/) | Platform Functions | string | Encode a string to Base64 |
 | [`Platform.Function.BeginImpressionRegion(name)`](/platform-functions/beginimpressionregion/) | Platform Functions | void | Start a named impression region |
 | [`BounceEvent.Retrieve(filter)`](/core-library/events/#bounce-event) | Core Library | object[] | Bounce tracking events |
 
@@ -54,9 +58,9 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`ContentBlockByID(id[, regionName, stopOnError, fallbackContent])`](/global-functions/contentblockbyid/) | Global Functions | string | Render Content Builder block by ID |
-| [`ContentBlockByKey(customerKey[, regionName, stopOnError, fallbackContent])`](/global-functions/contentblockbykey/) | Global Functions | string | Render Content Builder block by key |
-| [`ContentBlockByName(name[, regionName, stopOnError, fallbackContent, statusVariable])`](/global-functions/contentblockbyname/) | Global Functions | string | Render Content Builder block by name |
+| [`Platform.Function.ContentBlockByID(id[, regionName, stopOnError, fallbackContent])`](/platform-functions/contentblockbyid/) | Platform Functions | string | Render Content Builder block by ID |
+| [`Platform.Function.ContentBlockByKey(customerKey[, regionName, stopOnError, fallbackContent])`](/platform-functions/contentblockbykey/) | Platform Functions | string | Render Content Builder block by key |
+| [`Platform.Function.ContentBlockByName(name[, regionName, stopOnError, fallbackContent, statusVariable])`](/platform-functions/contentblockbyname/) | Platform Functions | string | Render Content Builder block by name |
 | [`Platform.Function.ContentImageByID(id[, fallbackId])`](/platform-functions/contentimagebyid/) | Platform Functions | string | img tag for Content Builder image by ID |
 | [`Platform.Function.ContentImageByKey(key[, fallbackId])`](/platform-functions/contentimagebykey/) | Platform Functions | string | img tag for Content Builder image by key |
 | [`Platform.Function.CreateObject(objectType)`](/platform-functions/createobject/) | Platform Functions | object | Create SOAP API object (legacy) |
@@ -228,6 +232,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`Math.SQRT1_2`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Square root of 1/2 |
 | [`Math.SQRT2`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Square root of 2 |
 | [`Math.tan(x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Tangent |
+| [`Platform.Function.MD5(string[, charset])`](/platform-functions/md5/) | Platform Functions | string | MD5 hash of a string |
 
 ---
 
@@ -384,7 +389,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`TreatAsContent(content)`](/global-functions/treatascontent/) | Global Functions | string | Evaluate AMPscript/HTML via SSJS |
+| [`Platform.Function.TreatAsContent(content)`](/platform-functions/treatascontent/) | Platform Functions | string | Evaluate AMPscript/HTML server-side |
 | [`Template.Init(key)`](/core-library/template/) | Core Library | TemplateInstance | Initialize template |
 | [`Template.Add(properties)`](/core-library/template/) | Core Library | string | Create template |
 | [`Template.Retrieve(filter)`](/core-library/template/) | Core Library | object[] | Retrieve templates |

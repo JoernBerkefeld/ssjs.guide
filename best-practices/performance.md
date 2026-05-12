@@ -119,7 +119,7 @@ function dateAdd(timestamp,intervalToAdd,intervalType) {
     Platform.Variable.SetValue("@dateAdd_ts",timestamp);
     Platform.Variable.SetValue("@dateAdd_add",intervalToAdd);
     Platform.Variable.SetValue("@dateAdd_type",intervalType);
-    return TreatAsContent("%%=DateAdd(@dateAdd_ts, @dateAdd_add, @dateAdd_type)=%%");
+    return Platform.Function.TreatAsContent("%%=DateAdd(@dateAdd_ts, @dateAdd_add, @dateAdd_type)=%%");
 }
 
 function getAccessToken() {
@@ -156,7 +156,7 @@ function formatDate(dateString,dateFormat,timeFormat,isoLocale) {
     Platform.Variable.SetValue("@formatDate_date",dateFormat);
     Platform.Variable.SetValue("@formatDate_time",timeFormat);
     Platform.Variable.SetValue("@formatDate_iso",isoLocale);
-    return TreatAsContent("%%=FormatDate(@formatDate_string, @formatDate_date, @formatDate_time, @formatDate_iso)=%%");
+    return Platform.Function.TreatAsContent("%%=FormatDate(@formatDate_string, @formatDate_date, @formatDate_time, @formatDate_iso)=%%");
 }
 ```
 

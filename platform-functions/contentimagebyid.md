@@ -44,6 +44,6 @@ Write(icon);
 <h4>See Also</h4>
 <ul>
   <li><a href="/platform-functions/contentimagebykey/">ContentImageByKey</a></li>
-  <li><a href="/global-functions/contentblockbyid/">ContentBlockByID</a></li>
+  <li><a href="/platform-functions/contentblockbyid/">Platform.Function.ContentBlockByID</a></li>
 </ul>
 </div>

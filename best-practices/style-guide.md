@@ -165,7 +165,7 @@ Platform.Function.InsertData("DE", ["col"], ["val"]);
 Platform.Function.UpsertData("DE", ["key"], ["val"], ["col"], ["val"]);
 
 // Also valid, just less descriptive
-InsertDE("DE", ["col"], ["val"]);
+Platform.Function.InsertDE("DE", ["col"], ["val"]);
 ```
 
 ---

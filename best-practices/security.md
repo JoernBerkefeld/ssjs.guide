@@ -33,17 +33,17 @@ id = parseInt(id, 10);
 
 ---
 
-## 2. Never Inject Input into TreatAsContent
+## 2. Never Inject Input into Platform.Function.TreatAsContent
 
-`TreatAsContent()` evaluates AMPscript. Passing user-controlled data to it creates a **Server-Side Template Injection (SSTI)** vulnerability.
+`Platform.Function.TreatAsContent()` evaluates AMPscript. Passing user-controlled data to it creates a **Server-Side Template Injection (SSTI)** vulnerability.
 
 ```javascript
 // DANGEROUS — user can inject AMPscript
-TreatAsContent(userInput);
+Platform.Function.TreatAsContent(userInput);
 
 // SAFE — set via Variable, then use a fixed template
 Variable.SetValue("@userInput", userInput);
-TreatAsContent("%%=v(@userInput)=%%"); // v() output-encodes the value
+Platform.Function.TreatAsContent("%%=v(@userInput)=%%"); // v() output-encodes the value
 ```
 
 ---
@@ -67,7 +67,7 @@ function decryptSymmetric(encryptedString, algorithm, passwordKey, passwordValue
     Platform.Variable.SetValue("@decrypt_pw",passwordValue || "");
     Platform.Variable.SetValue("@decrypt_salt",saltValue || "");
     Platform.Variable.SetValue("@decrypt_vector",vectorValue || "");
-    return TreatAsContent("%%=DecryptSymmetric(@decrypt_string, @decrypt_algo, @null,@decrypt_pw, @null, @decrypt_salt, @null, @decrypt_vector)=%%");
+    return Platform.Function.TreatAsContent("%%=DecryptSymmetric(@decrypt_string, @decrypt_algo, @null,@decrypt_pw, @null, @decrypt_salt, @null, @decrypt_vector)=%%");
 }
 var token = decryptSymmetric(encryptedToken, "AES", "myKey", "myIV");
 ```
@@ -174,7 +174,7 @@ function formatDate(dateString,dateFormat,timeFormat,isoLocale) {
     Platform.Variable.SetValue("@formatDate_date",dateFormat);
     Platform.Variable.SetValue("@formatDate_time",timeFormat);
     Platform.Variable.SetValue("@formatDate_iso",isoLocale);
-    return TreatAsContent("%%=FormatDate(@formatDate_string, @formatDate_date, @formatDate_time, @formatDate_iso)=%%");
+    return Platform.Function.TreatAsContent("%%=FormatDate(@formatDate_string, @formatDate_date, @formatDate_time, @formatDate_iso)=%%");
 }
 
 var ip = Platform.Request.GetRequestHeader("X-Forwarded-For")
@@ -204,6 +204,6 @@ Platform.Function.UpsertData("RateLimit",
 <h4>See Also</h4>
 <ul>
   <li><a href="/best-practices/defensive-coding/">Defensive Coding</a></li>
-  <li><a href="/global-functions/treatascontent/">TreatAsContent</a></li>
+  <li><a href="/platform-functions/treatascontent/">Platform.Function.TreatAsContent</a></li>
 </ul>
 </div>

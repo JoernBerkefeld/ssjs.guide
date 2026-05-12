@@ -57,14 +57,10 @@
         url: /global-functions/string/
       - title: Error
         url: /global-functions/error/
-      - title: ContentBlockByKey
-        url: /global-functions/contentblockbykey/
-      - title: ContentBlockByName
-        url: /global-functions/contentblockbyname/
-      - title: ContentBlockByID
-        url: /global-functions/contentblockbyid/
-      - title: TreatAsContent
-        url: /global-functions/treatascontent/
+      - title: Base64Encode
+        url: /global-functions/base64encode/
+      - title: Base64Decode
+        url: /global-functions/base64decode/
       - title: Variable (global)
         url: /global-functions/variable/
       - title: Attribute (global)
@@ -159,6 +155,12 @@
         url: /platform-functions/httppost/
       - title: '— Content —'
         url: /platform-functions/#content
+      - title: ContentBlockByKey
+        url: /platform-functions/contentblockbykey/
+      - title: ContentBlockByName
+        url: /platform-functions/contentblockbyname/
+      - title: ContentBlockByID
+        url: /platform-functions/contentblockbyid/
       - title: ContentImageByKey
         url: /platform-functions/contentimagebykey/
       - title: ContentImageByID
@@ -167,6 +169,16 @@
         url: /platform-functions/beginimpressionregion/
       - title: EndImpressionRegion
         url: /platform-functions/endimpressionregion/
+      - title: TreatAsContent
+        url: /platform-functions/treatascontent/
+      - title: '— Encoding —'
+        url: /platform-functions/#encoding
+      - title: MD5
+        url: /platform-functions/md5/
+      - title: Base64Encode
+        url: /platform-functions/base64encode/
+      - title: Base64Decode
+        url: /platform-functions/base64decode/
 
 - title: Platform Objects
   url: /platform-objects/

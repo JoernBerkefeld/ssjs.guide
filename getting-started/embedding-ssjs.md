@@ -80,7 +80,7 @@ function formatDate(dateString,dateFormat,timeFormat,isoLocale) {
     Platform.Variable.SetValue("@formatDate_date",dateFormat);
     Platform.Variable.SetValue("@formatDate_time",timeFormat);
     Platform.Variable.SetValue("@formatDate_iso",isoLocale);
-    return TreatAsContent("%%=FormatDate(@formatDate_string, @formatDate_date, @formatDate_time, @formatDate_iso)=%%");
+    return Platform.Function.TreatAsContent("%%=FormatDate(@formatDate_string, @formatDate_date, @formatDate_time, @formatDate_iso)=%%");
 }
 
 </script>

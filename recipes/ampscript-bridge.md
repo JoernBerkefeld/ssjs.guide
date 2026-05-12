@@ -62,24 +62,24 @@ AMPscript's `URLEncode` has more encoding options than SSJS:
 
 ```javascript
 Variable.SetValue("@rawValue", userInput);
-TreatAsContent("%%[SET @encoded = URLEncode(@rawValue, 1, 1)]%%");
+Platform.Function.TreatAsContent("%%[SET @encoded = URLEncode(@rawValue, 1, 1)]%%");
 var encoded = Variable.GetValue("@encoded");
 ```
 
 ---
 
-## Using TreatAsContent Safely
+## Using Platform.Function.TreatAsContent Safely
 
-{% include callout.html type="warning" content="Never pass user input directly to `TreatAsContent()`. Use `Variable.SetValue()` first — the AMPscript `v()` function output-encodes values preventing injection." %}
+{% include callout.html type="warning" content="Never pass user input directly to `Platform.Function.TreatAsContent()`. Use `Variable.SetValue()` first — the AMPscript `v()` function output-encodes values preventing injection." %}
 
 ```javascript
 // SAFE pattern
 Variable.SetValue("@name", userName);
 Variable.SetValue("@code", promoCode);
-TreatAsContent("Hello, %%=v(@name)=%%. Your code is %%=v(@code)=%%.");
+Platform.Function.TreatAsContent("Hello, %%=v(@name)=%%. Your code is %%=v(@code)=%%.");
 
 // DANGEROUS — never do this:
-// TreatAsContent(userInput); // AMPscript injection!
+// Platform.Function.TreatAsContent(userInput); // AMPscript injection!
 ```
 
 ---
@@ -140,7 +140,7 @@ Top pick: %%=v(@topProduct)=%%
 <ul>
   <li><a href="/platform-objects/platform-variable/">Platform.Variable</a></li>
   <li><a href="/global-functions/variable/">Variable (global)</a></li>
-  <li><a href="/global-functions/treatascontent/">TreatAsContent</a></li>
+  <li><a href="/platform-functions/treatascontent/">Platform.Function.TreatAsContent</a></li>
   <li><a href="/getting-started/embedding-ssjs/">Embedding SSJS</a></li>
 </ul>
 </div>

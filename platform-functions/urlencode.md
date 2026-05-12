@@ -38,6 +38,6 @@ For AMPscript-style `URLEncode` with additional operands (not exposed on `Platfo
 
 ```javascript
 Variable.SetValue("@val", myValue);
-TreatAsContent("%%[Set @encoded = URLEncode(@val, 1, 1)]%%");
+Platform.Function.TreatAsContent("%%[Set @encoded = URLEncode(@val, 1, 1)]%%");
 var encoded = Variable.GetValue("@encoded");
 ```

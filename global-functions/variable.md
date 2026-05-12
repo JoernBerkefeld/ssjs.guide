@@ -61,12 +61,12 @@ Variable.SetValue("@theme", data || "light");
 
 ### Bridge pattern for AMPscript functions
 
-The most important use: safely pass values into AMPscript functions via `TreatAsContent`:
+The most important use: safely pass values into AMPscript functions via `Platform.Function.TreatAsContent`:
 
 ```javascript
 // Safe: set value via Variable.SetValue, reference by name in AMPscript
 Variable.SetValue("@inputStr", userValue);
-TreatAsContent("%%[Set @encoded = URLEncode(@inputStr, 1, 1)]%%");
+Platform.Function.TreatAsContent("%%[Set @encoded = URLEncode(@inputStr, 1, 1)]%%");
 var encoded = Variable.GetValue("@encoded");
 ```
 
@@ -89,7 +89,7 @@ Variable.SetValue("name", "Jane");   // ⚠️ may work but non-standard
   <li><a href="/platform-objects/platform-variable/">Platform.Variable</a></li>
   <li><a href="/platform-functions/getvalue/">Platform.Function.GetValue</a></li>
   <li><a href="/platform-functions/setvalue/">Platform.Function.SetValue</a></li>
-  <li><a href="/global-functions/treatascontent/">TreatAsContent</a></li>
+  <li><a href="/platform-functions/treatascontent/">Platform.Function.TreatAsContent</a></li>
   <li><a href="/recipes/ampscript-bridge/">AMPscript Bridge recipe</a></li>
 </ul>
 </div>

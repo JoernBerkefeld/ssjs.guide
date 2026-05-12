@@ -12,7 +12,7 @@ SSJS exposes SFMC functionality through two distinct library layers with differe
 
 ```
 SSJS Runtime
-├── Global functions     (Write, Stringify, ContentBlockByKey, …)
+├── Global functions     (Write, Stringify, Base64Encode, …)
 ├── Platform             (always available, no Load required)
 │   ├── Platform.Function.*    (~55 methods)
 │   ├── Platform.Variable.*    (AMPscript bridge)

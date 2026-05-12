@@ -44,6 +44,6 @@ Write(thumb);
 <h4>See Also</h4>
 <ul>
   <li><a href="/platform-functions/contentimagebyid/">ContentImageByID</a></li>
-  <li><a href="/global-functions/contentblockbykey/">ContentBlockByKey</a></li>
+  <li><a href="/platform-functions/contentblockbykey/">Platform.Function.ContentBlockByKey</a></li>
 </ul>
 </div>

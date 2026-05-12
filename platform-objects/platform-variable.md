@@ -112,7 +112,7 @@ Platform.Variable.SetValue("@leadScore", score);
 
 ```javascript
 Variable.SetValue("@rawInput", userInput);
-TreatAsContent("%%[SET @encoded = URLEncode(@rawInput, 1, 1)]%%");
+Platform.Function.TreatAsContent("%%[SET @encoded = URLEncode(@rawInput, 1, 1)]%%");
 var encoded = Variable.GetValue("@encoded");
 ```
 
@@ -124,7 +124,7 @@ var encoded = Variable.GetValue("@encoded");
 <h4>See Also</h4>
 <ul>
   <li><a href="/global-functions/variable/">Variable (global alias)</a></li>
-  <li><a href="/global-functions/treatascontent/">TreatAsContent</a></li>
+  <li><a href="/platform-functions/treatascontent/">Platform.Function.TreatAsContent</a></li>
   <li><a href="/getting-started/embedding-ssjs/">Embedding SSJS</a></li>
 </ul>
 </div>

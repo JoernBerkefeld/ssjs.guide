@@ -1,4 +1,4 @@
----
+﻿---
 layout: function
 title: Now
 parent: Platform Functions
@@ -39,7 +39,7 @@ function dateAdd(timestamp,intervalToAdd,intervalType) {
     Platform.Variable.SetValue("@dateAdd_ts",timestamp);
     Platform.Variable.SetValue("@dateAdd_add",intervalToAdd);
     Platform.Variable.SetValue("@dateAdd_type",intervalType);
-    return TreatAsContent("%%=DateAdd(@dateAdd_ts, @dateAdd_add, @dateAdd_type)=%%");
+    return Platform.Function.TreatAsContent("%%=DateAdd(@dateAdd_ts, @dateAdd_add, @dateAdd_type)=%%");
 }
 var expiry = dateAdd(Now(), 30, "D");
 Write("Expires: " + expiry);

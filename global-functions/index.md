@@ -27,24 +27,14 @@ These functions and objects are available globally in any SSJS script block with
     <div class="fn-desc">Native Error constructor for creating throwable error objects with a message property.</div>
     <div class="fn-return">→ object</div>
   </a>
-  <a href="/global-functions/contentblockbykey/" class="function-card">
-    <div class="fn-name">ContentBlockByKey()</div>
-    <div class="fn-desc">Render a Content Builder asset by its customer key. Returns the rendered HTML.</div>
+  <a href="/global-functions/base64encode/" class="function-card">
+    <div class="fn-name">Base64Encode()</div>
+    <div class="fn-desc">Encode plain text to a Base64 string. Requires Platform.Load. For charset control use Platform.Function.Base64Encode().</div>
     <div class="fn-return">→ string</div>
   </a>
-  <a href="/global-functions/contentblockbyname/" class="function-card">
-    <div class="fn-name">ContentBlockByName()</div>
-    <div class="fn-desc">Render a Content Builder asset by folder path and name.</div>
-    <div class="fn-return">→ string</div>
-  </a>
-  <a href="/global-functions/contentblockbyid/" class="function-card">
-    <div class="fn-name">ContentBlockByID()</div>
-    <div class="fn-desc">Render a Content Builder asset by its numeric identifier.</div>
-    <div class="fn-return">→ string</div>
-  </a>
-  <a href="/global-functions/treatascontent/" class="function-card">
-    <div class="fn-name">TreatAsContent()</div>
-    <div class="fn-desc">Evaluate a string containing AMPscript or HTML and return the rendered result. Security note: never pass unvalidated user input.</div>
+  <a href="/global-functions/base64decode/" class="function-card">
+    <div class="fn-name">Base64Decode()</div>
+    <div class="fn-desc">Decode a Base64 string to plain text. Requires Platform.Load. For charset control use Platform.Function.Base64Decode().</div>
     <div class="fn-return">→ string</div>
   </a>
   <a href="/global-functions/variable/" class="function-card">

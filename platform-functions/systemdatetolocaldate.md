@@ -1,4 +1,4 @@
----
+﻿---
 layout: function
 title: SystemDateToLocalDate
 parent: Platform Functions
@@ -35,7 +35,7 @@ function formatDate(dateString,dateFormat,timeFormat,isoLocale) {
     Platform.Variable.SetValue("@formatDate_date",dateFormat);
     Platform.Variable.SetValue("@formatDate_time",timeFormat);
     Platform.Variable.SetValue("@formatDate_iso",isoLocale);
-    return TreatAsContent("%%=FormatDate(@formatDate_string, @formatDate_date, @formatDate_time, @formatDate_iso)=%%");
+    return Platform.Function.TreatAsContent("%%=FormatDate(@formatDate_string, @formatDate_date, @formatDate_time, @formatDate_iso)=%%");
 }
 
 Write("Your local time: " + formatDate(localTime, "M/D/YYYY H:MM"));

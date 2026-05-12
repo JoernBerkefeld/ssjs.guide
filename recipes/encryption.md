@@ -1,4 +1,4 @@
----
+﻿---
 layout: page
 title: Encryption
 parent: Recipes
@@ -51,7 +51,7 @@ function decryptSymmetric(encryptedString, algorithm, passwordKey, passwordValue
     Platform.Variable.SetValue("@decrypt_pw",passwordValue || "");
     Platform.Variable.SetValue("@decrypt_salt",saltValue || "");
     Platform.Variable.SetValue("@decrypt_vector",vectorValue || "");
-    return TreatAsContent("%%=DecryptSymmetric(@decrypt_string, @decrypt_algo, @null,@decrypt_pw, @null, @decrypt_salt, @null, @decrypt_vector)=%%");
+    return Platform.Function.TreatAsContent("%%=DecryptSymmetric(@decrypt_string, @decrypt_algo, @null,@decrypt_pw, @null, @decrypt_salt, @null, @decrypt_vector)=%%");
 }
 function encryptSymmetric(encryptedString, algorithm, passwordKey, passwordValue,saltKey, saltValue, vectorKey, vectorValue) {
     Platform.Variable.SetValue("@encrypt_string", encryptedString);
@@ -59,7 +59,7 @@ function encryptSymmetric(encryptedString, algorithm, passwordKey, passwordValue
     Platform.Variable.SetValue("@encrypt_pw",passwordValue || "");
     Platform.Variable.SetValue("@encrypt_salt",saltValue || "");
     Platform.Variable.SetValue("@encrypt_vector",vectorValue || "");
-    return TreatAsContent("%%=EncryptSymmetric(@encrypt_string, @encrypt_algo, @null,@encrypt_pw, @null, @encrypt_salt, @null, @encrypt_vector)=%%");
+    return Platform.Function.TreatAsContent("%%=EncryptSymmetric(@encrypt_string, @encrypt_algo, @null,@encrypt_pw, @null, @encrypt_salt, @null, @encrypt_vector)=%%");
 }
 ```
 
@@ -88,7 +88,7 @@ function encryptSymmetric(encryptedString, algorithm, passwordKey, passwordValue
     Platform.Variable.SetValue("@encrypt_pw",passwordValue || "");
     Platform.Variable.SetValue("@encrypt_salt",saltValue || "");
     Platform.Variable.SetValue("@encrypt_vector",vectorValue || "");
-    return TreatAsContent("%%=EncryptSymmetric(@encrypt_string, @encrypt_algo, @null,@encrypt_pw, @null, @encrypt_salt, @null, @encrypt_vector)=%%");
+    return Platform.Function.TreatAsContent("%%=EncryptSymmetric(@encrypt_string, @encrypt_algo, @null,@encrypt_pw, @null, @encrypt_salt, @null, @encrypt_vector)=%%");
 }
 
 function decryptSymmetric(encryptedString, algorithm, passwordKey, passwordValue,saltKey, saltValue, vectorKey, vectorValue) {
@@ -97,7 +97,7 @@ function decryptSymmetric(encryptedString, algorithm, passwordKey, passwordValue
     Platform.Variable.SetValue("@decrypt_pw",passwordValue || "");
     Platform.Variable.SetValue("@decrypt_salt",saltValue || "");
     Platform.Variable.SetValue("@decrypt_vector",vectorValue || "");
-    return TreatAsContent("%%=DecryptSymmetric(@decrypt_string, @decrypt_algo, @null,@decrypt_pw, @null, @decrypt_salt, @null, @decrypt_vector)=%%");
+    return Platform.Function.TreatAsContent("%%=DecryptSymmetric(@decrypt_string, @decrypt_algo, @null,@decrypt_pw, @null, @decrypt_salt, @null, @decrypt_vector)=%%");
 }
 ```
 
@@ -138,7 +138,7 @@ function decryptSymmetric(encryptedString, algorithm, passwordKey, passwordValue
     Platform.Variable.SetValue("@decrypt_pw",passwordValue || "");
     Platform.Variable.SetValue("@decrypt_salt",saltValue || "");
     Platform.Variable.SetValue("@decrypt_vector",vectorValue || "");
-    return TreatAsContent("%%=DecryptSymmetric(@decrypt_string, @decrypt_algo, @null,@decrypt_pw, @null, @decrypt_salt, @null, @decrypt_vector)=%%");
+    return Platform.Function.TreatAsContent("%%=DecryptSymmetric(@decrypt_string, @decrypt_algo, @null,@decrypt_pw, @null, @decrypt_salt, @null, @decrypt_vector)=%%");
 }
 ```
 

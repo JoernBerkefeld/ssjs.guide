@@ -4,7 +4,7 @@ title: Platform Functions
 description: The Platform.Function.* API — Data Extension CRUD, dates, HTTP helpers, SOAP wrappers, and content helpers. Most calls do not require Platform.Load.
 ---
 
-Most methods here are invoked as `Platform.Function.MethodName(...)`. Where the official docs describe a **dual-call** rule, the same function may also be callable without the `Platform.Function.` prefix; see each page and [Platform functions overview](/getting-started/platform-vs-core/).
+Most methods here are invoked as `Platform.Function.MethodName(...)`.
 
 ## Data Extensions {#data-extensions}
 
@@ -85,12 +85,20 @@ Simple HTTP functions — for full REST control see [Script.Util.HttpRequest](/h
 ## Content {#content}
 
 <div class="function-grid">
-  <a href="/global-functions/contentblockbykey/" class="function-card"><div class="fn-name">ContentBlockByKey</div><div class="fn-desc">Render a Content Builder asset by customer key (global).</div><div class="fn-return">→ string</div></a>
-  <a href="/global-functions/contentblockbyname/" class="function-card"><div class="fn-name">ContentBlockByName</div><div class="fn-desc">Render a Content Builder asset by folder path and name.</div><div class="fn-return">→ string</div></a>
-  <a href="/global-functions/contentblockbyid/" class="function-card"><div class="fn-name">ContentBlockByID</div><div class="fn-desc">Render a Content Builder asset by numeric ID.</div><div class="fn-return">→ string</div></a>
+  <a href="/platform-functions/contentblockbykey/" class="function-card"><div class="fn-name">ContentBlockByKey</div><div class="fn-desc">Render a Content Builder asset by customer key.</div><div class="fn-return">→ string</div></a>
+  <a href="/platform-functions/contentblockbyname/" class="function-card"><div class="fn-name">ContentBlockByName</div><div class="fn-desc">Render a Content Builder asset by folder path and name.</div><div class="fn-return">→ string</div></a>
+  <a href="/platform-functions/contentblockbyid/" class="function-card"><div class="fn-name">ContentBlockByID</div><div class="fn-desc">Render a Content Builder asset by numeric ID.</div><div class="fn-return">→ string</div></a>
   <a href="/platform-functions/contentimagebykey/" class="function-card"><div class="fn-name">ContentImageByKey</div><div class="fn-desc">Output an img tag for a Content Builder image by key.</div><div class="fn-return">→ string</div></a>
   <a href="/platform-functions/contentimagebyid/" class="function-card"><div class="fn-name">ContentImageByID</div><div class="fn-desc">Output an img tag for a Content Builder image by ID.</div><div class="fn-return">→ string</div></a>
   <a href="/platform-functions/beginimpressionregion/" class="function-card"><div class="fn-name">BeginImpressionRegion</div><div class="fn-desc">Start a named impression tracking region.</div><div class="fn-return">→ void</div></a>
   <a href="/platform-functions/endimpressionregion/" class="function-card"><div class="fn-name">EndImpressionRegion</div><div class="fn-desc">End an impression region.</div><div class="fn-return">→ void</div></a>
-  <a href="/global-functions/treatascontent/" class="function-card"><div class="fn-name">TreatAsContent</div><div class="fn-desc">Evaluate AMPscript/HTML via Platform.Function or global alias.</div><div class="fn-return">→ string</div></a>
+  <a href="/platform-functions/treatascontent/" class="function-card"><div class="fn-name">TreatAsContent</div><div class="fn-desc">Evaluate AMPscript/HTML server-side. Security: never pass unvalidated user input.</div><div class="fn-return">→ string</div></a>
+</div>
+
+## Encoding & Hashing {#encoding}
+
+<div class="function-grid">
+  <a href="/platform-functions/md5/" class="function-card"><div class="fn-name">MD5</div><div class="fn-desc">Returns an MD5 hash for a given string value.</div><div class="fn-return">→ string</div></a>
+  <a href="/platform-functions/base64encode/" class="function-card"><div class="fn-name">Base64Encode</div><div class="fn-desc">Encode a string to Base64 with optional charset.</div><div class="fn-return">→ string</div></a>
+  <a href="/platform-functions/base64decode/" class="function-card"><div class="fn-name">Base64Decode</div><div class="fn-desc">Decode a Base64-encoded string with optional charset.</div><div class="fn-return">→ string</div></a>
 </div>
