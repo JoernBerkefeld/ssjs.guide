@@ -4,7 +4,7 @@ title: proxy.createBatch
 parent: WSProxy
 parent_url: /wsproxy/
 permalink: /wsproxy/create-batch/
-description: Create multiple SFMC objects in a single SOAP API call — more efficient than calling proxy.create() in a loop.
+description: Create multiple SFMC objects in a single SOAP API call — more efficient than calling proxy.createItem() in a loop.
 ---
 
 ## Syntax
@@ -91,7 +91,7 @@ for (var c = 0; c < chunks.length; c++) {
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
-  <li><a href="/wsproxy/create-item/">proxy.create</a></li>
+  <li><a href="/wsproxy/create-item/">proxy.createItem</a></li>
   <li><a href="/wsproxy/update-batch/">proxy.updateBatch</a></li>
 </ul>
 </div>

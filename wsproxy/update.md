@@ -1,6 +1,6 @@
 ---
 layout: page
-title: proxy.update
+title: proxy.updateItem
 parent: WSProxy
 parent_url: /wsproxy/
 permalink: /wsproxy/update-item/
@@ -10,7 +10,7 @@ description: Update an existing SFMC object via the SOAP API. Can be used with S
 ## Syntax
 
 ```javascript
-var result = proxy.update(objectType, properties [, saveOptions]);
+var result = proxy.updateItem(objectType, properties);
 ```
 
 ## Parameters
@@ -19,7 +19,6 @@ var result = proxy.update(objectType, properties [, saveOptions]);
 |------|------|----------|-------------|
 | `objectType` | string | Yes | SOAP API object type |
 | `properties` | object | Yes | Properties to update (must include identifier) |
-| `saveOptions` | object | No | SOAP save options (e.g., for upsert) |
 
 ## Return Value
 
@@ -37,17 +36,17 @@ var result = proxy.update(objectType, properties [, saveOptions]);
 
 ```javascript
 var proxy = new Script.Util.WSProxy();
-var result = proxy.update("Subscriber", {
+var result = proxy.updateItem("Subscriber", {
     SubscriberKey: "sub_jane",
     Status: "Unsubscribed"
 });
 ```
 
-### Upsert DE row (update or create)
+### Update DE row
 
 ```javascript
 var proxy = new Script.Util.WSProxy();
-var result = proxy.update(
+var result = proxy.updateItem(
     "DataExtensionObject[MyDE_Key]",
     {
         Properties: {
@@ -57,20 +56,9 @@ var result = proxy.update(
                 { Name: "UpdatedAt", Value: Platform.Function.Now() }
             ]
         }
-    },
-    [{ SaveAction: "UpdateAdd" }]  // SaveAction: UpdateOnly, AddOnly, UpdateAdd (upsert)
+    }
 );
 ```
-
-## Notes
-
-### SaveAction Options
-
-| SaveAction | Behavior |
-|------------|----------|
-| `UpdateOnly` | Update existing; fail if not found |
-| `AddOnly` | Insert new; fail if already exists |
-| `UpdateAdd` | Upsert — update if found, insert if not |
 
 ## See Also
 
@@ -78,6 +66,6 @@ var result = proxy.update(
 <h4>See Also</h4>
 <ul>
   <li><a href="/wsproxy/update-batch/">proxy.updateBatch</a></li>
-  <li><a href="/wsproxy/create-item/">proxy.create</a></li>
+  <li><a href="/wsproxy/create-item/">proxy.createItem</a></li>
 </ul>
 </div>

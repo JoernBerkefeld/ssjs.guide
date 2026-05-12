@@ -57,7 +57,7 @@ var all = Platform.Request.GetFormField("unsubAll") === "on";
 if (all) {
     // Global unsubscribe via WSProxy
     var proxy = new Script.Util.WSProxy();
-    proxy.update("Subscriber", {
+    proxy.updateItem("Subscriber", {
         EmailAddress: email,
         SubscriberKey: email,
         Status: "Unsubscribed"
@@ -142,12 +142,12 @@ Write(Stringify({ status: "subscribed" }));
 
 ---
 
-## WSProxy: Upsert Subscriber to All Subscribers
+## WSProxy: Update Subscriber in All Subscribers
 
 ```javascript
 var proxy = new Script.Util.WSProxy();
 
-var result = proxy.update(
+var result = proxy.updateItem(
     "Subscriber",
     {
         EmailAddress: email,
@@ -161,12 +161,11 @@ var result = proxy.update(
             { Name: "FirstName", Value: firstName },
             { Name: "LastName", Value: lastName }
         ]
-    },
-    [{ SaveAction: "UpdateAdd" }]  // Upsert
+    }
 );
 
 if (result.Status !== "OK") {
-    throw new Error("Subscriber upsert failed: " + result.Results[0].StatusMessage);
+    throw new Error("Subscriber update failed: " + result.Results[0].StatusMessage);
 }
 ```
 
@@ -177,6 +176,6 @@ if (result.Status !== "OK") {
 <ul>
   <li><a href="/core-library/subscriber/">Subscriber</a></li>
   <li><a href="/core-library/list/">List</a></li>
-  <li><a href="/wsproxy/update-item/">WSProxy.update</a></li>
+  <li><a href="/wsproxy/update-item/">WSProxy.updateItem</a></li>
 </ul>
 </div>

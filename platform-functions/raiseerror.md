@@ -29,7 +29,7 @@ max_args: 4
 ```javascript
 // Halt with an error
 var email = Platform.Function.Lookup("Contacts", "email", "id", contactId);
-if (Platform.Function.Empty(email)) {
+if (!email) {
     Platform.Function.RaiseError("No email found for contact: " + contactId);
 }
 

@@ -66,8 +66,8 @@ try {
 Platform.Load("core", "1.1.5");
 
 if (Platform.Request.Method === "POST") {
-    var email   = Platform.Request.GetFormData("email");
-    var message = Platform.Request.GetFormData("message");
+    var email   = Platform.Request.GetFormField("email");
+    var message = Platform.Request.GetFormField("message");
 
     if (Platform.Function.IsEmailAddress(email)) {
         Platform.Function.InsertData(

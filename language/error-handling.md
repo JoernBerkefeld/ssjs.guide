@@ -183,8 +183,8 @@ function validateInput(params) {
 }
 
 var params = {
-    email: Platform.Request.GetFormData("email"),
-    name:  Platform.Request.GetFormData("name")
+    email: Platform.Request.GetFormField("email"),
+    name:  Platform.Request.GetFormField("name")
 };
 
 var errors = validateInput(params);

@@ -61,8 +61,6 @@ Platform.Request.GetFormField(fieldName)
 
 Reads a field from either a GET query string or POST form body (application/x-www-form-urlencoded or multipart/form-data).
 
-Some references use the name `GetFormData` for the same behavior; treat it as an alternate identifier for this request API.
-
 ### Examples
 
 ```javascript

@@ -1,6 +1,6 @@
 ---
 layout: page
-title: proxy.delete
+title: proxy.deleteItem
 parent: WSProxy
 parent_url: /wsproxy/
 permalink: /wsproxy/delete-item/
@@ -10,7 +10,7 @@ description: Delete an SFMC object via the SOAP API.
 ## Syntax
 
 ```javascript
-var result = proxy.delete(objectType, properties);
+var result = proxy.deleteItem(objectType, properties);
 ```
 
 ## Parameters
@@ -36,7 +36,7 @@ var result = proxy.delete(objectType, properties);
 
 ```javascript
 var proxy = new Script.Util.WSProxy();
-var result = proxy.delete("DataExtension", {
+var result = proxy.deleteItem("DataExtension", {
     CustomerKey: "TempDE_Key"
 });
 if (result.Status === "OK") {
@@ -48,7 +48,7 @@ if (result.Status === "OK") {
 
 ```javascript
 var proxy = new Script.Util.WSProxy();
-var result = proxy.delete("Subscriber", {
+var result = proxy.deleteItem("Subscriber", {
     SubscriberKey: "sub_jane"
 });
 ```
@@ -57,7 +57,7 @@ var result = proxy.delete("Subscriber", {
 
 ```javascript
 var proxy = new Script.Util.WSProxy();
-var result = proxy.delete("DataExtensionObject[MyDE_Key]", {
+var result = proxy.deleteItem("DataExtensionObject[MyDE_Key]", {
     Keys: {
         Key: [
             { Name: "SubscriberKey", Value: "sub_jane" }
@@ -73,7 +73,7 @@ var result = proxy.delete("DataExtensionObject[MyDE_Key]", {
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
-  <li><a href="/wsproxy/create-item/">proxy.create</a></li>
-  <li><a href="/wsproxy/update-item/">proxy.update</a></li>
+  <li><a href="/wsproxy/create-item/">proxy.createItem</a></li>
+  <li><a href="/wsproxy/update-item/">proxy.updateItem</a></li>
 </ul>
 </div>

@@ -24,7 +24,7 @@ max_args: 1
 ## Examples
 
 ```javascript
-var email = Platform.Request.GetFormData("email");
+var email = Platform.Request.GetFormField("email");
 
 if (!Platform.Function.IsEmailAddress(email)) {
     Write('<p class="error">Please enter a valid email address.</p>');

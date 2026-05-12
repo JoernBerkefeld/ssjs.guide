@@ -3,7 +3,7 @@ layout: page
 title: proxy.retrieve
 parent: WSProxy
 parent_url: /wsproxy/
-description: Retrieve SFMC objects of a given type using an optional filter. Returns up to ~2500 rows per call; use retrieveBatch or getNextBatch for pagination.
+description: Retrieve SFMC objects of a given type using an optional filter. Returns up to ~2500 rows per call; use getNextBatch for pagination.
 ---
 
 ## Syntax
@@ -59,7 +59,7 @@ var filter = {
     Status: "OK",
     RequestID: "...",
     Results: [...],      // array of result objects
-    HasMoreRows: false   // true when more rows exist (use retrieveBatch)
+    HasMoreRows: false   // true when more rows exist (use getNextBatch)
 }
 ```
 

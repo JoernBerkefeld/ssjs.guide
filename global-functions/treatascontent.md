@@ -33,7 +33,7 @@ This is primarily used to invoke AMPscript functions from SSJS context — funct
 
 ```javascript
 // ❌ Unsafe — user input could contain AMPscript
-var userInput = Platform.Request.GetFormData("name");
+var userInput = Platform.Request.GetFormField("name");
 TreatAsContent("%%[Set @result = Format(@userInput)]%%");
 
 // ✅ Safe — set the value via Variable.SetValue first, reference by variable name

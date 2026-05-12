@@ -1,16 +1,16 @@
 ---
 layout: page
-title: proxy.create
+title: proxy.createItem
 parent: WSProxy
 parent_url: /wsproxy/
 permalink: /wsproxy/create-item/
-description: Create a new SFMC object via the SOAP API — subscribers, data extensions, triggered send definitions, and more.
+description: Create a new SFMC object via the SOAP API — subscribers, data extensions, triggered send definitions, and more. Returns an object with Status, RequestID, and Results.
 ---
 
 ## Syntax
 
 ```javascript
-var result = proxy.create(objectType, properties [, options]);
+var result = proxy.createItem(objectType, properties);
 ```
 
 ## Parameters
@@ -19,7 +19,6 @@ var result = proxy.create(objectType, properties [, options]);
 |------|------|----------|-------------|
 | `objectType` | string | Yes | SOAP API object type |
 | `properties` | object | Yes | Object properties to set |
-| `options` | object | No | Additional SOAP create options |
 
 ## Return Value
 
@@ -43,7 +42,7 @@ var result = proxy.create(objectType, properties [, options]);
 
 ```javascript
 var proxy = new Script.Util.WSProxy();
-var result = proxy.create("Subscriber", {
+var result = proxy.createItem("Subscriber", {
     EmailAddress: "jane@example.com",
     SubscriberKey: "sub_jane",
     Status: "Active",
@@ -60,7 +59,7 @@ if (result.Status !== "OK") {
 
 ```javascript
 var proxy = new Script.Util.WSProxy();
-var result = proxy.create("DataExtension", {
+var result = proxy.createItem("DataExtension", {
     Name: "NewDE_Name",
     CustomerKey: "NewDE_Key",
     Fields: {
@@ -78,7 +77,7 @@ var result = proxy.create("DataExtension", {
 
 ```javascript
 var proxy = new Script.Util.WSProxy();
-var result = proxy.create("DataExtensionObject[MyDE_Key]", {
+var result = proxy.createItem("DataExtensionObject[MyDE_Key]", {
     Properties: {
         Property: [
             { Name: "Email", Value: "jane@example.com" },
@@ -91,7 +90,7 @@ var result = proxy.create("DataExtensionObject[MyDE_Key]", {
 
 ## Notes
 
-For **upsert** (create or update) on Data Extension rows, use `proxy.update` with `SaveOption` or use the Core library's `de.Rows.Add()` / `de.Rows.Update()`.
+For **upsert** (create or update) on Data Extension rows, use `proxy.updateItem` with the `SaveAction: "UpdateAdd"` save option via `proxy.updateBatch`, or use the Core library's `de.Rows.Add()` / `de.Rows.Update()`.
 
 ## See Also
 
@@ -99,7 +98,7 @@ For **upsert** (create or update) on Data Extension rows, use `proxy.update` wit
 <h4>See Also</h4>
 <ul>
   <li><a href="/wsproxy/create-batch/">proxy.createBatch</a></li>
-  <li><a href="/wsproxy/update-item/">proxy.update</a></li>
-  <li><a href="/wsproxy/delete-item/">proxy.delete</a></li>
+  <li><a href="/wsproxy/update-item/">proxy.updateItem</a></li>
+  <li><a href="/wsproxy/delete-item/">proxy.deleteItem</a></li>
 </ul>
 </div>

@@ -4,13 +4,13 @@ title: proxy.updateBatch
 parent: WSProxy
 parent_url: /wsproxy/
 permalink: /wsproxy/update-batch/
-description: Update multiple SFMC objects in a single SOAP API call for better performance than looping proxy.update().
+description: Update multiple SFMC objects in a single SOAP API call for better performance than looping proxy.updateItem().
 ---
 
 ## Syntax
 
 ```javascript
-var result = proxy.updateBatch(objectType, propertiesArray [, saveOptions]);
+var result = proxy.updateBatch(objectType, propertiesArray);
 ```
 
 ## Parameters
@@ -19,7 +19,6 @@ var result = proxy.updateBatch(objectType, propertiesArray [, saveOptions]);
 |------|------|----------|-------------|
 | `objectType` | string | Yes | SOAP API object type |
 | `propertiesArray` | object[] | Yes | Array of update property objects |
-| `saveOptions` | object | No | SOAP SaveOptions (e.g., `[{ SaveAction: "UpdateAdd" }]`) |
 
 ## Examples
 
@@ -47,7 +46,7 @@ var result = proxy.updateBatch("Subscriber", batch, [{ SaveAction: "UpdateAdd" }
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
-  <li><a href="/wsproxy/update-item/">proxy.update</a></li>
+  <li><a href="/wsproxy/update-item/">proxy.updateItem</a></li>
   <li><a href="/wsproxy/create-batch/">proxy.createBatch</a></li>
 </ul>
 </div>
