@@ -200,6 +200,36 @@ Array.prototype.fill = Array.prototype.fill || function(value, startIndex, endIn
 };
 ```
 
+### copyWithin
+
+```javascript
+Array.prototype.copyWithin = Array.prototype.copyWithin || function(targetIndex, startIndex, count) {
+    var n = count || 1;
+    for (var i = 0; i < n; i++) {
+        this[targetIndex + i] = this[startIndex + i];
+    }
+    return this;
+};
+```
+
+### entries
+
+```javascript
+Array.prototype.entries = Array.prototype.entries || function() {
+    var index = 0;
+    var arr = this;
+    return {
+        next: function() {
+            if (index < arr.length) {
+                return { value: [index, arr[index++]], done: false };
+            }
+            return { done: true };
+        }
+    };
+};
+```
+```
+
 ### splice (broken — must override)
 
 `Array.prototype.splice` exists but ignores its first two arguments. Override unconditionally:
@@ -297,6 +327,9 @@ Array.prototype.includes  = Array.prototype.includes  || function(v) { for (var 
 Array.prototype.some      = Array.prototype.some      || function(cb) { if (typeof cb!=='function') return false; for (var i=0;i<this.length;i++) if (cb(this[i],i,this)) return true; return false; };
 Array.prototype.every     = Array.prototype.every     || function(cb) { if (typeof cb!=='function') return true; for (var i=0;i<this.length;i++) if (!cb(this[i],i,this)) return false; return true; };
 Array.prototype.lastIndexOf = function(v,f) { var s=(f!==undefined)?f:this.length-1; for (var i=s;i>=0;i--) if (this[i]===v) return i; return -1; }; // broken native — always override
+Array.prototype.fill      = Array.prototype.fill      || function(v,s,e) { var start=s||0; var end=(!e||e>this.length)?this.length:e; for (var i=start;i<end;i++) this[i]=v; return this; };
+Array.prototype.copyWithin = Array.prototype.copyWithin || function(t,s,c) { var n=c||1; for (var i=0;i<n;i++) this[t+i]=this[s+i]; return this; };
+Array.prototype.entries   = Array.prototype.entries   || function() { var idx=0; var a=this; return { next: function() { return idx<a.length ? {value:[idx,a[idx++]],done:false} : {done:true}; } }; };
 String.prototype.trim     = String.prototype.trim     || function() { return this.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g,''); };
 String.prototype.startsWith = String.prototype.startsWith || function(s,p) { p=p||0; return this.indexOf(s,p)===p; };
 String.prototype.endsWith   = String.prototype.endsWith   || function(s,l) { var n=(l===undefined||l>this.length)?this.length:l; return this.substring(n-s.length,n)===s; };

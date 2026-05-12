@@ -3,10 +3,10 @@ layout: page
 title: Subscriber
 parent: Core Library
 parent_url: /core-library/
-description: Core library object for managing All Subscribers list entries — retrieve subscriber attributes, update status, add or remove from lists.
+description: Core library object for managing All Subscribers list entries — add, retrieve, upsert, update, remove, unsubscribe, and retrieve attributes and lists.
 ---
 
-The `Subscriber` Core library object manages entries in the All Subscribers list. Use it to look up subscriber details, update attributes, or manage list membership.
+The `Subscriber` Core library object manages entries in the All Subscribers list. Use it to create, look up, update, or unsubscribe subscribers, and to retrieve their attributes and list memberships.
 
 {% include callout.html type="warning" content="Requires `Platform.Load(\"core\", \"1.1.5\")` before use." %}
 
@@ -14,130 +14,305 @@ The `Subscriber` Core library object manages entries in the All Subscribers list
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| [`Subscriber.Init(subscriberKey)`](#init) | Subscriber | Initialize a subscriber instance |
-| [`sub.Attributes.Add(name, value)`](#attributesadd) | void | Add/update subscriber attribute |
-| [`sub.Attributes.Remove(name)`](#attributesremove) | void | Remove subscriber attribute |
-| [`sub.Lists.Add(listKey)`](#listsadd) | void | Add subscriber to a list |
-| [`sub.Lists.Remove(listKey)`](#listsremove) | void | Remove subscriber from a list |
+| [`Subscriber.Init(key)`](#init) | SubscriberInstance | Initialize a Subscriber instance by key |
+| [`Subscriber.Add(properties)`](#add) | string | Create a new subscriber |
+| [`Subscriber.Retrieve(filter)`](#retrieve) | object[] | Retrieve subscribers matching a filter |
+| [`Subscriber.Upsert(properties)`](#upsert) | string | Create or update a subscriber |
+| [`Subscriber.Statistics(subscriberKey)`](#statistics) | object | Retrieve statistics for a subscriber |
+| [`<SubscriberInstance>.Update(properties)`](#update) | string | Update the initialized subscriber |
+| [`<SubscriberInstance>.Remove()`](#remove) | string | Delete the initialized subscriber |
+| [`<SubscriberInstance>.Unsubscribe()`](#unsubscribe) | string | Set the subscriber status to Unsubscribed |
+| [`<SubscriberInstance>.Attributes.Retrieve()`](#attributesretrieve) | object[] | Retrieve attributes for the subscriber |
+| [`<SubscriberInstance>.Lists.Retrieve()`](#listsretrieve) | object[] | Retrieve list memberships for the subscriber |
 
 ---
 
 ## Subscriber.Init
 
+### Syntax
+
 ```javascript
-var sub = Subscriber.Init(subscriberKey);
+Subscriber.Init(key)
 ```
 
-Initializes a Subscriber object for the given subscriber key.
+Initializes a Subscriber instance bound to the specified subscriber key. Required before invoking any instance method on the returned object.
 
 ### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `subscriberKey` | string | Yes | Subscriber key (usually email or custom key) |
+| `key` | string | Yes | Subscriber key |
+
+### Return value
+
+`SubscriberInstance`
+
+### Examples
+
+```javascript
+Platform.Load("core", "1");
+var sub = Subscriber.Init("mySubscriber");
+```
 
 ---
 
-## Attributes.Add
+## Subscriber.Add
+
+### Syntax
 
 ```javascript
-sub.Attributes.Add(attributeName, attributeValue)
+Subscriber.Add(properties)
 ```
 
-Adds or updates a profile attribute on the subscriber.
+Creates a new subscriber from the supplied properties.
+
+### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `properties` | object | Yes | `EmailAddress`, `SubscriberKey`, `EmailTypePreference`, `Attributes`, `Lists`, ... |
+
+### Return value
+
+`"OK"` on success.
 
 ### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
-var sub = Subscriber.Init("jane@example.com");
-sub.Attributes.Add("FirstName", "Jane");
-sub.Attributes.Add("LastName", "Doe");
-sub.Attributes.Add("PreferredLanguage", "en");
+var newSubscriber = {
+    EmailAddress: "test.008@example.com",
+    SubscriberKey: "20100730001",
+    EmailTypePreference: "Text",
+    Attributes: { "First Name": "test.008", "Last Name": "test.008" },
+    Lists: { Status: "Active", ID: 12345, Action: "Create" }
+};
+var status = Subscriber.Add(newSubscriber);
 ```
 
 ---
 
-## Attributes.Remove
+## Subscriber.Retrieve
+
+### Syntax
 
 ```javascript
-sub.Attributes.Remove(attributeName)
+Subscriber.Retrieve(filter)
 ```
 
-Removes a profile attribute from the subscriber.
+Returns an array of subscribers matching the specified filter.
+
+### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `filter` | object | Yes | PascalCase WSProxy-style filter object: `{Property, SimpleOperator, Value}` |
+
+### Return value
+
+`object[]`
 
 ### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
-var sub = Subscriber.Init("jane@example.com");
-sub.Attributes.Remove("OutdatedField");
+var results = Subscriber.Retrieve({ Property: "SubscriberKey", SimpleOperator: "equals", Value: "MySubscriberKey" });
 ```
 
 ---
 
-## Lists.Add
+## Subscriber.Upsert
+
+### Syntax
 
 ```javascript
-sub.Lists.Add(listExternalKey)
+Subscriber.Upsert(properties)
 ```
 
-Subscribes the subscriber to a publication list.
+Creates a new subscriber, or updates an existing one matched by `EmailAddress` / `SubscriberKey`.
+
+### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `properties` | object | Yes | `EmailAddress`, `SubscriberKey`, `Attributes`, ... |
+
+### Return value
+
+`"OK"` on success.
+
+### Examples
+
+```javascript
+Platform.Load("core", "1");
+var sub = {
+    EmailAddress: "test@example.com",
+    SubscriberKey: "test@example.com",
+    Attributes: [ { Name: "FirstName", Value: "Jane" } ]
+};
+var result = Subscriber.Upsert(sub);
+Write(Stringify(result));
+```
+
+---
+
+## Subscriber.Statistics
+
+### Syntax
+
+```javascript
+Subscriber.Statistics(subscriberKey)
+```
+
+Retrieves statistical data for the specified subscriber (sends, opens, clicks, bounces, unsubscribes).
+
+### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `subscriberKey` | string | Yes | The subscriber key identifying the subscriber |
+
+### Return value
+
+`object` — a single object with subscriber statistics (not an array).
+
+### Examples
+
+```javascript
+Platform.Load("core", "1");
+var stats = Subscriber.Statistics("test@example.com");
+Write(Stringify(stats));
+```
+
+---
+
+## &lt;SubscriberInstance&gt;.Update
+
+### Syntax
+
+```javascript
+<SubscriberInstance>.Update(properties)
+```
+
+Updates the previously initialized subscriber with the supplied attributes.
+
+### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `properties` | object | Yes | Subscriber properties to change |
+
+### Return value
+
+`"OK"` on success.
 
 ### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
-var sub = Subscriber.Init("jane@example.com");
-sub.Lists.Add("Newsletter_PublicList");
+var subObj = Subscriber.Init("SubKey");
+var status = subObj.Update({ EmailTypePreference: "HTML", Attributes: { "First Name": "Test", "Last Name": "User" } });
 ```
 
 ---
 
-## Lists.Remove
+## &lt;SubscriberInstance&gt;.Remove
+
+### Syntax
 
 ```javascript
-sub.Lists.Remove(listExternalKey)
+<SubscriberInstance>.Remove()
 ```
 
-Unsubscribes the subscriber from a publication list.
+Deletes the previously initialized subscriber.
+
+### Return value
+
+`"OK"` on success.
 
 ### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
-var sub = Subscriber.Init("jane@example.com");
-sub.Lists.Remove("Newsletter_PublicList");
+var subObj = Subscriber.Init("SubKey");
+var status = subObj.Remove();
 ```
 
 ---
 
-## Complete Onboarding Pattern
+## &lt;SubscriberInstance&gt;.Unsubscribe
+
+### Syntax
+
+```javascript
+<SubscriberInstance>.Unsubscribe()
+```
+
+Sets the previously initialized subscriber's status to `"Unsubscribed"`.
+
+### Return value
+
+`"OK"` on success.
+
+### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
+var subObj = Subscriber.Init("SubKey");
+var status = subObj.Unsubscribe();
+```
 
-var email = Platform.Request.GetFormField("email");
-var firstName = Platform.Request.GetFormField("firstName");
-var lastName = Platform.Request.GetFormField("lastName");
+---
 
-try {
-    var sub = Subscriber.Init(email);
-    sub.Attributes.Add("FirstName", firstName);
-    sub.Attributes.Add("LastName", lastName);
-    sub.Attributes.Add("SubscribedAt", Platform.Function.Now());
-    sub.Lists.Add("MainNewsletter");
+## &lt;SubscriberInstance&gt;.Attributes.Retrieve
 
-    Platform.Response.SetContentType("application/json");
-    Write(Stringify({ status: "subscribed", email: email }));
-} catch(e) {
-    Write(Stringify({ status: 500, statusMessage: "Internal Server Error", error: "Subscription failed", message: e.message }));
-}
+### Syntax
+
+```javascript
+<SubscriberInstance>.Attributes.Retrieve()
+```
+
+Returns an array of attributes associated with the previously initialized subscriber.
+
+### Return value
+
+`object[]`
+
+### Examples
+
+```javascript
+Platform.Load("core", "1.1.5");
+var subObj = Subscriber.Init("SubKey");
+var attributes = subObj.Attributes.Retrieve();
+```
+
+---
+
+## &lt;SubscriberInstance&gt;.Lists.Retrieve
+
+### Syntax
+
+```javascript
+<SubscriberInstance>.Lists.Retrieve()
+```
+
+Returns the lists the previously initialized subscriber is a member of.
+
+### Return value
+
+`object[]`
+
+### Examples
+
+```javascript
+Platform.Load("core", "1.1.5");
+var subObj = Subscriber.Init("SubKey");
+var listArray = subObj.Lists.Retrieve();
 ```
 
 ## Notes
 
-{% include callout.html type="note" content="For more advanced subscriber management (upsert to All Subscribers, manage multiple lists, set status), use WSProxy with the `Subscriber` SOAP object. See [WSProxy](/wsproxy/)." %}
+{% include callout.html type="note" content="For more advanced subscriber management (batch operations, SOAP object access), use WSProxy with the `Subscriber` SOAP object. See [WSProxy](/wsproxy/)." %}
 
 ## See Also
 

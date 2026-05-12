@@ -37,8 +37,10 @@ var resp = req.send();
 
 | Method | Description |
 |--------|-------------|
-| `req.setHeader(name, value)` | Add/set a request header |
-| `req.send()` | Send the request; returns response object |
+| `<HttpRequestInstance>.setHeader(name, value)` | Add/set a request header |
+| `<HttpRequestInstance>.clearHeaders()` | Remove all custom headers |
+| `<HttpRequestInstance>.removeHeader(name)` | Remove a specific header by name |
+| `<HttpRequestInstance>.send()` | Send the request; returns response object |
 
 ## Response Object
 
@@ -124,6 +126,31 @@ var req = new Script.Util.HttpRequest("https://slow.api.example.com/data");
 req.method = "GET";
 req.timeout = 10000; // 10 second timeout
 req.setHeader("Authorization", "Bearer " + token);
+var resp = req.send();
+```
+
+### clearHeaders
+
+Removes all custom headers previously set on the request.
+
+```javascript
+var req = new Script.Util.HttpRequest("https://api.example.com/data");
+req.method = "GET";
+req.setHeader("Authorization", "Bearer " + token);
+req.clearHeaders(); // removes Authorization and all other custom headers
+var resp = req.send();
+```
+
+### removeHeader
+
+Removes a specific header from the request by name.
+
+```javascript
+var req = new Script.Util.HttpRequest("https://api.example.com/data");
+req.method = "GET";
+req.setHeader("Authorization", "Bearer " + token);
+req.setHeader("X-Debug", "1");
+req.removeHeader("X-Debug");
 var resp = req.send();
 ```
 

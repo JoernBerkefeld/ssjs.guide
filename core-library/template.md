@@ -18,7 +18,6 @@ description: Core library Template — HTML templates for messages (init, add, r
 | [`Template.Add(properties)`](#template-add) | string | Create a template |
 | [`Template.Retrieve(filter)`](#template-retrieve) | object[] | Query templates |
 | [`<TemplateInstance>.Update(properties)`](#update) | string | Update the initialized template |
-| [`<TemplateInstance>.Remove()`](#remove) | string | Delete the template |
 
 ---
 
@@ -138,26 +137,4 @@ var getTemplate = Template.Retrieve({
 Platform.Load("core", "1.1.5");
 var myTemplate = Template.Init("myTemplateCK");
 var status = myTemplate.Update({ TemplateName: "Edited Template" });
-```
-
----
-
-## Remove
-
-### Syntax
-
-```javascript
-<TemplateInstance>.Remove()
-```
-
-### Return value
-
-`"OK"` on success.
-
-### Examples
-
-```javascript
-Platform.Load("core", "1.1.5");
-var myTemplate = Template.Init("myTemplateCK");
-myTemplate.Remove();
 ```

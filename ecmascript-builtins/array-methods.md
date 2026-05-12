@@ -26,7 +26,10 @@ arr.unshift(0);            // arr = [0, 2, 3]
 
 ### splice
 
+{% include callout.html type="danger" content="**`Array.prototype.splice` is broken in SFMC SSJS.** The method exists but ignores its first two parameters. Always apply the polyfill from [Polyfills](/engine-limitations/polyfills/) before using it." %}
+
 ```javascript
+// After applying the polyfill:
 var arr = ["a", "b", "c", "d"];
 // Remove 1 element at index 1
 arr.splice(1, 1);           // ["a", "c", "d"]
@@ -68,15 +71,28 @@ parts.join("");     // "HelloWorld"
 parts.join(" / ");  // "Hello / World"
 ```
 
-### indexOf (may need polyfill)
+### indexOf (polyfill required)
 
-```javascript
-var arr = ["a", "b", "c"];
-arr.indexOf("b");  // 1
-arr.indexOf("z");  // -1
-```
+{% include callout.html type="warning" content="`Array.prototype.indexOf` is not available in SFMC SSJS. Apply the polyfill from [Polyfills](/engine-limitations/polyfills/)." %}
 
-{% include callout.html type="warning" content="`Array.prototype.indexOf` may not be available without a polyfill. Add it if you rely on it. See [Polyfills](/engine-limitations/polyfills/)." %}
+---
+
+## Polyfillable Methods
+
+The following methods require polyfills from [Polyfills](/engine-limitations/polyfills/). Once applied they work correctly.
+
+| Method | Notes |
+|--------|-------|
+| `Array.prototype.copyWithin(targetIndex, startIndex, count)` | ⚠️ Unavailable |
+| `Array.prototype.entries()` | ⚠️ Unavailable |
+| `Array.prototype.fill(value[, start[, end]])` | ⚠️ Unavailable |
+| `Array.prototype.findIndex(fn)` | ⚠️ Unavailable |
+| `Array.prototype.includes(searchValue)` | ⚠️ Unavailable |
+| `Array.prototype.indexOf(searchValue[, fromIndex])` | ⚠️ Unavailable |
+| `Array.prototype.lastIndexOf(searchValue[, fromIndex])` | ⚠️ Broken — always returns -1 |
+| `Array.prototype.splice(start[, deleteCount[, ...]])` | ⚠️ Broken — ignores parameters |
+| `Array.isArray(value)` | ⚠️ Unavailable |
+| `Array.of(...)` | ⚠️ Unavailable |
 
 ---
 
@@ -155,17 +171,21 @@ for (var i = 0; i < arr.length; i++) {
 }
 ```
 
+### reduceRight equivalent
+
+```javascript
+// Instead of: arr.reduceRight(function(acc, x) { return acc + x; }, 0)
+var sum = 0;
+for (var i = arr.length - 1; i >= 0; i--) {
+    sum += arr[i];
+}
+```
+
 ---
 
 ## Array.isArray
 
-`Array.isArray()` is not available. Use this pattern:
-
-```javascript
-function isArray(val) {
-    return val !== null && typeof val === "object" && typeof val.length === "number";
-}
-```
+{% include callout.html type="warning" content="`Array.isArray` is not available in SFMC SSJS. Apply the polyfill from [Polyfills](/engine-limitations/polyfills/)." %}
 
 ---
 

@@ -4,61 +4,98 @@ title: Script.Util.HttpGet
 parent: HTTP & REST APIs
 parent_url: /http/
 permalink: /http/script-util-httpget/
-description: Convenience function for simple HTTP GET requests — returns the response body as a string without requiring an HttpRequest object.
+description: HTTP GET request constructor — creates an HttpRequestInstance that caches content for mail sends and supports custom headers.
 ---
 
-`Script.Util.HttpGet` is a lightweight wrapper for HTTP GET requests. It sends a GET to the specified URL and returns the response body as a string. No `Platform.Load` is required.
+`Script.Util.HttpGet` creates an HTTP GET request handler. Unlike `Platform.Function.HTTPGet`, it caches content for use in mail sends and supports custom headers via `setHeader()`. Only works with HTTP on port 80 and HTTPS on port 443.
 
-{% include callout.html type="note" content="For full control over headers, timeouts, and status code inspection, use [`Script.Util.HttpRequest`](/http/script-util-httprequest/) instead." %}
+{% include callout.html type="note" content="For full control over HTTP method, timeouts, and all status codes, use [`Script.Util.HttpRequest`](/http/script-util-httprequest/) instead." %}
 
 ## Syntax
 
 ```javascript
-var body = Script.Util.HttpGet(url);
+new Script.Util.HttpGet(url)
 ```
 
 ## Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `url` | string | Yes | Target URL |
+| `url` | string | Yes | Target URL (HTTP port 80 or HTTPS port 443 only) |
 
 ## Return Value
 
-Returns the response body as a string. Throws on connection failure. Does not expose the HTTP status code.
+Returns an `HttpRequestInstance`. Call `send()` to execute the request.
+
+## Instance Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `<HttpRequestInstance>.retries` | number | Number of retry attempts on failure |
+| `<HttpRequestInstance>.continueOnError` | boolean | If `true`, does not throw on HTTP error status |
+
+## Instance Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `<HttpRequestInstance>.send()` | object | Execute the request; returns response object |
+| `<HttpRequestInstance>.setHeader(name, value)` | void | Set a custom request header |
+| `<HttpRequestInstance>.clearHeaders()` | void | Remove all custom headers |
+| `<HttpRequestInstance>.removeHeader(name)` | void | Remove a specific header by name |
+
+{% include callout.html type="warning" content="Calling `setHeader()` disables content caching for `HttpGet`." %}
+
+## Response Object
+
+The `resp` object returned by `send()` has:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `resp.statusCode` | number | HTTP status code |
+| `resp.content` | CLR string | Response body — convert with `String()` before use |
 
 ## Examples
 
-### Fetch JSON data
+### Basic GET request
 
 ```javascript
-var body = Script.Util.HttpGet("https://api.example.com/items");
-var items = Platform.Function.ParseJSON(body + "");
-for (var i = 0; i < items.length; i++) {
-    Write(items[i].name + "<br>");
+var req = new Script.Util.HttpGet("https://api.example.com/data");
+var resp = req.send();
+if (resp.statusCode == 200) {
+    var result = Platform.Function.ParseJSON(String(resp.content));
+    Write(Stringify(result));
 }
 ```
 
-### Fetch and render a remote snippet
+### GET with auth header
 
 ```javascript
-var content = Script.Util.HttpGet("https://cdn.example.com/snippets/footer.html");
-Write(content);
+var req = new Script.Util.HttpGet("https://api.example.com/items");
+req.setHeader("Authorization", "Bearer " + accessToken);
+req.retries = 2;
+req.continueOnError = true;
+var resp = req.send();
+if (resp.statusCode == 200) {
+    var items = Platform.Function.ParseJSON(String(resp.content));
+    for (var i = 0; i < items.length; i++) {
+        Write(items[i].name + "<br>");
+    }
+}
 ```
 
 ## Notes
 
-- Does not support custom request headers. Use [`Script.Util.HttpRequest`](/http/script-util-httprequest/) if you need to set `Authorization` or other headers.
-- Does not expose the HTTP status code. If the server returns a non-2xx response, the error body is returned as the string — with no indication of failure.
-- Available in all SSJS execution contexts without `Platform.Load`.
+- Only works with HTTP on **port 80** and HTTPS on **port 443**. Other ports require `Script.Util.HttpRequest`.
+- Caches the response content for use in mail send personalisation — unless `setHeader()` is called (which disables caching).
+- Does not require `Platform.Load`.
 
 ## See Also
 
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
-  <li><a href="/http/script-util-httppost/">Script.Util.HttpPost</a></li>
   <li><a href="/http/script-util-httprequest/">Script.Util.HttpRequest</a></li>
+  <li><a href="/http/request-methods/">Request Instance Methods</a></li>
   <li><a href="/http/http-get/">HTTP.Get</a></li>
   <li><a href="/http/platform-httpget/">Platform.Function.HTTPGet</a></li>
 </ul>

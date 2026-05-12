@@ -290,8 +290,6 @@
       url: /http/script-util-httprequest/
     - title: Script.Util.HttpGet
       url: /http/script-util-httpget/
-    - title: Script.Util.HttpPost
-      url: /http/script-util-httppost/
     - title: Request Instance Methods
       url: /http/request-methods/
 
@@ -306,6 +304,8 @@
       url: /ecmascript-builtins/string-methods/
     - title: Math
       url: /ecmascript-builtins/math/
+    - title: Number Methods
+      url: /ecmascript-builtins/number-methods/
 
 - title: Best Practices
   url: /best-practices/

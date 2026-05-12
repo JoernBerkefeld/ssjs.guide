@@ -15,12 +15,29 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`Platform.Function.AddObjectArrayItem(obj, prop, val)`](/platform-functions/addobjectarrayitem/) | Platform Functions | void | Append item to a SOAP API object array property |
+| [`Platform.Function.AddObjectArrayItem(apiObject, propertyName, value)`](/platform-functions/addobjectarrayitem/) | Platform Functions | void | Append item to a SOAP API object array property |
 | [`Attribute.GetValue(name)`](/global-functions/attribute/) | Global Object | string | Profile attribute in email / triggered send context |
 | [`Account.Init(key)`](/core-library/account/) | Core Library | AccountInstance | Initialize Account |
 | [`Account.Retrieve(filter)`](/core-library/account/) | Core Library | object[] | Retrieve accounts |
 | [`Account.Tracking.Retrieve(filter)`](/core-library/account/) | Core Library | object[] | Account-level tracking |
 | [`<AccountInstance>.Update(properties)`](/core-library/account/) | Core Library | string | Update account |
+| [`AccountUser.Init(targetUserKey, myClientID)`](/core-library/accountuser/) | Core Library | AccountUserInstance | Initialize AccountUser |
+| [`AccountUser.Add(properties)`](/core-library/accountuser/) | Core Library | string | Create AccountUser |
+| [`AccountUser.Retrieve(filter)`](/core-library/accountuser/) | Core Library | object[] | Retrieve AccountUsers |
+| [`<AccountUserInstance>.Update(properties)`](/core-library/accountuser/) | Core Library | string | Update AccountUser |
+| [`<AccountUserInstance>.Activate()`](/core-library/accountuser/) | Core Library | string | Activate AccountUser |
+| [`<AccountUserInstance>.Deactivate()`](/core-library/accountuser/) | Core Library | string | Deactivate AccountUser |
+| [`Array.concat(value[, ...])`](#) | ECMAScript Builtins | array | Merge arrays |
+| [`Array.join([separator])`](#) | ECMAScript Builtins | string | Join elements to string |
+| [`Array.length`](#) | ECMAScript Builtins | number | Number of elements |
+| [`Array.pop()`](#) | ECMAScript Builtins | any | Remove and return last element |
+| [`Array.push(element[, ...])`](#) | ECMAScript Builtins | number | Add elements to end; return new length |
+| [`Array.reverse()`](#) | ECMAScript Builtins | array | Reverse array in place |
+| [`Array.shift()`](#) | ECMAScript Builtins | any | Remove and return first element |
+| [`Array.slice([start[, end]])`](#) | ECMAScript Builtins | array | Shallow copy of a portion |
+| [`Array.sort([compareFn])`](#) | ECMAScript Builtins | array | Sort in place |
+| [`Array.splice(start[, deleteCount[, item1[, ...]]])`](/engine-limitations/polyfills/) | ECMAScript Builtins | array | ⚠️ Broken in SFMC SSJS — see polyfills |
+| [`Array.unshift(element[, ...])`](#) | ECMAScript Builtins | number | Add elements to start; return new length |
 
 ---
 
@@ -37,14 +54,18 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`ContentBlockByID(id)`](/global-functions/contentblockbyid/) | Global Functions | string | Render Content Builder block by ID |
-| [`ContentBlockByKey(key)`](/global-functions/contentblockbykey/) | Global Functions | string | Render Content Builder block by key |
-| [`ContentBlockByName(path)`](/global-functions/contentblockbyname/) | Global Functions | string | Render Content Builder block by name |
-| [`Platform.Function.ContentImageByID(id[, fallback])`](/platform-functions/contentimagebyid/) | Platform Functions | string | img tag for Content Builder image by ID |
-| [`Platform.Function.ContentImageByKey(key[, fallback])`](/platform-functions/contentimagebykey/) | Platform Functions | string | img tag for Content Builder image by key |
-| [`Platform.Function.CreateObject(type)`](/platform-functions/createobject/) | Platform Functions | object | Create SOAP API object (legacy) |
+| [`ContentBlockByID(id[, regionName, stopOnError, fallbackContent])`](/global-functions/contentblockbyid/) | Global Functions | string | Render Content Builder block by ID |
+| [`ContentBlockByKey(customerKey[, regionName, stopOnError, fallbackContent])`](/global-functions/contentblockbykey/) | Global Functions | string | Render Content Builder block by key |
+| [`ContentBlockByName(name[, regionName, stopOnError, fallbackContent, statusVariable])`](/global-functions/contentblockbyname/) | Global Functions | string | Render Content Builder block by name |
+| [`Platform.Function.ContentImageByID(id[, fallbackId])`](/platform-functions/contentimagebyid/) | Platform Functions | string | img tag for Content Builder image by ID |
+| [`Platform.Function.ContentImageByKey(key[, fallbackId])`](/platform-functions/contentimagebykey/) | Platform Functions | string | img tag for Content Builder image by key |
+| [`Platform.Function.CreateObject(objectType)`](/platform-functions/createobject/) | Platform Functions | object | Create SOAP API object (legacy) |
 | [`ClickEvent.Retrieve(filter)`](/core-library/events/#click-event) | Core Library | object[] | Click tracking events |
 | [`ContentAreaObj.Init(key)`](/core-library/contentareaobj/) | Core Library | ContentAreaObjInstance | Classic Content Area object (**deprecated**) |
+| [`ContentAreaObj.Add(properties)`](/core-library/contentareaobj/) | Core Library | string | Create Content Area (**deprecated**) |
+| [`ContentAreaObj.Retrieve(filter)`](/core-library/contentareaobj/) | Core Library | object[] | Retrieve Content Areas (**deprecated**) |
+| [`<ContentAreaObjInstance>.Update(properties)`](/core-library/contentareaobj/) | Core Library | string | Update Content Area (**deprecated**) |
+| [`<ContentAreaObjInstance>.Remove()`](/core-library/contentareaobj/) | Core Library | string | Remove Content Area (**deprecated**) |
 
 ---
 
@@ -53,14 +74,23 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
 | [`DateTime.TimeZone.Retrieve(filter)`](/platform-objects/datetime-timezone/) | Platform Object | object[] | Time zone definitions (requires Core load) |
-| [`DataExtension.Init(key)`](/core-library/dataextension/) | Core Library | DataExtension | Initialize DE object |
+| [`DataExtension.Init(key)`](/core-library/dataextension/) | Core Library | DataExtensionInstance | Initialize DE object |
+| [`DataExtension.Add(properties)`](/core-library/dataextension/) | Core Library | DataExtensionInstance | Create data extension |
+| [`DataExtension.Retrieve(filter, [queryAllAccounts])`](/core-library/dataextension/) | Core Library | object[] | Retrieve data extensions |
+| [`<DataExtensionInstance>.Fields.Add(properties)`](/core-library/dataextension-fields/) | Core Library | string | Add field to DE |
+| [`<DataExtensionInstance>.Fields.Retrieve()`](/core-library/dataextension-fields/) | Core Library | object[] | Retrieve DE field definitions |
+| [`<DataExtensionInstance>.Fields.UpdateSendableField(deFieldName, subscriberField)`](/core-library/dataextension-fields/) | Core Library | string | Update sendable field mapping |
 | [`<DataExtensionInstance>.Rows.Add(rowData)`](/core-library/dataextension-rows/) | Core Library | string | Insert DE row(s) |
 | [`<DataExtensionInstance>.Rows.Lookup(searchFieldNames, searchValues, [limit], [orderByFieldName])`](/core-library/dataextension-rows/) | Core Library | object[] | Lookup DE rows |
 | [`<DataExtensionInstance>.Rows.Remove(columnNames, columnValues)`](/core-library/dataextension-rows/) | Core Library | number | Delete matching DE rows |
 | [`<DataExtensionInstance>.Rows.Retrieve([filter])`](/core-library/dataextension-rows/) | Core Library | object[] | Read DE rows |
 | [`<DataExtensionInstance>.Rows.Update(rowData, whereFieldNames, whereValues)`](/core-library/dataextension-rows/) | Core Library | string | Update DE rows |
-| [`Platform.Function.DeleteData(...)`](/platform-functions/deletedata/) | Platform Functions | number | Delete DE rows |
-| [`DeleteDE(...)`](/platform-functions/deletede/) | Platform Functions | number | Alias for DeleteData |
+| [`DeliveryProfile.Init(key)`](/core-library/deliveryprofile/) | Core Library | DeliveryProfileInstance | Initialize DeliveryProfile |
+| [`DeliveryProfile.Add(properties)`](/core-library/deliveryprofile/) | Core Library | string | Create DeliveryProfile |
+| [`<DeliveryProfileInstance>.Update(properties)`](/core-library/deliveryprofile/) | Core Library | string | Update DeliveryProfile |
+| [`<DeliveryProfileInstance>.Remove()`](/core-library/deliveryprofile/) | Core Library | string | Remove DeliveryProfile |
+| [`Platform.Function.DeleteData(deName, whereFieldNames, whereFieldValues)`](/platform-functions/deletedata/) | Platform Functions | number | Delete DE rows |
+| [`DeleteDE(deName, whereFieldNames, whereFieldValues)`](/platform-functions/deletede/) | Platform Functions | number | Alias for DeleteData |
 
 ---
 
@@ -77,7 +107,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`<EmailInstance>.CheckContent()`](/core-library/email/) | Core Library | object | Content checks |
 | [Programmatic send (subscriber + options)](/core-library/email/) | Core Library | — | Send flow documented on Email page (Content Builder ID + `Send`) |
 | [`Platform.Function.EndImpressionRegion([closeAll])`](/platform-functions/endimpressionregion/) | Platform Functions | void | End an impression region |
-| [`Error(message)`](/global-functions/error/) | Global Functions | Error | Create Error object |
+| [`Error(message)`](/global-functions/error/) | Global Functions | Error | Create Error object (`new Error([message])`) |
 | [`ErrorUtil.ThrowWSProxyError(result)`](/platform-objects/errorutil/) | Platform Object | void | Throw when WSProxy status indicates failure |
 
 ---
@@ -87,6 +117,17 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
 | [`FilterDefinition.Init(key)`](/core-library/filterdefinition/) | Core Library | FilterDefinitionInstance | Initialize filter definition |
+| [`FilterDefinition.Add(properties)`](/core-library/filterdefinition/) | Core Library | string | Create filter definition |
+| [`FilterDefinition.Retrieve(filter)`](/core-library/filterdefinition/) | Core Library | object[] | Retrieve filter definitions |
+| [`<FilterDefinitionInstance>.Update(properties)`](/core-library/filterdefinition/) | Core Library | string | Update filter definition |
+| [`<FilterDefinitionInstance>.Remove()`](/core-library/filterdefinition/) | Core Library | string | Remove filter definition |
+| [`Folder.Init([key])`](/core-library/folder/) | Core Library | FolderInstance | Initialize Folder |
+| [`Folder.Add(properties)`](/core-library/folder/) | Core Library | string | Create folder |
+| [`Folder.Retrieve(filter)`](/core-library/folder/) | Core Library | object[] | Retrieve folders |
+| [`<FolderInstance>.Update(properties)`](/core-library/folder/) | Core Library | string | Update folder |
+| [`<FolderInstance>.Remove()`](/core-library/folder/) | Core Library | string | Remove folder |
+| [`<FolderInstance>.SetID(id)`](/core-library/folder/) | Core Library | void | Set folder ID |
+| [`Format(textToFormat, formatCode)`](/global-functions/format/) | Global Functions | string | Format a date/number string |
 | [`ForwardedEmailEvent.Retrieve(filter)`](/core-library/events/#forwarded-email-event) | Core Library | object[] | Forwarded-email events |
 | [`ForwardedEmailOptInEvent.Retrieve(filter)`](/core-library/events/#forwarded-email-opt-in-event) | Core Library | object[] | Forwarded opt-in events |
 
@@ -105,12 +146,12 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
 | [`HTTP.Get(url[, headerNames, headerValues])`](/http/http-get/) | Core HTTP | object | HTTP GET — structured status + body |
-| [`HTTP.Post(url, ct, payload[, headerNames, headerValues])`](/http/http-post/) | Core HTTP | object | HTTP POST — structured status + body |
+| [`HTTP.Post(url, contentType, payload, headerNames, headerValues)`](/http/http-post/) | Core HTTP | object | HTTP POST — structured status + body |
 | [`HTTPHeader.GetValue(name)`](/platform-objects/httpheader/) | Platform Object | string | Read HTTP request header (Core load) |
 | [`HTTPHeader.SetValue(name, value)`](/platform-objects/httpheader/) | Platform Object | void | Set HTTP request header (Core load) |
 | [`HTTPHeader.Remove(headerName)`](/platform-objects/httpheader/) | Platform Object | string | Remove HTTP request header (Core load) |
-| [`Platform.Function.HTTPGet(url, ...)`](/platform-functions/httpget/) | Platform Functions | string | HTTP GET — body string only |
-| [`Platform.Function.HTTPPost(url, ct, body, ...)`](/platform-functions/httppost/) | Platform Functions | string | HTTP POST — body string only |
+| [`Platform.Function.HTTPGet(url, continueOnError[, emptyContentHandling, headerNames, headerValues, statusVariable])`](/platform-functions/httpget/) | Platform Functions | string | HTTP GET — body string only |
+| [`Platform.Function.HTTPPost(url, contentType, payload[, headerNames, headerValues, response])`](/platform-functions/httppost/) | Platform Functions | string | HTTP POST — body string only |
 
 ---
 
@@ -118,20 +159,22 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`Platform.Function.InsertData(...)`](/platform-functions/insertdata/) | Platform Functions | number | Insert DE row |
-| [`InsertDE(...)`](/platform-functions/insertde/) | Platform Functions | number | Alias for InsertData |
-| [`Platform.Function.InvokeConfigure(...)`](/platform-functions/invokeconfigure/) | Platform Functions | string | SOAP Configure call (legacy) |
-| [`Platform.Function.InvokeCreate(...)`](/platform-functions/invokecreate/) | Platform Functions | object | SOAP Create (legacy) |
-| [`Platform.Function.InvokeDelete(...)`](/platform-functions/invokedelete/) | Platform Functions | object | SOAP Delete (legacy) |
-| [`Platform.Function.InvokeExecute(...)`](/platform-functions/invokeexecute/) | Platform Functions | string | SOAP Execute call (legacy) |
-| [`Platform.Function.InvokeExtract(...)`](/platform-functions/invokeextract/) | Platform Functions | string | SOAP Extract call (legacy) |
-| [`Platform.Function.InvokePerform(...)`](/platform-functions/invokeperform/) | Platform Functions | string | SOAP Perform action (legacy) |
-| [`Platform.Function.InvokeRetrieve(...)`](/platform-functions/invokeretrieve/) | Platform Functions | object[] | SOAP Retrieve (legacy) |
-| [`Platform.Function.InvokeSchedule(...)`](/platform-functions/invokeschedule/) | Platform Functions | string | SOAP Schedule call (legacy) |
-| [`Platform.Function.InvokeUpdate(...)`](/platform-functions/invokeupdate/) | Platform Functions | string | SOAP Update (legacy) |
-| [`Platform.Function.IsEmailAddress(val)`](/platform-functions/isemailaddress/) | Platform Functions | boolean | Validate email format |
-| [`Platform.Function.IsPhoneNumber(val)`](/platform-functions/isphonenumber/) | Platform Functions | boolean | Validate phone number format |
-| [`Platform.Function.IsCHTMLBrowser(ua)`](/platform-functions/ischtmlbrowser/) | Platform Functions | boolean | Detect CHTML / feature-phone browsers |
+| [`Platform.Function.InsertData(deName, fieldNames, fieldValues)`](/platform-functions/insertdata/) | Platform Functions | number | Insert DE row |
+| [`InsertDE(deName, fieldNames, fieldValues)`](/platform-functions/insertde/) | Platform Functions | number | Alias for InsertData |
+| [`Platform.Function.InvokeConfigure(apiObject, method, status, options)`](/platform-functions/invokeconfigure/) | Platform Functions | string | SOAP Configure call (legacy) |
+| [`Platform.Function.InvokeCreate(apiObject, status, options)`](/platform-functions/invokecreate/) | Platform Functions | object | SOAP Create (legacy) |
+| [`Platform.Function.InvokeDelete(apiObject, status, options)`](/platform-functions/invokedelete/) | Platform Functions | object | SOAP Delete (legacy) |
+| [`Platform.Function.InvokeExecute(apiObject, status, options)`](/platform-functions/invokeexecute/) | Platform Functions | string | SOAP Execute call (legacy) |
+| [`Platform.Function.InvokeExtract(apiObject, statusArray[, options])`](/platform-functions/invokeextract/) | Platform Functions | string | SOAP Extract call (legacy) |
+| [`Platform.Function.InvokePerform(apiObject, method, status, options)`](/platform-functions/invokeperform/) | Platform Functions | string | SOAP Perform action (legacy) |
+| [`Platform.Function.InvokeRetrieve(apiObject, status)`](/platform-functions/invokeretrieve/) | Platform Functions | object[] | SOAP Retrieve (legacy) |
+| [`Platform.Function.InvokeSchedule(apiObject, action, schedule[, statusArray, options])`](/platform-functions/invokeschedule/) | Platform Functions | string | SOAP Schedule call (legacy) |
+| [`Platform.Function.InvokeUpdate(apiObject, status, options)`](/platform-functions/invokeupdate/) | Platform Functions | string | SOAP Update (legacy) |
+| [`Platform.Function.IsEmailAddress(value)`](/platform-functions/isemailaddress/) | Platform Functions | boolean | Validate email format |
+| [`Platform.Function.IsPhoneNumber(value)`](/platform-functions/isphonenumber/) | Platform Functions | boolean | Validate phone number format |
+| [`Platform.Function.IsCHTMLBrowser(userAgentString)`](/platform-functions/ischtmlbrowser/) | Platform Functions | boolean | Detect CHTML / feature-phone browsers |
+| [`isFinite(value)`](#) | ECMAScript Builtins | boolean | Test if value is finite |
+| [`isNaN(value)`](#) | ECMAScript Builtins | boolean | Test if value is NaN |
 
 ---
 
@@ -140,16 +183,52 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
 | [`List.Init(key)`](/core-library/list/) | Core Library | ListInstance | Initialize list object |
+| [`List.Add(properties)`](/core-library/list/) | Core Library | string | Create list |
+| [`List.Retrieve(filter)`](/core-library/list/) | Core Library | object[] | Retrieve lists |
+| [`<ListInstance>.Remove()`](/core-library/list/) | Core Library | string | Remove list |
 | [`<ListInstance>.Subscribers.Add(properties)`](/core-library/list-subscribers/) | Core Library | string | Add subscriber to list |
 | [`<ListInstance>.Subscribers.Retrieve([filter])`](/core-library/list-subscribers/) | Core Library | object[] | Subscribers on list |
 | [`<ListInstance>.Subscribers.Unsubscribe(emailAddress)`](/core-library/list-subscribers/) | Core Library | string | Unsubscribe on list |
 | [`<ListInstance>.Subscribers.Update(emailAddress, status)`](/core-library/list-subscribers/) | Core Library | string | Update subscriber on list |
 | [`<ListInstance>.Subscribers.Upsert(emailAddress, attributes)`](/core-library/list-subscribers/) | Core Library | string | Upsert subscriber on list |
 | [`<ListInstance>.Subscribers.Tracking.Retrieve(filter)`](/core-library/list-subscribers/) | Core Library | object[] | List subscriber tracking |
-| [`Platform.Function.LocalDateToSystemDate(dateString)`](/platform-functions/localdatetosystemdate/) | Platform Functions | string | Local date/time to system CST |
-| [`Platform.Function.Lookup(...)`](/platform-functions/lookup/) | Platform Functions | string | Single-value DE lookup |
-| [`Platform.Function.LookupOrderedRows(...)`](/platform-functions/lookuporderedrows/) | Platform Functions | object[] | Sorted/limited DE rows |
-| [`Platform.Function.LookupRows(...)`](/platform-functions/lookuprows/) | Platform Functions | object[] | Multiple DE rows |
+| [`Platform.Function.LocalDateToSystemDate(dateValue)`](/platform-functions/localdatetosystemdate/) | Platform Functions | string | Local date/time to system CST |
+| [`Platform.Function.Lookup(deName, returnField, whereFieldNames, whereFieldValues)`](/platform-functions/lookup/) | Platform Functions | string | Single-value DE lookup |
+| [`Platform.Function.LookupOrderedRows(deName, count, orderBy, whereFieldNames, whereFieldValues)`](/platform-functions/lookuporderedrows/) | Platform Functions | object[] | Sorted/limited DE rows |
+| [`Platform.Function.LookupRows(deName, whereFieldNames, whereFieldValues)`](/platform-functions/lookuprows/) | Platform Functions | object[] | Multiple DE rows |
+
+---
+
+## M
+
+| Name | Category | Returns | Description |
+|------|----------|---------|-------------|
+| [`Math.abs(x)`](#) | ECMAScript Builtins | number | Absolute value |
+| [`Math.acos(x)`](#) | ECMAScript Builtins | number | Arccosine |
+| [`Math.asin(x)`](#) | ECMAScript Builtins | number | Arcsine |
+| [`Math.atan(x)`](#) | ECMAScript Builtins | number | Arctangent |
+| [`Math.atan2(y, x)`](#) | ECMAScript Builtins | number | Arctangent of quotient |
+| [`Math.ceil(x)`](#) | ECMAScript Builtins | number | Round up |
+| [`Math.cos(x)`](#) | ECMAScript Builtins | number | Cosine |
+| [`Math.E`](#) | ECMAScript Builtins | number | Euler's number (~2.718) |
+| [`Math.exp(x)`](#) | ECMAScript Builtins | number | e to the power of x |
+| [`Math.floor(x)`](#) | ECMAScript Builtins | number | Round down |
+| [`Math.LN2`](#) | ECMAScript Builtins | number | Natural logarithm of 2 |
+| [`Math.LN10`](#) | ECMAScript Builtins | number | Natural logarithm of 10 |
+| [`Math.log(x)`](#) | ECMAScript Builtins | number | Natural logarithm |
+| [`Math.LOG10E`](#) | ECMAScript Builtins | number | Base-10 log of e |
+| [`Math.LOG2E`](#) | ECMAScript Builtins | number | Base-2 log of e |
+| [`Math.max(value1[, value2, ...])`](#) | ECMAScript Builtins | number | Largest value |
+| [`Math.min(value1[, value2, ...])`](#) | ECMAScript Builtins | number | Smallest value |
+| [`Math.PI`](#) | ECMAScript Builtins | number | Pi (~3.14159) |
+| [`Math.pow(base, exponent)`](#) | ECMAScript Builtins | number | Base to the power of exponent |
+| [`Math.random()`](#) | ECMAScript Builtins | number | Random number [0, 1) |
+| [`Math.round(x)`](#) | ECMAScript Builtins | number | Round to nearest integer |
+| [`Math.sin(x)`](#) | ECMAScript Builtins | number | Sine |
+| [`Math.sqrt(x)`](#) | ECMAScript Builtins | number | Square root |
+| [`Math.SQRT1_2`](#) | ECMAScript Builtins | number | Square root of 1/2 |
+| [`Math.SQRT2`](#) | ECMAScript Builtins | number | Square root of 2 |
+| [`Math.tan(x)`](#) | ECMAScript Builtins | number | Tangent |
 
 ---
 
@@ -158,7 +237,10 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
 | [`NotSentEvent.Retrieve(filter)`](/core-library/events/#not-sent-event) | Core Library | object[] | Not-sent events |
-| [`Platform.Function.Now()`](/platform-functions/now/) | Platform Functions | string | Current SFMC server date/time |
+| [`Number.toExponential([fractionDigits])`](#) | ECMAScript Builtins | string | Exponential notation string |
+| [`Number.toFixed([fractionDigits])`](#) | ECMAScript Builtins | string | Fixed-point notation string |
+| [`Number.toPrecision([precision])`](#) | ECMAScript Builtins | string | Precision notation string |
+| [`Platform.Function.Now([useContextTime])`](/platform-functions/now/) | Platform Functions | string | Current SFMC server date/time |
 
 ---
 
@@ -166,6 +248,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
+| [`Object.hasOwnProperty(v)`](#) | ECMAScript Builtins | boolean | Test if object has own property |
 | [`OpenEvent.Retrieve(filter)`](/core-library/events/#open-event) | Core Library | object[] | Open tracking events |
 
 ---
@@ -174,12 +257,19 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`Platform.Function.ParseJSON(str)`](/platform-functions/parsejson/) | Platform Functions | object | Parse JSON string to object |
-| [`Platform.Load(lib, version)`](/platform-objects/platform-load/) | Platform Object | void | Load Core library |
+| [`parseFloat(string)`](#) | ECMAScript Builtins | number | Parse float from string |
+| [`parseInt(string[, radix])`](#) | ECMAScript Builtins | number | Parse integer from string |
+| [`Platform.Function.ParseJSON(jsonString)`](/platform-functions/parsejson/) | Platform Functions | object | Parse JSON string to object |
+| [`Platform.Load(libraryName, version)`](/platform-objects/platform-load/) | Platform Object | void | Load Core library |
 | [`Platform.Request.*`](/platform-objects/platform-request/) | Platform Object | various | HTTP request (query, POST, headers, cookies) |
 | [`Platform.Response.*`](/platform-objects/platform-response/) | Platform Object | various | HTTP response (redirect, cookies, content type) |
 | [`Platform.Variable.*`](/platform-objects/platform-variable/) | Platform Object | various | AMPscript variable bridge |
 | [`Platform.Recipient.*`](/platform-objects/platform-recipient/) | Platform Object | various | Current-recipient attributes |
+| [`Portfolio.Init(key)`](/core-library/portfolio/) | Core Library | PortfolioInstance | Initialize Portfolio |
+| [`Portfolio.Add(properties)`](/core-library/portfolio/) | Core Library | string | Create portfolio asset |
+| [`Portfolio.Retrieve(filter)`](/core-library/portfolio/) | Core Library | object[] | Retrieve portfolio assets |
+| [`<PortfolioInstance>.Update(properties)`](/core-library/portfolio/) | Core Library | string | Update portfolio asset |
+| [`<PortfolioInstance>.Remove()`](/core-library/portfolio/) | Core Library | string | Remove portfolio asset |
 | [`<WSProxyInstance>.createItem(objectType, properties)`](/wsproxy/create-item/) | WSProxy | object | SOAP Create |
 | [`<WSProxyInstance>.updateItem(objectType, properties)`](/wsproxy/update-item/) | WSProxy | object | SOAP Update |
 | [`<WSProxyInstance>.deleteItem(objectType, properties)`](/wsproxy/delete-item/) | WSProxy | object | SOAP Delete |
@@ -203,6 +293,10 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
 | [`QueryDefinition.Init(key)`](/core-library/querydefinition/) | Core Library | QueryDefinitionInstance | Initialize query activity |
+| [`QueryDefinition.Add(properties)`](/core-library/querydefinition/) | Core Library | string | Create query activity |
+| [`QueryDefinition.Retrieve(filter)`](/core-library/querydefinition/) | Core Library | object[] | Retrieve query activities |
+| [`<QueryDefinitionInstance>.Update(properties)`](/core-library/querydefinition/) | Core Library | string | Update query activity |
+| [`<QueryDefinitionInstance>.Remove()`](/core-library/querydefinition/) | Core Library | string | Remove query activity |
 | [`<QueryDefinitionInstance>.Perform(action)`](/core-library/querydefinition/) | Core Library | object | Run / manage query |
 
 ---
@@ -211,7 +305,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`Platform.Function.RaiseError(msg, skip)`](/platform-functions/raiseerror/) | Platform Functions | void | Halt execution with error |
+| [`Platform.Function.RaiseError(message[, currentRecipientOnly[, errorCode[, errorNumber]]])`](/platform-functions/raiseerror/) | Platform Functions | void | Halt execution with error |
 | [`Platform.Function.RedirectTo(url)`](/platform-functions/redirectto/) | Platform Functions | void | Email href redirect helper |
 
 ---
@@ -220,12 +314,43 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`Script.Util.HttpRequest`](/http/script-util-httprequest/) | HTTP | HttpRequest | Full HTTP request object |
-| [`new Script.Util.WSProxy()`](/wsproxy/constructor/) | WSProxy | WSProxy | Create WSProxy instance |
-| [`Platform.Function.SetObjectProperty(...)`](/platform-functions/setobjectproperty/) | Platform Functions | void | Set SOAP object property (legacy) |
-| [`String(val)`](/global-functions/string/) | Global Functions | string | Convert CLR string to JS string |
-| [`Stringify(obj)`](/global-functions/stringify/) | Global Functions | string | Object to JSON string |
-| [`Subscriber.Init(key)`](/core-library/subscriber/) | Core Library | Subscriber | Initialize subscriber object |
+| [`new Script.Util.HttpRequest(url)`](/http/script-util-httprequest/) | HTTP | HttpRequestInstance | Full HTTP request object |
+| [`new Script.Util.HttpGet(url)`](/http/script-util-httpget/) | HTTP | HttpRequestInstance | HTTP GET shorthand |
+| [`<HttpRequestInstance>.send()`](/http/request-methods/#send) | HTTP | object | Execute HTTP request |
+| [`<HttpRequestInstance>.setHeader(name, value)`](/http/request-methods/#setheader) | HTTP | void | Set request header |
+| [`<HttpRequestInstance>.clearHeaders()`](/http/request-methods/#clearheaders) | HTTP | void | Clear all custom headers |
+| [`<HttpRequestInstance>.removeHeader(name)`](/http/request-methods/#removeheader) | HTTP | void | Remove one header |
+| [`new Script.Util.WSProxy()`](/wsproxy/constructor/) | WSProxy | WSProxyInstance | Create WSProxy instance |
+| [`Platform.Function.SetObjectProperty(apiObject, propertyName, value)`](/platform-functions/setobjectproperty/) | Platform Functions | void | Set SOAP object property (legacy) |
+| [`String(value)`](/global-functions/string/) | Global Functions | string | Convert CLR object to JS string |
+| [`Platform.Function.Stringify(object)`](/platform-functions/stringify/) | Global Functions | string | Object to JSON string |
+| [`Subscriber.Init(key)`](/core-library/subscriber/) | Core Library | SubscriberInstance | Initialize subscriber |
+| [`Subscriber.Add(properties)`](/core-library/subscriber/) | Core Library | string | Create subscriber |
+| [`Subscriber.Retrieve(filter)`](/core-library/subscriber/) | Core Library | object[] | Retrieve subscribers |
+| [`Subscriber.Upsert(properties)`](/core-library/subscriber/) | Core Library | string | Insert or update subscriber |
+| [`Subscriber.Statistics(subscriberKey)`](/core-library/subscriber/) | Core Library | object | Subscriber statistics |
+| [`<SubscriberInstance>.Update(properties)`](/core-library/subscriber/) | Core Library | string | Update subscriber |
+| [`<SubscriberInstance>.Remove()`](/core-library/subscriber/) | Core Library | string | Remove subscriber |
+| [`<SubscriberInstance>.Unsubscribe()`](/core-library/subscriber/) | Core Library | string | Unsubscribe from all |
+| [`<SubscriberInstance>.Attributes.Retrieve()`](/core-library/subscriber/) | Core Library | object[] | Retrieve subscriber attributes |
+| [`<SubscriberInstance>.Lists.Retrieve()`](/core-library/subscriber/) | Core Library | object[] | Retrieve subscriber lists |
+| [`SenderProfile.Init(key)`](/core-library/senderprofile/) | Core Library | SenderProfileInstance | Initialize sender profile |
+| [`SenderProfile.Add(properties)`](/core-library/senderprofile/) | Core Library | string | Create sender profile |
+| [`<SenderProfileInstance>.Update(properties)`](/core-library/senderprofile/) | Core Library | string | Update sender profile |
+| [`<SenderProfileInstance>.Remove()`](/core-library/senderprofile/) | Core Library | string | Remove sender profile |
+| [`SendClassification.Init(key)`](/core-library/sendclassification/) | Core Library | SendClassificationInstance | Initialize send classification |
+| [`SendClassification.Add(properties)`](/core-library/sendclassification/) | Core Library | string | Create send classification |
+| [`SendClassification.Retrieve(filter)`](/core-library/sendclassification/) | Core Library | object[] | Retrieve send classifications |
+| [`<SendClassificationInstance>.Update(properties)`](/core-library/sendclassification/) | Core Library | string | Update send classification |
+| [`<SendClassificationInstance>.Remove()`](/core-library/sendclassification/) | Core Library | string | Remove send classification |
+| [`Send.Definition.Init(key)`](/core-library/senddefinition/) | Core Library | SendDefinitionInstance | Initialize send definition |
+| [`Send.Definition.Add(esdParams, sendClassificationKey, emailKey, listIds)`](/core-library/senddefinition/) | Core Library | SendDefinitionInstance | Create send definition |
+| [`Send.Definition.AddWithDE(esdParams, sendClassificationKey, emailKey, sendableDataExtensionKey, publicationListKey)`](/core-library/senddefinition/) | Core Library | SendDefinitionInstance | Create send def with DE |
+| [`Send.Definition.AddWithFilterDefinition(esdParams, sendClassificationKey, emailKey, filterDefinitionKey, listId)`](/core-library/senddefinition/) | Core Library | SendDefinitionInstance | Create send def with filter |
+| [`Send.Definition.Retrieve([filter])`](/core-library/senddefinition/) | Core Library | object[] | Retrieve send definitions |
+| [`<SendDefinitionInstance>.Update(properties)`](/core-library/senddefinition/) | Core Library | string | Update send definition |
+| [`<SendDefinitionInstance>.Remove()`](/core-library/senddefinition/) | Core Library | string | Remove send definition |
+| [`<SendDefinitionInstance>.Send()`](/core-library/senddefinition/) | Core Library | string | Execute send definition |
 | [`Send.Init(id)`](/core-library/send/) | Core Library | SendInstance | Initialize send |
 | [`Send.Add(emailKey, listIds, [options])`](/core-library/send/) | Core Library | SendInstance | Create send |
 | [`Send.Retrieve(filter)`](/core-library/send/) | Core Library | object[] | Retrieve sends |
@@ -235,10 +360,22 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`Send.Tracking.Retrieve(filter)`](/core-library/send/) | Core Library | object[] | Send tracking |
 | [`<SendInstance>.Tracking.ClickRetrieve(filter)`](/core-library/send/) | Core Library | object[] | Click tracking for send |
 | [`<SendInstance>.Tracking.TotalByIntervalRetrieve(type, startDate, endDate, groupBy)`](/core-library/send/) | Core Library | object[] | Aggregated send tracking |
-| [`Send.Definition.Init(key)`](/core-library/senddefinition/) | Core Library | SendDefinitionInstance | Initialize send definition |
-| [`Send.Definition.Add(esdParams, sendClassificationKey, emailKey, listIds)`](/core-library/senddefinition/) | Core Library | SendDefinitionInstance | Create send definition |
-| [`<SendDefinitionInstance>.Send()`](/core-library/senddefinition/) | Core Library | string | Execute send definition |
 | [`SentEvent.Retrieve(filter)`](/core-library/events/#sent-event) | Core Library | object[] | Sent events |
+| [`String.charAt(index)`](#) | ECMAScript Builtins | string | Character at index |
+| [`String.charCodeAt(index)`](#) | ECMAScript Builtins | number | Char code at index |
+| [`String.concat(string[, ...])`](#) | ECMAScript Builtins | string | Concatenate strings |
+| [`String.indexOf(searchValue[, fromIndex])`](#) | ECMAScript Builtins | number | First index of substring |
+| [`String.lastIndexOf(searchValue[, fromIndex])`](#) | ECMAScript Builtins | number | Last index of substring |
+| [`String.length`](#) | ECMAScript Builtins | number | String length |
+| [`String.match(regexp)`](#) | ECMAScript Builtins | array | Match regex |
+| [`String.replace(searchValue, replaceValue)`](#) | ECMAScript Builtins | string | Replace substring |
+| [`String.search(regexp)`](#) | ECMAScript Builtins | number | Search for regex |
+| [`String.slice(start[, end])`](#) | ECMAScript Builtins | string | Extract substring |
+| [`String.split(separator[, limit])`](#) | ECMAScript Builtins | array | Split into array |
+| [`String.substr(start[, length])`](#) | ECMAScript Builtins | string | Substring by length |
+| [`String.substring(start[, end])`](#) | ECMAScript Builtins | string | Substring by range |
+| [`String.toLowerCase()`](#) | ECMAScript Builtins | string | Convert to lower case |
+| [`String.toUpperCase()`](#) | ECMAScript Builtins | string | Convert to upper case |
 | [`SurveyEvent.Retrieve(filter)`](/core-library/events/#survey-event) | Core Library | object[] | Survey events |
 | [`Platform.Function.SystemDateToLocalDate(date)`](/platform-functions/systemdatetolocaldate/) | Platform Functions | string | Server to subscriber local time |
 
@@ -248,10 +385,13 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`TreatAsContent(str)`](/global-functions/treatascontent/) | Global Functions | string | Evaluate AMPscript/HTML via SSJS |
+| [`TreatAsContent(content)`](/global-functions/treatascontent/) | Global Functions | string | Evaluate AMPscript/HTML via SSJS |
 | [`Template.Init(key)`](/core-library/template/) | Core Library | TemplateInstance | Initialize template |
-| [`TriggeredSend.Init(key)`](/core-library/triggeredsend/) | Core Library | TriggeredSend | Initialize TS definition |
-| [`TriggeredSend.Add(properties)`](/core-library/triggeredsend/) | Core Library | TriggeredSend | Create TS definition |
+| [`Template.Add(properties)`](/core-library/template/) | Core Library | string | Create template |
+| [`Template.Retrieve(filter)`](/core-library/template/) | Core Library | object[] | Retrieve templates |
+| [`<TemplateInstance>.Update(properties)`](/core-library/template/) | Core Library | string | Update template |
+| [`TriggeredSend.Init(key)`](/core-library/triggeredsend/) | Core Library | TriggeredSendInstance | Initialize TS definition |
+| [`TriggeredSend.Add(properties)`](/core-library/triggeredsend/) | Core Library | TriggeredSendInstance | Create TS definition |
 | [`TriggeredSend.Retrieve(filter)`](/core-library/triggeredsend/) | Core Library | object[] | Retrieve TS definitions |
 | [`<TriggeredSendInstance>.Update(properties)`](/core-library/triggeredsend/) | Core Library | string | Update TS definition |
 | [`<TriggeredSendInstance>.Start()`](/core-library/triggeredsend/) | Core Library | string | Start TS definition |
@@ -269,11 +409,11 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
 | [`UnsubEvent.Retrieve(filter)`](/core-library/events/#unsub-event) | Core Library | object[] | Unsubscribe events |
-| [`Platform.Function.UpdateData(...)`](/platform-functions/updatedata/) | Platform Functions | number | Update DE rows |
-| [`UpdateDE(...)`](/platform-functions/updatede/) | Platform Functions | number | Alias for UpdateData |
+| [`Platform.Function.UpdateData(deName, whereFieldNames, whereFieldValues, fieldNames, fieldValues)`](/platform-functions/updatedata/) | Platform Functions | number | Update DE rows |
+| [`UpdateDE(deName, whereFieldNames, whereFieldValues, fieldNames, fieldValues)`](/platform-functions/updatede/) | Platform Functions | number | Alias for UpdateData |
 | [`Platform.Function.UrlEncode(url[, encodeReservedKeywords])`](/platform-functions/urlencode/) | Platform Functions | string | Percent-encode a full URL |
-| [`Platform.Function.UpsertData(...)`](/platform-functions/upsertdata/) | Platform Functions | number | Insert or update DE row |
-| [`UpsertDE(...)`](/platform-functions/upsertde/) | Platform Functions | number | Alias for UpsertData |
+| [`Platform.Function.UpsertData(deName, whereFieldNames, whereFieldValues, fieldNames, fieldValues)`](/platform-functions/upsertdata/) | Platform Functions | number | Insert or update DE row |
+| [`UpsertDE(deName, whereFieldNames, whereFieldValues, fieldNames, fieldValues)`](/platform-functions/upsertde/) | Platform Functions | number | Alias for UpsertData |
 
 ---
 
@@ -281,8 +421,8 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`Variable.GetValue(name)`](/global-functions/variable/) | Global Object | string | Read AMPscript variable (alias) |
-| [`Variable.SetValue(name, val)`](/global-functions/variable/) | Global Object | void | Write AMPscript variable (alias) |
+| [`Variable.GetValue(variableName)`](/global-functions/variable/) | Global Object | string | Read AMPscript variable (alias) |
+| [`Variable.SetValue(variableName, value)`](/global-functions/variable/) | Global Object | void | Write AMPscript variable (alias) |
 
 ---
 
@@ -290,21 +430,8 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`Write(value)`](/global-functions/write/) | Global Functions | void | Output to page |
+| [`Write(content)`](/global-functions/write/) | Global Functions | void | Output to page |
 
 ---
 
-## More Core namespaces
-
-| Namespace | Page |
-|-----------|------|
-| [`AccountUser`](/core-library/accountuser/) | Business unit users |
-| [`Portfolio`](/core-library/portfolio/) | File portfolio assets |
-| [`Folder`](/core-library/folder/) | Content folders |
-| [`DeliveryProfile`](/core-library/deliveryprofile/) | Delivery profiles |
-| [`SenderProfile`](/core-library/senderprofile/) | Sender profiles |
-| [`SendClassification`](/core-library/sendclassification/) | Send classifications |
-| [`FilterDefinition`](/core-library/filterdefinition/) | Filter definitions |
-| [`DataExtension.Fields`](/core-library/dataextension-fields/) | DE field schema |
-
-Subscriber nested APIs (`Subscriber.Attributes`, `Subscriber.Lists`) are covered on the [Subscriber](/core-library/subscriber/) page.
+All Core Library namespaces — including `AccountUser`, `Portfolio`, `Folder`, `DeliveryProfile`, `SenderProfile`, `SendClassification`, `FilterDefinition`, and `DataExtension.Fields` — are indexed in the A–Z sections above. See the [Core Library](/core-library/) section for full documentation.

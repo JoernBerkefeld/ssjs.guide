@@ -4,7 +4,7 @@ title: Request Instance Methods
 parent: HTTP & REST APIs
 parent_url: /http/
 permalink: /http/request-methods/
-description: Reference for the instance methods and response object properties of Script.Util.HttpRequest — setHeader, send, and the response object.
+description: Reference for the instance methods and response object properties of Script.Util.HttpRequest and Script.Util.HttpGet — setHeader, clearHeaders, removeHeader, send, and the response object.
 ---
 
 This page is a quick reference for the `Script.Util.HttpRequest` instance API: the methods you call on the request object before sending, and the properties available on the response object returned by `send()`.
@@ -29,10 +29,12 @@ Set these on the request object before calling `send()`.
 
 | Method | Description |
 |--------|-------------|
-| `req.setHeader(name, value)` | Set a single request header |
-| `req.send()` | Send the request; returns a response object |
+| `<HttpRequestInstance>.setHeader(name, value)` | Set a single request header |
+| `<HttpRequestInstance>.clearHeaders()` | Remove all custom headers |
+| `<HttpRequestInstance>.removeHeader(name)` | Remove one header by name |
+| `<HttpRequestInstance>.send()` | Send the request; returns a response object |
 
-### `req.setHeader(name, value)`
+### `<HttpRequestInstance>.setHeader(name, value)`
 
 Adds or replaces a header on the outgoing request. Call it once per header.
 
@@ -45,7 +47,31 @@ req.setHeader("X-Custom-Header", "my-value");
 var resp = req.send();
 ```
 
-### `req.send()`
+### `<HttpRequestInstance>.clearHeaders()`
+
+Removes all custom headers previously set on the request.
+
+```javascript
+var req = new Script.Util.HttpRequest("https://api.example.com/data");
+req.setHeader("Authorization", "Bearer " + token);
+req.setHeader("Accept", "application/json");
+req.clearHeaders(); // all custom headers removed
+var resp = req.send();
+```
+
+### `<HttpRequestInstance>.removeHeader(name)`
+
+Removes a specific header from the request by name.
+
+```javascript
+var req = new Script.Util.HttpRequest("https://api.example.com/data");
+req.setHeader("Authorization", "Bearer " + token);
+req.setHeader("X-Debug", "1");
+req.removeHeader("X-Debug");
+var resp = req.send();
+```
+
+### `<HttpRequestInstance>.send()`
 
 Sends the request and returns a response object. May throw on connection failure or timeout — wrap in `try/catch` for production code.
 
@@ -132,7 +158,6 @@ try {
 <ul>
   <li><a href="/http/script-util-httprequest/">Script.Util.HttpRequest (full docs)</a></li>
   <li><a href="/http/script-util-httpget/">Script.Util.HttpGet</a></li>
-  <li><a href="/http/script-util-httppost/">Script.Util.HttpPost</a></li>
   <li><a href="/http/http-get/">HTTP.Get</a></li>
 </ul>
 </div>

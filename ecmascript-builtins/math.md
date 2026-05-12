@@ -12,11 +12,14 @@ All `Math` object methods and constants work correctly in SSJS. No polyfills are
 
 | Constant | Value | Description |
 |----------|-------|-------------|
-| `Math.PI` | `3.141592653589793` | π |
-| `Math.E` | `2.718281828459045` | Euler's number |
-| `Math.LN2` | `0.6931471805599453` | Natural log of 2 |
-| `Math.LN10` | `2.302585092994046` | Natural log of 10 |
+| `Math.PI` | `3.141592653589793` | π (~3.14159) |
+| `Math.E` | `2.718281828459045` | Euler's number (~2.71828) |
+| `Math.LN2` | `0.6931471805599453` | Natural logarithm of 2 |
+| `Math.LN10` | `2.302585092994046` | Natural logarithm of 10 |
+| `Math.LOG2E` | `1.4426950408889634` | Base-2 logarithm of e |
+| `Math.LOG10E` | `0.4342944819032518` | Base-10 logarithm of e |
 | `Math.SQRT2` | `1.4142135623730951` | Square root of 2 |
+| `Math.SQRT1_2` | `0.7071067811865476` | Square root of 1/2 (= 1 / Math.SQRT2) |
 
 ---
 

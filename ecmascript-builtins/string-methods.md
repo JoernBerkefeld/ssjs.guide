@@ -48,7 +48,9 @@ str.indexOf("xyz");        // -1
 str.indexOf("o", 5);       // 7 (start from position 5)
 ```
 
-### startsWith / endsWith / includes (missing — use indexOf)
+### startsWith / endsWith / includes (missing — use indexOf or polyfill)
+
+{% include callout.html type="warning" content="`startsWith`, `endsWith`, and `includes` are ES6 and not available in SFMC SSJS. Apply polyfills from [Polyfills](/engine-limitations/polyfills/) or use the patterns below." %}
 
 ```javascript
 // startsWith
@@ -83,18 +85,7 @@ str.substr(6, 5);      // "World" (deprecated but works)
 
 ## Trim (use polyfill)
 
-```javascript
-// Native trim may be missing — always use polyfill or Platform.Function.Trim
-if (!String.prototype.trim) {
-    String.prototype.trim = function() {
-        return this.replace(/^\s+|\s+$/g, "");
-    };
-}
-"  hello  ".trim();  // "hello"
-
-// Or use Platform.Function
-Platform.Function.Trim("  hello  ");  // "hello"
-```
+{% include callout.html type="warning" content="`String.prototype.trim` is not available in SFMC SSJS. Apply a polyfill or use `Platform.Function.Trim`. See [Polyfills](/engine-limitations/polyfills/)." %}
 
 ---
 

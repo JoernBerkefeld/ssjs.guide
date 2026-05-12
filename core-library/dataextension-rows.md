@@ -14,17 +14,18 @@ description: Row-level CRUD methods on a DataExtension object. Retrieve, Add, Up
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| [`Retrieve([filter])`](#retrieve) | object[] | Retrieve rows, optionally filtered |
-| [`Add(columnValues)`](#add) | number | Insert a new row |
-| [`Update(columnValues, keyColumns, keyValues)`](#update) | number | Update existing rows |
-| [`Remove(filterColumn, filterValue)`](#remove) | number | Delete rows matching filter |
+| [`<DataExtensionInstance>.Rows.Retrieve([filter])`](#retrieve) | object[] | Retrieve rows, optionally filtered |
+| [`<DataExtensionInstance>.Rows.Add(rowData)`](#add) | string | Insert new row(s) |
+| [`<DataExtensionInstance>.Rows.Lookup(searchFieldNames, searchValues, [limit], [orderByFieldName])`](#lookup) | object[] | Look up rows by column values |
+| [`<DataExtensionInstance>.Rows.Update(rowData, whereFieldNames, whereValues)`](#update) | string | Update existing rows |
+| [`<DataExtensionInstance>.Rows.Remove(columnNames, columnValues)`](#remove) | number | Delete rows matching column values |
 
 ---
 
 ## Method: Retrieve
 
 ```javascript
-de.Rows.Retrieve([filter])
+<DataExtensionInstance>.Rows.Retrieve([filter])
 ```
 
 Returns an array of row objects. Each object has properties matching the DE column names.
@@ -91,30 +92,60 @@ for (var i = 0; i < active.length; i++) {
 ## Method: Add
 
 ```javascript
-de.Rows.Add(columnValues)
+<DataExtensionInstance>.Rows.Add(rowData)
 ```
 
-Inserts a new row into the Data Extension. Returns 1 on success.
+Adds one or more rows to the previously initialized data extension. Returns `"OK"` on success.
 
 ### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `columnValues` | object | Yes | Plain object mapping column names to values |
+| `rowData` | array | Yes | Array of objects, one per row to add. Each object's keys must match data extension field names. |
 
 ### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
-var de = DataExtension.Init("Submissions");
+var arrContacts = [
+    { Email: "jdoe@example.com", FirstName: "John", LastName: "Doe" },
+    { Email: "aruiz@example.com", FirstName: "Angel", LastName: "Ruiz" }
+];
+var birthdayDE = DataExtension.Init("birthdayDE");
+birthdayDE.Rows.Add(arrContacts);
+```
 
-var rowCount = de.Rows.Add({
-    Email: "jane@example.com",
-    FirstName: "Jane",
-    Score: 95,
-    SubmittedAt: Platform.Function.Now()
-});
-// rowCount === 1 on success
+---
+
+## Method: Lookup
+
+```javascript
+<DataExtensionInstance>.Rows.Lookup(searchFieldNames, searchValues, [limit], [orderByFieldName])
+```
+
+Returns rows where the specified columns equal the specified values (AND-joined). Optionally limits results and orders by a field.
+
+{% include callout.html type="note" content="When initializing a data extension for `Lookup()` from an email message, you must use the data extension Name; on landing pages, either Name or external key works — make them identical to be safe." %}
+
+### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `searchFieldNames` | array | Yes | Array of column names to match against |
+| `searchValues` | array | Yes | Array of values to match (one per column, in order) |
+| `limit` | number | No | Maximum number of rows to return |
+| `orderByFieldName` | string | No | Field to order results by |
+
+### Return value
+
+`object[]`
+
+### Examples
+
+```javascript
+Platform.Load("core", "1.1.5");
+var testDE = DataExtension.Init("testDE");
+var data = testDE.Rows.Lookup(["Age"], [25], 2, "LastName");
 ```
 
 ---
@@ -122,31 +153,26 @@ var rowCount = de.Rows.Add({
 ## Method: Update
 
 ```javascript
-de.Rows.Update(columnValues, keyColumnNames, keyValues)
+<DataExtensionInstance>.Rows.Update(rowData, whereFieldNames, whereValues)
 ```
 
-Updates existing rows that match the key. Returns the number of rows updated.
+Updates the columns of rows where `whereFieldNames` equal `whereValues` (AND-joined). Returns `"OK"` on success.
 
 ### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `columnValues` | object | Yes | Columns to update with new values |
-| `keyColumnNames` | string[] | Yes | Array of key column names to match |
-| `keyValues` | string[] | Yes | Array of corresponding key values |
+| `rowData` | object | Yes | Object whose keys are columns to update and values are the new values |
+| `whereFieldNames` | array | Yes | Array of column names to match against |
+| `whereValues` | array | Yes | Array of values to match (one per column, in order) |
 
 ### Examples
 
 ```javascript
-Platform.Load("core", "1.1.5");
-var de = DataExtension.Init("Contacts");
-
-var updated = de.Rows.Update(
-    { Status: "converted", UpdatedAt: Platform.Function.Now() },
-    ["SubscriberKey"],
-    ["sub_12345"]
-);
-// updated === 1 if found
+Platform.Load("Core", "1");
+var dataExt = DataExtension.Init("NTO Customer List");
+var fieldsToUpdate = { StateProvince: "QC", PreferredActivity: "Sailing" };
+var result = dataExt.Rows.Update(fieldsToUpdate, ["MemberId", "Country"], [9868600, "CA"]);
 ```
 
 ---
@@ -154,26 +180,24 @@ var updated = de.Rows.Update(
 ## Method: Remove
 
 ```javascript
-de.Rows.Remove(filterColumn, filterValue)
+<DataExtensionInstance>.Rows.Remove(columnNames, columnValues)
 ```
 
-Deletes all rows where `filterColumn` equals `filterValue`. Returns the number of rows deleted.
+Deletes rows from the previously initialized data extension where the specified columns equal the specified values (AND-joined). For large deletion requests, batch the work — this method times out on long-running deletes.
 
 ### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `filterColumn` | string | Yes | Column name to filter by |
-| `filterValue` | string | Yes | Value to match for deletion |
+| `columnNames` | array | Yes | Array of column names to match against |
+| `columnValues` | array | Yes | Array of values to match (one per column, in order) |
 
 ### Examples
 
 ```javascript
-Platform.Load("core", "1.1.5");
-var de = DataExtension.Init("ExpiredSessions");
-
-var removed = de.Rows.Remove("SessionToken", expiredToken);
-// removed === number of deleted rows
+Platform.Load("Core", "1.1.5");
+var memberDE = DataExtension.Init("MembershipRewards");
+var result = memberDE.Rows.Remove(["Area"], ["Kensington"]);
 ```
 
 ## Complete CRUD Pattern
