@@ -1,349 +1,351 @@
 - title: Getting Started
   url: /getting-started/
   children:
-    - title: What is SSJS?
-      url: /getting-started/what-is-ssjs/
-    - title: Where SSJS Runs
-      url: /getting-started/where-ssjs-runs/
-    - title: Embedding SSJS
-      url: /getting-started/embedding-ssjs/
-    - title: Execution Contexts
-      url: /getting-started/execution-contexts/
-    - title: Platform vs Core
-      url: /getting-started/platform-vs-core/
+      - title: What is SSJS?
+        url: /getting-started/what-is-ssjs/
+      - title: Where SSJS Runs
+        url: /getting-started/where-ssjs-runs/
+      - title: Embedding SSJS
+        url: /getting-started/embedding-ssjs/
+      - title: Execution Contexts
+        url: /getting-started/execution-contexts/
+      - title: Platform vs Core
+        url: /getting-started/platform-vs-core/
 
 - title: Language Guide
   url: /language/
   children:
-    - title: Variables
-      url: /language/variables/
-    - title: Data Types
-      url: /language/data-types/
-    - title: Operators
-      url: /language/operators/
-    - title: Control Flow
-      url: /language/control-flow/
-    - title: Loops
-      url: /language/loops/
-    - title: Functions & Scope
-      url: /language/functions-and-scope/
-    - title: Objects & JSON
-      url: /language/objects-and-json/
-    - title: Error Handling
-      url: /language/error-handling/
-    - title: Regular Expressions
-      url: /language/regular-expressions/
+      - title: Variables
+        url: /language/variables/
+      - title: Data Types
+        url: /language/data-types/
+      - title: Operators
+        url: /language/operators/
+      - title: Control Flow
+        url: /language/control-flow/
+      - title: Loops
+        url: /language/loops/
+      - title: Functions & Scope
+        url: /language/functions-and-scope/
+      - title: Objects & JSON
+        url: /language/objects-and-json/
+      - title: Error Handling
+        url: /language/error-handling/
+      - title: Regular Expressions
+        url: /language/regular-expressions/
 
 - title: Engine Limitations
   url: /engine-limitations/
   children:
-    - title: Unsupported Syntax
-      url: /engine-limitations/unsupported-syntax/
-    - title: Missing Methods
-      url: /engine-limitations/missing-methods/
-    - title: Polyfills
-      url: /engine-limitations/polyfills/
-    - title: Known Bugs
-      url: /engine-limitations/known-bugs/
+      - title: Unsupported Syntax
+        url: /engine-limitations/unsupported-syntax/
+      - title: Missing Methods
+        url: /engine-limitations/missing-methods/
+      - title: Polyfills
+        url: /engine-limitations/polyfills/
+      - title: Known Bugs
+        url: /engine-limitations/known-bugs/
 
 - title: Global Functions
   url: /global-functions/
   children:
-    - title: Write
-      url: /global-functions/write/
-    - title: Stringify
-      url: /global-functions/stringify/
-    - title: String
-      url: /global-functions/string/
-    - title: Error
-      url: /global-functions/error/
-    - title: ContentBlockByKey
-      url: /global-functions/contentblockbykey/
-    - title: ContentBlockByName
-      url: /global-functions/contentblockbyname/
-    - title: ContentBlockByID
-      url: /global-functions/contentblockbyid/
-    - title: TreatAsContent
-      url: /global-functions/treatascontent/
-    - title: Variable (global)
-      url: /global-functions/variable/
-    - title: Attribute (global)
-      url: /global-functions/attribute/
+      - title: Write
+        url: /global-functions/write/
+      - title: Stringify
+        url: /global-functions/stringify/
+      - title: String
+        url: /global-functions/string/
+      - title: Error
+        url: /global-functions/error/
+      - title: ContentBlockByKey
+        url: /global-functions/contentblockbykey/
+      - title: ContentBlockByName
+        url: /global-functions/contentblockbyname/
+      - title: ContentBlockByID
+        url: /global-functions/contentblockbyid/
+      - title: TreatAsContent
+        url: /global-functions/treatascontent/
+      - title: Variable (global)
+        url: /global-functions/variable/
+      - title: Attribute (global)
+        url: /global-functions/attribute/
 
 - title: Platform Functions
   url: /platform-functions/
   children:
-    - title: "— Data Extensions —"
-      url: /platform-functions/#data-extensions
-    - title: Lookup
-      url: /platform-functions/lookup/
-    - title: LookupRows
-      url: /platform-functions/lookuprows/
-    - title: LookupOrderedRows
-      url: /platform-functions/lookuporderedrows/
-    - title: InsertData
-      url: /platform-functions/insertdata/
-    - title: InsertDE
-      url: /platform-functions/insertde/
-    - title: UpdateData
-      url: /platform-functions/updatedata/
-    - title: UpdateDE
-      url: /platform-functions/updatede/
-    - title: UpsertData
-      url: /platform-functions/upsertdata/
-    - title: UpsertDE
-      url: /platform-functions/upsertde/
-    - title: DeleteData
-      url: /platform-functions/deletedata/
-    - title: DeleteDE
-      url: /platform-functions/deletede/
-    - title: "— Dates —"
-      url: /platform-functions/#dates
-    - title: Now
-      url: /platform-functions/now/
-    - title: SystemDateToLocalDate
-      url: /platform-functions/systemdatetolocaldate/
-    - title: LocalDateToSystemDate
-      url: /platform-functions/localdatetosystemdate/
-    - title: "— URLs & detection —"
-      url: /platform-functions/#urls
-    - title: UrlEncode
-      url: /platform-functions/urlencode/
-    - title: RedirectTo
-      url: /platform-functions/redirectto/
-    - title: IsCHTMLBrowser
-      url: /platform-functions/ischtmlbrowser/
-    - title: "— Logic —"
-      url: /platform-functions/#logic
-    - title: ParseJSON
-      url: /platform-functions/parsejson/
-    - title: GUID
-      url: /platform-functions/guid/
-    - title: IsEmailAddress
-      url: /platform-functions/isemailaddress/
-    - title: IsPhoneNumber
-      url: /platform-functions/isphonenumber/
-    - title: RaiseError
-      url: /platform-functions/raiseerror/
-    - title: "— SOAP API —"
-      url: /platform-functions/#soap
-    - title: CreateObject
-      url: /platform-functions/createobject/
-    - title: SetObjectProperty
-      url: /platform-functions/setobjectproperty/
-    - title: AddObjectArrayItem
-      url: /platform-functions/addobjectarrayitem/
-    - title: InvokeCreate
-      url: /platform-functions/invokecreate/
-    - title: InvokeRetrieve
-      url: /platform-functions/invokeretrieve/
-    - title: InvokeUpdate
-      url: /platform-functions/invokeupdate/
-    - title: InvokeDelete
-      url: /platform-functions/invokedelete/
-    - title: InvokePerform
-      url: /platform-functions/invokeperform/
-    - title: InvokeConfigure
-      url: /platform-functions/invokeconfigure/
-    - title: InvokeExecute
-      url: /platform-functions/invokeexecute/
-    - title: InvokeExtract
-      url: /platform-functions/invokeextract/
-    - title: InvokeSchedule
-      url: /platform-functions/invokeschedule/
-    - title: "— HTTP —"
-      url: /platform-functions/#http
-    - title: HTTPGet
-      url: /platform-functions/httpget/
-    - title: HTTPPost
-      url: /platform-functions/httppost/
-    - title: "— Content —"
-      url: /platform-functions/#content
-    - title: ContentImageByKey
-      url: /platform-functions/contentimagebykey/
-    - title: ContentImageByID
-      url: /platform-functions/contentimagebyid/
-    - title: BeginImpressionRegion
-      url: /platform-functions/beginimpressionregion/
-    - title: EndImpressionRegion
-      url: /platform-functions/endimpressionregion/
+      - title: '— Data Extensions —'
+        url: /platform-functions/#data-extensions
+      - title: Lookup
+        url: /platform-functions/lookup/
+      - title: LookupRows
+        url: /platform-functions/lookuprows/
+      - title: LookupOrderedRows
+        url: /platform-functions/lookuporderedrows/
+      - title: InsertData
+        url: /platform-functions/insertdata/
+      - title: InsertDE
+        url: /platform-functions/insertde/
+      - title: UpdateData
+        url: /platform-functions/updatedata/
+      - title: UpdateDE
+        url: /platform-functions/updatede/
+      - title: UpsertData
+        url: /platform-functions/upsertdata/
+      - title: UpsertDE
+        url: /platform-functions/upsertde/
+      - title: DeleteData
+        url: /platform-functions/deletedata/
+      - title: DeleteDE
+        url: /platform-functions/deletede/
+      - title: '— Dates —'
+        url: /platform-functions/#dates
+      - title: Now
+        url: /platform-functions/now/
+      - title: SystemDateToLocalDate
+        url: /platform-functions/systemdatetolocaldate/
+      - title: LocalDateToSystemDate
+        url: /platform-functions/localdatetosystemdate/
+      - title: '— URLs & detection —'
+        url: /platform-functions/#urls
+      - title: UrlEncode
+        url: /platform-functions/urlencode/
+      - title: RedirectTo
+        url: /platform-functions/redirectto/
+      - title: IsCHTMLBrowser
+        url: /platform-functions/ischtmlbrowser/
+      - title: '— Logic —'
+        url: /platform-functions/#logic
+      - title: ParseJSON
+        url: /platform-functions/parsejson/
+      - title: GUID
+        url: /platform-functions/guid/
+      - title: IsEmailAddress
+        url: /platform-functions/isemailaddress/
+      - title: IsPhoneNumber
+        url: /platform-functions/isphonenumber/
+      - title: RaiseError
+        url: /platform-functions/raiseerror/
+      - title: '— SOAP API —'
+        url: /platform-functions/#soap
+      - title: CreateObject
+        url: /platform-functions/createobject/
+      - title: SetObjectProperty
+        url: /platform-functions/setobjectproperty/
+      - title: AddObjectArrayItem
+        url: /platform-functions/addobjectarrayitem/
+      - title: InvokeCreate
+        url: /platform-functions/invokecreate/
+      - title: InvokeRetrieve
+        url: /platform-functions/invokeretrieve/
+      - title: InvokeUpdate
+        url: /platform-functions/invokeupdate/
+      - title: InvokeDelete
+        url: /platform-functions/invokedelete/
+      - title: InvokePerform
+        url: /platform-functions/invokeperform/
+      - title: InvokeConfigure
+        url: /platform-functions/invokeconfigure/
+      - title: InvokeExecute
+        url: /platform-functions/invokeexecute/
+      - title: InvokeExtract
+        url: /platform-functions/invokeextract/
+      - title: InvokeSchedule
+        url: /platform-functions/invokeschedule/
+      - title: '— HTTP —'
+        url: /platform-functions/#http
+      - title: HTTPGet
+        url: /platform-functions/httpget/
+      - title: HTTPPost
+        url: /platform-functions/httppost/
+      - title: '— Content —'
+        url: /platform-functions/#content
+      - title: ContentImageByKey
+        url: /platform-functions/contentimagebykey/
+      - title: ContentImageByID
+        url: /platform-functions/contentimagebyid/
+      - title: BeginImpressionRegion
+        url: /platform-functions/beginimpressionregion/
+      - title: EndImpressionRegion
+        url: /platform-functions/endimpressionregion/
 
 - title: Platform Objects
   url: /platform-objects/
   children:
-    - title: Platform.Load
-      url: /platform-objects/platform-load/
-    - title: Platform.Variable
-      url: /platform-objects/platform-variable/
-    - title: Platform.Response
-      url: /platform-objects/platform-response/
-    - title: Platform.Request
-      url: /platform-objects/platform-request/
-    - title: Platform.Recipient
-      url: /platform-objects/platform-recipient/
-    - title: HTTPHeader
-      url: /platform-objects/httpheader/
-    - title: DateTime.TimeZone
-      url: /platform-objects/datetime-timezone/
-    - title: ErrorUtil
-      url: /platform-objects/errorutil/
+      - title: Platform.Load
+        url: /platform-objects/platform-load/
+      - title: Platform.Variable
+        url: /platform-objects/platform-variable/
+      - title: Platform.Response
+        url: /platform-objects/platform-response/
+      - title: Platform.Request
+        url: /platform-objects/platform-request/
+      - title: Platform.Recipient
+        url: /platform-objects/platform-recipient/
+      - title: HTTPHeader
+        url: /platform-objects/httpheader/
+      - title: DateTime.TimeZone
+        url: /platform-objects/datetime-timezone/
+      - title: ErrorUtil
+        url: /platform-objects/errorutil/
 - title: Core Library
   url: /core-library/
   children:
-    - title: Overview
-      url: /core-library/
-    - title: DataExtension
-      url: /core-library/dataextension/
-    - title: DataExtension.Fields
-      url: /core-library/dataextension-fields/
-    - title: DataExtension.Rows
-      url: /core-library/dataextension-rows/
-    - title: Subscriber
-      url: /core-library/subscriber/
-    - title: Email
-      url: /core-library/email/
-    - title: TriggeredSend
-      url: /core-library/triggeredsend/
-    - title: List
-      url: /core-library/list/
-    - title: List.Subscribers
-      url: /core-library/list-subscribers/
-    - title: Send
-      url: /core-library/send/
-    - title: Template
-      url: /core-library/template/
-    - title: ContentAreaObj
-      url: /core-library/contentareaobj/
-    - title: Folder
-      url: /core-library/folder/
-    - title: QueryDefinition
-      url: /core-library/querydefinition/
-    - title: FilterDefinition
-      url: /core-library/filterdefinition/
-    - title: Send.Definition
-      url: /core-library/senddefinition/
-    - title: SendClassification
-      url: /core-library/sendclassification/
-    - title: DeliveryProfile
-      url: /core-library/deliveryprofile/
-    - title: SenderProfile
-      url: /core-library/senderprofile/
-    - title: Account
-      url: /core-library/account/
-    - title: AccountUser
-      url: /core-library/accountuser/
-    - title: Portfolio
-      url: /core-library/portfolio/
-    - title: Tracking events
-      url: /core-library/events/
+      - title: Overview
+        url: /core-library/
+      - title: DataExtension
+        url: /core-library/dataextension/
+      - title: DataExtension.Fields
+        url: /core-library/dataextension-fields/
+      - title: DataExtension.Rows
+        url: /core-library/dataextension-rows/
+      - title: Subscriber
+        url: /core-library/subscriber/
+      - title: Email
+        url: /core-library/email/
+      - title: TriggeredSend
+        url: /core-library/triggeredsend/
+      - title: List
+        url: /core-library/list/
+      - title: List.Subscribers
+        url: /core-library/list-subscribers/
+      - title: Send
+        url: /core-library/send/
+      - title: Template
+        url: /core-library/template/
+      - title: ContentAreaObj
+        url: /core-library/contentareaobj/
+      - title: Folder
+        url: /core-library/folder/
+      - title: QueryDefinition
+        url: /core-library/querydefinition/
+      - title: FilterDefinition
+        url: /core-library/filterdefinition/
+      - title: Send.Definition
+        url: /core-library/senddefinition/
+      - title: SendClassification
+        url: /core-library/sendclassification/
+      - title: DeliveryProfile
+        url: /core-library/deliveryprofile/
+      - title: SenderProfile
+        url: /core-library/senderprofile/
+      - title: Account
+        url: /core-library/account/
+      - title: AccountUser
+        url: /core-library/accountuser/
+      - title: Portfolio
+        url: /core-library/portfolio/
+      - title: Tracking events
+        url: /core-library/events/
 
 - title: WSProxy
   url: /wsproxy/
   children:
-    - title: Overview & Constructor
-      url: /wsproxy/
-    - title: retrieve
-      url: /wsproxy/retrieve/
-    - title: getNextBatch
-      url: /wsproxy/getnextbatch/
-    - title: createItem
-      url: /wsproxy/create-item/
-    - title: updateItem
-      url: /wsproxy/update-item/
-    - title: deleteItem
-      url: /wsproxy/delete-item/
-    - title: createBatch
-      url: /wsproxy/create-batch/
-    - title: updateBatch
-      url: /wsproxy/update-batch/
-    - title: deleteBatch
-      url: /wsproxy/delete-batch/
-    - title: describe
-      url: /wsproxy/describe/
-    - title: execute
-      url: /wsproxy/execute/
-    - title: performItem
-      url: /wsproxy/perform/
-    - title: performBatch
-      url: /wsproxy/perform-batch/
-    - title: setBatchSize
-      url: /wsproxy/set-batch-size/
-    - title: setClientId
-      url: /wsproxy/set-client-id/
-    - title: resetClientIds
-      url: /wsproxy/reset-client-ids/
+      - title: Overview & Constructor
+        url: /wsproxy/
+      - title: retrieve
+        url: /wsproxy/retrieve/
+      - title: getNextBatch
+        url: /wsproxy/getnextbatch/
+      - title: createItem
+        url: /wsproxy/create-item/
+      - title: updateItem
+        url: /wsproxy/update-item/
+      - title: deleteItem
+        url: /wsproxy/delete-item/
+      - title: createBatch
+        url: /wsproxy/create-batch/
+      - title: updateBatch
+        url: /wsproxy/update-batch/
+      - title: deleteBatch
+        url: /wsproxy/delete-batch/
+      - title: describe
+        url: /wsproxy/describe/
+      - title: execute
+        url: /wsproxy/execute/
+      - title: performItem
+        url: /wsproxy/perform/
+      - title: performBatch
+        url: /wsproxy/perform-batch/
+      - title: setBatchSize
+        url: /wsproxy/set-batch-size/
+      - title: setClientId
+        url: /wsproxy/set-client-id/
+      - title: resetClientIds
+        url: /wsproxy/reset-client-ids/
 
 - title: HTTP & REST
   url: /http/
   children:
-    - title: HTTP Methods Overview
-      url: /http/
-    - title: HTTP.Get
-      url: /http/http-get/
-    - title: HTTP.Post
-      url: /http/http-post/
-    - title: Platform.Function.HTTPGet
-      url: /http/platform-httpget/
-    - title: Platform.Function.HTTPPost
-      url: /http/platform-httppost/
-    - title: Script.Util.HttpRequest
-      url: /http/script-util-httprequest/
-    - title: Script.Util.HttpGet
-      url: /http/script-util-httpget/
-    - title: Request Instance Methods
-      url: /http/request-methods/
+      - title: HTTP Methods Overview
+        url: /http/
+      - title: HTTP.Get
+        url: /http/http-get/
+      - title: HTTP.Post
+        url: /http/http-post/
+      - title: Platform.Function.HTTPGet
+        url: /http/platform-httpget/
+      - title: Platform.Function.HTTPPost
+        url: /http/platform-httppost/
+      - title: Script.Util.HttpRequest
+        url: /http/script-util-httprequest/
+      - title: Script.Util.HttpGet
+        url: /http/script-util-httpget/
+      - title: Request Instance Methods
+        url: /http/request-methods/
 
 - title: ECMAScript Builtins
   url: /ecmascript-builtins/
   children:
-    - title: Overview
-      url: /ecmascript-builtins/
-    - title: Array Methods
-      url: /ecmascript-builtins/array-methods/
-    - title: String Methods
-      url: /ecmascript-builtins/string-methods/
-    - title: Math
-      url: /ecmascript-builtins/math/
-    - title: Number Methods
-      url: /ecmascript-builtins/number-methods/
+      - title: Overview
+        url: /ecmascript-builtins/
+      - title: Array Methods
+        url: /ecmascript-builtins/array-methods/
+      - title: String Methods
+        url: /ecmascript-builtins/string-methods/
+      - title: Math
+        url: /ecmascript-builtins/math/
+      - title: Number Methods
+        url: /ecmascript-builtins/number-methods/
+      - title: Object Methods
+        url: /ecmascript-builtins/object-methods/
 
 - title: Best Practices
   url: /best-practices/
   children:
-    - title: Debugging
-      url: /best-practices/debugging/
-    - title: Performance
-      url: /best-practices/performance/
-    - title: Security
-      url: /best-practices/security/
-    - title: Style Guide
-      url: /best-practices/style-guide/
-    - title: Defensive Coding
-      url: /best-practices/defensive-coding/
-    - title: Error Logging
-      url: /best-practices/error-logging/
+      - title: Debugging
+        url: /best-practices/debugging/
+      - title: Performance
+        url: /best-practices/performance/
+      - title: Security
+        url: /best-practices/security/
+      - title: Style Guide
+        url: /best-practices/style-guide/
+      - title: Defensive Coding
+        url: /best-practices/defensive-coding/
+      - title: Error Logging
+        url: /best-practices/error-logging/
 
 - title: Recipes
   url: /recipes/
   children:
-    - title: Cloud Page Apps
-      url: /recipes/cloud-page-apps/
-    - title: AMPscript Bridge
-      url: /recipes/ampscript-bridge/
-    - title: REST API Calls
-      url: /recipes/rest-api-calls/
-    - title: DE CRUD Patterns
-      url: /recipes/de-crud-patterns/
-    - title: Subscriber Management
-      url: /recipes/subscriber-management/
-    - title: WSProxy Patterns
-      url: /recipes/wsproxy-patterns/
-    - title: Date & Time
-      url: /recipes/date-and-time/
-    - title: Anti-CSRF
-      url: /recipes/anti-csrf/
-    - title: Encryption
-      url: /recipes/encryption/
+      - title: Cloud Page Apps
+        url: /recipes/cloud-page-apps/
+      - title: AMPscript Bridge
+        url: /recipes/ampscript-bridge/
+      - title: REST API Calls
+        url: /recipes/rest-api-calls/
+      - title: DE CRUD Patterns
+        url: /recipes/de-crud-patterns/
+      - title: Subscriber Management
+        url: /recipes/subscriber-management/
+      - title: WSProxy Patterns
+        url: /recipes/wsproxy-patterns/
+      - title: Date & Time
+        url: /recipes/date-and-time/
+      - title: Anti-CSRF
+        url: /recipes/anti-csrf/
+      - title: Encryption
+        url: /recipes/encryption/
 
 - title: Function Index
   url: /function-index/

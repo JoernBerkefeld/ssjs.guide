@@ -27,17 +27,17 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`<AccountUserInstance>.Update(properties)`](/core-library/accountuser/) | Core Library | string | Update AccountUser |
 | [`<AccountUserInstance>.Activate()`](/core-library/accountuser/) | Core Library | string | Activate AccountUser |
 | [`<AccountUserInstance>.Deactivate()`](/core-library/accountuser/) | Core Library | string | Deactivate AccountUser |
-| [`Array.concat(value[, ...])`](#) | ECMAScript Builtins | array | Merge arrays |
-| [`Array.join([separator])`](#) | ECMAScript Builtins | string | Join elements to string |
-| [`Array.length`](#) | ECMAScript Builtins | number | Number of elements |
-| [`Array.pop()`](#) | ECMAScript Builtins | any | Remove and return last element |
-| [`Array.push(element[, ...])`](#) | ECMAScript Builtins | number | Add elements to end; return new length |
-| [`Array.reverse()`](#) | ECMAScript Builtins | array | Reverse array in place |
-| [`Array.shift()`](#) | ECMAScript Builtins | any | Remove and return first element |
-| [`Array.slice([start[, end]])`](#) | ECMAScript Builtins | array | Shallow copy of a portion |
-| [`Array.sort([compareFn])`](#) | ECMAScript Builtins | array | Sort in place |
-| [`Array.splice(start[, deleteCount[, item1[, ...]]])`](/engine-limitations/polyfills/) | ECMAScript Builtins | array | ⚠️ Broken in SFMC SSJS — see polyfills |
-| [`Array.unshift(element[, ...])`](#) | ECMAScript Builtins | number | Add elements to start; return new length |
+| [`<ArrayInstance>.concat(value[, ...])`](/ecmascript-builtins/array-methods/) | ECMAScript Builtins | array | Merge arrays |
+| [`<ArrayInstance>.join([separator])`](/ecmascript-builtins/array-methods/) | ECMAScript Builtins | string | Join elements to string |
+| [`<ArrayInstance>.length`](/ecmascript-builtins/array-methods/) | ECMAScript Builtins | number | Number of elements |
+| [`<ArrayInstance>.pop()`](/ecmascript-builtins/array-methods/) | ECMAScript Builtins | any | Remove and return last element |
+| [`<ArrayInstance>.push(element[, ...])`](/ecmascript-builtins/array-methods/) | ECMAScript Builtins | number | Add elements to end; return new length |
+| [`<ArrayInstance>.reverse()`](/ecmascript-builtins/array-methods/) | ECMAScript Builtins | array | Reverse array in place |
+| [`<ArrayInstance>.shift()`](/ecmascript-builtins/array-methods/) | ECMAScript Builtins | any | Remove and return first element |
+| [`<ArrayInstance>.slice([start[, end]])`](/ecmascript-builtins/array-methods/) | ECMAScript Builtins | array | Shallow copy of a portion |
+| [`<ArrayInstance>.sort([compareFn])`](/ecmascript-builtins/array-methods/) | ECMAScript Builtins | array | Sort in place |
+| [`<ArrayInstance>.splice(start[, deleteCount[, item1[, ...]]])`](/engine-limitations/polyfills/) | ECMAScript Builtins | array | ⚠️ Broken in SFMC SSJS — see polyfills |
+| [`<ArrayInstance>.unshift(element[, ...])`](/ecmascript-builtins/array-methods/) | ECMAScript Builtins | number | Add elements to start; return new length |
 
 ---
 
@@ -105,7 +105,6 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`<EmailInstance>.Remove()`](/core-library/email/) | Core Library | string | Remove email definition |
 | [`<EmailInstance>.Validate()`](/core-library/email/) | Core Library | object | Validate email |
 | [`<EmailInstance>.CheckContent()`](/core-library/email/) | Core Library | object | Content checks |
-| [Programmatic send (subscriber + options)](/core-library/email/) | Core Library | — | Send flow documented on Email page (Content Builder ID + `Send`) |
 | [`Platform.Function.EndImpressionRegion([closeAll])`](/platform-functions/endimpressionregion/) | Platform Functions | void | End an impression region |
 | [`Error(message)`](/global-functions/error/) | Global Functions | Error | Create Error object (`new Error([message])`) |
 | [`ErrorUtil.ThrowWSProxyError(result)`](/platform-objects/errorutil/) | Platform Object | void | Throw when WSProxy status indicates failure |
@@ -173,8 +172,8 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`Platform.Function.IsEmailAddress(value)`](/platform-functions/isemailaddress/) | Platform Functions | boolean | Validate email format |
 | [`Platform.Function.IsPhoneNumber(value)`](/platform-functions/isphonenumber/) | Platform Functions | boolean | Validate phone number format |
 | [`Platform.Function.IsCHTMLBrowser(userAgentString)`](/platform-functions/ischtmlbrowser/) | Platform Functions | boolean | Detect CHTML / feature-phone browsers |
-| [`isFinite(value)`](#) | ECMAScript Builtins | boolean | Test if value is finite |
-| [`isNaN(value)`](#) | ECMAScript Builtins | boolean | Test if value is NaN |
+| [`isFinite(value)`](/ecmascript-builtins/number-methods/) | ECMAScript Builtins | boolean | Test if value is finite |
+| [`isNaN(value)`](/ecmascript-builtins/number-methods/) | ECMAScript Builtins | boolean | Test if value is NaN |
 
 ---
 
@@ -203,32 +202,32 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`Math.abs(x)`](#) | ECMAScript Builtins | number | Absolute value |
-| [`Math.acos(x)`](#) | ECMAScript Builtins | number | Arccosine |
-| [`Math.asin(x)`](#) | ECMAScript Builtins | number | Arcsine |
-| [`Math.atan(x)`](#) | ECMAScript Builtins | number | Arctangent |
-| [`Math.atan2(y, x)`](#) | ECMAScript Builtins | number | Arctangent of quotient |
-| [`Math.ceil(x)`](#) | ECMAScript Builtins | number | Round up |
-| [`Math.cos(x)`](#) | ECMAScript Builtins | number | Cosine |
-| [`Math.E`](#) | ECMAScript Builtins | number | Euler's number (~2.718) |
-| [`Math.exp(x)`](#) | ECMAScript Builtins | number | e to the power of x |
-| [`Math.floor(x)`](#) | ECMAScript Builtins | number | Round down |
-| [`Math.LN2`](#) | ECMAScript Builtins | number | Natural logarithm of 2 |
-| [`Math.LN10`](#) | ECMAScript Builtins | number | Natural logarithm of 10 |
-| [`Math.log(x)`](#) | ECMAScript Builtins | number | Natural logarithm |
-| [`Math.LOG10E`](#) | ECMAScript Builtins | number | Base-10 log of e |
-| [`Math.LOG2E`](#) | ECMAScript Builtins | number | Base-2 log of e |
-| [`Math.max(value1[, value2, ...])`](#) | ECMAScript Builtins | number | Largest value |
-| [`Math.min(value1[, value2, ...])`](#) | ECMAScript Builtins | number | Smallest value |
-| [`Math.PI`](#) | ECMAScript Builtins | number | Pi (~3.14159) |
-| [`Math.pow(base, exponent)`](#) | ECMAScript Builtins | number | Base to the power of exponent |
-| [`Math.random()`](#) | ECMAScript Builtins | number | Random number [0, 1) |
-| [`Math.round(x)`](#) | ECMAScript Builtins | number | Round to nearest integer |
-| [`Math.sin(x)`](#) | ECMAScript Builtins | number | Sine |
-| [`Math.sqrt(x)`](#) | ECMAScript Builtins | number | Square root |
-| [`Math.SQRT1_2`](#) | ECMAScript Builtins | number | Square root of 1/2 |
-| [`Math.SQRT2`](#) | ECMAScript Builtins | number | Square root of 2 |
-| [`Math.tan(x)`](#) | ECMAScript Builtins | number | Tangent |
+| [`Math.abs(x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Absolute value |
+| [`Math.acos(x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Arccosine |
+| [`Math.asin(x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Arcsine |
+| [`Math.atan(x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Arctangent |
+| [`Math.atan2(y, x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Arctangent of quotient |
+| [`Math.ceil(x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Round up |
+| [`Math.cos(x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Cosine |
+| [`Math.E`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Euler's number (~2.718) |
+| [`Math.exp(x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | e to the power of x |
+| [`Math.floor(x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Round down |
+| [`Math.LN2`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Natural logarithm of 2 |
+| [`Math.LN10`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Natural logarithm of 10 |
+| [`Math.log(x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Natural logarithm |
+| [`Math.LOG10E`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Base-10 log of e |
+| [`Math.LOG2E`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Base-2 log of e |
+| [`Math.max(value1[, value2, ...])`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Largest value |
+| [`Math.min(value1[, value2, ...])`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Smallest value |
+| [`Math.PI`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Pi (~3.14159) |
+| [`Math.pow(base, exponent)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Base to the power of exponent |
+| [`Math.random()`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Random number [0, 1) |
+| [`Math.round(x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Round to nearest integer |
+| [`Math.sin(x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Sine |
+| [`Math.sqrt(x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Square root |
+| [`Math.SQRT1_2`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Square root of 1/2 |
+| [`Math.SQRT2`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Square root of 2 |
+| [`Math.tan(x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Tangent |
 
 ---
 
@@ -237,9 +236,9 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
 | [`NotSentEvent.Retrieve(filter)`](/core-library/events/#not-sent-event) | Core Library | object[] | Not-sent events |
-| [`Number.toExponential([fractionDigits])`](#) | ECMAScript Builtins | string | Exponential notation string |
-| [`Number.toFixed([fractionDigits])`](#) | ECMAScript Builtins | string | Fixed-point notation string |
-| [`Number.toPrecision([precision])`](#) | ECMAScript Builtins | string | Precision notation string |
+| [`Number.toExponential([fractionDigits])`](/ecmascript-builtins/number-methods/) | ECMAScript Builtins | string | Exponential notation string |
+| [`Number.toFixed([fractionDigits])`](/ecmascript-builtins/number-methods/) | ECMAScript Builtins | string | Fixed-point notation string |
+| [`Number.toPrecision([precision])`](/ecmascript-builtins/number-methods/) | ECMAScript Builtins | string | Precision notation string |
 | [`Platform.Function.Now([useContextTime])`](/platform-functions/now/) | Platform Functions | string | Current SFMC server date/time |
 
 ---
@@ -248,7 +247,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`Object.hasOwnProperty(v)`](#) | ECMAScript Builtins | boolean | Test if object has own property |
+| [`Object.hasOwnProperty(v)`](/ecmascript-builtins/object-methods/) | ECMAScript Builtins | boolean | Test if object has own property |
 | [`OpenEvent.Retrieve(filter)`](/core-library/events/#open-event) | Core Library | object[] | Open tracking events |
 
 ---
@@ -257,8 +256,8 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`parseFloat(string)`](#) | ECMAScript Builtins | number | Parse float from string |
-| [`parseInt(string[, radix])`](#) | ECMAScript Builtins | number | Parse integer from string |
+| [`parseFloat(string)`](/ecmascript-builtins/number-methods/) | ECMAScript Builtins | number | Parse float from string |
+| [`parseInt(string[, radix])`](/ecmascript-builtins/number-methods/) | ECMAScript Builtins | number | Parse integer from string |
 | [`Platform.Function.ParseJSON(jsonString)`](/platform-functions/parsejson/) | Platform Functions | object | Parse JSON string to object |
 | [`Platform.Load(libraryName, version)`](/platform-objects/platform-load/) | Platform Object | void | Load Core library |
 | [`Platform.Request.*`](/platform-objects/platform-request/) | Platform Object | various | HTTP request (query, POST, headers, cookies) |
@@ -361,21 +360,21 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`<SendInstance>.Tracking.ClickRetrieve(filter)`](/core-library/send/) | Core Library | object[] | Click tracking for send |
 | [`<SendInstance>.Tracking.TotalByIntervalRetrieve(type, startDate, endDate, groupBy)`](/core-library/send/) | Core Library | object[] | Aggregated send tracking |
 | [`SentEvent.Retrieve(filter)`](/core-library/events/#sent-event) | Core Library | object[] | Sent events |
-| [`String.charAt(index)`](#) | ECMAScript Builtins | string | Character at index |
-| [`String.charCodeAt(index)`](#) | ECMAScript Builtins | number | Char code at index |
-| [`String.concat(string[, ...])`](#) | ECMAScript Builtins | string | Concatenate strings |
-| [`String.indexOf(searchValue[, fromIndex])`](#) | ECMAScript Builtins | number | First index of substring |
-| [`String.lastIndexOf(searchValue[, fromIndex])`](#) | ECMAScript Builtins | number | Last index of substring |
-| [`String.length`](#) | ECMAScript Builtins | number | String length |
-| [`String.match(regexp)`](#) | ECMAScript Builtins | array | Match regex |
-| [`String.replace(searchValue, replaceValue)`](#) | ECMAScript Builtins | string | Replace substring |
-| [`String.search(regexp)`](#) | ECMAScript Builtins | number | Search for regex |
-| [`String.slice(start[, end])`](#) | ECMAScript Builtins | string | Extract substring |
-| [`String.split(separator[, limit])`](#) | ECMAScript Builtins | array | Split into array |
-| [`String.substr(start[, length])`](#) | ECMAScript Builtins | string | Substring by length |
-| [`String.substring(start[, end])`](#) | ECMAScript Builtins | string | Substring by range |
-| [`String.toLowerCase()`](#) | ECMAScript Builtins | string | Convert to lower case |
-| [`String.toUpperCase()`](#) | ECMAScript Builtins | string | Convert to upper case |
+| [`<StringInstance>.charAt(index)`](#) | ECMAScript Builtins | string | Character at index |
+| [`<StringInstance>.charCodeAt(index)`](#) | ECMAScript Builtins | number | Char code at index |
+| [`<StringInstance>.concat(string[, ...])`](#) | ECMAScript Builtins | string | Concatenate strings |
+| [`<StringInstance>.indexOf(searchValue[, fromIndex])`](#) | ECMAScript Builtins | number | First index of substring |
+| [`<StringInstance>.lastIndexOf(searchValue[, fromIndex])`](#) | ECMAScript Builtins | number | Last index of substring |
+| [`<StringInstance>.length`](#) | ECMAScript Builtins | number | String length |
+| [`<StringInstance>.match(regexp)`](#) | ECMAScript Builtins | array | Match regex |
+| [`<StringInstance>.replace(searchValue, replaceValue)`](#) | ECMAScript Builtins | string | Replace substring |
+| [`<StringInstance>.search(regexp)`](#) | ECMAScript Builtins | number | Search for regex |
+| [`<StringInstance>.slice(start[, end])`](#) | ECMAScript Builtins | string | Extract substring |
+| [`<StringInstance>.split(separator[, limit])`](#) | ECMAScript Builtins | array | Split into array |
+| [`<StringInstance>.substr(start[, length])`](#) | ECMAScript Builtins | string | Substring by length |
+| [`<StringInstance>.substring(start[, end])`](#) | ECMAScript Builtins | string | Substring by range |
+| [`<StringInstance>.toLowerCase()`](#) | ECMAScript Builtins | string | Convert to lower case |
+| [`<StringInstance>.toUpperCase()`](#) | ECMAScript Builtins | string | Convert to upper case |
 | [`SurveyEvent.Retrieve(filter)`](/core-library/events/#survey-event) | Core Library | object[] | Survey events |
 | [`Platform.Function.SystemDateToLocalDate(date)`](/platform-functions/systemdatetolocaldate/) | Platform Functions | string | Server to subscriber local time |
 

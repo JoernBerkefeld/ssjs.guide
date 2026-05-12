@@ -16,34 +16,34 @@ SSJS runs on the JINT engine with ES3/ES5 compatibility. Most native ECMAScript 
 
 | Method | Status | Notes |
 |--------|--------|-------|
-| `arr.concat(...)` | ✅ Works | |
-| `arr.join(sep)` | ✅ Works | |
-| `arr.length` | ✅ Works | |
-| `arr.pop()` | ✅ Works | |
-| `arr.push(item)` | ✅ Works | |
-| `arr.reverse()` | ✅ Works | |
-| `arr.shift()` | ✅ Works | |
-| `arr.slice(start, end)` | ✅ Works | |
-| `arr.sort(fn)` | ✅ Works | |
-| `arr.unshift(item)` | ✅ Works | |
-| `arr.splice(start, count)` | ⚠️ Broken — polyfill | Ignores parameters; see [Polyfills](/engine-limitations/polyfills/) |
-| `arr.lastIndexOf(item)` | ⚠️ Broken — polyfill | Always returns -1; see [Polyfills](/engine-limitations/polyfills/) |
-| `arr.copyWithin(...)` | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
-| `arr.entries()` | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
-| `arr.fill(value)` | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
-| `arr.findIndex(fn)` | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
-| `arr.includes(item)` | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
-| `arr.indexOf(item)` | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
-| `arr.reduceRight(fn)` | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
+| `Array.prototype.concat(...)` | ✅ Works | |
+| `Array.prototype.join(sep)` | ✅ Works | |
+| `Array.prototype.length` | ✅ Works | |
+| `Array.prototype.pop()` | ✅ Works | |
+| `Array.prototype.push(item)` | ✅ Works | |
+| `Array.prototype.reverse()` | ✅ Works | |
+| `Array.prototype.shift()` | ✅ Works | |
+| `Array.prototype.slice(start, end)` | ✅ Works | |
+| `Array.prototype.sort(fn)` | ✅ Works | |
+| `Array.prototype.unshift(item)` | ✅ Works | |
+| `Array.prototype.splice(start, count)` | ⚠️ Broken — polyfill | Ignores parameters; see [Polyfills](/engine-limitations/polyfills/) |
+| `Array.prototype.lastIndexOf(item)` | ⚠️ Broken — polyfill | Always returns -1; see [Polyfills](/engine-limitations/polyfills/) |
+| `Array.prototype.copyWithin(...)` | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
+| `Array.prototype.entries()` | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
+| `Array.prototype.fill(value)` | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
+| `Array.prototype.findIndex(fn)` | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
+| `Array.prototype.includes(item)` | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
+| `Array.prototype.indexOf(item)` | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
+| `Array.prototype.reduceRight(fn)` | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
 | `Array.isArray(val)` | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
 | `Array.of(...)` | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
-| `arr.every(fn)` | ❌ Missing | Use `for` loop |
-| `arr.filter(fn)` | ❌ Missing | Use `for` loop or polyfill |
-| `arr.find(fn)` | ❌ Missing | Use `for` loop or polyfill |
-| `arr.forEach(fn)` | ❌ Missing | Use `for` loop or polyfill |
-| `arr.map(fn)` | ❌ Missing | Use `for` loop or polyfill |
-| `arr.reduce(fn)` | ❌ Missing | Use `for` loop or polyfill |
-| `arr.some(fn)` | ❌ Missing | Use `for` loop or polyfill |
+| `Array.prototype.every(fn)` | ❌ Missing | Use `for` loop |
+| `Array.prototype.filter(fn)` | ❌ Missing | Use `for` loop or polyfill |
+| `Array.prototype.find(fn)` | ❌ Missing | Use `for` loop or polyfill |
+| `Array.prototype.forEach(fn)` | ❌ Missing | Use `for` loop or polyfill |
+| `Array.prototype.map(fn)` | ❌ Missing | Use `for` loop or polyfill |
+| `Array.prototype.reduce(fn)` | ❌ Missing | Use `for` loop or polyfill |
+| `Array.prototype.some(fn)` | ❌ Missing | Use `for` loop or polyfill |
 
 ### String Methods
 
@@ -124,6 +124,15 @@ SSJS runs on the JINT engine with ES3/ES5 compatibility. Most native ECMAScript 
 | `Number.parseInt(str)` | ❌ Missing | ES6; use global `parseInt()` |
 | `Number.parseFloat(str)` | ❌ Missing | ES6; use global `parseFloat()` |
 
+### Object Methods
+
+| Method | Status | Notes |
+|--------|--------|-------|
+| `Object.prototype.hasOwnProperty(v)` | ✅ Works | Use inside `for...in` to skip inherited properties |
+| `Object.keys(obj)` | ❌ Missing | ES6; use `for...in` with `hasOwnProperty` |
+| `Object.values(obj)` | ❌ Missing | ES6; use `for...in` with `hasOwnProperty` |
+| `Object.assign(target, ...src)` | ❌ Missing | ES6; copy properties manually |
+
 ## In This Section
 
 | Page | Description |
@@ -132,3 +141,4 @@ SSJS runs on the JINT engine with ES3/ES5 compatibility. Most native ECMAScript 
 | [String Methods](/ecmascript-builtins/string-methods/) | Safe and polyfillable string methods |
 | [Math](/ecmascript-builtins/math/) | Math object reference |
 | [Number Methods](/ecmascript-builtins/number-methods/) | Number methods, constants, and global numeric functions |
+| [Object Methods](/ecmascript-builtins/object-methods/) | `hasOwnProperty` and missing Object statics |

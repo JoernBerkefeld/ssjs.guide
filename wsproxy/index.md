@@ -31,21 +31,21 @@ var items = result.Results;
 | Method | Description |
 |--------|-------------|
 | [`new Script.Util.WSProxy()`](/wsproxy/constructor/) | Create a WSProxy instance |
-| [`proxy.retrieve(...)`](/wsproxy/retrieve/) | Retrieve SFMC objects (paginate with `getNextBatch` when `HasMoreRows`) |
-| [`proxy.getNextBatch(...)`](/wsproxy/getnextbatch/) | Continue a paginated retrieve |
-| [`proxy.setBatchSize(...)`](/wsproxy/set-batch-size/) | Change retrieve page size |
-| [`proxy.createItem(...)`](/wsproxy/create-item/) | Create a new SFMC object |
-| [`proxy.updateItem(...)`](/wsproxy/update-item/) | Update an existing object |
-| [`proxy.deleteItem(...)`](/wsproxy/delete-item/) | Delete an object |
-| [`proxy.createBatch(...)`](/wsproxy/create-batch/) | Create multiple objects |
-| [`proxy.updateBatch(...)`](/wsproxy/update-batch/) | Update multiple objects |
-| [`proxy.deleteBatch(...)`](/wsproxy/delete-batch/) | Delete multiple objects |
-| [`proxy.describe(...)`](/wsproxy/describe/) | SOAP object metadata |
-| [`proxy.execute(...)`](/wsproxy/execute/) | Named execute requests (e.g. `LogUnsubEvent`) |
-| [`proxy.performItem(...)`](/wsproxy/perform/) | SOAP Perform on one object |
-| [`proxy.performBatch(...)`](/wsproxy/perform-batch/) | SOAP Perform on many objects |
-| [`proxy.setClientId(...)`](/wsproxy/set-client-id/) | Target another business unit |
-| [`proxy.resetClientIds()`](/wsproxy/reset-client-ids/) | Clear BU override |
+| [`<WSProxyInstance>.retrieve(...)`](/wsproxy/retrieve/) | Retrieve SFMC objects (paginate with `getNextBatch` when `HasMoreRows`) |
+| [`<WSProxyInstance>.getNextBatch(...)`](/wsproxy/getnextbatch/) | Continue a paginated retrieve |
+| [`<WSProxyInstance>.setBatchSize(...)`](/wsproxy/set-batch-size/) | Change retrieve page size |
+| [`<WSProxyInstance>.createItem(...)`](/wsproxy/create-item/) | Create a new SFMC object |
+| [`<WSProxyInstance>.updateItem(...)`](/wsproxy/update-item/) | Update an existing object |
+| [`<WSProxyInstance>.deleteItem(...)`](/wsproxy/delete-item/) | Delete an object |
+| [`<WSProxyInstance>.createBatch(...)`](/wsproxy/create-batch/) | Create multiple objects |
+| [`<WSProxyInstance>.updateBatch(...)`](/wsproxy/update-batch/) | Update multiple objects |
+| [`<WSProxyInstance>.deleteBatch(...)`](/wsproxy/delete-batch/) | Delete multiple objects |
+| [`<WSProxyInstance>.describe(...)`](/wsproxy/describe/) | SOAP object metadata |
+| [`<WSProxyInstance>.execute(...)`](/wsproxy/execute/) | Named execute requests (e.g. `LogUnsubEvent`) |
+| [`<WSProxyInstance>.performItem(...)`](/wsproxy/perform/) | SOAP Perform on one object |
+| [`<WSProxyInstance>.performBatch(...)`](/wsproxy/perform-batch/) | SOAP Perform on many objects |
+| [`<WSProxyInstance>.setClientId(...)`](/wsproxy/set-client-id/) | Target another business unit |
+| [`<WSProxyInstance>.resetClientIds()`](/wsproxy/reset-client-ids/) | Clear BU override |
 
 ---
 

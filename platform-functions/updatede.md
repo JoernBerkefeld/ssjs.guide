@@ -1,9 +1,9 @@
 ﻿---
 layout: function
-title: Updatede
+title: UpdateDE
 parent: Platform Functions
 parent_url: /platform-functions/
-description: Alias for Updatedata. Identical behavior — however this is limited to emails.
+description: Alias for UpdateData. Identical behavior — however this is limited to emails.
 availability:
   email: true
   cloudpage: false
@@ -15,15 +15,13 @@ min_args: 5
 max_args: 5
 ---
 
-This function is an alias for [Updatedata](/platform-functions/updatedata/). They have identical signatures and behavior. However, this is limited to emails.
-
-Prefer $title when you are used to the legacy AMPscript naming convention, or $baseTitle for the more descriptive name.
+This function is an alias for [UpdateData](/platform-functions/updatedata/). They have identical signatures and behavior. However, this is limited to emails.
 
 ## See Also
 
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
-  <li><a href="/platform-functions/updatedata/">Updatedata</a></li>
+  <li><a href="/platform-functions/updatedata/">UpdateData</a></li>
 </ul>
 </div>
