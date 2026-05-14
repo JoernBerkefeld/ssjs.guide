@@ -62,7 +62,7 @@ The `req` object returned by `Script.Util.HttpRequest(url)` has these methods yo
 
 ## HttpResponseInstance Properties
 
-{% include callout.html type="info" content="`resp.content` is equal for `HttpGet` and `HttpRequest`." %}
+{% include callout.html type="info" content="`HttpResponseInstance` is equal for `HttpGet` and `HttpRequest`." %}
 
 The `resp` object returned by `req.send()` has these properties:
 
