@@ -272,6 +272,7 @@ var status = ts.Send(order.email, {
     ShippingAddress: order.shippingAddress
 });
 
+Platform.Response.ContentType = "application/json";
 Write(Stringify({ status: status, order: order.orderNumber }));
 ```
 

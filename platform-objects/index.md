@@ -65,5 +65,6 @@ var cookie = Platform.Request.GetCookieValue("sessionId");  // cookie value
 Control the HTTP response before output is sent:
 
 ```javascript
+Platform.Response.ContentType = "application/json";
 Platform.Response.Redirect("https://example.com", false);
 ```

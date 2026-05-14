@@ -325,6 +325,7 @@ if (method === "GET") {
         Write(Stringify({ status: 400, statusMessage: "Bad Request", error: "id is required" }));
     } else {
         var record = Platform.Function.Lookup("Records", "data", "id", id);
+        Platform.Response.ContentType = "application/json";
         Write(Stringify({ id: id, data: record }));
     }
 } else if (method === "POST") {
@@ -332,6 +333,7 @@ if (method === "GET") {
     try {
         var body = Platform.Function.ParseJSON(rawBody + "");
         // process body...
+        Platform.Response.ContentType = "application/json";
         Write(Stringify({ status: "ok" }));
     } catch(e) {
         Write(Stringify({ status: 400, statusMessage: "Bad Request", error: "Invalid JSON" }));

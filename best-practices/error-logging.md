@@ -79,6 +79,7 @@ try {
 } catch(e) {
     logError(PAGE_NAME, e.message, e.stack, requestSnapshot, "");
 
+    Platform.Response.ContentType = "application/json";
     Write(Stringify({ error: "An error occurred. Please try again." }));
 }
 

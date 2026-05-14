@@ -92,6 +92,7 @@ try {
     var resp = req.send();
     if (resp.statusCode === 200) {
         var data = Platform.Function.ParseJSON(String(resp.content));
+        Platform.Response.ContentType = "application/json";
         Write(Stringify(data));
     } else {
         Write(Stringify({ status: resp.statusCode, statusMessage: "Upstream Error", error: resp.statusCode }));

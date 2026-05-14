@@ -31,5 +31,5 @@ Writing robust SSJS requires understanding both the capabilities and the sharp e
 6. **Add filter to `de.Rows.Retrieve()` on CloudPages** — it returns empty without a filter
 7. **Handle the `switch default` bug** — test your `switch` statements, use `if`/`else` as fallback
 8. **Log errors to a DE** — don't rely on SFMC's native error pages for debugging
-9. **Use try-catch** — wrap your code in try-catch blocks to handle errors gracefully
+9. **Set content type explicitly** — always set `Platform.Response.ContentType = "application/json";` for API responses
 10. **Use WSProxy over CreateObject/Invoke** — WSProxy is simpler and more maintainable

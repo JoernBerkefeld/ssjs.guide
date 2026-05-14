@@ -45,6 +45,7 @@ if (!session) {
 ### JSON API response boilerplate
 
 ```javascript
+Platform.Response.ContentType = "application/json";
 var method = Platform.Request.Method;
 if (method !== "POST") {
     Write(Stringify({ status: 405, statusMessage: "Method Not Allowed", error: "POST required" }));
