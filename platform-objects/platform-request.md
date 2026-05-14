@@ -14,6 +14,15 @@ description: Read HTTP request data including query string parameters, POST body
 |----------|------|-------------|
 | `Platform.Request.Method` | string | HTTP method: `"GET"` or `"POST"` |
 | `Platform.Request.RequestURL` | string | Full resolved URL of the current page |
+| `Platform.Request.Browser` | object | Browser metadata: `Platform`, `Browser`, `Version`, `MajorVersion`, `MinorVersion` |
+| `Platform.Request.ClientIP` | string | IP address of the requesting client |
+| `Platform.Request.HasSSL` | boolean | Whether the current request supports SSL (HTTPS) |
+| `Platform.Request.IsSSL` | boolean | Whether the current request used an SSL (HTTPS) connection |
+| `Platform.Request.QueryString` | string | Full raw query string of the request URL |
+| `Platform.Request.ReferrerURL` | string | URL of the referring web address |
+| `Platform.Request.UserAgent` | string | User-agent string of the requesting browser |
+
+All properties return `null` (or `false` for boolean properties) when no valid request object exists or the value is absent.
 
 ## Methods
 
@@ -185,6 +194,122 @@ Returns the full URL of the current CloudPage as it was resolved, including Clou
 
 ```javascript
 var currentUrl = Platform.Request.RequestURL;
+```
+
+---
+
+## Property: Browser
+
+```javascript
+Platform.Request.Browser
+```
+
+Returns an object describing the requesting client's browser with the following fields: `Platform`, `Browser`, `Version`, `MajorVersion`, `MinorVersion`.
+
+### Examples
+
+```javascript
+var browser = Platform.Request.Browser;
+Write(Stringify(browser));
+// { "Platform": "WinNT", "Browser": "Chrome", "Version": "124.0", "MajorVersion": 124, "MinorVersion": 0 }
+```
+
+---
+
+## Property: ClientIP
+
+```javascript
+Platform.Request.ClientIP
+```
+
+Returns the IP address of the requesting client as a string.
+
+### Examples
+
+```javascript
+var ip = Platform.Request.ClientIP;
+Write("Request from: " + ip);
+```
+
+---
+
+## Property: HasSSL
+
+```javascript
+Platform.Request.HasSSL
+```
+
+Returns `true` if the current request supports SSL (HTTPS), `false` otherwise.
+
+### Examples
+
+```javascript
+if (!Platform.Request.HasSSL) {
+    Platform.Response.Redirect("https://" + Platform.Request.RequestURL, false);
+}
+```
+
+---
+
+## Property: IsSSL
+
+```javascript
+Platform.Request.IsSSL
+```
+
+Returns `true` if the current request was made over an SSL (HTTPS) connection. Alias of `HasSSL`.
+
+---
+
+## Property: QueryString
+
+```javascript
+Platform.Request.QueryString
+```
+
+Returns the full raw query string of the request URL (everything after `?`). Use `GetQueryStringParameter(name)` to read individual values.
+
+### Examples
+
+```javascript
+var qs = Platform.Request.QueryString;
+// e.g. "id=42&mode=preview"
+```
+
+---
+
+## Property: ReferrerURL
+
+```javascript
+Platform.Request.ReferrerURL
+```
+
+Returns the URL of the referring web address (the HTTP `Referer` header value). Returns `null` when no referrer is present.
+
+### Examples
+
+```javascript
+var referrer = Platform.Request.ReferrerURL;
+if (referrer) {
+    Write("<!-- Referred from: " + referrer + " -->");
+}
+```
+
+---
+
+## Property: UserAgent
+
+```javascript
+Platform.Request.UserAgent
+```
+
+Returns the user-agent string from the HTTP request. Use with [`Platform.Function.IsCHTMLBrowser()`](/platform-functions/ischtmlbrowser/) to detect browser types.
+
+### Examples
+
+```javascript
+var ua = Platform.Request.UserAgent;
+var isCHTML = Platform.Function.IsCHTMLBrowser(ua);
 ```
 
 ---

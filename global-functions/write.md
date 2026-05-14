@@ -9,6 +9,7 @@ availability:
   cloudpage: true
   automation: true
   triggered_send: true
+requires_core_load: true
 syntax: "Write(content)"
 return_type: void
 min_args: 1
@@ -26,6 +27,8 @@ max_args: 1
 `Write()` appends the given string to the page output at the position of the `<script runat="server">` block. It does not add a newline — concatenate `"\n"` or `"<br>"` manually if needed.
 
 The output is written into the final rendered HTML document. In email contexts, it is written into the email body. In Automation Studio, output is written to the activity log.
+
+Requires `Platform.Load("core", "1.1.5")` before use. If you need output from a script that does not load Core, use [`Platform.Response.Write()`](/platform-objects/platform-response/#write) instead.
 
 ## Examples
 

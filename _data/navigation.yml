@@ -65,6 +65,8 @@
         url: /global-functions/variable/
       - title: Write
         url: /global-functions/write/
+      - title: Format
+        url: /global-functions/format/
 
 - title: Platform Functions
   url: /platform-functions/

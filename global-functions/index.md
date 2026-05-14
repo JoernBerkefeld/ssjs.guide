@@ -47,4 +47,9 @@ These functions and objects are available globally in any SSJS script block with
     <div class="fn-desc">Global object providing access to subscriber attribute values.</div>
     <div class="fn-return">object</div>
   </a>
+  <a href="/global-functions/format/" class="function-card">
+    <div class="fn-name">Format()</div>
+    <div class="fn-desc">Format numbers (currency, decimals, percentages) and dates (ISO 8601, RFC 1123, custom patterns). Requires Platform.Load.</div>
+    <div class="fn-return">→ string</div>
+  </a>
 </div>
