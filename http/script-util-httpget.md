@@ -5,6 +5,15 @@ parent: HTTP & REST APIs
 parent_url: /http/
 permalink: /http/script-util-httpget/
 description: HTTP GET request constructor — creates an HttpRequestInstance that caches content for mail sends and supports custom headers.
+availability:
+  email: true
+  cloudpage: true
+  automation: true
+  triggered_send: true
+syntax: "new Script.Util.HttpGet(url)"
+return_type: HttpGetInstance
+min_args: 1
+max_args: 1
 ---
 
 `Script.Util.HttpGet` creates an HTTP GET request handler. Unlike `Platform.Function.HTTPGet`, it caches content for use in mail sends and supports custom headers via `setHeader()`. Only works with HTTP on port 80 and HTTPS on port 443.
