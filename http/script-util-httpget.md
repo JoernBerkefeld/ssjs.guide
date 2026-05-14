@@ -20,12 +20,6 @@ max_args: 1
 
 {% include callout.html type="note" content="For full control over HTTP method, timeouts, and all status codes, use [`Script.Util.HttpRequest`](/http/script-util-httprequest/) instead." %}
 
-## Syntax
-
-```javascript
-new Script.Util.HttpGet(url)
-```
-
 ## Parameters
 
 | Name | Type | Required | Description |
