@@ -12,41 +12,8 @@ description: Control the HTTP response from CloudPages and JSON Code Resources â
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| [`SetContentType(mimeType)`](#setcontenttype) | void | Set the Content-Type header |
 | [`SetCookie(name, value [, expires [, path [, domain [, secure]]]])`](#setcookie) | void | Set a response cookie |
 | [`Redirect(url [, permanent])`](#redirect) | void | Redirect the browser |
-
----
-
-## Method: SetContentType
-
-```javascript
-Platform.Response.SetContentType(mimeType)
-```
-
-Sets the `Content-Type` header of the response. Default is `text/html`.
-
-### Common Content Types
-
-| Use Case | MIME Type |
-|----------|-----------|
-| JSON API response | `"application/json"` |
-| HTML page | `"text/html; charset=UTF-8"` |
-| Plain text | `"text/plain"` |
-| XML | `"application/xml"` |
-| JavaScript | `"application/javascript"` |
-
-### Examples
-
-```javascript
-// JSON API
-Platform.Response.SetContentType("application/json");
-Write(Stringify({ status: "ok", count: rows.length }));
-
-// Plain text
-Platform.Response.SetContentType("text/plain");
-Write("OK");
-```
 
 ---
 

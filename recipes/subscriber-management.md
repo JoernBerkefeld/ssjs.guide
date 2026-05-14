@@ -35,7 +35,6 @@ try {
         ["true", Platform.Function.Now()]
     );
 
-    Platform.Response.SetContentType("application/json");
     Write(Stringify({ status: "subscribed", email: email }));
 } catch(e) {
     Write(Stringify({ status: 500, statusMessage: "Internal Server Error", error: "Subscription failed" }));

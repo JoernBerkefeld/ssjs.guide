@@ -26,12 +26,10 @@ if (method === "GET") {
 function handleGet() {
     var id = Platform.Request.GetQueryStringParameter("id");
     if (!id) {
-        Platform.Response.SetContentType("application/json");
         Write(Stringify({ message: "Welcome to the API" }));
         return;
     }
     var record = Platform.Function.Lookup("Records", "data", "id", id);
-    Platform.Response.SetContentType("application/json");
     if (!record) {
         Write(Stringify({ status: 404, statusMessage: "Not Found", error: "Record not found" }));
     } else {
@@ -52,7 +50,6 @@ function handlePost(body) {
         ["Email", "Name", "Timestamp"],
         [body.email, body.name || "", Platform.Function.Now()]
     );
-    Platform.Response.SetContentType("application/json");
     Write(Stringify({ status: "ok", email: body.email }));
 }
 </script>

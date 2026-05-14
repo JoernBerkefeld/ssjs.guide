@@ -24,12 +24,12 @@ Writing robust SSJS requires understanding both the capabilities and the sharp e
 ## Top 10 SSJS Rules
 
 1. **Always `Platform.Load("core", "1.1.5")` first** — before any Core library usage
-2. **Read `GetPostData()` once** — store in a variable immediately, it returns `""` on second call
-3. **Use `+ ""` before `ParseJSON()`** — `ParseJSON(str + "")` not `ParseJSON(str)` to avoid 500 errors
+2. **Read `Platform.Request.GetPostData()` once** — store in a variable immediately, it returns `""` on second call
+3. **Use `+ ""` before `Platform.Function.ParseJSON()`** — `Platform.Function.ParseJSON(str + "")` not `Platform.Function.ParseJSON(str)` to avoid 500 errors
 4. **Never trust user input** — validate and sanitize all query params, POST fields, and cookies
 5. **Use `var` everywhere** — `let`, `const`, arrow functions, and template literals all throw runtime errors
 6. **Add filter to `de.Rows.Retrieve()` on CloudPages** — it returns empty without a filter
 7. **Handle the `switch default` bug** — test your `switch` statements, use `if`/`else` as fallback
 8. **Log errors to a DE** — don't rely on SFMC's native error pages for debugging
-9. **Set content type explicitly** — always call `Platform.Response.SetContentType("application/json")` for API responses
+9. **Use try-catch** — wrap your code in try-catch blocks to handle errors gracefully
 10. **Use WSProxy over CreateObject/Invoke** — WSProxy is simpler and more maintainable
