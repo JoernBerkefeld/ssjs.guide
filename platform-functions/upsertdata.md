@@ -103,7 +103,7 @@ try {
         ["Name", "RegisteredAt"],
         [name,   Platform.Function.Now()]
     );
-    Platform.Response.Redirect("/confirmation");
+    Platform.Response.Redirect("/confirmation", false);
 } catch (e) {
     Write("Save failed: " + e.message);
 }

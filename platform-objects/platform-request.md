@@ -167,7 +167,7 @@ Returns the value of a cookie sent with the request.
 var sessionId = Platform.Request.GetCookieValue("sfmc_session");
 if (!sessionId) {
     // No session — redirect to login
-    Platform.Response.Redirect("/login");
+    Platform.Response.Redirect("/login", false);
 }
 ```
 
@@ -192,7 +192,6 @@ var currentUrl = Platform.Request.RequestURL;
 ## Complete Request Handler Pattern
 
 ```javascript
-<script runat="server">
 var method = Platform.Request.Method;
 
 if (method === "GET") {
@@ -213,7 +212,6 @@ if (method === "GET") {
         Write(Stringify({ status: 400, statusMessage: "Bad Request", error: "Invalid JSON" }));
     }
 }
-</script>
 ```
 
 ## See Also

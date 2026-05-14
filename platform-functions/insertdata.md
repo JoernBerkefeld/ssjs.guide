@@ -62,7 +62,6 @@ try {
 ### Insert from form data
 
 ```javascript
-<script runat="server">
 Platform.Load("core", "1.1.5");
 
 if (Platform.Request.Method === "POST") {
@@ -75,10 +74,9 @@ if (Platform.Request.Method === "POST") {
             ["Email", "Message", "CreatedAt"],
             [email, message, Now()],
         );
-        Platform.Response.Redirect("/thank-you");
+        Platform.Response.Redirect("/thank-you", false);
     }
 }
-</script>
 ```
 
 ## Notes

@@ -84,7 +84,7 @@ try {
 
 } catch (e) {
     Platform.Function.InsertData("ErrorLog", "Message", e.message, "Timestamp", Platform.Function.Now());
-    Platform.Response.Redirect("/error");
+    Platform.Response.Redirect("/error", false);
 }
 ```
 

@@ -36,7 +36,7 @@ var value = Platform.Request.GetQueryStringParameter("id");
 // Preferred: !! coercion or direct truthiness check
 if (!value) {
     // value is "", null, undefined, 0, or false
-    Platform.Response.Redirect("/error");
+    Platform.Response.Redirect("/error", false);
 }
 
 // Explicit empty string check

@@ -122,7 +122,7 @@ function destroySession() {
 // Usage
 var session = getSession();
 if (!session) {
-    Platform.Response.Redirect("/login");
+    Platform.Response.Redirect("/login", false);
 }
 Write("Hello, user " + session.userId);
 </script>
@@ -159,7 +159,7 @@ if (Platform.Request.Method === "POST") {
     );
 
     if (step < 3) {
-        Platform.Response.Redirect("?step=" + (step + 1));
+        Platform.Response.Redirect("?step=" + (step + 1), false);
     } else {
         // Final submission
         // process complete form data...

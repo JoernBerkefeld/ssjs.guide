@@ -13,7 +13,7 @@ description: Control the HTTP response from CloudPages and JSON Code Resources â
 | Method | Returns | Description |
 |--------|---------|-------------|
 | [`SetCookie(name, value [, expires [, path [, domain [, secure]]]])`](#setcookie) | void | Set a response cookie |
-| [`Redirect(url [, permanent])`](#redirect) | void | Redirect the browser |
+| [`Redirect(url , movedPermanently)`](#redirect) | void | Redirect the browser |
 
 ---
 
@@ -73,7 +73,7 @@ Platform.Response.SetCookie("sessionToken", "", "Thu, 01 Jan 1970 00:00:00 GMT")
 ## Method: Redirect
 
 ```javascript
-Platform.Response.Redirect(url [, permanent])
+Platform.Response.Redirect(url , movedPermanently)
 ```
 
 Redirects the browser to the specified URL.
@@ -83,13 +83,13 @@ Redirects the browser to the specified URL.
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `url` | string | Yes | Destination URL |
-| `permanent` | boolean | No | `true` for 301 redirect, `false`/omitted for 302 |
+| `movedPermanently` | boolean | Yes | `true` for 301 redirect, `false`/omitted for 302 |
 
 ### Examples
 
 ```javascript
 // Temporary redirect (302)
-Platform.Response.Redirect("https://example.com/thank-you");
+Platform.Response.Redirect("https://example.com/thank-you", false);
 
 // Permanent redirect (301)
 Platform.Response.Redirect("https://new-domain.com/page", true);
@@ -98,7 +98,7 @@ Platform.Response.Redirect("https://new-domain.com/page", true);
 var isLoggedIn = !!Platform.Request.GetCookieValue("session");
 if (!isLoggedIn) {
     Platform.Response.Redirect("/login?next=" +
-        Platform.Function.UrlEncode(Platform.Request.RequestURL));
+        Platform.Function.UrlEncode(Platform.Request.RequestURL), false);
 }
 ```
 

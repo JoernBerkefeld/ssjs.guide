@@ -71,7 +71,7 @@ try {
     var email = getSubscriber(subscriberKey);
     Write(email);
 } catch (e) {
-    Platform.Response.Redirect("/error?msg=" + Platform.Function.UrlEncode(e.message));
+    Platform.Response.Redirect("/error?msg=" + Platform.Function.UrlEncode(e.message), false);
 }
 ```
 
@@ -90,7 +90,7 @@ try {
     var sk = Platform.Request.GetQueryStringParameter("sk");
 
     if (!sk) {
-        Platform.Response.Redirect("/error?code=missing_sk");
+        Platform.Response.Redirect("/error?code=missing_sk", false);
     }
 
     var data = Platform.Function.Lookup("Subscribers", "Email", "SubscriberKey", sk);
@@ -104,7 +104,7 @@ try {
     if (isDebug) {
         Write("<pre>Error: " + Stringify(e) + "</pre>");
     } else {
-        Platform.Response.Redirect("/error?code=unexpected");
+        Platform.Response.Redirect("/error?code=unexpected", false);
     }
 }
 </script>
@@ -227,7 +227,7 @@ try {
     if (isDebug) {
         Write("<pre style='color:red'>" + Stringify(e) + "</pre>");
     } else {
-        Platform.Response.Redirect("/error");
+        Platform.Response.Redirect("/error", false);
     }
 }
 ```

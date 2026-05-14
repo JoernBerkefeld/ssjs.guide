@@ -78,7 +78,7 @@ var campaignId    = Platform.Request.GetQueryStringParameter("cid");
 
 // Parameters not present in the URL return an empty string ""
 if (!subscriberKey) {
-    Platform.Response.Redirect("/error?code=no_sk");
+    Platform.Response.Redirect("/error?code=no_sk", false);
 }
 </script>
 ```

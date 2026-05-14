@@ -31,7 +31,7 @@ if (!Platform.Function.IsEmailAddress(email)) {
 } else {
     // Process valid email
     Platform.Function.UpsertData("Signups", ["Email"], [email], ["Status"], ["pending"]);
-    Platform.Response.Redirect("/thank-you");
+    Platform.Response.Redirect("/thank-you", false);
 }
 ```
 
