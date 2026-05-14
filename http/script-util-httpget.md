@@ -1,5 +1,5 @@
 ---
-layout: page
+layout: function
 title: Script.Util.HttpGet
 parent: HTTP & REST APIs
 parent_url: /http/
