@@ -51,13 +51,20 @@ Returns an `HttpGetInstance`. Call `send()` to execute the request.
 
 ## HttpResponseInstance Object
 
-The `resp` object returned by `send()` has:
+{% include callout.html type="info" content="`resp.content` is equal for `HttpGet` and `HttpRequest`." %}
+
+The `resp` object returned by `req.send()` has these properties:
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `resp.statusCode` | number | HTTP status code |
-| `resp.content` | CLR string | Response body — convert with `String()` before use |
+| `content` | CLR string | Response body (must use `String()` to convert) |
+| `contentType` | string | The content type returned in the response |
+| `encoding` | string | The encoding type returned in the response |
+| `headers` | object | Response headers |
+| `returnStatus` | number | A status value: `0` = OK, `1` = Empty URL, `2` = Call failed, `3` = Call succeeded with empty content |
+| `statusCode` | number | HTTP status code |
 
+{% include callout.html type="warning" content="`resp.content` is a CLR string, not a JavaScript string. Always wrap it with `String(resp.content)` before calling `ParseJSON()` or string methods." %}
 ## Examples
 
 ### Basic GET request
