@@ -87,8 +87,6 @@ Variable.SetValue("name", "Jane");   // ⚠️ may work but non-standard
 <h4>See Also</h4>
 <ul>
   <li><a href="/platform-objects/platform-variable/">Platform.Variable</a></li>
-  <li><a href="/platform-functions/getvalue/">Platform.Function.GetValue</a></li>
-  <li><a href="/platform-functions/setvalue/">Platform.Function.SetValue</a></li>
   <li><a href="/platform-functions/treatascontent/">Platform.Function.TreatAsContent</a></li>
   <li><a href="/recipes/ampscript-bridge/">AMPscript Bridge recipe</a></li>
 </ul>

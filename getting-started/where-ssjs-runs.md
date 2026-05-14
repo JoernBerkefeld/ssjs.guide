@@ -24,11 +24,9 @@ CloudPages is the most flexible SSJS environment. A landing page is a publicly a
 - Requests time out (no documented limit, but ~30s is a practical ceiling for external calls)
 
 ```javascript
-<script runat="server">
 Platform.Load("core", "1.1.5");
 var method = Platform.Request.Method; // "GET" or "POST"
 Write("<p>Request method: " + method + "</p>");
-</script>
 ```
 
 ## JSON Code Resources
@@ -36,13 +34,10 @@ Write("<p>Request method: " + method + "</p>");
 A special CloudPages type that sets `Content-Type: application/json`. Perfect for building simple API endpoints:
 
 ```javascript
-<script runat="server">
 Platform.Load("core", "1.1.5");
-Platform.Response.SetResponseHeader("Content-Type", "application/json");
 
 var result = { status: "ok", timestamp: Platform.Function.Now() };
 Write(Stringify(result));
-</script>
 ```
 
 You cannot write HTML and JSON in the same resource — the first `Write()` determines the content type behavior. Set the header explicitly at the top.
@@ -63,7 +58,7 @@ SSJS in emails runs during **precompile** — when SFMC personalizes the email f
 - JSON manipulation
 - Custom function definitions for reuse
 
-```javascript
+```html
 <script runat="server">
 var firstName = Platform.Function.Lookup("Subscribers", "FirstName", "SubscriberKey", _subscriberKey);
 var displayName = firstName ? firstName : "Subscriber";
@@ -88,7 +83,6 @@ Script Activities let you run SSJS as a step in an Automation. This is how SSJS 
 - Use `Platform.Function.Now()` and date math to track elapsed time
 
 ```javascript
-<script runat="server">
 Platform.Load("core", "1.1.5");
 
 var startTime = new Date();
@@ -108,7 +102,6 @@ for (var i = 0; i < results.Results.length; i++) {
 }
 
 Write("Processed: " + processed + " items");
-</script>
 ```
 
 ## Triggered Send (Email)
