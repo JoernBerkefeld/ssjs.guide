@@ -25,27 +25,31 @@ new Script.Util.HttpGet(url)
 
 ## Return Value
 
-Returns an `HttpRequestInstance`. Call `send()` to execute the request.
+Returns an `HttpGetInstance`. Call `send()` to execute the request.
 
-## Instance Properties
+## HttpGetInstance Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `<HttpRequestInstance>.retries` | number | Number of retry attempts on failure |
-| `<HttpRequestInstance>.continueOnError` | boolean | If `true`, does not throw on HTTP error status |
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `retries` | number | `1` | Number of retry attempts on failure |
+| `continueOnError` | boolean | `false` | If `true`, does not throw on HTTP error status |
+| `emptyContentHandling` | number | `0` | Indicates what to do if the GET request doesn’t return any content. `0` = continue, `1` = stop the request, `2` = continue to the next subscriber (only works in email sends) |
 
-## Instance Methods
+{% include callout.html type="warning" content="`emptyContentHandling` is defined differently for `HttpGet` compared to `HttpRequest`." %}
+
+
+## HttpGetInstance Methods
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `<HttpRequestInstance>.send()` | object | Execute the request; returns response object |
-| `<HttpRequestInstance>.setHeader(name, value)` | void | Set a custom request header |
-| `<HttpRequestInstance>.clearHeaders()` | void | Remove all custom headers |
-| `<HttpRequestInstance>.removeHeader(name)` | void | Remove a specific header by name |
+| `clearHeaders()` | void | Remove all custom headers |
+| `removeHeader(name)` | void | Remove a specific header by name |
+| `send()` | `HttpResponseInstance` | Send the request |
+| `setHeader(name, value)` | void | Set a custom request header |
 
 {% include callout.html type="warning" content="Calling `setHeader()` disables content caching for `HttpGet`." %}
 
-## Response Object
+## HttpResponseInstance Object
 
 The `resp` object returned by `send()` has:
 
@@ -97,6 +101,6 @@ if (resp.statusCode == 200) {
   <li><a href="/http/script-util-httprequest/">Script.Util.HttpRequest</a></li>
   <li><a href="/http/request-methods/">Request Instance Methods</a></li>
   <li><a href="/http/http-get/">HTTP.Get</a></li>
-  <li><a href="/http/platform-httpget/">Platform.Function.HTTPGet</a></li>
+  <li><a href="/platform-functions/httpget/">Platform.Function.HTTPGet</a></li>
 </ul>
 </div>

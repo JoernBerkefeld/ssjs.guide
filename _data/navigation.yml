@@ -299,9 +299,9 @@
       - title: HTTP.Post
         url: /http/http-post/
       - title: Platform.Function.HTTPGet
-        url: /http/platform-httpget/
+        url: /platform-functions/httpget/
       - title: Platform.Function.HTTPPost
-        url: /http/platform-httppost/
+        url: /platform-functions/httppost/
       - title: Script.Util.HttpRequest
         url: /http/script-util-httprequest/
       - title: Script.Util.HttpGet

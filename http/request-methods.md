@@ -27,12 +27,12 @@ Set these on the request object before calling `send()`.
 
 ## Request Object — Methods
 
-| Method | Description |
-|--------|-------------|
-| `<HttpRequestInstance>.setHeader(name, value)` | Set a single request header |
-| `<HttpRequestInstance>.clearHeaders()` | Remove all custom headers |
-| `<HttpRequestInstance>.removeHeader(name)` | Remove one header by name |
-| `<HttpRequestInstance>.send()` | Send the request; returns a response object |
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `<HttpRequestInstance>.clearHeaders()` | void | Remove all custom headers |
+| `<HttpRequestInstance>.removeHeader(name)` | void | Remove a specific header by name |
+| `<HttpRequestInstance>.send()` | `HttpResponseInstance` | Send the request |
+| `<HttpRequestInstance>.setHeader(name, value)` | void | Set a custom request header |
 
 ### `<HttpRequestInstance>.setHeader(name, value)`
 
@@ -91,9 +91,12 @@ try {
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `resp.statusCode` | number | HTTP status code (e.g. `200`, `404`, `500`) |
-| `resp.content` | CLR string | Response body — **must be converted** with `String()` before use |
-| `resp.headers` | object | Response headers |
+| `content` | CLR string | Response body (must use `String()` to convert) |
+| `contentType` | string | The content type returned in the response |
+| `encoding` | string | The encoding type returned in the response |
+| `headers` | object | Response headers |
+| `returnStatus` | number | A status value: `0` = OK, `1` = Empty URL, `2` = Call failed, `3` = Call succeeded with empty content |
+| `statusCode` | number | HTTP status code |
 
 {% include callout.html type="warning" content="`resp.content` is a CLR string object, not a native JavaScript string. Always convert it with `String(resp.content)` before passing to `ParseJSON()` or any string method." %}
 
@@ -158,6 +161,5 @@ try {
 <ul>
   <li><a href="/http/script-util-httprequest/">Script.Util.HttpRequest (full docs)</a></li>
   <li><a href="/http/script-util-httpget/">Script.Util.HttpGet</a></li>
-  <li><a href="/http/http-get/">HTTP.Get</a></li>
 </ul>
 </div>

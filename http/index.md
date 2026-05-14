@@ -10,9 +10,10 @@ SSJS offers three different ways to make HTTP requests. Choose based on how much
 
 | API | Control Level | Best For |
 |-----|--------------|----------|
-| `Platform.Function.HTTPGet` / `HTTPPost` | Basic | Simple GET/POST; response body only |
+| `Platform.Function.HTTPGet` / `Platform.Function.HTTPPost` | Basic | Simple GET/POST; response body only |
 | `HTTP.Get` / `HTTP.Post` (Core) | Medium | Same transport as syndicated HTTP docs — returns a **status + body object** |
-| `Script.Util.HttpRequest` | Full | Custom methods, headers, auth, timeouts, status codes |
+| `Script.Util.HttpGet` | Full-ish | Shorthand for `Script.Util.HttpRequest` with GET method but without control over timeouts and returned encoding/content-type |
+| `Script.Util.HttpRequest` | Full | Custom methods, headers, auth, timeouts, status codes and returns most details |
 
 ---
 
@@ -43,9 +44,10 @@ Write("Status: " + resp.statusCode + ", Body: " + String(resp.content));
 |------|-------------|
 | [HTTP.Get](/http/http-get/) | Core library GET — returns response object |
 | [HTTP.Post](/http/http-post/) | Core library POST — returns response object |
+| [Script.Util.HttpGet](/http/script-util-httpget/) | Full-featured HTTP GET request object |
 | [Script.Util.HttpRequest](/http/script-util-httprequest/) | Full-featured HTTP request object |
-| [Platform.Function.HTTPGet](/http/platform-httpget/) | Simple GET without Core load |
-| [Platform.Function.HTTPPost](/http/platform-httppost/) | Simple POST without Core load |
+| [Platform.Function.HTTPGet](/platform-functions/httpget/) | Simple GET without Core load |
+| [Platform.Function.HTTPPost](/platform-functions/httppost/) | Simple POST without Core load |
 
 ---
 

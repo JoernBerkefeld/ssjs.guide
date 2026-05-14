@@ -20,37 +20,58 @@ req.encoding = "UTF-8";                     // Encoding (default UTF-8)
 req.timeout = 30000;                        // Timeout in ms
 req.setHeader(name, value);                 // Set a request header
 req.postData = body;                        // Request body (POST/PUT/PATCH)
+req.emptyContentHandling = false;           // throw if no content returned
+req.retries = 2;                            // Number of retries on failure
+req.continueOnError = true;                 // If true, don't throw on HTTP error status
 var resp = req.send();
 ```
 
-## Properties
+## Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `url` | string | Yes | Destination URL |
+
+## HttpRequestInstance Properties
+
+The `req` object returned by `Script.Util.HttpRequest(url)` has these properties you can set to configure the request:
 
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
-| `method` | string | `"GET"` | HTTP method: `GET`, `POST`, `PUT`, `PATCH`, `DELETE` |
-| `contentType` | string | `""` | Content-Type header for body |
+| `method` | `"GET"`,`"POST"`,`"PUT"`,`"PATCH"`,`"DELETE"` | `"GET"` | HTTP method |
+| `contentType` | string | `""` | Content-Type header for body, e.g. `"application/json"` |
 | `encoding` | string | `"UTF-8"` | Character encoding |
 | `timeout` | number | `30000` | Timeout in milliseconds |
 | `postData` | string | `""` | Request body (for POST/PUT/PATCH) |
+| `emptyContentHandling` | boolean | `false` | If `false`, throws an exception when no content is returned; if `true`, continues without throwing |
+| `retries` | number | `1` | The number of times to retry the request before throwing an exception |
+| `continueOnError` | boolean | `false` | If `true`, continues after receiving a non-fatal error; if `false`, throws an exception |
 
-## Methods
+{% include callout.html type="warning" content="`emptyContentHandling` is defined differently for `HttpGet` compared to `HttpRequest`." %}
 
-| Method | Description |
-|--------|-------------|
-| `<HttpRequestInstance>.setHeader(name, value)` | Add/set a request header |
-| `<HttpRequestInstance>.clearHeaders()` | Remove all custom headers |
-| `<HttpRequestInstance>.removeHeader(name)` | Remove a specific header by name |
-| `<HttpRequestInstance>.send()` | Send the request; returns response object |
+## HttpRequestInstance Methods
 
-## Response Object
+The `req` object returned by `Script.Util.HttpRequest(url)` has these methods you can call to configure the request:
 
-The `resp` object returned by `req.send()` has:
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `clearHeaders()` | void | Remove all custom headers |
+| `removeHeader(name)` | void | Remove a specific header by name |
+| `send()` | `HttpResponseInstance` | Send the request |
+| `setHeader(name, value)` | void | Set a custom request header |
+
+## HttpResponseInstance Properties
+
+The `resp` object returned by `req.send()` has these properties:
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `resp.statusCode` | number | HTTP status code |
-| `resp.content` | CLR string | Response body (must use `String()` to convert) |
-| `resp.headers` | object | Response headers |
+| `content` | CLR string | Response body (must use `String()` to convert) |
+| `contentType` | string | The content type returned in the response |
+| `encoding` | string | The encoding type returned in the response |
+| `headers` | object | Response headers |
+| `returnStatus` | number | A status value: `0` = OK, `1` = Empty URL, `2` = Call failed, `3` = Call succeeded with empty content |
+| `statusCode` | number | HTTP status code |
 
 {% include callout.html type="warning" content="`resp.content` is a CLR string, not a JavaScript string. Always wrap it with `String(resp.content)` before calling `ParseJSON()` or string methods." %}
 
@@ -184,6 +205,7 @@ if (result.status === 200) {
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
+  <li><a href="/http/script-util-httpget/">Script.Util.HttpGet</a></li>
   <li><a href="/http/http-get/">HTTP.Get</a></li>
   <li><a href="/http/http-post/">HTTP.Post</a></li>
   <li><a href="/platform-functions/httpget/">Platform.Function.HTTPGet</a></li>
