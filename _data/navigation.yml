@@ -49,22 +49,22 @@
 - title: Global Functions
   url: /global-functions/
   children:
-      - title: Write
-        url: /global-functions/write/
-      - title: Stringify
-        url: /global-functions/stringify/
-      - title: String
-        url: /global-functions/string/
-      - title: Error
-        url: /global-functions/error/
+      - title: Attribute (global)
+        url: /global-functions/attribute/
       - title: Base64Encode
         url: /global-functions/base64encode/
       - title: Base64Decode
         url: /global-functions/base64decode/
+      - title: Error
+        url: /global-functions/error/
+      - title: String
+        url: /global-functions/string/
+      - title: Stringify
+        url: /global-functions/stringify/
       - title: Variable (global)
         url: /global-functions/variable/
-      - title: Attribute (global)
-        url: /global-functions/attribute/
+      - title: Write
+        url: /global-functions/write/
 
 - title: Platform Functions
   url: /platform-functions/
@@ -204,48 +204,52 @@
   children:
       - title: Overview
         url: /core-library/
+      - title: Account
+        url: /core-library/account/
+      - title: AccountUser
+        url: /core-library/accountuser/
+      - title: ContentAreaObj
+        url: /core-library/contentareaobj/
       - title: DataExtension
         url: /core-library/dataextension/
       - title: DataExtension.Fields
         url: /core-library/dataextension-fields/
       - title: DataExtension.Rows
         url: /core-library/dataextension-rows/
-      - title: Subscriber
-        url: /core-library/subscriber/
+      - title: DeliveryProfile
+        url: /core-library/deliveryprofile/
       - title: Email
         url: /core-library/email/
-      - title: TriggeredSend
-        url: /core-library/triggeredsend/
+      - title: FilterDefinition
+        url: /core-library/filterdefinition/
+      - title: Folder
+        url: /core-library/folder/
+      - title: HTTP.Get
+        url: /http/http-get/
+      - title: HTTP.Post
+        url: /http/http-post/
       - title: List
         url: /core-library/list/
       - title: List.Subscribers
         url: /core-library/list-subscribers/
-      - title: Send
-        url: /core-library/send/
-      - title: Template
-        url: /core-library/template/
-      - title: ContentAreaObj
-        url: /core-library/contentareaobj/
-      - title: Folder
-        url: /core-library/folder/
+      - title: Portfolio
+        url: /core-library/portfolio/
       - title: QueryDefinition
         url: /core-library/querydefinition/
-      - title: FilterDefinition
-        url: /core-library/filterdefinition/
+      - title: Send
+        url: /core-library/send/
       - title: Send.Definition
         url: /core-library/senddefinition/
       - title: SendClassification
         url: /core-library/sendclassification/
-      - title: DeliveryProfile
-        url: /core-library/deliveryprofile/
       - title: SenderProfile
         url: /core-library/senderprofile/
-      - title: Account
-        url: /core-library/account/
-      - title: AccountUser
-        url: /core-library/accountuser/
-      - title: Portfolio
-        url: /core-library/portfolio/
+      - title: Subscriber
+        url: /core-library/subscriber/
+      - title: Template
+        url: /core-library/template/
+      - title: TriggeredSend
+        url: /core-library/triggeredsend/
       - title: Tracking events
         url: /core-library/events/
 

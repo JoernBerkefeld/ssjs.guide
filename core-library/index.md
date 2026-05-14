@@ -18,34 +18,34 @@ Platform.Load("core", "1.1.5");
 
 | Object | Description |
 |--------|-------------|
+| [`Account`](/core-library/account/) | Account settings |
+| [`AccountUser`](/core-library/accountuser/) | Users in the business unit |
+| [`ContentAreaObj`](/core-library/contentareaobj/) | Classic Content Areas (**deprecated** object — not `ContentArea()` global) |
 | [`DataExtension`](/core-library/dataextension/) | Initialize and work with Data Extensions |
 | [`DataExtension.Fields`](/core-library/dataextension-fields/) | Field definitions on a DE |
 | [`DataExtension.Rows`](/core-library/dataextension-rows/) | Retrieve, Add, Update, Remove rows |
-| [`Subscriber`](/core-library/subscriber/) | Manage All Subscribers list entries |
+| [`DeliveryProfile`](/core-library/deliveryprofile/) | Delivery profiles |
+| [`Email`](/core-library/email/) | Email message definitions and programmatic send |
+| [`FilterDefinition`](/core-library/filterdefinition/) | Data filters |
+| [`Folder`](/core-library/folder/) | Content folders |
 | [`List`](/core-library/list/) | Work with publication lists |
 | [`List.Subscribers`](/core-library/list-subscribers/) | Subscribers on a specific list |
-| [`Email`](/core-library/email/) | Email message definitions and programmatic send |
-| [`TriggeredSend`](/core-library/triggeredsend/) | Triggered send definitions and sends |
+| [`Portfolio`](/core-library/portfolio/) | Portfolio (file) assets |
+| [`QueryDefinition`](/core-library/querydefinition/) | SQL query activities |
 | [`Send`](/core-library/send/) | Email sends |
 | [`Send.Definition`](/core-library/senddefinition/) | Send Definition configurations |
-| [`Template`](/core-library/template/) | Email templates |
-| [`Folder`](/core-library/folder/) | Content folders |
-| [`QueryDefinition`](/core-library/querydefinition/) | SQL query activities |
-| [`FilterDefinition`](/core-library/filterdefinition/) | Data filters |
 | [`SendClassification`](/core-library/sendclassification/) | Send classifications |
-| [`DeliveryProfile`](/core-library/deliveryprofile/) | Delivery profiles |
 | [`SenderProfile`](/core-library/senderprofile/) | Sender profiles |
-| [`Account`](/core-library/account/) | Account settings |
-| [`AccountUser`](/core-library/accountuser/) | Users in the business unit |
-| [`Portfolio`](/core-library/portfolio/) | Portfolio (file) assets |
-| [`ContentAreaObj`](/core-library/contentareaobj/) | Classic Content Areas (**deprecated** object — not `ContentArea()` global) |
+| [`Subscriber`](/core-library/subscriber/) | Manage All Subscribers list entries |
+| [`Template`](/core-library/template/) | Email templates |
+| [`TriggeredSend`](/core-library/triggeredsend/) | Triggered send definitions and sends |
 
 HTTP utilities are also part of the Core library but documented separately:
 
 | Object | Description |
 |--------|-------------|
-| [`HTTP`](/http/http-get/) | Simple HTTP GET and POST |
-| [`Script.Util`](/http/script-util-httprequest/) | Advanced HTTP with request objects |
+| [`HTTP.GET`](/http/http-get/) | Simple HTTP GET |
+| [`HTTP.POST`](/http/http-post/) | Simple HTTP POST |
 
 ---
 
@@ -57,13 +57,13 @@ SOAP-style tracking event objects expose `Retrieve(filter)` for send metrics:
 |--------|------|
 | [`BounceEvent`](/core-library/events/#bounce-event) | Bounce events |
 | [`ClickEvent`](/core-library/events/#click-event) | Click events |
-| [`OpenEvent`](/core-library/events/#open-event) | Open events |
-| [`SentEvent`](/core-library/events/#sent-event) | Sent events |
-| [`UnsubEvent`](/core-library/events/#unsub-event) | Unsubscribe events |
-| [`NotSentEvent`](/core-library/events/#not-sent-event) | Not-sent events |
 | [`ForwardedEmailEvent`](/core-library/events/#forwarded-email-event) | Forwarded email events |
 | [`ForwardedEmailOptInEvent`](/core-library/events/#forwarded-email-opt-in-event) | Forwarded opt-in events |
+| [`NotSentEvent`](/core-library/events/#not-sent-event) | Not-sent events |
+| [`OpenEvent`](/core-library/events/#open-event) | Open events |
+| [`SentEvent`](/core-library/events/#sent-event) | Sent events |
 | [`SurveyEvent`](/core-library/events/#survey-event) | Survey events |
+| [`UnsubEvent`](/core-library/events/#unsub-event) | Unsubscribe events |
 
 See **[Tracking events](/core-library/events/)** for full documentation on every type.
 
