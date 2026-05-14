@@ -88,7 +88,7 @@ function createSession(userId, data) {
         ["token", "userId", "data", "expires"],
         [token, userId, Stringify(data), expires]
     );
-    Platform.Response.SetCookie(SESSION_COOKIE, token, expires, "/", "", true);
+    Platform.Response.SetCookie(SESSION_COOKIE, token, expires, true);
     return token;
 }
 
@@ -115,7 +115,7 @@ function destroySession() {
     if (token) {
         Platform.Function.DeleteData(SESSION_DE, ["token"], [token]);
         Platform.Response.SetCookie(SESSION_COOKIE, "",
-            "Thu, 01 Jan 1970 00:00:00 GMT", "/", "", true);
+            "Thu, 01 Jan 1970 00:00:00 GMT", true);
     }
 }
 
@@ -139,7 +139,7 @@ var sessionToken = Platform.Request.GetCookieValue("formSession");
 // Initialize form session
 if (!sessionToken) {
     sessionToken = Platform.Function.GUID();
-    Platform.Response.SetCookie("formSession", sessionToken, "", "/");
+    Platform.Response.SetCookie("formSession", sessionToken);
     Platform.Function.InsertData("FormSessions",
         ["token", "step", "data", "created"],
         [sessionToken, "1", "{}", Platform.Function.Now()]

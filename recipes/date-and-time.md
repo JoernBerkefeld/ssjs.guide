@@ -78,7 +78,7 @@ var expiry = formatDate(
     "ddd, DD MMM YYYY HH:mm:ss",
     "en-US"
 ) + " GMT";
-Platform.Response.SetCookie("session", token, expiry, "/", "", true);
+Platform.Response.SetCookie("session", token, expiry, true);
 ```
 
 ---

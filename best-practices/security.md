@@ -82,7 +82,7 @@ CloudPages forms are publicly accessible. Without CSRF protection, any site can 
 // Generate CSRF token on page load (GET)
 if (Platform.Request.Method === "GET") {
     var csrfToken = Platform.Function.GUID();
-    Platform.Response.SetCookie("csrfToken", csrfToken, "", "/", "", true);
+    Platform.Response.SetCookie("csrfToken", csrfToken, "", true);
     // Output token in form
     Write('<input type="hidden" name="csrf_token" value="' + csrfToken + '">');
 }

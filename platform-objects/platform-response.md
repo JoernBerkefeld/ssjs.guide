@@ -12,7 +12,7 @@ description: Control the HTTP response from CloudPages and JSON Code Resources â
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| [`SetCookie(name, value [, expires [, path [, domain [, secure]]]])`](#setcookie) | void | Set a response cookie |
+| [`SetCookie(name, value [, expires [, secure]])`](#setcookie) | void | Set a response cookie |
 | [`Redirect(url , movedPermanently)`](#redirect) | void | Redirect the browser |
 
 ---
@@ -20,7 +20,7 @@ description: Control the HTTP response from CloudPages and JSON Code Resources â
 ## Method: SetCookie
 
 ```javascript
-Platform.Response.SetCookie(name, value [, expires [, path [, domain [, secure]]]])
+Platform.Response.SetCookie(name, value [, expires [, secure]])
 ```
 
 Sets a cookie in the response.
@@ -32,8 +32,6 @@ Sets a cookie in the response.
 | `name` | string | Yes | Cookie name |
 | `value` | string | Yes | Cookie value |
 | `expires` | string | No | Expiration datetime string |
-| `path` | string | No | Cookie path (default: `"/"`) |
-| `domain` | string | No | Cookie domain |
 | `secure` | boolean | No | Send only over HTTPS |
 
 ### Examples
@@ -62,7 +60,7 @@ var expiry = formatDate(
     "ddd, DD MMM YYYY HH:mm:ss",
     "en-US"
 ) + " GMT";
-Platform.Response.SetCookie("rememberMe", userId, expiry, "/", "", true);
+Platform.Response.SetCookie("rememberMe", userId, expiry, true);
 
 // Clear a cookie (set expired date)
 Platform.Response.SetCookie("sessionToken", "", "Thu, 01 Jan 1970 00:00:00 GMT");
