@@ -14,12 +14,12 @@ Does not require `Platform.Load`.
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| [`Write(content)`](#write) | void | Write content to the HTTP response output |
-| [`SetResponseHeader(headerName, value)`](#setresponseheader) | void | Set a response header |
-| [`RemoveResponseHeader(headerName)`](#removeresponseheader) | void | Remove a response header |
-| [`SetCookie(name, value [, expires [, secure]])`](#setcookie) | void | Set a response cookie |
-| [`RemoveCookie(name)`](#removecookie) | void | Remove a cookie |
-| [`Redirect(url, movedPermanently)`](#redirect) | void | Redirect the browser |
+| [`Platform.Response.Write(content)`](#write) | void | Write content to the HTTP response output |
+| [`Platform.Response.SetResponseHeader(headerName, value)`](#setresponseheader) | void | Set a response header |
+| [`Platform.Response.RemoveResponseHeader(headerName)`](#removeresponseheader) | void | Remove a response header |
+| [`Platform.Response.SetCookie(name, value [, expires [, secure]])`](#setcookie) | void | Set a response cookie |
+| [`Platform.Response.RemoveCookie(name)`](#removecookie) | void | Remove a cookie |
+| [`Platform.Response.Redirect(url, movedPermanently)`](#redirect) | void | Redirect the browser |
 
 ## Properties
 

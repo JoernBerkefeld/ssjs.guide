@@ -12,14 +12,14 @@ description: Read HTTP request data including query string parameters, POST body
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `Platform.Request.Method` | string | HTTP method: `"GET"` or `"POST"` |
-| `Platform.Request.RequestURL` | string | Full resolved URL of the current page |
 | `Platform.Request.Browser` | object | Browser metadata: `Platform`, `Browser`, `Version`, `MajorVersion`, `MinorVersion` |
 | `Platform.Request.ClientIP` | string | IP address of the requesting client |
 | `Platform.Request.HasSSL` | boolean | Whether the current request supports SSL (HTTPS) |
 | `Platform.Request.IsSSL` | boolean | Whether the current request used an SSL (HTTPS) connection |
+| `Platform.Request.Method` | string | HTTP method: `"GET"` or `"POST"` |
 | `Platform.Request.QueryString` | string | Full raw query string of the request URL |
 | `Platform.Request.ReferrerURL` | string | URL of the referring web address |
+| `Platform.Request.RequestURL` | string | Full resolved URL of the current page |
 | `Platform.Request.UserAgent` | string | User-agent string of the requesting browser |
 
 All properties return `null` (or `false` for boolean properties) when no valid request object exists or the value is absent.
@@ -28,11 +28,11 @@ All properties return `null` (or `false` for boolean properties) when no valid r
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| [`GetQueryStringParameter(name)`](#getquerystringparameter) | string | Read a URL query parameter |
+| [`GetCookieValue(name)`](#getcookievalue) | string | Read a cookie value |
 | [`GetFormField(name)`](#getformfield) | string | Read a form field (POST or GET) |
 | [`GetPostData([encoding])`](#getpostdata) | string | Read raw POST body (optional character encoding) |
+| [`GetQueryStringParameter(name)`](#getquerystringparameter) | string | Read a URL query parameter |
 | [`GetRequestHeader(name)`](#getrequestheader) | string | Read a request header |
-| [`GetCookieValue(name)`](#getcookievalue) | string | Read a cookie value |
 | [`GetUserLanguages()`](#getuserlanguages) | string | Read the browser `Accept-Language` header value |
 
 ---
