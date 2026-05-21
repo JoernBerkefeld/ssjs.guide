@@ -47,7 +47,9 @@
 
   // Simple inverted index — tokenize name, description, and aliases
   function buildIndex(docs) {
-    var idx = {};
+    // Object.create(null) avoids prototype-pollution collisions when a token
+    // happens to match a built-in property name like "constructor".
+    var idx = Object.create(null);
     docs.forEach(function (doc, i) {
       var aliases = Array.isArray(doc.aliases) ? doc.aliases.join(' ') : '';
       var text = (doc.name || '') + ' ' + (doc.description || '') + ' ' + aliases;
@@ -70,7 +72,7 @@
   function search(query) {
     if (!index || !query) return [];
     var terms = tokenize(query);
-    var scores = {};
+    var scores = Object.create(null);
 
     terms.forEach(function (term) {
       Object.keys(index).forEach(function (word) {
