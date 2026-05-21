@@ -12,19 +12,36 @@
 
   var index = null;
   var documents = [];
+  var loadFailed = false;
 
   // Load search index
   function loadIndex(onReady) {
+    // Don't retry after a confirmed failure
+    if (loadFailed) {
+      if (onReady) onReady();
+      return;
+    }
     var url = (typeof siteBaseUrl !== 'undefined' ? siteBaseUrl : '') + '/site-index.json';
+    console.log('[search] fetching', url);
     fetch(url)
-      .then(function (r) { return r.json(); })
+      .then(function (r) {
+        if (!r.ok) {
+          throw new Error('HTTP ' + r.status);
+        }
+        return r.json();
+      })
       .then(function (data) {
+        console.log('[search] index loaded,', data.length, 'entries');
         documents = data;
         index = buildIndex(data);
+        console.log('[search] index built,', Object.keys(index).length, 'tokens');
         if (onReady) onReady();
       })
-      .catch(function () {
-        // Silent fail - search just won't work
+      .catch(function (err) {
+        loadFailed = true;
+        console.error('[search] failed to load index:', err);
+        searchResults.innerHTML = '<div class="search-empty">Search temporarily unavailable — please reload the page.</div>';
+        searchResults.hidden = false;
       });
   }
 
@@ -32,7 +49,8 @@
   function buildIndex(docs) {
     var idx = {};
     docs.forEach(function (doc, i) {
-      var text = (doc.name || '') + ' ' + (doc.description || '') + ' ' + (doc.aliases || []).join(' ');
+      var aliases = Array.isArray(doc.aliases) ? doc.aliases.join(' ') : '';
+      var text = (doc.name || '') + ' ' + (doc.description || '') + ' ' + aliases;
       var words = tokenize(text);
       words.forEach(function (w) {
         if (!idx[w]) idx[w] = [];
@@ -55,7 +73,6 @@
     var scores = {};
 
     terms.forEach(function (term) {
-      // Exact match
       Object.keys(index).forEach(function (word) {
         if (word.indexOf(term) === 0) {
           var boost = word === term ? 2 : 1;
@@ -92,6 +109,7 @@
   }
 
   function renderResults(results, query) {
+    console.log('[search] renderResults called, results:', results.length, 'query:', query);
     if (!results.length) {
       searchResults.innerHTML = '<div class="search-empty">No results for "' + escapeHtml(query) + '"</div>';
       searchResults.hidden = false;
@@ -120,6 +138,10 @@
     }
     debounceTimer = setTimeout(function () {
       if (!index) {
+        if (!loadFailed) {
+          searchResults.innerHTML = '<div class="search-empty">Loading search…</div>';
+          searchResults.hidden = false;
+        }
         loadIndex(function () { renderResults(search(q), q); });
         return;
       }
@@ -167,5 +189,10 @@
       }
     }
   });
+
+  // Eagerly load the index so the first search feels instant.
+  // search.js is loaded with defer so the DOM is already parsed here —
+  // DOMContentLoaded has already fired; call loadIndex() directly.
+  loadIndex();
 
 })();
