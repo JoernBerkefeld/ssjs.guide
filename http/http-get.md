@@ -3,6 +3,9 @@ layout: page
 title: HTTP.Get
 parent: HTTP & REST APIs
 parent_url: /http/
+permalink: /http/get/
+redirect_from:
+  - /http/http-get/
 description: Core library HTTP GET — returns status and response body as an object. Requires Platform.Load.
 ---
 
@@ -48,7 +51,7 @@ To inspect HTTP status codes with full control, prefer [`Script.Util.HttpRequest
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
-  <li><a href="/http/http-post/">HTTP.Post</a></li>
+  <li><a href="/http/post/">HTTP.Post</a></li>
   <li><a href="/http/script-util-httprequest/">Script.Util.HttpRequest</a></li>
   <li><a href="/platform-functions/httpget/">Platform.Function.HTTPGet</a></li>
 </ul>

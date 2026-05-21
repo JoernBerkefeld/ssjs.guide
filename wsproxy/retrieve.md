@@ -160,6 +160,6 @@ while (result.HasMoreRows) {
 <h4>See Also</h4>
 <ul>
   <li><a href="/wsproxy/getnextbatch/">proxy.getNextBatch</a></li>
-  <li><a href="/wsproxy/create-item/">proxy.createItem</a></li>
+  <li><a href="/wsproxy/createitem/">proxy.createItem</a></li>
 </ul>
 </div>

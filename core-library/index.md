@@ -44,8 +44,8 @@ HTTP utilities are also part of the Core library but documented separately:
 
 | Object | Description |
 |--------|-------------|
-| [`HTTP.GET`](/http/http-get/) | Simple HTTP GET |
-| [`HTTP.POST`](/http/http-post/) | Simple HTTP POST |
+| [`HTTP.GET`](/http/get/) | Simple HTTP GET |
+| [`HTTP.POST`](/http/post/) | Simple HTTP POST |
 
 ---
 

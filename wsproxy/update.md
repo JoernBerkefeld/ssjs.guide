@@ -3,7 +3,9 @@ layout: page
 title: proxy.updateItem
 parent: WSProxy
 parent_url: /wsproxy/
-permalink: /wsproxy/update-item/
+permalink: /wsproxy/updateitem/
+redirect_from:
+  - /wsproxy/update-item/
 description: Update an existing SFMC object via the SOAP API. Can be used with SaveOption for upsert behavior.
 ---
 
@@ -65,7 +67,7 @@ var result = proxy.updateItem(
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
-  <li><a href="/wsproxy/update-batch/">proxy.updateBatch</a></li>
-  <li><a href="/wsproxy/create-item/">proxy.createItem</a></li>
+  <li><a href="/wsproxy/updatebatch/">proxy.updateBatch</a></li>
+  <li><a href="/wsproxy/createitem/">proxy.createItem</a></li>
 </ul>
 </div>

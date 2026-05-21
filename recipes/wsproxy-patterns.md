@@ -151,9 +151,9 @@ for (var c = 0; c < allRows.length; c += chunkSize) {
 <ul>
   <li><a href="/wsproxy/">WSProxy Overview</a></li>
   <li><a href="/wsproxy/getnextbatch/">proxy.getNextBatch</a></li>
-  <li><a href="/wsproxy/create-batch/">proxy.createBatch</a></li>
-  <li><a href="/wsproxy/update-item/">proxy.updateItem</a></li>
-  <li><a href="/wsproxy/set-client-id/">proxy.setClientId</a></li>
+  <li><a href="/wsproxy/createbatch/">proxy.createBatch</a></li>
+  <li><a href="/wsproxy/updateitem/">proxy.updateItem</a></li>
+  <li><a href="/wsproxy/setclientid/">proxy.setClientId</a></li>
   <li><a href="/recipes/de-crud-patterns/">DE CRUD Patterns</a></li>
 </ul>
 </div>

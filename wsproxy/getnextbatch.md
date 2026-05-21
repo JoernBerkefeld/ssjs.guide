@@ -55,6 +55,6 @@ while (result.Status === "OK") {
 <h4>See Also</h4>
 <ul>
   <li><a href="/wsproxy/retrieve/">proxy.retrieve</a></li>
-  <li><a href="/wsproxy/set-batch-size/">proxy.setBatchSize</a></li>
+  <li><a href="/wsproxy/setbatchsize/">proxy.setBatchSize</a></li>
 </ul>
 </div>

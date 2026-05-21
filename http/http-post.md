@@ -3,6 +3,9 @@ layout: page
 title: HTTP.Post
 parent: HTTP & REST APIs
 parent_url: /http/
+permalink: /http/post/
+redirect_from:
+  - /http/http-post/
 description: Core library HTTP POST — posts a payload and returns status and body as an object. Requires Platform.Load.
 ---
 
@@ -57,7 +60,7 @@ var result = Platform.Function.ParseJSON(String(response.Content));
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
-  <li><a href="/http/http-get/">HTTP.Get</a></li>
+  <li><a href="/http/get/">HTTP.Get</a></li>
   <li><a href="/http/script-util-httprequest/">Script.Util.HttpRequest</a></li>
   <li><a href="/platform-functions/httppost/">Platform.Function.HTTPPost</a></li>
 </ul>

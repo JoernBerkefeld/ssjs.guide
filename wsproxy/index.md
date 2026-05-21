@@ -33,19 +33,19 @@ var items = result.Results;
 | [`new Script.Util.WSProxy()`](/wsproxy/constructor/) | Create a WSProxy instance |
 | [`<WSProxyInstance>.retrieve(...)`](/wsproxy/retrieve/) | Retrieve SFMC objects (paginate with `getNextBatch` when `HasMoreRows`) |
 | [`<WSProxyInstance>.getNextBatch(...)`](/wsproxy/getnextbatch/) | Continue a paginated retrieve |
-| [`<WSProxyInstance>.setBatchSize(...)`](/wsproxy/set-batch-size/) | Change retrieve page size |
-| [`<WSProxyInstance>.createItem(...)`](/wsproxy/create-item/) | Create a new SFMC object |
-| [`<WSProxyInstance>.updateItem(...)`](/wsproxy/update-item/) | Update an existing object |
-| [`<WSProxyInstance>.deleteItem(...)`](/wsproxy/delete-item/) | Delete an object |
-| [`<WSProxyInstance>.createBatch(...)`](/wsproxy/create-batch/) | Create multiple objects |
-| [`<WSProxyInstance>.updateBatch(...)`](/wsproxy/update-batch/) | Update multiple objects |
-| [`<WSProxyInstance>.deleteBatch(...)`](/wsproxy/delete-batch/) | Delete multiple objects |
+| [`<WSProxyInstance>.setBatchSize(...)`](/wsproxy/setbatchsize/) | Change retrieve page size |
+| [`<WSProxyInstance>.createItem(...)`](/wsproxy/createitem/) | Create a new SFMC object |
+| [`<WSProxyInstance>.updateItem(...)`](/wsproxy/updateitem/) | Update an existing object |
+| [`<WSProxyInstance>.deleteItem(...)`](/wsproxy/deleteitem/) | Delete an object |
+| [`<WSProxyInstance>.createBatch(...)`](/wsproxy/createbatch/) | Create multiple objects |
+| [`<WSProxyInstance>.updateBatch(...)`](/wsproxy/updatebatch/) | Update multiple objects |
+| [`<WSProxyInstance>.deleteBatch(...)`](/wsproxy/deletebatch/) | Delete multiple objects |
 | [`<WSProxyInstance>.describe(...)`](/wsproxy/describe/) | SOAP object metadata |
 | [`<WSProxyInstance>.execute(...)`](/wsproxy/execute/) | Named execute requests (e.g. `LogUnsubEvent`) |
 | [`<WSProxyInstance>.performItem(...)`](/wsproxy/perform/) | SOAP Perform on one object |
-| [`<WSProxyInstance>.performBatch(...)`](/wsproxy/perform-batch/) | SOAP Perform on many objects |
-| [`<WSProxyInstance>.setClientId(...)`](/wsproxy/set-client-id/) | Target another business unit |
-| [`<WSProxyInstance>.resetClientIds()`](/wsproxy/reset-client-ids/) | Clear BU override |
+| [`<WSProxyInstance>.performBatch(...)`](/wsproxy/performbatch/) | SOAP Perform on many objects |
+| [`<WSProxyInstance>.setClientId(...)`](/wsproxy/setclientid/) | Target another business unit |
+| [`<WSProxyInstance>.resetClientIds()`](/wsproxy/resetclientids/) | Clear BU override |
 
 ---
 

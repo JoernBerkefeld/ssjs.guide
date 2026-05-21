@@ -110,7 +110,7 @@ if (resp.statusCode == 200) {
 <ul>
   <li><a href="/http/script-util-httprequest/">Script.Util.HttpRequest</a></li>
   <li><a href="/http/request-methods/">Request Instance Methods</a></li>
-  <li><a href="/http/http-get/">HTTP.Get</a></li>
+  <li><a href="/http/get/">HTTP.Get</a></li>
   <li><a href="/platform-functions/httpget/">Platform.Function.HTTPGet</a></li>
 </ul>
 </div>

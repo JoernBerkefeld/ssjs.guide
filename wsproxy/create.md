@@ -3,7 +3,9 @@ layout: page
 title: proxy.createItem
 parent: WSProxy
 parent_url: /wsproxy/
-permalink: /wsproxy/create-item/
+permalink: /wsproxy/createitem/
+redirect_from:
+  - /wsproxy/create-item/
 description: Create a new SFMC object via the SOAP API — subscribers, data extensions, triggered send definitions, and more. Returns an object with Status, RequestID, and Results.
 ---
 
@@ -97,8 +99,8 @@ For **upsert** (create or update) on Data Extension rows, use `proxy.updateItem`
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
-  <li><a href="/wsproxy/create-batch/">proxy.createBatch</a></li>
-  <li><a href="/wsproxy/update-item/">proxy.updateItem</a></li>
-  <li><a href="/wsproxy/delete-item/">proxy.deleteItem</a></li>
+  <li><a href="/wsproxy/createbatch/">proxy.createBatch</a></li>
+  <li><a href="/wsproxy/updateitem/">proxy.updateItem</a></li>
+  <li><a href="/wsproxy/deleteitem/">proxy.deleteItem</a></li>
 </ul>
 </div>

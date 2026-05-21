@@ -3,7 +3,9 @@ layout: page
 title: proxy.setClientId
 parent: WSProxy
 parent_url: /wsproxy/
-permalink: /wsproxy/set-client-id/
+permalink: /wsproxy/setclientid/
+redirect_from:
+  - /wsproxy/set-client-id/
 description: Set the Business Unit client ID for WSProxy operations — allows parent BU scripts to operate on child BU data.
 ---
 

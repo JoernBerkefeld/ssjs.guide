@@ -124,7 +124,7 @@ try {
   <li><a href="/platform-functions/updatedata/">UpdateData</a></li>
   <li><a href="/platform-functions/deletedata/">DeleteData</a></li>
   <li><a href="/platform-functions/upsertde/">UpsertDE</a></li>
-  <li><a href="/wsproxy/update-batch/">WSProxy.updateBatch</a></li>
+  <li><a href="/wsproxy/updatebatch/">WSProxy.updateBatch</a></li>
   <li><a href="/recipes/de-crud-patterns/">DE CRUD Patterns</a></li>
 </ul>
 </div>

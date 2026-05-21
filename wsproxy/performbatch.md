@@ -3,7 +3,9 @@ layout: page
 title: proxy.performBatch
 parent: WSProxy
 parent_url: /wsproxy/
-permalink: /wsproxy/perform-batch/
+permalink: /wsproxy/performbatch/
+redirect_from:
+  - /wsproxy/perform-batch/
 description: Run a SOAP Perform action against multiple objects of the same type in one call (parallel to performItem for a single object).
 ---
 

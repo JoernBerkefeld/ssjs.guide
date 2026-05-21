@@ -227,9 +227,9 @@
       - title: Folder
         url: /core-library/folder/
       - title: HTTP.Get
-        url: /http/http-get/
+        url: /http/get/
       - title: HTTP.Post
-        url: /http/http-post/
+        url: /http/post/
       - title: List
         url: /core-library/list/
       - title: List.Subscribers
@@ -265,17 +265,17 @@
       - title: getNextBatch
         url: /wsproxy/getnextbatch/
       - title: createItem
-        url: /wsproxy/create-item/
+        url: /wsproxy/createitem/
       - title: updateItem
-        url: /wsproxy/update-item/
+        url: /wsproxy/updateitem/
       - title: deleteItem
-        url: /wsproxy/delete-item/
+        url: /wsproxy/deleteitem/
       - title: createBatch
-        url: /wsproxy/create-batch/
+        url: /wsproxy/createbatch/
       - title: updateBatch
-        url: /wsproxy/update-batch/
+        url: /wsproxy/updatebatch/
       - title: deleteBatch
-        url: /wsproxy/delete-batch/
+        url: /wsproxy/deletebatch/
       - title: describe
         url: /wsproxy/describe/
       - title: execute
@@ -283,13 +283,13 @@
       - title: performItem
         url: /wsproxy/perform/
       - title: performBatch
-        url: /wsproxy/perform-batch/
+        url: /wsproxy/performbatch/
       - title: setBatchSize
-        url: /wsproxy/set-batch-size/
+        url: /wsproxy/setbatchsize/
       - title: setClientId
-        url: /wsproxy/set-client-id/
+        url: /wsproxy/setclientid/
       - title: resetClientIds
-        url: /wsproxy/reset-client-ids/
+        url: /wsproxy/resetclientids/
 
 - title: HTTP & REST
   url: /http/
@@ -297,9 +297,9 @@
       - title: HTTP Methods Overview
         url: /http/
       - title: HTTP.Get
-        url: /http/http-get/
+        url: /http/get/
       - title: HTTP.Post
-        url: /http/http-post/
+        url: /http/post/
       - title: Platform.Function.HTTPGet
         url: /platform-functions/httpget/
       - title: Platform.Function.HTTPPost

@@ -71,7 +71,7 @@ Loading Core gives you access to the following objects:
 - [`List`](/core-library/list/) — List management
 - [`Email`](/core-library/email/) — Email send operations
 - [`TriggeredSend`](/core-library/triggeredsend/) — Triggered Send sends
-- [`HTTP`](/http/http-get/) — HTTP GET and POST
+- [`HTTP`](/http/get/) — HTTP GET and POST
 - [`Script.Util`](/http/script-util-httprequest/) — Advanced HTTP with request objects
 
 ## See Also

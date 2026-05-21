@@ -42,8 +42,8 @@ Write("Status: " + resp.statusCode + ", Body: " + String(resp.content));
 
 | Page | Description |
 |------|-------------|
-| [HTTP.Get](/http/http-get/) | Core library GET — returns response object |
-| [HTTP.Post](/http/http-post/) | Core library POST — returns response object |
+| [HTTP.Get](/http/get/) | Core library GET — returns response object |
+| [HTTP.Post](/http/post/) | Core library POST — returns response object |
 | [Script.Util.HttpGet](/http/script-util-httpget/) | Full-featured HTTP GET request object |
 | [Script.Util.HttpRequest](/http/script-util-httprequest/) | Full-featured HTTP request object |
 | [Platform.Function.HTTPGet](/platform-functions/httpget/) | Simple GET without Core load |

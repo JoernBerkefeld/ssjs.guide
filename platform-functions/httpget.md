@@ -66,7 +66,7 @@ Returns the response body as a string. The HTTP status code is written into the 
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
-  <li><a href="/http/http-get/">HTTP.Get</a></li>
+  <li><a href="/http/get/">HTTP.Get</a></li>
   <li><a href="/http/script-util-httprequest/">Script.Util.HttpRequest</a></li>
 </ul>
 </div>

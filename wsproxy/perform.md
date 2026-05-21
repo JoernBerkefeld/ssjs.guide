@@ -7,7 +7,7 @@ permalink: /wsproxy/perform/
 description: Run a SOAP Perform action on one SFMC object (start automations, query activities, and other perform-capable types).
 ---
 
-SFMC exposes SOAP **Perform** for lifecycle actions. WSProxy surfaces this as **`performItem`** for one target row and **`performBatch`** for many (see [`proxy.performBatch`](/wsproxy/perform-batch/)).
+SFMC exposes SOAP **Perform** for lifecycle actions. WSProxy surfaces this as **`performItem`** for one target row and **`performBatch`** for many (see [`proxy.performBatch`](/wsproxy/performbatch/)).
 
 There is **no** method named `proxy.perform` — older samples used informal shorthand.
 
@@ -59,5 +59,5 @@ Use the SOAP object type and property shape required for that object (see SFMC S
 
 ## See Also
 
-- [`proxy.performBatch`](/wsproxy/perform-batch/)
+- [`proxy.performBatch`](/wsproxy/performbatch/)
 - [`proxy.execute`](/wsproxy/execute/) — different API (`LogUnsubEvent`, etc.)

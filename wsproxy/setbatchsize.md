@@ -3,7 +3,9 @@ layout: page
 title: proxy.setBatchSize
 parent: WSProxy
 parent_url: /wsproxy/
-permalink: /wsproxy/set-batch-size/
+permalink: /wsproxy/setbatchsize/
+redirect_from:
+  - /wsproxy/set-batch-size/
 description: Limits how many rows/objects WSProxy returns per SOAP page on subsequent retrieve calls (default 2500).
 ---
 

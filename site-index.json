@@ -1,0 +1,3542 @@
+[
+  {
+    "name": "Lookup",
+    "url": "/platform-functions/lookup/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Retrieves a single field value from a Data Extension row matching filter criteria.",
+    "params": [
+      "deName",
+      "returnField",
+      "whereFieldNames",
+      "whereFieldValues"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "LookupRows",
+    "url": "/platform-functions/lookuprows/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Returns a result set of rows from a Data Extension matching filter criteria.",
+    "params": [
+      "deName",
+      "whereFieldNames",
+      "whereFieldValues"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "LookupOrderedRows",
+    "url": "/platform-functions/lookuporderedrows/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Returns an ordered result set from a Data Extension.",
+    "params": [
+      "deName",
+      "count",
+      "orderBy",
+      "whereFieldNames",
+      "whereFieldValues"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "InsertData",
+    "url": "/platform-functions/insertdata/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Adds a new row to a Data Extension.",
+    "params": [
+      "deName",
+      "fieldNames",
+      "fieldValues"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "InsertDE",
+    "url": "/platform-functions/insertde/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Adds a new row to a Data Extension.",
+    "params": [
+      "deName",
+      "fieldNames",
+      "fieldValues"
+    ],
+    "returnType": "void"
+  },
+  {
+    "name": "UpdateData",
+    "url": "/platform-functions/updatedata/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Modifies existing rows in a Data Extension matching filter criteria.",
+    "params": [
+      "deName",
+      "whereFieldNames",
+      "whereFieldValues",
+      "fieldNames",
+      "fieldValues"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "UpdateDE",
+    "url": "/platform-functions/updatede/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Modifies existing rows in a Data Extension matching filter criteria.",
+    "params": [
+      "deName",
+      "whereFieldNames",
+      "whereFieldValues",
+      "fieldNames",
+      "fieldValues"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "UpsertData",
+    "url": "/platform-functions/upsertdata/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Inserts a new row or updates an existing one in a Data Extension.",
+    "params": [
+      "deName",
+      "whereFieldNames",
+      "whereFieldValues",
+      "fieldNames",
+      "fieldValues"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "UpsertDE",
+    "url": "/platform-functions/upsertde/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Inserts a new row or updates an existing one in a Data Extension.",
+    "params": [
+      "deName",
+      "whereFieldNames",
+      "whereFieldValues",
+      "fieldNames",
+      "fieldValues"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "DeleteData",
+    "url": "/platform-functions/deletedata/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Removes rows from a Data Extension matching filter criteria.",
+    "params": [
+      "deName",
+      "whereFieldNames",
+      "whereFieldValues"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "DeleteDE",
+    "url": "/platform-functions/deletede/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Removes rows from a Data Extension matching filter criteria.",
+    "params": [
+      "deName",
+      "whereFieldNames",
+      "whereFieldValues"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "ContentBlockByKey",
+    "url": "/platform-functions/contentblockbykey/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Renders a Content Builder asset referenced by customer key.",
+    "params": [
+      "customerKey",
+      "regionName",
+      "stopOnError",
+      "fallbackContent"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "ContentBlockByName",
+    "url": "/platform-functions/contentblockbyname/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Renders a Content Builder asset referenced by folder path and name.",
+    "params": [
+      "name",
+      "regionName",
+      "stopOnError",
+      "fallbackContent",
+      "statusVariable"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "ContentBlockByID",
+    "url": "/platform-functions/contentblockbyid/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Renders a Content Builder asset by its numeric identifier.",
+    "params": [
+      "id",
+      "regionName",
+      "stopOnError",
+      "fallbackContent"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "ContentImageByKey",
+    "url": "/platform-functions/contentimagebykey/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Returns an HTML img tag for a Content Builder image identified by its external key.",
+    "params": [
+      "key",
+      "fallbackId"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "ContentImageByID",
+    "url": "/platform-functions/contentimagebyid/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Returns an HTML img tag for a Content Builder image identified by its numeric ID.",
+    "params": [
+      "id",
+      "fallbackId"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "TreatAsContent",
+    "url": "/platform-functions/treatascontent/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Processes a string as AMPscript/HTML and returns rendered output.",
+    "params": [
+      "content"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "BeginImpressionRegion",
+    "url": "/platform-functions/beginimpressionregion/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Marks the start of a named impression tracking region within content.",
+    "params": [
+      "name"
+    ],
+    "returnType": "void"
+  },
+  {
+    "name": "EndImpressionRegion",
+    "url": "/platform-functions/endimpressionregion/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Marks the end of an impression tracking region within content.",
+    "params": [
+      "closeAll"
+    ],
+    "returnType": "void"
+  },
+  {
+    "name": "Now",
+    "url": "/platform-functions/now/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Returns the current system timestamp, or the timestamp of the triggering send when called with true.",
+    "params": [
+      "useContextTime"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "SystemDateToLocalDate",
+    "url": "/platform-functions/systemdatetolocaldate/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Converts a date-time value from Marketing Cloud system time (CST) to the local time of the account or user.",
+    "params": [
+      "dateValue"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "LocalDateToSystemDate",
+    "url": "/platform-functions/localdatetosystemdate/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Converts a date-time value from the local time of the account or user to Marketing Cloud system time (CST).",
+    "params": [
+      "dateValue"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "RaiseError",
+    "url": "/platform-functions/raiseerror/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Raises an error with an optional scope flag.",
+    "params": [
+      "message",
+      "currentRecipientOnly",
+      "errorCode",
+      "errorNumber"
+    ],
+    "returnType": "void"
+  },
+  {
+    "name": "GUID",
+    "url": "/platform-functions/guid/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Generates a new globally unique identifier string.",
+    "returnType": "string"
+  },
+  {
+    "name": "IsEmailAddress",
+    "url": "/platform-functions/isemailaddress/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Checks whether a string is a valid email address format.",
+    "params": [
+      "value"
+    ],
+    "returnType": "boolean"
+  },
+  {
+    "name": "IsPhoneNumber",
+    "url": "/platform-functions/isphonenumber/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Evaluates whether a string contains a valid phone number.",
+    "params": [
+      "value"
+    ],
+    "returnType": "boolean"
+  },
+  {
+    "name": "CreateObject",
+    "url": "/platform-functions/createobject/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Instantiates a Marketing Cloud SOAP API object.",
+    "params": [
+      "objectType"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "SetObjectProperty",
+    "url": "/platform-functions/setobjectproperty/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Assigns a property value on a SOAP API object.",
+    "params": [
+      "apiObject",
+      "propertyName",
+      "value"
+    ],
+    "returnType": "void"
+  },
+  {
+    "name": "AddObjectArrayItem",
+    "url": "/platform-functions/addobjectarrayitem/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Appends an item to a SOAP API object's array property.",
+    "params": [
+      "apiObject",
+      "propertyName",
+      "value"
+    ],
+    "returnType": "void"
+  },
+  {
+    "name": "InvokeCreate",
+    "url": "/platform-functions/invokecreate/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Executes a SOAP API Create call on an API object.",
+    "params": [
+      "apiObject",
+      "status",
+      "options"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "InvokeUpdate",
+    "url": "/platform-functions/invokeupdate/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Executes a SOAP API Update call on an API object.",
+    "params": [
+      "apiObject",
+      "status",
+      "options"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "InvokeDelete",
+    "url": "/platform-functions/invokedelete/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Executes a SOAP API Delete call on an API object.",
+    "params": [
+      "apiObject",
+      "status",
+      "options"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "InvokeRetrieve",
+    "url": "/platform-functions/invokeretrieve/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Executes a SOAP API Retrieve call.",
+    "params": [
+      "apiObject",
+      "status"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "InvokePerform",
+    "url": "/platform-functions/invokeperform/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Executes a SOAP API Perform action on an API object.",
+    "params": [
+      "apiObject",
+      "method",
+      "status",
+      "options"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "InvokeConfigure",
+    "url": "/platform-functions/invokeconfigure/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Executes a SOAP API Configure call on an API object.",
+    "params": [
+      "apiObject",
+      "method",
+      "status",
+      "options"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "InvokeExecute",
+    "url": "/platform-functions/invokeexecute/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Executes a SOAP API Execute call on an API object.",
+    "params": [
+      "apiObject",
+      "status",
+      "options"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "InvokeExtract",
+    "url": "/platform-functions/invokeextract/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Invokes the Extract SOAP API method on the specified object.",
+    "params": [
+      "apiObject",
+      "statusArray",
+      "options"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "InvokeSchedule",
+    "url": "/platform-functions/invokeschedule/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Invokes the Schedule SOAP API method on the specified object.",
+    "params": [
+      "apiObject",
+      "action",
+      "schedule",
+      "statusArray",
+      "options"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "HTTPGet",
+    "url": "/platform-functions/httpget/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Performs an HTTP GET request and returns the response body.",
+    "params": [
+      "url",
+      "continueOnError",
+      "emptyContentHandling",
+      "headerNames",
+      "headerValues",
+      "statusVariable"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "HTTPPost",
+    "url": "/platform-functions/httppost/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Performs an HTTP POST request with a content type and payload.",
+    "params": [
+      "url",
+      "contentType",
+      "payload",
+      "headerNames",
+      "headerValues",
+      "response"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "ParseJSON",
+    "url": "/platform-functions/parsejson/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Parses a JSON-formatted string (or array of strings) and returns the resulting JavaScript object (or array of objects).",
+    "params": [
+      "jsonString"
+    ],
+    "returnType": "object|object[]"
+  },
+  {
+    "name": "RedirectTo",
+    "url": "/platform-functions/redirectto/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Specifies the target of an email link as a complete URL stored in an attribute, data extension field, or variable.",
+    "params": [
+      "url"
+    ],
+    "returnType": "void"
+  },
+  {
+    "name": "UrlEncode",
+    "url": "/platform-functions/urlencode/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Percent-encodes a complete URL.",
+    "params": [
+      "url",
+      "encodeReservedKeywords"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Base64Encode",
+    "url": "/platform-functions/base64encode/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Encodes any string value to Base64.",
+    "params": [
+      "string",
+      "charset"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Base64Decode",
+    "url": "/platform-functions/base64decode/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Decodes a Base64-encoded string.",
+    "params": [
+      "encodedString",
+      "charset"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "MD5",
+    "url": "/platform-functions/md5/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Returns an MD5 hash for a given string value.",
+    "params": [
+      "string",
+      "charset"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Stringify",
+    "url": "/platform-functions/stringify/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Converts a JavaScript object into its JSON string representation.",
+    "params": [
+      "object"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "ContentArea",
+    "url": "/platform-functions/contentarea/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Retrieves content from a specified classic Content Area by numeric ID.",
+    "params": [
+      "id",
+      "regionName",
+      "stopOnError",
+      "fallbackContent"
+    ],
+    "returnType": "string",
+    "deprecated": true
+  },
+  {
+    "name": "ContentAreaByName",
+    "url": "/platform-functions/contentareabyname/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Retrieves content from a specified classic Content Area by name.",
+    "params": [
+      "name",
+      "regionName",
+      "stopOnError",
+      "fallbackContent"
+    ],
+    "returnType": "string",
+    "deprecated": true
+  },
+  {
+    "name": "IsCHTMLBrowser",
+    "url": "/platform-functions/ischtmlbrowser/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Indicates whether the passed-in user-agent value represents a CHTML browser.",
+    "params": [
+      "userAgentString"
+    ],
+    "returnType": "boolean"
+  },
+  {
+    "name": "HTTP.Get",
+    "url": "/http/get/",
+    "section": "HTTP & REST",
+    "type": "function",
+    "description": "Performs an HTTP GET request and returns the response body.",
+    "params": [
+      "url",
+      "headerNames",
+      "headerValues"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "HTTP.Post",
+    "url": "/http/post/",
+    "section": "HTTP & REST",
+    "type": "function",
+    "description": "Performs an HTTP POST request with a content type and payload.",
+    "params": [
+      "url",
+      "contentType",
+      "payload",
+      "headerNames",
+      "headerValues"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "proxy.createItem",
+    "url": "/wsproxy/createitem/",
+    "section": "WSProxy",
+    "type": "method",
+    "description": "Creates a new Marketing Cloud object via the SOAP API.",
+    "params": [
+      "objectType",
+      "properties"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "proxy.updateItem",
+    "url": "/wsproxy/updateitem/",
+    "section": "WSProxy",
+    "type": "method",
+    "description": "Updates an existing Marketing Cloud object via the SOAP API.",
+    "params": [
+      "objectType",
+      "properties"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "proxy.deleteItem",
+    "url": "/wsproxy/deleteitem/",
+    "section": "WSProxy",
+    "type": "method",
+    "description": "Deletes a Marketing Cloud object via the SOAP API.",
+    "params": [
+      "objectType",
+      "properties"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "proxy.retrieve",
+    "url": "/wsproxy/retrieve/",
+    "section": "WSProxy",
+    "type": "method",
+    "description": "Retrieves Marketing Cloud objects matching an optional filter via the SOAP API.",
+    "params": [
+      "objectType",
+      "columns",
+      "filter",
+      "retrieveOptions",
+      "requestProps"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "proxy.getNextBatch",
+    "url": "/wsproxy/getnextbatch/",
+    "section": "WSProxy",
+    "type": "method",
+    "description": "Retrieves the next page of results from a previous retrieve call that returned HasMoreRows = true.",
+    "params": [
+      "objectType",
+      "requestId"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "proxy.performItem",
+    "url": "/wsproxy/performitem/",
+    "section": "WSProxy",
+    "type": "method",
+    "description": "Executes a perform action on a single Marketing Cloud object.",
+    "params": [
+      "objectType",
+      "properties",
+      "action",
+      "performOptions"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "proxy.performBatch",
+    "url": "/wsproxy/performbatch/",
+    "section": "WSProxy",
+    "type": "method",
+    "description": "Executes a perform action on multiple Marketing Cloud objects in a single SOAP API call.",
+    "params": [
+      "objectType",
+      "propertiesArray",
+      "action",
+      "performOptions"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "proxy.describe",
+    "url": "/wsproxy/describe/",
+    "section": "WSProxy",
+    "type": "method",
+    "description": "Returns structural metadata (ObjectDefinition) for one or more SOAP API object types.",
+    "params": [
+      "objectType"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "proxy.execute",
+    "url": "/wsproxy/execute/",
+    "section": "WSProxy",
+    "type": "method",
+    "description": "Executes a named method on a Marketing Cloud object.",
+    "params": [
+      "objectType",
+      "requestName"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "proxy.setBatchSize",
+    "url": "/wsproxy/setbatchsize/",
+    "section": "WSProxy",
+    "type": "method",
+    "description": "Sets the maximum number of objects returned per SOAP API page (default is 2500).",
+    "params": [
+      "batchSize"
+    ],
+    "returnType": "void"
+  },
+  {
+    "name": "proxy.setClientId",
+    "url": "/wsproxy/setclientid/",
+    "section": "WSProxy",
+    "type": "method",
+    "description": "Sets the business unit MID for cross-account operations.",
+    "params": [
+      "clientId"
+    ],
+    "returnType": "void"
+  },
+  {
+    "name": "proxy.resetClientIds",
+    "url": "/wsproxy/resetclientids/",
+    "section": "WSProxy",
+    "type": "method",
+    "description": "Clears all client IDs set on the WSProxy instance, reverting to the default execution context credentials.",
+    "returnType": "void"
+  },
+  {
+    "name": "proxy.createBatch",
+    "url": "/wsproxy/createbatch/",
+    "section": "WSProxy",
+    "type": "method",
+    "description": "Creates multiple Marketing Cloud objects in a single SOAP API call.",
+    "params": [
+      "objectType",
+      "propertiesArray"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "proxy.updateBatch",
+    "url": "/wsproxy/updatebatch/",
+    "section": "WSProxy",
+    "type": "method",
+    "description": "Updates multiple Marketing Cloud objects in a single SOAP API call.",
+    "params": [
+      "objectType",
+      "propertiesArray"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "proxy.deleteBatch",
+    "url": "/wsproxy/deletebatch/",
+    "section": "WSProxy",
+    "type": "method",
+    "description": "Deletes multiple Marketing Cloud objects in a single SOAP API call.",
+    "params": [
+      "objectType",
+      "propertiesArray"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "new Script.Util.WSProxy",
+    "url": "/wsproxy/",
+    "section": "HTTP & REST",
+    "type": "function",
+    "description": "Creates a WSProxy instance for making SOAP API calls against the Marketing Cloud web service.",
+    "returnType": "WSProxyInstance"
+  },
+  {
+    "name": "new Script.Util.HttpRequest",
+    "url": "/http/script-util-httprequest/",
+    "section": "HTTP & REST",
+    "type": "function",
+    "description": "Creates an HTTP request handler that supports any HTTP method (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS).",
+    "params": [
+      "url"
+    ],
+    "returnType": "HttpRequestInstance"
+  },
+  {
+    "name": "new Script.Util.HttpGet",
+    "url": "/http/httpget/",
+    "section": "HTTP & REST",
+    "type": "function",
+    "description": "Creates an HTTP GET request handler.",
+    "params": [
+      "url"
+    ],
+    "returnType": "HttpRequestInstance"
+  },
+  {
+    "name": "<HttpRequestInstance>.send",
+    "url": "/http/request-methods/",
+    "section": "HTTP & REST",
+    "type": "method",
+    "description": "Executes the HTTP request and returns a Script.",
+    "returnType": "object"
+  },
+  {
+    "name": "<HttpRequestInstance>.setHeader",
+    "url": "/http/request-methods/",
+    "section": "HTTP & REST",
+    "type": "method",
+    "description": "Sets a request header on the Script.",
+    "params": [
+      "name",
+      "value"
+    ],
+    "returnType": "void"
+  },
+  {
+    "name": "<HttpRequestInstance>.clearHeaders",
+    "url": "/http/request-methods/",
+    "section": "HTTP & REST",
+    "type": "method",
+    "description": "Removes all custom headers previously set on the request.",
+    "returnType": "void"
+  },
+  {
+    "name": "<HttpRequestInstance>.removeHeader",
+    "url": "/http/request-methods/",
+    "section": "HTTP & REST",
+    "type": "method",
+    "description": "Removes a specific header from the request by name.",
+    "params": [
+      "name"
+    ],
+    "returnType": "void"
+  },
+  {
+    "name": "Platform.Load",
+    "url": "/platform-objects/platform-load/",
+    "section": "Platform Objects",
+    "type": "method",
+    "description": "Loads a platform library.",
+    "params": [
+      "libraryName",
+      "version"
+    ],
+    "returnType": "void"
+  },
+  {
+    "name": "Platform.Variable.GetValue",
+    "url": "/platform-objects/platform-variable/",
+    "section": "Platform Objects",
+    "type": "method",
+    "description": "Retrieves the value of an AMPscript variable from the SSJS context.",
+    "params": [
+      "variableName"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Platform.Variable.SetValue",
+    "url": "/platform-objects/platform-variable/",
+    "section": "Platform Objects",
+    "type": "method",
+    "description": "Assigns a value to an AMPscript variable from the SSJS context.",
+    "params": [
+      "variableName",
+      "value"
+    ],
+    "returnType": "void"
+  },
+  {
+    "name": "Platform.Response.SetResponseHeader",
+    "url": "/platform-objects/platform-response/",
+    "section": "Platform Objects",
+    "type": "method",
+    "description": "Sets a response header on the current page response.",
+    "params": [
+      "headerName",
+      "value"
+    ],
+    "returnType": "void"
+  },
+  {
+    "name": "Platform.Response.RemoveResponseHeader",
+    "url": "/platform-objects/platform-response/",
+    "section": "Platform Objects",
+    "type": "method",
+    "description": "Removes a previously set HTTP response header from the response.",
+    "params": [
+      "headerName"
+    ],
+    "returnType": "void"
+  },
+  {
+    "name": "Platform.Response.Redirect",
+    "url": "/platform-objects/platform-response/",
+    "section": "Platform Objects",
+    "type": "method",
+    "description": "Redirects the current page to a new URL.",
+    "params": [
+      "url",
+      "movedPermanently"
+    ],
+    "returnType": "void"
+  },
+  {
+    "name": "Platform.Response.SetCookie",
+    "url": "/platform-objects/platform-response/",
+    "section": "Platform Objects",
+    "type": "method",
+    "description": "Sets a cookie on the client browser response.",
+    "params": [
+      "name",
+      "value",
+      "expires",
+      "secure"
+    ],
+    "returnType": "void"
+  },
+  {
+    "name": "Platform.Response.RemoveCookie",
+    "url": "/platform-objects/platform-response/",
+    "section": "Platform Objects",
+    "type": "method",
+    "description": "Removes a cookie from the client browser by setting its expiration to a past date.",
+    "params": [
+      "name"
+    ],
+    "returnType": "void"
+  },
+  {
+    "name": "Platform.Response.Write",
+    "url": "/platform-objects/platform-response/",
+    "section": "Platform Objects",
+    "type": "method",
+    "description": "Writes content to the HTTP response output.",
+    "params": [
+      "content"
+    ],
+    "returnType": "void"
+  },
+  {
+    "name": "Platform.Response.ContentType",
+    "url": "/platform-objects/platform-response/",
+    "section": "Platform Objects",
+    "type": "property",
+    "description": "Gets or sets the Content-Type of the HTTP response.",
+    "returnType": "string"
+  },
+  {
+    "name": "Platform.Response.CharacterSet",
+    "url": "/platform-objects/platform-response/",
+    "section": "Platform Objects",
+    "type": "property",
+    "description": "Gets or sets the character set of the HTTP response.",
+    "returnType": "string"
+  },
+  {
+    "name": "Platform.Request.GetQueryStringParameter",
+    "url": "/platform-objects/platform-request/",
+    "section": "Platform Objects",
+    "type": "method",
+    "description": "Retrieves the value of a URL query string parameter.",
+    "params": [
+      "parameterName"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Platform.Request.GetFormField",
+    "url": "/platform-objects/platform-request/",
+    "section": "Platform Objects",
+    "type": "method",
+    "description": "Retrieves data from a named form field, including values sent via POST.",
+    "params": [
+      "name"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Platform.Request.GetPostData",
+    "url": "/platform-objects/platform-request/",
+    "section": "Platform Objects",
+    "type": "method",
+    "description": "Returns the raw body of the HTTP POST request.",
+    "params": [
+      "encoding"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Platform.Request.GetCookieValue",
+    "url": "/platform-objects/platform-request/",
+    "section": "Platform Objects",
+    "type": "method",
+    "description": "Retrieves the value of a named cookie from the HTTP request sent by the client browser.",
+    "params": [
+      "cookieName"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Platform.Request.GetUserLanguages",
+    "url": "/platform-objects/platform-request/",
+    "section": "Platform Objects",
+    "type": "method",
+    "description": "Returns the language preferences of the client browser as specified in the HTTP Accept-Language request header.",
+    "returnType": "string"
+  },
+  {
+    "name": "Platform.Request.GetRequestHeader",
+    "url": "/platform-objects/platform-request/",
+    "section": "Platform Objects",
+    "type": "method",
+    "description": "Returns the value of the named HTTP request header, or null if not present.",
+    "params": [
+      "headerName"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Platform.Request.Browser",
+    "url": "/platform-objects/platform-request/",
+    "section": "Platform Objects",
+    "type": "property",
+    "description": "Returns an object describing the client browser.",
+    "returnType": "object"
+  },
+  {
+    "name": "Platform.Request.ClientIP",
+    "url": "/platform-objects/platform-request/",
+    "section": "Platform Objects",
+    "type": "property",
+    "description": "Returns the IP address of the client.",
+    "returnType": "string"
+  },
+  {
+    "name": "Platform.Request.HasSSL",
+    "url": "/platform-objects/platform-request/",
+    "section": "Platform Objects",
+    "type": "property",
+    "description": "Returns true if the current request was made over HTTPS.",
+    "returnType": "boolean"
+  },
+  {
+    "name": "Platform.Request.IsSSL",
+    "url": "/platform-objects/platform-request/",
+    "section": "Platform Objects",
+    "type": "property",
+    "description": "Returns true if the current request was made over HTTPS (alias of HasSSL).",
+    "returnType": "boolean"
+  },
+  {
+    "name": "Platform.Request.Method",
+    "url": "/platform-objects/platform-request/",
+    "section": "Platform Objects",
+    "type": "property",
+    "description": "Returns the HTTP method (GET, POST, etc.",
+    "returnType": "string"
+  },
+  {
+    "name": "Platform.Request.QueryString",
+    "url": "/platform-objects/platform-request/",
+    "section": "Platform Objects",
+    "type": "property",
+    "description": "Returns the full query string of the current request URL.",
+    "returnType": "string"
+  },
+  {
+    "name": "Platform.Request.ReferrerURL",
+    "url": "/platform-objects/platform-request/",
+    "section": "Platform Objects",
+    "type": "property",
+    "description": "Returns the referrer URL from the HTTP Referer header.",
+    "returnType": "string"
+  },
+  {
+    "name": "Platform.Request.RequestURL",
+    "url": "/platform-objects/platform-request/",
+    "section": "Platform Objects",
+    "type": "property",
+    "description": "Returns the full URL of the current page request.",
+    "returnType": "string"
+  },
+  {
+    "name": "Platform.Request.UserAgent",
+    "url": "/platform-objects/platform-request/",
+    "section": "Platform Objects",
+    "type": "property",
+    "description": "Returns the user-agent string from the HTTP request.",
+    "returnType": "string"
+  },
+  {
+    "name": "Platform.Recipient.GetAttributeValue",
+    "url": "/platform-objects/platform-recipient/",
+    "section": "Platform Objects",
+    "type": "method",
+    "description": "Returns the value of a subscriber attribute or sendable data extension field for the current recipient.",
+    "params": [
+      "attributeName"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "HTTPHeader.GetValue",
+    "url": "/platform-objects/httpheader/",
+    "section": "Platform Objects",
+    "type": "method",
+    "description": "Retrieves the value of the specified HTTP request header.",
+    "params": [
+      "name"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "HTTPHeader.SetValue",
+    "url": "/platform-objects/httpheader/",
+    "section": "Platform Objects",
+    "type": "method",
+    "description": "Sets the value of the specified HTTP header.",
+    "params": [
+      "name",
+      "value"
+    ],
+    "returnType": "void"
+  },
+  {
+    "name": "HTTPHeader.Remove",
+    "url": "/platform-objects/httpheader/",
+    "section": "Platform Objects",
+    "type": "method",
+    "description": "Removes the specified entry from the HTTP header.",
+    "params": [
+      "headerName"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "DateTime.TimeZone.Retrieve",
+    "url": "/platform-objects/datetime-timezone/",
+    "section": "Platform Objects",
+    "type": "method",
+    "description": "Retrieves an array of time zones matching the specified filter criteria.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "ErrorUtil.ThrowWSProxyError",
+    "url": "/platform-objects/errorutil/",
+    "section": "Platform Objects",
+    "type": "method",
+    "description": "Inspects a WSProxy result object and throws an exception when its `Status` property starts with `\"Error:\"`.",
+    "params": [
+      "result"
+    ],
+    "returnType": "void"
+  },
+  {
+    "name": "Attribute.GetValue",
+    "url": "/global-functions/attribute/",
+    "section": "Global Functions",
+    "type": "method",
+    "description": "Returns the value of the specified subscriber attribute or sendable data extension field for the current recipient.",
+    "params": [
+      "name"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "DataExtension.Init",
+    "url": "/core-library/dataextension/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Initializes a DataExtension instance bound to the specified external key.",
+    "params": [
+      "key"
+    ],
+    "returnType": "DataExtensionInstance"
+  },
+  {
+    "name": "DataExtension.Add",
+    "url": "/core-library/dataextension/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Creates a new data extension from the supplied properties and returns an initialized DataExtension instance.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "DataExtensionInstance"
+  },
+  {
+    "name": "DataExtension.Retrieve",
+    "url": "/core-library/dataextension/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns an array of data extensions matching the specified filter.",
+    "params": [
+      "filter",
+      "queryAllAccounts"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "DataExtension.Fields.Add",
+    "url": "/core-library/dataextension-fields/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Adds a field to the previously initialized data extension.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "DataExtension.Fields.Retrieve",
+    "url": "/core-library/dataextension-fields/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns an array of field definitions for the previously initialized data extension.",
+    "returnType": "object[]"
+  },
+  {
+    "name": "DataExtension.Fields.UpdateSendableField",
+    "url": "/core-library/dataextension-fields/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Updates which data extension field is used to relate the data extension to the All Subscribers list during sending.",
+    "params": [
+      "deFieldName",
+      "subscriberField"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "DataExtension.Rows.Add",
+    "url": "/core-library/dataextension-rows/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Adds one or more rows to the previously initialized data extension.",
+    "params": [
+      "rowData"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "DataExtension.Rows.Lookup",
+    "url": "/core-library/dataextension-rows/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns rows where the specified columns equal the specified values (AND-joined).",
+    "params": [
+      "searchFieldNames",
+      "searchValues",
+      "limit",
+      "orderByFieldName"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "DataExtension.Rows.Remove",
+    "url": "/core-library/dataextension-rows/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Deletes rows from the previously initialized data extension where the specified columns equal the specified values (AND-joined).",
+    "params": [
+      "columnNames",
+      "columnValues"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "DataExtension.Rows.Retrieve",
+    "url": "/core-library/dataextension-rows/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Retrieves up to 2500 rows from the previously initialized data extension.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "DataExtension.Rows.Update",
+    "url": "/core-library/dataextension-rows/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Updates the columns of rows where `whereFieldNames` equal `whereValues` (AND-joined).",
+    "params": [
+      "rowData",
+      "whereFieldNames",
+      "whereValues"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Account.Init",
+    "url": "/core-library/account/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Initializes an Account instance bound to the specified external key.",
+    "params": [
+      "key"
+    ],
+    "returnType": "AccountInstance"
+  },
+  {
+    "name": "Account.Retrieve",
+    "url": "/core-library/account/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Retrieves accounts based on the specified filter criteria.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "Account.Update",
+    "url": "/core-library/account/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Updates the account with the supplied attributes.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Account.Tracking.Retrieve",
+    "url": "/core-library/account/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns an array of tracking data related to the accounts specified by the passed filter argument.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "AccountUser.Init",
+    "url": "/core-library/accountuser/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Initializes an AccountUser instance bound to the specified external key and client ID (MID).",
+    "params": [
+      "targetUserKey",
+      "myClientID"
+    ],
+    "returnType": "AccountUserInstance"
+  },
+  {
+    "name": "AccountUser.Add",
+    "url": "/core-library/accountuser/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Creates a new account user from the supplied properties object.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "AccountUser.Retrieve",
+    "url": "/core-library/accountuser/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Retrieves account users based on the specified filter criteria.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "AccountUser.Update",
+    "url": "/core-library/accountuser/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Updates the account user with the supplied attributes.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "AccountUser.Activate",
+    "url": "/core-library/accountuser/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Activates the account user.",
+    "returnType": "string"
+  },
+  {
+    "name": "AccountUser.Deactivate",
+    "url": "/core-library/accountuser/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Deactivates the account user.",
+    "returnType": "string"
+  },
+  {
+    "name": "Email.Init",
+    "url": "/core-library/email/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Initializes an Email instance bound to the specified external key.",
+    "params": [
+      "key"
+    ],
+    "returnType": "EmailInstance"
+  },
+  {
+    "name": "Email.Add",
+    "url": "/core-library/email/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Creates a new email message from the supplied properties and returns an initialized email instance.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "EmailInstance"
+  },
+  {
+    "name": "Email.Retrieve",
+    "url": "/core-library/email/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns an array of email messages matching the specified filter.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "Email.Update",
+    "url": "/core-library/email/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Updates the email message with the supplied attributes.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Email.Remove",
+    "url": "/core-library/email/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Removes the previously initialized email message.",
+    "returnType": "string"
+  },
+  {
+    "name": "Email.Validate",
+    "url": "/core-library/email/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Runs validation checks on the previously initialized email message.",
+    "returnType": "object"
+  },
+  {
+    "name": "Email.CheckContent",
+    "url": "/core-library/email/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Runs content checks on the previously initialized email message.",
+    "returnType": "object"
+  },
+  {
+    "name": "FilterDefinition.Init",
+    "url": "/core-library/filterdefinition/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Initializes a FilterDefinition instance bound to the specified external key.",
+    "params": [
+      "key"
+    ],
+    "returnType": "FilterDefinitionInstance"
+  },
+  {
+    "name": "FilterDefinition.Add",
+    "url": "/core-library/filterdefinition/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Creates a new filter definition from the supplied properties.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "FilterDefinition.Retrieve",
+    "url": "/core-library/filterdefinition/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns an array of filter definitions matching the specified filter.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "FilterDefinition.Update",
+    "url": "/core-library/filterdefinition/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Updates the filter definition with the supplied attributes.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "FilterDefinition.Remove",
+    "url": "/core-library/filterdefinition/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Deletes the previously initialized filter definition.",
+    "returnType": "string"
+  },
+  {
+    "name": "Folder.Init",
+    "url": "/core-library/folder/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Initializes a Folder instance, optionally bound to the specified external key.",
+    "params": [
+      "key"
+    ],
+    "returnType": "FolderInstance"
+  },
+  {
+    "name": "Folder.Add",
+    "url": "/core-library/folder/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Creates a new folder as a child of an existing folder.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Folder.Retrieve",
+    "url": "/core-library/folder/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns an array of folders matching the specified filter.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "Folder.Update",
+    "url": "/core-library/folder/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Updates the folder with the supplied attributes.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Folder.Remove",
+    "url": "/core-library/folder/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Removes the previously initialized folder.",
+    "returnType": "string"
+  },
+  {
+    "name": "Folder.SetID",
+    "url": "/core-library/folder/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Binds a previously initialized Folder instance to a specific folder ID.",
+    "params": [
+      "id"
+    ],
+    "returnType": "void"
+  },
+  {
+    "name": "List.Init",
+    "url": "/core-library/list/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Initializes a List instance bound to the specified external key.",
+    "params": [
+      "key"
+    ],
+    "returnType": "ListInstance"
+  },
+  {
+    "name": "List.Add",
+    "url": "/core-library/list/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Creates a new list from the supplied properties and returns an initialized list instance.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "ListInstance"
+  },
+  {
+    "name": "List.Retrieve",
+    "url": "/core-library/list/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns an array of lists matching the specified filter.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "List.Remove",
+    "url": "/core-library/list/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Removes the previously initialized list.",
+    "returnType": "string"
+  },
+  {
+    "name": "List.Subscribers.Add",
+    "url": "/core-library/list-subscribers/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Adds a subscriber to the previously initialized list.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "List.Subscribers.Retrieve",
+    "url": "/core-library/list-subscribers/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns the subscribers belonging to the previously initialized list.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "List.Subscribers.Unsubscribe",
+    "url": "/core-library/list-subscribers/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Removes the specified subscriber from the previously initialized list.",
+    "params": [
+      "emailAddress"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "List.Subscribers.Update",
+    "url": "/core-library/list-subscribers/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Updates the status of the specified subscriber on the previously initialized list.",
+    "params": [
+      "emailAddress",
+      "status"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "List.Subscribers.Upsert",
+    "url": "/core-library/list-subscribers/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Adds the subscriber if not on the list, otherwise updates the supplied attributes.",
+    "params": [
+      "emailAddress",
+      "attributes"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "List.Subscribers.Tracking.Retrieve",
+    "url": "/core-library/list-subscribers/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns an array of tracking data for subscribers matching the filter.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "Subscriber.Init",
+    "url": "/core-library/subscriber/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Initializes a Subscriber instance bound to the specified subscriber key.",
+    "params": [
+      "key"
+    ],
+    "returnType": "SubscriberInstance"
+  },
+  {
+    "name": "Subscriber.Add",
+    "url": "/core-library/subscriber/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Creates a new subscriber from the supplied properties.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Subscriber.Retrieve",
+    "url": "/core-library/subscriber/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns an array of subscribers matching the specified filter.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "Subscriber.Upsert",
+    "url": "/core-library/subscriber/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Creates a new subscriber, or updates an existing one matched by EmailAddress / SubscriberKey.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Subscriber.Statistics",
+    "url": "/core-library/subscriber/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Retrieves statistical data for the specified subscriber (sends, opens, clicks, bounces, unsubscribes).",
+    "params": [
+      "subscriberKey"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "Subscriber.Update",
+    "url": "/core-library/subscriber/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Updates the previously initialized subscriber with the supplied attributes.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Subscriber.Remove",
+    "url": "/core-library/subscriber/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Deletes the previously initialized subscriber.",
+    "returnType": "string"
+  },
+  {
+    "name": "Subscriber.Unsubscribe",
+    "url": "/core-library/subscriber/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Sets the previously initialized subscriber's status to `\"Unsubscribed\"`.",
+    "returnType": "string"
+  },
+  {
+    "name": "Subscriber.Attributes.Retrieve",
+    "url": "/core-library/subscriber/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns an array of attributes associated with the previously initialized subscriber.",
+    "returnType": "object[]"
+  },
+  {
+    "name": "Subscriber.Lists.Retrieve",
+    "url": "/core-library/subscriber/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns the lists the previously initialized subscriber is a member of.",
+    "returnType": "object[]"
+  },
+  {
+    "name": "Template.Init",
+    "url": "/core-library/template/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Initializes a Template instance bound to the specified external key.",
+    "params": [
+      "key"
+    ],
+    "returnType": "TemplateInstance"
+  },
+  {
+    "name": "Template.Add",
+    "url": "/core-library/template/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Creates a new template from the supplied properties.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Template.Retrieve",
+    "url": "/core-library/template/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns an array of templates matching the specified filter.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "Template.Update",
+    "url": "/core-library/template/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Updates the template with the supplied attributes.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "DeliveryProfile.Init",
+    "url": "/core-library/deliveryprofile/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Initializes a DeliveryProfile instance bound to the specified external key.",
+    "params": [
+      "key"
+    ],
+    "returnType": "DeliveryProfileInstance"
+  },
+  {
+    "name": "DeliveryProfile.Add",
+    "url": "/core-library/deliveryprofile/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Creates a new delivery profile from the supplied properties.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "DeliveryProfile.Update",
+    "url": "/core-library/deliveryprofile/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Updates the delivery profile with the supplied attributes.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "DeliveryProfile.Remove",
+    "url": "/core-library/deliveryprofile/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Removes the previously initialized delivery profile.",
+    "returnType": "string"
+  },
+  {
+    "name": "SenderProfile.Init",
+    "url": "/core-library/senderprofile/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Initializes a SenderProfile instance bound to the specified external key.",
+    "params": [
+      "key"
+    ],
+    "returnType": "SenderProfileInstance"
+  },
+  {
+    "name": "SenderProfile.Add",
+    "url": "/core-library/senderprofile/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Creates a new sender profile from the supplied properties.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "SenderProfile.Update",
+    "url": "/core-library/senderprofile/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Updates the sender profile with the supplied attributes.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "SenderProfile.Remove",
+    "url": "/core-library/senderprofile/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Removes the previously initialized sender profile.",
+    "returnType": "string"
+  },
+  {
+    "name": "SendClassification.Init",
+    "url": "/core-library/sendclassification/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Initializes a SendClassification instance bound to the specified external key.",
+    "params": [
+      "key"
+    ],
+    "returnType": "SendClassificationInstance"
+  },
+  {
+    "name": "SendClassification.Add",
+    "url": "/core-library/sendclassification/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Creates a new send classification from the supplied properties.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "SendClassification.Retrieve",
+    "url": "/core-library/sendclassification/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns an array of send classifications matching the specified filter.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "SendClassification.Update",
+    "url": "/core-library/sendclassification/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Updates the send classification with the supplied attributes.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "SendClassification.Remove",
+    "url": "/core-library/sendclassification/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Removes the previously initialized send classification.",
+    "returnType": "string"
+  },
+  {
+    "name": "QueryDefinition.Init",
+    "url": "/core-library/querydefinition/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Initializes a QueryDefinition instance bound to the specified external key.",
+    "params": [
+      "key"
+    ],
+    "returnType": "QueryDefinitionInstance"
+  },
+  {
+    "name": "QueryDefinition.Add",
+    "url": "/core-library/querydefinition/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Creates a new query definition from the supplied properties.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "QueryDefinition.Retrieve",
+    "url": "/core-library/querydefinition/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns an array of query definitions matching the specified filter.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "QueryDefinition.Update",
+    "url": "/core-library/querydefinition/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Updates the query definition with the supplied attributes.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "QueryDefinition.Remove",
+    "url": "/core-library/querydefinition/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Removes the previously initialized query definition.",
+    "returnType": "string"
+  },
+  {
+    "name": "QueryDefinition.Perform",
+    "url": "/core-library/querydefinition/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Executes the query definition.",
+    "params": [
+      "action"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Send.Init",
+    "url": "/core-library/send/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Initializes a Send instance bound to the specified send ID.",
+    "params": [
+      "id"
+    ],
+    "returnType": "SendInstance"
+  },
+  {
+    "name": "Send.Add",
+    "url": "/core-library/send/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Creates a new send to the specified email and list(s).",
+    "params": [
+      "emailKey",
+      "listIds",
+      "options"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Send.Retrieve",
+    "url": "/core-library/send/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns an array of sends matching the specified filter.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "Send.RetrieveLists",
+    "url": "/core-library/send/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns information about the lists targeted by a send.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "Send.Remove",
+    "url": "/core-library/send/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Removes the previously initialized send.",
+    "returnType": "string"
+  },
+  {
+    "name": "Send.CancelSend",
+    "url": "/core-library/send/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Attempts to cancel the previously initialized send.",
+    "returnType": "string"
+  },
+  {
+    "name": "Send.Tracking.Retrieve",
+    "url": "/core-library/send/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns tracking data for sends matching the filter.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "Send.Tracking.ClickRetrieve",
+    "url": "/core-library/send/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns click tracking data for the previously initialized send.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "Send.Tracking.TotalByIntervalRetrieve",
+    "url": "/core-library/send/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns aggregated tracking data for the previously initialized send.",
+    "params": [
+      "type",
+      "startDate",
+      "endDate",
+      "groupBy"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "Send.Definition.Init",
+    "url": "/core-library/senddefinition/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Initializes a SendDefinition instance bound to the specified external key.",
+    "params": [
+      "key"
+    ],
+    "returnType": "SendDefinitionInstance"
+  },
+  {
+    "name": "Send.Definition.Add",
+    "url": "/core-library/senddefinition/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Creates a new send definition.",
+    "params": [
+      "esdParams",
+      "sendClassificationKey",
+      "emailKey",
+      "listIds"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Send.Definition.AddWithDE",
+    "url": "/core-library/senddefinition/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Creates a new send definition that targets a sendable Data Extension.",
+    "params": [
+      "esdParams",
+      "sendClassificationKey",
+      "emailKey",
+      "sendableDataExtensionKey",
+      "publicationListKey"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Send.Definition.AddWithFilterDefinition",
+    "url": "/core-library/senddefinition/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Creates a new send definition that targets the audience defined by a filter definition.",
+    "params": [
+      "esdParams",
+      "sendClassificationKey",
+      "emailKey",
+      "filterDefinitionKey",
+      "listId"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Send.Definition.Retrieve",
+    "url": "/core-library/senddefinition/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns an array of send definitions, optionally filtered.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "Send.Definition.Update",
+    "url": "/core-library/senddefinition/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Updates the previously initialized send definition.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Send.Definition.Remove",
+    "url": "/core-library/senddefinition/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Deletes the previously initialized send definition.",
+    "returnType": "string"
+  },
+  {
+    "name": "Send.Definition.Send",
+    "url": "/core-library/senddefinition/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Sends email messages to the lists associated with the previously initialized send definition.",
+    "returnType": "string"
+  },
+  {
+    "name": "TriggeredSend.Init",
+    "url": "/core-library/triggeredsend/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Initializes a TriggeredSend instance bound to the specified external key.",
+    "params": [
+      "key"
+    ],
+    "returnType": "TriggeredSendInstance"
+  },
+  {
+    "name": "TriggeredSend.Add",
+    "url": "/core-library/triggeredsend/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Creates a new triggered send definition from the supplied properties and returns an initialized TriggeredSend instance.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "TriggeredSendInstance"
+  },
+  {
+    "name": "TriggeredSend.Retrieve",
+    "url": "/core-library/triggeredsend/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns an array of triggered send definitions matching the specified filter.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "TriggeredSend.Update",
+    "url": "/core-library/triggeredsend/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Updates the previously initialized triggered send definition.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "TriggeredSend.Start",
+    "url": "/core-library/triggeredsend/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Starts (reactivates) a paused triggered send definition.",
+    "returnType": "string"
+  },
+  {
+    "name": "TriggeredSend.Pause",
+    "url": "/core-library/triggeredsend/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Pauses an active triggered send definition.",
+    "returnType": "string"
+  },
+  {
+    "name": "TriggeredSend.Publish",
+    "url": "/core-library/triggeredsend/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Publishes a triggered send definition, making it active and ready to accept sends.",
+    "returnType": "string"
+  },
+  {
+    "name": "TriggeredSend.Send",
+    "url": "/core-library/triggeredsend/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Sends an email using the previously initialized triggered send definition.",
+    "params": [
+      "emailAddress",
+      "sendTimeAttributes"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "TriggeredSend.Tracking.Retrieve",
+    "url": "/core-library/triggeredsend/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns tracking data for the previously initialized triggered send definition.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "TriggeredSend.Tracking.Clicks.Retrieve",
+    "url": "/core-library/triggeredsend/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns click tracking information for the previously initialized triggered send definition.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "TriggeredSend.Tracking.TotalByInterval.Retrieve",
+    "url": "/core-library/triggeredsend/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns aggregated tracking data for the previously initialized triggered send.",
+    "params": [
+      "type",
+      "startDate",
+      "endDate",
+      "groupBy"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "Tracking.Retrieve",
+    "url": "/core-library/events/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Retrieves bounce event data for message sends matching the specified filter.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "Tracking.Retrieve",
+    "url": "/core-library/events/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Retrieves click tracking event data for message sends matching the specified filter.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "Tracking.Retrieve",
+    "url": "/core-library/events/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Retrieves forwarded email event data for message sends matching the specified filter.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "Tracking.Retrieve",
+    "url": "/core-library/events/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Retrieves forwarded email opt-in event data for message sends matching the specified filter.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "Tracking.Retrieve",
+    "url": "/core-library/events/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Retrieves not-sent event data for message sends matching the specified filter.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "Tracking.Retrieve",
+    "url": "/core-library/events/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Retrieves open tracking event data for message sends matching the specified filter.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "Tracking.Retrieve",
+    "url": "/core-library/events/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Retrieves sent event data for message sends matching the specified filter.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "Tracking.Retrieve",
+    "url": "/core-library/events/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Retrieves survey response event data for message sends matching the specified filter.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "Tracking.Retrieve",
+    "url": "/core-library/events/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Retrieves unsubscribe event data for message sends matching the specified filter.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "ContentAreaObj.Init",
+    "url": "/core-library/contentareaobj/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Initializes a ContentAreaObj instance bound to the specified external key.",
+    "params": [
+      "key"
+    ],
+    "returnType": "ContentAreaObjInstance",
+    "deprecated": true
+  },
+  {
+    "name": "ContentAreaObj.Add",
+    "url": "/core-library/contentareaobj/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Creates a new content area from the supplied properties.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string",
+    "deprecated": true
+  },
+  {
+    "name": "ContentAreaObj.Retrieve",
+    "url": "/core-library/contentareaobj/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns an array of content areas matching the specified filter.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]",
+    "deprecated": true
+  },
+  {
+    "name": "ContentAreaObj.Update",
+    "url": "/core-library/contentareaobj/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Updates the content area with the supplied attributes.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string",
+    "deprecated": true
+  },
+  {
+    "name": "ContentAreaObj.Remove",
+    "url": "/core-library/contentareaobj/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Removes the previously initialized content area.",
+    "returnType": "string",
+    "deprecated": true
+  },
+  {
+    "name": "Portfolio.Init",
+    "url": "/core-library/portfolio/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Initializes a Portfolio instance bound to the specified external key.",
+    "params": [
+      "key"
+    ],
+    "returnType": "PortfolioInstance"
+  },
+  {
+    "name": "Portfolio.Add",
+    "url": "/core-library/portfolio/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Creates a new portfolio (file) object from the supplied properties.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Portfolio.Retrieve",
+    "url": "/core-library/portfolio/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns an array of portfolio objects matching the specified filter.",
+    "params": [
+      "filter"
+    ],
+    "returnType": "object[]"
+  },
+  {
+    "name": "Portfolio.Update",
+    "url": "/core-library/portfolio/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Updates the portfolio object with the supplied attributes.",
+    "params": [
+      "properties"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Portfolio.Remove",
+    "url": "/core-library/portfolio/",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Removes the previously initialized portfolio object.",
+    "returnType": "string"
+  },
+  {
+    "name": "DataExtension",
+    "url": "/core-library/dataextension/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Manages Data Extension definitions and their field schemas."
+  },
+  {
+    "name": "DataExtension.Fields",
+    "url": "/core-library/dataextension-fields/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Accesses and manages field definitions within a Data Extension."
+  },
+  {
+    "name": "DataExtension.Rows",
+    "url": "/core-library/dataextension-rows/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Manages individual rows within a Data Extension."
+  },
+  {
+    "name": "Subscriber",
+    "url": "/core-library/subscriber/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Manages subscriber records in the account."
+  },
+  {
+    "name": "Subscriber.Attributes",
+    "url": "/core-library/subscriber-attributes/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Accesses attributes belonging to a specific subscriber."
+  },
+  {
+    "name": "Subscriber.Lists",
+    "url": "/core-library/subscriber-lists/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Lists the subscriber lists a specific subscriber belongs to."
+  },
+  {
+    "name": "Email",
+    "url": "/core-library/email/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Manages email message definitions."
+  },
+  {
+    "name": "TriggeredSend",
+    "url": "/core-library/triggeredsend/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Manages triggered send definitions and fires individual sends."
+  },
+  {
+    "name": "TriggeredSend.Tracking",
+    "url": "/core-library/triggeredsend-tracking/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Retrieves tracking data for a specific triggered send."
+  },
+  {
+    "name": "TriggeredSend.Tracking.Clicks",
+    "url": "/core-library/triggeredsend-tracking-clicks/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Retrieves click tracking data for a specific triggered send."
+  },
+  {
+    "name": "TriggeredSend.Tracking.TotalByInterval",
+    "url": "/core-library/triggeredsend-tracking-totalbyinterval/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Returns aggregated tracking data for a triggered send by type and interval."
+  },
+  {
+    "name": "List",
+    "url": "/core-library/list/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Manages subscriber lists."
+  },
+  {
+    "name": "List.Subscribers",
+    "url": "/core-library/list-subscribers/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Manages the subscribers belonging to a specific list."
+  },
+  {
+    "name": "List.Subscribers.Tracking",
+    "url": "/core-library/list-subscribers-tracking/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Retrieves tracking data for subscribers on a specific list."
+  },
+  {
+    "name": "ContentAreaObj",
+    "url": "/core-library/contentareaobj/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Manages classic content area objects."
+  },
+  {
+    "name": "Folder",
+    "url": "/core-library/folder/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Manages folder structures within the Marketing Cloud account."
+  },
+  {
+    "name": "QueryDefinition",
+    "url": "/core-library/querydefinition/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Manages SQL query activity definitions."
+  },
+  {
+    "name": "Send",
+    "url": "/core-library/send/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Manages email sends."
+  },
+  {
+    "name": "Send.Tracking",
+    "url": "/core-library/send-tracking/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Retrieves tracking data for a specific send."
+  },
+  {
+    "name": "Send.Definition",
+    "url": "/core-library/send-definition/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Manages reusable Send Definition configurations that define all parameters for a send including content, audience, and delivery settings."
+  },
+  {
+    "name": "Template",
+    "url": "/core-library/template/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Manages email template definitions."
+  },
+  {
+    "name": "DeliveryProfile",
+    "url": "/core-library/deliveryprofile/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Manages delivery profile configurations."
+  },
+  {
+    "name": "SenderProfile",
+    "url": "/core-library/senderprofile/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Manages sender profile definitions."
+  },
+  {
+    "name": "SendClassification",
+    "url": "/core-library/sendclassification/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Manages send classification settings."
+  },
+  {
+    "name": "FilterDefinition",
+    "url": "/core-library/filterdefinition/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Manages data filter definitions."
+  },
+  {
+    "name": "Account",
+    "url": "/core-library/account/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Manages Marketing Cloud account settings."
+  },
+  {
+    "name": "AccountUser",
+    "url": "/core-library/accountuser/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Manages user accounts within the Marketing Cloud business unit."
+  },
+  {
+    "name": "Account.Tracking",
+    "url": "/core-library/account-tracking/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Retrieves tracking data associated with account-level sends."
+  },
+  {
+    "name": "Portfolio",
+    "url": "/core-library/portfolio/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Manages portfolio (file) items in the account."
+  },
+  {
+    "name": "BounceEvent",
+    "url": "/core-library/bounceevent/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Retrieves bounce event data for message sends."
+  },
+  {
+    "name": "ClickEvent",
+    "url": "/core-library/clickevent/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Retrieves click tracking event data for message sends."
+  },
+  {
+    "name": "ForwardedEmailEvent",
+    "url": "/core-library/forwardedemailevent/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Retrieves forwarded email event data for message sends."
+  },
+  {
+    "name": "ForwardedEmailOptInEvent",
+    "url": "/core-library/forwardedemailoptinevent/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Retrieves forwarded email opt-in event data for message sends."
+  },
+  {
+    "name": "NotSentEvent",
+    "url": "/core-library/notsentevent/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Retrieves not-sent event data for message sends."
+  },
+  {
+    "name": "OpenEvent",
+    "url": "/core-library/openevent/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Retrieves open tracking event data for message sends."
+  },
+  {
+    "name": "SentEvent",
+    "url": "/core-library/sentevent/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Retrieves sent event data for message sends."
+  },
+  {
+    "name": "SurveyEvent",
+    "url": "/core-library/surveyevent/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Retrieves survey response event data for message sends."
+  },
+  {
+    "name": "UnsubEvent",
+    "url": "/core-library/unsubevent/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Retrieves unsubscribe event data for message sends."
+  },
+  {
+    "name": "DateTime.TimeZone",
+    "url": "/core-library/datetime-timezone/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Time zone utilities for SSJS date/time conversions."
+  },
+  {
+    "name": "Array.join",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Joins all array elements into a string, separated by the specified delimiter.",
+    "params": [
+      "separator"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Array.push",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Appends one or more elements to the end of an array and returns the new length.",
+    "params": [
+      "element"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "Array.pop",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Removes and returns the last element from an array.",
+    "returnType": "any"
+  },
+  {
+    "name": "Array.shift",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Removes and returns the first element from an array.",
+    "returnType": "any"
+  },
+  {
+    "name": "Array.unshift",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Inserts one or more elements at the start of an array and returns the new length.",
+    "params": [
+      "element"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "Array.concat",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns a new array formed by merging this array with other arrays or values.",
+    "params": [
+      "value"
+    ],
+    "returnType": "array"
+  },
+  {
+    "name": "Array.slice",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns a shallow copy of a portion of an array.",
+    "params": [
+      "start",
+      "end"
+    ],
+    "returnType": "array"
+  },
+  {
+    "name": "Array.sort",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Sorts the array in place and returns it.",
+    "params": [
+      "compareFn"
+    ],
+    "returnType": "array"
+  },
+  {
+    "name": "Array.reverse",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Reverses the elements of an array in place.",
+    "returnType": "array"
+  },
+  {
+    "name": "Array.splice",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Removes or replaces elements and optionally inserts new ones in place.",
+    "params": [
+      "start",
+      "deleteCount",
+      "item"
+    ],
+    "returnType": "array"
+  },
+  {
+    "name": "Array.length",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the number of elements in the array.",
+    "returnType": "number"
+  },
+  {
+    "name": "String.charAt",
+    "url": "/ecmascript-builtins/string-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the character at the specified index.",
+    "params": [
+      "index"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "String.charCodeAt",
+    "url": "/ecmascript-builtins/string-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the UTF-16 code unit at the specified index.",
+    "params": [
+      "index"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "String.indexOf",
+    "url": "/ecmascript-builtins/string-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the index of the first occurrence of a substring, or -1 if not found.",
+    "params": [
+      "searchValue",
+      "fromIndex"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "String.lastIndexOf",
+    "url": "/ecmascript-builtins/string-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the index of the last occurrence of a substring, or -1 if not found.",
+    "params": [
+      "searchValue",
+      "fromIndex"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "String.match",
+    "url": "/ecmascript-builtins/string-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Matches a string against a regular expression and returns the matches array.",
+    "params": [
+      "regexp"
+    ],
+    "returnType": "array"
+  },
+  {
+    "name": "String.replace",
+    "url": "/ecmascript-builtins/string-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns a new string with matches replaced by a replacement string or function.",
+    "params": [
+      "searchValue",
+      "replaceValue"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "String.search",
+    "url": "/ecmascript-builtins/string-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Searches for a match and returns the index of the first match, or -1.",
+    "params": [
+      "regexp"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "String.slice",
+    "url": "/ecmascript-builtins/string-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Extracts a section of a string and returns it as a new string.",
+    "params": [
+      "start",
+      "end"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "String.split",
+    "url": "/ecmascript-builtins/string-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Splits a string into an array of substrings using a separator.",
+    "params": [
+      "separator",
+      "limit"
+    ],
+    "returnType": "array"
+  },
+  {
+    "name": "String.substring",
+    "url": "/ecmascript-builtins/string-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the characters between two indices of a string.",
+    "params": [
+      "start",
+      "end"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "String.toLowerCase",
+    "url": "/ecmascript-builtins/string-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the string converted to lowercase.",
+    "returnType": "string"
+  },
+  {
+    "name": "String.toUpperCase",
+    "url": "/ecmascript-builtins/string-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the string converted to uppercase.",
+    "returnType": "string"
+  },
+  {
+    "name": "String.concat",
+    "url": "/ecmascript-builtins/string-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns a new string formed by concatenating this string with one or more additional strings.",
+    "params": [
+      "string"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "String.substr",
+    "url": "/ecmascript-builtins/string-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns a substring starting at start and running for length characters.",
+    "params": [
+      "start",
+      "length"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "String.length",
+    "url": "/ecmascript-builtins/string-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the number of characters in the string.",
+    "returnType": "number"
+  },
+  {
+    "name": "Math.abs",
+    "url": "/ecmascript-builtins/math/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the absolute value of a number.",
+    "params": [
+      "x"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "Math.ceil",
+    "url": "/ecmascript-builtins/math/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Rounds a number up to the next integer.",
+    "params": [
+      "x"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "Math.floor",
+    "url": "/ecmascript-builtins/math/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Rounds a number down to the nearest integer.",
+    "params": [
+      "x"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "Math.max",
+    "url": "/ecmascript-builtins/math/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the largest of the supplied numbers.",
+    "params": [
+      "values"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "Math.min",
+    "url": "/ecmascript-builtins/math/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the smallest of the supplied numbers.",
+    "params": [
+      "values"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "Math.pow",
+    "url": "/ecmascript-builtins/math/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the base raised to the exponent power.",
+    "params": [
+      "base",
+      "exponent"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "Math.random",
+    "url": "/ecmascript-builtins/math/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns a pseudo-random floating-point number in [0, 1).",
+    "returnType": "number"
+  },
+  {
+    "name": "Math.round",
+    "url": "/ecmascript-builtins/math/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Rounds a number to the nearest integer.",
+    "params": [
+      "x"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "Math.sqrt",
+    "url": "/ecmascript-builtins/math/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the square root of a number.",
+    "params": [
+      "x"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "Math.sin",
+    "url": "/ecmascript-builtins/math/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the sine of an angle given in radians.",
+    "params": [
+      "x"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "Math.cos",
+    "url": "/ecmascript-builtins/math/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the cosine of an angle given in radians.",
+    "params": [
+      "x"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "Math.tan",
+    "url": "/ecmascript-builtins/math/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the tangent of an angle given in radians.",
+    "params": [
+      "x"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "Math.asin",
+    "url": "/ecmascript-builtins/math/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the arc sine (in radians) of a number in the range [-1, 1].",
+    "params": [
+      "x"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "Math.acos",
+    "url": "/ecmascript-builtins/math/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the arc cosine (in radians) of a number in the range [-1, 1].",
+    "params": [
+      "x"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "Math.atan",
+    "url": "/ecmascript-builtins/math/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the arc tangent (in radians) of a number.",
+    "params": [
+      "x"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "Math.atan2",
+    "url": "/ecmascript-builtins/math/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the angle (in radians) from the positive x-axis to the point (x, y).",
+    "params": [
+      "y",
+      "x"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "Math.exp",
+    "url": "/ecmascript-builtins/math/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns e raised to the power of x (e^x).",
+    "params": [
+      "x"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "Math.log",
+    "url": "/ecmascript-builtins/math/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the natural logarithm (base e) of a number.",
+    "params": [
+      "x"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "Math.PI",
+    "url": "/ecmascript-builtins/math/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "The ratio of a circle's circumference to its diameter (~3.",
+    "returnType": "number"
+  },
+  {
+    "name": "Math.E",
+    "url": "/ecmascript-builtins/math/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Euler's number, the base of the natural logarithm (~2.",
+    "returnType": "number"
+  },
+  {
+    "name": "Math.LN2",
+    "url": "/ecmascript-builtins/math/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "The natural logarithm of 2 (~0.",
+    "returnType": "number"
+  },
+  {
+    "name": "Math.LN10",
+    "url": "/ecmascript-builtins/math/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "The natural logarithm of 10 (~2.",
+    "returnType": "number"
+  },
+  {
+    "name": "Math.LOG2E",
+    "url": "/ecmascript-builtins/math/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "The base-2 logarithm of e (~1.",
+    "returnType": "number"
+  },
+  {
+    "name": "Math.LOG10E",
+    "url": "/ecmascript-builtins/math/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "The base-10 logarithm of e (~0.",
+    "returnType": "number"
+  },
+  {
+    "name": "Math.SQRT2",
+    "url": "/ecmascript-builtins/math/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "The square root of 2 (~1.",
+    "returnType": "number"
+  },
+  {
+    "name": "Math.SQRT1_2",
+    "url": "/ecmascript-builtins/math/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "The square root of 1/2 (~0.",
+    "returnType": "number"
+  },
+  {
+    "name": "Number.toFixed",
+    "url": "/ecmascript-builtins/number-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns a string representing the number in fixed-point notation with the given number of decimal places.",
+    "params": [
+      "fractionDigits"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Number.toExponential",
+    "url": "/ecmascript-builtins/number-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns a string representing the number in exponential notation.",
+    "params": [
+      "fractionDigits"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Number.toPrecision",
+    "url": "/ecmascript-builtins/number-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns a string representing the number to the specified number of significant digits.",
+    "params": [
+      "precision"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Object.hasOwnProperty",
+    "url": "/ecmascript-builtins/object-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns true if the object has the specified property as its own (not inherited) property.",
+    "params": [
+      "v"
+    ],
+    "returnType": "boolean"
+  },
+  {
+    "name": "String",
+    "url": "/global-functions/string/",
+    "section": "Global Functions",
+    "type": "function",
+    "description": "Native JavaScript function that converts any value to its string representation.",
+    "params": [
+      "value"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Error",
+    "url": "/global-functions/error/",
+    "section": "Global Functions",
+    "type": "function",
+    "description": "Native JavaScript Error constructor.",
+    "params": [
+      "message"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "Base64Encode",
+    "url": "/global-functions/base64encode/",
+    "section": "Global Functions",
+    "type": "function",
+    "description": "Encodes plain text to a Base64 encoded string.",
+    "params": [
+      "string"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Base64Decode",
+    "url": "/global-functions/base64decode/",
+    "section": "Global Functions",
+    "type": "function",
+    "description": "Decodes a Base64 encoded string to plain text.",
+    "params": [
+      "encodedString"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Format",
+    "url": "/global-functions/format/",
+    "section": "Global Functions",
+    "type": "function",
+    "description": "Applies a formatting rule to a string or numeric value.",
+    "params": [
+      "textToFormat",
+      "formatCode"
+    ],
+    "returnType": "string"
+  }
+]

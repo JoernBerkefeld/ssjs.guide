@@ -69,7 +69,7 @@ Returns the HTTP status code as a number. The response body is written into the 
 <h4>See Also</h4>
 <ul>
   <li><a href="/platform-functions/httpget/">HTTPGet</a></li>
-  <li><a href="/http/http-post/">HTTP.Post</a></li>
+  <li><a href="/http/post/">HTTP.Post</a></li>
   <li><a href="/http/script-util-httprequest/">Script.Util.HttpRequest</a></li>
 </ul>
 </div>

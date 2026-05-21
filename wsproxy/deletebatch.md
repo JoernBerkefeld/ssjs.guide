@@ -3,11 +3,13 @@ layout: page
 title: proxy.deleteBatch
 parent: WSProxy
 parent_url: /wsproxy/
-permalink: /wsproxy/delete-batch/
+permalink: /wsproxy/deletebatch/
+redirect_from:
+  - /wsproxy/delete-batch/
 description: Delete multiple SFMC objects of the same type in one SOAP call (batch counterpart of deleteItem).
 ---
 
-Deletes several objects in a single API round-trip. For **one** object, use [`proxy.deleteItem`](/wsproxy/delete-item/).
+Deletes several objects in a single API round-trip. For **one** object, use [`proxy.deleteItem`](/wsproxy/deleteitem/).
 
 ## Syntax
 
@@ -42,6 +44,6 @@ Write(result.Status);
 
 ## See Also
 
-- [`proxy.deleteItem`](/wsproxy/delete-item/)
-- [`proxy.createBatch`](/wsproxy/create-batch/)
-- [`proxy.updateBatch`](/wsproxy/update-batch/)
+- [`proxy.deleteItem`](/wsproxy/deleteitem/)
+- [`proxy.createBatch`](/wsproxy/createbatch/)
+- [`proxy.updateBatch`](/wsproxy/updatebatch/)

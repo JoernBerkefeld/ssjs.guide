@@ -3,11 +3,13 @@ layout: page
 title: proxy.resetClientIds
 parent: WSProxy
 parent_url: /wsproxy/
-permalink: /wsproxy/reset-client-ids/
+permalink: /wsproxy/resetclientids/
+redirect_from:
+  - /wsproxy/reset-client-ids/
 description: Reset the Business Unit context previously set by setClientId — subsequent operations target the script's own BU again.
 ---
 
-`proxy.resetClientIds()` clears any Business Unit context set by a previous [`proxy.setClientId()`](/wsproxy/set-client-id/) call. After resetting, all WSProxy operations target the BU the script is running in.
+`proxy.resetClientIds()` clears any Business Unit context set by a previous [`proxy.setClientId()`](/wsproxy/setclientid/) call. After resetting, all WSProxy operations target the BU the script is running in.
 
 ## Syntax
 
@@ -67,7 +69,7 @@ proxy.resetClientIds();
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
-  <li><a href="/wsproxy/set-client-id/">proxy.setClientId</a></li>
+  <li><a href="/wsproxy/setclientid/">proxy.setClientId</a></li>
   <li><a href="/wsproxy/constructor/">WSProxy Constructor</a></li>
 </ul>
 </div>

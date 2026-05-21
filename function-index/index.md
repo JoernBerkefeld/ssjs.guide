@@ -155,8 +155,8 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`HTTP.Get(url[, headerNames, headerValues])`](/http/http-get/) | Core HTTP | object | HTTP GET — structured status + body |
-| [`HTTP.Post(url, contentType, payload, headerNames, headerValues)`](/http/http-post/) | Core HTTP | object | HTTP POST — structured status + body |
+| [`HTTP.Get(url[, headerNames, headerValues])`](/http/get/) | Core HTTP | object | HTTP GET — structured status + body |
+| [`HTTP.Post(url, contentType, payload, headerNames, headerValues)`](/http/post/) | Core HTTP | object | HTTP POST — structured status + body |
 | [`HTTPHeader.GetValue(name)`](/platform-objects/httpheader/) | Platform Object | string | Read HTTP request header (Core load) |
 | [`HTTPHeader.SetValue(name, value)`](/platform-objects/httpheader/) | Platform Object | void | Set HTTP request header (Core load) |
 | [`HTTPHeader.Remove(headerName)`](/platform-objects/httpheader/) | Platform Object | string | Remove HTTP request header (Core load) |
@@ -281,21 +281,21 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`Portfolio.Retrieve(filter)`](/core-library/portfolio/) | Core Library | object[] | Retrieve portfolio assets |
 | [`<PortfolioInstance>.Update(properties)`](/core-library/portfolio/) | Core Library | string | Update portfolio asset |
 | [`<PortfolioInstance>.Remove()`](/core-library/portfolio/) | Core Library | string | Remove portfolio asset |
-| [`<WSProxyInstance>.createItem(objectType, properties)`](/wsproxy/create-item/) | WSProxy | object | SOAP Create |
-| [`<WSProxyInstance>.updateItem(objectType, properties)`](/wsproxy/update-item/) | WSProxy | object | SOAP Update |
-| [`<WSProxyInstance>.deleteItem(objectType, properties)`](/wsproxy/delete-item/) | WSProxy | object | SOAP Delete |
-| [`<WSProxyInstance>.createBatch(objectType, propertiesArray)`](/wsproxy/create-batch/) | WSProxy | object | SOAP batch Create |
-| [`<WSProxyInstance>.updateBatch(objectType, propertiesArray)`](/wsproxy/update-batch/) | WSProxy | object | SOAP batch Update |
-| [`<WSProxyInstance>.deleteBatch(objectType, propertiesArray)`](/wsproxy/delete-batch/) | WSProxy | object | SOAP batch Delete |
+| [`<WSProxyInstance>.createItem(objectType, properties)`](/wsproxy/createitem/) | WSProxy | object | SOAP Create |
+| [`<WSProxyInstance>.updateItem(objectType, properties)`](/wsproxy/updateitem/) | WSProxy | object | SOAP Update |
+| [`<WSProxyInstance>.deleteItem(objectType, properties)`](/wsproxy/deleteitem/) | WSProxy | object | SOAP Delete |
+| [`<WSProxyInstance>.createBatch(objectType, propertiesArray)`](/wsproxy/createbatch/) | WSProxy | object | SOAP batch Create |
+| [`<WSProxyInstance>.updateBatch(objectType, propertiesArray)`](/wsproxy/updatebatch/) | WSProxy | object | SOAP batch Update |
+| [`<WSProxyInstance>.deleteBatch(objectType, propertiesArray)`](/wsproxy/deletebatch/) | WSProxy | object | SOAP batch Delete |
 | [`<WSProxyInstance>.describe(objectType)`](/wsproxy/describe/) | WSProxy | object | SOAP object metadata |
 | [`<WSProxyInstance>.execute(objectType, requestName)`](/wsproxy/execute/) | WSProxy | object | SOAP Execute |
 | [`<WSProxyInstance>.getNextBatch(objectType, requestId)`](/wsproxy/getnextbatch/) | WSProxy | object | Next retrieve page |
 | [`<WSProxyInstance>.performItem(objectType, properties, action[, performOptions])`](/wsproxy/perform/) | WSProxy | object | SOAP Perform (single) |
-| [`<WSProxyInstance>.performBatch(objectType, propertiesArray, action[, performOptions])`](/wsproxy/perform-batch/) | WSProxy | object | SOAP Perform (batch) |
-| [`<WSProxyInstance>.resetClientIds()`](/wsproxy/reset-client-ids/) | WSProxy | void | Clear BU override |
+| [`<WSProxyInstance>.performBatch(objectType, propertiesArray, action[, performOptions])`](/wsproxy/performbatch/) | WSProxy | object | SOAP Perform (batch) |
+| [`<WSProxyInstance>.resetClientIds()`](/wsproxy/resetclientids/) | WSProxy | void | Clear BU override |
 | [`<WSProxyInstance>.retrieve(objectType, columns[, filter[, retrieveOptions[, requestProps]]])`](/wsproxy/retrieve/) | WSProxy | object | SOAP Retrieve |
-| [`<WSProxyInstance>.setBatchSize(batchSize)`](/wsproxy/set-batch-size/) | WSProxy | void | Retrieve page size |
-| [`<WSProxyInstance>.setClientId(clientId)`](/wsproxy/set-client-id/) | WSProxy | void | Target another BU |
+| [`<WSProxyInstance>.setBatchSize(batchSize)`](/wsproxy/setbatchsize/) | WSProxy | void | Retrieve page size |
+| [`<WSProxyInstance>.setClientId(clientId)`](/wsproxy/setclientid/) | WSProxy | void | Target another BU |
 
 ---
 
