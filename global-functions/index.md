@@ -52,4 +52,14 @@ These functions and objects are available globally in any SSJS script block with
     <div class="fn-desc">Format numbers (currency, decimals, percentages) and dates (ISO 8601, RFC 1123, custom patterns). Requires Platform.Load.</div>
     <div class="fn-return">→ string</div>
   </a>
+  <a href="/global-functions/contentarea/" class="function-card deprecated">
+    <div class="fn-name">ContentArea() <span class="badge-deprecated">deprecated</span></div>
+    <div class="fn-desc">Retrieve rendered content from a classic Content Area by numeric ID. Requires Platform.Load. Use sfmc:block or Content Builder instead.</div>
+    <div class="fn-return">→ string</div>
+  </a>
+  <a href="/global-functions/contentareabyname/" class="function-card deprecated">
+    <div class="fn-name">ContentAreaByName() <span class="badge-deprecated">deprecated</span></div>
+    <div class="fn-desc">Retrieve rendered content from a classic Content Area by name. Requires Platform.Load. Use sfmc:block or Content Builder instead.</div>
+    <div class="fn-return">→ string</div>
+  </a>
 </div>
