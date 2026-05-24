@@ -25,7 +25,7 @@ Platform.Load("core", "1.1.5");
 | [`DataExtension.Fields`](/core-library/dataextension-fields/) | Field definitions on a DE |
 | [`DataExtension.Rows`](/core-library/dataextension-rows/) | Retrieve, Add, Update, Remove rows |
 | [`DeliveryProfile`](/core-library/deliveryprofile/) | Delivery profiles |
-| [`Email`](/core-library/email/) | Email message definitions and programmatic send |
+| [`Email`](/core-library/email/) | Email message definitions |
 | [`FilterDefinition`](/core-library/filterdefinition/) | Data filters |
 | [`Folder`](/core-library/folder/) | Content folders |
 | [`List`](/core-library/list/) | Work with publication lists |
