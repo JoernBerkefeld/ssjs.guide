@@ -4,6 +4,7 @@ title: Stringify
 parent: Global Functions
 parent_url: /global-functions/
 description: Converts an object or value to its JSON string representation. SFMC's equivalent of JSON.stringify() — not the same as the native String() function.
+requires_core_load: true
 availability:
   email: true
   cloudpage: true
@@ -120,11 +121,18 @@ var data = Platform.Function.ParseJSON(body + "");
 
 **Circular reference objects:** `Stringify` may fail or produce incorrect output for objects with circular references. Flatten the data structure first.
 
+## Platform.Function variant
+
+`Platform.Function.Stringify()` is functionally identical to this global form but does **not** require `Platform.Load("core", "1.1.5")`. Prefer it when you do not already have a `Platform.Load` call in scope.
+
+See [Platform.Function.Stringify](/platform-functions/stringify/) for the qualified variant.
+
 ## See Also
 
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
+  <li><a href="/platform-functions/stringify/">Platform.Function.Stringify — qualified form (no Platform.Load required)</a></li>
   <li><a href="/global-functions/string/">String()</a></li>
   <li><a href="/platform-functions/parsejson/">Platform.Function.ParseJSON</a></li>
   <li><a href="/global-functions/write/">Write</a></li>

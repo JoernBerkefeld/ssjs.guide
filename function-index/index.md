@@ -58,6 +58,10 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
+| [`ContentArea(id[, regionName, errorMsg, fallbackContent])`](/global-functions/contentarea/) | Global Functions | string | Classic Content Area by ID — **deprecated**, requires Platform.Load |
+| [`ContentAreaByName(name[, regionName, errorMsg, fallbackContent])`](/global-functions/contentareabyname/) | Global Functions | string | Classic Content Area by name — **deprecated**, requires Platform.Load |
+| [`Platform.Function.ContentArea(id[, regionName, stopOnError, fallbackContent])`](/platform-functions/contentarea/) | Platform Functions | string | Classic Content Area by ID — **deprecated** |
+| [`Platform.Function.ContentAreaByName(name[, regionName, stopOnError, fallbackContent])`](/platform-functions/contentareabyname/) | Platform Functions | string | Classic Content Area by name — **deprecated** |
 | [`Platform.Function.ContentBlockByID(id[, regionName, stopOnError, fallbackContent])`](/platform-functions/contentblockbyid/) | Platform Functions | string | Render Content Builder block by ID |
 | [`Platform.Function.ContentBlockByKey(customerKey[, regionName, stopOnError, fallbackContent])`](/platform-functions/contentblockbykey/) | Platform Functions | string | Render Content Builder block by key |
 | [`Platform.Function.ContentBlockByName(name[, regionName, stopOnError, fallbackContent, statusVariable])`](/platform-functions/contentblockbyname/) | Platform Functions | string | Render Content Builder block by name |
@@ -337,7 +341,8 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`new Script.Util.WSProxy()`](/wsproxy/constructor/) | WSProxy | WSProxyInstance | Create WSProxy instance |
 | [`Platform.Function.SetObjectProperty(apiObject, propertyName, value)`](/platform-functions/setobjectproperty/) | Platform Functions | void | Set SOAP object property (legacy) |
 | [`String(value)`](/global-functions/string/) | Global Functions | string | Convert CLR object to JS string |
-| [`Platform.Function.Stringify(object)`](/platform-functions/stringify/) | Global Functions | string | Object to JSON string |
+| [`Stringify(value)`](/global-functions/stringify/) | Global Functions | string | Object to JSON string (requires Platform.Load) |
+| [`Platform.Function.Stringify(object)`](/platform-functions/stringify/) | Platform Functions | string | Object to JSON string (no Platform.Load needed) |
 | [`Subscriber.Init(key)`](/core-library/subscriber/#init) | Core Library | SubscriberInstance | Initialize subscriber |
 | [`Subscriber.Add(properties)`](/core-library/subscriber/#add) | Core Library | string | Create subscriber |
 | [`Subscriber.Retrieve(filter)`](/core-library/subscriber/#retrieve) | Core Library | object[] | Retrieve subscribers |

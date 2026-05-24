@@ -55,6 +55,10 @@
         url: /global-functions/base64encode/
       - title: Base64Decode
         url: /global-functions/base64decode/
+      - title: "ContentArea (deprecated)"
+        url: /global-functions/contentarea/
+      - title: "ContentAreaByName (deprecated)"
+        url: /global-functions/contentareabyname/
       - title: Error
         url: /global-functions/error/
       - title: String
@@ -173,10 +177,16 @@
         url: /platform-functions/endimpressionregion/
       - title: TreatAsContent
         url: /platform-functions/treatascontent/
+      - title: "ContentArea (deprecated)"
+        url: /platform-functions/contentarea/
+      - title: "ContentAreaByName (deprecated)"
+        url: /platform-functions/contentareabyname/
       - title: '— Encoding —'
         url: /platform-functions/#encoding
       - title: MD5
         url: /platform-functions/md5/
+      - title: Stringify
+        url: /platform-functions/stringify/
       - title: Base64Encode
         url: /platform-functions/base64encode/
       - title: Base64Decode

@@ -591,7 +591,7 @@
   },
   {
     "name": "Stringify",
-    "url": "/global-functions/stringify/",
+    "url": "/platform-functions/stringify/",
     "section": "Platform Functions",
     "type": "function",
     "description": "Converts a JavaScript object into its JSON string representation.",
@@ -599,6 +599,36 @@
       "object"
     ],
     "returnType": "string"
+  },
+  {
+    "name": "ContentArea",
+    "url": "/platform-functions/contentarea/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Retrieves content from a specified classic Content Area by numeric ID.",
+    "params": [
+      "id",
+      "regionName",
+      "stopOnError",
+      "fallbackContent"
+    ],
+    "returnType": "string",
+    "deprecated": true
+  },
+  {
+    "name": "ContentAreaByName",
+    "url": "/platform-functions/contentareabyname/",
+    "section": "Platform Functions",
+    "type": "function",
+    "description": "Retrieves content from a specified classic Content Area by name.",
+    "params": [
+      "name",
+      "regionName",
+      "stopOnError",
+      "fallbackContent"
+    ],
+    "returnType": "string",
+    "deprecated": true
   },
   {
     "name": "IsCHTMLBrowser",
