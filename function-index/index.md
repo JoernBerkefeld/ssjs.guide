@@ -312,7 +312,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`QueryDefinition.Retrieve(filter)`](/core-library/querydefinition/#retrieve) | Core Library | object[] | Retrieve query activities |
 | [`<QueryDefinitionInstance>.Update(properties)`](/core-library/querydefinition/#instance-update) | Core Library | string | Update query activity |
 | [`<QueryDefinitionInstance>.Remove()`](/core-library/querydefinition/#instance-remove) | Core Library | string | Remove query activity |
-| [`<QueryDefinitionInstance>.Perform(action)`](/core-library/querydefinition/#instance-perform) | Core Library | object | Run / manage query |
+| [`<QueryDefinitionInstance>.Perform(action)`](/core-library/querydefinition/#instance-perform) | Core Library | string | Run / manage query |
 
 ---
 
