@@ -1,19 +1,17 @@
 ---
-layout: page
-title: proxy.createBatch
+layout: function
+title: <WSProxyInstance>.createBatch
 parent: WSProxy
 parent_url: /wsproxy/
 permalink: /wsproxy/createbatch/
 redirect_from:
   - /wsproxy/create-batch/
 description: Create multiple SFMC objects in a single SOAP API call — more efficient than calling proxy.createItem() in a loop.
+syntax: "<WSProxyInstance>.createBatch(objectType, propertiesArray)"
+return_type: object
+min_args: 2
+max_args: 2
 ---
-
-## Syntax
-
-```javascript
-var result = proxy.createBatch(objectType, propertiesArray);
-```
 
 ## Parameters
 

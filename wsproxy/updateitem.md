@@ -1,19 +1,17 @@
 ---
-layout: page
-title: proxy.updateItem
+layout: function
+title: <WSProxyInstance>.updateItem
 parent: WSProxy
 parent_url: /wsproxy/
 permalink: /wsproxy/updateitem/
 redirect_from:
   - /wsproxy/update-item/
 description: Update an existing SFMC object via the SOAP API. Can be used with SaveOption for upsert behavior.
+syntax: "<WSProxyInstance>.updateItem(objectType, properties)"
+return_type: object
+min_args: 2
+max_args: 2
 ---
-
-## Syntax
-
-```javascript
-var result = proxy.updateItem(objectType, properties);
-```
 
 ## Parameters
 

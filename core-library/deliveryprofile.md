@@ -15,31 +15,33 @@ description: Core library DeliveryProfile — create, update, and remove deliver
 | Method | Returns | Description |
 |--------|---------|-------------|
 | [`DeliveryProfile.Init(key)`](#init) | DeliveryProfileInstance | Bind by external key |
-| [`DeliveryProfile.Add(properties)`](#deliveryprofile-add) | string | Create a delivery profile |
-| [`<DeliveryProfileInstance>.Update(properties)`](#update) | string | Update the initialized profile |
-| [`<DeliveryProfileInstance>.Remove()`](#remove) | string | Delete the profile |
+| [`DeliveryProfile.Add(properties)`](#add) | string | Create a delivery profile |
+| [`<DeliveryProfileInstance>.Update(properties)`](#instance-update) | string | Update the initialized profile |
+| [`<DeliveryProfileInstance>.Remove()`](#instance-remove) | string | Delete the profile |
 
 ---
 
-## Init
+### DeliveryProfile.Init {#init}
 
-### Syntax
+Initializes a `DeliveryProfile` instance for the given external key.
+
+#### Syntax
 
 ```javascript
 DeliveryProfile.Init(key)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `key` | string | Yes | External key of the delivery profile |
 
-### Return value
+#### Return value
 
 `DeliveryProfileInstance`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1");
@@ -48,25 +50,27 @@ var myProfile = DeliveryProfile.Init("myDeliveryProfile");
 
 ---
 
-## DeliveryProfile.Add
+### DeliveryProfile.Add {#add}
 
-### Syntax
+Creates a new delivery profile with the specified properties.
+
+#### Syntax
 
 ```javascript
 DeliveryProfile.Add(properties)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | New profile (`Name`, `CustomerKey`, `Description`, `SourceAddressType`, …) |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -81,25 +85,27 @@ var status = DeliveryProfile.Add(newDP);
 
 ---
 
-## Update
+### &lt;DeliveryProfileInstance&gt;.Update {#instance-update}
 
-### Syntax
+Updates the initialized delivery profile with the given properties.
+
+#### Syntax
 
 ```javascript
 <DeliveryProfileInstance>.Update(properties)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | Attributes to change |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -109,19 +115,21 @@ var status = myProfile.Update({ Name: "SSJS Updated Delivery Profile" });
 
 ---
 
-## Remove
+### &lt;DeliveryProfileInstance&gt;.Remove {#instance-remove}
 
-### Syntax
+Removes the initialized delivery profile.
+
+#### Syntax
 
 ```javascript
 <DeliveryProfileInstance>.Remove()
 ```
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");

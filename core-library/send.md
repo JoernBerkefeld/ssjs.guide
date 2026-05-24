@@ -12,46 +12,41 @@ The `Send` namespace covers **user-initiated sends**: creating sends from an ema
 
 ## Methods
 
-### Send
-
 | Method | Returns | Description |
 |--------|---------|-------------|
 | [`Send.Init(id)`](#init) | SendInstance | Bind to a send by numeric ID |
-| [`Send.Add(emailKey, listIds, [options])`](#send-add) | string | Create a send |
-| [`Send.Retrieve(filter)`](#send-retrieve) | object[] | Query sends |
-| [`Send.RetrieveLists(filter)`](#send-retrievelists) | object[] | Lists targeted by matching sends |
-| [`<SendInstance>.Remove()`](#remove) | string | Delete the bound send |
-| [`<SendInstance>.CancelSend()`](#cancelsend) | string | Attempt to cancel the send |
-
-### Tracking
-
-| Method | Returns | Description |
-|--------|---------|-------------|
-| [`Send.Tracking.Retrieve(filter)`](#send-tracking-retrieve) | object[] | Tracking rows (static; no `Send.Init` required) |
-| [`<SendInstance>.Tracking.ClickRetrieve(filter)`](#tracking-clickretrieve) | object[] | Click tracking for this send |
-| [`<SendInstance>.Tracking.TotalByIntervalRetrieve(type, startDate, endDate, groupBy)`](#tracking-totalbyintervalretrieve) | object[] | Aggregated tracking by interval |
+| [`Send.Add(emailKey, listIds[, options])`](#add) | string | Create a send |
+| [`Send.Retrieve(filter)`](#retrieve) | object[] | Query sends |
+| [`Send.RetrieveLists(filter)`](#retrievelists) | object[] | Lists targeted by matching sends |
+| [`<SendInstance>.Remove()`](#instance-remove) | string | Delete the bound send |
+| [`<SendInstance>.CancelSend()`](#instance-cancelsend) | string | Attempt to cancel the send |
+| [`Send.Tracking.Retrieve(filter)`](#tracking-retrieve) | object[] | Tracking rows (static; no `Send.Init` required) |
+| [`<SendInstance>.Tracking.ClickRetrieve(filter)`](#instance-tracking-clickretrieve) | object[] | Click tracking for this send |
+| [`<SendInstance>.Tracking.TotalByIntervalRetrieve(type, startDate, endDate, groupBy)`](#instance-tracking-totalbyintervalretrieve) | object[] | Aggregated tracking by interval |
 
 ---
 
-## Init
+### Send.Init {#init}
 
-### Syntax
+Initializes a send instance from its numeric send ID. Required before calling instance methods such as `Remove()`, `CancelSend()`, or `Tracking.*`.
+
+#### Syntax
 
 ```javascript
 Send.Init(id)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `id` | number | Yes | Numeric ID of the send |
 
-### Return value
+#### Return value
 
 `SendInstance`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1");
@@ -60,17 +55,17 @@ var s = Send.Init(12345);
 
 ---
 
-## Send.Add
-
-### Syntax
-
-```javascript
-Send.Add(emailKey, listIds, [options])
-```
+### Send.Add {#add}
 
 Creates a send for the given email customer key and list IDs. Optional `options` can override From name, From address, subject, send time, etc.
 
-### Parameters
+#### Syntax
+
+```javascript
+Send.Add(emailKey, listIds[, options])
+```
+
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
@@ -78,11 +73,11 @@ Creates a send for the given email customer key and list IDs. Optional `options`
 | `listIds` | array | Yes | Array of list IDs |
 | `options` | object | No | Send-time overrides |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -97,25 +92,27 @@ var status2 = Send.Add("test_email", [12345, 12346], options);
 
 ---
 
-## Send.Retrieve
+### Send.Retrieve {#retrieve}
 
-### Syntax
+Returns send objects matching the supplied filter.
+
+#### Syntax
 
 ```javascript
 Send.Retrieve(filter)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `filter` | object | Yes | WSProxy-style filter (simple or compound) |
 
-### Return value
+#### Return value
 
 `object[]`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -124,27 +121,27 @@ var sends = Send.Retrieve({ Property: "ID", SimpleOperator: "equals", Value: 123
 
 ---
 
-## Send.RetrieveLists
+### Send.RetrieveLists {#retrievelists}
 
-### Syntax
+Returns the lists that were targeted by the sends matching the filter. The filter must restrict to specific send ID(s).
+
+#### Syntax
 
 ```javascript
 Send.RetrieveLists(filter)
 ```
 
-Filter must restrict to specific send ID(s).
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `filter` | object | Yes | Filter on send ID(s) |
 
-### Return value
+#### Return value
 
 `object[]` — list objects for matching sends.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -157,19 +154,21 @@ var listsSentTo = Send.RetrieveLists({
 
 ---
 
-## Remove
+### &lt;SendInstance&gt;.Remove {#instance-remove}
 
-### Syntax
+Deletes the send record bound to this instance.
+
+#### Syntax
 
 ```javascript
 <SendInstance>.Remove()
 ```
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -179,21 +178,21 @@ s.Remove();
 
 ---
 
-## CancelSend
+### &lt;SendInstance&gt;.CancelSend {#instance-cancelsend}
 
-### Syntax
+Attempts to cancel the bound send.
+
+#### Syntax
 
 ```javascript
 <SendInstance>.CancelSend()
 ```
 
-Attempts to cancel the bound send.
-
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -203,27 +202,27 @@ var status = mySend.CancelSend();
 
 ---
 
-## Send.Tracking.Retrieve
+### Send.Tracking.Retrieve {#tracking-retrieve}
 
-### Syntax
+Static tracking retrieval — **no** `Send.Init()` required. Returns tracking rows matching the filter.
+
+#### Syntax
 
 ```javascript
 Send.Tracking.Retrieve(filter)
 ```
 
-Static tracking retrieval — **no** `Send.Init()` required.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `filter` | object | Yes | WSProxy-style filter |
 
-### Return value
+#### Return value
 
 `object[]`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -236,25 +235,27 @@ var sendTracking = Send.Tracking.Retrieve({
 
 ---
 
-## Tracking.ClickRetrieve
+### &lt;SendInstance&gt;.Tracking.ClickRetrieve {#instance-tracking-clickretrieve}
 
-### Syntax
+Returns click-tracking rows for the bound send that match the filter.
+
+#### Syntax
 
 ```javascript
 <SendInstance>.Tracking.ClickRetrieve(filter)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `filter` | object | Yes | Restricts click rows |
 
-### Return value
+#### Return value
 
 `object[]`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -268,17 +269,17 @@ var results = singleSend.Tracking.ClickRetrieve({
 
 ---
 
-## Tracking.TotalByIntervalRetrieve
+### &lt;SendInstance&gt;.Tracking.TotalByIntervalRetrieve {#instance-tracking-totalbyintervalretrieve}
 
-### Syntax
+Aggregates tracking by `type` over the date range, grouped by `groupBy` (`"day"` or `"hour"`). Dates use **MM-DD-YYYY**.
+
+#### Syntax
 
 ```javascript
 <SendInstance>.Tracking.TotalByIntervalRetrieve(type, startDate, endDate, groupBy)
 ```
 
-Aggregates tracking by `type` over the date range, grouped by `groupBy` (`"day"` or `"hour"`). Dates use **MM-DD-YYYY**.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
@@ -287,11 +288,11 @@ Aggregates tracking by `type` over the date range, grouped by `groupBy` (`"day"`
 | `endDate` | string | Yes | End (MM-DD-YYYY) |
 | `groupBy` | string | Yes | `"day"` or `"hour"` |
 
-### Return value
+#### Return value
 
 `object[]`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");

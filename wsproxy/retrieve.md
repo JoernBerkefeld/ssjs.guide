@@ -1,16 +1,14 @@
 ---
-layout: page
-title: proxy.retrieve
+layout: function
+title: <WSProxyInstance>.retrieve
 parent: WSProxy
 parent_url: /wsproxy/
 description: Retrieve SFMC objects of a given type using an optional filter. Returns up to ~2500 rows per call; use getNextBatch for pagination.
+syntax: "<WSProxyInstance>.retrieve(objectType, columns[, filter[, retrieveOptions[, requestProps]]])"
+return_type: object
+min_args: 2
+max_args: 5
 ---
-
-## Syntax
-
-```javascript
-var result = proxy.retrieve(objectType, columns [, filter [, retrieveOptions [, requestProps]]]);
-```
 
 ## Parameters
 

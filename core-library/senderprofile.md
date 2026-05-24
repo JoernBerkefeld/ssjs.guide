@@ -17,31 +17,33 @@ There is **no** `SenderProfile.Retrieve` in this Core namespace; use **Init** wi
 | Method | Returns | Description |
 |--------|---------|-------------|
 | [`SenderProfile.Init(key)`](#init) | SenderProfileInstance | Bind by external key |
-| [`SenderProfile.Add(properties)`](#senderprofile-add) | string | Create a sender profile |
-| [`<SenderProfileInstance>.Update(properties)`](#update) | string | Update the initialized profile |
-| [`<SenderProfileInstance>.Remove()`](#remove) | string | Delete the profile |
+| [`SenderProfile.Add(properties)`](#add) | string | Create a sender profile |
+| [`<SenderProfileInstance>.Update(properties)`](#instance-update) | string | Update the initialized profile |
+| [`<SenderProfileInstance>.Remove()`](#instance-remove) | string | Delete the profile |
 
 ---
 
-## Init
+### SenderProfile.Init {#init}
 
-### Syntax
+Initializes a `SenderProfile` instance for the given external key.
+
+#### Syntax
 
 ```javascript
 SenderProfile.Init(key)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `key` | string | Yes | External key |
 
-### Return value
+#### Return value
 
 `SenderProfileInstance`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1");
@@ -50,25 +52,27 @@ var myProfile = SenderProfile.Init("mySenderProfile");
 
 ---
 
-## SenderProfile.Add
+### SenderProfile.Add {#add}
 
-### Syntax
+Creates a new sender profile with the specified properties.
+
+#### Syntax
 
 ```javascript
 SenderProfile.Add(properties)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | `Name`, `CustomerKey`, `Description`, `FromName`, `FromAddress`, … |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -84,25 +88,27 @@ var status = SenderProfile.Add(newSP);
 
 ---
 
-## Update
+### &lt;SenderProfileInstance&gt;.Update {#instance-update}
 
-### Syntax
+Updates the initialized sender profile with the given properties.
+
+#### Syntax
 
 ```javascript
 <SenderProfileInstance>.Update(properties)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | Attributes to change |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -112,19 +118,21 @@ var status = myProfile.Update({ Name: "SSJS Updated Sender Profile" });
 
 ---
 
-## Remove
+### &lt;SenderProfileInstance&gt;.Remove {#instance-remove}
 
-### Syntax
+Removes the initialized sender profile.
+
+#### Syntax
 
 ```javascript
 <SenderProfileInstance>.Remove()
 ```
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");

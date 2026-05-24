@@ -15,34 +15,34 @@ The `List` Core library object provides an object-oriented interface for SFMC pu
 | Method | Returns | Description |
 |--------|---------|-------------|
 | [`List.Init(key)`](#init) | ListInstance | Bind to a list by external key |
-| [`List.Add(properties)`](#list-add) | ListInstance | Create a new list from properties |
-| [`List.Retrieve(filter)`](#list-retrieve) | object[] | Query lists with a filter |
-| [`<ListInstance>.Remove()`](#remove) | string | Delete the list represented by the instance |
+| [`List.Add(properties)`](#add) | ListInstance | Create a new list from properties |
+| [`List.Retrieve(filter)`](#retrieve) | object[] | Query lists with a filter |
+| [`<ListInstance>.Remove()`](#instance-remove) | string | Delete the list represented by the instance |
 | [`<ListInstance>.Subscribers.*`](/core-library/list-subscribers/) | — | Add, retrieve, unsubscribe, update, upsert subscribers (see dedicated page) |
 
 ---
 
-## Init
+### List.Init {#init}
 
-### Syntax
+Initializes a list instance using the list external key. Required before calling instance methods such as `Remove()` or `Subscribers.*`.
+
+#### Syntax
 
 ```javascript
 List.Init(key)
 ```
 
-Initializes a list instance using the list external key. Required before calling instance methods such as `Remove()` or `Subscribers.*`.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `key` | string | Yes | External key of the publication list |
 
-### Return value
+#### Return value
 
 `ListInstance` — object bound to that list.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1");
@@ -51,27 +51,27 @@ var myList = List.Init("myList");
 
 ---
 
-## List.Add
+### List.Add {#add}
 
-### Syntax
+Creates a new list from the supplied JSON properties (`CustomerKey`, `Name`, `Description`, …). Unlike many Core `Add` methods, this returns an initialized `ListInstance`, not `"OK"`.
+
+#### Syntax
 
 ```javascript
 List.Add(properties)
 ```
 
-Creates a new list from the supplied JSON properties (`CustomerKey`, `Name`, `Description`, …). Unlike many Core `Add` methods, this returns an initialized `ListInstance`, not `"OK"`.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | Object describing the new list |
 
-### Return value
+#### Return value
 
 `ListInstance` — handle for the newly created list.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -84,27 +84,27 @@ var myNewList = List.Add({
 
 ---
 
-## List.Retrieve
+### List.Retrieve {#retrieve}
 
-### Syntax
+Returns array of list objects matching the WSProxy-style filter.
+
+#### Syntax
 
 ```javascript
 List.Retrieve(filter)
 ```
 
-Returns array of list objects matching the WSProxy-style filter.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `filter` | object | Yes | `{ Property, SimpleOperator, Value }` (or compatible compound filter) |
 
-### Return value
+#### Return value
 
 `object[]` — matching lists.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -117,25 +117,21 @@ var lists = List.Retrieve({
 
 ---
 
-## Remove
+### &lt;ListInstance&gt;.Remove {#instance-remove}
 
-### Syntax
+Deletes the list bound to this instance (the publication list itself).
+
+#### Syntax
 
 ```javascript
 <ListInstance>.Remove()
 ```
 
-Deletes the list bound to this instance (the publication list itself).
-
-### Parameters
-
-None.
-
-### Return value
+#### Return value
 
 `"OK"` on success, or throws on failure.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");

@@ -17,34 +17,34 @@ The `Email` Core library object provides programmatic management of email messag
 | [`Email.Init(key)`](#init) | EmailInstance | Initialize an Email object by external key |
 | [`Email.Add(properties)`](#add) | EmailInstance | Create a new email message |
 | [`Email.Retrieve(filter)`](#retrieve) | object[] | Retrieve email messages matching a filter |
-| [`<EmailInstance>.Update(properties)`](#update) | string | Update the initialized email message |
-| [`<EmailInstance>.Remove()`](#remove) | string | Delete the initialized email message |
-| [`<EmailInstance>.Validate()`](#validate) | object | Run validation checks on the email message |
-| [`<EmailInstance>.CheckContent()`](#checkcontent) | object | Run content checks on the email message |
+| [`<EmailInstance>.Update(properties)`](#instance-update) | string | Update the initialized email message |
+| [`<EmailInstance>.Remove()`](#instance-remove) | string | Delete the initialized email message |
+| [`<EmailInstance>.Validate()`](#instance-validate) | object | Run validation checks on the email message |
+| [`<EmailInstance>.CheckContent()`](#instance-checkcontent) | object | Run content checks on the email message |
 
 ---
 
-## Email.Init
+### Email.Init {#init}
 
-### Syntax
+Initializes an Email instance bound to the specified external key. Required before invoking any instance method on the returned object. External keys cannot be set in the UI — set one via SOAP API, or look up the value via `Email.Retrieve()`.
+
+#### Syntax
 
 ```javascript
 Email.Init(key)
 ```
 
-Initializes an Email instance bound to the specified external key. Required before invoking any instance method on the returned object. External keys cannot be set in the UI — set one via SOAP API, or look up the value via `Email.Retrieve()`.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `key` | string | Yes | External key of the email message |
 
-### Return value
+#### Return value
 
 `EmailInstance`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -53,27 +53,27 @@ var myEmail = Email.Init("myEmail");
 
 ---
 
-## Email.Add
+### Email.Add {#add}
 
-### Syntax
+Creates a new email message from the supplied properties and returns an initialized email instance. Unlike most static `Add` methods, this returns an `EmailInstance`, not `"OK"`.
+
+#### Syntax
 
 ```javascript
 Email.Add(properties)
 ```
 
-Creates a new email message from the supplied properties and returns an initialized email instance. Unlike most static `Add` methods, this returns an `EmailInstance`, not `"OK"`.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | `CustomerKey`, `Name`, optional `CategoryID`, `HTMLBody`, `TextBody`, `Subject`, `EmailType`, ... |
 
-### Return value
+#### Return value
 
 `EmailInstance`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -91,27 +91,27 @@ var myEmail = Email.Add(newMail);
 
 ---
 
-## Email.Retrieve
+### Email.Retrieve {#retrieve}
 
-### Syntax
+Returns an array of email messages matching the specified filter.
+
+#### Syntax
 
 ```javascript
 Email.Retrieve(filter)
 ```
 
-Returns an array of email messages matching the specified filter.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `filter` | object | Yes | PascalCase WSProxy-style filter object: `{Property, SimpleOperator, Value}` |
 
-### Return value
+#### Return value
 
 `object[]`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -120,27 +120,27 @@ var results = Email.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals"
 
 ---
 
-## &lt;EmailInstance&gt;.Update
+### &lt;EmailInstance&gt;.Update {#instance-update}
 
-### Syntax
+Updates the email message with the supplied attributes.
+
+#### Syntax
 
 ```javascript
 <EmailInstance>.Update(properties)
 ```
 
-Updates the email message with the supplied attributes.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | Attributes to change on the email message |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -150,21 +150,21 @@ var status = myEmail.Update({ Name: "Updated Name", Subject: "Updated Email Subj
 
 ---
 
-## &lt;EmailInstance&gt;.Remove
+### &lt;EmailInstance&gt;.Remove {#instance-remove}
 
-### Syntax
+Removes the previously initialized email message.
+
+#### Syntax
 
 ```javascript
 <EmailInstance>.Remove()
 ```
 
-Removes the previously initialized email message.
-
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -174,21 +174,21 @@ myEmail.Remove();
 
 ---
 
-## &lt;EmailInstance&gt;.Validate
+### &lt;EmailInstance&gt;.Validate {#instance-validate}
 
-### Syntax
+Runs validation checks on the previously initialized email message. Returns a `{Task: {ValidationStatus: boolean, ValidationMessages: string}}` object.
+
+#### Syntax
 
 ```javascript
 <EmailInstance>.Validate()
 ```
 
-Runs validation checks on the previously initialized email message. Returns a `{Task: {ValidationStatus: boolean, ValidationMessages: string}}` object.
-
-### Return value
+#### Return value
 
 `object` — with `Task.ValidationStatus` (boolean) and `Task.ValidationMessages` (string).
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -200,21 +200,21 @@ Write(results.Task.ValidationMessages);
 
 ---
 
-## &lt;EmailInstance&gt;.CheckContent
+### &lt;EmailInstance&gt;.CheckContent {#instance-checkcontent}
 
-### Syntax
+Runs content checks on the previously initialized email message. Returns a `{Task: {CheckPassed: boolean, ResultMessage: string}}` object.
+
+#### Syntax
 
 ```javascript
 <EmailInstance>.CheckContent()
 ```
 
-Runs content checks on the previously initialized email message. Returns a `{Task: {CheckPassed: boolean, ResultMessage: string}}` object.
-
-### Return value
+#### Return value
 
 `object` — with `Task.CheckPassed` (boolean) and `Task.ResultMessage` (string).
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");

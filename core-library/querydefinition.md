@@ -15,33 +15,35 @@ description: Core library QueryDefinition — SQL query activities (add, retriev
 | Method | Returns | Description |
 |--------|---------|-------------|
 | [`QueryDefinition.Init(key)`](#init) | QueryDefinitionInstance | Bind by external key |
-| [`QueryDefinition.Add(properties)`](#querydefinition-add) | string | Create a query definition |
-| [`QueryDefinition.Retrieve(filter)`](#querydefinition-retrieve) | object[] | Query definitions (simple or compound filters) |
-| [`<QueryDefinitionInstance>.Update(properties)`](#update) | string | Update the initialized definition |
-| [`<QueryDefinitionInstance>.Remove()`](#remove) | string | Delete the definition |
-| [`<QueryDefinitionInstance>.Perform(action)`](#perform) | string | Run the query (`action`: `"start"`) |
+| [`QueryDefinition.Add(properties)`](#add) | string | Create a query definition |
+| [`QueryDefinition.Retrieve(filter)`](#retrieve) | object[] | Query definitions (simple or compound filters) |
+| [`<QueryDefinitionInstance>.Update(properties)`](#instance-update) | string | Update the initialized definition |
+| [`<QueryDefinitionInstance>.Remove()`](#instance-remove) | string | Delete the definition |
+| [`<QueryDefinitionInstance>.Perform(action)`](#instance-perform) | string | Run the query (`action`: `"start"`) |
 
 ---
 
-## Init
+### QueryDefinition.Init {#init}
 
-### Syntax
+Initializes a QueryDefinition instance from its external key. Required before calling instance methods (`Update`, `Remove`, `Perform`).
+
+#### Syntax
 
 ```javascript
 QueryDefinition.Init(key)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `key` | string | Yes | External key of the query definition |
 
-### Return value
+#### Return value
 
 `QueryDefinitionInstance`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1");
@@ -50,27 +52,27 @@ var qd = QueryDefinition.Init("myQueryDef");
 
 ---
 
-## QueryDefinition.Add
+### QueryDefinition.Add {#add}
 
-### Syntax
+Creates a new Query Activity. Optional `CategoryID` places the query in a folder.
+
+#### Syntax
 
 ```javascript
 QueryDefinition.Add(properties)
 ```
 
-Optional `CategoryID` places the query in a folder.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | `Name`, `CustomerKey`, `TargetUpdateType`, `TargetType`, `Target`, `QueryText`, … |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -87,25 +89,27 @@ var status = QueryDefinition.Add(queryDef);
 
 ---
 
-## QueryDefinition.Retrieve
+### QueryDefinition.Retrieve {#retrieve}
 
-### Syntax
+Returns query definitions matching the filter.
+
+#### Syntax
 
 ```javascript
 QueryDefinition.Retrieve(filter)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `filter` | object | Yes | WSProxy-style filter |
 
-### Return value
+#### Return value
 
 `object[]` — may include nested `DataExtensionTarget` information.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("Core", "1");
@@ -119,25 +123,27 @@ Write(Stringify(result));
 
 ---
 
-## Update
+### &lt;QueryDefinitionInstance&gt;.Update {#instance-update}
 
-### Syntax
+Updates attributes on the initialized query definition, including `QueryText`.
+
+#### Syntax
 
 ```javascript
 <QueryDefinitionInstance>.Update(properties)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | Attributes to change (including `QueryText`) |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -150,19 +156,21 @@ var status = qd.Update({
 
 ---
 
-## Remove
+### &lt;QueryDefinitionInstance&gt;.Remove {#instance-remove}
 
-### Syntax
+Deletes the query definition bound to this instance.
+
+#### Syntax
 
 ```javascript
 <QueryDefinitionInstance>.Remove()
 ```
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -172,27 +180,27 @@ var status = qd.Remove();
 
 ---
 
-## Perform
+### &lt;QueryDefinitionInstance&gt;.Perform {#instance-perform}
 
-### Syntax
+Runs the SQL and writes results to the configured target Data Extension. Use **`"start"`** as the action.
+
+#### Syntax
 
 ```javascript
 <QueryDefinitionInstance>.Perform(action)
 ```
 
-Runs the SQL and writes results to the configured target Data Extension. Use **`"start"`** as the action.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `action` | string | Yes | `"start"` |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1");

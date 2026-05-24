@@ -20,29 +20,29 @@ description: Initialize a Data Extension object for row-level CRUD operations. T
 
 ---
 
-## DataExtension.Init
+### DataExtension.Init {#init}
 
-### Syntax
+Initializes a DataExtension instance bound to the specified external key. Required before invoking any `Fields` or `Rows` sub-namespace method on the returned instance.
+
+#### Syntax
 
 ```javascript
 DataExtension.Init(key)
 ```
 
-Initializes a DataExtension instance bound to the specified external key. Required before invoking any `Fields` or `Rows` sub-namespace method on the returned instance.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `key` | string | Yes | The External Key of the Data Extension |
 
-### Return value
+#### Return value
 
 `DataExtensionInstance` — access rows via `.Rows`, fields via `.Fields`.
 
-### Examples
+#### Examples
 
-#### Initialize and retrieve all rows
+**Initialize and retrieve all rows**
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -54,7 +54,7 @@ for (var i = 0; i < rows.length; i++) {
 }
 ```
 
-#### Initialize and retrieve with filter
+**Initialize and retrieve with filter**
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -67,7 +67,7 @@ var filter = {
 var pendingOrders = de.Rows.Retrieve(filter);
 ```
 
-#### Insert a row
+**Insert a row**
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -80,7 +80,7 @@ de.Rows.Add([{
 }]);
 ```
 
-#### Update a row
+**Update a row**
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -92,7 +92,7 @@ de.Rows.Update(
 );
 ```
 
-#### Remove rows
+**Remove rows**
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -102,27 +102,27 @@ de.Rows.Remove(["SubscriberKey"], [subscriberKey]);
 
 ---
 
-## DataExtension.Add
+### DataExtension.Add {#add}
 
-### Syntax
+Creates a new data extension from the supplied properties and returns an initialized DataExtension instance. Unlike most static `Add` methods, this returns a `DataExtensionInstance`, not `"OK"`.
+
+#### Syntax
 
 ```javascript
 DataExtension.Add(properties)
 ```
 
-Creates a new data extension from the supplied properties and returns an initialized DataExtension instance. Unlike most static `Add` methods, this returns a `DataExtensionInstance`, not `"OK"`.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | `CustomerKey`, `Name`, `Fields[]`, optional `SendableInfo` |
 
-### Return value
+#### Return value
 
 `DataExtensionInstance`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -143,28 +143,28 @@ var de = DataExtension.Add(deObj);
 
 ---
 
-## DataExtension.Retrieve
+### DataExtension.Retrieve {#retrieve}
 
-### Syntax
+Returns an array of data extensions matching the specified filter. Pass `queryAllAccounts: true` to search all accounts accessible to the authenticated user.
+
+#### Syntax
 
 ```javascript
 DataExtension.Retrieve(filter, [queryAllAccounts])
 ```
 
-Returns an array of data extensions matching the specified filter. Pass `queryAllAccounts: true` to search all accounts accessible to the authenticated user.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `filter` | object | Yes | PascalCase WSProxy-style filter object: `{Property, SimpleOperator, Value}` |
 | `queryAllAccounts` | boolean | No | When `true`, search across all accessible accounts. Defaults to `false`. |
 
-### Return value
+#### Return value
 
 `object[]`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");

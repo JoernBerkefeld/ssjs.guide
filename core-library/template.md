@@ -15,31 +15,33 @@ description: Core library Template — HTML templates for messages (init, add, r
 | Method | Returns | Description |
 |--------|---------|-------------|
 | [`Template.Init(key)`](#init) | TemplateInstance | Bind by external key |
-| [`Template.Add(properties)`](#template-add) | string | Create a template |
-| [`Template.Retrieve(filter)`](#template-retrieve) | object[] | Query templates |
-| [`<TemplateInstance>.Update(properties)`](#update) | string | Update the initialized template |
+| [`Template.Add(properties)`](#add) | string | Create a template |
+| [`Template.Retrieve(filter)`](#retrieve) | object[] | Query templates |
+| [`<TemplateInstance>.Update(properties)`](#instance-update) | string | Update the initialized template |
 
 ---
 
-## Init
+### Template.Init {#init}
 
-### Syntax
+Initializes a `Template` instance for the given external key.
+
+#### Syntax
 
 ```javascript
 Template.Init(key)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `key` | string | Yes | External key |
 
-### Return value
+#### Return value
 
 `TemplateInstance`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1");
@@ -48,25 +50,27 @@ var t = Template.Init("myTemplate");
 
 ---
 
-## Template.Add
+### Template.Add {#add}
 
-### Syntax
+Creates a new template with the specified properties.
+
+#### Syntax
 
 ```javascript
 Template.Add(properties)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | `CustomerKey`, `TemplateName`, `LayoutHTML`, … |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1");
@@ -80,27 +84,27 @@ var status = Template.Add(myTemp);
 
 ---
 
-## Template.Retrieve
+### Template.Retrieve {#retrieve}
 
-### Syntax
+Queries templates matching the given filter. Pass `{ Filter: { Property, SimpleOperator, Value }, QueryAllAccounts: true }` to search all accessible accounts.
+
+#### Syntax
 
 ```javascript
 Template.Retrieve(filter)
 ```
 
-Pass `{ Filter: { Property, SimpleOperator, Value }, QueryAllAccounts: true }` to search all accessible accounts.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `filter` | object | Yes | WSProxy-style filter (optionally with `QueryAllAccounts`) |
 
-### Return value
+#### Return value
 
 `object[]`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -113,25 +117,27 @@ var getTemplate = Template.Retrieve({
 
 ---
 
-## Update
+### &lt;TemplateInstance&gt;.Update {#instance-update}
 
-### Syntax
+Updates the initialized template with the given properties.
+
+#### Syntax
 
 ```javascript
 <TemplateInstance>.Update(properties)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | Attributes to change |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");

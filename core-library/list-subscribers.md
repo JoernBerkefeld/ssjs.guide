@@ -14,36 +14,36 @@ After [`List.Init`](/core-library/list/), use `list.Subscribers` to work with su
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| [`<ListInstance>.Subscribers.Add(properties)`](#subscribers-add) | string | Add a subscriber to the list |
-| [`<ListInstance>.Subscribers.Retrieve([filter])`](#subscribers-retrieve) | object[] | Return subscribers (optional filter) |
-| [`<ListInstance>.Subscribers.Unsubscribe(emailAddress)`](#subscribers-unsubscribe) | string | Remove subscriber from this list |
-| [`<ListInstance>.Subscribers.Update(emailAddress, status)`](#subscribers-update) | string | Change subscriber status on the list |
-| [`<ListInstance>.Subscribers.Upsert(emailAddress, attributes)`](#subscribers-upsert) | string | Add or update subscriber attributes |
-| [`<ListInstance>.Subscribers.Tracking.Retrieve(filter)`](#subscribers-tracking-retrieve) | object[] | Tracking data for subscribers on the list |
+| [`<ListInstance>.Subscribers.Add(properties)`](#instance-subscribers-add) | string | Add a subscriber to the list |
+| [`<ListInstance>.Subscribers.Retrieve([filter])`](#instance-subscribers-retrieve) | object[] | Return subscribers (optional filter) |
+| [`<ListInstance>.Subscribers.Unsubscribe(emailAddress)`](#instance-subscribers-unsubscribe) | string | Remove subscriber from this list |
+| [`<ListInstance>.Subscribers.Update(emailAddress, status)`](#instance-subscribers-update) | string | Change subscriber status on the list |
+| [`<ListInstance>.Subscribers.Upsert(emailAddress, attributes)`](#instance-subscribers-upsert) | string | Add or update subscriber attributes |
+| [`<ListInstance>.Subscribers.Tracking.Retrieve(filter)`](#instance-subscribers-tracking-retrieve) | object[] | Tracking data for subscribers on the list |
 
 ---
 
-## Subscribers.Add
+### &lt;ListInstance&gt;.Subscribers.Add {#instance-subscribers-add}
 
-### Syntax
+Adds a subscriber to the initialized list. Properties typically include `EmailAddress` and `SubscriberKey`, plus optional list-specific fields.
+
+#### Syntax
 
 ```javascript
 <ListInstance>.Subscribers.Add(properties)
 ```
 
-Adds a subscriber to the initialized list. Properties typically include `EmailAddress` and `SubscriberKey`, plus optional list-specific fields.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | Subscriber properties (`EmailAddress`, `SubscriberKey`, …) |
 
-### Return value
+#### Return value
 
 `"OK"` on success, or throws on failure.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1");
@@ -57,27 +57,27 @@ Write(Stringify(result));
 
 ---
 
-## Subscribers.Retrieve
+### &lt;ListInstance&gt;.Subscribers.Retrieve {#instance-subscribers-retrieve}
 
-### Syntax
+Returns subscribers on the list. Omit `filter` to return all subscribers on the list; pass a WSProxy-style filter to narrow results.
+
+#### Syntax
 
 ```javascript
 <ListInstance>.Subscribers.Retrieve([filter])
 ```
 
-Returns subscribers on the list. Omit `filter` to return all subscribers on the list; pass a WSProxy-style filter to narrow results.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `filter` | object | No | Optional filter object |
 
-### Return value
+#### Return value
 
 `object[]` — subscriber rows.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1");
@@ -87,27 +87,27 @@ var subscribers = list.Subscribers.Retrieve();
 
 ---
 
-## Subscribers.Unsubscribe
+### &lt;ListInstance&gt;.Subscribers.Unsubscribe {#instance-subscribers-unsubscribe}
 
-### Syntax
+Removes the subscriber from this list. `emailAddress` may be a string or an object `{ EmailAddress, SubscriberKey }` identifying the subscriber.
+
+#### Syntax
 
 ```javascript
 <ListInstance>.Subscribers.Unsubscribe(emailAddress)
 ```
 
-Removes the subscriber from this list. `emailAddress` may be a string or an object `{ EmailAddress, SubscriberKey }` identifying the subscriber.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `emailAddress` | string | Yes | Email or identifying object |
 
-### Return value
+#### Return value
 
 `"OK"` on success, or throws on failure.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -117,28 +117,28 @@ var status = myList.Subscribers.Unsubscribe("aruiz@example.com");
 
 ---
 
-## Subscribers.Update
+### &lt;ListInstance&gt;.Subscribers.Update {#instance-subscribers-update}
 
-### Syntax
+Updates the subscriber's status for this list.
+
+#### Syntax
 
 ```javascript
 <ListInstance>.Subscribers.Update(emailAddress, status)
 ```
 
-Updates the subscriber’s status for this list.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `emailAddress` | string | Yes | Email or `{ EmailAddress, SubscriberKey }` |
 | `status` | string | Yes | New status on the list (e.g. `"Active"`) |
 
-### Return value
+#### Return value
 
 `"OK"` on success, or throws on failure.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -148,28 +148,28 @@ var status = myList.Subscribers.Update("aruiz@example.com", "Active");
 
 ---
 
-## Subscribers.Upsert
+### &lt;ListInstance&gt;.Subscribers.Upsert {#instance-subscribers-upsert}
 
-### Syntax
+Adds the subscriber if they are not on the list; otherwise updates the supplied attributes. If `attributes.Status` is set, the list status is updated accordingly.
+
+#### Syntax
 
 ```javascript
 <ListInstance>.Subscribers.Upsert(emailAddress, attributes)
 ```
 
-Adds the subscriber if they are not on the list; otherwise updates the supplied attributes. If `attributes.Status` is set, the list status is updated accordingly.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `emailAddress` | string | Yes | Email or `{ EmailAddress, SubscriberKey }` |
 | `attributes` | object | Yes | Attributes to set or merge |
 
-### Return value
+#### Return value
 
 `"OK"` on success, or throws on failure.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -179,27 +179,27 @@ var status = myList.Subscribers.Upsert("aruiz@example.com", { ZipCode: "46202" }
 
 ---
 
-## Subscribers.Tracking.Retrieve
+### &lt;ListInstance&gt;.Subscribers.Tracking.Retrieve {#instance-subscribers-tracking-retrieve}
 
-### Syntax
+Returns tracking rows for subscribers on this list that match the filter.
+
+#### Syntax
 
 ```javascript
 <ListInstance>.Subscribers.Tracking.Retrieve(filter)
 ```
 
-Returns tracking rows for subscribers on this list that match the filter.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `filter` | object | Yes | WSProxy-style filter (e.g. on `SubscriberKey`) |
 
-### Return value
+#### Return value
 
 `object[]` — tracking records.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");

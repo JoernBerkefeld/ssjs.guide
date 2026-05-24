@@ -1,19 +1,17 @@
 ---
-layout: page
-title: proxy.getNextBatch
+layout: function
+title: <WSProxyInstance>.getNextBatch
 parent: WSProxy
 parent_url: /wsproxy/
 permalink: /wsproxy/getnextbatch/
 description: Fetches the next page of SOAP retrieve results after a prior retrieve returned HasMoreRows true. Pass the same object type and the RequestID from the previous response.
+syntax: "<WSProxyInstance>.getNextBatch(objectType, requestId)"
+return_type: object
+min_args: 2
+max_args: 2
 ---
 
-`proxy.getNextBatch(objectType, requestId)` continues a paginated [`retrieve`](/wsproxy/retrieve/) sequence after `HasMoreRows` is true.
-
-## Syntax
-
-```javascript
-var result = proxy.getNextBatch(objectType, requestId);
-```
+`<WSProxyInstance>.getNextBatch(objectType, requestId)` continues a paginated [`retrieve`](/wsproxy/retrieve/) sequence after `HasMoreRows` is true.
 
 ## Parameters
 

@@ -1,21 +1,19 @@
 ---
-layout: page
-title: proxy.performBatch
+layout: function
+title: <WSProxyInstance>.performBatch
 parent: WSProxy
 parent_url: /wsproxy/
 permalink: /wsproxy/performbatch/
 redirect_from:
   - /wsproxy/perform-batch/
 description: Run a SOAP Perform action against multiple objects of the same type in one call (parallel to performItem for a single object).
+syntax: "<WSProxyInstance>.performBatch(objectType, propertiesArray, action[, performOptions])"
+return_type: object
+min_args: 3
+max_args: 4
 ---
 
-Performs the same action on **multiple** rows/objects in one SOAP request. For a **single** object, use [`proxy.performItem`](/wsproxy/perform/).
-
-## Syntax
-
-```javascript
-var result = proxy.performBatch(objectType, propertiesArray, action[, performOptions]);
-```
+Performs the same action on **multiple** rows/objects in one SOAP request. For a **single** object, use [`<WSProxyInstance>.performItem`](/wsproxy/performitem/).
 
 ## Parameters
 
@@ -41,4 +39,4 @@ Write(result.Status);
 
 ## See Also
 
-- [`proxy.performItem`](/wsproxy/perform/) — single-object perform
+- [`<WSProxyInstance>.performItem`](/wsproxy/performitem/) — single-object perform

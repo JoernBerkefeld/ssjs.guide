@@ -15,32 +15,34 @@ description: Core library SendClassification — ties a sender profile and deliv
 | Method | Returns | Description |
 |--------|---------|-------------|
 | [`SendClassification.Init(key)`](#init) | SendClassificationInstance | Bind by external key |
-| [`SendClassification.Add(properties)`](#sendclassification-add) | string | Create a send classification |
-| [`SendClassification.Retrieve(filter)`](#sendclassification-retrieve) | object[] | Query classifications |
-| [`<SendClassificationInstance>.Update(properties)`](#update) | string | Update (requires sender + delivery keys) |
-| [`<SendClassificationInstance>.Remove()`](#remove) | string | Delete the classification |
+| [`SendClassification.Add(properties)`](#add) | string | Create a send classification |
+| [`SendClassification.Retrieve(filter)`](#retrieve) | object[] | Query classifications |
+| [`<SendClassificationInstance>.Update(properties)`](#instance-update) | string | Update (requires sender + delivery keys) |
+| [`<SendClassificationInstance>.Remove()`](#instance-remove) | string | Delete the classification |
 
 ---
 
-## Init
+### SendClassification.Init {#init}
 
-### Syntax
+Initializes a `SendClassification` instance for the given external key.
+
+#### Syntax
 
 ```javascript
 SendClassification.Init(key)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `key` | string | Yes | External key |
 
-### Return value
+#### Return value
 
 `SendClassificationInstance`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1");
@@ -49,25 +51,27 @@ var sc = SendClassification.Init("mySendClassification");
 
 ---
 
-## SendClassification.Add
+### SendClassification.Add {#add}
 
-### Syntax
+Creates a new send classification with the specified properties.
+
+#### Syntax
 
 ```javascript
 SendClassification.Add(properties)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | `CustomerKey`, `Name`, `Description`, `SenderProfileKey`, `DeliveryProfileKey` |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -83,25 +87,27 @@ SendClassification.Add(newSC);
 
 ---
 
-## SendClassification.Retrieve
+### SendClassification.Retrieve {#retrieve}
 
-### Syntax
+Queries send classifications matching the given filter criteria.
+
+#### Syntax
 
 ```javascript
 SendClassification.Retrieve(filter)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `filter` | object | Yes | WSProxy-style filter |
 
-### Return value
+#### Return value
 
 `object[]`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -114,27 +120,27 @@ var results = SendClassification.Retrieve({
 
 ---
 
-## Update
+### &lt;SendClassificationInstance&gt;.Update {#instance-update}
 
-### Syntax
+Updates the initialized send classification. You must include **both** `SenderProfileKey` and `DeliveryProfileKey` for the update to succeed.
+
+#### Syntax
 
 ```javascript
 <SendClassificationInstance>.Update(properties)
 ```
 
-You must include **both** `SenderProfileKey` and `DeliveryProfileKey` for the update to succeed.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | Includes `SenderProfileKey` and `DeliveryProfileKey` |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -149,19 +155,21 @@ var status = sc.Update(updatedSC);
 
 ---
 
-## Remove
+### &lt;SendClassificationInstance&gt;.Remove {#instance-remove}
 
-### Syntax
+Removes the initialized send classification.
+
+#### Syntax
 
 ```javascript
 <SendClassificationInstance>.Remove()
 ```
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");

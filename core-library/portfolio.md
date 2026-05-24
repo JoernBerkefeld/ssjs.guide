@@ -15,32 +15,34 @@ description: Core library Portfolio — file / portfolio items in Content Builde
 | Method | Returns | Description |
 |--------|---------|-------------|
 | [`Portfolio.Init(key)`](#init) | PortfolioInstance | Bind by external key |
-| [`Portfolio.Add(properties)`](#portfolio-add) | string | Create a portfolio item |
-| [`Portfolio.Retrieve(filter)`](#portfolio-retrieve) | object[] | Query portfolio objects |
-| [`<PortfolioInstance>.Update(properties)`](#update) | string | Update the initialized item |
-| [`<PortfolioInstance>.Remove()`](#remove) | string | Delete the item |
+| [`Portfolio.Add(properties)`](#add) | string | Create a portfolio item |
+| [`Portfolio.Retrieve(filter)`](#retrieve) | object[] | Query portfolio objects |
+| [`<PortfolioInstance>.Update(properties)`](#instance-update) | string | Update the initialized item |
+| [`<PortfolioInstance>.Remove()`](#instance-remove) | string | Delete the item |
 
 ---
 
-## Init
+### Portfolio.Init {#init}
 
-### Syntax
+Initializes a `Portfolio` instance for the given external key.
+
+#### Syntax
 
 ```javascript
 Portfolio.Init(key)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `key` | string | Yes | External key of the portfolio item |
 
-### Return value
+#### Return value
 
 `PortfolioInstance`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -49,25 +51,27 @@ var portObj = Portfolio.Init("myPortfolioCK");
 
 ---
 
-## Portfolio.Add
+### Portfolio.Add {#add}
 
-### Syntax
+Creates a new portfolio item with the specified properties.
+
+#### Syntax
 
 ```javascript
 Portfolio.Add(properties)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | `DisplayName`, `CustomerKey`, `CategoryID`, `FileName`, `FileLocation`, … |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -83,25 +87,27 @@ var status = Portfolio.Add(newPortfolio);
 
 ---
 
-## Portfolio.Retrieve
+### Portfolio.Retrieve {#retrieve}
 
-### Syntax
+Queries portfolio items matching the given filter criteria.
+
+#### Syntax
 
 ```javascript
 Portfolio.Retrieve(filter)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `filter` | object | Yes | WSProxy-style filter |
 
-### Return value
+#### Return value
 
 `object[]`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -114,25 +120,27 @@ var portObjArr = Portfolio.Retrieve({
 
 ---
 
-## Update
+### &lt;PortfolioInstance&gt;.Update {#instance-update}
 
-### Syntax
+Updates the initialized portfolio item with the given properties.
+
+#### Syntax
 
 ```javascript
 <PortfolioInstance>.Update(properties)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | Attributes to change |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -142,19 +150,21 @@ var status = portObj.Update({ DisplayName: "Updated SSJS Image" });
 
 ---
 
-## Remove
+### &lt;PortfolioInstance&gt;.Remove {#instance-remove}
 
-### Syntax
+Removes the initialized portfolio item.
+
+#### Syntax
 
 ```javascript
 <PortfolioInstance>.Remove()
 ```
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");

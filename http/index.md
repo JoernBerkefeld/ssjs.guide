@@ -10,10 +10,10 @@ SSJS offers three different ways to make HTTP requests. Choose based on how much
 
 | API | Control Level | Best For |
 |-----|--------------|----------|
-| `Platform.Function.HTTPGet` / `Platform.Function.HTTPPost` | Basic | Simple GET/POST; response body only |
-| `HTTP.Get` / `HTTP.Post` (Core) | Medium | Same transport as syndicated HTTP docs — returns a **status + body object** |
-| `Script.Util.HttpGet` | Full-ish | Shorthand for `Script.Util.HttpRequest` with GET method but without control over timeouts and returned encoding/content-type |
-| `Script.Util.HttpRequest` | Full | Custom methods, headers, auth, timeouts, status codes and returns most details |
+| [Platform.Function.HTTPGet](/platform-functions/httpget/) / [Platform.Function.HTTPPost](/platform-functions/httppost/) | Basic | Simple GET/POST; response body only; without Core load |
+| [HTTP.Get](/http/get/) / [HTTP.Post](/http/post/) (Core) | Medium | Same transport as syndicated HTTP docs — returns a **status + body object** |
+| [Script.Util.HttpGet](/http/script-util-httpget/) | Full-ish | Shorthand for `Script.Util.HttpRequest` with GET method but without control over timeouts and returned encoding/content-type |
+| [Script.Util.HttpRequest](/http/script-util-httprequest/) | Full | Custom methods, headers, auth, timeouts, status codes and returns most details |
 
 ---
 
@@ -35,19 +35,6 @@ req.setHeader("Authorization", "Bearer " + token);
 var resp = req.send();
 Write("Status: " + resp.statusCode + ", Body: " + String(resp.content));
 ```
-
----
-
-## In This Section
-
-| Page | Description |
-|------|-------------|
-| [HTTP.Get](/http/get/) | Core library GET — returns response object |
-| [HTTP.Post](/http/post/) | Core library POST — returns response object |
-| [Script.Util.HttpGet](/http/script-util-httpget/) | Full-featured HTTP GET request object |
-| [Script.Util.HttpRequest](/http/script-util-httprequest/) | Full-featured HTTP request object |
-| [Platform.Function.HTTPGet](/platform-functions/httpget/) | Simple GET without Core load |
-| [Platform.Function.HTTPPost](/platform-functions/httppost/) | Simple POST without Core load |
 
 ---
 

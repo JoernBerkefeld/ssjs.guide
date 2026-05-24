@@ -1,19 +1,17 @@
 ---
-layout: page
-title: proxy.setClientId
+layout: function
+title: <WSProxyInstance>.setClientId
 parent: WSProxy
 parent_url: /wsproxy/
 permalink: /wsproxy/setclientid/
 redirect_from:
   - /wsproxy/set-client-id/
 description: Set the Business Unit client ID for WSProxy operations — allows parent BU scripts to operate on child BU data.
+syntax: "<WSProxyInstance>.setClientId({ ID: clientId })"
+return_type: void
+min_args: 1
+max_args: 1
 ---
-
-## Syntax
-
-```javascript
-proxy.setClientId({ ID: clientId });
-```
 
 ## Parameters
 
@@ -52,6 +50,10 @@ for (var i = 0; i < businessUnits.length; i++) {
     Write(businessUnits[i].name + ": " + result.Results.length + " DEs<br>");
 }
 ```
+
+## Return Value
+
+`void`
 
 ## Notes
 

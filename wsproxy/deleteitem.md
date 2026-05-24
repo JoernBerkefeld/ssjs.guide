@@ -1,19 +1,17 @@
 ---
-layout: page
-title: proxy.deleteItem
+layout: function
+title: <WSProxyInstance>.deleteItem
 parent: WSProxy
 parent_url: /wsproxy/
 permalink: /wsproxy/deleteitem/
 redirect_from:
   - /wsproxy/delete-item/
 description: Delete an SFMC object via the SOAP API.
+syntax: "<WSProxyInstance>.deleteItem(objectType, properties)"
+return_type: object
+min_args: 2
+max_args: 2
 ---
-
-## Syntax
-
-```javascript
-var result = proxy.deleteItem(objectType, properties);
-```
 
 ## Parameters
 

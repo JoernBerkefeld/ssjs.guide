@@ -17,38 +17,38 @@ The `TriggeredSend` Core library object is the recommended way to send transacti
 | [`TriggeredSend.Init(key)`](#init) | TriggeredSendInstance | Initialize a TriggeredSend object by external key |
 | [`TriggeredSend.Add(properties)`](#add) | TriggeredSendInstance | Create a new Triggered Send Definition |
 | [`TriggeredSend.Retrieve(filter)`](#retrieve) | object[] | Retrieve Triggered Send Definitions matching a filter |
-| [`<TriggeredSendInstance>.Update(properties)`](#update) | string | Update the initialized TSD |
-| [`<TriggeredSendInstance>.Start()`](#start) | string | Start (reactivate) a paused TSD |
-| [`<TriggeredSendInstance>.Pause()`](#pause) | string | Pause an active TSD |
-| [`<TriggeredSendInstance>.Publish()`](#publish) | string | Publish a TSD to make it active |
-| [`<TriggeredSendInstance>.Send(emailAddress, [sendTimeAttributes])`](#send) | string | Send an email using the TSD |
-| [`<TriggeredSendInstance>.Tracking.Retrieve([filter])`](#trackingretrieve) | object[] | Retrieve tracking data for the TSD |
-| [`<TriggeredSendInstance>.Tracking.Clicks.Retrieve(filter)`](#trackingclicksretrieve) | object[] | Retrieve click tracking data |
-| [`<TriggeredSendInstance>.Tracking.TotalByInterval.Retrieve(type, startDate, endDate, groupBy)`](#trackingtotalbyintervalretrieve) | object[] | Retrieve aggregated tracking data by interval |
+| [`<TriggeredSendInstance>.Update(properties)`](#instance-update) | string | Update the initialized TSD |
+| [`<TriggeredSendInstance>.Start()`](#instance-start) | string | Start (reactivate) a paused TSD |
+| [`<TriggeredSendInstance>.Pause()`](#instance-pause) | string | Pause an active TSD |
+| [`<TriggeredSendInstance>.Publish()`](#instance-publish) | string | Publish a TSD to make it active |
+| [`<TriggeredSendInstance>.Send(emailAddress, [sendTimeAttributes])`](#instance-send) | string | Send an email using the TSD |
+| [`<TriggeredSendInstance>.Tracking.Retrieve([filter])`](#instance-tracking-retrieve) | object[] | Retrieve tracking data for the TSD |
+| [`<TriggeredSendInstance>.Tracking.Clicks.Retrieve(filter)`](#instance-tracking-clicks-retrieve) | object[] | Retrieve click tracking data |
+| [`<TriggeredSendInstance>.Tracking.TotalByInterval.Retrieve(type, startDate, endDate, groupBy)`](#instance-tracking-totalbyinterval-retrieve) | object[] | Retrieve aggregated tracking data by interval |
 
 ---
 
-## TriggeredSend.Init
+### TriggeredSend.Init {#init}
 
-### Syntax
+Initializes a TriggeredSend instance bound to the specified external key. Required before invoking any instance method on the returned object.
+
+#### Syntax
 
 ```javascript
 TriggeredSend.Init(key)
 ```
 
-Initializes a TriggeredSend instance bound to the specified external key. Required before invoking any instance method on the returned object.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `key` | string | Yes | External key of the Triggered Send Definition |
 
-### Return value
+#### Return value
 
 `TriggeredSendInstance`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1");
@@ -57,27 +57,27 @@ var triggeredSend = TriggeredSend.Init("support");
 
 ---
 
-## TriggeredSend.Add
+### TriggeredSend.Add {#add}
 
-### Syntax
+Creates a new triggered send definition from the supplied properties and returns an initialized TriggeredSend instance. Unlike most static `Add` methods, this returns a `TriggeredSendInstance`, not `"OK"`.
+
+#### Syntax
 
 ```javascript
 TriggeredSend.Add(properties)
 ```
 
-Creates a new triggered send definition from the supplied properties and returns an initialized TriggeredSend instance. Unlike most static `Add` methods, this returns a `TriggeredSendInstance`, not `"OK"`.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | `Name`, `CustomerKey`, `FromName`, `FromAddress`, `EmailID`, `SendClassificationID`, ... |
 
-### Return value
+#### Return value
 
 `TriggeredSendInstance`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -94,27 +94,27 @@ var tsd = TriggeredSend.Add(newTSD);
 
 ---
 
-## TriggeredSend.Retrieve
+### TriggeredSend.Retrieve {#retrieve}
 
-### Syntax
+Returns an array of triggered send definitions matching the specified filter.
+
+#### Syntax
 
 ```javascript
 TriggeredSend.Retrieve(filter)
 ```
 
-Returns an array of triggered send definitions matching the specified filter.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `filter` | object | Yes | PascalCase WSProxy-style filter object: `{Property, SimpleOperator, Value}` |
 
-### Return value
+#### Return value
 
 `object[]`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -123,27 +123,27 @@ var results = TriggeredSend.Retrieve({ Property: "CustomerKey", SimpleOperator: 
 
 ---
 
-## &lt;TriggeredSendInstance&gt;.Update
+### &lt;TriggeredSendInstance&gt;.Update {#instance-update}
 
-### Syntax
+Updates the previously initialized triggered send definition.
+
+#### Syntax
 
 ```javascript
 <TriggeredSendInstance>.Update(properties)
 ```
 
-Updates the previously initialized triggered send definition.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | Attributes to change on the triggered send definition |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -153,21 +153,21 @@ var status = tsd.Update({ Name: "Updated TSD Name" });
 
 ---
 
-## &lt;TriggeredSendInstance&gt;.Start
+### &lt;TriggeredSendInstance&gt;.Start {#instance-start}
 
-### Syntax
+Starts (reactivates) a paused triggered send definition.
+
+#### Syntax
 
 ```javascript
 <TriggeredSendInstance>.Start()
 ```
 
-Starts (reactivates) a paused triggered send definition.
-
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -177,21 +177,21 @@ var result = ts.Start();
 
 ---
 
-## &lt;TriggeredSendInstance&gt;.Pause
+### &lt;TriggeredSendInstance&gt;.Pause {#instance-pause}
 
-### Syntax
+Pauses an active triggered send definition.
+
+#### Syntax
 
 ```javascript
 <TriggeredSendInstance>.Pause()
 ```
 
-Pauses an active triggered send definition.
-
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -201,21 +201,21 @@ var status = ts.Pause();
 
 ---
 
-## &lt;TriggeredSendInstance&gt;.Publish
+### &lt;TriggeredSendInstance&gt;.Publish {#instance-publish}
 
-### Syntax
+Publishes a triggered send definition, making it active and ready to accept sends. Use this to move a definition from Draft / Inactive to Active.
+
+#### Syntax
 
 ```javascript
 <TriggeredSendInstance>.Publish()
 ```
 
-Publishes a triggered send definition, making it active and ready to accept sends. Use this to move a definition from Draft / Inactive to Active.
-
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -225,30 +225,30 @@ var result = ts.Publish();
 
 ---
 
-## &lt;TriggeredSendInstance&gt;.Send
+### &lt;TriggeredSendInstance&gt;.Send {#instance-send}
 
-### Syntax
+Sends an email using the previously initialized triggered send definition. On failure, inspect `<TriggeredSendInstance>.LastMessage` for error details.
+
+#### Syntax
 
 ```javascript
 <TriggeredSendInstance>.Send(emailAddress, [sendTimeAttributes])
 ```
 
-Sends an email using the previously initialized triggered send definition. On failure, inspect `<TriggeredSendInstance>.LastMessage` for error details.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `emailAddress` | string | Yes | Email address to send to. SubscriberKey is **not** supported. |
 | `sendTimeAttributes` | object | No | Dynamic attributes to include in the send |
 
-### Return value
+#### Return value
 
 `"OK"` on success or `"Error"`; throws on a hard failure.
 
-### Examples
+#### Examples
 
-#### Simple Send
+**Simple Send**
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -257,7 +257,7 @@ var status = ts.Send("aruiz@example.com", { FirstName: "Angel", CouponCode: "AA1
 if (status != "OK") { var message = ts.LastMessage; }
 ```
 
-#### Order Confirmation
+**Order Confirmation**
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -288,27 +288,27 @@ The attribute keys in `sendTimeAttributes` must exactly match the AMPscript vari
 
 ---
 
-## &lt;TriggeredSendInstance&gt;.Tracking.Retrieve
+### &lt;TriggeredSendInstance&gt;.Tracking.Retrieve {#instance-tracking-retrieve}
 
-### Syntax
+Returns tracking data for the previously initialized triggered send definition.
+
+#### Syntax
 
 ```javascript
 <TriggeredSendInstance>.Tracking.Retrieve([filter])
 ```
 
-Returns tracking data for the previously initialized triggered send definition.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `filter` | object | No | Optional WSProxy-style filter object |
 
-### Return value
+#### Return value
 
 `object[]`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -318,27 +318,27 @@ var tsdTracking = tsd.Tracking.Retrieve();
 
 ---
 
-## &lt;TriggeredSendInstance&gt;.Tracking.Clicks.Retrieve
+### &lt;TriggeredSendInstance&gt;.Tracking.Clicks.Retrieve {#instance-tracking-clicks-retrieve}
 
-### Syntax
+Returns click tracking information for the previously initialized triggered send definition.
+
+#### Syntax
 
 ```javascript
 <TriggeredSendInstance>.Tracking.Clicks.Retrieve(filter)
 ```
 
-Returns click tracking information for the previously initialized triggered send definition.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `filter` | object | Yes | WSProxy-style filter restricting click results |
 
-### Return value
+#### Return value
 
 `object[]`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -348,17 +348,17 @@ var results = tsd.Tracking.Clicks.Retrieve({ Property: "SendUrlID", SimpleOperat
 
 ---
 
-## &lt;TriggeredSendInstance&gt;.Tracking.TotalByInterval.Retrieve
+### &lt;TriggeredSendInstance&gt;.Tracking.TotalByInterval.Retrieve {#instance-tracking-totalbyinterval-retrieve}
 
-### Syntax
+Returns aggregated tracking data for the previously initialized triggered send. Aggregates by `type` over the date range, grouped by `groupBy`.
+
+#### Syntax
 
 ```javascript
 <TriggeredSendInstance>.Tracking.TotalByInterval.Retrieve(type, startDate, endDate, groupBy)
 ```
 
-Returns aggregated tracking data for the previously initialized triggered send. Aggregates by `type` over the date range, grouped by `groupBy`.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
@@ -367,11 +367,11 @@ Returns aggregated tracking data for the previously initialized triggered send. 
 | `endDate` | string | Yes | End date of the data period (MM-DD-YYYY) |
 | `groupBy` | string | Yes | Interval used to aggregate: `"day"` or `"hour"` |
 
-### Return value
+#### Return value
 
 `object[]`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");

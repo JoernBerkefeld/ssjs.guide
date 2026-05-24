@@ -15,35 +15,37 @@ description: Core library namespace Send.Definition — create, configure, query
 | Method | Returns | Description |
 |--------|---------|-------------|
 | [`Send.Definition.Init(key)`](#init) | SendDefinitionInstance | Bind to a send definition by external key |
-| [`Send.Definition.Add(esdParams, sendClassificationKey, emailKey, listIds)`](#send-definition-add) | string | Create send definition (lists) |
-| [`Send.Definition.AddWithDE(...)`](#send-definition-addwithde) | string | Create send definition targeting a sendable DE |
-| [`Send.Definition.AddWithFilterDefinition(...)`](#send-definition-addwithfilterdefinition) | string | Create send definition using a filter definition |
-| [`Send.Definition.Retrieve([filter])`](#send-definition-retrieve) | object[] | Query send definitions |
-| [`<SendDefinitionInstance>.Update(properties)`](#update) | string | Update the initialized send definition |
-| [`<SendDefinitionInstance>.Remove()`](#remove) | string | Delete the send definition |
-| [`<SendDefinitionInstance>.Send()`](#send) | string | Execute the send |
+| [`Send.Definition.Add(esdParams, sendClassificationKey, emailKey, listIds)`](#add) | string | Create send definition (lists) |
+| [`Send.Definition.AddWithDE(...)`](#addwithde) | string | Create send definition targeting a sendable DE |
+| [`Send.Definition.AddWithFilterDefinition(...)`](#addwithfilterdefinition) | string | Create send definition using a filter definition |
+| [`Send.Definition.Retrieve([filter])`](#retrieve) | object[] | Query send definitions |
+| [`<SendDefinitionInstance>.Update(properties)`](#instance-update) | string | Update the initialized send definition |
+| [`<SendDefinitionInstance>.Remove()`](#instance-remove) | string | Delete the send definition |
+| [`<SendDefinitionInstance>.Send()`](#instance-send) | string | Execute the send |
 
 ---
 
-## Init
+### Send.Definition.Init {#init}
 
-### Syntax
+Initializes a send definition instance from its external key. Required before calling instance methods (`Update`, `Remove`, `Send`).
+
+#### Syntax
 
 ```javascript
 Send.Definition.Init(key)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `key` | string | Yes | External key of the send definition |
 
-### Return value
+#### Return value
 
 `SendDefinitionInstance`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -52,17 +54,17 @@ var esd = Send.Definition.Init("myESD");
 
 ---
 
-## Send.Definition.Add
+### Send.Definition.Add {#add}
 
-### Syntax
+Creates a send definition. `esdParams` includes `CustomerKey`, `Name`, and `EmailSubject`.
+
+#### Syntax
 
 ```javascript
 Send.Definition.Add(esdParams, sendClassificationKey, emailKey, listIds)
 ```
 
-Creates a send definition. `esdParams` includes `CustomerKey`, `Name`, and `EmailSubject`.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
@@ -71,11 +73,11 @@ Creates a send definition. `esdParams` includes `CustomerKey`, `Name`, and `Emai
 | `emailKey` | string | Yes | Customer key of the email |
 | `listIds` | array | Yes | Target list IDs |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1");
@@ -89,17 +91,17 @@ Send.Definition.Add(esdParams, "example_sc_key", "example_email_key", [12345, 12
 
 ---
 
-## Send.Definition.AddWithDE
+### Send.Definition.AddWithDE {#addwithde}
 
-### Syntax
+Creates a send definition that sends to a **sendable Data Extension**.
+
+#### Syntax
 
 ```javascript
 Send.Definition.AddWithDE(esdParams, sendClassificationKey, emailKey, sendableDataExtensionKey, publicationListKey)
 ```
 
-Creates a send definition that sends to a **sendable Data Extension**.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
@@ -109,11 +111,11 @@ Creates a send definition that sends to a **sendable Data Extension**.
 | `sendableDataExtensionKey` | string | Yes | Sendable DE customer key |
 | `publicationListKey` | string | Yes | Publication list customer key |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -127,17 +129,17 @@ var status = Send.Definition.AddWithDE(esdParams, "scKey", "test_email", "deKey"
 
 ---
 
-## Send.Definition.AddWithFilterDefinition
+### Send.Definition.AddWithFilterDefinition {#addwithfilterdefinition}
 
-### Syntax
+Creates a send definition whose audience comes from a **filter definition**.
+
+#### Syntax
 
 ```javascript
 Send.Definition.AddWithFilterDefinition(esdParams, sendClassificationKey, emailKey, filterDefinitionKey, listId)
 ```
 
-Creates a send definition whose audience comes from a **filter definition**.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
@@ -147,11 +149,11 @@ Creates a send definition whose audience comes from a **filter definition**.
 | `filterDefinitionKey` | string | Yes | Filter definition customer key |
 | `listId` | number | Yes | List ID the filter applies to |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -165,27 +167,27 @@ var status = Send.Definition.AddWithFilterDefinition(esdParams, "scKey", "test_e
 
 ---
 
-## Send.Definition.Retrieve
+### Send.Definition.Retrieve {#retrieve}
 
-### Syntax
+Returns send definitions. Omit `filter` to return all definitions visible in context.
+
+#### Syntax
 
 ```javascript
 Send.Definition.Retrieve([filter])
 ```
 
-Returns send definitions. Omit `filter` to return all definitions visible in context.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `filter` | object | No | Optional WSProxy-style filter |
 
-### Return value
+#### Return value
 
 `object[]`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -198,25 +200,27 @@ var esd = Send.Definition.Retrieve({
 
 ---
 
-## Update
+### &lt;SendDefinitionInstance&gt;.Update {#instance-update}
 
-### Syntax
+Updates properties on the initialized send definition.
+
+#### Syntax
 
 ```javascript
 <SendDefinitionInstance>.Update(properties)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | Properties to change |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -226,21 +230,21 @@ var result = sendDef.Update({ Name: "Updated Send Definition Name" });
 
 ---
 
-## Remove
+### &lt;SendDefinitionInstance&gt;.Remove {#instance-remove}
 
-### Syntax
+Deletes the send definition bound to this instance.
+
+#### Syntax
 
 ```javascript
 <SendDefinitionInstance>.Remove()
 ```
 
-Deletes the send definition bound to this instance.
-
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -250,21 +254,21 @@ var status = esd.Remove();
 
 ---
 
-## Send
+### &lt;SendDefinitionInstance&gt;.Send {#instance-send}
 
-### Syntax
+Sends using the lists or audience configured on this send definition.
+
+#### Syntax
 
 ```javascript
 <SendDefinitionInstance>.Send()
 ```
 
-Sends using the lists or audience configured on this send definition.
-
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");

@@ -48,7 +48,7 @@ var performResponse = StatusAndRequestID[2];
   <li><a href="/platform-functions/setobjectproperty/">SetObjectProperty</a></li>
   <li><a href="/platform-functions/invokeexecute/">InvokeExecute</a></li>
   <li><a href="/platform-functions/invokecreate/">InvokeCreate</a></li>
-  <li><a href="/wsproxy/perform/">proxy.perform</a></li>
+  <li><a href="/wsproxy/performitem/"><WSProxyInstance>.performItem</a></li>
   <li><a href="/wsproxy/">WSProxy</a></li>
 </ul>
 </div>

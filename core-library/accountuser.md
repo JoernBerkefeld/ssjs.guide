@@ -15,34 +15,36 @@ description: Core library AccountUser — manage users in the business unit (ini
 | Method | Returns | Description |
 |--------|---------|-------------|
 | [`AccountUser.Init(targetUserKey, myClientID)`](#init) | AccountUserInstance | Bind to a user by key and MID |
-| [`AccountUser.Add(properties)`](#accountuser-add) | string | Create a user |
-| [`AccountUser.Retrieve(filter)`](#accountuser-retrieve) | object[] | Query users |
-| [`<AccountUserInstance>.Update(properties)`](#update) | string | Update the initialized user |
-| [`<AccountUserInstance>.Activate()`](#activate) | string | Activate the user |
-| [`<AccountUserInstance>.Deactivate()`](#deactivate) | string | Deactivate the user |
+| [`AccountUser.Add(properties)`](#add) | string | Create a user |
+| [`AccountUser.Retrieve(filter)`](#retrieve) | object[] | Query users |
+| [`<AccountUserInstance>.Update(properties)`](#instance-update) | string | Update the initialized user |
+| [`<AccountUserInstance>.Activate()`](#instance-activate) | string | Activate the user |
+| [`<AccountUserInstance>.Deactivate()`](#instance-deactivate) | string | Deactivate the user |
 
 ---
 
-## Init
+### AccountUser.Init {#init}
 
-### Syntax
+Initializes an `AccountUser` instance bound to the given user external key and business unit MID.
+
+#### Syntax
 
 ```javascript
 AccountUser.Init(targetUserKey, myClientID)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `targetUserKey` | string | Yes | External key of the user |
 | `myClientID` | number | Yes | MID of the business unit |
 
-### Return value
+#### Return value
 
 `AccountUserInstance`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -51,25 +53,27 @@ var acctUser = AccountUser.Init("myAccountUser", 123456789);
 
 ---
 
-## AccountUser.Add
+### AccountUser.Add {#add}
 
-### Syntax
+Creates a new Marketing Cloud user with the specified properties.
+
+#### Syntax
 
 ```javascript
 AccountUser.Add(properties)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | User fields (`Name`, `UserID`, `Password`, `Email`, `ClientID`, `DefaultBusinessUnitKey`, `AssociatedBusinessUnits`, …) |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -87,25 +91,27 @@ var status = AccountUser.Add(newUser);
 
 ---
 
-## AccountUser.Retrieve
+### AccountUser.Retrieve {#retrieve}
 
-### Syntax
+Retrieves user records matching the given filter criteria.
+
+#### Syntax
 
 ```javascript
 AccountUser.Retrieve(filter)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `filter` | object | Yes | Search criteria |
 
-### Return value
+#### Return value
 
 `object[]`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -118,25 +124,27 @@ var accountUser = AccountUser.Retrieve({
 
 ---
 
-## Update
+### &lt;AccountUserInstance&gt;.Update {#instance-update}
 
-### Syntax
+Updates the initialized user's profile with the given properties.
+
+#### Syntax
 
 ```javascript
 <AccountUserInstance>.Update(properties)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | Fields to change |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -146,19 +154,21 @@ var status = acctUser.Update({ Password: "XXXXX" });
 
 ---
 
-## Activate
+### &lt;AccountUserInstance&gt;.Activate {#instance-activate}
 
-### Syntax
+Activates the initialized user account.
+
+#### Syntax
 
 ```javascript
 <AccountUserInstance>.Activate()
 ```
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -168,21 +178,21 @@ var status = acctUser.Activate();
 
 ---
 
-## Deactivate
+### &lt;AccountUserInstance&gt;.Deactivate {#instance-deactivate}
 
-### Syntax
+Deactivates the initialized user. Account users **cannot** be deleted via SSJS; deactivation is the supported "offboarding" path.
+
+#### Syntax
 
 ```javascript
 <AccountUserInstance>.Deactivate()
 ```
 
-Account users **cannot** be deleted via SSJS; deactivation is the supported “offboarding” path.
-
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");

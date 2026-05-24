@@ -19,35 +19,35 @@ The `Subscriber` Core library object manages entries in the All Subscribers list
 | [`Subscriber.Retrieve(filter)`](#retrieve) | object[] | Retrieve subscribers matching a filter |
 | [`Subscriber.Upsert(properties)`](#upsert) | string | Create or update a subscriber |
 | [`Subscriber.Statistics(subscriberKey)`](#statistics) | object | Retrieve statistics for a subscriber |
-| [`<SubscriberInstance>.Update(properties)`](#update) | string | Update the initialized subscriber |
-| [`<SubscriberInstance>.Remove()`](#remove) | string | Delete the initialized subscriber |
-| [`<SubscriberInstance>.Unsubscribe()`](#unsubscribe) | string | Set the subscriber status to Unsubscribed |
-| [`<SubscriberInstance>.Attributes.Retrieve()`](#attributesretrieve) | object[] | Retrieve attributes for the subscriber |
-| [`<SubscriberInstance>.Lists.Retrieve()`](#listsretrieve) | object[] | Retrieve list memberships for the subscriber |
+| [`<SubscriberInstance>.Update(properties)`](#instance-update) | string | Update the initialized subscriber |
+| [`<SubscriberInstance>.Remove()`](#instance-remove) | string | Delete the initialized subscriber |
+| [`<SubscriberInstance>.Unsubscribe()`](#instance-unsubscribe) | string | Set the subscriber status to Unsubscribed |
+| [`<SubscriberInstance>.Attributes.Retrieve()`](#instance-attributes-retrieve) | object[] | Retrieve attributes for the subscriber |
+| [`<SubscriberInstance>.Lists.Retrieve()`](#instance-lists-retrieve) | object[] | Retrieve list memberships for the subscriber |
 
 ---
 
-## Subscriber.Init
+### Subscriber.Init {#init}
 
-### Syntax
+Initializes a Subscriber instance bound to the specified subscriber key. Required before invoking any instance method on the returned object.
+
+#### Syntax
 
 ```javascript
 Subscriber.Init(key)
 ```
 
-Initializes a Subscriber instance bound to the specified subscriber key. Required before invoking any instance method on the returned object.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `key` | string | Yes | Subscriber key |
 
-### Return value
+#### Return value
 
 `SubscriberInstance`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1");
@@ -56,27 +56,27 @@ var sub = Subscriber.Init("mySubscriber");
 
 ---
 
-## Subscriber.Add
+### Subscriber.Add {#add}
 
-### Syntax
+Creates a new subscriber from the supplied properties.
+
+#### Syntax
 
 ```javascript
 Subscriber.Add(properties)
 ```
 
-Creates a new subscriber from the supplied properties.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | `EmailAddress`, `SubscriberKey`, `EmailTypePreference`, `Attributes`, `Lists`, ... |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -92,27 +92,27 @@ var status = Subscriber.Add(newSubscriber);
 
 ---
 
-## Subscriber.Retrieve
+### Subscriber.Retrieve {#retrieve}
 
-### Syntax
+Returns an array of subscribers matching the specified filter.
+
+#### Syntax
 
 ```javascript
 Subscriber.Retrieve(filter)
 ```
 
-Returns an array of subscribers matching the specified filter.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `filter` | object | Yes | PascalCase WSProxy-style filter object: `{Property, SimpleOperator, Value}` |
 
-### Return value
+#### Return value
 
 `object[]`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -121,27 +121,27 @@ var results = Subscriber.Retrieve({ Property: "SubscriberKey", SimpleOperator: "
 
 ---
 
-## Subscriber.Upsert
+### Subscriber.Upsert {#upsert}
 
-### Syntax
+Creates a new subscriber, or updates an existing one matched by `EmailAddress` / `SubscriberKey`.
+
+#### Syntax
 
 ```javascript
 Subscriber.Upsert(properties)
 ```
 
-Creates a new subscriber, or updates an existing one matched by `EmailAddress` / `SubscriberKey`.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | `EmailAddress`, `SubscriberKey`, `Attributes`, ... |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1");
@@ -156,27 +156,27 @@ Write(Stringify(result));
 
 ---
 
-## Subscriber.Statistics
+### Subscriber.Statistics {#statistics}
 
-### Syntax
+Retrieves statistical data for the specified subscriber (sends, opens, clicks, bounces, unsubscribes).
+
+#### Syntax
 
 ```javascript
 Subscriber.Statistics(subscriberKey)
 ```
 
-Retrieves statistical data for the specified subscriber (sends, opens, clicks, bounces, unsubscribes).
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `subscriberKey` | string | Yes | The subscriber key identifying the subscriber |
 
-### Return value
+#### Return value
 
 `object` — a single object with subscriber statistics (not an array).
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1");
@@ -186,27 +186,27 @@ Write(Stringify(stats));
 
 ---
 
-## &lt;SubscriberInstance&gt;.Update
+### &lt;SubscriberInstance&gt;.Update {#instance-update}
 
-### Syntax
+Updates the previously initialized subscriber with the supplied attributes.
+
+#### Syntax
 
 ```javascript
 <SubscriberInstance>.Update(properties)
 ```
 
-Updates the previously initialized subscriber with the supplied attributes.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | Subscriber properties to change |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -216,21 +216,21 @@ var status = subObj.Update({ EmailTypePreference: "HTML", Attributes: { "First N
 
 ---
 
-## &lt;SubscriberInstance&gt;.Remove
+### &lt;SubscriberInstance&gt;.Remove {#instance-remove}
 
-### Syntax
+Deletes the previously initialized subscriber.
+
+#### Syntax
 
 ```javascript
 <SubscriberInstance>.Remove()
 ```
 
-Deletes the previously initialized subscriber.
-
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -240,21 +240,21 @@ var status = subObj.Remove();
 
 ---
 
-## &lt;SubscriberInstance&gt;.Unsubscribe
+### &lt;SubscriberInstance&gt;.Unsubscribe {#instance-unsubscribe}
 
-### Syntax
+Sets the previously initialized subscriber's status to `"Unsubscribed"`.
+
+#### Syntax
 
 ```javascript
 <SubscriberInstance>.Unsubscribe()
 ```
 
-Sets the previously initialized subscriber's status to `"Unsubscribed"`.
-
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -264,21 +264,21 @@ var status = subObj.Unsubscribe();
 
 ---
 
-## &lt;SubscriberInstance&gt;.Attributes.Retrieve
+### &lt;SubscriberInstance&gt;.Attributes.Retrieve {#instance-attributes-retrieve}
 
-### Syntax
+Returns an array of attributes associated with the previously initialized subscriber.
+
+#### Syntax
 
 ```javascript
 <SubscriberInstance>.Attributes.Retrieve()
 ```
 
-Returns an array of attributes associated with the previously initialized subscriber.
-
-### Return value
+#### Return value
 
 `object[]`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -288,21 +288,21 @@ var attributes = subObj.Attributes.Retrieve();
 
 ---
 
-## &lt;SubscriberInstance&gt;.Lists.Retrieve
+### &lt;SubscriberInstance&gt;.Lists.Retrieve {#instance-lists-retrieve}
 
-### Syntax
+Returns the lists the previously initialized subscriber is a member of.
+
+#### Syntax
 
 ```javascript
 <SubscriberInstance>.Lists.Retrieve()
 ```
 
-Returns the lists the previously initialized subscriber is a member of.
-
-### Return value
+#### Return value
 
 `object[]`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");

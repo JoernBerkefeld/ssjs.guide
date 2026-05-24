@@ -15,33 +15,35 @@ description: Core library Folder — create, query, update, and remove folders; 
 | Method | Returns | Description |
 |--------|---------|-------------|
 | [`Folder.Init([key])`](#init) | FolderInstance | Optional external key |
-| [`Folder.Add(properties)`](#folder-add) | string | Create a child folder |
-| [`Folder.Retrieve(filter)`](#folder-retrieve) | object[] | Query folders (simple or compound filters) |
-| [`<FolderInstance>.Update(properties)`](#update) | string | Update folder attributes |
-| [`<FolderInstance>.Remove()`](#remove) | string | Delete the folder |
-| [`<FolderInstance>.SetID(id)`](#setid) | void | Bind instance to folder ID when no external key |
+| [`Folder.Add(properties)`](#add) | string | Create a child folder |
+| [`Folder.Retrieve(filter)`](#retrieve) | object[] | Query folders (simple or compound filters) |
+| [`<FolderInstance>.Update(properties)`](#instance-update) | string | Update folder attributes |
+| [`<FolderInstance>.Remove()`](#instance-remove) | string | Delete the folder |
+| [`<FolderInstance>.SetID(id)`](#instance-setid) | void | Bind instance to folder ID when no external key |
 
 ---
 
-## Init
+### Folder.Init {#init}
 
-### Syntax
+Initializes a `Folder` instance, optionally bound to an external key. Omit the key and call `SetID()` when the folder has no external key.
+
+#### Syntax
 
 ```javascript
 Folder.Init([key])
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `key` | string | No | External key; omit and use `SetID()` when none exists |
 
-### Return value
+#### Return value
 
 `FolderInstance`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1");
@@ -53,25 +55,27 @@ myIDFolder.SetID(12345);
 
 ---
 
-## Folder.Add
+### Folder.Add {#add}
 
-### Syntax
+Creates a new folder with the specified properties.
+
+#### Syntax
 
 ```javascript
 Folder.Add(properties)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | `Name`, `CustomerKey`, `Description`, `ContentType`, `ParentFolderID`, … |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -90,27 +94,27 @@ var status = Folder.Add(newFolder);
 
 ---
 
-## Folder.Retrieve
+### Folder.Retrieve {#retrieve}
 
-### Syntax
+Queries folders matching the given filter. Supports compound filters and dot notation (e.g. `ParentFolder.Name`).
+
+#### Syntax
 
 ```javascript
 Folder.Retrieve(filter)
 ```
 
-Supports compound filters and dot notation (e.g. `ParentFolder.Name`).
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `filter` | object | Yes | WSProxy-style filter |
 
-### Return value
+#### Return value
 
 `object[]`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1");
@@ -124,25 +128,27 @@ Write(Stringify(folders));
 
 ---
 
-## Update
+### &lt;FolderInstance&gt;.Update {#instance-update}
 
-### Syntax
+Updates the initialized folder with the given properties.
+
+#### Syntax
 
 ```javascript
 <FolderInstance>.Update(properties)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | Attributes to change |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -152,19 +158,21 @@ var status = myFolder.Update({ Name: "Updated Folder Name" });
 
 ---
 
-## Remove
+### &lt;FolderInstance&gt;.Remove {#instance-remove}
 
-### Syntax
+Removes the initialized folder.
+
+#### Syntax
 
 ```javascript
 <FolderInstance>.Remove()
 ```
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -174,27 +182,27 @@ myFolder.Remove();
 
 ---
 
-## SetID
+### &lt;FolderInstance&gt;.SetID {#instance-setid}
 
-### Syntax
+Binds the instance to a folder by numeric ID. Use after `Folder.Init()` with no key when targeting a folder that only has a numeric ID.
+
+#### Syntax
 
 ```javascript
 <FolderInstance>.SetID(id)
 ```
 
-Use after `Folder.Init()` with no key when targeting a folder that only has a numeric ID.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `id` | number | Yes | Folder ID |
 
-### Return value
+#### Return value
 
 None (`void`).
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");

@@ -17,16 +17,16 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 |------|----------|---------|-------------|
 | [`Platform.Function.AddObjectArrayItem(apiObject, propertyName, value)`](/platform-functions/addobjectarrayitem/) | Platform Functions | void | Append item to a SOAP API object array property |
 | [`Attribute.GetValue(name)`](/global-functions/attribute/) | Global Object | string | Profile attribute in email / triggered send context |
-| [`Account.Init(key)`](/core-library/account/) | Core Library | AccountInstance | Initialize Account |
-| [`Account.Retrieve(filter)`](/core-library/account/) | Core Library | object[] | Retrieve accounts |
-| [`Account.Tracking.Retrieve(filter)`](/core-library/account/) | Core Library | object[] | Account-level tracking |
-| [`<AccountInstance>.Update(properties)`](/core-library/account/) | Core Library | string | Update account |
-| [`AccountUser.Init(targetUserKey, myClientID)`](/core-library/accountuser/) | Core Library | AccountUserInstance | Initialize AccountUser |
-| [`AccountUser.Add(properties)`](/core-library/accountuser/) | Core Library | string | Create AccountUser |
-| [`AccountUser.Retrieve(filter)`](/core-library/accountuser/) | Core Library | object[] | Retrieve AccountUsers |
-| [`<AccountUserInstance>.Update(properties)`](/core-library/accountuser/) | Core Library | string | Update AccountUser |
-| [`<AccountUserInstance>.Activate()`](/core-library/accountuser/) | Core Library | string | Activate AccountUser |
-| [`<AccountUserInstance>.Deactivate()`](/core-library/accountuser/) | Core Library | string | Deactivate AccountUser |
+| [`Account.Init(key)`](/core-library/account/#init) | Core Library | AccountInstance | Initialize Account |
+| [`Account.Retrieve(filter)`](/core-library/account/#retrieve) | Core Library | object[] | Retrieve accounts |
+| [`Account.Tracking.Retrieve(filter)`](/core-library/account/#tracking-retrieve) | Core Library | object[] | Account-level tracking |
+| [`<AccountInstance>.Update(properties)`](/core-library/account/#instance-update) | Core Library | string | Update account |
+| [`AccountUser.Init(targetUserKey, myClientID)`](/core-library/accountuser/#init) | Core Library | AccountUserInstance | Initialize AccountUser |
+| [`AccountUser.Add(properties)`](/core-library/accountuser/#add) | Core Library | string | Create AccountUser |
+| [`AccountUser.Retrieve(filter)`](/core-library/accountuser/#retrieve) | Core Library | object[] | Retrieve AccountUsers |
+| [`<AccountUserInstance>.Update(properties)`](/core-library/accountuser/#instance-update) | Core Library | string | Update AccountUser |
+| [`<AccountUserInstance>.Activate()`](/core-library/accountuser/#instance-activate) | Core Library | string | Activate AccountUser |
+| [`<AccountUserInstance>.Deactivate()`](/core-library/accountuser/#instance-deactivate) | Core Library | string | Deactivate AccountUser |
 | [`<ArrayInstance>.concat(value[, ...])`](/ecmascript-builtins/array-methods/) | ECMAScript Builtins | array | Merge arrays |
 | [`<ArrayInstance>.join([separator])`](/ecmascript-builtins/array-methods/) | ECMAScript Builtins | string | Join elements to string |
 | [`<ArrayInstance>.length`](/ecmascript-builtins/array-methods/) | ECMAScript Builtins | number | Number of elements |
@@ -65,11 +65,11 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`Platform.Function.ContentImageByKey(key[, fallbackId])`](/platform-functions/contentimagebykey/) | Platform Functions | string | img tag for Content Builder image by key |
 | [`Platform.Function.CreateObject(objectType)`](/platform-functions/createobject/) | Platform Functions | object | Create SOAP API object (legacy) |
 | [`ClickEvent.Retrieve(filter)`](/core-library/events/#click-event) | Core Library | object[] | Click tracking events |
-| [`ContentAreaObj.Init(key)`](/core-library/contentareaobj/) | Core Library | ContentAreaObjInstance | Classic Content Area object (**deprecated**) |
-| [`ContentAreaObj.Add(properties)`](/core-library/contentareaobj/) | Core Library | string | Create Content Area (**deprecated**) |
-| [`ContentAreaObj.Retrieve(filter)`](/core-library/contentareaobj/) | Core Library | object[] | Retrieve Content Areas (**deprecated**) |
-| [`<ContentAreaObjInstance>.Update(properties)`](/core-library/contentareaobj/) | Core Library | string | Update Content Area (**deprecated**) |
-| [`<ContentAreaObjInstance>.Remove()`](/core-library/contentareaobj/) | Core Library | string | Remove Content Area (**deprecated**) |
+| [`ContentAreaObj.Init(key)`](/core-library/contentareaobj/#init) | Core Library | ContentAreaObjInstance | Classic Content Area object (**deprecated**) |
+| [`ContentAreaObj.Add(properties)`](/core-library/contentareaobj/#add) | Core Library | string | Create Content Area (**deprecated**) |
+| [`ContentAreaObj.Retrieve(filter)`](/core-library/contentareaobj/#retrieve) | Core Library | object[] | Retrieve Content Areas (**deprecated**) |
+| [`<ContentAreaObjInstance>.Update(properties)`](/core-library/contentareaobj/#instance-update) | Core Library | string | Update Content Area (**deprecated**) |
+| [`<ContentAreaObjInstance>.Remove()`](/core-library/contentareaobj/#instance-remove) | Core Library | string | Remove Content Area (**deprecated**) |
 
 ---
 
@@ -78,21 +78,21 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
 | [`DateTime.TimeZone.Retrieve(filter)`](/platform-objects/datetime-timezone/) | Platform Object | object[] | Time zone definitions (requires Core load) |
-| [`DataExtension.Init(key)`](/core-library/dataextension/) | Core Library | DataExtensionInstance | Initialize DE object |
-| [`DataExtension.Add(properties)`](/core-library/dataextension/) | Core Library | DataExtensionInstance | Create data extension |
-| [`DataExtension.Retrieve(filter, [queryAllAccounts])`](/core-library/dataextension/) | Core Library | object[] | Retrieve data extensions |
-| [`<DataExtensionInstance>.Fields.Add(properties)`](/core-library/dataextension-fields/) | Core Library | string | Add field to DE |
-| [`<DataExtensionInstance>.Fields.Retrieve()`](/core-library/dataextension-fields/) | Core Library | object[] | Retrieve DE field definitions |
-| [`<DataExtensionInstance>.Fields.UpdateSendableField(deFieldName, subscriberField)`](/core-library/dataextension-fields/) | Core Library | string | Update sendable field mapping |
-| [`<DataExtensionInstance>.Rows.Add(rowData)`](/core-library/dataextension-rows/) | Core Library | string | Insert DE row(s) |
-| [`<DataExtensionInstance>.Rows.Lookup(searchFieldNames, searchValues, [limit], [orderByFieldName])`](/core-library/dataextension-rows/) | Core Library | object[] | Lookup DE rows |
-| [`<DataExtensionInstance>.Rows.Remove(columnNames, columnValues)`](/core-library/dataextension-rows/) | Core Library | number | Delete matching DE rows |
-| [`<DataExtensionInstance>.Rows.Retrieve([filter])`](/core-library/dataextension-rows/) | Core Library | object[] | Read DE rows |
-| [`<DataExtensionInstance>.Rows.Update(rowData, whereFieldNames, whereValues)`](/core-library/dataextension-rows/) | Core Library | string | Update DE rows |
-| [`DeliveryProfile.Init(key)`](/core-library/deliveryprofile/) | Core Library | DeliveryProfileInstance | Initialize DeliveryProfile |
-| [`DeliveryProfile.Add(properties)`](/core-library/deliveryprofile/) | Core Library | string | Create DeliveryProfile |
-| [`<DeliveryProfileInstance>.Update(properties)`](/core-library/deliveryprofile/) | Core Library | string | Update DeliveryProfile |
-| [`<DeliveryProfileInstance>.Remove()`](/core-library/deliveryprofile/) | Core Library | string | Remove DeliveryProfile |
+| [`DataExtension.Init(key)`](/core-library/dataextension/#init) | Core Library | DataExtensionInstance | Initialize DE object |
+| [`DataExtension.Add(properties)`](/core-library/dataextension/#add) | Core Library | DataExtensionInstance | Create data extension |
+| [`DataExtension.Retrieve(filter, [queryAllAccounts])`](/core-library/dataextension/#retrieve) | Core Library | object[] | Retrieve data extensions |
+| [`<DataExtensionInstance>.Fields.Add(properties)`](/core-library/dataextension-fields/#instance-fields-add) | Core Library | string | Add field to DE |
+| [`<DataExtensionInstance>.Fields.Retrieve()`](/core-library/dataextension-fields/#instance-fields-retrieve) | Core Library | object[] | Retrieve DE field definitions |
+| [`<DataExtensionInstance>.Fields.UpdateSendableField(deFieldName, subscriberField)`](/core-library/dataextension-fields/#instance-fields-updatesendablefield) | Core Library | string | Update sendable field mapping |
+| [`<DataExtensionInstance>.Rows.Add(rowData)`](/core-library/dataextension-rows/#instance-rows-add) | Core Library | string | Insert DE row(s) |
+| [`<DataExtensionInstance>.Rows.Lookup(searchFieldNames, searchValues, [limit], [orderByFieldName])`](/core-library/dataextension-rows/#instance-rows-lookup) | Core Library | object[] | Lookup DE rows |
+| [`<DataExtensionInstance>.Rows.Remove(columnNames, columnValues)`](/core-library/dataextension-rows/#instance-rows-remove) | Core Library | number | Delete matching DE rows |
+| [`<DataExtensionInstance>.Rows.Retrieve([filter])`](/core-library/dataextension-rows/#instance-rows-retrieve) | Core Library | object[] | Read DE rows |
+| [`<DataExtensionInstance>.Rows.Update(rowData, whereFieldNames, whereValues)`](/core-library/dataextension-rows/#instance-rows-update) | Core Library | string | Update DE rows |
+| [`DeliveryProfile.Init(key)`](/core-library/deliveryprofile/#init) | Core Library | DeliveryProfileInstance | Initialize DeliveryProfile |
+| [`DeliveryProfile.Add(properties)`](/core-library/deliveryprofile/#add) | Core Library | string | Create DeliveryProfile |
+| [`<DeliveryProfileInstance>.Update(properties)`](/core-library/deliveryprofile/#instance-update) | Core Library | string | Update DeliveryProfile |
+| [`<DeliveryProfileInstance>.Remove()`](/core-library/deliveryprofile/#instance-remove) | Core Library | string | Remove DeliveryProfile |
 | [`Platform.Function.DeleteData(deName, whereFieldNames, whereFieldValues)`](/platform-functions/deletedata/) | Platform Functions | number | Delete DE rows |
 | [`DeleteDE(deName, whereFieldNames, whereFieldValues)`](/platform-functions/deletede/) | Platform Functions | number | Alias for DeleteData |
 
@@ -102,13 +102,13 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`Email.Init(key)`](/core-library/email/) | Core Library | EmailInstance | Initialize email definition |
-| [`Email.Add(properties)`](/core-library/email/) | Core Library | EmailInstance | Create email definition |
-| [`Email.Retrieve(filter)`](/core-library/email/) | Core Library | object[] | Retrieve email definitions |
-| [`<EmailInstance>.Update(properties)`](/core-library/email/) | Core Library | string | Update email definition |
-| [`<EmailInstance>.Remove()`](/core-library/email/) | Core Library | string | Remove email definition |
-| [`<EmailInstance>.Validate()`](/core-library/email/) | Core Library | object | Validate email |
-| [`<EmailInstance>.CheckContent()`](/core-library/email/) | Core Library | object | Content checks |
+| [`Email.Init(key)`](/core-library/email/#init) | Core Library | EmailInstance | Initialize email definition |
+| [`Email.Add(properties)`](/core-library/email/#add) | Core Library | EmailInstance | Create email definition |
+| [`Email.Retrieve(filter)`](/core-library/email/#retrieve) | Core Library | object[] | Retrieve email definitions |
+| [`<EmailInstance>.Update(properties)`](/core-library/email/#instance-update) | Core Library | string | Update email definition |
+| [`<EmailInstance>.Remove()`](/core-library/email/#instance-remove) | Core Library | string | Remove email definition |
+| [`<EmailInstance>.Validate()`](/core-library/email/#instance-validate) | Core Library | object | Validate email |
+| [`<EmailInstance>.CheckContent()`](/core-library/email/#instance-checkcontent) | Core Library | object | Content checks |
 | [`Platform.Function.EndImpressionRegion([closeAll])`](/platform-functions/endimpressionregion/) | Platform Functions | void | End an impression region |
 | [`Error(message)`](/global-functions/error/) | Global Functions | Error | Create Error object (`new Error([message])`) |
 | [`ErrorUtil.ThrowWSProxyError(result)`](/platform-objects/errorutil/) | Platform Object | void | Throw when WSProxy status indicates failure |
@@ -119,17 +119,17 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`FilterDefinition.Init(key)`](/core-library/filterdefinition/) | Core Library | FilterDefinitionInstance | Initialize filter definition |
-| [`FilterDefinition.Add(properties)`](/core-library/filterdefinition/) | Core Library | string | Create filter definition |
-| [`FilterDefinition.Retrieve(filter)`](/core-library/filterdefinition/) | Core Library | object[] | Retrieve filter definitions |
-| [`<FilterDefinitionInstance>.Update(properties)`](/core-library/filterdefinition/) | Core Library | string | Update filter definition |
-| [`<FilterDefinitionInstance>.Remove()`](/core-library/filterdefinition/) | Core Library | string | Remove filter definition |
-| [`Folder.Init([key])`](/core-library/folder/) | Core Library | FolderInstance | Initialize Folder |
-| [`Folder.Add(properties)`](/core-library/folder/) | Core Library | string | Create folder |
-| [`Folder.Retrieve(filter)`](/core-library/folder/) | Core Library | object[] | Retrieve folders |
-| [`<FolderInstance>.Update(properties)`](/core-library/folder/) | Core Library | string | Update folder |
-| [`<FolderInstance>.Remove()`](/core-library/folder/) | Core Library | string | Remove folder |
-| [`<FolderInstance>.SetID(id)`](/core-library/folder/) | Core Library | void | Set folder ID |
+| [`FilterDefinition.Init(key)`](/core-library/filterdefinition/#init) | Core Library | FilterDefinitionInstance | Initialize filter definition |
+| [`FilterDefinition.Add(properties)`](/core-library/filterdefinition/#add) | Core Library | string | Create filter definition |
+| [`FilterDefinition.Retrieve(filter)`](/core-library/filterdefinition/#retrieve) | Core Library | object[] | Retrieve filter definitions |
+| [`<FilterDefinitionInstance>.Update(properties)`](/core-library/filterdefinition/#instance-update) | Core Library | string | Update filter definition |
+| [`<FilterDefinitionInstance>.Remove()`](/core-library/filterdefinition/#instance-remove) | Core Library | string | Remove filter definition |
+| [`Folder.Init([key])`](/core-library/folder/#init) | Core Library | FolderInstance | Initialize Folder |
+| [`Folder.Add(properties)`](/core-library/folder/#add) | Core Library | string | Create folder |
+| [`Folder.Retrieve(filter)`](/core-library/folder/#retrieve) | Core Library | object[] | Retrieve folders |
+| [`<FolderInstance>.Update(properties)`](/core-library/folder/#instance-update) | Core Library | string | Update folder |
+| [`<FolderInstance>.Remove()`](/core-library/folder/#instance-remove) | Core Library | string | Remove folder |
+| [`<FolderInstance>.SetID(id)`](/core-library/folder/#instance-setid) | Core Library | void | Set folder ID |
 | [`Format(textToFormat, formatCode)`](/global-functions/format/) | Global Functions | string | Format a date/number string |
 | [`ForwardedEmailEvent.Retrieve(filter)`](/core-library/events/#forwarded-email-event) | Core Library | object[] | Forwarded-email events |
 | [`ForwardedEmailOptInEvent.Retrieve(filter)`](/core-library/events/#forwarded-email-opt-in-event) | Core Library | object[] | Forwarded opt-in events |
@@ -192,16 +192,16 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`List.Init(key)`](/core-library/list/) | Core Library | ListInstance | Initialize list object |
-| [`List.Add(properties)`](/core-library/list/) | Core Library | string | Create list |
-| [`List.Retrieve(filter)`](/core-library/list/) | Core Library | object[] | Retrieve lists |
-| [`<ListInstance>.Remove()`](/core-library/list/) | Core Library | string | Remove list |
-| [`<ListInstance>.Subscribers.Add(properties)`](/core-library/list-subscribers/) | Core Library | string | Add subscriber to list |
-| [`<ListInstance>.Subscribers.Retrieve([filter])`](/core-library/list-subscribers/) | Core Library | object[] | Subscribers on list |
-| [`<ListInstance>.Subscribers.Unsubscribe(emailAddress)`](/core-library/list-subscribers/) | Core Library | string | Unsubscribe on list |
-| [`<ListInstance>.Subscribers.Update(emailAddress, status)`](/core-library/list-subscribers/) | Core Library | string | Update subscriber on list |
-| [`<ListInstance>.Subscribers.Upsert(emailAddress, attributes)`](/core-library/list-subscribers/) | Core Library | string | Upsert subscriber on list |
-| [`<ListInstance>.Subscribers.Tracking.Retrieve(filter)`](/core-library/list-subscribers/) | Core Library | object[] | List subscriber tracking |
+| [`List.Init(key)`](/core-library/list/#init) | Core Library | ListInstance | Initialize list object |
+| [`List.Add(properties)`](/core-library/list/#add) | Core Library | string | Create list |
+| [`List.Retrieve(filter)`](/core-library/list/#retrieve) | Core Library | object[] | Retrieve lists |
+| [`<ListInstance>.Remove()`](/core-library/list/#instance-remove) | Core Library | string | Remove list |
+| [`<ListInstance>.Subscribers.Add(properties)`](/core-library/list-subscribers/#instance-subscribers-add) | Core Library | string | Add subscriber to list |
+| [`<ListInstance>.Subscribers.Retrieve([filter])`](/core-library/list-subscribers/#instance-subscribers-retrieve) | Core Library | object[] | Subscribers on list |
+| [`<ListInstance>.Subscribers.Unsubscribe(emailAddress)`](/core-library/list-subscribers/#instance-subscribers-unsubscribe) | Core Library | string | Unsubscribe on list |
+| [`<ListInstance>.Subscribers.Update(emailAddress, status)`](/core-library/list-subscribers/#instance-subscribers-update) | Core Library | string | Update subscriber on list |
+| [`<ListInstance>.Subscribers.Upsert(emailAddress, attributes)`](/core-library/list-subscribers/#instance-subscribers-upsert) | Core Library | string | Upsert subscriber on list |
+| [`<ListInstance>.Subscribers.Tracking.Retrieve(filter)`](/core-library/list-subscribers/#instance-subscribers-tracking-retrieve) | Core Library | object[] | List subscriber tracking |
 | [`Platform.Function.LocalDateToSystemDate(dateValue)`](/platform-functions/localdatetosystemdate/) | Platform Functions | string | Local date/time to system CST |
 | [`Platform.Function.Lookup(deName, returnField, whereFieldNames, whereFieldValues)`](/platform-functions/lookup/) | Platform Functions | string | Single-value DE lookup |
 | [`Platform.Function.LookupOrderedRows(deName, count, orderBy, whereFieldNames, whereFieldValues)`](/platform-functions/lookuporderedrows/) | Platform Functions | object[] | Sorted/limited DE rows |
@@ -276,11 +276,11 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`Platform.Response.*`](/platform-objects/platform-response/) | Platform Object | various | HTTP response (redirect, cookies, content type) |
 | [`Platform.Variable.*`](/platform-objects/platform-variable/) | Platform Object | various | AMPscript variable bridge |
 | [`Platform.Recipient.*`](/platform-objects/platform-recipient/) | Platform Object | various | Current-recipient attributes |
-| [`Portfolio.Init(key)`](/core-library/portfolio/) | Core Library | PortfolioInstance | Initialize Portfolio |
-| [`Portfolio.Add(properties)`](/core-library/portfolio/) | Core Library | string | Create portfolio asset |
-| [`Portfolio.Retrieve(filter)`](/core-library/portfolio/) | Core Library | object[] | Retrieve portfolio assets |
-| [`<PortfolioInstance>.Update(properties)`](/core-library/portfolio/) | Core Library | string | Update portfolio asset |
-| [`<PortfolioInstance>.Remove()`](/core-library/portfolio/) | Core Library | string | Remove portfolio asset |
+| [`Portfolio.Init(key)`](/core-library/portfolio/#init) | Core Library | PortfolioInstance | Initialize Portfolio |
+| [`Portfolio.Add(properties)`](/core-library/portfolio/#add) | Core Library | string | Create portfolio asset |
+| [`Portfolio.Retrieve(filter)`](/core-library/portfolio/#retrieve) | Core Library | object[] | Retrieve portfolio assets |
+| [`<PortfolioInstance>.Update(properties)`](/core-library/portfolio/#instance-update) | Core Library | string | Update portfolio asset |
+| [`<PortfolioInstance>.Remove()`](/core-library/portfolio/#instance-remove) | Core Library | string | Remove portfolio asset |
 | [`<WSProxyInstance>.createItem(objectType, properties)`](/wsproxy/createitem/) | WSProxy | object | SOAP Create |
 | [`<WSProxyInstance>.updateItem(objectType, properties)`](/wsproxy/updateitem/) | WSProxy | object | SOAP Update |
 | [`<WSProxyInstance>.deleteItem(objectType, properties)`](/wsproxy/deleteitem/) | WSProxy | object | SOAP Delete |
@@ -290,7 +290,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`<WSProxyInstance>.describe(objectType)`](/wsproxy/describe/) | WSProxy | object | SOAP object metadata |
 | [`<WSProxyInstance>.execute(objectType, requestName)`](/wsproxy/execute/) | WSProxy | object | SOAP Execute |
 | [`<WSProxyInstance>.getNextBatch(objectType, requestId)`](/wsproxy/getnextbatch/) | WSProxy | object | Next retrieve page |
-| [`<WSProxyInstance>.performItem(objectType, properties, action[, performOptions])`](/wsproxy/perform/) | WSProxy | object | SOAP Perform (single) |
+| [`<WSProxyInstance>.performItem(objectType, properties, action[, performOptions])`](/wsproxy/performitem/) | WSProxy | object | SOAP Perform (single) |
 | [`<WSProxyInstance>.performBatch(objectType, propertiesArray, action[, performOptions])`](/wsproxy/performbatch/) | WSProxy | object | SOAP Perform (batch) |
 | [`<WSProxyInstance>.resetClientIds()`](/wsproxy/resetclientids/) | WSProxy | void | Clear BU override |
 | [`<WSProxyInstance>.retrieve(objectType, columns[, filter[, retrieveOptions[, requestProps]]])`](/wsproxy/retrieve/) | WSProxy | object | SOAP Retrieve |
@@ -303,12 +303,12 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`QueryDefinition.Init(key)`](/core-library/querydefinition/) | Core Library | QueryDefinitionInstance | Initialize query activity |
-| [`QueryDefinition.Add(properties)`](/core-library/querydefinition/) | Core Library | string | Create query activity |
-| [`QueryDefinition.Retrieve(filter)`](/core-library/querydefinition/) | Core Library | object[] | Retrieve query activities |
-| [`<QueryDefinitionInstance>.Update(properties)`](/core-library/querydefinition/) | Core Library | string | Update query activity |
-| [`<QueryDefinitionInstance>.Remove()`](/core-library/querydefinition/) | Core Library | string | Remove query activity |
-| [`<QueryDefinitionInstance>.Perform(action)`](/core-library/querydefinition/) | Core Library | object | Run / manage query |
+| [`QueryDefinition.Init(key)`](/core-library/querydefinition/#init) | Core Library | QueryDefinitionInstance | Initialize query activity |
+| [`QueryDefinition.Add(properties)`](/core-library/querydefinition/#add) | Core Library | string | Create query activity |
+| [`QueryDefinition.Retrieve(filter)`](/core-library/querydefinition/#retrieve) | Core Library | object[] | Retrieve query activities |
+| [`<QueryDefinitionInstance>.Update(properties)`](/core-library/querydefinition/#instance-update) | Core Library | string | Update query activity |
+| [`<QueryDefinitionInstance>.Remove()`](/core-library/querydefinition/#instance-remove) | Core Library | string | Remove query activity |
+| [`<QueryDefinitionInstance>.Perform(action)`](/core-library/querydefinition/#instance-perform) | Core Library | object | Run / manage query |
 
 ---
 
@@ -338,42 +338,42 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`Platform.Function.SetObjectProperty(apiObject, propertyName, value)`](/platform-functions/setobjectproperty/) | Platform Functions | void | Set SOAP object property (legacy) |
 | [`String(value)`](/global-functions/string/) | Global Functions | string | Convert CLR object to JS string |
 | [`Platform.Function.Stringify(object)`](/platform-functions/stringify/) | Global Functions | string | Object to JSON string |
-| [`Subscriber.Init(key)`](/core-library/subscriber/) | Core Library | SubscriberInstance | Initialize subscriber |
-| [`Subscriber.Add(properties)`](/core-library/subscriber/) | Core Library | string | Create subscriber |
-| [`Subscriber.Retrieve(filter)`](/core-library/subscriber/) | Core Library | object[] | Retrieve subscribers |
-| [`Subscriber.Upsert(properties)`](/core-library/subscriber/) | Core Library | string | Insert or update subscriber |
-| [`Subscriber.Statistics(subscriberKey)`](/core-library/subscriber/) | Core Library | object | Subscriber statistics |
-| [`<SubscriberInstance>.Update(properties)`](/core-library/subscriber/) | Core Library | string | Update subscriber |
-| [`<SubscriberInstance>.Remove()`](/core-library/subscriber/) | Core Library | string | Remove subscriber |
-| [`<SubscriberInstance>.Unsubscribe()`](/core-library/subscriber/) | Core Library | string | Unsubscribe from all |
-| [`<SubscriberInstance>.Attributes.Retrieve()`](/core-library/subscriber/) | Core Library | object[] | Retrieve subscriber attributes |
-| [`<SubscriberInstance>.Lists.Retrieve()`](/core-library/subscriber/) | Core Library | object[] | Retrieve subscriber lists |
-| [`SenderProfile.Init(key)`](/core-library/senderprofile/) | Core Library | SenderProfileInstance | Initialize sender profile |
-| [`SenderProfile.Add(properties)`](/core-library/senderprofile/) | Core Library | string | Create sender profile |
-| [`<SenderProfileInstance>.Update(properties)`](/core-library/senderprofile/) | Core Library | string | Update sender profile |
-| [`<SenderProfileInstance>.Remove()`](/core-library/senderprofile/) | Core Library | string | Remove sender profile |
-| [`SendClassification.Init(key)`](/core-library/sendclassification/) | Core Library | SendClassificationInstance | Initialize send classification |
-| [`SendClassification.Add(properties)`](/core-library/sendclassification/) | Core Library | string | Create send classification |
-| [`SendClassification.Retrieve(filter)`](/core-library/sendclassification/) | Core Library | object[] | Retrieve send classifications |
-| [`<SendClassificationInstance>.Update(properties)`](/core-library/sendclassification/) | Core Library | string | Update send classification |
-| [`<SendClassificationInstance>.Remove()`](/core-library/sendclassification/) | Core Library | string | Remove send classification |
-| [`Send.Definition.Init(key)`](/core-library/senddefinition/) | Core Library | SendDefinitionInstance | Initialize send definition |
-| [`Send.Definition.Add(esdParams, sendClassificationKey, emailKey, listIds)`](/core-library/senddefinition/) | Core Library | SendDefinitionInstance | Create send definition |
-| [`Send.Definition.AddWithDE(esdParams, sendClassificationKey, emailKey, sendableDataExtensionKey, publicationListKey)`](/core-library/senddefinition/) | Core Library | SendDefinitionInstance | Create send def with DE |
-| [`Send.Definition.AddWithFilterDefinition(esdParams, sendClassificationKey, emailKey, filterDefinitionKey, listId)`](/core-library/senddefinition/) | Core Library | SendDefinitionInstance | Create send def with filter |
-| [`Send.Definition.Retrieve([filter])`](/core-library/senddefinition/) | Core Library | object[] | Retrieve send definitions |
-| [`<SendDefinitionInstance>.Update(properties)`](/core-library/senddefinition/) | Core Library | string | Update send definition |
-| [`<SendDefinitionInstance>.Remove()`](/core-library/senddefinition/) | Core Library | string | Remove send definition |
-| [`<SendDefinitionInstance>.Send()`](/core-library/senddefinition/) | Core Library | string | Execute send definition |
-| [`Send.Init(id)`](/core-library/send/) | Core Library | SendInstance | Initialize send |
-| [`Send.Add(emailKey, listIds, [options])`](/core-library/send/) | Core Library | SendInstance | Create send |
-| [`Send.Retrieve(filter)`](/core-library/send/) | Core Library | object[] | Retrieve sends |
-| [`Send.RetrieveLists(filter)`](/core-library/send/) | Core Library | object[] | Lists for send |
-| [`<SendInstance>.CancelSend()`](/core-library/send/) | Core Library | string | Cancel send |
-| [`<SendInstance>.Remove()`](/core-library/send/) | Core Library | string | Remove send |
-| [`Send.Tracking.Retrieve(filter)`](/core-library/send/) | Core Library | object[] | Send tracking |
-| [`<SendInstance>.Tracking.ClickRetrieve(filter)`](/core-library/send/) | Core Library | object[] | Click tracking for send |
-| [`<SendInstance>.Tracking.TotalByIntervalRetrieve(type, startDate, endDate, groupBy)`](/core-library/send/) | Core Library | object[] | Aggregated send tracking |
+| [`Subscriber.Init(key)`](/core-library/subscriber/#init) | Core Library | SubscriberInstance | Initialize subscriber |
+| [`Subscriber.Add(properties)`](/core-library/subscriber/#add) | Core Library | string | Create subscriber |
+| [`Subscriber.Retrieve(filter)`](/core-library/subscriber/#retrieve) | Core Library | object[] | Retrieve subscribers |
+| [`Subscriber.Upsert(properties)`](/core-library/subscriber/#upsert) | Core Library | string | Insert or update subscriber |
+| [`Subscriber.Statistics(subscriberKey)`](/core-library/subscriber/#statistics) | Core Library | object | Subscriber statistics |
+| [`<SubscriberInstance>.Update(properties)`](/core-library/subscriber/#instance-update) | Core Library | string | Update subscriber |
+| [`<SubscriberInstance>.Remove()`](/core-library/subscriber/#instance-remove) | Core Library | string | Remove subscriber |
+| [`<SubscriberInstance>.Unsubscribe()`](/core-library/subscriber/#instance-unsubscribe) | Core Library | string | Unsubscribe from all |
+| [`<SubscriberInstance>.Attributes.Retrieve()`](/core-library/subscriber/#instance-attributes-retrieve) | Core Library | object[] | Retrieve subscriber attributes |
+| [`<SubscriberInstance>.Lists.Retrieve()`](/core-library/subscriber/#instance-lists-retrieve) | Core Library | object[] | Retrieve subscriber lists |
+| [`SenderProfile.Init(key)`](/core-library/senderprofile/#init) | Core Library | SenderProfileInstance | Initialize sender profile |
+| [`SenderProfile.Add(properties)`](/core-library/senderprofile/#add) | Core Library | string | Create sender profile |
+| [`<SenderProfileInstance>.Update(properties)`](/core-library/senderprofile/#instance-update) | Core Library | string | Update sender profile |
+| [`<SenderProfileInstance>.Remove()`](/core-library/senderprofile/#instance-remove) | Core Library | string | Remove sender profile |
+| [`SendClassification.Init(key)`](/core-library/sendclassification/#init) | Core Library | SendClassificationInstance | Initialize send classification |
+| [`SendClassification.Add(properties)`](/core-library/sendclassification/#add) | Core Library | string | Create send classification |
+| [`SendClassification.Retrieve(filter)`](/core-library/sendclassification/#retrieve) | Core Library | object[] | Retrieve send classifications |
+| [`<SendClassificationInstance>.Update(properties)`](/core-library/sendclassification/#instance-update) | Core Library | string | Update send classification |
+| [`<SendClassificationInstance>.Remove()`](/core-library/sendclassification/#instance-remove) | Core Library | string | Remove send classification |
+| [`Send.Definition.Init(key)`](/core-library/senddefinition/#init) | Core Library | SendDefinitionInstance | Initialize send definition |
+| [`Send.Definition.Add(esdParams, sendClassificationKey, emailKey, listIds)`](/core-library/senddefinition/#add) | Core Library | SendDefinitionInstance | Create send definition |
+| [`Send.Definition.AddWithDE(esdParams, sendClassificationKey, emailKey, sendableDataExtensionKey, publicationListKey)`](/core-library/senddefinition/#addwithde) | Core Library | SendDefinitionInstance | Create send def with DE |
+| [`Send.Definition.AddWithFilterDefinition(esdParams, sendClassificationKey, emailKey, filterDefinitionKey, listId)`](/core-library/senddefinition/#addwithfilterdefinition) | Core Library | SendDefinitionInstance | Create send def with filter |
+| [`Send.Definition.Retrieve([filter])`](/core-library/senddefinition/#retrieve) | Core Library | object[] | Retrieve send definitions |
+| [`<SendDefinitionInstance>.Update(properties)`](/core-library/senddefinition/#instance-update) | Core Library | string | Update send definition |
+| [`<SendDefinitionInstance>.Remove()`](/core-library/senddefinition/#instance-remove) | Core Library | string | Remove send definition |
+| [`<SendDefinitionInstance>.Send()`](/core-library/senddefinition/#instance-send) | Core Library | string | Execute send definition |
+| [`Send.Init(id)`](/core-library/send/#init) | Core Library | SendInstance | Initialize send |
+| [`Send.Add(emailKey, listIds, [options])`](/core-library/send/#add) | Core Library | SendInstance | Create send |
+| [`Send.Retrieve(filter)`](/core-library/send/#retrieve) | Core Library | object[] | Retrieve sends |
+| [`Send.RetrieveLists(filter)`](/core-library/send/#retrievelists) | Core Library | object[] | Lists for send |
+| [`<SendInstance>.CancelSend()`](/core-library/send/#instance-cancelsend) | Core Library | string | Cancel send |
+| [`<SendInstance>.Remove()`](/core-library/send/#instance-remove) | Core Library | string | Remove send |
+| [`Send.Tracking.Retrieve(filter)`](/core-library/send/#tracking-retrieve) | Core Library | object[] | Send tracking |
+| [`<SendInstance>.Tracking.ClickRetrieve(filter)`](/core-library/send/#instance-tracking-clickretrieve) | Core Library | object[] | Click tracking for send |
+| [`<SendInstance>.Tracking.TotalByIntervalRetrieve(type, startDate, endDate, groupBy)`](/core-library/send/#instance-tracking-totalbyintervalretrieve) | Core Library | object[] | Aggregated send tracking |
 | [`SentEvent.Retrieve(filter)`](/core-library/events/#sent-event) | Core Library | object[] | Sent events |
 | [`<StringInstance>.charAt(index)`](#) | ECMAScript Builtins | string | Character at index |
 | [`<StringInstance>.charCodeAt(index)`](#) | ECMAScript Builtins | number | Char code at index |
@@ -402,21 +402,21 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
 | [`Platform.Function.TreatAsContent(content)`](/platform-functions/treatascontent/) | Platform Functions | string | Evaluate AMPscript/HTML server-side |
-| [`Template.Init(key)`](/core-library/template/) | Core Library | TemplateInstance | Initialize template |
-| [`Template.Add(properties)`](/core-library/template/) | Core Library | string | Create template |
-| [`Template.Retrieve(filter)`](/core-library/template/) | Core Library | object[] | Retrieve templates |
-| [`<TemplateInstance>.Update(properties)`](/core-library/template/) | Core Library | string | Update template |
-| [`TriggeredSend.Init(key)`](/core-library/triggeredsend/) | Core Library | TriggeredSendInstance | Initialize TS definition |
-| [`TriggeredSend.Add(properties)`](/core-library/triggeredsend/) | Core Library | TriggeredSendInstance | Create TS definition |
-| [`TriggeredSend.Retrieve(filter)`](/core-library/triggeredsend/) | Core Library | object[] | Retrieve TS definitions |
-| [`<TriggeredSendInstance>.Update(properties)`](/core-library/triggeredsend/) | Core Library | string | Update TS definition |
-| [`<TriggeredSendInstance>.Start()`](/core-library/triggeredsend/) | Core Library | string | Start TS definition |
-| [`<TriggeredSendInstance>.Pause()`](/core-library/triggeredsend/) | Core Library | string | Pause TS definition |
-| [`<TriggeredSendInstance>.Publish()`](/core-library/triggeredsend/) | Core Library | string | Publish TS definition |
-| [`<TriggeredSendInstance>.Send(emailAddress, [sendTimeAttributes])`](/core-library/triggeredsend/) | Core Library | string | Fire triggered send |
-| [`<TriggeredSendInstance>.Tracking.Retrieve([filter])`](/core-library/triggeredsend/) | Core Library | object[] | TS tracking |
-| [`<TriggeredSendInstance>.Tracking.Clicks.Retrieve(filter)`](/core-library/triggeredsend/) | Core Library | object[] | TS click tracking |
-| [`<TriggeredSendInstance>.Tracking.TotalByInterval.Retrieve(type, startDate, endDate, groupBy)`](/core-library/triggeredsend/) | Core Library | object[] | TS aggregated tracking |
+| [`Template.Init(key)`](/core-library/template/#init) | Core Library | TemplateInstance | Initialize template |
+| [`Template.Add(properties)`](/core-library/template/#add) | Core Library | string | Create template |
+| [`Template.Retrieve(filter)`](/core-library/template/#retrieve) | Core Library | object[] | Retrieve templates |
+| [`<TemplateInstance>.Update(properties)`](/core-library/template/#instance-update) | Core Library | string | Update template |
+| [`TriggeredSend.Init(key)`](/core-library/triggeredsend/#init) | Core Library | TriggeredSendInstance | Initialize TS definition |
+| [`TriggeredSend.Add(properties)`](/core-library/triggeredsend/#add) | Core Library | TriggeredSendInstance | Create TS definition |
+| [`TriggeredSend.Retrieve(filter)`](/core-library/triggeredsend/#retrieve) | Core Library | object[] | Retrieve TS definitions |
+| [`<TriggeredSendInstance>.Update(properties)`](/core-library/triggeredsend/#instance-update) | Core Library | string | Update TS definition |
+| [`<TriggeredSendInstance>.Start()`](/core-library/triggeredsend/#instance-start) | Core Library | string | Start TS definition |
+| [`<TriggeredSendInstance>.Pause()`](/core-library/triggeredsend/#instance-pause) | Core Library | string | Pause TS definition |
+| [`<TriggeredSendInstance>.Publish()`](/core-library/triggeredsend/#instance-publish) | Core Library | string | Publish TS definition |
+| [`<TriggeredSendInstance>.Send(emailAddress, [sendTimeAttributes])`](/core-library/triggeredsend/#instance-send) | Core Library | string | Fire triggered send |
+| [`<TriggeredSendInstance>.Tracking.Retrieve([filter])`](/core-library/triggeredsend/#instance-tracking-retrieve) | Core Library | object[] | TS tracking |
+| [`<TriggeredSendInstance>.Tracking.Clicks.Retrieve(filter)`](/core-library/triggeredsend/#instance-tracking-clicks-retrieve) | Core Library | object[] | TS click tracking |
+| [`<TriggeredSendInstance>.Tracking.TotalByInterval.Retrieve(type, startDate, endDate, groupBy)`](/core-library/triggeredsend/#instance-tracking-totalbyinterval-retrieve) | Core Library | object[] | TS aggregated tracking |
 
 ---
 

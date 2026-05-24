@@ -1,16 +1,14 @@
 ---
-layout: page
-title: proxy.describe
+layout: function
+title: <WSProxyInstance>.describe
 parent: WSProxy
 parent_url: /wsproxy/
 description: Retrieve structural metadata for one or more SOAP API object types — useful for exploring available fields and relationships on an API object.
+syntax: "<WSProxyInstance>.describe(objectType)"
+return_type: object
+min_args: 1
+max_args: 1
 ---
-
-## Syntax
-
-```javascript
-var result = proxy.describe(objectType);
-```
 
 ## Parameters
 

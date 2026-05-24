@@ -591,7 +591,7 @@
   },
   {
     "name": "Stringify",
-    "url": "/platform-functions/stringify/",
+    "url": "/global-functions/stringify/",
     "section": "Platform Functions",
     "type": "function",
     "description": "Converts a JavaScript object into its JSON string representation.",
@@ -599,36 +599,6 @@
       "object"
     ],
     "returnType": "string"
-  },
-  {
-    "name": "ContentArea",
-    "url": "/platform-functions/contentarea/",
-    "section": "Platform Functions",
-    "type": "function",
-    "description": "Retrieves content from a specified classic Content Area by numeric ID.",
-    "params": [
-      "id",
-      "regionName",
-      "stopOnError",
-      "fallbackContent"
-    ],
-    "returnType": "string",
-    "deprecated": true
-  },
-  {
-    "name": "ContentAreaByName",
-    "url": "/platform-functions/contentareabyname/",
-    "section": "Platform Functions",
-    "type": "function",
-    "description": "Retrieves content from a specified classic Content Area by name.",
-    "params": [
-      "name",
-      "regionName",
-      "stopOnError",
-      "fallbackContent"
-    ],
-    "returnType": "string",
-    "deprecated": true
   },
   {
     "name": "IsCHTMLBrowser",
@@ -670,7 +640,7 @@
     "returnType": "object"
   },
   {
-    "name": "proxy.createItem",
+    "name": "<WSProxyInstance>.createItem",
     "url": "/wsproxy/createitem/",
     "section": "WSProxy",
     "type": "method",
@@ -682,7 +652,7 @@
     "returnType": "object"
   },
   {
-    "name": "proxy.updateItem",
+    "name": "<WSProxyInstance>.updateItem",
     "url": "/wsproxy/updateitem/",
     "section": "WSProxy",
     "type": "method",
@@ -694,7 +664,7 @@
     "returnType": "object"
   },
   {
-    "name": "proxy.deleteItem",
+    "name": "<WSProxyInstance>.deleteItem",
     "url": "/wsproxy/deleteitem/",
     "section": "WSProxy",
     "type": "method",
@@ -706,7 +676,7 @@
     "returnType": "object"
   },
   {
-    "name": "proxy.retrieve",
+    "name": "<WSProxyInstance>.retrieve",
     "url": "/wsproxy/retrieve/",
     "section": "WSProxy",
     "type": "method",
@@ -721,7 +691,7 @@
     "returnType": "object"
   },
   {
-    "name": "proxy.getNextBatch",
+    "name": "<WSProxyInstance>.getNextBatch",
     "url": "/wsproxy/getnextbatch/",
     "section": "WSProxy",
     "type": "method",
@@ -733,7 +703,7 @@
     "returnType": "object"
   },
   {
-    "name": "proxy.performItem",
+    "name": "<WSProxyInstance>.performItem",
     "url": "/wsproxy/performitem/",
     "section": "WSProxy",
     "type": "method",
@@ -747,7 +717,7 @@
     "returnType": "object"
   },
   {
-    "name": "proxy.performBatch",
+    "name": "<WSProxyInstance>.performBatch",
     "url": "/wsproxy/performbatch/",
     "section": "WSProxy",
     "type": "method",
@@ -761,7 +731,7 @@
     "returnType": "object"
   },
   {
-    "name": "proxy.describe",
+    "name": "<WSProxyInstance>.describe",
     "url": "/wsproxy/describe/",
     "section": "WSProxy",
     "type": "method",
@@ -772,7 +742,7 @@
     "returnType": "object"
   },
   {
-    "name": "proxy.execute",
+    "name": "<WSProxyInstance>.execute",
     "url": "/wsproxy/execute/",
     "section": "WSProxy",
     "type": "method",
@@ -784,7 +754,7 @@
     "returnType": "object"
   },
   {
-    "name": "proxy.setBatchSize",
+    "name": "<WSProxyInstance>.setBatchSize",
     "url": "/wsproxy/setbatchsize/",
     "section": "WSProxy",
     "type": "method",
@@ -795,7 +765,7 @@
     "returnType": "void"
   },
   {
-    "name": "proxy.setClientId",
+    "name": "<WSProxyInstance>.setClientId",
     "url": "/wsproxy/setclientid/",
     "section": "WSProxy",
     "type": "method",
@@ -806,7 +776,7 @@
     "returnType": "void"
   },
   {
-    "name": "proxy.resetClientIds",
+    "name": "<WSProxyInstance>.resetClientIds",
     "url": "/wsproxy/resetclientids/",
     "section": "WSProxy",
     "type": "method",
@@ -814,7 +784,7 @@
     "returnType": "void"
   },
   {
-    "name": "proxy.createBatch",
+    "name": "<WSProxyInstance>.createBatch",
     "url": "/wsproxy/createbatch/",
     "section": "WSProxy",
     "type": "method",
@@ -826,7 +796,7 @@
     "returnType": "object"
   },
   {
-    "name": "proxy.updateBatch",
+    "name": "<WSProxyInstance>.updateBatch",
     "url": "/wsproxy/updatebatch/",
     "section": "WSProxy",
     "type": "method",
@@ -838,7 +808,7 @@
     "returnType": "object"
   },
   {
-    "name": "proxy.deleteBatch",
+    "name": "<WSProxyInstance>.deleteBatch",
     "url": "/wsproxy/deletebatch/",
     "section": "WSProxy",
     "type": "method",
@@ -870,7 +840,7 @@
   },
   {
     "name": "new Script.Util.HttpGet",
-    "url": "/http/httpget/",
+    "url": "/http/script-util-httpget/",
     "section": "HTTP & REST",
     "type": "function",
     "description": "Creates an HTTP GET request handler.",
@@ -2660,14 +2630,14 @@
   },
   {
     "name": "Subscriber.Attributes",
-    "url": "/core-library/subscriber-attributes/",
+    "url": "/core-library/subscriber/",
     "section": "Core Library",
     "type": "object",
     "description": "Accesses attributes belonging to a specific subscriber."
   },
   {
     "name": "Subscriber.Lists",
-    "url": "/core-library/subscriber-lists/",
+    "url": "/core-library/subscriber/",
     "section": "Core Library",
     "type": "object",
     "description": "Lists the subscriber lists a specific subscriber belongs to."
@@ -2688,21 +2658,21 @@
   },
   {
     "name": "TriggeredSend.Tracking",
-    "url": "/core-library/triggeredsend-tracking/",
+    "url": "/core-library/triggeredsend/",
     "section": "Core Library",
     "type": "object",
     "description": "Retrieves tracking data for a specific triggered send."
   },
   {
     "name": "TriggeredSend.Tracking.Clicks",
-    "url": "/core-library/triggeredsend-tracking-clicks/",
+    "url": "/core-library/triggeredsend/",
     "section": "Core Library",
     "type": "object",
     "description": "Retrieves click tracking data for a specific triggered send."
   },
   {
     "name": "TriggeredSend.Tracking.TotalByInterval",
-    "url": "/core-library/triggeredsend-tracking-totalbyinterval/",
+    "url": "/core-library/triggeredsend/",
     "section": "Core Library",
     "type": "object",
     "description": "Returns aggregated tracking data for a triggered send by type and interval."
@@ -2723,7 +2693,7 @@
   },
   {
     "name": "List.Subscribers.Tracking",
-    "url": "/core-library/list-subscribers-tracking/",
+    "url": "/core-library/list-subscribers/",
     "section": "Core Library",
     "type": "object",
     "description": "Retrieves tracking data for subscribers on a specific list."
@@ -2758,14 +2728,14 @@
   },
   {
     "name": "Send.Tracking",
-    "url": "/core-library/send-tracking/",
+    "url": "/core-library/send/",
     "section": "Core Library",
     "type": "object",
     "description": "Retrieves tracking data for a specific send."
   },
   {
     "name": "Send.Definition",
-    "url": "/core-library/send-definition/",
+    "url": "/core-library/senddefinition/",
     "section": "Core Library",
     "type": "object",
     "description": "Manages reusable Send Definition configurations that define all parameters for a send including content, audience, and delivery settings."
@@ -2821,7 +2791,7 @@
   },
   {
     "name": "Account.Tracking",
-    "url": "/core-library/account-tracking/",
+    "url": "/core-library/account/",
     "section": "Core Library",
     "type": "object",
     "description": "Retrieves tracking data associated with account-level sends."
@@ -2835,70 +2805,70 @@
   },
   {
     "name": "BounceEvent",
-    "url": "/core-library/bounceevent/",
+    "url": "/core-library/events/",
     "section": "Core Library",
     "type": "object",
     "description": "Retrieves bounce event data for message sends."
   },
   {
     "name": "ClickEvent",
-    "url": "/core-library/clickevent/",
+    "url": "/core-library/events/",
     "section": "Core Library",
     "type": "object",
     "description": "Retrieves click tracking event data for message sends."
   },
   {
     "name": "ForwardedEmailEvent",
-    "url": "/core-library/forwardedemailevent/",
+    "url": "/core-library/events/",
     "section": "Core Library",
     "type": "object",
     "description": "Retrieves forwarded email event data for message sends."
   },
   {
     "name": "ForwardedEmailOptInEvent",
-    "url": "/core-library/forwardedemailoptinevent/",
+    "url": "/core-library/events/",
     "section": "Core Library",
     "type": "object",
     "description": "Retrieves forwarded email opt-in event data for message sends."
   },
   {
     "name": "NotSentEvent",
-    "url": "/core-library/notsentevent/",
+    "url": "/core-library/events/",
     "section": "Core Library",
     "type": "object",
     "description": "Retrieves not-sent event data for message sends."
   },
   {
     "name": "OpenEvent",
-    "url": "/core-library/openevent/",
+    "url": "/core-library/events/",
     "section": "Core Library",
     "type": "object",
     "description": "Retrieves open tracking event data for message sends."
   },
   {
     "name": "SentEvent",
-    "url": "/core-library/sentevent/",
+    "url": "/core-library/events/",
     "section": "Core Library",
     "type": "object",
     "description": "Retrieves sent event data for message sends."
   },
   {
     "name": "SurveyEvent",
-    "url": "/core-library/surveyevent/",
+    "url": "/core-library/events/",
     "section": "Core Library",
     "type": "object",
     "description": "Retrieves survey response event data for message sends."
   },
   {
     "name": "UnsubEvent",
-    "url": "/core-library/unsubevent/",
+    "url": "/core-library/events/",
     "section": "Core Library",
     "type": "object",
     "description": "Retrieves unsubscribe event data for message sends."
   },
   {
     "name": "DateTime.TimeZone",
-    "url": "/core-library/datetime-timezone/",
+    "url": "/platform-objects/datetime-timezone/",
     "section": "Core Library",
     "type": "object",
     "description": "Time zone utilities for SSJS date/time conversions."

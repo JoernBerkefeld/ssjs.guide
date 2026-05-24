@@ -14,29 +14,31 @@ description: Row-level CRUD methods on a DataExtension object. Retrieve, Add, Up
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| [`<DataExtensionInstance>.Rows.Retrieve([filter])`](#retrieve) | object[] | Retrieve rows, optionally filtered |
-| [`<DataExtensionInstance>.Rows.Add(rowData)`](#add) | string | Insert new row(s) |
-| [`<DataExtensionInstance>.Rows.Lookup(searchFieldNames, searchValues, [limit], [orderByFieldName])`](#lookup) | object[] | Look up rows by column values |
-| [`<DataExtensionInstance>.Rows.Update(rowData, whereFieldNames, whereValues)`](#update) | string | Update existing rows |
-| [`<DataExtensionInstance>.Rows.Remove(columnNames, columnValues)`](#remove) | number | Delete rows matching column values |
+| [`<DataExtensionInstance>.Rows.Retrieve([filter])`](#instance-rows-retrieve) | object[] | Retrieve rows, optionally filtered |
+| [`<DataExtensionInstance>.Rows.Add(rowData)`](#instance-rows-add) | string | Insert new row(s) |
+| [`<DataExtensionInstance>.Rows.Lookup(searchFieldNames, searchValues[, limit[, orderByFieldName]])`](#instance-rows-lookup) | object[] | Look up rows by column values |
+| [`<DataExtensionInstance>.Rows.Update(rowData, whereFieldNames, whereValues)`](#instance-rows-update) | string | Update existing rows |
+| [`<DataExtensionInstance>.Rows.Remove(columnNames, columnValues)`](#instance-rows-remove) | number | Delete rows matching column values |
 
 ---
 
-## Method: Retrieve
+### &lt;DataExtensionInstance&gt;.Rows.Retrieve {#instance-rows-retrieve}
+
+Returns an array of row objects. Each object has properties matching the DE column names.
+
+#### Syntax
 
 ```javascript
 <DataExtensionInstance>.Rows.Retrieve([filter])
 ```
 
-Returns an array of row objects. Each object has properties matching the DE column names.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `filter` | object | No | SimpleFilterPart or ComplexFilterPart object |
 
-### Filter Object
+#### Filter Object
 
 ```javascript
 // SimpleFilterPart
@@ -62,7 +64,11 @@ var filter = {
 };
 ```
 
-### Retrieve Examples
+#### Return value
+
+`object[]` — row objects with properties matching DE column names.
+
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -89,21 +95,27 @@ for (var i = 0; i < active.length; i++) {
 
 ---
 
-## Method: Add
+### &lt;DataExtensionInstance&gt;.Rows.Add {#instance-rows-add}
+
+Adds one or more rows to the previously initialized data extension.
+
+#### Syntax
 
 ```javascript
 <DataExtensionInstance>.Rows.Add(rowData)
 ```
 
-Adds one or more rows to the previously initialized data extension. Returns `"OK"` on success.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `rowData` | array | Yes | Array of objects, one per row to add. Each object's keys must match data extension field names. |
 
-### Examples
+#### Return value
+
+`"OK"` on success.
+
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -117,17 +129,19 @@ birthdayDE.Rows.Add(arrContacts);
 
 ---
 
-## Method: Lookup
-
-```javascript
-<DataExtensionInstance>.Rows.Lookup(searchFieldNames, searchValues, [limit], [orderByFieldName])
-```
+### &lt;DataExtensionInstance&gt;.Rows.Lookup {#instance-rows-lookup}
 
 Returns rows where the specified columns equal the specified values (AND-joined). Optionally limits results and orders by a field.
 
 {% include callout.html type="note" content="When initializing a data extension for `Lookup()` from an email message, you must use the data extension Name; on landing pages, either Name or external key works — make them identical to be safe." %}
 
-### Parameters
+#### Syntax
+
+```javascript
+<DataExtensionInstance>.Rows.Lookup(searchFieldNames, searchValues[, limit[, orderByFieldName]])
+```
+
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
@@ -136,11 +150,11 @@ Returns rows where the specified columns equal the specified values (AND-joined)
 | `limit` | number | No | Maximum number of rows to return |
 | `orderByFieldName` | string | No | Field to order results by |
 
-### Return value
+#### Return value
 
 `object[]`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -150,15 +164,17 @@ var data = testDE.Rows.Lookup(["Age"], [25], 2, "LastName");
 
 ---
 
-## Method: Update
+### &lt;DataExtensionInstance&gt;.Rows.Update {#instance-rows-update}
+
+Updates the columns of rows where `whereFieldNames` equal `whereValues` (AND-joined).
+
+#### Syntax
 
 ```javascript
 <DataExtensionInstance>.Rows.Update(rowData, whereFieldNames, whereValues)
 ```
 
-Updates the columns of rows where `whereFieldNames` equal `whereValues` (AND-joined). Returns `"OK"` on success.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
@@ -166,7 +182,11 @@ Updates the columns of rows where `whereFieldNames` equal `whereValues` (AND-joi
 | `whereFieldNames` | array | Yes | Array of column names to match against |
 | `whereValues` | array | Yes | Array of values to match (one per column, in order) |
 
-### Examples
+#### Return value
+
+`"OK"` on success.
+
+#### Examples
 
 ```javascript
 Platform.Load("Core", "1");
@@ -177,22 +197,28 @@ var result = dataExt.Rows.Update(fieldsToUpdate, ["MemberId", "Country"], [98686
 
 ---
 
-## Method: Remove
+### &lt;DataExtensionInstance&gt;.Rows.Remove {#instance-rows-remove}
+
+Deletes rows from the previously initialized data extension where the specified columns equal the specified values (AND-joined). For large deletion requests, batch the work — this method times out on long-running deletes.
+
+#### Syntax
 
 ```javascript
 <DataExtensionInstance>.Rows.Remove(columnNames, columnValues)
 ```
 
-Deletes rows from the previously initialized data extension where the specified columns equal the specified values (AND-joined). For large deletion requests, batch the work — this method times out on long-running deletes.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `columnNames` | array | Yes | Array of column names to match against |
 | `columnValues` | array | Yes | Array of values to match (one per column, in order) |
 
-### Examples
+#### Return value
+
+`number` — count of deleted rows.
+
+#### Examples
 
 ```javascript
 Platform.Load("Core", "1.1.5");

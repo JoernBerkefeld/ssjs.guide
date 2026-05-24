@@ -42,7 +42,7 @@ var items = result.Results;
 | [`<WSProxyInstance>.deleteBatch(...)`](/wsproxy/deletebatch/) | Delete multiple objects |
 | [`<WSProxyInstance>.describe(...)`](/wsproxy/describe/) | SOAP object metadata |
 | [`<WSProxyInstance>.execute(...)`](/wsproxy/execute/) | Named execute requests (e.g. `LogUnsubEvent`) |
-| [`<WSProxyInstance>.performItem(...)`](/wsproxy/perform/) | SOAP Perform on one object |
+| [`<WSProxyInstance>.performItem(...)`](/wsproxy/performitem/) | SOAP Perform on one object |
 | [`<WSProxyInstance>.performBatch(...)`](/wsproxy/performbatch/) | SOAP Perform on many objects |
 | [`<WSProxyInstance>.setClientId(...)`](/wsproxy/setclientid/) | Target another business unit |
 | [`<WSProxyInstance>.resetClientIds()`](/wsproxy/resetclientids/) | Clear BU override |

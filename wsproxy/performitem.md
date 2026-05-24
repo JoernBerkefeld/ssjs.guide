@@ -1,21 +1,21 @@
 ---
-layout: page
-title: proxy.performItem
+layout: function
+title: <WSProxyInstance>.performItem
 parent: WSProxy
 parent_url: /wsproxy/
-permalink: /wsproxy/perform/
+permalink: /wsproxy/performitem/
+redirect_from:
+  - /wsproxy/perform/
 description: Run a SOAP Perform action on one SFMC object (start automations, query activities, and other perform-capable types).
+syntax: "<WSProxyInstance>.performItem(objectType, properties, action[, performOptions])"
+return_type: object
+min_args: 3
+max_args: 4
 ---
 
 SFMC exposes SOAP **Perform** for lifecycle actions. WSProxy surfaces this as **`performItem`** for one target row and **`performBatch`** for many (see [`proxy.performBatch`](/wsproxy/performbatch/)).
 
 There is **no** method named `proxy.perform` — older samples used informal shorthand.
-
-## Syntax
-
-```javascript
-var result = proxy.performItem(objectType, properties, action[, performOptions]);
-```
 
 ## Parameters
 

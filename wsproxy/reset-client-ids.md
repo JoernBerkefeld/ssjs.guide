@@ -1,21 +1,19 @@
 ---
-layout: page
-title: proxy.resetClientIds
+layout: function
+title: <WSProxyInstance>.resetClientIds
 parent: WSProxy
 parent_url: /wsproxy/
 permalink: /wsproxy/resetclientids/
 redirect_from:
   - /wsproxy/reset-client-ids/
 description: Reset the Business Unit context previously set by setClientId — subsequent operations target the script's own BU again.
+syntax: "<WSProxyInstance>.resetClientIds()"
+return_type: void
+min_args: 0
+max_args: 0
 ---
 
 `proxy.resetClientIds()` clears any Business Unit context set by a previous [`proxy.setClientId()`](/wsproxy/setclientid/) call. After resetting, all WSProxy operations target the BU the script is running in.
-
-## Syntax
-
-```javascript
-proxy.resetClientIds();
-```
 
 ## Parameters
 

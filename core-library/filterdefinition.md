@@ -15,32 +15,34 @@ description: Core library FilterDefinition — create and manage data filter def
 | Method | Returns | Description |
 |--------|---------|-------------|
 | [`FilterDefinition.Init(key)`](#init) | FilterDefinitionInstance | Bind by external key |
-| [`FilterDefinition.Add(properties)`](#filterdefinition-add) | string | Create a filter definition |
-| [`FilterDefinition.Retrieve(filter)`](#filterdefinition-retrieve) | object[] | Query definitions |
-| [`<FilterDefinitionInstance>.Update(properties)`](#update) | string | Update the initialized definition |
-| [`<FilterDefinitionInstance>.Remove()`](#remove) | string | Delete the definition |
+| [`FilterDefinition.Add(properties)`](#add) | string | Create a filter definition |
+| [`FilterDefinition.Retrieve(filter)`](#retrieve) | object[] | Query definitions |
+| [`<FilterDefinitionInstance>.Update(properties)`](#instance-update) | string | Update the initialized definition |
+| [`<FilterDefinitionInstance>.Remove()`](#instance-remove) | string | Delete the definition |
 
 ---
 
-## Init
+### FilterDefinition.Init {#init}
 
-### Syntax
+Initializes a `FilterDefinition` instance for the given external key.
+
+#### Syntax
 
 ```javascript
 FilterDefinition.Init(key)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `key` | string | Yes | External key |
 
-### Return value
+#### Return value
 
 `FilterDefinitionInstance`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1");
@@ -49,25 +51,27 @@ var fd = FilterDefinition.Init("myFilterDef");
 
 ---
 
-## FilterDefinition.Add
+### FilterDefinition.Add {#add}
 
-### Syntax
+Creates a new filter definition with the specified properties.
+
+#### Syntax
 
 ```javascript
 FilterDefinition.Add(properties)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | `Name`, `CustomerKey`, `Filter`, `DataSource`, … |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -83,25 +87,27 @@ var status = FilterDefinition.Add(newFD);
 
 ---
 
-## FilterDefinition.Retrieve
+### FilterDefinition.Retrieve {#retrieve}
 
-### Syntax
+Queries filter definitions matching the given filter criteria.
+
+#### Syntax
 
 ```javascript
 FilterDefinition.Retrieve(filter)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `filter` | object | Yes | WSProxy-style filter |
 
-### Return value
+#### Return value
 
 `object[]`
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -114,25 +120,27 @@ var results = FilterDefinition.Retrieve({
 
 ---
 
-## Update
+### &lt;FilterDefinitionInstance&gt;.Update {#instance-update}
 
-### Syntax
+Updates the initialized filter definition with the given properties.
+
+#### Syntax
 
 ```javascript
 <FilterDefinitionInstance>.Update(properties)
 ```
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | Attributes to change |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -142,19 +150,21 @@ var status = fd.Update({ Name: "Updated Name" });
 
 ---
 
-## Remove
+### &lt;FilterDefinitionInstance&gt;.Remove {#instance-remove}
 
-### Syntax
+Removes the initialized filter definition.
+
+#### Syntax
 
 ```javascript
 <FilterDefinitionInstance>.Remove()
 ```
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");

@@ -1,19 +1,17 @@
 ---
-layout: page
-title: proxy.updateBatch
+layout: function
+title: <WSProxyInstance>.updateBatch
 parent: WSProxy
 parent_url: /wsproxy/
 permalink: /wsproxy/updatebatch/
 redirect_from:
   - /wsproxy/update-batch/
 description: Update multiple SFMC objects in a single SOAP API call for better performance than looping proxy.updateItem().
+syntax: "<WSProxyInstance>.updateBatch(objectType, propertiesArray)"
+return_type: object
+min_args: 2
+max_args: 2
 ---
-
-## Syntax
-
-```javascript
-var result = proxy.updateBatch(objectType, propertiesArray);
-```
 
 ## Parameters
 

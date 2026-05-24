@@ -1,16 +1,14 @@
 ---
-layout: page
+layout: function
 title: new Script.Util.WSProxy()
 parent: WSProxy
 parent_url: /wsproxy/
 description: Creates a new WSProxy instance for interacting with the SFMC SOAP API. No arguments required.
+syntax: "new Script.Util.WSProxy()"
+return_type: WSProxyInstance
+min_args: 0
+max_args: 0
 ---
-
-## Syntax
-
-```javascript
-var proxy = new Script.Util.WSProxy();
-```
 
 Creates a new WSProxy instance. No arguments are needed. The proxy automatically authenticates using the current SFMC account credentials.
 

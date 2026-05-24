@@ -14,33 +14,33 @@ Use **`DataExtension.Init`** first, then **`de.Fields`** to manage columns: add 
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| [`<DataExtensionInstance>.Fields.Add(properties)`](#fields-add) | string | Add a column |
-| [`<DataExtensionInstance>.Fields.Retrieve()`](#fields-retrieve) | object[] | Field definitions |
-| [`<DataExtensionInstance>.Fields.UpdateSendableField(deFieldName, subscriberField)`](#fields-updatesendablefield) | string | Map DE field to subscriber attribute |
+| [`<DataExtensionInstance>.Fields.Add(properties)`](#instance-fields-add) | string | Add a column |
+| [`<DataExtensionInstance>.Fields.Retrieve()`](#instance-fields-retrieve) | object[] | Field definitions |
+| [`<DataExtensionInstance>.Fields.UpdateSendableField(deFieldName, subscriberField)`](#instance-fields-updatesendablefield) | string | Map DE field to subscriber attribute |
 
 ---
 
-## Fields.Add
+### &lt;DataExtensionInstance&gt;.Fields.Add {#instance-fields-add}
 
-### Syntax
+Adds a new column to the initialized Data Extension. `properties.Name` is required; `FieldType` accepts values such as `'Boolean'`, `'Date'`, `'Decimal'`, `'EmailAddress'`, `'Locale'`, `'Number'`, `'Phone'`, `'Text'`.
+
+#### Syntax
 
 ```javascript
 <DataExtensionInstance>.Fields.Add(properties)
 ```
 
-`properties.Name` is required. `FieldType` accepts values such as `'Boolean'`, `'Date'`, `'Decimal'`, `'EmailAddress'`, `'Locale'`, `'Number'`, `'Phone'`, `'Text'`.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `properties` | object | Yes | Field definition (`Name`, `CustomerKey`, `FieldType`, `MaxLength`, …) |
 
-### Return value
+#### Return value
 
 `"OK"` on success.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -57,19 +57,21 @@ var status = de.Fields.Add(newField);
 
 ---
 
-## Fields.Retrieve
+### &lt;DataExtensionInstance&gt;.Fields.Retrieve {#instance-fields-retrieve}
 
-### Syntax
+Returns field metadata for all columns in this Data Extension.
+
+#### Syntax
 
 ```javascript
 <DataExtensionInstance>.Fields.Retrieve()
 ```
 
-### Return value
+#### Return value
 
 `object[]` — field metadata for this Data Extension.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -79,28 +81,28 @@ var fields = birthdayDE.Fields.Retrieve();
 
 ---
 
-## Fields.UpdateSendableField
+### &lt;DataExtensionInstance&gt;.Fields.UpdateSendableField {#instance-fields-updatesendablefield}
 
-### Syntax
+Updates which DE column relates the extension to **All Subscribers** for sending. `subscriberField` is **`"Subscriber Key"`** or **`"Subscriber Id"`**.
+
+#### Syntax
 
 ```javascript
 <DataExtensionInstance>.Fields.UpdateSendableField(deFieldName, subscriberField)
 ```
 
-Updates which DE column relates the extension to **All Subscribers** for sending. `subscriberField` is **`"Subscriber Key"`** or **`"Subscriber Id"`**.
-
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `deFieldName` | string | Yes | Data extension field name to use for the relationship |
 | `subscriberField` | string | Yes | `"Subscriber Key"` or `"Subscriber Id"` |
 
-### Return value
+#### Return value
 
 `"OK"` on success (or throws on failure).
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");

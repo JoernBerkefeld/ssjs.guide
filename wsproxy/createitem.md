@@ -1,19 +1,17 @@
 ---
-layout: page
-title: proxy.createItem
+layout: function
+title: <WSProxyInstance>.createItem
 parent: WSProxy
 parent_url: /wsproxy/
 permalink: /wsproxy/createitem/
 redirect_from:
   - /wsproxy/create-item/
 description: Create a new SFMC object via the SOAP API — subscribers, data extensions, triggered send definitions, and more. Returns an object with Status, RequestID, and Results.
+syntax: "<WSProxyInstance>.createItem(objectType, properties)"
+return_type: object
+min_args: 2
+max_args: 2
 ---
-
-## Syntax
-
-```javascript
-var result = proxy.createItem(objectType, properties);
-```
 
 ## Parameters
 

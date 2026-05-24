@@ -258,8 +258,10 @@
 - title: WSProxy
   url: /wsproxy/
   children:
-      - title: Overview & Constructor
+      - title: Overview
         url: /wsproxy/
+      - title: Constructor
+        url: /wsproxy/constructor/
       - title: retrieve
         url: /wsproxy/retrieve/
       - title: getNextBatch
@@ -281,7 +283,7 @@
       - title: execute
         url: /wsproxy/execute/
       - title: performItem
-        url: /wsproxy/perform/
+        url: /wsproxy/performitem/
       - title: performBatch
         url: /wsproxy/performbatch/
       - title: setBatchSize
