@@ -380,21 +380,21 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`<SendInstance>.Tracking.ClickRetrieve(filter)`](/core-library/send/#instance-tracking-clickretrieve) | Core Library | object[] | Click tracking for send |
 | [`<SendInstance>.Tracking.TotalByIntervalRetrieve(type, startDate, endDate, groupBy)`](/core-library/send/#instance-tracking-totalbyintervalretrieve) | Core Library | object[] | Aggregated send tracking |
 | [`SentEvent.Retrieve(filter)`](/core-library/events/#sent-event) | Core Library | object[] | Sent events |
-| [`<StringInstance>.charAt(index)`](#) | ECMAScript Builtins | string | Character at index |
-| [`<StringInstance>.charCodeAt(index)`](#) | ECMAScript Builtins | number | Char code at index |
-| [`<StringInstance>.concat(string[, ...])`](#) | ECMAScript Builtins | string | Concatenate strings |
-| [`<StringInstance>.indexOf(searchValue[, fromIndex])`](#) | ECMAScript Builtins | number | First index of substring |
-| [`<StringInstance>.lastIndexOf(searchValue[, fromIndex])`](#) | ECMAScript Builtins | number | Last index of substring |
-| [`<StringInstance>.length`](#) | ECMAScript Builtins | number | String length |
-| [`<StringInstance>.match(regexp)`](#) | ECMAScript Builtins | array | Match regex |
-| [`<StringInstance>.replace(searchValue, replaceValue)`](#) | ECMAScript Builtins | string | Replace substring |
-| [`<StringInstance>.search(regexp)`](#) | ECMAScript Builtins | number | Search for regex |
-| [`<StringInstance>.slice(start[, end])`](#) | ECMAScript Builtins | string | Extract substring |
-| [`<StringInstance>.split(separator[, limit])`](#) | ECMAScript Builtins | array | Split into array |
-| [`<StringInstance>.substr(start[, length])`](#) | ECMAScript Builtins | string | Substring by length |
-| [`<StringInstance>.substring(start[, end])`](#) | ECMAScript Builtins | string | Substring by range |
-| [`<StringInstance>.toLowerCase()`](#) | ECMAScript Builtins | string | Convert to lower case |
-| [`<StringInstance>.toUpperCase()`](#) | ECMAScript Builtins | string | Convert to upper case |
+| [`<StringInstance>.charAt(index)`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | string | Character at index |
+| [`<StringInstance>.charCodeAt(index)`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | number | Char code at index |
+| [`<StringInstance>.concat(string[, ...])`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | string | Concatenate strings |
+| [`<StringInstance>.indexOf(searchValue[, fromIndex])`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | number | First index of substring |
+| [`<StringInstance>.lastIndexOf(searchValue[, fromIndex])`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | number | Last index of substring |
+| [`<StringInstance>.length`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | number | String length |
+| [`<StringInstance>.match(regexp)`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | array | Match regex |
+| [`<StringInstance>.replace(searchValue, replaceValue)`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | string | Replace substring |
+| [`<StringInstance>.search(regexp)`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | number | Search for regex |
+| [`<StringInstance>.slice(start[, end])`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | string | Extract substring |
+| [`<StringInstance>.split(separator[, limit])`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | array | Split into array |
+| [`<StringInstance>.substr(start[, length])`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | string | Substring by length |
+| [`<StringInstance>.substring(start[, end])`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | string | Substring by range |
+| [`<StringInstance>.toLowerCase()`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | string | Convert to lower case |
+| [`<StringInstance>.toUpperCase()`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | string | Convert to upper case |
 | [`SurveyEvent.Retrieve(filter)`](/core-library/events/#survey-event) | Core Library | object[] | Survey events |
 | [`Platform.Function.SystemDateToLocalDate(date)`](/platform-functions/systemdatetolocaldate/) | Platform Functions | string | Server to subscriber local time |
 | [`Platform.Response.SetResponseHeader(headerName, value)`](/platform-objects/platform-response/#setresponseheader) | Platform Response | void | Set a response header |
