@@ -153,7 +153,7 @@ Platform.Load("core", "1.1.5");
 var startTime = new Date();
 var MAX_MINUTES = 25;
 
-var proxy = new WSProxy();
+var proxy = new Script.Util.WSProxy();
 var result = proxy.retrieve("DataExtension", ["CustomerKey", "Name"]);
 var allDEs = result.Results;
 

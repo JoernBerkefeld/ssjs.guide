@@ -88,7 +88,7 @@ Platform.Load("core", "1.1.5");
 var startTime = new Date();
 var maxMinutes = 25; // Leave 5-minute buffer
 
-var proxy = new WSProxy();
+var proxy = new Script.Util.WSProxy();
 var results = proxy.retrieve("DataExtension", ["CustomerKey", "Name"]);
 
 var processed = 0;

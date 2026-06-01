@@ -77,7 +77,7 @@ description: "The complete reference for Server-Side JavaScript (SSJS) in Salesf
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 10c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M10 14l-4-4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </div>
     <div class="card-title">WSProxy</div>
-    <div class="card-description">The fastest way to call the SFMC SOAP API from SSJS. <code>new WSProxy()</code> with retrieve, create, update, delete, batch, and impersonation.</div>
+    <div class="card-description">The fastest way to call the SFMC SOAP API from SSJS. <code>new Script.Util.WSProxy()</code> with retrieve, create, update, delete, batch, and impersonation.</div>
     <div class="card-count">11 methods</div>
   </a>
 
