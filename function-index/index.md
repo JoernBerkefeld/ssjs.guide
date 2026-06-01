@@ -81,7 +81,9 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`DateTime.TimeZone.Retrieve(filter)`](/platform-objects/datetime-timezone/) | Platform Object | object[] | Time zone definitions (requires Core load) |
+| [`DateTime.TimeZone.Retrieve(filter)`](/platform-objects/datetime/#timezone-retrieve) | Platform Object | object[] | Time zone definitions (requires Core load) |
+| [`DateTime.LocalDateToSystemDate(dateString)`](/platform-objects/datetime/#localdatetolocaldate) | Platform Object | string | Local account/user time to system time (CST) |
+| [`DateTime.SystemDateToLocalDate(dateString)`](/platform-objects/datetime/#systemdatetolocaldate) | Platform Object | string | System time (CST) to local account/user time |
 | [`DataExtension.Init(key)`](/core-library/dataextension/#init) | Core Library | DataExtensionInstance | Initialize DE object |
 | [`DataExtension.Add(properties)`](/core-library/dataextension/#add) | Core Library | DataExtensionInstance | Create data extension |
 | [`DataExtension.Retrieve(filter, [queryAllAccounts])`](/core-library/dataextension/#retrieve) | Core Library | object[] | Retrieve data extensions |
@@ -206,7 +208,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`<ListInstance>.Subscribers.Update(emailAddress, status)`](/core-library/list-subscribers/#instance-subscribers-update) | Core Library | string | Update subscriber on list |
 | [`<ListInstance>.Subscribers.Upsert(emailAddress, attributes)`](/core-library/list-subscribers/#instance-subscribers-upsert) | Core Library | string | Upsert subscriber on list |
 | [`<ListInstance>.Subscribers.Tracking.Retrieve(filter)`](/core-library/list-subscribers/#instance-subscribers-tracking-retrieve) | Core Library | object[] | List subscriber tracking |
-| [`Platform.Function.LocalDateToSystemDate(dateValue)`](/platform-functions/localdatetosystemdate/) | Platform Functions | string | Local date/time to system CST |
+| [`Platform.Function.LocalDateToSystemDate(dateString)`](/platform-functions/localdatetosystemdate/) | Platform Functions | string | Local date/time to system CST |
 | [`Platform.Function.Lookup(deName, returnField, whereFieldNames, whereFieldValues)`](/platform-functions/lookup/) | Platform Functions | string | Single-value DE lookup |
 | [`Platform.Function.LookupOrderedRows(deName, count, orderBy, whereFieldNames, whereFieldValues)`](/platform-functions/lookuporderedrows/) | Platform Functions | object[] | Sorted/limited DE rows |
 | [`Platform.Function.LookupRows(deName, whereFieldNames, whereFieldValues)`](/platform-functions/lookuprows/) | Platform Functions | object[] | Multiple DE rows |
@@ -396,7 +398,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`<StringInstance>.toLowerCase()`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | string | Convert to lower case |
 | [`<StringInstance>.toUpperCase()`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | string | Convert to upper case |
 | [`SurveyEvent.Retrieve(filter)`](/core-library/events/#survey-event) | Core Library | object[] | Survey events |
-| [`Platform.Function.SystemDateToLocalDate(date)`](/platform-functions/systemdatetolocaldate/) | Platform Functions | string | Server to subscriber local time |
+| [`Platform.Function.SystemDateToLocalDate(dateString)`](/platform-functions/systemdatetolocaldate/) | Platform Functions | string | System time (CST) to local account/user time |
 | [`Platform.Response.SetResponseHeader(headerName, value)`](/platform-objects/platform-response/#setresponseheader) | Platform Response | void | Set a response header |
 | [`Platform.Response.SetCookie(name, value [, expires [, secure]])`](/platform-objects/platform-response/#setcookie) | Platform Response | void | Set a response cookie |
 

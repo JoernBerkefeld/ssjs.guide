@@ -271,7 +271,7 @@
     "type": "function",
     "description": "Converts a date-time value from Marketing Cloud system time (CST) to the local time of the account or user.",
     "params": [
-      "dateValue"
+      "dateString"
     ],
     "returnType": "string"
   },
@@ -282,7 +282,7 @@
     "type": "function",
     "description": "Converts a date-time value from the local time of the account or user to Marketing Cloud system time (CST).",
     "params": [
-      "dateValue"
+      "dateString"
     ],
     "returnType": "string"
   },
@@ -1221,8 +1221,30 @@
     "returnType": "string"
   },
   {
+    "name": "DateTime.SystemDateToLocalDate",
+    "url": "/platform-objects/datetime/",
+    "section": "Platform Objects",
+    "type": "method",
+    "description": "Converts a date-time value from Marketing Cloud system time (CST) to the local time of the account or user.",
+    "params": [
+      "dateString"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "DateTime.LocalDateToSystemDate",
+    "url": "/platform-objects/datetime/",
+    "section": "Platform Objects",
+    "type": "method",
+    "description": "Converts a date-time value from the local time of the account or user to Marketing Cloud system time (CST).",
+    "params": [
+      "dateString"
+    ],
+    "returnType": "string"
+  },
+  {
     "name": "DateTime.TimeZone.Retrieve",
-    "url": "/platform-objects/datetime-timezone/",
+    "url": "/platform-objects/datetime/",
     "section": "Platform Objects",
     "type": "method",
     "description": "Retrieves an array of time zones matching the specified filter criteria.",
@@ -2898,7 +2920,7 @@
   },
   {
     "name": "DateTime.TimeZone",
-    "url": "/platform-objects/datetime-timezone/",
+    "url": "/platform-objects/datetime/",
     "section": "Core Library",
     "type": "object",
     "description": "Time zone utilities for SSJS date/time conversions."

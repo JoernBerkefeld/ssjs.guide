@@ -18,7 +18,7 @@ The `Platform` namespace exposes a set of objects beyond `Platform.Function.*` t
 | [`Platform.Request`](/platform-objects/platform-request/) | Read HTTP request data (query string, POST, headers, cookies) |
 | [`Platform.Recipient`](/platform-objects/platform-recipient/) | Read subscriber attributes and sendable DE fields for the current recipient |
 | [`HTTPHeader`](/platform-objects/httpheader/) | Core-library helpers for HTTP headers (requires Core load) |
-| [`DateTime.TimeZone`](/platform-objects/datetime-timezone/) | Retrieve time zone definitions (requires Core load) |
+| [`DateTime`](/platform-objects/datetime/) | Date-time conversion helpers and time zone lookup (requires Core load) |
 | [`ErrorUtil`](/platform-objects/errorutil/) | Throw on WSProxy error status (requires Core load) |
 
 ---

@@ -207,8 +207,8 @@
         url: /platform-objects/platform-recipient/
       - title: HTTPHeader
         url: /platform-objects/httpheader/
-      - title: DateTime.TimeZone
-        url: /platform-objects/datetime-timezone/
+      - title: DateTime
+        url: /platform-objects/datetime/
       - title: ErrorUtil
         url: /platform-objects/errorutil/
 - title: Core Library

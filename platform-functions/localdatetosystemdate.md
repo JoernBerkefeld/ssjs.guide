@@ -3,7 +3,7 @@ layout: function
 title: LocalDateToSystemDate
 parent: Platform Functions
 parent_url: /platform-functions/
-description: Converts a date-time from local account or user time to Marketing Cloud system time (CST, without daylight saving adjustments).
+description: Converts a date-time value from local account or user time to Marketing Cloud system time (CST, without daylight saving adjustments).
 availability:
   email: true
   cloudpage: true
@@ -30,3 +30,7 @@ var time = Platform.Function.Now();
 var systemTime = Platform.Function.LocalDateToSystemDate(time);
 Write(systemTime);
 ```
+
+## See Also
+
+- [`DateTime.LocalDateToSystemDate()`](/platform-objects/datetime/#localdatetolocaldate) — short form available after `Platform.Load("core", "1.1.5")`; equivalent to this function.
