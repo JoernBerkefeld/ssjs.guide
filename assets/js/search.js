@@ -13,7 +13,7 @@
   var headerSearch = document.querySelector('.header-search');
   var cancelBtn = document.querySelector('.search-cancel');
 
-  var EXPAND_THRESHOLD = 130; // px — expand to full-width overlay below this
+  var EXPAND_THRESHOLD = 280; // px — expand to full-width overlay below this
 
   function expandSearch() {
     if (headerSearch) headerSearch.classList.add('is-expanded');
