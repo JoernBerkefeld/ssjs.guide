@@ -183,6 +183,8 @@
       }
     }
     if (e.key === 'Escape') {
+      var headerSearchEl = document.querySelector('.header-search');
+      if (headerSearchEl) headerSearchEl.classList.remove('is-expanded');
       var results = document.getElementById('search-results');
       if (results) {
         results.hidden = true;

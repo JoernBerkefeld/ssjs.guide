@@ -128,6 +128,72 @@
   padding: 0.1em 0.35em;
 }
 
+// ── Search cancel button ──────────────────────────────────────────────────────
+
+.search-cancel {
+  display: none;
+  flex-shrink: 0;
+  margin-left: $space-3;
+  padding: $space-1 $space-3;
+  min-height: 2.25rem;
+  min-width: 44px;
+  font-size: $text-sm;
+  color: $text-secondary;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: $radius-md;
+  white-space: nowrap;
+
+  &:hover {
+    color: $text-primary;
+    background-color: $bg-hover;
+  }
+}
+
+// ── Search expanded overlay ───────────────────────────────────────────────────
+// Triggered when the wrapper is too narrow to use (<130 px) and the input is focused.
+// .header-search lives inside .site-header (position: fixed), so absolute
+// positioning here fills the full header bar and overlays the brand / nav.
+
+.header-search.is-expanded {
+  position: absolute;
+  inset: 0;
+  max-width: none;
+  margin: 0;
+  padding: 0 $space-4;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  background-color: rgba($bg-surface, 0.97);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  .search-wrapper {
+    flex: 1;
+  }
+
+  .search-cancel {
+    display: flex;
+    align-items: center;
+  }
+
+  .search-kbd {
+    display: none;
+  }
+
+  // Results inherit left:0/right:0 from the now-full-width .header-search.
+  // Explicitly override to guard against any cascade that might constrain width.
+  .search-results {
+    left: 0;
+    right: 0;
+    max-width: none;
+    top: calc(100% + #{$space-2});
+  }
+}
+
+// ── Search results dropdown ───────────────────────────────────────────────────
+
 .search-results {
   position: absolute;
   top: calc(100% + $space-2);
