@@ -10,12 +10,12 @@ layout: default
         <span aria-hidden="true">›</span>
         <a href="{{ page.parent_url | default: '#' | relative_url }}">{{ page.parent }}</a>
         <span aria-hidden="true">›</span>
-        <span aria-current="page">{{ page.title }}</span>
+        <span aria-current="page">{{ page.title | escape }}</span>
       </nav>
     {% endif %}
 
     <div class="function-header">
-      <h1 class="page-title function-title">{{ page.title }}</h1>
+      <h1 class="page-title function-title">{{ page.title | escape }}</h1>
       {% if page.return_type %}
         <span class="function-return-badge">→ {{ page.return_type }}</span>
       {% endif %}
@@ -34,7 +34,7 @@ layout: default
     <div class="function-syntax">
       <h2 class="function-syntax-label">Syntax</h2>
       <div class="function-syntax-block">
-        <pre><code class="language-javascript">{{ page.syntax }}</code></pre>
+        <pre><code class="language-javascript">{{ page.syntax | escape }}</code></pre>
         {% if page.min_args and page.max_args %}
           <div class="function-arity">
             {% if page.min_args == page.max_args %}
@@ -58,7 +58,7 @@ layout: default
     {% if page.prev_page %}
       <a href="{{ page.prev_page.url | relative_url }}" class="page-nav-link page-nav-link--prev">
         <span class="page-nav-label">Previous</span>
-        <span class="page-nav-title">← {{ page.prev_page.title }}</span>
+        <span class="page-nav-title">← {{ page.prev_page.title | escape }}</span>
       </a>
     {% else %}
       <span></span>
@@ -66,7 +66,7 @@ layout: default
     {% if page.next_page %}
       <a href="{{ page.next_page.url | relative_url }}" class="page-nav-link page-nav-link--next">
         <span class="page-nav-label">Next</span>
-        <span class="page-nav-title">{{ page.next_page.title }} →</span>
+        <span class="page-nav-title">{{ page.next_page.title | escape }} →</span>
       </a>
     {% endif %}
   </div>
