@@ -3506,6 +3506,68 @@
     "returnType": "boolean"
   },
   {
+    "name": "RegExp.test",
+    "url": "/language/regular-expressions/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Tests whether the string matches the pattern.",
+    "params": [
+      "string"
+    ],
+    "returnType": "boolean"
+  },
+  {
+    "name": "RegExp.exec",
+    "url": "/language/regular-expressions/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Executes a search for a match in the string.",
+    "params": [
+      "string"
+    ],
+    "returnType": "array"
+  },
+  {
+    "name": "RegExp.source",
+    "url": "/language/regular-expressions/",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "The text of the pattern, excluding the enclosing slashes and any flags.",
+    "returnType": "string"
+  },
+  {
+    "name": "RegExp.global",
+    "url": "/language/regular-expressions/",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "True if the g (global) flag was specified when creating the regular expression.",
+    "returnType": "boolean"
+  },
+  {
+    "name": "RegExp.ignoreCase",
+    "url": "/language/regular-expressions/",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "True if the i (case-insensitive) flag was specified.",
+    "returnType": "boolean"
+  },
+  {
+    "name": "RegExp.multiline",
+    "url": "/language/regular-expressions/",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "True if the m (multiline) flag was specified.",
+    "returnType": "boolean"
+  },
+  {
+    "name": "RegExp.lastIndex",
+    "url": "/language/regular-expressions/",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "The index at which to start the next match.",
+    "returnType": "number"
+  },
+  {
     "name": "String",
     "url": "/global-functions/string/",
     "section": "Global Functions",

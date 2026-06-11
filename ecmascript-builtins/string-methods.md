@@ -85,7 +85,7 @@ str.substr(6, 5);      // "World" (deprecated but works)
 
 ## Trim (use polyfill)
 
-{% include callout.html type="warning" content="`String.prototype.trim` is not available in SFMC SSJS. Apply a polyfill or use `Platform.Function.Trim`. See [Polyfills](/engine-limitations/polyfills/)." %}
+{% include callout.html type="warning" content="`String.prototype.trim` is not available in SFMC SSJS. Apply a polyfill. See [Polyfills](/engine-limitations/polyfills/)." %}
 
 ---
 
