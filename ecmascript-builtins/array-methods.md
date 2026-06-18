@@ -28,19 +28,28 @@ arr.unshift(0);            // arr = [0, 2, 3]
 
 ### splice `(ES3)`
 
-{% include callout.html type="danger" content="**`Array.prototype.splice` is broken in SFMC SSJS.** The method exists but ignores its first two parameters. Always apply the polyfill from [Polyfills](/engine-limitations/polyfills/) before using it." %}
+{% include callout.html type="warning" content="**`Array.prototype.splice` is only partially broken in SFMC SSJS.** The delete-only form — `splice(start)` and `splice(start, deleteCount)` — works correctly. The bug surfaces **only when you insert items**: as soon as a third argument (`item1`) is passed, the engine ignores `start` and `deleteCount` and overwrites from the left. Apply the polyfill from [Polyfills](/engine-limitations/polyfills/) if you use the insert form." %}
+
+Signature: `splice(start[, deleteCount[, item1[, item2[, ...itemN]]]])`. After `start` and the optional `deleteCount`, you can pass an unlimited number of additional items (`item1 … itemN`) to insert at `start`.
 
 ```javascript
-// After applying the polyfill:
+// Delete-only form works natively (no polyfill needed):
 var arr = ["a", "b", "c", "d"];
 // Remove 1 element at index 1
 arr.splice(1, 1);           // ["a", "c", "d"]
+// Remove from index 2 to the end
+arr.splice(2);              // ["a", "c"]
 
+// Insert form REQUIRES the polyfill (otherwise start/deleteCount are ignored):
+var arr2 = ["a", "b", "c", "d"];
 // Replace element
-arr.splice(1, 1, "X");      // ["a", "X", "d"]
+arr2.splice(1, 1, "X");      // ["a", "X", "c", "d"]
 
 // Insert without removing
-arr.splice(1, 0, "B");      // ["a", "B", "X", "d"]
+arr2.splice(1, 0, "B");      // ["a", "B", "X", "c", "d"]
+
+// Insert multiple items without removing (unlimited item1 … itemN)
+arr2.splice(1, 0, "B", "C"); // ["a", "B", "C", "X", "c", "d"]
 ```
 
 ### reverse / sort `(ES3)`
@@ -106,7 +115,7 @@ The following methods require polyfills from [Polyfills](/engine-limitations/pol
 | `Array.prototype.reduce(fn)` | ES5 | ⚠️ Unavailable |
 | `Array.prototype.reduceRight(fn)` | ES5 | ⚠️ Unavailable |
 | `Array.prototype.some(fn)` | ES5 | ⚠️ Unavailable |
-| `Array.prototype.splice(start[, deleteCount[, ...]])` | ES3 | ⚠️ Broken — ignores parameters |
+| `Array.prototype.splice(start[, deleteCount[, item1[, ...]]])` | ES3 | ⚠️ Delete form works; insert form (3rd+ arg) ignores `start`/`deleteCount` |
 | `Array.isArray(value)` | ES5 | ⚠️ Unavailable |
 | `Array.of(...)` | ES6 | ⚠️ Unavailable |
 

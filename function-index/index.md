@@ -36,7 +36,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`<ArrayInstance>.shift()`](/ecmascript-builtins/array-methods/) | ECMAScript Builtins | any | Remove and return first element |
 | [`<ArrayInstance>.slice([start[, end]])`](/ecmascript-builtins/array-methods/) | ECMAScript Builtins | array | Shallow copy of a portion |
 | [`<ArrayInstance>.sort([compareFn])`](/ecmascript-builtins/array-methods/) | ECMAScript Builtins | array | Sort in place |
-| [`<ArrayInstance>.splice(start[, deleteCount[, item1[, ...]]])`](/engine-limitations/polyfills/) | ECMAScript Builtins | array | ⚠️ Broken in SFMC SSJS — see polyfills |
+| [`<ArrayInstance>.splice(start[, deleteCount[, item1[, ...]]])`](/engine-limitations/polyfills/) | ECMAScript Builtins | array | Delete form works; insert form (3rd+ arg) needs polyfill — see polyfills |
 | [`<ArrayInstance>.unshift(element[, ...])`](/ecmascript-builtins/array-methods/) | ECMAScript Builtins | number | Add elements to start; return new length |
 
 ---

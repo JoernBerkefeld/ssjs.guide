@@ -29,7 +29,7 @@ The **ES** column shows the ECMAScript edition that standardized each member (ES
 | `Array.prototype.sort(fn)` | ES3 | ✅ Works | |
 | `Array.prototype.toLocaleString()` | ES3 | ✅ Works | |
 | `Array.prototype.unshift(item)` | ES3 | ✅ Works | |
-| `Array.prototype.splice(start, count)` | ES3 | ⚠️ Broken — polyfill | Ignores parameters; see [Polyfills](/engine-limitations/polyfills/) |
+| `Array.prototype.splice(start[, deleteCount[, item1[, ...]]])` | ES3 | ⚠️ Partial | Delete form works; insert form (3rd+ arg) ignores `start`/`deleteCount` — see [Polyfills](/engine-limitations/polyfills/) |
 | `Array.prototype.lastIndexOf(item)` | ES5 | ⚠️ Broken — polyfill | Always returns -1; see [Polyfills](/engine-limitations/polyfills/) |
 | `Array.prototype.copyWithin(...)` | ES6 | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
 | `Array.prototype.entries()` | ES6 | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |

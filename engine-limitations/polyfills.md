@@ -228,24 +228,28 @@ Array.prototype.entries = Array.prototype.entries || function() {
     };
 };
 ```
-```
 
-### splice (broken — must override)
+### splice (partially broken — override only if you insert items)
 
-`Array.prototype.splice` exists but ignores its first two arguments. Override unconditionally:
+`Array.prototype.splice(start[, deleteCount[, item1 … itemN]])` works correctly in SFMC SSJS for the **delete-only** form (`splice(start)` and `splice(start, deleteCount)`). The bug surfaces **only when you insert items**: as soon as a third argument (`item1`) is passed, the engine ignores `start` and `deleteCount` and just overwrites from the left with the items to insert. If you ever call the insert form (with one or more `item1 … itemN`), override it unconditionally:
 
 ```javascript
-Array.prototype.splice = function(startIndex, deleteCount) {
+Array.prototype.splice = function(start, deleteCount) {
     var arr = this;
-    var endIndex = startIndex + deleteCount;
+    var len = arr.length;
+    start = start < 0 ? (len + start < 0 ? 0 : len + start) : (start > len ? len : start);
+    var removeCount = arguments.length < 2 ? len - start : (deleteCount < 0 ? 0 : deleteCount);
+    if (removeCount > len - start) { removeCount = len - start; }
+    var endIndex = start + removeCount;
     var before = [];
     var removed = [];
     var after = [];
-    for (var i = 0; i < arr.length; i++) {
-        if (i < startIndex)      { before.push(arr[i]); }
-        else if (i < endIndex)   { removed.push(arr[i]); }
-        else                     { after.push(arr[i]); }
+    for (var i = 0; i < len; i++) {
+        if (i < start)         { before.push(arr[i]); }
+        else if (i < endIndex) { removed.push(arr[i]); }
+        else                   { after.push(arr[i]); }
     }
+    // item1 … itemN — unlimited additional items to insert at start
     for (var j = 2; j < arguments.length; j++) {
         before.push(arguments[j]);
     }
