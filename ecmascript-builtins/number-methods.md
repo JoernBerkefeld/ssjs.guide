@@ -10,16 +10,18 @@ description: Number prototype methods, static constants, and global numeric func
 
 ---
 
+The **ES** column shows the ECMAScript edition that standardized each member.
+
 ## Global Numeric Functions
 
 These global functions are available without any namespace in all SSJS contexts.
 
-| Function | Returns | Description |
-|----------|---------|-------------|
-| `parseFloat(str)` | number | Parse a string and return a floating-point number |
-| `parseInt(str[, radix])` | number | Parse a string and return an integer |
-| `isNaN(val)` | boolean | Returns `true` if the value is `NaN` |
-| `isFinite(val)` | boolean | Returns `true` if the value is a finite number |
+| Function | ES | Returns | Description |
+|----------|----|---------|-------------|
+| `parseFloat(str)` | ES3 | number | Parse a string and return a floating-point number |
+| `parseInt(str[, radix])` | ES3 | number | Parse a string and return an integer |
+| `isNaN(val)` | ES3 | boolean | Returns `true` if the value is `NaN` |
+| `isFinite(val)` | ES3 | boolean | Returns `true` if the value is a finite number |
 
 ```javascript
 parseFloat("3.14");      // 3.14
@@ -33,13 +35,13 @@ isFinite(42);            // true
 
 ## Number Instance Methods
 
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `Number.prototype.toFixed(digits)` | string | Format with a fixed number of decimal places |
-| `Number.prototype.toExponential([digits])` | string | Format in exponential notation |
-| `Number.prototype.toPrecision([digits])` | string | Format to a specified number of significant digits |
-| `Number.prototype.toString([radix])` | string | Convert to string, optionally in another base |
-| `Number.prototype.valueOf()` | number | Return the primitive numeric value |
+| Method | ES | Returns | Description |
+|--------|----|---------|-------------|
+| `Number.prototype.toFixed(digits)` | ES3 | string | Format with a fixed number of decimal places |
+| `Number.prototype.toExponential([digits])` | ES3 | string | Format in exponential notation |
+| `Number.prototype.toPrecision([digits])` | ES3 | string | Format to a specified number of significant digits |
+| `Number.prototype.toString([radix])` | ES3 | string | Convert to string, optionally in another base |
+| `Number.prototype.valueOf()` | ES3 | number | Return the primitive numeric value |
 
 ```javascript
 var n = 3.14159;
@@ -57,13 +59,13 @@ n.toString();          // "3.14159"
 
 ES3/ES5 constants on the `Number` constructor — all available in SSJS.
 
-| Constant | Value | Description |
-|----------|-------|-------------|
-| `Number.MAX_VALUE` | `1.7976931348623157e+308` | Largest positive representable number |
-| `Number.MIN_VALUE` | `5e-324` | Smallest positive non-zero number |
-| `Number.NaN` | `NaN` | Not-a-Number (same as global `NaN`) |
-| `Number.NEGATIVE_INFINITY` | `-Infinity` | Negative infinity |
-| `Number.POSITIVE_INFINITY` | `Infinity` | Positive infinity |
+| Constant | ES | Value | Description |
+|----------|----|-------|-------------|
+| `Number.MAX_VALUE` | ES3 | `1.7976931348623157e+308` | Largest positive representable number |
+| `Number.MIN_VALUE` | ES3 | `5e-324` | Smallest positive non-zero number |
+| `Number.NaN` | ES3 | `NaN` | Not-a-Number (same as global `NaN`) |
+| `Number.NEGATIVE_INFINITY` | ES3 | `-Infinity` | Negative infinity |
+| `Number.POSITIVE_INFINITY` | ES3 | `Infinity` | Positive infinity |
 
 ---
 
@@ -71,17 +73,17 @@ ES3/ES5 constants on the `Number` constructor — all available in SSJS.
 
 The following ES6 `Number.*` static methods do not exist in SSJS. Use the global equivalents or inline expressions instead.
 
-| Missing Method | ES5 Alternative |
-|----------------|-----------------|
-| `Number.isFinite(val)` | `isFinite(val)` |
-| `Number.isNaN(val)` | `isNaN(val)` _(note: differs for non-numbers)_ |
-| `Number.isInteger(val)` | `val === Math.floor(val)` |
-| `Number.isSafeInteger(val)` | `val === Math.floor(val) && Math.abs(val) <= 9007199254740991` |
-| `Number.parseInt(str)` | `parseInt(str, 10)` |
-| `Number.parseFloat(str)` | `parseFloat(str)` |
-| `Number.EPSILON` | Hardcode `2.220446049250313e-16` if needed |
-| `Number.MAX_SAFE_INTEGER` | Hardcode `9007199254740991` if needed |
-| `Number.MIN_SAFE_INTEGER` | Hardcode `-9007199254740991` if needed |
+| Missing Method | ES | ES5 Alternative |
+|----------------|----|-----------------|
+| `Number.isFinite(val)` | ES6 | `isFinite(val)` |
+| `Number.isNaN(val)` | ES6 | `isNaN(val)` _(note: differs for non-numbers)_ |
+| `Number.isInteger(val)` | ES6 | `val === Math.floor(val)` |
+| `Number.isSafeInteger(val)` | ES6 | `val === Math.floor(val) && Math.abs(val) <= 9007199254740991` |
+| `Number.parseInt(str)` | ES6 | `parseInt(str, 10)` |
+| `Number.parseFloat(str)` | ES6 | `parseFloat(str)` |
+| `Number.EPSILON` | ES6 | Hardcode `2.220446049250313e-16` if needed |
+| `Number.MAX_SAFE_INTEGER` | ES6 | Hardcode `9007199254740991` if needed |
+| `Number.MIN_SAFE_INTEGER` | ES6 | Hardcode `-9007199254740991` if needed |
 
 ---
 

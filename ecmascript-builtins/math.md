@@ -6,9 +6,9 @@ parent_url: /ecmascript-builtins/
 description: The Math built-in object in SSJS — all standard methods work as expected. Complete reference with examples.
 ---
 
-All `Math` object methods and constants work correctly in SSJS. No polyfills are needed.
+All `Math` object methods and constants work correctly in SSJS. No polyfills are needed. Every `Math` member documented here is part of **ES3** — section headings are tagged accordingly. Methods shown only as fallbacks (e.g. `Math.sign`, `Math.cbrt`, `Math.log10`) are ES6 and **not** available.
 
-## Constants
+## Constants `(ES3)`
 
 | Constant | Value | Description |
 |----------|-------|-------------|
@@ -23,7 +23,7 @@ All `Math` object methods and constants work correctly in SSJS. No polyfills are
 
 ---
 
-## Rounding
+## Rounding `(ES3)`
 
 ```javascript
 Math.floor(4.9);   // 4  — round down
@@ -41,7 +41,7 @@ roundTo(3.14159, 2);  // 3.14
 
 ---
 
-## Absolute Value / Sign
+## Absolute Value / Sign `(ES3)`
 
 ```javascript
 Math.abs(-5);     // 5
@@ -55,7 +55,7 @@ function sign(n) {
 
 ---
 
-## Min / Max
+## Min / Max `(ES3)`
 
 ```javascript
 Math.max(1, 5, 3);   // 5
@@ -73,7 +73,7 @@ for (var i = 1; i < arr.length; i++) {
 
 ---
 
-## Powers and Roots
+## Powers and Roots `(ES3)`
 
 ```javascript
 Math.pow(2, 10);   // 1024
@@ -91,7 +91,7 @@ cbrt(-27);  // -3
 
 ---
 
-## Logarithms
+## Logarithms `(ES3)`
 
 ```javascript
 Math.log(Math.E);   // 1 (natural log)
@@ -102,7 +102,7 @@ Math.log(8) / Math.LN2;     // log base 2 (Math.log2 is ES6)
 
 ---
 
-## Trigonometry
+## Trigonometry `(ES3)`
 
 ```javascript
 Math.sin(Math.PI / 2);   // 1
@@ -116,7 +116,7 @@ Math.atan2(1, 1);        // π/4
 
 ---
 
-## Random Numbers
+## Random Numbers `(ES3)`
 
 ```javascript
 Math.random();                    // float in [0, 1)
@@ -135,7 +135,7 @@ function randomItem(arr) {
 
 ---
 
-## Number Parsing
+## Number Parsing `(ES3)`
 
 ```javascript
 parseInt("42", 10);      // 42

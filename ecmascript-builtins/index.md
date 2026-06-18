@@ -12,126 +12,151 @@ SSJS runs on the JINT engine with ES3/ES5 compatibility. Most native ECMAScript 
 
 ## Quick Reference
 
+The **ES** column shows the ECMAScript edition that standardized each member (ES3, ES5, or ES6).
+
 ### Array Methods
 
-| Method | Status | Notes |
-|--------|--------|-------|
-| `Array.prototype.concat(...)` | ✅ Works | |
-| `Array.prototype.join(sep)` | ✅ Works | |
-| `Array.prototype.length` | ✅ Works | |
-| `Array.prototype.pop()` | ✅ Works | |
-| `Array.prototype.push(item)` | ✅ Works | |
-| `Array.prototype.reverse()` | ✅ Works | |
-| `Array.prototype.shift()` | ✅ Works | |
-| `Array.prototype.slice(start, end)` | ✅ Works | |
-| `Array.prototype.sort(fn)` | ✅ Works | |
-| `Array.prototype.unshift(item)` | ✅ Works | |
-| `Array.prototype.splice(start, count)` | ⚠️ Broken — polyfill | Ignores parameters; see [Polyfills](/engine-limitations/polyfills/) |
-| `Array.prototype.lastIndexOf(item)` | ⚠️ Broken — polyfill | Always returns -1; see [Polyfills](/engine-limitations/polyfills/) |
-| `Array.prototype.copyWithin(...)` | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
-| `Array.prototype.entries()` | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
-| `Array.prototype.fill(value)` | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
-| `Array.prototype.findIndex(fn)` | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
-| `Array.prototype.includes(item)` | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
-| `Array.prototype.indexOf(item)` | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
-| `Array.prototype.reduceRight(fn)` | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
-| `Array.isArray(val)` | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
-| `Array.of(...)` | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
-| `Array.prototype.every(fn)` | ❌ Missing | Use `for` loop |
-| `Array.prototype.filter(fn)` | ❌ Missing | Use `for` loop or polyfill |
-| `Array.prototype.find(fn)` | ❌ Missing | Use `for` loop or polyfill |
-| `Array.prototype.forEach(fn)` | ❌ Missing | Use `for` loop or polyfill |
-| `Array.prototype.map(fn)` | ❌ Missing | Use `for` loop or polyfill |
-| `Array.prototype.reduce(fn)` | ❌ Missing | Use `for` loop or polyfill |
-| `Array.prototype.some(fn)` | ❌ Missing | Use `for` loop or polyfill |
+| Method | ES | Status | Notes |
+|--------|----|--------|-------|
+| `Array.prototype.concat(...)` | ES3 | ✅ Works | |
+| `Array.prototype.join(sep)` | ES3 | ✅ Works | |
+| `Array.prototype.length` | ES3 | ✅ Works | |
+| `Array.prototype.pop()` | ES3 | ✅ Works | |
+| `Array.prototype.push(item)` | ES3 | ✅ Works | |
+| `Array.prototype.reverse()` | ES3 | ✅ Works | |
+| `Array.prototype.shift()` | ES3 | ✅ Works | |
+| `Array.prototype.slice(start, end)` | ES3 | ✅ Works | |
+| `Array.prototype.sort(fn)` | ES3 | ✅ Works | |
+| `Array.prototype.toLocaleString()` | ES3 | ✅ Works | |
+| `Array.prototype.unshift(item)` | ES3 | ✅ Works | |
+| `Array.prototype.splice(start, count)` | ES3 | ⚠️ Broken — polyfill | Ignores parameters; see [Polyfills](/engine-limitations/polyfills/) |
+| `Array.prototype.lastIndexOf(item)` | ES5 | ⚠️ Broken — polyfill | Always returns -1; see [Polyfills](/engine-limitations/polyfills/) |
+| `Array.prototype.copyWithin(...)` | ES6 | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
+| `Array.prototype.entries()` | ES6 | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
+| `Array.prototype.fill(value)` | ES6 | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
+| `Array.prototype.filter(fn)` | ES5 | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
+| `Array.prototype.find(fn)` | ES6 | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
+| `Array.prototype.findIndex(fn)` | ES6 | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
+| `Array.prototype.forEach(fn)` | ES5 | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
+| `Array.prototype.includes(item)` | ES6 | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
+| `Array.prototype.indexOf(item)` | ES5 | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
+| `Array.prototype.map(fn)` | ES5 | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
+| `Array.prototype.reduce(fn)` | ES5 | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
+| `Array.prototype.reduceRight(fn)` | ES5 | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
+| `Array.prototype.some(fn)` | ES5 | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
+| `Array.isArray(val)` | ES5 | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
+| `Array.of(...)` | ES6 | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
+| `Array.prototype.every(fn)` | ES5 | ❌ Missing | Use `for` loop |
 
 ### String Methods
 
-| Method | Status | Notes |
-|--------|--------|-------|
-| `String.prototype.charAt(i)` | ✅ Works | |
-| `String.prototype.charCodeAt(i)` | ✅ Works | |
-| `String.prototype.concat(...)` | ✅ Works | |
-| `String.prototype.indexOf(sub)` | ✅ Works | |
-| `String.prototype.lastIndexOf(sub)` | ✅ Works | |
-| `String.prototype.length` | ✅ Works | |
-| `String.prototype.match(regex)` | ✅ Works | |
-| `String.prototype.replace(search, rep)` | ✅ Works | Regex supported |
-| `String.prototype.search(regex)` | ✅ Works | |
-| `String.prototype.slice(start, end)` | ✅ Works | |
-| `String.prototype.split(sep)` | ✅ Works | |
-| `String.prototype.substr(start, len)` | ✅ Works | ES3 Annex B; prefer substring |
-| `String.prototype.substring(start, end)` | ✅ Works | |
-| `String.prototype.toLowerCase()` | ✅ Works | |
-| `String.prototype.toUpperCase()` | ✅ Works | |
-| `String.fromCharCode(code)` | ✅ Works | Static method |
-| `String.prototype.trim()` | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
-| `String.prototype.endsWith(sub)` | ❌ Missing | ES6; use polyfill or `lastIndexOf` |
-| `String.prototype.includes(sub)` | ❌ Missing | ES6; use `indexOf !== -1` |
-| `String.prototype.padEnd(len, ch)` | ❌ Missing | ES6; implement manually |
-| `String.prototype.padStart(len, ch)` | ❌ Missing | ES6; implement manually |
-| `String.prototype.repeat(n)` | ❌ Missing | ES6; loop instead |
-| `String.prototype.startsWith(sub)` | ❌ Missing | ES6; use polyfill or `indexOf` |
+| Method | ES | Status | Notes |
+|--------|----|--------|-------|
+| `String.prototype.charAt(i)` | ES3 | ✅ Works | |
+| `String.prototype.charCodeAt(i)` | ES3 | ✅ Works | |
+| `String.prototype.concat(...)` | ES3 | ✅ Works | |
+| `String.prototype.indexOf(sub)` | ES3 | ✅ Works | |
+| `String.prototype.lastIndexOf(sub)` | ES3 | ✅ Works | |
+| `String.prototype.length` | ES3 | ✅ Works | |
+| `String.prototype.match(regex)` | ES3 | ✅ Works | |
+| `String.prototype.replace(search, rep)` | ES3 | ✅ Works | Regex supported |
+| `String.prototype.search(regex)` | ES3 | ✅ Works | |
+| `String.prototype.slice(start, end)` | ES3 | ✅ Works | |
+| `String.prototype.split(sep)` | ES3 | ✅ Works | |
+| `String.prototype.substr(start, len)` | ES3 | ✅ Works | ES3 Annex B; prefer substring |
+| `String.prototype.substring(start, end)` | ES3 | ✅ Works | |
+| `String.prototype.toLowerCase()` | ES3 | ✅ Works | |
+| `String.prototype.toLocaleLowerCase()` | ES3 | ✅ Works | |
+| `String.prototype.toUpperCase()` | ES3 | ✅ Works | |
+| `String.fromCharCode(code)` | ES3 | ✅ Works | Static method |
+| `String.prototype.trim()` | ES5 | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
+| `String.prototype.endsWith(sub)` | ES6 | ❌ Missing | Use polyfill or `lastIndexOf` |
+| `String.prototype.includes(sub)` | ES6 | ❌ Missing | Use `indexOf !== -1` |
+| `String.prototype.padEnd(len, ch)` | ES6 | ❌ Missing | Implement manually |
+| `String.prototype.padStart(len, ch)` | ES6 | ❌ Missing | Implement manually |
+| `String.prototype.repeat(n)` | ES6 | ❌ Missing | Loop instead |
+| `String.prototype.startsWith(sub)` | ES6 | ❌ Missing | Use polyfill or `indexOf` |
 
 ### Math Object
 
-| Method / Constant | Status |
-|-------------------|--------|
-| `Math.abs(x)` | ✅ Works |
-| `Math.acos(x)` | ✅ Works |
-| `Math.asin(x)` | ✅ Works |
-| `Math.atan(x)` | ✅ Works |
-| `Math.atan2(y, x)` | ✅ Works |
-| `Math.ceil(x)` | ✅ Works |
-| `Math.cos(x)` | ✅ Works |
-| `Math.E` | ✅ Works |
-| `Math.exp(x)` | ✅ Works |
-| `Math.floor(x)` | ✅ Works |
-| `Math.LN2` | ✅ Works |
-| `Math.LN10` | ✅ Works |
-| `Math.log(x)` | ✅ Works |
-| `Math.LOG10E` | ✅ Works |
-| `Math.LOG2E` | ✅ Works |
-| `Math.max(a, b, ...)` | ✅ Works |
-| `Math.min(a, b, ...)` | ✅ Works |
-| `Math.PI` | ✅ Works |
-| `Math.pow(base, exp)` | ✅ Works |
-| `Math.random()` | ✅ Works |
-| `Math.round(x)` | ✅ Works |
-| `Math.sin(x)` | ✅ Works |
-| `Math.sqrt(x)` | ✅ Works |
-| `Math.SQRT1_2` | ✅ Works |
-| `Math.SQRT2` | ✅ Works |
-| `Math.tan(x)` | ✅ Works |
+All `Math` members are ES3 and work natively.
+
+| Method / Constant | ES | Status |
+|-------------------|----|--------|
+| `Math.abs(x)` | ES3 | ✅ Works |
+| `Math.acos(x)` | ES3 | ✅ Works |
+| `Math.asin(x)` | ES3 | ✅ Works |
+| `Math.atan(x)` | ES3 | ✅ Works |
+| `Math.atan2(y, x)` | ES3 | ✅ Works |
+| `Math.ceil(x)` | ES3 | ✅ Works |
+| `Math.cos(x)` | ES3 | ✅ Works |
+| `Math.E` | ES3 | ✅ Works |
+| `Math.exp(x)` | ES3 | ✅ Works |
+| `Math.floor(x)` | ES3 | ✅ Works |
+| `Math.LN2` | ES3 | ✅ Works |
+| `Math.LN10` | ES3 | ✅ Works |
+| `Math.log(x)` | ES3 | ✅ Works |
+| `Math.LOG10E` | ES3 | ✅ Works |
+| `Math.LOG2E` | ES3 | ✅ Works |
+| `Math.max(a, b, ...)` | ES3 | ✅ Works |
+| `Math.min(a, b, ...)` | ES3 | ✅ Works |
+| `Math.PI` | ES3 | ✅ Works |
+| `Math.pow(base, exp)` | ES3 | ✅ Works |
+| `Math.random()` | ES3 | ✅ Works |
+| `Math.round(x)` | ES3 | ✅ Works |
+| `Math.sin(x)` | ES3 | ✅ Works |
+| `Math.sqrt(x)` | ES3 | ✅ Works |
+| `Math.SQRT1_2` | ES3 | ✅ Works |
+| `Math.SQRT2` | ES3 | ✅ Works |
+| `Math.tan(x)` | ES3 | ✅ Works |
 
 ### Number
 
-| Method / Constant | Status | Notes |
-|-------------------|--------|-------|
-| `Number.prototype.toFixed(digits)` | ✅ Works | |
-| `Number.prototype.toExponential([digits])` | ✅ Works | |
-| `Number.prototype.toPrecision([digits])` | ✅ Works | |
-| `Number.prototype.toString([radix])` | ✅ Works | |
-| `Number.prototype.valueOf()` | ✅ Works | |
-| `Number.MAX_VALUE` | ✅ Works | |
-| `Number.MIN_VALUE` | ✅ Works | |
-| `Number.NaN` | ✅ Works | |
-| `Number.NEGATIVE_INFINITY` | ✅ Works | |
-| `Number.POSITIVE_INFINITY` | ✅ Works | |
-| `Number.isFinite(val)` | ❌ Missing | ES6; use global `isFinite()` |
-| `Number.isInteger(val)` | ❌ Missing | ES6; use `val === Math.floor(val)` |
-| `Number.isNaN(val)` | ❌ Missing | ES6; use global `isNaN()` |
-| `Number.parseInt(str)` | ❌ Missing | ES6; use global `parseInt()` |
-| `Number.parseFloat(str)` | ❌ Missing | ES6; use global `parseFloat()` |
+| Method / Constant | ES | Status | Notes |
+|-------------------|----|--------|-------|
+| `Number.prototype.toFixed(digits)` | ES3 | ✅ Works | |
+| `Number.prototype.toExponential([digits])` | ES3 | ✅ Works | |
+| `Number.prototype.toPrecision([digits])` | ES3 | ✅ Works | |
+| `Number.prototype.toString([radix])` | ES3 | ✅ Works | |
+| `Number.prototype.valueOf()` | ES3 | ✅ Works | |
+| `Number.MAX_VALUE` | ES3 | ✅ Works | |
+| `Number.MIN_VALUE` | ES3 | ✅ Works | |
+| `Number.NaN` | ES3 | ✅ Works | |
+| `Number.NEGATIVE_INFINITY` | ES3 | ✅ Works | |
+| `Number.POSITIVE_INFINITY` | ES3 | ✅ Works | |
+| `Number.isFinite(val)` | ES6 | ❌ Missing | Use global `isFinite()` |
+| `Number.isInteger(val)` | ES6 | ❌ Missing | Use `val === Math.floor(val)` |
+| `Number.isNaN(val)` | ES6 | ❌ Missing | Use global `isNaN()` |
+| `Number.parseInt(str)` | ES6 | ❌ Missing | Use global `parseInt()` |
+| `Number.parseFloat(str)` | ES6 | ❌ Missing | Use global `parseFloat()` |
 
 ### Object Methods
 
-| Method | Status | Notes |
-|--------|--------|-------|
-| `Object.prototype.hasOwnProperty(v)` | ✅ Works | Use inside `for...in` to skip inherited properties |
-| `Object.keys(obj)` | ❌ Missing | ES6; use `for...in` with `hasOwnProperty` |
-| `Object.values(obj)` | ❌ Missing | ES6; use `for...in` with `hasOwnProperty` |
-| `Object.assign(target, ...src)` | ❌ Missing | ES6; copy properties manually |
+| Method | ES | Status | Notes |
+|--------|----|--------|-------|
+| `Object.prototype.hasOwnProperty(v)` | ES3 | ✅ Works | Use inside `for...in` to skip inherited properties |
+| `Object.defineProperty(obj, prop, desc)` | ES5 | ✅ Works | Static method |
+| `Object.getPrototypeOf(obj)` | ES5 | ⚠️ Broken — polyfill | Exists but throws at runtime; see [Polyfills](/engine-limitations/polyfills/) |
+| `Object.keys(obj)` | ES6 | ❌ Missing | Use `for...in` with `hasOwnProperty` |
+| `Object.values(obj)` | ES6 | ❌ Missing | Use `for...in` with `hasOwnProperty` |
+| `Object.assign(target, ...src)` | ES6 | ❌ Missing | Copy properties manually |
+
+### Date Methods
+
+Value-confirmed `Date` members — see [Date Methods](/ecmascript-builtins/date-methods/) for examples.
+
+| Method | ES | Status |
+|--------|----|--------|
+| `Date.prototype.getFullYear()` | ES3 | ✅ Works |
+| `Date.prototype.getDay()` | ES3 | ✅ Works |
+| `Date.prototype.getMinutes()` | ES3 | ✅ Works |
+| `Date.prototype.getSeconds()` | ES3 | ✅ Works |
+| `Date.prototype.getMilliseconds()` | ES3 | ✅ Works |
+| `Date.prototype.valueOf()` | ES3 | ✅ Works |
+| `Date.prototype.toString()` | ES3 | ✅ Works |
+| `Date.prototype.toDateString()` | ES3 | ✅ Works |
+| `Date.prototype.toUTCString()` | ES3 | ✅ Works |
+| `Date.UTC(year[, ...])` | ES3 | ✅ Works |
 
 ## In This Section
 
@@ -141,4 +166,5 @@ SSJS runs on the JINT engine with ES3/ES5 compatibility. Most native ECMAScript 
 | [String Methods](/ecmascript-builtins/string-methods/) | Safe and polyfillable string methods |
 | [Math](/ecmascript-builtins/math/) | Math object reference |
 | [Number Methods](/ecmascript-builtins/number-methods/) | Number methods, constants, and global numeric functions |
-| [Object Methods](/ecmascript-builtins/object-methods/) | `hasOwnProperty` and missing Object statics |
+| [Object Methods](/ecmascript-builtins/object-methods/) | `hasOwnProperty`, `defineProperty`, and missing Object statics |
+| [Date Methods](/ecmascript-builtins/date-methods/) | Value-confirmed `Date` getters, string conversions, and `Date.UTC` |

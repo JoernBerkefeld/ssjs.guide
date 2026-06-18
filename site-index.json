@@ -3017,25 +3017,20 @@
     "returnType": "array"
   },
   {
-    "name": "Array.splice",
-    "url": "/ecmascript-builtins/array-methods/",
-    "section": "ECMAScript Builtins",
-    "type": "method",
-    "description": "Removes or replaces elements and optionally inserts new ones in place.",
-    "params": [
-      "start",
-      "deleteCount",
-      "item"
-    ],
-    "returnType": "array"
-  },
-  {
     "name": "Array.length",
     "url": "/ecmascript-builtins/array-methods/",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the number of elements in the array.",
     "returnType": "number"
+  },
+  {
+    "name": "Array.toLocaleString",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns a string representing the array elements, joined by a locale-specific separator.",
+    "returnType": "string"
   },
   {
     "name": "String.charAt",
@@ -3159,6 +3154,14 @@
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the string converted to lowercase.",
+    "returnType": "string"
+  },
+  {
+    "name": "String.toLocaleLowerCase",
+    "url": "/ecmascript-builtins/string-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the string converted to lowercase according to host locale mappings.",
     "returnType": "string"
   },
   {
@@ -3566,6 +3569,108 @@
     "type": "property",
     "description": "The index at which to start the next match.",
     "returnType": "number"
+  },
+  {
+    "name": "Date.getFullYear",
+    "url": "/ecmascript-builtins/date-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the four-digit year of the date according to local time.",
+    "returnType": "number"
+  },
+  {
+    "name": "Date.getMinutes",
+    "url": "/ecmascript-builtins/date-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the minutes (0–59) of the date according to local time.",
+    "returnType": "number"
+  },
+  {
+    "name": "Date.getSeconds",
+    "url": "/ecmascript-builtins/date-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the seconds (0–59) of the date according to local time.",
+    "returnType": "number"
+  },
+  {
+    "name": "Date.getDay",
+    "url": "/ecmascript-builtins/date-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the day of the week (0 = Sunday … 6 = Saturday) according to local time.",
+    "returnType": "number"
+  },
+  {
+    "name": "Date.getMilliseconds",
+    "url": "/ecmascript-builtins/date-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the milliseconds (0–999) of the date according to local time.",
+    "returnType": "number"
+  },
+  {
+    "name": "Date.toString",
+    "url": "/ecmascript-builtins/date-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns a human-readable string representing the date.",
+    "returnType": "string"
+  },
+  {
+    "name": "Date.toDateString",
+    "url": "/ecmascript-builtins/date-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the date portion of the date as a human-readable string.",
+    "returnType": "string"
+  },
+  {
+    "name": "Date.toUTCString",
+    "url": "/ecmascript-builtins/date-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the date as a string using the UTC time zone.",
+    "returnType": "string"
+  },
+  {
+    "name": "Date.valueOf",
+    "url": "/ecmascript-builtins/date-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the primitive value of the date as the number of milliseconds since the Unix epoch.",
+    "returnType": "number"
+  },
+  {
+    "name": "Date.UTC",
+    "url": "/ecmascript-builtins/date-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the number of milliseconds since the Unix epoch for the given UTC date components.",
+    "params": [
+      "year",
+      "month",
+      "day",
+      "hours",
+      "minutes",
+      "seconds",
+      "milliseconds"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "Object.defineProperty",
+    "url": "/ecmascript-builtins/object-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Defines a new property on an object, or modifies an existing one, with the given descriptor.",
+    "params": [
+      "obj",
+      "prop",
+      "descriptor"
+    ],
+    "returnType": "object"
   },
   {
     "name": "String",

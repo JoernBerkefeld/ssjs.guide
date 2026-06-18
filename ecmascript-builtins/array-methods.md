@@ -6,9 +6,11 @@ parent_url: /ecmascript-builtins/
 description: Array prototype methods available in SSJS — which work natively, which need polyfills, and safe ES3/ES5 alternatives for missing methods.
 ---
 
+Each method heading is tagged with the ECMAScript edition that standardized it: `(ES3)`, `(ES5)`, or `(ES6)`.
+
 ## Modifying Arrays
 
-### push / pop
+### push / pop `(ES3)`
 
 ```javascript
 var arr = [1, 2, 3];
@@ -16,7 +18,7 @@ arr.push(4);       // [1, 2, 3, 4]
 var last = arr.pop(); // 4, arr = [1, 2, 3]
 ```
 
-### shift / unshift
+### shift / unshift `(ES3)`
 
 ```javascript
 var arr = [1, 2, 3];
@@ -24,7 +26,7 @@ var first = arr.shift();   // 1, arr = [2, 3]
 arr.unshift(0);            // arr = [0, 2, 3]
 ```
 
-### splice
+### splice `(ES3)`
 
 {% include callout.html type="danger" content="**`Array.prototype.splice` is broken in SFMC SSJS.** The method exists but ignores its first two parameters. Always apply the polyfill from [Polyfills](/engine-limitations/polyfills/) before using it." %}
 
@@ -41,7 +43,7 @@ arr.splice(1, 1, "X");      // ["a", "X", "d"]
 arr.splice(1, 0, "B");      // ["a", "B", "X", "d"]
 ```
 
-### reverse / sort
+### reverse / sort `(ES3)`
 
 ```javascript
 var arr = [3, 1, 4, 1, 5, 9];
@@ -53,7 +55,7 @@ arr.reverse();  // descending
 
 ## Reading Arrays
 
-### slice
+### slice `(ES3)`
 
 ```javascript
 var arr = [0, 1, 2, 3, 4];
@@ -62,7 +64,7 @@ arr.slice(-2);    // [3, 4]
 arr.slice();      // copy of arr
 ```
 
-### join
+### join `(ES3)`
 
 ```javascript
 var parts = ["Hello", "World"];
@@ -71,7 +73,14 @@ parts.join("");     // "HelloWorld"
 parts.join(" / ");  // "Hello / World"
 ```
 
-### indexOf (polyfill required)
+### toLocaleString `(ES3)`
+
+```javascript
+var arr = [1, 2, 3];
+arr.toLocaleString();  // "1,2,3" (locale-specific separator)
+```
+
+### indexOf (polyfill required) `(ES5)`
 
 {% include callout.html type="warning" content="`Array.prototype.indexOf` is not available in SFMC SSJS. Apply the polyfill from [Polyfills](/engine-limitations/polyfills/)." %}
 
@@ -81,18 +90,25 @@ parts.join(" / ");  // "Hello / World"
 
 The following methods require polyfills from [Polyfills](/engine-limitations/polyfills/). Once applied they work correctly.
 
-| Method | Notes |
-|--------|-------|
-| `Array.prototype.copyWithin(targetIndex, startIndex, count)` | ⚠️ Unavailable |
-| `Array.prototype.entries()` | ⚠️ Unavailable |
-| `Array.prototype.fill(value[, start[, end]])` | ⚠️ Unavailable |
-| `Array.prototype.findIndex(fn)` | ⚠️ Unavailable |
-| `Array.prototype.includes(searchValue)` | ⚠️ Unavailable |
-| `Array.prototype.indexOf(searchValue[, fromIndex])` | ⚠️ Unavailable |
-| `Array.prototype.lastIndexOf(searchValue[, fromIndex])` | ⚠️ Broken — always returns -1 |
-| `Array.prototype.splice(start[, deleteCount[, ...]])` | ⚠️ Broken — ignores parameters |
-| `Array.isArray(value)` | ⚠️ Unavailable |
-| `Array.of(...)` | ⚠️ Unavailable |
+| Method | ES | Notes |
+|--------|----|-------|
+| `Array.prototype.copyWithin(targetIndex, startIndex, count)` | ES6 | ⚠️ Unavailable |
+| `Array.prototype.entries()` | ES6 | ⚠️ Unavailable |
+| `Array.prototype.fill(value[, start[, end]])` | ES6 | ⚠️ Unavailable |
+| `Array.prototype.filter(fn)` | ES5 | ⚠️ Unavailable |
+| `Array.prototype.find(fn)` | ES6 | ⚠️ Unavailable |
+| `Array.prototype.findIndex(fn)` | ES6 | ⚠️ Unavailable |
+| `Array.prototype.forEach(fn)` | ES5 | ⚠️ Unavailable |
+| `Array.prototype.includes(searchValue)` | ES6 | ⚠️ Unavailable |
+| `Array.prototype.indexOf(searchValue[, fromIndex])` | ES5 | ⚠️ Unavailable |
+| `Array.prototype.lastIndexOf(searchValue[, fromIndex])` | ES5 | ⚠️ Broken — always returns -1 |
+| `Array.prototype.map(fn)` | ES5 | ⚠️ Unavailable |
+| `Array.prototype.reduce(fn)` | ES5 | ⚠️ Unavailable |
+| `Array.prototype.reduceRight(fn)` | ES5 | ⚠️ Unavailable |
+| `Array.prototype.some(fn)` | ES5 | ⚠️ Unavailable |
+| `Array.prototype.splice(start[, deleteCount[, ...]])` | ES3 | ⚠️ Broken — ignores parameters |
+| `Array.isArray(value)` | ES5 | ⚠️ Unavailable |
+| `Array.of(...)` | ES6 | ⚠️ Unavailable |
 
 ---
 
@@ -100,7 +116,7 @@ The following methods require polyfills from [Polyfills](/engine-limitations/pol
 
 In SSJS, `forEach`, `map`, `filter`, `reduce`, `some`, and `every` are **not available**. Use `for` loops instead.
 
-### forEach equivalent
+### forEach equivalent `(ES5)`
 
 ```javascript
 // Instead of:  arr.forEach(function(item) { ... })
@@ -110,7 +126,7 @@ for (var i = 0; i < arr.length; i++) {
 }
 ```
 
-### map equivalent
+### map equivalent `(ES5)`
 
 ```javascript
 // Instead of: var doubled = arr.map(function(x) { return x * 2; })
@@ -120,7 +136,7 @@ for (var i = 0; i < arr.length; i++) {
 }
 ```
 
-### filter equivalent
+### filter equivalent `(ES5)`
 
 ```javascript
 // Instead of: var evens = arr.filter(function(x) { return x % 2 === 0; })
@@ -132,7 +148,7 @@ for (var i = 0; i < arr.length; i++) {
 }
 ```
 
-### reduce equivalent
+### reduce equivalent `(ES5)`
 
 ```javascript
 // Instead of: var sum = arr.reduce(function(acc, x) { return acc + x; }, 0)
@@ -142,7 +158,7 @@ for (var i = 0; i < arr.length; i++) {
 }
 ```
 
-### find equivalent
+### find equivalent `(ES6)`
 
 ```javascript
 // Instead of: var found = arr.find(function(x) { return x.id === targetId; })
@@ -155,7 +171,7 @@ for (var i = 0; i < arr.length; i++) {
 }
 ```
 
-### some/every equivalent
+### some/every equivalent `(ES5)`
 
 ```javascript
 // Instead of: arr.some(function(x) { return x > 10; })
@@ -171,7 +187,7 @@ for (var i = 0; i < arr.length; i++) {
 }
 ```
 
-### reduceRight equivalent
+### reduceRight equivalent `(ES5)`
 
 ```javascript
 // Instead of: arr.reduceRight(function(acc, x) { return acc + x; }, 0)
@@ -183,7 +199,7 @@ for (var i = arr.length - 1; i >= 0; i--) {
 
 ---
 
-## Array.isArray
+## Array.isArray `(ES5)`
 
 {% include callout.html type="warning" content="`Array.isArray` is not available in SFMC SSJS. Apply the polyfill from [Polyfills](/engine-limitations/polyfills/)." %}
 

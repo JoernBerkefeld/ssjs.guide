@@ -6,7 +6,9 @@ parent_url: /ecmascript-builtins/
 description: String prototype methods available in SSJS — native methods, polyfill candidates, and ES3/ES5 safe alternatives for ES6+ methods.
 ---
 
-## Length
+Each section heading is tagged with the ECMAScript edition that standardized the methods it covers: `(ES3)`, `(ES5)`, or `(ES6)`.
+
+## Length `(ES3)`
 
 ```javascript
 var str = "Hello";
@@ -15,7 +17,7 @@ str.length;  // 5
 
 ---
 
-## Character Access
+## Character Access `(ES3)`
 
 ```javascript
 var str = "Hello";
@@ -27,18 +29,19 @@ str[0];                // "H" (works in SSJS)
 
 ---
 
-## Case Conversion
+## Case Conversion `(ES3)`
 
 ```javascript
-"Hello World".toUpperCase();  // "HELLO WORLD"
-"Hello World".toLowerCase();  // "hello world"
+"Hello World".toUpperCase();        // "HELLO WORLD"
+"Hello World".toLowerCase();        // "hello world"
+"Hello World".toLocaleLowerCase();  // "hello world" (locale-aware lowercase)
 ```
 
 ---
 
 ## Searching
 
-### indexOf / lastIndexOf
+### indexOf / lastIndexOf `(ES3)`
 
 ```javascript
 var str = "Hello World Hello";
@@ -48,7 +51,7 @@ str.indexOf("xyz");        // -1
 str.indexOf("o", 5);       // 7 (start from position 5)
 ```
 
-### startsWith / endsWith / includes (missing — use indexOf or polyfill)
+### startsWith / endsWith / includes (missing — use indexOf or polyfill) `(ES6)`
 
 {% include callout.html type="warning" content="`startsWith`, `endsWith`, and `includes` are ES6 and not available in SFMC SSJS. Apply polyfills from [Polyfills](/engine-limitations/polyfills/) or use the patterns below." %}
 
@@ -71,7 +74,7 @@ function includes(str, sub) {
 
 ---
 
-## Substrings
+## Substrings `(ES3)`
 
 ```javascript
 var str = "Hello World";
@@ -83,13 +86,13 @@ str.substr(6, 5);      // "World" (deprecated but works)
 
 ---
 
-## Trim (use polyfill)
+## Trim (use polyfill) `(ES5)`
 
 {% include callout.html type="warning" content="`String.prototype.trim` is not available in SFMC SSJS. Apply a polyfill. See [Polyfills](/engine-limitations/polyfills/)." %}
 
 ---
 
-## Replace
+## Replace `(ES3)`
 
 ```javascript
 // Replace first occurrence
@@ -109,7 +112,7 @@ str.substr(6, 5);      // "World" (deprecated but works)
 
 ---
 
-## Split
+## Split `(ES3)`
 
 ```javascript
 "a,b,c".split(",");         // ["a", "b", "c"]
@@ -120,7 +123,7 @@ str.substr(6, 5);      // "World" (deprecated but works)
 
 ---
 
-## Match / Search
+## Match / Search `(ES3)`
 
 ```javascript
 var str = "Call 555-1234 or 555-5678";
@@ -130,7 +133,7 @@ str.search(/\d{3}-\d{4}/);                // 5
 
 ---
 
-## String Repetition (missing — implement manually)
+## String Repetition (missing — implement manually) `(ES6)`
 
 ```javascript
 // str.repeat(n) is ES6 — not available
@@ -146,7 +149,7 @@ repeat("ab", 3);  // "ababab"
 
 ---
 
-## Padding (missing — implement manually)
+## Padding (missing — implement manually) `(ES6)`
 
 ```javascript
 // padStart / padEnd are ES6 — not available
@@ -171,7 +174,7 @@ padStart("7", 3, "0");  // "007"
 
 ---
 
-## String.fromCharCode
+## String.fromCharCode `(ES3)`
 
 ```javascript
 String.fromCharCode(65);         // "A"
@@ -180,7 +183,7 @@ String.fromCharCode(72, 101, 108, 108, 111);  // "Hello"
 
 ---
 
-## Template Literal Alternative
+## Template Literal Alternative `(ES6)`
 
 Template literals are ES6 and not supported. Use string concatenation:
 
