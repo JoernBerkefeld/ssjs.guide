@@ -14,7 +14,7 @@ The **ES** column shows the ECMAScript edition that standardized each member.
 
 ## Global Numeric Functions
 
-These global functions are available without any namespace in all SSJS contexts.
+These are standard ECMAScript global functions (not SFMC-proprietary), available without any namespace in all SSJS contexts.
 
 | Function | ES | Returns | Description |
 |----------|----|---------|-------------|

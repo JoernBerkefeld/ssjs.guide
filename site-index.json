@@ -3673,6 +3673,153 @@
     "returnType": "object"
   },
   {
+    "name": "Array.copyWithin",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Array."
+  },
+  {
+    "name": "Array.entries",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Array."
+  },
+  {
+    "name": "Array.fill",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Array."
+  },
+  {
+    "name": "Array.filter",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Array."
+  },
+  {
+    "name": "Array.find",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Array."
+  },
+  {
+    "name": "Array.findIndex",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Array."
+  },
+  {
+    "name": "Array.forEach",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Array."
+  },
+  {
+    "name": "Array.includes",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Array."
+  },
+  {
+    "name": "Array.indexOf",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Array."
+  },
+  {
+    "name": "Array.lastIndexOf",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Array."
+  },
+  {
+    "name": "Array.map",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Array."
+  },
+  {
+    "name": "Array.reduce",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Array."
+  },
+  {
+    "name": "Array.reduceRight",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Array."
+  },
+  {
+    "name": "Array.some",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Array."
+  },
+  {
+    "name": "Array.splice",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Array."
+  },
+  {
+    "name": "String.trim",
+    "url": "/ecmascript-builtins/string-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "String."
+  },
+  {
+    "name": "String.startsWith",
+    "url": "/ecmascript-builtins/string-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "String."
+  },
+  {
+    "name": "String.endsWith",
+    "url": "/ecmascript-builtins/string-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "String."
+  },
+  {
+    "name": "Object.getPrototypeOf",
+    "url": "/ecmascript-builtins/object-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Object."
+  },
+  {
+    "name": "Array.isArray",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Array."
+  },
+  {
+    "name": "Array.of",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Array."
+  },
+  {
     "name": "String",
     "url": "/global-functions/string/",
     "section": "Global Functions",

@@ -130,6 +130,17 @@ All `Math` members are ES3 and work natively.
 | `Number.parseInt(str)` | ES6 | ❌ Missing | Use global `parseInt()` |
 | `Number.parseFloat(str)` | ES6 | ❌ Missing | Use global `parseFloat()` |
 
+### Global Functions
+
+Standard ECMAScript global functions (not SFMC-specific) — callable without any namespace.
+
+| Function | ES | Status | Notes |
+|----------|----|--------|-------|
+| `parseInt(str[, radix])` | ES3 | ✅ Works | Always pass a radix |
+| `parseFloat(str)` | ES3 | ✅ Works | |
+| `isNaN(val)` | ES3 | ✅ Works | |
+| `isFinite(val)` | ES3 | ✅ Works | |
+
 ### Object Methods
 
 | Method | ES | Status | Notes |
@@ -158,6 +169,20 @@ Value-confirmed `Date` members — see [Date Methods](/ecmascript-builtins/date-
 | `Date.prototype.toUTCString()` | ES3 | ✅ Works |
 | `Date.UTC(year[, ...])` | ES3 | ✅ Works |
 
+### RegExp
+
+Value-confirmed `RegExp` members — see [Regular Expressions](/language/regular-expressions/) for syntax, flags, and examples.
+
+| Method / Property | ES | Status |
+|-------------------|----|--------|
+| `RegExp.prototype.test(string)` | ES3 | ✅ Works |
+| `RegExp.prototype.exec(string)` | ES3 | ✅ Works |
+| `RegExp.prototype.source` | ES3 | ✅ Works |
+| `RegExp.prototype.global` | ES3 | ✅ Works |
+| `RegExp.prototype.ignoreCase` | ES3 | ✅ Works |
+| `RegExp.prototype.multiline` | ES3 | ✅ Works |
+| `RegExp.prototype.lastIndex` | ES3 | ✅ Works |
+
 ## In This Section
 
 | Page | Description |
@@ -168,3 +193,4 @@ Value-confirmed `Date` members — see [Date Methods](/ecmascript-builtins/date-
 | [Number Methods](/ecmascript-builtins/number-methods/) | Number methods, constants, and global numeric functions |
 | [Object Methods](/ecmascript-builtins/object-methods/) | `hasOwnProperty`, `defineProperty`, and missing Object statics |
 | [Date Methods](/ecmascript-builtins/date-methods/) | Value-confirmed `Date` getters, string conversions, and `Date.UTC` |
+| [Regular Expressions](/language/regular-expressions/) | `RegExp` `test`, `exec`, and flag accessors (`source`, `global`, `ignoreCase`, `multiline`, `lastIndex`) |

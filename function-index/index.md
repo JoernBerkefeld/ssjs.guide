@@ -84,6 +84,16 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`DateTime.TimeZone.Retrieve(filter)`](/platform-objects/datetime/#timezone-retrieve) | Platform Object | object[] | Time zone definitions (requires Core load) |
 | [`DateTime.LocalDateToSystemDate(dateString)`](/platform-objects/datetime/#localdatetolocaldate) | Platform Object | string | Local account/user time to system time (CST) |
 | [`DateTime.SystemDateToLocalDate(dateString)`](/platform-objects/datetime/#systemdatetolocaldate) | Platform Object | string | System time (CST) to local account/user time |
+| [`Date.UTC(year, month[, day, hours, minutes, seconds, milliseconds])`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Milliseconds since epoch for the given UTC date parts (static) |
+| [`<DateInstance>.getDay()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Day of week (0 = Sunday … 6 = Saturday), local time |
+| [`<DateInstance>.getFullYear()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Four-digit year, local time |
+| [`<DateInstance>.getMilliseconds()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Milliseconds (0–999), local time |
+| [`<DateInstance>.getMinutes()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Minutes (0–59), local time |
+| [`<DateInstance>.getSeconds()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Seconds (0–59), local time |
+| [`<DateInstance>.toDateString()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | string | Date portion as a human-readable string |
+| [`<DateInstance>.toString()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | string | Human-readable string representation of the date |
+| [`<DateInstance>.toUTCString()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | string | Date as a string in the UTC time zone |
+| [`<DateInstance>.valueOf()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Milliseconds since the Unix epoch |
 | [`DataExtension.Init(key)`](/core-library/dataextension/#init) | Core Library | DataExtensionInstance | Initialize DE object |
 | [`DataExtension.Add(properties)`](/core-library/dataextension/#add) | Core Library | DataExtensionInstance | Create data extension |
 | [`DataExtension.Retrieve(filter, [queryAllAccounts])`](/core-library/dataextension/#retrieve) | Core Library | object[] | Retrieve data extensions |
@@ -265,7 +275,9 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`Object.hasOwnProperty(v)`](/ecmascript-builtins/object-methods/) | ECMAScript Builtins | boolean | Test if object has own property |
+| [`Object.defineProperty(obj, prop, descriptor)`](/ecmascript-builtins/object-methods/) | ECMAScript Builtins | object | Define or modify a property with a descriptor (static) |
+| [`Object.getPrototypeOf(obj)`](/engine-limitations/polyfills/) | ECMAScript Builtins | object | Broken natively — throws at runtime; needs polyfill (static) |
+| [`<ObjectInstance>.hasOwnProperty(v)`](/ecmascript-builtins/object-methods/) | ECMAScript Builtins | boolean | Test if object has own (non-inherited) property |
 | [`OpenEvent.Retrieve(filter)`](/core-library/events/#open-event) | Core Library | object[] | Open tracking events |
 
 ---
@@ -327,6 +339,13 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`Platform.Response.Redirect(url, movedPermanently)`](/platform-objects/platform-response/#redirect) | Platform Response | void | Redirect the browser |
 | [`Platform.Response.RemoveCookie(name)`](/platform-objects/platform-response/#removecookie) | Platform Response | void | Remove a cookie |
 | [`Platform.Response.RemoveResponseHeader(headerName)`](/platform-objects/platform-response/#removeresponseheader) | Platform Response | void | Remove a response header |
+| [`<RegExpInstance>.exec(string)`](/language/regular-expressions/) | ECMAScript Builtins | array | Execute a search; returns match array or null |
+| [`<RegExpInstance>.test(string)`](/language/regular-expressions/) | ECMAScript Builtins | boolean | Test whether the string matches the pattern |
+| [`<RegExpInstance>.global`](/language/regular-expressions/) | ECMAScript Builtins | boolean | True if the `g` flag was set |
+| [`<RegExpInstance>.ignoreCase`](/language/regular-expressions/) | ECMAScript Builtins | boolean | True if the `i` flag was set |
+| [`<RegExpInstance>.lastIndex`](/language/regular-expressions/) | ECMAScript Builtins | number | Index at which to start the next match |
+| [`<RegExpInstance>.multiline`](/language/regular-expressions/) | ECMAScript Builtins | boolean | True if the `m` flag was set |
+| [`<RegExpInstance>.source`](/language/regular-expressions/) | ECMAScript Builtins | string | The pattern text, excluding slashes and flags |
 
 ---
 

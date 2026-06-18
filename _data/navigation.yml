@@ -338,6 +338,10 @@
         url: /ecmascript-builtins/number-methods/
       - title: Object Methods
         url: /ecmascript-builtins/object-methods/
+      - title: Date Methods
+        url: /ecmascript-builtins/date-methods/
+      - title: Regular Expressions
+        url: /language/regular-expressions/
 
 - title: Best Practices
   url: /best-practices/
