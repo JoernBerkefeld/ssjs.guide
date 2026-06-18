@@ -68,8 +68,50 @@ arr.lastIndexOf(2);
 | `String.prototype.trim` | `str.replace(/^\s+\|\s+$/g, "")` |
 | `String.prototype.startsWith` | `str.indexOf(sub) === 0` |
 | `String.prototype.endsWith` | `str.slice(-sub.length) === sub` |
+| `String.prototype.includes` | `str.indexOf(sub) !== -1` |
+| `String.prototype.padStart` | Manual `for` loop prepending the pad character |
+| `String.prototype.padEnd` | Manual `for` loop appending the pad character |
+| `String.prototype.repeat` | Manual `for` loop concatenating the string |
 
 **Note:** `String.prototype.indexOf` is available and works correctly for strings. The `indexOf` missing-method warning only applies to `Array.prototype.indexOf`.
+
+## Missing Number Methods
+
+The ES6 static helpers on `Number` are **not available** — use the equivalent global functions or simple expressions instead:
+
+| Method | Workaround |
+|--------|-----------|
+| `Number.isFinite` | Global `isFinite(val)` |
+| `Number.isInteger` | `val === Math.floor(val)` (guard against non-numbers first) |
+| `Number.isNaN` | Global `isNaN(val)` |
+| `Number.parseInt` | Global `parseInt(str, radix)` |
+| `Number.parseFloat` | Global `parseFloat(str)` |
+
+## Broken Object Methods
+
+These methods **exist** in SSJS but do not behave correctly:
+
+### Object.getPrototypeOf — broken
+
+`Object.getPrototypeOf` is present but **throws at runtime** when called.
+
+```javascript
+Object.getPrototypeOf({});
+// Expected: the prototype object
+// Actual:   throws an error
+```
+
+**Use the polyfill** from the [Polyfills](/engine-limitations/polyfills/) page.
+
+## Missing Object Methods
+
+These methods do **not exist** in SFMC SSJS and will throw an error if called:
+
+| Method | Workaround |
+|--------|-----------|
+| `Object.keys` | `for...in` loop with `hasOwnProperty`, pushing keys |
+| `Object.values` | `for...in` loop with `hasOwnProperty`, pushing values |
+| `Object.assign` | Manual `for...in` copy of each source's own properties |
 
 ## Safe Array Methods (Available in SSJS)
 
@@ -133,6 +175,58 @@ function includesValue(arr, value) {
 // Array.isArray equivalent
 function isArray(value) {
     return Object.prototype.toString.call(value) === "[object Array]";
+}
+
+// String.prototype.padStart equivalent
+function padStart(str, targetLength, padChar) {
+    padChar = padChar || " ";
+    while (str.length < targetLength) { str = padChar + str; }
+    return str;
+}
+
+// String.prototype.padEnd equivalent
+function padEnd(str, targetLength, padChar) {
+    padChar = padChar || " ";
+    while (str.length < targetLength) { str = str + padChar; }
+    return str;
+}
+
+// String.prototype.repeat equivalent
+function repeat(str, count) {
+    var result = "";
+    for (var i = 0; i < count; i++) { result += str; }
+    return result;
+}
+
+// Number.isInteger equivalent
+function isInteger(value) {
+    return typeof value === "number" && isFinite(value) && value === Math.floor(value);
+}
+
+// Object.keys equivalent
+function objectKeys(obj) {
+    var keys = [];
+    for (var key in obj) {
+        if (obj.hasOwnProperty(key)) { keys.push(key); }
+    }
+    return keys;
+}
+
+// Object.values equivalent
+function objectValues(obj) {
+    var values = [];
+    for (var key in obj) {
+        if (obj.hasOwnProperty(key)) { values.push(obj[key]); }
+    }
+    return values;
+}
+
+// Object.assign equivalent
+function objectAssign(target, source) {
+    for (var key in source) {
+        if (source.hasOwnProperty(key)) { target[key] = source[key]; }
+    }
+    return target;
 }
 ```
 
