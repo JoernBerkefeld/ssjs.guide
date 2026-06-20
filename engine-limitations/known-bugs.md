@@ -126,13 +126,13 @@ function getConfig() {
 
 **Severity: Medium** — silent incorrect behavior
 
-`Array.prototype.splice` in SFMC SSJS ignores its `startIndex` and `deleteCount` arguments, behaving as if both are `0`. This means it never actually removes elements from the intended position.
+`Array.prototype.splice(start[, deleteCount[, item1 … itemN]])` works correctly in SFMC SSJS for the **delete-only** form (`splice(start)` and `splice(start, deleteCount)`). The bug surfaces **only when you insert items**: as soon as a third argument (`item1`) is passed, the engine ignores `start` and `deleteCount` and just overwrites from the left with the items to insert.
 
 ```javascript
 var arr = [1, 2, 3, 4, 5];
-arr.splice(2, 1);
-// Expected: removes element at index 2, arr becomes [1, 2, 4, 5]
-// Actual:   arr is unchanged = [1, 2, 3, 4, 5]
+arr.splice(2, 1, 'a');
+// Expected: removes element at index 2, arr becomes [1, 2, 'a', 4, 5]
+// Actual:   first element is replaced = ['a', 2, 3, 4, 5] as if you ran arr.splice(null, null, "a");
 ```
 
 Use the [splice polyfill](/engine-limitations/polyfills/#splice-broken--must-override).

@@ -13,19 +13,19 @@ description: Date prototype methods and statics confirmed to work in SSJS — va
 
 ---
 
-## Instance Methods (ES3)
+## Instance Methods `(ES3)`
 
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `Date.prototype.getFullYear()` `(ES3)` | number | Four-digit year in local time |
-| `Date.prototype.getDay()` `(ES3)` | number | Day of week (0 = Sunday … 6 = Saturday) in local time |
-| `Date.prototype.getMinutes()` `(ES3)` | number | Minutes (0–59) in local time |
-| `Date.prototype.getSeconds()` `(ES3)` | number | Seconds (0–59) in local time |
-| `Date.prototype.getMilliseconds()` `(ES3)` | number | Milliseconds (0–999) in local time |
-| `Date.prototype.valueOf()` `(ES3)` | number | Milliseconds since the Unix epoch |
-| `Date.prototype.toString()` `(ES3)` | string | Human-readable date string |
-| `Date.prototype.toDateString()` `(ES3)` | string | Date portion as a human-readable string |
-| `Date.prototype.toUTCString()` `(ES3)` | string | Date string in the UTC time zone |
+| Method | ES | Returns | Description |
+|--------|---------|---------|-------------|
+| `Date.prototype.getFullYear()` | ES3 | number | Four-digit year in local time |
+| `Date.prototype.getDay()` | ES3 | number | Day of week (0 = Sunday … 6 = Saturday) in local time |
+| `Date.prototype.getMinutes()` | ES3 | number | Minutes (0–59) in local time |
+| `Date.prototype.getSeconds()` | ES3 | number | Seconds (0–59) in local time |
+| `Date.prototype.getMilliseconds()` | ES3 | number | Milliseconds (0–999) in local time |
+| `Date.prototype.valueOf()` | ES3 | number | Milliseconds since the Unix epoch |
+| `Date.prototype.toString()` | ES3 | string | Human-readable date string |
+| `Date.prototype.toDateString()` | ES3 | string | Date portion as a human-readable string |
+| `Date.prototype.toUTCString()` | ES3 | string | Date string in the UTC time zone |
 
 ```javascript
 var d = new Date();
@@ -44,7 +44,7 @@ epoch.toUTCString();   // "Thu, 01 Jan 1970 00:00:00 UTC"
 
 ---
 
-## Static Methods (ES3)
+## Static Methods `(ES3)`
 
 | Method | Returns | Description |
 |--------|---------|-------------|
