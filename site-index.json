@@ -528,7 +528,7 @@
     "params": [
       "jsonString"
     ],
-    "returnType": "object|object[]"
+    "returnType": "any"
   },
   {
     "name": "RedirectTo",
@@ -596,7 +596,7 @@
     "type": "function",
     "description": "Converts a JavaScript object into its JSON string representation.",
     "params": [
-      "object"
+      "value"
     ],
     "returnType": "string"
   },
@@ -679,7 +679,7 @@
       "objectType",
       "properties"
     ],
-    "returnType": "object"
+    "returnType": "WSProxyResult"
   },
   {
     "name": "<WSProxyInstance>.updateItem",
@@ -691,7 +691,7 @@
       "objectType",
       "properties"
     ],
-    "returnType": "object"
+    "returnType": "WSProxyResult"
   },
   {
     "name": "<WSProxyInstance>.deleteItem",
@@ -703,7 +703,7 @@
       "objectType",
       "properties"
     ],
-    "returnType": "object"
+    "returnType": "WSProxyResult"
   },
   {
     "name": "<WSProxyInstance>.retrieve",
@@ -718,7 +718,7 @@
       "retrieveOptions",
       "requestProps"
     ],
-    "returnType": "object"
+    "returnType": "WSProxyResult"
   },
   {
     "name": "<WSProxyInstance>.getNextBatch",
@@ -730,7 +730,7 @@
       "objectType",
       "requestId"
     ],
-    "returnType": "object"
+    "returnType": "WSProxyResult"
   },
   {
     "name": "<WSProxyInstance>.performItem",
@@ -744,7 +744,7 @@
       "action",
       "performOptions"
     ],
-    "returnType": "object"
+    "returnType": "WSProxyResult"
   },
   {
     "name": "<WSProxyInstance>.performBatch",
@@ -758,7 +758,7 @@
       "action",
       "performOptions"
     ],
-    "returnType": "object"
+    "returnType": "WSProxyResult"
   },
   {
     "name": "<WSProxyInstance>.describe",
@@ -769,7 +769,7 @@
     "params": [
       "objectType"
     ],
-    "returnType": "object"
+    "returnType": "WSProxyResult"
   },
   {
     "name": "<WSProxyInstance>.execute",
@@ -781,7 +781,7 @@
       "objectType",
       "requestName"
     ],
-    "returnType": "object"
+    "returnType": "WSProxyResult"
   },
   {
     "name": "<WSProxyInstance>.setBatchSize",
@@ -823,7 +823,7 @@
       "objectType",
       "propertiesArray"
     ],
-    "returnType": "object"
+    "returnType": "WSProxyResult"
   },
   {
     "name": "<WSProxyInstance>.updateBatch",
@@ -835,7 +835,7 @@
       "objectType",
       "propertiesArray"
     ],
-    "returnType": "object"
+    "returnType": "WSProxyResult"
   },
   {
     "name": "<WSProxyInstance>.deleteBatch",
@@ -847,7 +847,7 @@
       "objectType",
       "propertiesArray"
     ],
-    "returnType": "object"
+    "returnType": "WSProxyResult"
   },
   {
     "name": "new Script.Util.WSProxy",
@@ -885,7 +885,7 @@
     "section": "HTTP & REST",
     "type": "method",
     "description": "Executes the HTTP request and returns a Script.",
-    "returnType": "object"
+    "returnType": "HttpResponseInstance"
   },
   {
     "name": "<HttpRequestInstance>.setHeader",
