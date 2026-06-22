@@ -152,6 +152,14 @@ Standard ECMAScript global functions (not SFMC-specific) — callable without an
 | `Object.values(obj)` | ES6 | ❌ Missing | Use `for...in` with `hasOwnProperty` |
 | `Object.assign(target, ...src)` | ES6 | ❌ Missing | Copy properties manually |
 
+### Function Methods
+
+| Method | ES | Status | Notes |
+|--------|----|--------|-------|
+| `Function.prototype.call(thisArg, ...)` | ES3 | ✅ Works | See [Function Methods](/ecmascript-builtins/function-methods/) |
+| `Function.prototype.apply(thisArg, argsArray)` | ES3 | ✅ Works | See [Function Methods](/ecmascript-builtins/function-methods/) |
+| `Function.prototype.bind(thisArg, ...)` | ES5 | ❌ Missing | Prototype is sealed — use the `bindFn` helper in [Polyfills](/engine-limitations/polyfills/) |
+
 ### Date Methods
 
 Value-confirmed `Date` members — see [Date Methods](/ecmascript-builtins/date-methods/) for examples.
@@ -192,5 +200,6 @@ Value-confirmed `RegExp` members — see [Regular Expressions](/language/regular
 | [Math](/ecmascript-builtins/math/) | Math object reference |
 | [Number Methods](/ecmascript-builtins/number-methods/) | Number methods, constants, and global numeric functions |
 | [Object Methods](/ecmascript-builtins/object-methods/) | `hasOwnProperty`, `defineProperty`, and missing Object statics |
+| [Function Methods](/ecmascript-builtins/function-methods/) | Native `call` / `apply` and the `bind` (`bindFn`) helper |
 | [Date Methods](/ecmascript-builtins/date-methods/) | Value-confirmed `Date` getters, string conversions, and `Date.UTC` |
 | [Regular Expressions](/language/regular-expressions/) | `RegExp` `test`, `exec`, and flag accessors (`source`, `global`, `ignoreCase`, `multiline`, `lastIndex`) |

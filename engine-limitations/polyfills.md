@@ -3,7 +3,7 @@ layout: page
 title: Polyfills
 parent: Engine Limitations
 parent_url: /engine-limitations/
-description: Ready-to-use polyfill implementations for the 20 missing or broken Array and String methods in SFMC SSJS.
+description: Ready-to-use polyfill implementations and helpers for the missing or broken Array, String, and Function methods in SFMC SSJS.
 ---
 
 Copy the polyfills you need to the top of your SSJS script block (before any usage). Add only the ones you actually use — each one adds a small amount of overhead.
@@ -306,11 +306,54 @@ String.prototype.startsWith = String.prototype.startsWith || function(searchStri
 
 ### endsWith
 
+> **Two engine quirks to respect (both verified on a CloudPage):**
+>
+> 1. **Never name the second parameter `length`.** A function parameter literally named `length` collides with the engine's internal length intrinsic and throws `invalid length` at runtime. Name it `endPosition` instead.
+> 2. **Short-circuit an empty search string to `true`.** `substring(len, len)` does not reliably yield `''` on this engine, so `'x'.endsWith('')` returns `false` without the guard. The ECMAScript spec requires an empty search string to always return `true`.
+
 ```javascript
-String.prototype.endsWith = String.prototype.endsWith || function(search, length) {
-    var len = (length === undefined || length > this.length) ? this.length : length;
-    return this.substring(len - search.length, len) === search;
+String.prototype.endsWith = String.prototype.endsWith || function(searchString, endPosition) {
+    var str = String(this);
+    var search = String(searchString);
+    if (search.length === 0) { return true; }
+    var strLen = str.length;
+    var end = (endPosition === undefined || endPosition > strLen) ? strLen : Number(endPosition);
+    if (end < 0) { end = 0; }
+    var start = end - search.length;
+    if (start < 0) { return false; }
+    return str.substring(start, end) === search;
 };
+```
+
+---
+
+## Function Helpers
+
+`Function.prototype.call` and `Function.prototype.apply` are **ES3 and work natively** in SFMC SSJS — no polyfill is needed for either.
+
+`Function.prototype.bind` (ES5) is **not** available, and unlike `Array.prototype` / `String.prototype`, **`Function.prototype` is sealed** — assigning `Function.prototype.bind = …` silently has no effect. Use a standalone helper instead of a prototype polyfill.
+
+### bindFn (standalone helper — `bind` cannot be installed on the prototype)
+
+```javascript
+function bindFn(fn, thisArg) {
+    var preArgs = [];
+    for (var i = 2; i < arguments.length; i++) { preArgs.push(arguments[i]); }
+    return function () {
+        var callArgs = [];
+        for (var a = 0; a < preArgs.length; a++) { callArgs.push(preArgs[a]); }
+        for (var b = 0; b < arguments.length; b++) { callArgs.push(arguments[b]); }
+        return fn.apply(thisArg, callArgs);
+    };
+}
+```
+
+Usage — `bindFn(fn, thisArg[, ...preArgs])` returns a new function with `this` and any leading arguments pre-bound:
+
+```javascript
+var greet = function (greeting, name) { return greeting + ', ' + name + '!'; };
+var sayHi = bindFn(greet, null, 'Hi');
+sayHi('Ada'); // "Hi, Ada!"
 ```
 
 ---
@@ -336,6 +379,8 @@ Array.prototype.copyWithin = Array.prototype.copyWithin || function(t,s,c) { var
 Array.prototype.entries   = Array.prototype.entries   || function() { var idx=0; var a=this; return { next: function() { return idx<a.length ? {value:[idx,a[idx++]],done:false} : {done:true}; } }; };
 String.prototype.trim     = String.prototype.trim     || function() { return this.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g,''); };
 String.prototype.startsWith = String.prototype.startsWith || function(s,p) { p=p||0; return this.indexOf(s,p)===p; };
-String.prototype.endsWith   = String.prototype.endsWith   || function(s,l) { var n=(l===undefined||l>this.length)?this.length:l; return this.substring(n-s.length,n)===s; };
+String.prototype.endsWith   = String.prototype.endsWith   || function(searchString,endPosition) { var str=String(this); var search=String(searchString); if (search.length===0) return true; var strLen=str.length; var end=(endPosition===undefined||endPosition>strLen)?strLen:Number(endPosition); if (end<0) end=0; var start=end-search.length; if (start<0) return false; return str.substring(start,end)===search; };
 Array.isArray = Array.isArray || function(v) { return Object.prototype.toString.call(v)==='[object Array]'; };
+// Function.prototype.bind is unavailable AND the prototype is sealed — use this standalone helper instead:
+function bindFn(fn,thisArg) { var preArgs=[]; for (var i=2;i<arguments.length;i++) preArgs.push(arguments[i]); return function() { var callArgs=[]; for (var a=0;a<preArgs.length;a++) callArgs.push(preArgs[a]); for (var b=0;b<arguments.length;b++) callArgs.push(arguments[b]); return fn.apply(thisArg,callArgs); }; }
 ```

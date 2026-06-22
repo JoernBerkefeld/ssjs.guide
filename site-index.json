@@ -3673,6 +3673,30 @@
     "returnType": "object"
   },
   {
+    "name": "Function.call",
+    "url": "/ecmascript-builtins/function-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Calls the function with a given `this` value and arguments provided individually.",
+    "params": [
+      "thisArg",
+      "arg"
+    ],
+    "returnType": "any"
+  },
+  {
+    "name": "Function.apply",
+    "url": "/ecmascript-builtins/function-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Calls the function with a given `this` value and arguments provided as an array.",
+    "params": [
+      "thisArg",
+      "argsArray"
+    ],
+    "returnType": "any"
+  },
+  {
     "name": "Array.copyWithin",
     "url": "/ecmascript-builtins/array-methods/",
     "section": "ECMAScript Builtins",
@@ -3797,6 +3821,13 @@
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "String."
+  },
+  {
+    "name": "Function.bind",
+    "url": "/ecmascript-builtins/function-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Function."
   },
   {
     "name": "Object.getPrototypeOf",
