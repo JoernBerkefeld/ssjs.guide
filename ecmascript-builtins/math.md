@@ -6,7 +6,12 @@ parent_url: /ecmascript-builtins/
 description: The Math built-in object in SSJS — all standard methods work as expected. Complete reference with examples.
 ---
 
-All `Math` object methods and constants work correctly in SSJS. No polyfills are needed. Every `Math` member documented here is part of **ES3** — section headings are tagged accordingly. Methods shown only as fallbacks (e.g. `Math.sign`, `Math.cbrt`, `Math.log10`) are ES6 and **not** available.
+Most `Math` object methods and constants work correctly in SSJS. Every `Math` member documented here is part of **ES3** — section headings are tagged accordingly. Methods shown only as fallbacks (e.g. `Math.sign`, `Math.cbrt`, `Math.log10`) are ES6 and **not** available.
+
+Two confirmed exceptions in the SFMC engine:
+
+- **`Math.LOG10E` is `undefined`** — use the literal `0.4342944819032518` instead.
+- **`Math.max` / `Math.min` throw with 3+ arguments**, and the no-argument forms return `0` instead of `-Infinity` / `+Infinity`. Compare two values at a time, fold with a loop, or use the [polyfill](/engine-limitations/polyfills/).
 
 ## Constants `(ES3)`
 
@@ -17,7 +22,7 @@ All `Math` object methods and constants work correctly in SSJS. No polyfills are
 | `Math.LN2` | `0.6931471805599453` | Natural logarithm of 2 |
 | `Math.LN10` | `2.302585092994046` | Natural logarithm of 10 |
 | `Math.LOG2E` | `1.4426950408889634` | Base-2 logarithm of e |
-| `Math.LOG10E` | `0.4342944819032518` | Base-10 logarithm of e |
+| `Math.LOG10E` | ❌ `undefined` | Missing in SFMC — use the literal `0.4342944819032518` |
 | `Math.SQRT2` | `1.4142135623730951` | Square root of 2 |
 | `Math.SQRT1_2` | `0.7071067811865476` | Square root of 1/2 (= 1 / Math.SQRT2) |
 
@@ -57,11 +62,14 @@ function sign(n) {
 
 ## Min / Max `(ES3)`
 
-```javascript
-Math.max(1, 5, 3);   // 5
-Math.min(1, 5, 3);   // 1
+{% include callout.html type="warning" content="In SFMC SSJS, `Math.max` / `Math.min` throw when passed **3 or more arguments**, and the no-argument forms return `0` instead of `-Infinity` / `+Infinity`. Only the two-argument form is safe — fold with a loop for more, or use the [polyfill](/engine-limitations/polyfills/)." %}
 
-// Max/min of array
+```javascript
+Math.max(1, 5);      // 5  — two-argument form is safe
+Math.min(1, 5);      // 1
+// Math.max(1, 5, 3); // ❌ throws in SFMC (3+ args)
+
+// Max/min of array (safe pattern)
 var arr = [3, 1, 4, 1, 5, 9, 2, 6];
 var max = arr[0];
 var min = arr[0];
@@ -137,10 +145,14 @@ function randomItem(arr) {
 
 ## Number Parsing `(ES3)`
 
+{% include callout.html type="warning" content="In SFMC SSJS, `parseInt` / `parseFloat` return `NaN` when the string has **trailing non-numeric characters** (e.g. `parseInt(\"10px\", 10)` is `NaN`, not `10`). Strip non-digits before parsing. `parseFloat` results also use 32-bit precision — compare with a tolerance." %}
+
 ```javascript
 parseInt("42", 10);      // 42
 parseInt("0xFF", 16);    // 255
-parseFloat("3.14");      // 3.14
+parseFloat("3.14");      // 3.14 (32-bit precision)
+parseInt("10px", 10);    // NaN in SFMC (spec would give 10)
+parseFloat("1.5kg");     // NaN in SFMC (spec would give 1.5)
 isNaN(NaN);              // true
 isNaN("hello");          // true
 isNaN(42);               // false

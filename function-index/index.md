@@ -84,12 +84,19 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`DateTime.TimeZone.Retrieve(filter)`](/platform-objects/datetime/#timezone-retrieve) | Platform Object | object[] | Time zone definitions (requires Core load) |
 | [`DateTime.LocalDateToSystemDate(dateString)`](/platform-objects/datetime/#localdatetolocaldate) | Platform Object | string | Local account/user time to system time (CST) |
 | [`DateTime.SystemDateToLocalDate(dateString)`](/platform-objects/datetime/#systemdatetolocaldate) | Platform Object | string | System time (CST) to local account/user time |
+| [`Date.now()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Milliseconds since the Unix epoch (static) |
+| [`Date.parse(dateString)`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Parse a date string to milliseconds since epoch (static) |
 | [`Date.UTC(year, month[, day, hours, minutes, seconds, milliseconds])`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Milliseconds since epoch for the given UTC date parts (static) |
+| [`<DateInstance>.getDate()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Day of month (1–31), local time |
 | [`<DateInstance>.getDay()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Day of week (0 = Sunday … 6 = Saturday), local time |
 | [`<DateInstance>.getFullYear()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Four-digit year, local time |
-| [`<DateInstance>.getMilliseconds()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Milliseconds (0–999), local time |
+| [`<DateInstance>.getHours()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Hours (0–23), local time |
+| [`<DateInstance>.getMilliseconds()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Milliseconds (0–999), local time — frequently off by one |
 | [`<DateInstance>.getMinutes()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Minutes (0–59), local time |
+| [`<DateInstance>.getMonth()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Month (0 = January … 11 = December), local time |
 | [`<DateInstance>.getSeconds()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Seconds (0–59), local time |
+| [`<DateInstance>.getTime()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Milliseconds since the Unix epoch |
+| [`<DateInstance>.getTimezoneOffset()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Difference in minutes between local time and UTC |
 | [`<DateInstance>.toDateString()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | string | Date portion as a human-readable string |
 | [`<DateInstance>.toString()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | string | Human-readable string representation of the date |
 | [`<DateInstance>.toUTCString()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | string | Date as a string in the UTC time zone |
@@ -242,7 +249,6 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`Math.LN2`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Natural logarithm of 2 |
 | [`Math.LN10`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Natural logarithm of 10 |
 | [`Math.log(x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Natural logarithm |
-| [`Math.LOG10E`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Base-10 log of e |
 | [`Math.LOG2E`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Base-2 log of e |
 | [`Math.max(value1[, value2, ...])`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Largest value |
 | [`Math.min(value1[, value2, ...])`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Smallest value |
@@ -276,6 +282,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
 | [`Object.defineProperty(obj, prop, descriptor)`](/ecmascript-builtins/object-methods/) | ECMAScript Builtins | object | Define or modify a property with a descriptor (static) |
+| [`Object.getOwnPropertyNames(obj)`](/ecmascript-builtins/object-methods/) | ECMAScript Builtins | array | Array of an object's own property names (static) |
 | [`Object.getPrototypeOf(obj)`](/engine-limitations/polyfills/) | ECMAScript Builtins | object | Broken natively — throws at runtime; needs polyfill (static) |
 | [`<ObjectInstance>.hasOwnProperty(v)`](/ecmascript-builtins/object-methods/) | ECMAScript Builtins | boolean | Test if object has own (non-inherited) property |
 | [`OpenEvent.Retrieve(filter)`](/core-library/events/#open-event) | Core Library | object[] | Open tracking events |
@@ -342,9 +349,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`<RegExpInstance>.exec(string)`](/language/regular-expressions/) | ECMAScript Builtins | array | Execute a search; returns match array or null |
 | [`<RegExpInstance>.test(string)`](/language/regular-expressions/) | ECMAScript Builtins | boolean | Test whether the string matches the pattern |
 | [`<RegExpInstance>.global`](/language/regular-expressions/) | ECMAScript Builtins | boolean | True if the `g` flag was set |
-| [`<RegExpInstance>.ignoreCase`](/language/regular-expressions/) | ECMAScript Builtins | boolean | True if the `i` flag was set |
 | [`<RegExpInstance>.lastIndex`](/language/regular-expressions/) | ECMAScript Builtins | number | Index at which to start the next match |
-| [`<RegExpInstance>.multiline`](/language/regular-expressions/) | ECMAScript Builtins | boolean | True if the `m` flag was set |
 | [`<RegExpInstance>.source`](/language/regular-expressions/) | ECMAScript Builtins | string | The pattern text, excluding slashes and flags |
 
 ---
@@ -407,12 +412,12 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`<StringInstance>.indexOf(searchValue[, fromIndex])`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | number | First index of substring |
 | [`<StringInstance>.lastIndexOf(searchValue[, fromIndex])`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | number | Last index of substring |
 | [`<StringInstance>.length`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | number | String length |
+| [`<StringInstance>.localeCompare(compareString)`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | number | Compare two strings in sort order (-1, 0, or 1) |
 | [`<StringInstance>.match(regexp)`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | array | Match regex |
 | [`<StringInstance>.replace(searchValue, replaceValue)`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | string | Replace substring |
 | [`<StringInstance>.search(regexp)`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | number | Search for regex |
 | [`<StringInstance>.slice(start[, end])`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | string | Extract substring |
 | [`<StringInstance>.split(separator[, limit])`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | array | Split into array |
-| [`<StringInstance>.substr(start[, length])`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | string | Substring by length |
 | [`<StringInstance>.substring(start[, end])`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | string | Substring by range |
 | [`<StringInstance>.toLowerCase()`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | string | Convert to lower case |
 | [`<StringInstance>.toUpperCase()`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | string | Convert to upper case |

@@ -76,12 +76,14 @@ function includes(str, sub) {
 
 ## Substrings `(ES3)`
 
+{% include callout.html type="warning" content="`String.prototype.substr` throws at runtime in SFMC SSJS — it is **not** available. Use `substring` or `slice` instead, or apply the `substr` polyfill from [Polyfills](/engine-limitations/polyfills/)." %}
+
 ```javascript
 var str = "Hello World";
 str.slice(0, 5);       // "Hello"
 str.slice(-5);         // "World"
 str.substring(6, 11);  // "World"
-str.substr(6, 5);      // "World" (deprecated but works)
+// str.substr(6, 5);   // ❌ throws in SFMC — use substring/slice or the polyfill
 ```
 
 ---
@@ -114,21 +116,43 @@ str.substr(6, 5);      // "World" (deprecated but works)
 
 ## Split `(ES3)`
 
+{% include callout.html type="warning" content="The empty-separator form `str.split(\"\")` does **not** split into characters in SFMC SSJS — it returns the whole string as a single element. To get characters, loop with `charAt`, or use the `split` polyfill from [Polyfills](/engine-limitations/polyfills/)." %}
+
 ```javascript
 "a,b,c".split(",");         // ["a", "b", "c"]
-"hello".split("");          // ["h", "e", "l", "l", "o"]
 "a  b  c".split(/\s+/);     // ["a", "b", "c"]
 "a,b,c".split(",", 2);      // ["a", "b"] (limit)
+
+// "hello".split("");       // ❌ does NOT split into characters in SFMC
+// Get characters by looping instead:
+var chars = [];
+var s = "hello";
+for (var i = 0; i < s.length; i++) { chars.push(s.charAt(i)); }
+// chars is now ["h", "e", "l", "l", "o"]
 ```
 
 ---
 
 ## Match / Search `(ES3)`
 
+{% include callout.html type="warning" content="In SFMC SSJS, `String.match` returns an **empty array `[]`** (not `null`) when there is no match, and matched results do **not** carry a `.index` property. `String.search` is unreliable — it returns `0` instead of `-1` for a no-match, and some real matches return the wrong index — use `String.match` or `RegExp.test` to detect a match reliably, or apply the `search` polyfill from [Polyfills](/engine-limitations/polyfills/)." %}
+
 ```javascript
 var str = "Call 555-1234 or 555-5678";
 var matches = str.match(/\d{3}-\d{4}/g);  // ["555-1234", "555-5678"]
-str.search(/\d{3}-\d{4}/);                // 5
+str.match(/zzz/);                         // [] (empty array in SFMC, not null)
+str.search(/\d{3}-\d{4}/);                // unreliable in SFMC — may return the wrong index
+str.search(/zzz/);                        // 0 in SFMC (spec would give -1) — ambiguous
+```
+
+---
+
+## localeCompare `(ES3)`
+
+```javascript
+"apple".localeCompare("banana");  // negative (apple sorts before banana)
+"banana".localeCompare("apple");  // positive
+"apple".localeCompare("apple");   // 0 (equal)
 ```
 
 ---

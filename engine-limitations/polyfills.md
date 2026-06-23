@@ -3,7 +3,7 @@ layout: page
 title: Polyfills
 parent: Engine Limitations
 parent_url: /engine-limitations/
-description: Ready-to-use polyfill implementations and helpers for the missing or broken Array, String, and Function methods in SFMC SSJS.
+description: Ready-to-use polyfill implementations and helpers for the missing or broken Array, String, Math, Object, and Function methods in SFMC SSJS.
 ---
 
 Copy the polyfills you need to the top of your SSJS script block (before any usage). Add only the ones you actually use — each one adds a small amount of overhead.
@@ -263,6 +263,52 @@ Array.prototype.splice = function(start, deleteCount) {
 };
 ```
 
+### slice (broken — must override)
+
+`Array.prototype.slice` works for explicit indices (including negatives, e.g. `slice(1, 3)` and `slice(-2)`), but the no-argument form `arr.slice()` throws in the SFMC engine. This pure-JS reimplementation makes `slice()`, `slice(-2)`, and `slice(1, -1)` all work without relying on the native. Override it unconditionally:
+
+```javascript
+Array.prototype.slice = function(start, end) {
+    var len = this.length;
+    var s = (start === undefined) ? 0 : Number(start);
+    var e = (end === undefined) ? len : Number(end);
+    if (s !== s) { s = 0; }
+    if (e !== e) { e = 0; }
+    if (s < 0) { s = len + s; if (s < 0) { s = 0; } } else if (s > len) { s = len; }
+    if (e < 0) { e = len + e; if (e < 0) { e = 0; } } else if (e > len) { e = len; }
+    var out = [];
+    for (var i = s; i < e; i++) { out.push(this[i]); }
+    return out;
+};
+```
+
+### sort (broken — must override)
+
+`Array.prototype.sort` works when called **with a compare function**, but the no-argument form `arr.sort()` throws, and the native sort cannot be re-invoked via a captured reference. This pure-JS in-place insertion sort makes both `arr.sort()` (default lexicographic order) and `arr.sort(compareFn)` work. Override it unconditionally:
+
+```javascript
+Array.prototype.sort = function(compareFn) {
+    var cmp = (typeof compareFn === 'function')
+        ? compareFn
+        : function(a, b) {
+            var sa = String(a);
+            var sb = String(b);
+            return sa < sb ? -1 : (sa > sb ? 1 : 0);
+        };
+    var len = this.length;
+    for (var i = 1; i < len; i++) {
+        var current = this[i];
+        var j = i - 1;
+        while (j >= 0 && cmp(this[j], current) > 0) {
+            this[j + 1] = this[j];
+            j--;
+        }
+        this[j + 1] = current;
+    }
+    return this;
+};
+```
+
 ### Array.isArray (static)
 
 ```javascript
@@ -325,6 +371,106 @@ String.prototype.endsWith = String.prototype.endsWith || function(searchString, 
 };
 ```
 
+### substr (broken — must override)
+
+`String.prototype.substr` throws when called in SFMC SSJS. This polyfill maps `(start, length)` onto `substring()`. Override it unconditionally:
+
+```javascript
+String.prototype.substr = function(start, length) {
+    var len = this.length;
+    var from = start < 0 ? Math.max(len + start, 0) : Math.min(start, len);
+    var to = length === undefined ? len : from + (length < 0 ? 0 : length);
+    return this.substring(from, to);
+};
+```
+
+### search (broken — must override)
+
+`String.prototype.search` is unreliable in SFMC: it returns the wrong index for some matches (observed returning `0` or `-1` where the match is elsewhere) and returns `0` instead of `-1` on a no-match. This polyfill delegates to `String.match` (passing the regex straight through, since `regexp instanceof RegExp` returns `false` here and reconstructing via `new RegExp()` breaks matching) and returns the index via `indexOf` of the matched text, or `-1` on no match. Override it unconditionally:
+
+```javascript
+String.prototype.search = function(regexp) {
+    var str = "" + this;
+    var m = str.match(regexp);
+    if (m === null || m.length === 0) { return -1; }
+    return str.indexOf(m[0]);
+};
+```
+
+### split (broken — must override)
+
+`String.prototype.split` works for normal separators, but the empty-string separator `""` does **not** split into individual characters as the spec requires. This polyfill handles the `""` case with a manual character loop (honouring an optional limit) and delegates all other separators to the native split. Override it unconditionally:
+
+```javascript
+String.prototype.split = (function() {
+    var nativeSplit = String.prototype.split;
+    return function(separator, limit) {
+        var str = String(this);
+        if (separator === '') {
+            var out = [];
+            for (var i = 0; i < str.length; i++) {
+                if (limit !== undefined && out.length >= limit) { break; }
+                out.push(str.charAt(i));
+            }
+            return out;
+        }
+        if (limit === undefined) { return nativeSplit.call(str, separator); }
+        return nativeSplit.call(str, separator, limit);
+    };
+})();
+```
+
+---
+
+## Math Polyfills
+
+### max / min (broken — must override)
+
+`Math.max` / `Math.min` throw when given **three or more arguments** and return `0` (not ±Infinity) with **no arguments**. These pure-JS variadic folds handle any argument count and propagate `NaN` per spec. Override them unconditionally:
+
+> **Note:** the no-argument results are `Number.NEGATIVE_INFINITY` / `Number.POSITIVE_INFINITY`. The engine mis-renders the **sign** of `Infinity` when stringified, but the numeric value is correct.
+
+```javascript
+Math.max = function() {
+    if (arguments.length === 0) { return Number.NEGATIVE_INFINITY; }
+    var best = Number(arguments[0]);
+    if (best !== best) { return NaN; }
+    for (var i = 1; i < arguments.length; i++) {
+        var v = Number(arguments[i]);
+        if (v !== v) { return NaN; }
+        if (v > best) { best = v; }
+    }
+    return best;
+};
+
+Math.min = function() {
+    if (arguments.length === 0) { return Number.POSITIVE_INFINITY; }
+    var best = Number(arguments[0]);
+    if (best !== best) { return NaN; }
+    for (var i = 1; i < arguments.length; i++) {
+        var v = Number(arguments[i]);
+        if (v !== v) { return NaN; }
+        if (v < best) { best = v; }
+    }
+    return best;
+};
+```
+
+---
+
+## Object Polyfills
+
+### Object.getPrototypeOf (broken — must override)
+
+`Object.getPrototypeOf` exists but throws at runtime, so it cannot be used. This polyfill returns the constructor prototype instead. Override it unconditionally:
+
+```javascript
+Object.getPrototypeOf = function(obj) {
+    if (obj === null || obj === undefined) { return null; }
+    return obj.constructor ? obj.constructor.prototype : null;
+};
+```
+
 ---
 
 ## Function Helpers
@@ -374,12 +520,20 @@ Array.prototype.includes  = Array.prototype.includes  || function(v) { for (var 
 Array.prototype.some      = Array.prototype.some      || function(cb) { if (typeof cb!=='function') return false; for (var i=0;i<this.length;i++) if (cb(this[i],i,this)) return true; return false; };
 Array.prototype.every     = Array.prototype.every     || function(cb) { if (typeof cb!=='function') return true; for (var i=0;i<this.length;i++) if (!cb(this[i],i,this)) return false; return true; };
 Array.prototype.lastIndexOf = function(v,f) { var s=(f!==undefined)?f:this.length-1; for (var i=s;i>=0;i--) if (this[i]===v) return i; return -1; }; // broken native — always override
+Array.prototype.slice     = function(start,end) { var len=this.length; var s=(start===undefined)?0:Number(start); var e=(end===undefined)?len:Number(end); if (s!==s) s=0; if (e!==e) e=0; if (s<0){s=len+s; if (s<0) s=0;} else if (s>len) s=len; if (e<0){e=len+e; if (e<0) e=0;} else if (e>len) e=len; var out=[]; for (var i=s;i<e;i++) out.push(this[i]); return out; }; // broken native — always override
+Array.prototype.sort      = function(compareFn) { var cmp=(typeof compareFn==='function')?compareFn:function(a,b){var sa=String(a),sb=String(b);return sa<sb?-1:(sa>sb?1:0);}; var len=this.length; for (var i=1;i<len;i++){var current=this[i];var j=i-1;while (j>=0&&cmp(this[j],current)>0){this[j+1]=this[j];j--;}this[j+1]=current;} return this; }; // broken native — always override
 Array.prototype.fill      = Array.prototype.fill      || function(v,s,e) { var start=s||0; var end=(!e||e>this.length)?this.length:e; for (var i=start;i<end;i++) this[i]=v; return this; };
 Array.prototype.copyWithin = Array.prototype.copyWithin || function(t,s,c) { var n=c||1; for (var i=0;i<n;i++) this[t+i]=this[s+i]; return this; };
 Array.prototype.entries   = Array.prototype.entries   || function() { var idx=0; var a=this; return { next: function() { return idx<a.length ? {value:[idx,a[idx++]],done:false} : {done:true}; } }; };
 String.prototype.trim     = String.prototype.trim     || function() { return this.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g,''); };
 String.prototype.startsWith = String.prototype.startsWith || function(s,p) { p=p||0; return this.indexOf(s,p)===p; };
 String.prototype.endsWith   = String.prototype.endsWith   || function(searchString,endPosition) { var str=String(this); var search=String(searchString); if (search.length===0) return true; var strLen=str.length; var end=(endPosition===undefined||endPosition>strLen)?strLen:Number(endPosition); if (end<0) end=0; var start=end-search.length; if (start<0) return false; return str.substring(start,end)===search; };
+String.prototype.substr   = function(start,length) { var len=this.length; var from=start<0?Math.max(len+start,0):Math.min(start,len); var to=length===undefined?len:from+(length<0?0:length); return this.substring(from,to); }; // broken native — always override
+String.prototype.search   = function(regexp) { var str=""+this; var m=str.match(regexp); if (m===null||m.length===0) return -1; return str.indexOf(m[0]); }; // broken native — always override
+String.prototype.split    = (function(){ var nativeSplit=String.prototype.split; return function(separator,limit){ var str=String(this); if (separator===''){ var out=[]; for (var i=0;i<str.length;i++){ if (limit!==undefined&&out.length>=limit) break; out.push(str.charAt(i)); } return out; } if (limit===undefined) return nativeSplit.call(str,separator); return nativeSplit.call(str,separator,limit); }; })(); // broken native — always override
+Math.max = function() { if (arguments.length===0) return Number.NEGATIVE_INFINITY; var best=Number(arguments[0]); if (best!==best) return NaN; for (var i=1;i<arguments.length;i++){var v=Number(arguments[i]); if (v!==v) return NaN; if (v>best) best=v;} return best; }; // broken native — always override
+Math.min = function() { if (arguments.length===0) return Number.POSITIVE_INFINITY; var best=Number(arguments[0]); if (best!==best) return NaN; for (var i=1;i<arguments.length;i++){var v=Number(arguments[i]); if (v!==v) return NaN; if (v<best) best=v;} return best; }; // broken native — always override
+Object.getPrototypeOf = function(obj) { if (obj===null||obj===undefined) return null; return obj.constructor ? obj.constructor.prototype : null; }; // broken native — always override
 Array.isArray = Array.isArray || function(v) { return Object.prototype.toString.call(v)==='[object Array]'; };
 // Function.prototype.bind is unavailable AND the prototype is sealed — use this standalone helper instead:
 function bindFn(fn,thisArg) { var preArgs=[]; for (var i=2;i<arguments.length;i++) preArgs.push(arguments[i]); return function() { var callArgs=[]; for (var a=0;a<preArgs.length;a++) callArgs.push(preArgs[a]); for (var b=0;b<arguments.length;b++) callArgs.push(arguments[b]); return fn.apply(thisArg,callArgs); }; }

@@ -95,9 +95,10 @@ The following ES6 `Object` static methods are **not available** in SSJS:
 
 | Method | ES | Alternative |
 |--------|----|-------------|
-| `Object.keys(obj)` | ES6 | Use `for...in` with `hasOwnProperty` |
+| `Object.keys(obj)` | ES5 | Use `for...in` with `hasOwnProperty` |
 | `Object.values(obj)` | ES6 | Use `for...in` with `hasOwnProperty` |
 | `Object.entries(obj)` | ES6 | Use `for...in` with `hasOwnProperty` |
 | `Object.assign(target, ...src)` | ES6 | Copy properties manually with a loop |
-| `Object.create(proto)` | ES5 | Not available |
-| `Object.freeze(obj)` | ES5 | Not available |
+| `Object.create(proto)` | ES5 | Use a constructor function with a prototype |
+| `Object.getOwnPropertyNames(obj)` | ES5 | Use `for...in` with `hasOwnProperty` (enumerable own keys only) |
+| `Object.freeze(obj)` | ES5 | Not available — immutability cannot be enforced; treat as read-only by convention |

@@ -3184,16 +3184,15 @@
     "returnType": "string"
   },
   {
-    "name": "String.substr",
+    "name": "String.localeCompare",
     "url": "/ecmascript-builtins/string-methods/",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns a substring starting at start and running for length characters.",
+    "description": "Compares this string with another and returns a negative number if it sorts before, a positive number if it sorts after, or 0 if they are equivalent.",
     "params": [
-      "start",
-      "length"
+      "compareString"
     ],
-    "returnType": "string"
+    "returnType": "number"
   },
   {
     "name": "String.length",
@@ -3441,14 +3440,6 @@
     "returnType": "number"
   },
   {
-    "name": "Math.LOG10E",
-    "url": "/ecmascript-builtins/math/",
-    "section": "ECMAScript Builtins",
-    "type": "method",
-    "description": "The base-10 logarithm of e (~0.",
-    "returnType": "number"
-  },
-  {
     "name": "Math.SQRT2",
     "url": "/ecmascript-builtins/math/",
     "section": "ECMAScript Builtins",
@@ -3547,22 +3538,6 @@
     "returnType": "boolean"
   },
   {
-    "name": "RegExp.ignoreCase",
-    "url": "/language/regular-expressions/",
-    "section": "ECMAScript Builtins",
-    "type": "property",
-    "description": "True if the i (case-insensitive) flag was specified.",
-    "returnType": "boolean"
-  },
-  {
-    "name": "RegExp.multiline",
-    "url": "/language/regular-expressions/",
-    "section": "ECMAScript Builtins",
-    "type": "property",
-    "description": "True if the m (multiline) flag was specified.",
-    "returnType": "boolean"
-  },
-  {
     "name": "RegExp.lastIndex",
     "url": "/language/regular-expressions/",
     "section": "ECMAScript Builtins",
@@ -3576,6 +3551,46 @@
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the four-digit year of the date according to local time.",
+    "returnType": "number"
+  },
+  {
+    "name": "Date.getMonth",
+    "url": "/ecmascript-builtins/date-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the month (0 = January … 11 = December) of the date according to local time.",
+    "returnType": "number"
+  },
+  {
+    "name": "Date.getDate",
+    "url": "/ecmascript-builtins/date-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the day of the month (1–31) of the date according to local time.",
+    "returnType": "number"
+  },
+  {
+    "name": "Date.getHours",
+    "url": "/ecmascript-builtins/date-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the hour (0–23) of the date according to local time.",
+    "returnType": "number"
+  },
+  {
+    "name": "Date.getTime",
+    "url": "/ecmascript-builtins/date-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the numeric timestamp (milliseconds since 1970-01-01T00:00:00 UTC) for the date.",
+    "returnType": "number"
+  },
+  {
+    "name": "Date.getTimezoneOffset",
+    "url": "/ecmascript-builtins/date-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the difference, in minutes, between this date evaluated in UTC and in the host local time zone.",
     "returnType": "number"
   },
   {
@@ -3657,6 +3672,25 @@
       "seconds",
       "milliseconds"
     ],
+    "returnType": "number"
+  },
+  {
+    "name": "Date.parse",
+    "url": "/ecmascript-builtins/date-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Parses a date string and returns the numeric timestamp (milliseconds since the Unix epoch), or NaN if the string cannot be parsed.",
+    "params": [
+      "dateString"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "Date.now",
+    "url": "/ecmascript-builtins/date-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the current time as the numeric timestamp (milliseconds since the Unix epoch).",
     "returnType": "number"
   },
   {
@@ -3849,6 +3883,55 @@
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Array."
+  },
+  {
+    "name": "String.substr",
+    "url": "/ecmascript-builtins/string-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "String."
+  },
+  {
+    "name": "Array.slice",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Array."
+  },
+  {
+    "name": "Array.sort",
+    "url": "/ecmascript-builtins/array-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Array."
+  },
+  {
+    "name": "String.search",
+    "url": "/ecmascript-builtins/string-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "String."
+  },
+  {
+    "name": "String.split",
+    "url": "/ecmascript-builtins/string-methods/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "String."
+  },
+  {
+    "name": "Math.max",
+    "url": "/ecmascript-builtins/math/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Math."
+  },
+  {
+    "name": "Math.min",
+    "url": "/ecmascript-builtins/math/",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Math."
   },
   {
     "name": "String",

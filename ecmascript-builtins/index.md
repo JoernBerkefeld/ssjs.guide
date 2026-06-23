@@ -25,10 +25,10 @@ The **ES** column shows the ECMAScript edition that standardized each member (ES
 | `Array.prototype.push(item)` | ES3 | ✅ Works | |
 | `Array.prototype.reverse()` | ES3 | ✅ Works | |
 | `Array.prototype.shift()` | ES3 | ✅ Works | |
-| `Array.prototype.slice(start, end)` | ES3 | ✅ Works | |
-| `Array.prototype.sort(fn)` | ES3 | ✅ Works | |
 | `Array.prototype.toLocaleString()` | ES3 | ✅ Works | |
 | `Array.prototype.unshift(item)` | ES3 | ✅ Works | |
+| `Array.prototype.slice(start, end)` | ES3 | ⚠️ Partial | Explicit indices (including negatives, e.g. `slice(1, 3)` / `slice(-2)`) work, but no-arg `slice()` throws — see [Polyfills](/engine-limitations/polyfills/) |
+| `Array.prototype.sort(fn)` | ES3 | ⚠️ Partial | No-arg `sort()` throws; pass a compare function or use the [polyfill](/engine-limitations/polyfills/) |
 | `Array.prototype.splice(start[, deleteCount[, item1[, ...]]])` | ES3 | ⚠️ Partial | Delete form works; insert form (3rd+ arg) ignores `start`/`deleteCount` — see [Polyfills](/engine-limitations/polyfills/) |
 | `Array.prototype.lastIndexOf(item)` | ES5 | ⚠️ Broken — polyfill | Always returns -1; see [Polyfills](/engine-limitations/polyfills/) |
 | `Array.prototype.copyWithin(...)` | ES6 | ⚠️ Polyfill | See [Polyfills](/engine-limitations/polyfills/) |
@@ -58,13 +58,14 @@ The **ES** column shows the ECMAScript edition that standardized each member (ES
 | `String.prototype.indexOf(sub)` | ES3 | ✅ Works | |
 | `String.prototype.lastIndexOf(sub)` | ES3 | ✅ Works | |
 | `String.prototype.length` | ES3 | ✅ Works | |
-| `String.prototype.match(regex)` | ES3 | ✅ Works | |
+| `String.prototype.localeCompare(other)` | ES3 | ✅ Works | |
+| `String.prototype.match(regex)` | ES3 | ✅ Works | No-match returns `[]` (empty array), not `null`; matches have no `.index` |
 | `String.prototype.replace(search, rep)` | ES3 | ✅ Works | Regex supported |
-| `String.prototype.search(regex)` | ES3 | ✅ Works | |
 | `String.prototype.slice(start, end)` | ES3 | ✅ Works | |
-| `String.prototype.split(sep)` | ES3 | ✅ Works | |
-| `String.prototype.substr(start, len)` | ES3 | ✅ Works | ES3 Annex B; prefer substring |
 | `String.prototype.substring(start, end)` | ES3 | ✅ Works | |
+| `String.prototype.search(regex)` | ES3 | ⚠️ Partial | Unreliable — no-match returns `0` instead of `-1`, and some real matches return the wrong index — see [Polyfills](/engine-limitations/polyfills/) |
+| `String.prototype.split(sep)` | ES3 | ⚠️ Partial | Empty-separator `split("")` does not split into characters — see [Polyfills](/engine-limitations/polyfills/) |
+| `String.prototype.substr(start, len)` | ES3 | ❌ Missing | Throws at runtime; use `substring` or the [polyfill](/engine-limitations/polyfills/) |
 | `String.prototype.toLowerCase()` | ES3 | ✅ Works | |
 | `String.prototype.toLocaleLowerCase()` | ES3 | ✅ Works | |
 | `String.prototype.toUpperCase()` | ES3 | ✅ Works | |
@@ -79,36 +80,36 @@ The **ES** column shows the ECMAScript edition that standardized each member (ES
 
 ### Math Object
 
-All `Math` members are ES3 and work natively.
+All `Math` members below are ES3. Most work natively; `Math.max` / `Math.min` have argument-count caveats and `Math.LOG10E` is missing.
 
-| Method / Constant | ES | Status |
-|-------------------|----|--------|
-| `Math.abs(x)` | ES3 | ✅ Works |
-| `Math.acos(x)` | ES3 | ✅ Works |
-| `Math.asin(x)` | ES3 | ✅ Works |
-| `Math.atan(x)` | ES3 | ✅ Works |
-| `Math.atan2(y, x)` | ES3 | ✅ Works |
-| `Math.ceil(x)` | ES3 | ✅ Works |
-| `Math.cos(x)` | ES3 | ✅ Works |
-| `Math.E` | ES3 | ✅ Works |
-| `Math.exp(x)` | ES3 | ✅ Works |
-| `Math.floor(x)` | ES3 | ✅ Works |
-| `Math.LN2` | ES3 | ✅ Works |
-| `Math.LN10` | ES3 | ✅ Works |
-| `Math.log(x)` | ES3 | ✅ Works |
-| `Math.LOG10E` | ES3 | ✅ Works |
-| `Math.LOG2E` | ES3 | ✅ Works |
-| `Math.max(a, b, ...)` | ES3 | ✅ Works |
-| `Math.min(a, b, ...)` | ES3 | ✅ Works |
-| `Math.PI` | ES3 | ✅ Works |
-| `Math.pow(base, exp)` | ES3 | ✅ Works |
-| `Math.random()` | ES3 | ✅ Works |
-| `Math.round(x)` | ES3 | ✅ Works |
-| `Math.sin(x)` | ES3 | ✅ Works |
-| `Math.sqrt(x)` | ES3 | ✅ Works |
-| `Math.SQRT1_2` | ES3 | ✅ Works |
-| `Math.SQRT2` | ES3 | ✅ Works |
-| `Math.tan(x)` | ES3 | ✅ Works |
+| Method / Constant | ES | Status | Notes |
+|-------------------|----|--------|-------|
+| `Math.abs(x)` | ES3 | ✅ Works | |
+| `Math.acos(x)` | ES3 | ✅ Works | |
+| `Math.asin(x)` | ES3 | ✅ Works | |
+| `Math.atan(x)` | ES3 | ✅ Works | |
+| `Math.atan2(y, x)` | ES3 | ✅ Works | |
+| `Math.ceil(x)` | ES3 | ✅ Works | |
+| `Math.cos(x)` | ES3 | ✅ Works | |
+| `Math.E` | ES3 | ✅ Works | |
+| `Math.exp(x)` | ES3 | ✅ Works | |
+| `Math.floor(x)` | ES3 | ✅ Works | |
+| `Math.LN2` | ES3 | ✅ Works | |
+| `Math.LN10` | ES3 | ✅ Works | |
+| `Math.log(x)` | ES3 | ✅ Works | |
+| `Math.LOG10E` | ES3 | ❌ Missing | `undefined` in SFMC; use the literal `0.4342944819032518` |
+| `Math.LOG2E` | ES3 | ✅ Works | |
+| `Math.max(a, b, ...)` | ES3 | ⚠️ Partial | Throws with 3+ args; no-arg `Math.max()` returns `0` not `-Infinity` — compare two at a time or use the [polyfill](/engine-limitations/polyfills/) |
+| `Math.min(a, b, ...)` | ES3 | ⚠️ Partial | Throws with 3+ args; no-arg `Math.min()` returns `0` not `+Infinity` — compare two at a time or use the [polyfill](/engine-limitations/polyfills/) |
+| `Math.PI` | ES3 | ✅ Works | |
+| `Math.pow(base, exp)` | ES3 | ✅ Works | |
+| `Math.random()` | ES3 | ✅ Works | |
+| `Math.round(x)` | ES3 | ✅ Works | |
+| `Math.sin(x)` | ES3 | ✅ Works | |
+| `Math.sqrt(x)` | ES3 | ✅ Works | |
+| `Math.SQRT1_2` | ES3 | ✅ Works | |
+| `Math.SQRT2` | ES3 | ✅ Works | |
+| `Math.tan(x)` | ES3 | ✅ Works | |
 
 ### Number
 
@@ -136,8 +137,8 @@ Standard ECMAScript global functions (not SFMC-specific) — callable without an
 
 | Function | ES | Status | Notes |
 |----------|----|--------|-------|
-| `parseInt(str[, radix])` | ES3 | ✅ Works | Always pass a radix |
-| `parseFloat(str)` | ES3 | ✅ Works | |
+| `parseInt(str[, radix])` | ES3 | ⚠️ Partial | Always pass a radix; returns `NaN` for trailing non-digits (`parseInt("10px", 10)` → `NaN`, not `10`) |
+| `parseFloat(str)` | ES3 | ⚠️ Partial | Returns `NaN` for trailing non-digits (`parseFloat("1.5kg")` → `NaN`); result uses 32-bit precision |
 | `isNaN(val)` | ES3 | ✅ Works | |
 | `isFinite(val)` | ES3 | ✅ Works | |
 
@@ -164,32 +165,39 @@ Standard ECMAScript global functions (not SFMC-specific) — callable without an
 
 Value-confirmed `Date` members — see [Date Methods](/ecmascript-builtins/date-methods/) for examples.
 
-| Method | ES | Status |
-|--------|----|--------|
-| `Date.prototype.getFullYear()` | ES3 | ✅ Works |
-| `Date.prototype.getDay()` | ES3 | ✅ Works |
-| `Date.prototype.getMinutes()` | ES3 | ✅ Works |
-| `Date.prototype.getSeconds()` | ES3 | ✅ Works |
-| `Date.prototype.getMilliseconds()` | ES3 | ✅ Works |
-| `Date.prototype.valueOf()` | ES3 | ✅ Works |
-| `Date.prototype.toString()` | ES3 | ✅ Works |
-| `Date.prototype.toDateString()` | ES3 | ✅ Works |
-| `Date.prototype.toUTCString()` | ES3 | ✅ Works |
-| `Date.UTC(year[, ...])` | ES3 | ✅ Works |
+| Method | ES | Status | Notes |
+|--------|----|--------|-------|
+| `Date.prototype.getFullYear()` | ES3 | ✅ Works | |
+| `Date.prototype.getMonth()` | ES3 | ✅ Works | 0-based |
+| `Date.prototype.getDate()` | ES3 | ✅ Works | |
+| `Date.prototype.getDay()` | ES3 | ✅ Works | |
+| `Date.prototype.getHours()` | ES3 | ✅ Works | |
+| `Date.prototype.getMinutes()` | ES3 | ✅ Works | |
+| `Date.prototype.getSeconds()` | ES3 | ✅ Works | |
+| `Date.prototype.getMilliseconds()` | ES3 | ⚠️ Partial | Frequently off by one — do not rely on exact millisecond values |
+| `Date.prototype.getTime()` | ES3 | ✅ Works | |
+| `Date.prototype.getTimezoneOffset()` | ES3 | ✅ Works | |
+| `Date.prototype.valueOf()` | ES3 | ✅ Works | |
+| `Date.prototype.toString()` | ES3 | ✅ Works | |
+| `Date.prototype.toDateString()` | ES3 | ✅ Works | |
+| `Date.prototype.toUTCString()` | ES3 | ✅ Works | |
+| `Date.now()` | ES5 | ✅ Works | Static |
+| `Date.parse(str)` | ES3 | ✅ Works | Static |
+| `Date.UTC(year[, ...])` | ES3 | ✅ Works | Static |
 
 ### RegExp
 
 Value-confirmed `RegExp` members — see [Regular Expressions](/language/regular-expressions/) for syntax, flags, and examples.
 
-| Method / Property | ES | Status |
-|-------------------|----|--------|
-| `RegExp.prototype.test(string)` | ES3 | ✅ Works |
-| `RegExp.prototype.exec(string)` | ES3 | ✅ Works |
-| `RegExp.prototype.source` | ES3 | ✅ Works |
-| `RegExp.prototype.global` | ES3 | ✅ Works |
-| `RegExp.prototype.ignoreCase` | ES3 | ✅ Works |
-| `RegExp.prototype.multiline` | ES3 | ✅ Works |
-| `RegExp.prototype.lastIndex` | ES3 | ✅ Works |
+| Method / Property | ES | Status | Notes |
+|-------------------|----|--------|-------|
+| `RegExp.prototype.test(string)` | ES3 | ✅ Works | |
+| `RegExp.prototype.exec(string)` | ES3 | ⚠️ Partial | Full match `result[0]` works, but capture groups `result[1]+` are `undefined`; `lastIndex` does not advance |
+| `RegExp.prototype.source` | ES3 | ✅ Works | |
+| `RegExp.prototype.global` | ES3 | ✅ Works | |
+| `RegExp.prototype.lastIndex` | ES3 | ⚠️ Partial | Does not advance after `exec()`/`test()` with the `g` flag — use `String.match(/.../g)` to get all matches |
+| `RegExp.prototype.ignoreCase` | ES3 | ❌ Missing | `undefined` in SFMC; track the `i` flag yourself |
+| `RegExp.prototype.multiline` | ES3 | ❌ Missing | `undefined` in SFMC; track the `m` flag yourself |
 
 ## In This Section
 
@@ -202,4 +210,4 @@ Value-confirmed `RegExp` members — see [Regular Expressions](/language/regular
 | [Object Methods](/ecmascript-builtins/object-methods/) | `hasOwnProperty`, `defineProperty`, and missing Object statics |
 | [Function Methods](/ecmascript-builtins/function-methods/) | Native `call` / `apply` and the `bind` (`bindFn`) helper |
 | [Date Methods](/ecmascript-builtins/date-methods/) | Value-confirmed `Date` getters, string conversions, and `Date.UTC` |
-| [Regular Expressions](/language/regular-expressions/) | `RegExp` `test`, `exec`, and flag accessors (`source`, `global`, `ignoreCase`, `multiline`, `lastIndex`) |
+| [Regular Expressions](/language/regular-expressions/) | `RegExp` `test`, `exec`, and the `source` / `global` / `lastIndex` accessors (`ignoreCase` / `multiline` are `undefined` in SFMC) |

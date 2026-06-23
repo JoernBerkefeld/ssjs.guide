@@ -23,9 +23,13 @@ These are standard ECMAScript global functions (not SFMC-proprietary), available
 | `isNaN(val)` | ES3 | boolean | Returns `true` if the value is `NaN` |
 | `isFinite(val)` | ES3 | boolean | Returns `true` if the value is a finite number |
 
+{% include callout.html type="warning" content="In SFMC SSJS, `parseInt` / `parseFloat` return `NaN` when the string has **trailing non-numeric characters** (e.g. `parseInt(\"10px\", 10)` is `NaN`, not `10`). Strip non-digits before parsing. `parseFloat` results also use 32-bit precision — compare with a tolerance rather than `===`." %}
+
 ```javascript
-parseFloat("3.14");      // 3.14
+parseFloat("3.14");      // 3.14 (32-bit precision)
 parseInt("255", 16);     // 255 (hex)
+parseInt("10px", 10);    // NaN in SFMC (spec would give 10)
+parseFloat("1.5kg");     // NaN in SFMC (spec would give 1.5)
 isNaN("hello");          // true
 isFinite(Infinity);      // false
 isFinite(42);            // true

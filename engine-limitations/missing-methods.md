@@ -3,7 +3,7 @@ layout: page
 title: Missing & Broken Methods
 parent: Engine Limitations
 parent_url: /engine-limitations/
-description: Array and String prototype methods that are unavailable or return wrong results in SFMC SSJS, with manual workarounds.
+description: Array, String, Number, Math, Object, Date, JSON, and RegExp members that are unavailable or return wrong results in SFMC SSJS, with manual workarounds.
 ---
 
 The SFMC SSJS engine is missing many Array and String methods that are available in modern JavaScript. Some methods exist on the prototype but return **incorrect results** (marked as "broken"). All can be replaced with polyfills — see the [Polyfills](/engine-limitations/polyfills/) page.
@@ -28,8 +28,15 @@ These methods do **not exist** in SFMC SSJS and will throw an error if called:
 | `Array.prototype.fill` | Manual `for` loop assigning value |
 | `Array.prototype.copyWithin` | Manual `for` loop |
 | `Array.prototype.entries` | Manual index-based iteration |
+| `Array.prototype.keys` | Standard index `for` loop |
+| `Array.prototype.values` | Standard index `for` loop |
+| `Array.prototype.at` | `arr[i]` (and `arr[arr.length + i]` for negative `i`) |
+| `Array.prototype.flat` | Concatenate nested arrays manually in a loop |
+| `Array.prototype.flatMap` | `for` loop with `push` |
+| `Array.prototype.findLast` | Reverse `for` loop |
 | `Array.isArray` | `Object.prototype.toString.call(v) === "[object Array]"` |
 | `Array.of` | Array literal or `[].concat(args)` |
+| `Array.from` | `for` loop over the source building the array |
 
 ## Broken Array Methods
 
@@ -61,19 +68,75 @@ arr.lastIndexOf(2);
 
 **Use the polyfill** from the [Polyfills](/engine-limitations/polyfills/) page.
 
+### Array.prototype.slice — partial
+
+`slice` works with explicit indices, including negative ones (`slice(-2)`, `slice(1, -1)`), but the no-argument form `arr.slice()` throws.
+
+```javascript
+var arr = [1, 2, 3, 4, 5];
+arr.slice(1, 3);   // [2, 3] — works
+arr.slice(-2);     // [4, 5] — works (negative index)
+// arr.slice();    // ❌ throws (no-arg form)
+```
+
+**Use the polyfill** from the [Polyfills](/engine-limitations/polyfills/) page if you need the no-arg form.
+
+### Array.prototype.sort — partial
+
+`sort` works when called **with a compare function**, but the no-argument form `arr.sort()` throws, and the native sort cannot be re-invoked through a captured reference.
+
+```javascript
+var arr = [3, 1, 2];
+arr.sort(function (a, b) { return a - b; });  // [1, 2, 3] — works
+// arr.sort();  // ❌ throws (no-arg form)
+```
+
+**Use the polyfill** from the [Polyfills](/engine-limitations/polyfills/) page if you need the default lexicographic `sort()`.
+
 ## Missing String Methods
 
 | Method | Workaround |
 |--------|-----------|
 | `String.prototype.trim` | `str.replace(/^\s+\|\s+$/g, "")` |
+| `String.prototype.trimStart` | `str.replace(/^\s+/, "")` |
+| `String.prototype.trimEnd` | `str.replace(/\s+$/, "")` |
 | `String.prototype.startsWith` | `str.indexOf(sub) === 0` |
 | `String.prototype.endsWith` | `str.slice(-sub.length) === sub` |
 | `String.prototype.includes` | `str.indexOf(sub) !== -1` |
 | `String.prototype.padStart` | Manual `for` loop prepending the pad character |
 | `String.prototype.padEnd` | Manual `for` loop appending the pad character |
 | `String.prototype.repeat` | Manual `for` loop concatenating the string |
+| `String.prototype.codePointAt` | `charCodeAt` for BMP characters |
 
 **Note:** `String.prototype.indexOf` is available and works correctly for strings. The `indexOf` missing-method warning only applies to `Array.prototype.indexOf`.
+
+## Broken String Methods
+
+These methods **exist** but throw or return incorrect results:
+
+### String.prototype.substr — throws
+
+`substr` throws at runtime in SFMC SSJS. Use `substring` or `slice` instead, or apply the `substr` polyfill.
+
+```javascript
+var str = "Hello World";
+// str.substr(6, 5);   // ❌ throws
+str.substring(6, 11);  // "World" — use this instead
+```
+
+### String.prototype.search — partial
+
+`search` is unreliable in SFMC: it returns the wrong index for some real matches (observed returning `0` or `-1` where the match is elsewhere), and returns `0` instead of `-1` on a no-match. Use `String.match` or `RegExp.test` to detect a match, or apply the `search` polyfill.
+
+### String.prototype.split — partial
+
+The empty-separator form `str.split("")` does **not** split into characters — it returns the whole string as a single element. Loop with `charAt`, or apply the `split` polyfill.
+
+### String.match return shape
+
+`String.match` returns an **empty array `[]`** (not `null`) on no-match, and matched results do **not** carry a `.index` property.
+
+**Use the polyfills** from the [Polyfills](/engine-limitations/polyfills/) page for `substr`, `search`, and `split`.
 
 ## Missing Number Methods
 
@@ -85,7 +148,35 @@ The ES6 static helpers on `Number` are **not available** — use the equivalent 
 | `Number.isInteger` | `val === Math.floor(val)` (guard against non-numbers first) |
 | `Number.isNaN` | Global `isNaN(val)` |
 | `Number.parseInt` | Global `parseInt(str, radix)` |
-| `Number.parseFloat` | Global `parseFloat(str)` |
+| `Number.MAX_SAFE_INTEGER` | Literal `9007199254740991` |
+
+## Missing Math Methods & Constants
+
+The following ES6 `Math` members are **not available**, and the ES3 constant `Math.LOG10E` is `undefined` in SFMC:
+
+| Member | Workaround |
+|--------|-----------|
+| `Math.LOG10E` | Literal `0.4342944819032518` |
+| `Math.trunc` | `x < 0 ? Math.ceil(x) : Math.floor(x)` |
+| `Math.sign` | `x > 0 ? 1 : x < 0 ? -1 : 0` |
+| `Math.cbrt` | `Math.pow(x, 1 / 3)` for non-negative `x` |
+| `Math.log2` | `Math.log(x) / Math.LN2` |
+| `Math.log10` | `Math.log(x) / Math.LN10` |
+| `Math.hypot` | `Math.sqrt(a * a + b * b)` |
+
+**Broken `Math` methods:** `Math.max` / `Math.min` throw with 3+ arguments and the no-arg forms return `0` — see [Math Object](/ecmascript-builtins/math/) and the [Polyfills](/engine-limitations/polyfills/) page.
+
+## Missing Date / JSON / RegExp Members
+
+| Member | Workaround |
+|--------|-----------|
+| `Date.prototype.toISOString` | Build the ISO string from `get*` methods, or use `Platform.Function.FormatDate` |
+| `JSON.parse` | `Platform.Function.ParseJSON(string)` |
+| `JSON.stringify` | `Platform.Function.Stringify(value)` |
+| `RegExp.prototype.ignoreCase` | Track the `i` flag yourself when constructing the RegExp |
+| `RegExp.prototype.multiline` | Track the `m` flag yourself when constructing the RegExp |
+
+**Broken `RegExp` behavior:** `RegExp.exec` capture groups (`result[1]+`) are `undefined`, and `lastIndex` does not advance with the `g` flag — use `String.match(/.../g)` to collect all matches.
 
 ## Broken Object Methods
 
