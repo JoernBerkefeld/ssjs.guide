@@ -652,7 +652,7 @@
       "headerNames",
       "headerValues"
     ],
-    "returnType": "object"
+    "returnType": "{ Status: number, Content: string }"
   },
   {
     "name": "HTTP.Post",
@@ -667,7 +667,7 @@
       "headerNames",
       "headerValues"
     ],
-    "returnType": "object"
+    "returnType": "{ StatusCode: string, Response: string }"
   },
   {
     "name": "<WSProxyInstance>.createItem",

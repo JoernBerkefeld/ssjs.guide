@@ -31,7 +31,14 @@ When you omit `headerNames` and `headerValues`, pass **nothing** after `url`. Wh
 
 ## Return value
 
-Returns an **object** (not a bare string). Official samples describe fields such as numeric status and string `Content` holding the body—inspect `Stringify(response)` when integrating a new endpoint.
+Returns an **object** (not a bare string) with these fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `Status` | number | Numeric status of the request |
+| `Content` | string | Response body |
+
+Note that `HTTP.Get` uses different field names than [`HTTP.Post`](/http/post/), which returns `{ StatusCode, Response }`. Inspect `Stringify(response)` when integrating a new endpoint.
 
 ## Example
 
