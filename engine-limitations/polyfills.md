@@ -31,11 +31,45 @@ The `|| function(...)` guard prevents re-defining methods that may become availa
 
 > **Important:** Some array method names (`indexOf`, `lastIndexOf`) are ambiguous with `String.prototype` methods of the same name. The polyfills below only add to `Array.prototype` — `String.prototype.indexOf` works correctly without polyfilling.
 
+## Index
+
+| Polyfill | Type |
+|----------|------|
+| [`Array.prototype.forEach`](#array-prototype-foreach) | Missing |
+| [`Array.prototype.map`](#array-prototype-map) | Missing |
+| [`Array.prototype.filter`](#array-prototype-filter) | Missing |
+| [`Array.prototype.find`](#array-prototype-find) | Missing |
+| [`Array.prototype.findIndex`](#array-prototype-findindex) | Missing |
+| [`Array.prototype.indexOf`](#array-prototype-indexof) | Missing |
+| [`Array.prototype.lastIndexOf`](#array-prototype-lastindexof) | Broken |
+| [`Array.prototype.includes`](#array-prototype-includes) | Missing |
+| [`Array.prototype.some`](#array-prototype-some) | Missing |
+| [`Array.prototype.every`](#array-prototype-every) | Missing |
+| [`Array.prototype.reduce`](#array-prototype-reduce) | Missing |
+| [`Array.prototype.reduceRight`](#array-prototype-reduceright) | Missing |
+| [`Array.prototype.fill`](#array-prototype-fill) | Missing |
+| [`Array.prototype.copyWithin`](#array-prototype-copywithin) | Missing |
+| [`Array.prototype.entries`](#array-prototype-entries) | Missing |
+| [`Array.prototype.splice`](#array-prototype-splice) | Broken (insert form) |
+| [`Array.prototype.slice`](#array-prototype-slice) | Broken |
+| [`Array.prototype.sort`](#array-prototype-sort) | Broken |
+| [`Array.isArray`](#array-isarray) | Missing |
+| [`Array.of`](#array-of) | Missing |
+| [`String.prototype.trim`](#string-prototype-trim) | Missing |
+| [`String.prototype.startsWith`](#string-prototype-startswith) | Missing |
+| [`String.prototype.endsWith`](#string-prototype-endswith) | Missing |
+| [`String.prototype.substr`](#string-prototype-substr) | Broken |
+| [`String.prototype.search`](#string-prototype-search) | Broken |
+| [`String.prototype.split`](#string-prototype-split) | Broken (empty separator) |
+| [`Math.max` / `Math.min`](#math-max-min) | Broken |
+| [`Object.getPrototypeOf`](#object-getprototypeof) | Broken |
+| [`bindFn` (for `Function.prototype.bind`)](#function-prototype-bind) | Missing |
+
 ---
 
 ## Array Polyfills
 
-### forEach
+### forEach {#array-prototype-foreach}
 
 ```javascript
 Array.prototype.forEach = Array.prototype.forEach || function(callback) {
@@ -46,7 +80,7 @@ Array.prototype.forEach = Array.prototype.forEach || function(callback) {
 };
 ```
 
-### map
+### map {#array-prototype-map}
 
 ```javascript
 Array.prototype.map = Array.prototype.map || function(callback) {
@@ -59,7 +93,7 @@ Array.prototype.map = Array.prototype.map || function(callback) {
 };
 ```
 
-### filter
+### filter {#array-prototype-filter}
 
 ```javascript
 Array.prototype.filter = Array.prototype.filter || function(predicate) {
@@ -72,7 +106,7 @@ Array.prototype.filter = Array.prototype.filter || function(predicate) {
 };
 ```
 
-### find
+### find {#array-prototype-find}
 
 ```javascript
 Array.prototype.find = Array.prototype.find || function(predicate) {
@@ -84,7 +118,7 @@ Array.prototype.find = Array.prototype.find || function(predicate) {
 };
 ```
 
-### findIndex
+### findIndex {#array-prototype-findindex}
 
 ```javascript
 Array.prototype.findIndex = Array.prototype.findIndex || function(predicate) {
@@ -96,7 +130,7 @@ Array.prototype.findIndex = Array.prototype.findIndex || function(predicate) {
 };
 ```
 
-### indexOf (Array)
+### indexOf (Array) {#array-prototype-indexof}
 
 Note: `String.prototype.indexOf` already works. This only polyfills `Array.prototype.indexOf`.
 
@@ -110,7 +144,7 @@ Array.prototype.indexOf = Array.prototype.indexOf || function(searchValue, fromI
 };
 ```
 
-### lastIndexOf (Array — broken, must override)
+### lastIndexOf (Array — broken, must override) {#array-prototype-lastindexof}
 
 `Array.prototype.lastIndexOf` exists but always returns `-1`. Override it unconditionally:
 
@@ -124,7 +158,7 @@ Array.prototype.lastIndexOf = function(searchValue, fromIndex) {
 };
 ```
 
-### includes
+### includes {#array-prototype-includes}
 
 ```javascript
 Array.prototype.includes = Array.prototype.includes || function(searchValue) {
@@ -135,7 +169,7 @@ Array.prototype.includes = Array.prototype.includes || function(searchValue) {
 };
 ```
 
-### some
+### some {#array-prototype-some}
 
 ```javascript
 Array.prototype.some = Array.prototype.some || function(predicate) {
@@ -147,7 +181,7 @@ Array.prototype.some = Array.prototype.some || function(predicate) {
 };
 ```
 
-### every
+### every {#array-prototype-every}
 
 ```javascript
 Array.prototype.every = Array.prototype.every || function(predicate) {
@@ -159,7 +193,7 @@ Array.prototype.every = Array.prototype.every || function(predicate) {
 };
 ```
 
-### reduce
+### reduce {#array-prototype-reduce}
 
 ```javascript
 Array.prototype.reduce = Array.prototype.reduce || function(callback, initialValue) {
@@ -173,7 +207,7 @@ Array.prototype.reduce = Array.prototype.reduce || function(callback, initialVal
 };
 ```
 
-### reduceRight
+### reduceRight {#array-prototype-reduceright}
 
 ```javascript
 Array.prototype.reduceRight = Array.prototype.reduceRight || function(callback, initialValue) {
@@ -187,7 +221,7 @@ Array.prototype.reduceRight = Array.prototype.reduceRight || function(callback, 
 };
 ```
 
-### fill
+### fill {#array-prototype-fill}
 
 ```javascript
 Array.prototype.fill = Array.prototype.fill || function(value, startIndex, endIndex) {
@@ -200,7 +234,7 @@ Array.prototype.fill = Array.prototype.fill || function(value, startIndex, endIn
 };
 ```
 
-### copyWithin
+### copyWithin {#array-prototype-copywithin}
 
 ```javascript
 Array.prototype.copyWithin = Array.prototype.copyWithin || function(targetIndex, startIndex, count) {
@@ -212,7 +246,7 @@ Array.prototype.copyWithin = Array.prototype.copyWithin || function(targetIndex,
 };
 ```
 
-### entries
+### entries {#array-prototype-entries}
 
 ```javascript
 Array.prototype.entries = Array.prototype.entries || function() {
@@ -229,7 +263,7 @@ Array.prototype.entries = Array.prototype.entries || function() {
 };
 ```
 
-### splice (partially broken — override only if you insert items)
+### splice (partially broken — override only if you insert items) {#array-prototype-splice}
 
 `Array.prototype.splice(start[, deleteCount[, item1 … itemN]])` works correctly in SFMC SSJS for the **delete-only** form (`splice(start)` and `splice(start, deleteCount)`). The bug surfaces **only when you insert items**: as soon as a third argument (`item1`) is passed, the engine ignores `start` and `deleteCount` and just overwrites from the left with the items to insert. If you ever call the insert form (with one or more `item1 … itemN`), override it unconditionally:
 
@@ -263,7 +297,7 @@ Array.prototype.splice = function(start, deleteCount) {
 };
 ```
 
-### slice (broken — must override)
+### slice (broken — must override) {#array-prototype-slice}
 
 `Array.prototype.slice` works for explicit indices (including negatives, e.g. `slice(1, 3)` and `slice(-2)`), but the no-argument form `arr.slice()` throws in the SFMC engine. This pure-JS reimplementation makes `slice()`, `slice(-2)`, and `slice(1, -1)` all work without relying on the native. Override it unconditionally:
 
@@ -282,7 +316,7 @@ Array.prototype.slice = function(start, end) {
 };
 ```
 
-### sort (broken — must override)
+### sort (broken — must override) {#array-prototype-sort}
 
 `Array.prototype.sort` works when called **with a compare function**, but the no-argument form `arr.sort()` throws, and the native sort cannot be re-invoked via a captured reference. This pure-JS in-place insertion sort makes both `arr.sort()` (default lexicographic order) and `arr.sort(compareFn)` work. Override it unconditionally:
 
@@ -309,7 +343,7 @@ Array.prototype.sort = function(compareFn) {
 };
 ```
 
-### Array.isArray (static)
+### Array.isArray (static) {#array-isarray}
 
 ```javascript
 Array.isArray = Array.isArray || function(value) {
@@ -317,7 +351,7 @@ Array.isArray = Array.isArray || function(value) {
 };
 ```
 
-### Array.of (static)
+### Array.of (static) {#array-of}
 
 ```javascript
 Array.of = Array.of || function() {
@@ -333,7 +367,7 @@ Array.of = Array.of || function() {
 
 ## String Polyfills
 
-### trim
+### trim {#string-prototype-trim}
 
 ```javascript
 String.prototype.trim = String.prototype.trim || function() {
@@ -341,7 +375,7 @@ String.prototype.trim = String.prototype.trim || function() {
 };
 ```
 
-### startsWith
+### startsWith {#string-prototype-startswith}
 
 ```javascript
 String.prototype.startsWith = String.prototype.startsWith || function(searchString, position) {
@@ -350,7 +384,7 @@ String.prototype.startsWith = String.prototype.startsWith || function(searchStri
 };
 ```
 
-### endsWith
+### endsWith {#string-prototype-endswith}
 
 > **Two engine quirks to respect (both verified on a CloudPage):**
 >
@@ -371,7 +405,7 @@ String.prototype.endsWith = String.prototype.endsWith || function(searchString, 
 };
 ```
 
-### substr (broken — must override)
+### substr (broken — must override) {#string-prototype-substr}
 
 `String.prototype.substr` throws when called in SFMC SSJS. This polyfill maps `(start, length)` onto `substring()`. Override it unconditionally:
 
@@ -384,7 +418,7 @@ String.prototype.substr = function(start, length) {
 };
 ```
 
-### search (broken — must override)
+### search (broken — must override) {#string-prototype-search}
 
 `String.prototype.search` is unreliable in SFMC: it returns the wrong index for some matches (observed returning `0` or `-1` where the match is elsewhere) and returns `0` instead of `-1` on a no-match. This polyfill delegates to `String.match` (passing the regex straight through, since `regexp instanceof RegExp` returns `false` here and reconstructing via `new RegExp()` breaks matching) and returns the index via `indexOf` of the matched text, or `-1` on no match. Override it unconditionally:
 
@@ -397,7 +431,7 @@ String.prototype.search = function(regexp) {
 };
 ```
 
-### split (broken — must override)
+### split (broken — must override) {#string-prototype-split}
 
 `String.prototype.split` works for normal separators, but the empty-string separator `""` does **not** split into individual characters as the spec requires. This polyfill handles the `""` case with a manual character loop (honouring an optional limit) and delegates all other separators to the native split. Override it unconditionally:
 
@@ -424,7 +458,7 @@ String.prototype.split = (function() {
 
 ## Math Polyfills
 
-### max / min (broken — must override)
+### max / min (broken — must override) {#math-max-min}
 
 `Math.max` / `Math.min` throw when given **three or more arguments** and return `0` (not ±Infinity) with **no arguments**. These pure-JS variadic folds handle any argument count and propagate `NaN` per spec. Override them unconditionally:
 
@@ -460,7 +494,7 @@ Math.min = function() {
 
 ## Object Polyfills
 
-### Object.getPrototypeOf (broken — must override)
+### Object.getPrototypeOf (broken — must override) {#object-getprototypeof}
 
 `Object.getPrototypeOf` exists but throws at runtime, so it cannot be used. This polyfill returns the constructor prototype instead. Override it unconditionally:
 
@@ -479,7 +513,7 @@ Object.getPrototypeOf = function(obj) {
 
 `Function.prototype.bind` (ES5) is **not** available, and unlike `Array.prototype` / `String.prototype`, **`Function.prototype` is sealed** — assigning `Function.prototype.bind = …` silently has no effect. Use a standalone helper instead of a prototype polyfill.
 
-### bindFn (standalone helper — `bind` cannot be installed on the prototype)
+### bindFn (standalone helper — `bind` cannot be installed on the prototype) {#function-prototype-bind}
 
 ```javascript
 function bindFn(fn, thisArg) {

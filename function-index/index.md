@@ -27,17 +27,40 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`<AccountUserInstance>.Update(properties)`](/core-library/accountuser/#instance-update) | Core Library | string | Update AccountUser |
 | [`<AccountUserInstance>.Activate()`](/core-library/accountuser/#instance-activate) | Core Library | string | Activate AccountUser |
 | [`<AccountUserInstance>.Deactivate()`](/core-library/accountuser/#instance-deactivate) | Core Library | string | Deactivate AccountUser |
-| [`<ArrayInstance>.concat(value[, ...])`](/ecmascript-builtins/array-methods/) | ECMAScript Builtins | array | Merge arrays |
-| [`<ArrayInstance>.join([separator])`](/ecmascript-builtins/array-methods/) | ECMAScript Builtins | string | Join elements to string |
-| [`<ArrayInstance>.length`](/ecmascript-builtins/array-methods/) | ECMAScript Builtins | number | Number of elements |
-| [`<ArrayInstance>.pop()`](/ecmascript-builtins/array-methods/) | ECMAScript Builtins | any | Remove and return last element |
-| [`<ArrayInstance>.push(element[, ...])`](/ecmascript-builtins/array-methods/) | ECMAScript Builtins | number | Add elements to end; return new length |
-| [`<ArrayInstance>.reverse()`](/ecmascript-builtins/array-methods/) | ECMAScript Builtins | array | Reverse array in place |
-| [`<ArrayInstance>.shift()`](/ecmascript-builtins/array-methods/) | ECMAScript Builtins | any | Remove and return first element |
-| [`<ArrayInstance>.slice([start[, end]])`](/ecmascript-builtins/array-methods/) | ECMAScript Builtins | array | Shallow copy of a portion |
-| [`<ArrayInstance>.sort([compareFn])`](/ecmascript-builtins/array-methods/) | ECMAScript Builtins | array | Sort in place |
-| [`<ArrayInstance>.splice(start[, deleteCount[, item1[, ...]]])`](/engine-limitations/polyfills/) | ECMAScript Builtins | array | Delete form works; insert form (3rd+ arg) needs polyfill — see polyfills |
-| [`<ArrayInstance>.unshift(element[, ...])`](/ecmascript-builtins/array-methods/) | ECMAScript Builtins | number | Add elements to start; return new length |
+| [`Array.from(arrayLike[, mapFn])`](/ecmascript-builtins/array-methods/#from) | ECMAScript Builtins | array | ❌ Missing (ES6) — needs polyfill |
+| [`Array.isArray(value)`](/ecmascript-builtins/array-methods/#isarray) | ECMAScript Builtins | boolean | ❌ Missing (ES5) — needs polyfill |
+| [`Array.of(element[, ...])`](/ecmascript-builtins/array-methods/#of) | ECMAScript Builtins | array | ❌ Missing (ES6) — needs polyfill |
+| [`<ArrayInstance>.at(index)`](/ecmascript-builtins/array-methods/#at) | ECMAScript Builtins | any | ❌ Missing (ES2022) — needs polyfill |
+| [`<ArrayInstance>.concat(value[, ...])`](/ecmascript-builtins/array-methods/#concat) | ECMAScript Builtins | array | Merge arrays |
+| [`<ArrayInstance>.copyWithin(target[, start[, end]])`](/ecmascript-builtins/array-methods/#copywithin) | ECMAScript Builtins | array | ❌ Missing (ES6) — needs polyfill |
+| [`<ArrayInstance>.entries()`](/ecmascript-builtins/array-methods/#entries) | ECMAScript Builtins | iterator | ❌ Missing (ES6) — needs polyfill |
+| [`<ArrayInstance>.fill(value[, start[, end]])`](/ecmascript-builtins/array-methods/#fill) | ECMAScript Builtins | array | ❌ Missing (ES6) — needs polyfill |
+| [`<ArrayInstance>.filter(callback[, thisArg])`](/ecmascript-builtins/array-methods/#filter) | ECMAScript Builtins | array | ❌ Missing (ES5) — needs polyfill |
+| [`<ArrayInstance>.find(callback[, thisArg])`](/ecmascript-builtins/array-methods/#find) | ECMAScript Builtins | any | ❌ Missing (ES6) — needs polyfill |
+| [`<ArrayInstance>.findIndex(callback[, thisArg])`](/ecmascript-builtins/array-methods/#findindex) | ECMAScript Builtins | number | ❌ Missing (ES6) — needs polyfill |
+| [`<ArrayInstance>.findLast(callback[, thisArg])`](/ecmascript-builtins/array-methods/#findlast) | ECMAScript Builtins | any | ❌ Missing (ES2023) — needs polyfill |
+| [`<ArrayInstance>.flat([depth])`](/ecmascript-builtins/array-methods/#flat) | ECMAScript Builtins | array | ❌ Missing (ES2019) — needs polyfill |
+| [`<ArrayInstance>.flatMap(callback[, thisArg])`](/ecmascript-builtins/array-methods/#flatmap) | ECMAScript Builtins | array | ❌ Missing (ES2019) — needs polyfill |
+| [`<ArrayInstance>.forEach(callback[, thisArg])`](/ecmascript-builtins/array-methods/#foreach) | ECMAScript Builtins | void | ❌ Missing (ES5) — needs polyfill |
+| [`<ArrayInstance>.includes(searchElement[, fromIndex])`](/ecmascript-builtins/array-methods/#includes) | ECMAScript Builtins | boolean | ❌ Missing (ES2016) — needs polyfill |
+| [`<ArrayInstance>.indexOf(searchElement[, fromIndex])`](/ecmascript-builtins/array-methods/#indexof) | ECMAScript Builtins | number | ❌ Missing (ES5) — needs polyfill |
+| [`<ArrayInstance>.join([separator])`](/ecmascript-builtins/array-methods/#join) | ECMAScript Builtins | string | Join elements to string |
+| [`<ArrayInstance>.keys()`](/ecmascript-builtins/array-methods/#keys) | ECMAScript Builtins | iterator | ❌ Missing (ES6) — needs polyfill |
+| [`<ArrayInstance>.lastIndexOf(searchElement[, fromIndex])`](/ecmascript-builtins/array-methods/#lastindexof) | ECMAScript Builtins | number | ❌ Missing (ES5) — needs polyfill |
+| [`<ArrayInstance>.length`](/ecmascript-builtins/array-methods/#length) | ECMAScript Builtins | number | Number of elements |
+| [`<ArrayInstance>.map(callback[, thisArg])`](/ecmascript-builtins/array-methods/#map) | ECMAScript Builtins | array | ❌ Missing (ES5) — needs polyfill |
+| [`<ArrayInstance>.pop()`](/ecmascript-builtins/array-methods/#pop) | ECMAScript Builtins | any | Remove and return last element |
+| [`<ArrayInstance>.push(element[, ...])`](/ecmascript-builtins/array-methods/#push) | ECMAScript Builtins | number | Add elements to end; return new length |
+| [`<ArrayInstance>.reduce(callback[, initialValue])`](/ecmascript-builtins/array-methods/#reduce) | ECMAScript Builtins | any | ❌ Missing (ES5) — needs polyfill |
+| [`<ArrayInstance>.reduceRight(callback[, initialValue])`](/ecmascript-builtins/array-methods/#reduceright) | ECMAScript Builtins | any | ❌ Missing (ES5) — needs polyfill |
+| [`<ArrayInstance>.reverse()`](/ecmascript-builtins/array-methods/#reverse) | ECMAScript Builtins | array | Reverse array in place |
+| [`<ArrayInstance>.shift()`](/ecmascript-builtins/array-methods/#shift) | ECMAScript Builtins | any | Remove and return first element |
+| [`<ArrayInstance>.slice([start[, end]])`](/ecmascript-builtins/array-methods/#slice) | ECMAScript Builtins | array | Shallow copy of a portion |
+| [`<ArrayInstance>.some(callback[, thisArg])`](/ecmascript-builtins/array-methods/#some) | ECMAScript Builtins | boolean | ❌ Missing (ES5) — needs polyfill |
+| [`<ArrayInstance>.sort([compareFn])`](/ecmascript-builtins/array-methods/#sort) | ECMAScript Builtins | array | Sort in place |
+| [`<ArrayInstance>.splice(start[, deleteCount[, item1[, ...]]])`](/ecmascript-builtins/array-methods/#splice) | ECMAScript Builtins | array | ⚠️ Partial — delete form works; insert form (3rd+ arg) needs [polyfill](/engine-limitations/polyfills/#array-prototype-splice) |
+| [`<ArrayInstance>.unshift(element[, ...])`](/ecmascript-builtins/array-methods/#unshift) | ECMAScript Builtins | number | Add elements to start; return new length |
+| [`<ArrayInstance>.values()`](/ecmascript-builtins/array-methods/#values) | ECMAScript Builtins | iterator | ❌ Missing (ES6) — needs polyfill |
 
 ---
 
@@ -84,23 +107,24 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`DateTime.TimeZone.Retrieve(filter)`](/platform-objects/datetime/#timezone-retrieve) | Platform Object | object[] | Time zone definitions (requires Core load) |
 | [`DateTime.LocalDateToSystemDate(dateString)`](/platform-objects/datetime/#localdatetolocaldate) | Platform Object | string | Local account/user time to system time (CST) |
 | [`DateTime.SystemDateToLocalDate(dateString)`](/platform-objects/datetime/#systemdatetolocaldate) | Platform Object | string | System time (CST) to local account/user time |
-| [`Date.now()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Milliseconds since the Unix epoch (static) |
-| [`Date.parse(dateString)`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Parse a date string to milliseconds since epoch (static) |
-| [`Date.UTC(year, month[, day, hours, minutes, seconds, milliseconds])`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Milliseconds since epoch for the given UTC date parts (static) |
-| [`<DateInstance>.getDate()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Day of month (1–31), local time |
-| [`<DateInstance>.getDay()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Day of week (0 = Sunday … 6 = Saturday), local time |
-| [`<DateInstance>.getFullYear()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Four-digit year, local time |
-| [`<DateInstance>.getHours()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Hours (0–23), local time |
-| [`<DateInstance>.getMilliseconds()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Milliseconds (0–999), local time — frequently off by one |
-| [`<DateInstance>.getMinutes()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Minutes (0–59), local time |
-| [`<DateInstance>.getMonth()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Month (0 = January … 11 = December), local time |
-| [`<DateInstance>.getSeconds()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Seconds (0–59), local time |
-| [`<DateInstance>.getTime()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Milliseconds since the Unix epoch |
-| [`<DateInstance>.getTimezoneOffset()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Difference in minutes between local time and UTC |
-| [`<DateInstance>.toDateString()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | string | Date portion as a human-readable string |
-| [`<DateInstance>.toString()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | string | Human-readable string representation of the date |
-| [`<DateInstance>.toUTCString()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | string | Date as a string in the UTC time zone |
-| [`<DateInstance>.valueOf()`](/ecmascript-builtins/date-methods/) | ECMAScript Builtins | number | Milliseconds since the Unix epoch |
+| [`Date.now()`](/ecmascript-builtins/date-methods/#now) | ECMAScript Builtins | number | Milliseconds since the Unix epoch (static) |
+| [`Date.parse(dateString)`](/ecmascript-builtins/date-methods/#parse) | ECMAScript Builtins | number | Parse a date string to milliseconds since epoch (static) |
+| [`Date.UTC(year, month[, day, hours, minutes, seconds, milliseconds])`](/ecmascript-builtins/date-methods/#utc) | ECMAScript Builtins | number | Milliseconds since epoch for the given UTC date parts (static) |
+| [`<DateInstance>.getDate()`](/ecmascript-builtins/date-methods/#getdate) | ECMAScript Builtins | number | Day of month (1–31), local time |
+| [`<DateInstance>.getDay()`](/ecmascript-builtins/date-methods/#getday) | ECMAScript Builtins | number | Day of week (0 = Sunday … 6 = Saturday), local time |
+| [`<DateInstance>.getFullYear()`](/ecmascript-builtins/date-methods/#getfullyear) | ECMAScript Builtins | number | Four-digit year, local time |
+| [`<DateInstance>.getHours()`](/ecmascript-builtins/date-methods/#gethours) | ECMAScript Builtins | number | Hours (0–23), local time |
+| [`<DateInstance>.getMilliseconds()`](/ecmascript-builtins/date-methods/#getmilliseconds) | ECMAScript Builtins | number | Milliseconds (0–999), local time — frequently off by one |
+| [`<DateInstance>.getMinutes()`](/ecmascript-builtins/date-methods/#getminutes) | ECMAScript Builtins | number | Minutes (0–59), local time |
+| [`<DateInstance>.getMonth()`](/ecmascript-builtins/date-methods/#getmonth) | ECMAScript Builtins | number | Month (0 = January … 11 = December), local time |
+| [`<DateInstance>.getSeconds()`](/ecmascript-builtins/date-methods/#getseconds) | ECMAScript Builtins | number | Seconds (0–59), local time |
+| [`<DateInstance>.getTime()`](/ecmascript-builtins/date-methods/#gettime) | ECMAScript Builtins | number | Milliseconds since the Unix epoch |
+| [`<DateInstance>.getTimezoneOffset()`](/ecmascript-builtins/date-methods/#gettimezoneoffset) | ECMAScript Builtins | number | Difference in minutes between local time and UTC |
+| [`<DateInstance>.toDateString()`](/ecmascript-builtins/date-methods/#todatestring) | ECMAScript Builtins | string | Date portion as a human-readable string |
+| [`<DateInstance>.toISOString()`](/ecmascript-builtins/date-methods/#toisostring) | ECMAScript Builtins | string | ❌ Missing (ES5) — needs polyfill |
+| [`<DateInstance>.toString()`](/ecmascript-builtins/date-methods/#tostring) | ECMAScript Builtins | string | Human-readable string representation of the date |
+| [`<DateInstance>.toUTCString()`](/ecmascript-builtins/date-methods/#toutcstring) | ECMAScript Builtins | string | Date as a string in the UTC time zone |
+| [`<DateInstance>.valueOf()`](/ecmascript-builtins/date-methods/#valueof) | ECMAScript Builtins | number | Milliseconds since the Unix epoch |
 | [`DataExtension.Init(key)`](/core-library/dataextension/#init) | Core Library | DataExtensionInstance | Initialize DE object |
 | [`DataExtension.Add(properties)`](/core-library/dataextension/#add) | Core Library | DataExtensionInstance | Create data extension |
 | [`DataExtension.Retrieve(filter, [queryAllAccounts])`](/core-library/dataextension/#retrieve) | Core Library | object[] | Retrieve data extensions |
@@ -154,6 +178,9 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`<FolderInstance>.Remove()`](/core-library/folder/#instance-remove) | Core Library | string | Remove folder |
 | [`<FolderInstance>.SetID(id)`](/core-library/folder/#instance-setid) | Core Library | void | Set folder ID |
 | [`Format(textToFormat, formatCode)`](/global-functions/format/) | Global Functions | string | Format a date/number string |
+| [`<FunctionInstance>.apply(thisArg[, argsArray])`](/ecmascript-builtins/function-methods/#apply) | ECMAScript Builtins | any | Call function with `this` and an array of arguments |
+| [`<FunctionInstance>.bind(thisArg[, ...args])`](/ecmascript-builtins/function-methods/#bind) | ECMAScript Builtins | function | ❌ Missing (ES5) — needs polyfill |
+| [`<FunctionInstance>.call(thisArg[, ...args])`](/ecmascript-builtins/function-methods/#call) | ECMAScript Builtins | any | Call function with `this` and individual arguments |
 | [`ForwardedEmailEvent.Retrieve(filter)`](/core-library/events/#forwarded-email-event) | Core Library | object[] | Forwarded-email events |
 | [`ForwardedEmailOptInEvent.Retrieve(filter)`](/core-library/events/#forwarded-email-opt-in-event) | Core Library | object[] | Forwarded opt-in events |
 
@@ -208,6 +235,19 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`Platform.Function.IsCHTMLBrowser(userAgentString)`](/platform-functions/ischtmlbrowser/) | Platform Functions | boolean | Detect CHTML / feature-phone browsers |
 | [`isFinite(value)`](/ecmascript-builtins/number-methods/) | ECMAScript Builtins | boolean | Test if value is finite |
 | [`isNaN(value)`](/ecmascript-builtins/number-methods/) | ECMAScript Builtins | boolean | Test if value is NaN |
+| [`Number.isFinite(value)`](/ecmascript-builtins/number-methods/#isfinite) | ECMAScript Builtins | boolean | ❌ Missing (ES6) — use the global `isFinite` |
+| [`Number.isInteger(value)`](/ecmascript-builtins/number-methods/#isinteger) | ECMAScript Builtins | boolean | ❌ Missing (ES6) — needs polyfill |
+| [`Number.isNaN(value)`](/ecmascript-builtins/number-methods/#isnan) | ECMAScript Builtins | boolean | ❌ Missing (ES6) — use the global `isNaN` |
+| [`Number.parseInt(string[, radix])`](/ecmascript-builtins/number-methods/#parseint) | ECMAScript Builtins | number | ❌ Missing (ES6) — use the global `parseInt` |
+
+---
+
+## J
+
+| Name | Category | Returns | Description |
+|------|----------|---------|-------------|
+| [`JSON.parse(text[, reviver])`](/ecmascript-builtins/json/#parse) | ECMAScript Builtins | any | ❌ Missing — `JSON` is undefined; use [`Platform.Function.ParseJSON`](/platform-functions/parsejson/) |
+| [`JSON.stringify(value[, replacer[, space]])`](/ecmascript-builtins/json/#stringify) | ECMAScript Builtins | string | ❌ Missing — `JSON` is undefined; use [`Platform.Function.Stringify`](/platform-functions/stringify/) |
 
 ---
 
@@ -236,31 +276,38 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`Math.abs(x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Absolute value |
-| [`Math.acos(x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Arccosine |
-| [`Math.asin(x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Arcsine |
-| [`Math.atan(x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Arctangent |
-| [`Math.atan2(y, x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Arctangent of quotient |
-| [`Math.ceil(x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Round up |
-| [`Math.cos(x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Cosine |
-| [`Math.E`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Euler's number (~2.718) |
-| [`Math.exp(x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | e to the power of x |
-| [`Math.floor(x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Round down |
-| [`Math.LN2`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Natural logarithm of 2 |
-| [`Math.LN10`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Natural logarithm of 10 |
-| [`Math.log(x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Natural logarithm |
-| [`Math.LOG2E`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Base-2 log of e |
-| [`Math.max(value1[, value2, ...])`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Largest value |
-| [`Math.min(value1[, value2, ...])`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Smallest value |
-| [`Math.PI`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Pi (~3.14159) |
-| [`Math.pow(base, exponent)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Base to the power of exponent |
-| [`Math.random()`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Random number [0, 1) |
-| [`Math.round(x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Round to nearest integer |
-| [`Math.sin(x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Sine |
-| [`Math.sqrt(x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Square root |
-| [`Math.SQRT1_2`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Square root of 1/2 |
-| [`Math.SQRT2`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Square root of 2 |
-| [`Math.tan(x)`](/ecmascript-builtins/math/) | ECMAScript Builtins | number | Tangent |
+| [`Math.abs(x)`](/ecmascript-builtins/math/#abs) | ECMAScript Builtins | number | Absolute value |
+| [`Math.acos(x)`](/ecmascript-builtins/math/#acos) | ECMAScript Builtins | number | Arccosine |
+| [`Math.asin(x)`](/ecmascript-builtins/math/#asin) | ECMAScript Builtins | number | Arcsine |
+| [`Math.atan(x)`](/ecmascript-builtins/math/#atan) | ECMAScript Builtins | number | Arctangent |
+| [`Math.atan2(y, x)`](/ecmascript-builtins/math/#atan2) | ECMAScript Builtins | number | Arctangent of quotient |
+| [`Math.cbrt(x)`](/ecmascript-builtins/math/#cbrt) | ECMAScript Builtins | number | ❌ Missing (ES6) — use `Math.pow(x, 1/3)` |
+| [`Math.ceil(x)`](/ecmascript-builtins/math/#ceil) | ECMAScript Builtins | number | Round up |
+| [`Math.cos(x)`](/ecmascript-builtins/math/#cos) | ECMAScript Builtins | number | Cosine |
+| [`Math.E`](/ecmascript-builtins/math/#e) | ECMAScript Builtins | number | Euler's number (~2.718) |
+| [`Math.exp(x)`](/ecmascript-builtins/math/#exp) | ECMAScript Builtins | number | e to the power of x |
+| [`Math.floor(x)`](/ecmascript-builtins/math/#floor) | ECMAScript Builtins | number | Round down |
+| [`Math.hypot(value1[, value2, ...])`](/ecmascript-builtins/math/#hypot) | ECMAScript Builtins | number | ❌ Missing (ES6) — needs polyfill |
+| [`Math.LN2`](/ecmascript-builtins/math/#ln2) | ECMAScript Builtins | number | Natural logarithm of 2 |
+| [`Math.LN10`](/ecmascript-builtins/math/#ln10) | ECMAScript Builtins | number | Natural logarithm of 10 |
+| [`Math.log(x)`](/ecmascript-builtins/math/#log) | ECMAScript Builtins | number | Natural logarithm |
+| [`Math.log2(x)`](/ecmascript-builtins/math/#log2) | ECMAScript Builtins | number | ❌ Missing (ES6) — use `Math.log(x) / Math.LN2` |
+| [`Math.log10(x)`](/ecmascript-builtins/math/#log10) | ECMAScript Builtins | number | ❌ Missing (ES6) — use `Math.log(x) / Math.LN10` |
+| [`Math.LOG2E`](/ecmascript-builtins/math/#log2e) | ECMAScript Builtins | number | Base-2 log of e |
+| [`Math.LOG10E`](/ecmascript-builtins/math/#log10e) | ECMAScript Builtins | number | ❌ Missing — `undefined`; use `1 / Math.LN10` |
+| [`Math.max(value1[, value2, ...])`](/ecmascript-builtins/math/#max) | ECMAScript Builtins | number | Largest value |
+| [`Math.min(value1[, value2, ...])`](/ecmascript-builtins/math/#min) | ECMAScript Builtins | number | Smallest value |
+| [`Math.PI`](/ecmascript-builtins/math/#pi) | ECMAScript Builtins | number | Pi (~3.14159) |
+| [`Math.pow(base, exponent)`](/ecmascript-builtins/math/#pow) | ECMAScript Builtins | number | Base to the power of exponent |
+| [`Math.random()`](/ecmascript-builtins/math/#random) | ECMAScript Builtins | number | Random number [0, 1) |
+| [`Math.round(x)`](/ecmascript-builtins/math/#round) | ECMAScript Builtins | number | Round to nearest integer |
+| [`Math.sign(x)`](/ecmascript-builtins/math/#sign) | ECMAScript Builtins | number | ❌ Missing (ES6) — needs polyfill |
+| [`Math.sin(x)`](/ecmascript-builtins/math/#sin) | ECMAScript Builtins | number | Sine |
+| [`Math.sqrt(x)`](/ecmascript-builtins/math/#sqrt) | ECMAScript Builtins | number | Square root |
+| [`Math.SQRT1_2`](/ecmascript-builtins/math/#sqrt1_2) | ECMAScript Builtins | number | Square root of 1/2 |
+| [`Math.SQRT2`](/ecmascript-builtins/math/#sqrt2) | ECMAScript Builtins | number | Square root of 2 |
+| [`Math.tan(x)`](/ecmascript-builtins/math/#tan) | ECMAScript Builtins | number | Tangent |
+| [`Math.trunc(x)`](/ecmascript-builtins/math/#trunc) | ECMAScript Builtins | number | ❌ Missing (ES6) — use `x < 0 ? Math.ceil(x) : Math.floor(x)` |
 | [`Platform.Function.MD5(string[, charset])`](/platform-functions/md5/) | Platform Functions | string | MD5 hash of a string |
 
 ---
@@ -270,9 +317,10 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
 | [`NotSentEvent.Retrieve(filter)`](/core-library/events/#not-sent-event) | Core Library | object[] | Not-sent events |
-| [`Number.toExponential([fractionDigits])`](/ecmascript-builtins/number-methods/) | ECMAScript Builtins | string | Exponential notation string |
-| [`Number.toFixed([fractionDigits])`](/ecmascript-builtins/number-methods/) | ECMAScript Builtins | string | Fixed-point notation string |
-| [`Number.toPrecision([precision])`](/ecmascript-builtins/number-methods/) | ECMAScript Builtins | string | Precision notation string |
+| [`Number.MAX_SAFE_INTEGER`](/ecmascript-builtins/number-methods/#max_safe_integer) | ECMAScript Builtins | number | ❌ Missing (ES6) — `undefined`; use `9007199254740991` |
+| [`<NumberInstance>.toExponential([fractionDigits])`](/ecmascript-builtins/number-methods/#toexponential) | ECMAScript Builtins | string | Exponential notation string |
+| [`<NumberInstance>.toFixed([fractionDigits])`](/ecmascript-builtins/number-methods/#tofixed) | ECMAScript Builtins | string | Fixed-point notation string |
+| [`<NumberInstance>.toPrecision([precision])`](/ecmascript-builtins/number-methods/#toprecision) | ECMAScript Builtins | string | Precision notation string |
 | [`Platform.Function.Now([useContextTime])`](/platform-functions/now/) | Platform Functions | string | Current SFMC server date/time |
 
 ---
@@ -281,10 +329,14 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`Object.defineProperty(obj, prop, descriptor)`](/ecmascript-builtins/object-methods/) | ECMAScript Builtins | object | Define or modify a property with a descriptor (static) |
-| [`Object.getOwnPropertyNames(obj)`](/ecmascript-builtins/object-methods/) | ECMAScript Builtins | array | Array of an object's own property names (static) |
-| [`Object.getPrototypeOf(obj)`](/engine-limitations/polyfills/) | ECMAScript Builtins | object | Broken natively — throws at runtime; needs polyfill (static) |
-| [`<ObjectInstance>.hasOwnProperty(v)`](/ecmascript-builtins/object-methods/) | ECMAScript Builtins | boolean | Test if object has own (non-inherited) property |
+| [`Object.assign(target, ...sources)`](/ecmascript-builtins/object-methods/#assign) | ECMAScript Builtins | object | ❌ Missing (ES6) — needs polyfill (static) |
+| [`Object.create(proto[, propertiesObject])`](/ecmascript-builtins/object-methods/#create) | ECMAScript Builtins | object | ❌ Missing (ES5) — needs polyfill (static) |
+| [`Object.defineProperty(obj, prop, descriptor)`](/ecmascript-builtins/object-methods/#defineproperty) | ECMAScript Builtins | object | Define or modify a property with a descriptor (static) |
+| [`Object.freeze(obj)`](/ecmascript-builtins/object-methods/#freeze) | ECMAScript Builtins | object | ❌ Missing (ES5) — no-op fallback only (static) |
+| [`Object.getOwnPropertyNames(obj)`](/ecmascript-builtins/object-methods/#getownpropertynames) | ECMAScript Builtins | array | Array of an object's own property names (static) |
+| [`Object.getPrototypeOf(obj)`](/ecmascript-builtins/object-methods/#getprototypeof) | ECMAScript Builtins | object | ⚠️ Broken natively — throws at runtime; needs [polyfill](/engine-limitations/polyfills/#object-getprototypeof) (static) |
+| [`Object.keys(obj)`](/ecmascript-builtins/object-methods/#keys) | ECMAScript Builtins | array | ❌ Missing (ES5) — needs polyfill (static) |
+| [`<ObjectInstance>.hasOwnProperty(v)`](/ecmascript-builtins/object-methods/#hasownproperty) | ECMAScript Builtins | boolean | Test if object has own (non-inherited) property |
 | [`OpenEvent.Retrieve(filter)`](/core-library/events/#open-event) | Core Library | object[] | Open tracking events |
 
 ---
@@ -293,8 +345,8 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`parseFloat(string)`](/ecmascript-builtins/number-methods/) | ECMAScript Builtins | number | Parse float from string |
-| [`parseInt(string[, radix])`](/ecmascript-builtins/number-methods/) | ECMAScript Builtins | number | Parse integer from string |
+| [`parseFloat(string)`](/ecmascript-builtins/number-methods/#parsefloat-global) | ECMAScript Builtins | number | ⚠️ Partial — `NaN` on trailing non-numeric characters |
+| [`parseInt(string[, radix])`](/ecmascript-builtins/number-methods/#parseint-global) | ECMAScript Builtins | number | ⚠️ Partial — `NaN` on trailing non-numeric characters |
 | [`Platform.Function.ParseJSON(jsonString)`](/platform-functions/parsejson/) | Platform Functions | object | Parse JSON string to object |
 | [`Platform.Load(libraryName, version)`](/platform-objects/platform-load/) | Platform Object | void | Load Core library |
 | [`Platform.Request.*`](/platform-objects/platform-request/) | Platform Object | various | HTTP request (query, POST, headers, cookies) |
@@ -346,11 +398,13 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`Platform.Response.Redirect(url, movedPermanently)`](/platform-objects/platform-response/#redirect) | Platform Response | void | Redirect the browser |
 | [`Platform.Response.RemoveCookie(name)`](/platform-objects/platform-response/#removecookie) | Platform Response | void | Remove a cookie |
 | [`Platform.Response.RemoveResponseHeader(headerName)`](/platform-objects/platform-response/#removeresponseheader) | Platform Response | void | Remove a response header |
-| [`<RegExpInstance>.exec(string)`](/language/regular-expressions/) | ECMAScript Builtins | array | Execute a search; returns match array or null |
-| [`<RegExpInstance>.test(string)`](/language/regular-expressions/) | ECMAScript Builtins | boolean | Test whether the string matches the pattern |
-| [`<RegExpInstance>.global`](/language/regular-expressions/) | ECMAScript Builtins | boolean | True if the `g` flag was set |
-| [`<RegExpInstance>.lastIndex`](/language/regular-expressions/) | ECMAScript Builtins | number | Index at which to start the next match |
-| [`<RegExpInstance>.source`](/language/regular-expressions/) | ECMAScript Builtins | string | The pattern text, excluding slashes and flags |
+| [`<RegExpInstance>.exec(string)`](/ecmascript-builtins/regular-expressions/#exec) | ECMAScript Builtins | array | ⚠️ Partial — `lastIndex` does not advance; avoid the `g`-flag loop pattern |
+| [`<RegExpInstance>.global`](/ecmascript-builtins/regular-expressions/#global) | ECMAScript Builtins | boolean | True if the `g` flag was set |
+| [`<RegExpInstance>.ignoreCase`](/ecmascript-builtins/regular-expressions/#ignorecase) | ECMAScript Builtins | boolean | True if the `i` flag was set |
+| [`<RegExpInstance>.lastIndex`](/ecmascript-builtins/regular-expressions/#lastindex) | ECMAScript Builtins | number | ⚠️ Partial — not updated by `exec`/`test` in SFMC |
+| [`<RegExpInstance>.multiline`](/ecmascript-builtins/regular-expressions/#multiline) | ECMAScript Builtins | boolean | True if the `m` flag was set |
+| [`<RegExpInstance>.source`](/ecmascript-builtins/regular-expressions/#source) | ECMAScript Builtins | string | The pattern text, excluding slashes and flags |
+| [`<RegExpInstance>.test(string)`](/ecmascript-builtins/regular-expressions/#test) | ECMAScript Builtins | boolean | Test whether the string matches the pattern |
 
 ---
 
@@ -406,21 +460,33 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`<SendInstance>.Tracking.ClickRetrieve(filter)`](/core-library/send/#instance-tracking-clickretrieve) | Core Library | object[] | Click tracking for send |
 | [`<SendInstance>.Tracking.TotalByIntervalRetrieve(type, startDate, endDate, groupBy)`](/core-library/send/#instance-tracking-totalbyintervalretrieve) | Core Library | object[] | Aggregated send tracking |
 | [`SentEvent.Retrieve(filter)`](/core-library/events/#sent-event) | Core Library | object[] | Sent events |
-| [`<StringInstance>.charAt(index)`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | string | Character at index |
-| [`<StringInstance>.charCodeAt(index)`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | number | Char code at index |
-| [`<StringInstance>.concat(string[, ...])`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | string | Concatenate strings |
-| [`<StringInstance>.indexOf(searchValue[, fromIndex])`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | number | First index of substring |
-| [`<StringInstance>.lastIndexOf(searchValue[, fromIndex])`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | number | Last index of substring |
-| [`<StringInstance>.length`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | number | String length |
-| [`<StringInstance>.localeCompare(compareString)`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | number | Compare two strings in sort order (-1, 0, or 1) |
-| [`<StringInstance>.match(regexp)`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | array | Match regex |
-| [`<StringInstance>.replace(searchValue, replaceValue)`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | string | Replace substring |
-| [`<StringInstance>.search(regexp)`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | number | Search for regex |
-| [`<StringInstance>.slice(start[, end])`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | string | Extract substring |
-| [`<StringInstance>.split(separator[, limit])`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | array | Split into array |
-| [`<StringInstance>.substring(start[, end])`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | string | Substring by range |
-| [`<StringInstance>.toLowerCase()`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | string | Convert to lower case |
-| [`<StringInstance>.toUpperCase()`](/ecmascript-builtins/string-methods/) | ECMAScript Builtins | string | Convert to upper case |
+| [`<StringInstance>.charAt(index)`](/ecmascript-builtins/string-methods/#charat) | ECMAScript Builtins | string | Character at index |
+| [`<StringInstance>.charCodeAt(index)`](/ecmascript-builtins/string-methods/#charcodeat) | ECMAScript Builtins | number | Char code at index |
+| [`<StringInstance>.codePointAt(pos)`](/ecmascript-builtins/string-methods/#codepointat) | ECMAScript Builtins | number | ❌ Missing (ES6) — needs polyfill |
+| [`<StringInstance>.concat(string[, ...])`](/ecmascript-builtins/string-methods/#concat) | ECMAScript Builtins | string | Concatenate strings |
+| [`<StringInstance>.endsWith(searchString[, endPosition])`](/ecmascript-builtins/string-methods/#endswith) | ECMAScript Builtins | boolean | ❌ Missing (ES6) — needs polyfill |
+| [`<StringInstance>.includes(searchString[, position])`](/ecmascript-builtins/string-methods/#includes) | ECMAScript Builtins | boolean | ❌ Missing (ES6) — use `indexOf(...) !== -1` |
+| [`<StringInstance>.indexOf(searchValue[, fromIndex])`](/ecmascript-builtins/string-methods/#indexof) | ECMAScript Builtins | number | First index of substring |
+| [`<StringInstance>.lastIndexOf(searchValue[, fromIndex])`](/ecmascript-builtins/string-methods/#lastindexof) | ECMAScript Builtins | number | Last index of substring |
+| [`<StringInstance>.length`](/ecmascript-builtins/string-methods/#length) | ECMAScript Builtins | number | String length |
+| [`<StringInstance>.localeCompare(compareString)`](/ecmascript-builtins/string-methods/#localecompare) | ECMAScript Builtins | number | Compare two strings in sort order (-1, 0, or 1) |
+| [`<StringInstance>.match(regexp)`](/ecmascript-builtins/string-methods/#match) | ECMAScript Builtins | array | Match regex |
+| [`<StringInstance>.padEnd(targetLength[, padString])`](/ecmascript-builtins/string-methods/#padend) | ECMAScript Builtins | string | ❌ Missing (ES2017) — needs polyfill |
+| [`<StringInstance>.padStart(targetLength[, padString])`](/ecmascript-builtins/string-methods/#padstart) | ECMAScript Builtins | string | ❌ Missing (ES2017) — needs polyfill |
+| [`<StringInstance>.repeat(count)`](/ecmascript-builtins/string-methods/#repeat) | ECMAScript Builtins | string | ❌ Missing (ES6) — needs polyfill |
+| [`<StringInstance>.replace(searchValue, replaceValue)`](/ecmascript-builtins/string-methods/#replace) | ECMAScript Builtins | string | Replace substring |
+| [`<StringInstance>.search(regexp)`](/ecmascript-builtins/string-methods/#search) | ECMAScript Builtins | number | Search for regex |
+| [`<StringInstance>.slice(start[, end])`](/ecmascript-builtins/string-methods/#slice) | ECMAScript Builtins | string | Extract substring |
+| [`<StringInstance>.split(separator[, limit])`](/ecmascript-builtins/string-methods/#split) | ECMAScript Builtins | array | Split into array |
+| [`<StringInstance>.startsWith(searchString[, position])`](/ecmascript-builtins/string-methods/#startswith) | ECMAScript Builtins | boolean | ❌ Missing (ES6) — use `indexOf(...) === 0` |
+| [`<StringInstance>.substr(start[, length])`](/ecmascript-builtins/string-methods/#substr) | ECMAScript Builtins | string | Substring by start + length (legacy) |
+| [`<StringInstance>.substring(start[, end])`](/ecmascript-builtins/string-methods/#substring) | ECMAScript Builtins | string | Substring by range |
+| [`<StringInstance>.toLocaleLowerCase()`](/ecmascript-builtins/string-methods/#tolocalelowercase) | ECMAScript Builtins | string | Lower case using host locale mappings |
+| [`<StringInstance>.toLowerCase()`](/ecmascript-builtins/string-methods/#tolowercase) | ECMAScript Builtins | string | Convert to lower case |
+| [`<StringInstance>.toUpperCase()`](/ecmascript-builtins/string-methods/#touppercase) | ECMAScript Builtins | string | Convert to upper case |
+| [`<StringInstance>.trim()`](/ecmascript-builtins/string-methods/#trim) | ECMAScript Builtins | string | ❌ Missing (ES5) — use `Platform.Function.Trim` or a polyfill |
+| [`<StringInstance>.trimEnd()`](/ecmascript-builtins/string-methods/#trimend) | ECMAScript Builtins | string | ❌ Missing (ES2019) — needs polyfill |
+| [`<StringInstance>.trimStart()`](/ecmascript-builtins/string-methods/#trimstart) | ECMAScript Builtins | string | ❌ Missing (ES2019) — needs polyfill |
 | [`SurveyEvent.Retrieve(filter)`](/core-library/events/#survey-event) | Core Library | object[] | Survey events |
 | [`Platform.Function.SystemDateToLocalDate(dateString)`](/platform-functions/systemdatetolocaldate/) | Platform Functions | string | System time (CST) to local account/user time |
 | [`Platform.Response.SetResponseHeader(headerName, value)`](/platform-objects/platform-response/#setresponseheader) | Platform Response | void | Set a response header |

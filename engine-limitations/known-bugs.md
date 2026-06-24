@@ -135,7 +135,7 @@ arr.splice(2, 1, 'a');
 // Actual:   first element is replaced = ['a', 2, 3, 4, 5] as if you ran arr.splice(null, null, "a");
 ```
 
-Use the [splice polyfill](/engine-limitations/polyfills/#splice-broken--must-override).
+Use the [splice polyfill](/engine-limitations/polyfills/#array-prototype-splice).
 
 ---
 
@@ -151,7 +151,7 @@ Use the [splice polyfill](/engine-limitations/polyfills/#splice-broken--must-ove
 // Actual:   -1
 ```
 
-Use the [lastIndexOf polyfill](/engine-limitations/polyfills/#lastindexof-array--broken--must-override).
+Use the [lastIndexOf polyfill](/engine-limitations/polyfills/#array-prototype-lastindexof).
 
 ---
 

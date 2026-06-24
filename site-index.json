@@ -2927,7 +2927,7 @@
   },
   {
     "name": "Array.join",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#join",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Joins all array elements into a string, separated by the specified delimiter.",
@@ -2938,7 +2938,7 @@
   },
   {
     "name": "Array.push",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#push",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Appends one or more elements to the end of an array and returns the new length.",
@@ -2949,7 +2949,7 @@
   },
   {
     "name": "Array.pop",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#pop",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Removes and returns the last element from an array.",
@@ -2957,7 +2957,7 @@
   },
   {
     "name": "Array.shift",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#shift",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Removes and returns the first element from an array.",
@@ -2965,7 +2965,7 @@
   },
   {
     "name": "Array.unshift",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#unshift",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Inserts one or more elements at the start of an array and returns the new length.",
@@ -2976,7 +2976,7 @@
   },
   {
     "name": "Array.concat",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#concat",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns a new array formed by merging this array with other arrays or values.",
@@ -2987,7 +2987,7 @@
   },
   {
     "name": "Array.slice",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#slice",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns a shallow copy of a portion of an array.",
@@ -2999,7 +2999,7 @@
   },
   {
     "name": "Array.sort",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#sort",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Sorts the array in place and returns it.",
@@ -3010,7 +3010,7 @@
   },
   {
     "name": "Array.reverse",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#reverse",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Reverses the elements of an array in place.",
@@ -3018,7 +3018,7 @@
   },
   {
     "name": "Array.length",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#length",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the number of elements in the array.",
@@ -3026,7 +3026,7 @@
   },
   {
     "name": "Array.toLocaleString",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#tolocalestring",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns a string representing the array elements, joined by a locale-specific separator.",
@@ -3034,7 +3034,7 @@
   },
   {
     "name": "String.charAt",
-    "url": "/ecmascript-builtins/string-methods/",
+    "url": "/ecmascript-builtins/string-methods/#charat",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the character at the specified index.",
@@ -3045,7 +3045,7 @@
   },
   {
     "name": "String.charCodeAt",
-    "url": "/ecmascript-builtins/string-methods/",
+    "url": "/ecmascript-builtins/string-methods/#charcodeat",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the UTF-16 code unit at the specified index.",
@@ -3056,7 +3056,7 @@
   },
   {
     "name": "String.indexOf",
-    "url": "/ecmascript-builtins/string-methods/",
+    "url": "/ecmascript-builtins/string-methods/#indexof",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the index of the first occurrence of a substring, or -1 if not found.",
@@ -3068,7 +3068,7 @@
   },
   {
     "name": "String.lastIndexOf",
-    "url": "/ecmascript-builtins/string-methods/",
+    "url": "/ecmascript-builtins/string-methods/#lastindexof",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the index of the last occurrence of a substring, or -1 if not found.",
@@ -3080,7 +3080,7 @@
   },
   {
     "name": "String.match",
-    "url": "/ecmascript-builtins/string-methods/",
+    "url": "/ecmascript-builtins/string-methods/#match",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Matches a string against a regular expression and returns the matches array.",
@@ -3091,7 +3091,7 @@
   },
   {
     "name": "String.replace",
-    "url": "/ecmascript-builtins/string-methods/",
+    "url": "/ecmascript-builtins/string-methods/#replace",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns a new string with matches replaced by a replacement string or function.",
@@ -3103,7 +3103,7 @@
   },
   {
     "name": "String.search",
-    "url": "/ecmascript-builtins/string-methods/",
+    "url": "/ecmascript-builtins/string-methods/#search",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Searches for a match and returns the index of the first match, or -1.",
@@ -3114,7 +3114,7 @@
   },
   {
     "name": "String.slice",
-    "url": "/ecmascript-builtins/string-methods/",
+    "url": "/ecmascript-builtins/string-methods/#slice",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Extracts a section of a string and returns it as a new string.",
@@ -3126,7 +3126,7 @@
   },
   {
     "name": "String.split",
-    "url": "/ecmascript-builtins/string-methods/",
+    "url": "/ecmascript-builtins/string-methods/#split",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Splits a string into an array of substrings using a separator.",
@@ -3138,7 +3138,7 @@
   },
   {
     "name": "String.substring",
-    "url": "/ecmascript-builtins/string-methods/",
+    "url": "/ecmascript-builtins/string-methods/#substring",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the characters between two indices of a string.",
@@ -3150,7 +3150,7 @@
   },
   {
     "name": "String.toLowerCase",
-    "url": "/ecmascript-builtins/string-methods/",
+    "url": "/ecmascript-builtins/string-methods/#tolowercase",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the string converted to lowercase.",
@@ -3158,7 +3158,7 @@
   },
   {
     "name": "String.toLocaleLowerCase",
-    "url": "/ecmascript-builtins/string-methods/",
+    "url": "/ecmascript-builtins/string-methods/#tolocalelowercase",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the string converted to lowercase according to host locale mappings.",
@@ -3166,7 +3166,7 @@
   },
   {
     "name": "String.toUpperCase",
-    "url": "/ecmascript-builtins/string-methods/",
+    "url": "/ecmascript-builtins/string-methods/#touppercase",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the string converted to uppercase.",
@@ -3174,7 +3174,7 @@
   },
   {
     "name": "String.concat",
-    "url": "/ecmascript-builtins/string-methods/",
+    "url": "/ecmascript-builtins/string-methods/#concat",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns a new string formed by concatenating this string with one or more additional strings.",
@@ -3185,7 +3185,7 @@
   },
   {
     "name": "String.localeCompare",
-    "url": "/ecmascript-builtins/string-methods/",
+    "url": "/ecmascript-builtins/string-methods/#localecompare",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Compares this string with another and returns a negative number if it sorts before, a positive number if it sorts after, or 0 if they are equivalent.",
@@ -3196,7 +3196,7 @@
   },
   {
     "name": "String.length",
-    "url": "/ecmascript-builtins/string-methods/",
+    "url": "/ecmascript-builtins/string-methods/#length",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the number of characters in the string.",
@@ -3204,7 +3204,7 @@
   },
   {
     "name": "Math.abs",
-    "url": "/ecmascript-builtins/math/",
+    "url": "/ecmascript-builtins/math/#abs",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the absolute value of a number.",
@@ -3215,7 +3215,7 @@
   },
   {
     "name": "Math.ceil",
-    "url": "/ecmascript-builtins/math/",
+    "url": "/ecmascript-builtins/math/#ceil",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Rounds a number up to the next integer.",
@@ -3226,7 +3226,7 @@
   },
   {
     "name": "Math.floor",
-    "url": "/ecmascript-builtins/math/",
+    "url": "/ecmascript-builtins/math/#floor",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Rounds a number down to the nearest integer.",
@@ -3237,7 +3237,7 @@
   },
   {
     "name": "Math.max",
-    "url": "/ecmascript-builtins/math/",
+    "url": "/ecmascript-builtins/math/#max",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the largest of the supplied numbers.",
@@ -3248,7 +3248,7 @@
   },
   {
     "name": "Math.min",
-    "url": "/ecmascript-builtins/math/",
+    "url": "/ecmascript-builtins/math/#min",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the smallest of the supplied numbers.",
@@ -3259,7 +3259,7 @@
   },
   {
     "name": "Math.pow",
-    "url": "/ecmascript-builtins/math/",
+    "url": "/ecmascript-builtins/math/#pow",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the base raised to the exponent power.",
@@ -3271,7 +3271,7 @@
   },
   {
     "name": "Math.random",
-    "url": "/ecmascript-builtins/math/",
+    "url": "/ecmascript-builtins/math/#random",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns a pseudo-random floating-point number in [0, 1).",
@@ -3279,7 +3279,7 @@
   },
   {
     "name": "Math.round",
-    "url": "/ecmascript-builtins/math/",
+    "url": "/ecmascript-builtins/math/#round",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Rounds a number to the nearest integer.",
@@ -3290,7 +3290,7 @@
   },
   {
     "name": "Math.sqrt",
-    "url": "/ecmascript-builtins/math/",
+    "url": "/ecmascript-builtins/math/#sqrt",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the square root of a number.",
@@ -3301,7 +3301,7 @@
   },
   {
     "name": "Math.sin",
-    "url": "/ecmascript-builtins/math/",
+    "url": "/ecmascript-builtins/math/#sin",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the sine of an angle given in radians.",
@@ -3312,7 +3312,7 @@
   },
   {
     "name": "Math.cos",
-    "url": "/ecmascript-builtins/math/",
+    "url": "/ecmascript-builtins/math/#cos",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the cosine of an angle given in radians.",
@@ -3323,7 +3323,7 @@
   },
   {
     "name": "Math.tan",
-    "url": "/ecmascript-builtins/math/",
+    "url": "/ecmascript-builtins/math/#tan",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the tangent of an angle given in radians.",
@@ -3334,7 +3334,7 @@
   },
   {
     "name": "Math.asin",
-    "url": "/ecmascript-builtins/math/",
+    "url": "/ecmascript-builtins/math/#asin",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the arc sine (in radians) of a number in the range [-1, 1].",
@@ -3345,7 +3345,7 @@
   },
   {
     "name": "Math.acos",
-    "url": "/ecmascript-builtins/math/",
+    "url": "/ecmascript-builtins/math/#acos",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the arc cosine (in radians) of a number in the range [-1, 1].",
@@ -3356,7 +3356,7 @@
   },
   {
     "name": "Math.atan",
-    "url": "/ecmascript-builtins/math/",
+    "url": "/ecmascript-builtins/math/#atan",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the arc tangent (in radians) of a number.",
@@ -3367,7 +3367,7 @@
   },
   {
     "name": "Math.atan2",
-    "url": "/ecmascript-builtins/math/",
+    "url": "/ecmascript-builtins/math/#atan2",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the angle (in radians) from the positive x-axis to the point (x, y).",
@@ -3379,7 +3379,7 @@
   },
   {
     "name": "Math.exp",
-    "url": "/ecmascript-builtins/math/",
+    "url": "/ecmascript-builtins/math/#exp",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns e raised to the power of x (e^x).",
@@ -3390,7 +3390,7 @@
   },
   {
     "name": "Math.log",
-    "url": "/ecmascript-builtins/math/",
+    "url": "/ecmascript-builtins/math/#log",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the natural logarithm (base e) of a number.",
@@ -3401,7 +3401,7 @@
   },
   {
     "name": "Math.PI",
-    "url": "/ecmascript-builtins/math/",
+    "url": "/ecmascript-builtins/math/#pi",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "The ratio of a circle's circumference to its diameter (~3.",
@@ -3409,7 +3409,7 @@
   },
   {
     "name": "Math.E",
-    "url": "/ecmascript-builtins/math/",
+    "url": "/ecmascript-builtins/math/#e",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Euler's number, the base of the natural logarithm (~2.",
@@ -3417,7 +3417,7 @@
   },
   {
     "name": "Math.LN2",
-    "url": "/ecmascript-builtins/math/",
+    "url": "/ecmascript-builtins/math/#ln2",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "The natural logarithm of 2 (~0.",
@@ -3425,7 +3425,7 @@
   },
   {
     "name": "Math.LN10",
-    "url": "/ecmascript-builtins/math/",
+    "url": "/ecmascript-builtins/math/#ln10",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "The natural logarithm of 10 (~2.",
@@ -3433,7 +3433,7 @@
   },
   {
     "name": "Math.LOG2E",
-    "url": "/ecmascript-builtins/math/",
+    "url": "/ecmascript-builtins/math/#log2e",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "The base-2 logarithm of e (~1.",
@@ -3441,7 +3441,7 @@
   },
   {
     "name": "Math.SQRT2",
-    "url": "/ecmascript-builtins/math/",
+    "url": "/ecmascript-builtins/math/#sqrt2",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "The square root of 2 (~1.",
@@ -3449,7 +3449,7 @@
   },
   {
     "name": "Math.SQRT1_2",
-    "url": "/ecmascript-builtins/math/",
+    "url": "/ecmascript-builtins/math/#sqrt1_2",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "The square root of 1/2 (~0.",
@@ -3457,7 +3457,7 @@
   },
   {
     "name": "Number.toFixed",
-    "url": "/ecmascript-builtins/number-methods/",
+    "url": "/ecmascript-builtins/number-methods/#tofixed",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns a string representing the number in fixed-point notation with the given number of decimal places.",
@@ -3468,7 +3468,7 @@
   },
   {
     "name": "Number.toExponential",
-    "url": "/ecmascript-builtins/number-methods/",
+    "url": "/ecmascript-builtins/number-methods/#toexponential",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns a string representing the number in exponential notation.",
@@ -3479,7 +3479,7 @@
   },
   {
     "name": "Number.toPrecision",
-    "url": "/ecmascript-builtins/number-methods/",
+    "url": "/ecmascript-builtins/number-methods/#toprecision",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns a string representing the number to the specified number of significant digits.",
@@ -3490,7 +3490,7 @@
   },
   {
     "name": "Object.hasOwnProperty",
-    "url": "/ecmascript-builtins/object-methods/",
+    "url": "/ecmascript-builtins/object-methods/#hasownproperty",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns true if the object has the specified property as its own (not inherited) property.",
@@ -3501,7 +3501,7 @@
   },
   {
     "name": "RegExp.test",
-    "url": "/language/regular-expressions/",
+    "url": "/ecmascript-builtins/regular-expressions/#test",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Tests whether the string matches the pattern.",
@@ -3512,7 +3512,7 @@
   },
   {
     "name": "RegExp.exec",
-    "url": "/language/regular-expressions/",
+    "url": "/ecmascript-builtins/regular-expressions/#exec",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Executes a search for a match in the string.",
@@ -3523,7 +3523,7 @@
   },
   {
     "name": "RegExp.source",
-    "url": "/language/regular-expressions/",
+    "url": "/ecmascript-builtins/regular-expressions/#source",
     "section": "ECMAScript Builtins",
     "type": "property",
     "description": "The text of the pattern, excluding the enclosing slashes and any flags.",
@@ -3531,7 +3531,7 @@
   },
   {
     "name": "RegExp.global",
-    "url": "/language/regular-expressions/",
+    "url": "/ecmascript-builtins/regular-expressions/#global",
     "section": "ECMAScript Builtins",
     "type": "property",
     "description": "True if the g (global) flag was specified when creating the regular expression.",
@@ -3539,7 +3539,7 @@
   },
   {
     "name": "RegExp.lastIndex",
-    "url": "/language/regular-expressions/",
+    "url": "/ecmascript-builtins/regular-expressions/#lastindex",
     "section": "ECMAScript Builtins",
     "type": "property",
     "description": "The index at which to start the next match.",
@@ -3547,7 +3547,7 @@
   },
   {
     "name": "Date.getFullYear",
-    "url": "/ecmascript-builtins/date-methods/",
+    "url": "/ecmascript-builtins/date-methods/#getfullyear",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the four-digit year of the date according to local time.",
@@ -3555,7 +3555,7 @@
   },
   {
     "name": "Date.getMonth",
-    "url": "/ecmascript-builtins/date-methods/",
+    "url": "/ecmascript-builtins/date-methods/#getmonth",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the month (0 = January … 11 = December) of the date according to local time.",
@@ -3563,7 +3563,7 @@
   },
   {
     "name": "Date.getDate",
-    "url": "/ecmascript-builtins/date-methods/",
+    "url": "/ecmascript-builtins/date-methods/#getdate",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the day of the month (1–31) of the date according to local time.",
@@ -3571,7 +3571,7 @@
   },
   {
     "name": "Date.getHours",
-    "url": "/ecmascript-builtins/date-methods/",
+    "url": "/ecmascript-builtins/date-methods/#gethours",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the hour (0–23) of the date according to local time.",
@@ -3579,7 +3579,7 @@
   },
   {
     "name": "Date.getTime",
-    "url": "/ecmascript-builtins/date-methods/",
+    "url": "/ecmascript-builtins/date-methods/#gettime",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the numeric timestamp (milliseconds since 1970-01-01T00:00:00 UTC) for the date.",
@@ -3587,7 +3587,7 @@
   },
   {
     "name": "Date.getTimezoneOffset",
-    "url": "/ecmascript-builtins/date-methods/",
+    "url": "/ecmascript-builtins/date-methods/#gettimezoneoffset",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the difference, in minutes, between this date evaluated in UTC and in the host local time zone.",
@@ -3595,7 +3595,7 @@
   },
   {
     "name": "Date.getMinutes",
-    "url": "/ecmascript-builtins/date-methods/",
+    "url": "/ecmascript-builtins/date-methods/#getminutes",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the minutes (0–59) of the date according to local time.",
@@ -3603,7 +3603,7 @@
   },
   {
     "name": "Date.getSeconds",
-    "url": "/ecmascript-builtins/date-methods/",
+    "url": "/ecmascript-builtins/date-methods/#getseconds",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the seconds (0–59) of the date according to local time.",
@@ -3611,7 +3611,7 @@
   },
   {
     "name": "Date.getDay",
-    "url": "/ecmascript-builtins/date-methods/",
+    "url": "/ecmascript-builtins/date-methods/#getday",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the day of the week (0 = Sunday … 6 = Saturday) according to local time.",
@@ -3619,7 +3619,7 @@
   },
   {
     "name": "Date.getMilliseconds",
-    "url": "/ecmascript-builtins/date-methods/",
+    "url": "/ecmascript-builtins/date-methods/#getmilliseconds",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the milliseconds (0–999) of the date according to local time.",
@@ -3627,7 +3627,7 @@
   },
   {
     "name": "Date.toString",
-    "url": "/ecmascript-builtins/date-methods/",
+    "url": "/ecmascript-builtins/date-methods/#tostring",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns a human-readable string representing the date.",
@@ -3635,7 +3635,7 @@
   },
   {
     "name": "Date.toDateString",
-    "url": "/ecmascript-builtins/date-methods/",
+    "url": "/ecmascript-builtins/date-methods/#todatestring",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the date portion of the date as a human-readable string.",
@@ -3643,7 +3643,7 @@
   },
   {
     "name": "Date.toUTCString",
-    "url": "/ecmascript-builtins/date-methods/",
+    "url": "/ecmascript-builtins/date-methods/#toutcstring",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the date as a string using the UTC time zone.",
@@ -3651,7 +3651,7 @@
   },
   {
     "name": "Date.valueOf",
-    "url": "/ecmascript-builtins/date-methods/",
+    "url": "/ecmascript-builtins/date-methods/#valueof",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the primitive value of the date as the number of milliseconds since the Unix epoch.",
@@ -3659,7 +3659,7 @@
   },
   {
     "name": "Date.UTC",
-    "url": "/ecmascript-builtins/date-methods/",
+    "url": "/ecmascript-builtins/date-methods/#utc",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the number of milliseconds since the Unix epoch for the given UTC date components.",
@@ -3676,7 +3676,7 @@
   },
   {
     "name": "Date.parse",
-    "url": "/ecmascript-builtins/date-methods/",
+    "url": "/ecmascript-builtins/date-methods/#parse",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Parses a date string and returns the numeric timestamp (milliseconds since the Unix epoch), or NaN if the string cannot be parsed.",
@@ -3687,7 +3687,7 @@
   },
   {
     "name": "Date.now",
-    "url": "/ecmascript-builtins/date-methods/",
+    "url": "/ecmascript-builtins/date-methods/#now",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the current time as the numeric timestamp (milliseconds since the Unix epoch).",
@@ -3695,7 +3695,7 @@
   },
   {
     "name": "Object.defineProperty",
-    "url": "/ecmascript-builtins/object-methods/",
+    "url": "/ecmascript-builtins/object-methods/#defineproperty",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Defines a new property on an object, or modifies an existing one, with the given descriptor.",
@@ -3708,7 +3708,7 @@
   },
   {
     "name": "Function.call",
-    "url": "/ecmascript-builtins/function-methods/",
+    "url": "/ecmascript-builtins/function-methods/#call",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Calls the function with a given `this` value and arguments provided individually.",
@@ -3720,7 +3720,7 @@
   },
   {
     "name": "Function.apply",
-    "url": "/ecmascript-builtins/function-methods/",
+    "url": "/ecmascript-builtins/function-methods/#apply",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Calls the function with a given `this` value and arguments provided as an array.",
@@ -3732,203 +3732,455 @@
   },
   {
     "name": "Array.copyWithin",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#copywithin",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Array."
   },
   {
     "name": "Array.entries",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#entries",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Array."
   },
   {
     "name": "Array.fill",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#fill",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Array."
   },
   {
     "name": "Array.filter",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#filter",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Array."
   },
   {
     "name": "Array.find",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#find",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Array."
   },
   {
     "name": "Array.findIndex",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#findindex",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Array."
   },
   {
     "name": "Array.forEach",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#foreach",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Array."
   },
   {
     "name": "Array.includes",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#includes",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Array."
   },
   {
     "name": "Array.indexOf",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#indexof",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Array."
   },
   {
     "name": "Array.lastIndexOf",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#lastindexof",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Array."
   },
   {
     "name": "Array.map",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#map",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Array."
   },
   {
     "name": "Array.reduce",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#reduce",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Array."
   },
   {
     "name": "Array.reduceRight",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#reduceright",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Array."
   },
   {
     "name": "Array.some",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#some",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Array."
   },
   {
     "name": "Array.splice",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#splice",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Array."
   },
   {
     "name": "String.trim",
-    "url": "/ecmascript-builtins/string-methods/",
+    "url": "/ecmascript-builtins/string-methods/#trim",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "String."
   },
   {
     "name": "String.startsWith",
-    "url": "/ecmascript-builtins/string-methods/",
+    "url": "/ecmascript-builtins/string-methods/#startswith",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "String."
   },
   {
     "name": "String.endsWith",
-    "url": "/ecmascript-builtins/string-methods/",
+    "url": "/ecmascript-builtins/string-methods/#endswith",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "String."
   },
   {
     "name": "Function.bind",
-    "url": "/ecmascript-builtins/function-methods/",
+    "url": "/ecmascript-builtins/function-methods/#bind",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Function."
   },
   {
     "name": "Object.getPrototypeOf",
-    "url": "/ecmascript-builtins/object-methods/",
+    "url": "/ecmascript-builtins/object-methods/#getprototypeof",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Object."
   },
   {
     "name": "Array.isArray",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#isarray",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Array."
   },
   {
     "name": "Array.of",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#of",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Array."
   },
   {
     "name": "String.substr",
-    "url": "/ecmascript-builtins/string-methods/",
+    "url": "/ecmascript-builtins/string-methods/#substr",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "String."
   },
   {
     "name": "Array.slice",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#slice",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Array."
   },
   {
     "name": "Array.sort",
-    "url": "/ecmascript-builtins/array-methods/",
+    "url": "/ecmascript-builtins/array-methods/#sort",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Array."
   },
   {
     "name": "String.search",
-    "url": "/ecmascript-builtins/string-methods/",
+    "url": "/ecmascript-builtins/string-methods/#search",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "String."
   },
   {
     "name": "String.split",
-    "url": "/ecmascript-builtins/string-methods/",
+    "url": "/ecmascript-builtins/string-methods/#split",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "String."
   },
   {
     "name": "Math.max",
-    "url": "/ecmascript-builtins/math/",
+    "url": "/ecmascript-builtins/math/#max",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Math."
   },
   {
     "name": "Math.min",
-    "url": "/ecmascript-builtins/math/",
+    "url": "/ecmascript-builtins/math/#min",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Math."
+  },
+  {
+    "name": "Math.LOG10E",
+    "url": "/ecmascript-builtins/math/#log10e",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "Math."
+  },
+  {
+    "name": "RegExp.ignoreCase",
+    "url": "/ecmascript-builtins/regular-expressions/#ignorecase",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "RegExp."
+  },
+  {
+    "name": "RegExp.multiline",
+    "url": "/ecmascript-builtins/regular-expressions/#multiline",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "RegExp."
+  },
+  {
+    "name": "Date.toISOString",
+    "url": "/ecmascript-builtins/date-methods/#toisostring",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Date."
+  },
+  {
+    "name": "JSON.parse",
+    "url": "/ecmascript-builtins/json/#parse",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "JSON is undefined in SFMC SSJS."
+  },
+  {
+    "name": "JSON.stringify",
+    "url": "/ecmascript-builtins/json/#stringify",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "JSON is undefined in SFMC SSJS."
+  },
+  {
+    "name": "Object.keys",
+    "url": "/ecmascript-builtins/object-methods/#keys",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Object."
+  },
+  {
+    "name": "Object.assign",
+    "url": "/ecmascript-builtins/object-methods/#assign",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Object."
+  },
+  {
+    "name": "Object.create",
+    "url": "/ecmascript-builtins/object-methods/#create",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Object."
+  },
+  {
+    "name": "Object.freeze",
+    "url": "/ecmascript-builtins/object-methods/#freeze",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Object."
+  },
+  {
+    "name": "Object.getOwnPropertyNames",
+    "url": "/ecmascript-builtins/object-methods/#getownpropertynames",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Object."
+  },
+  {
+    "name": "String.trimStart",
+    "url": "/ecmascript-builtins/string-methods/#trimstart",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "String."
+  },
+  {
+    "name": "String.trimEnd",
+    "url": "/ecmascript-builtins/string-methods/#trimend",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "String."
+  },
+  {
+    "name": "String.padStart",
+    "url": "/ecmascript-builtins/string-methods/#padstart",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "String."
+  },
+  {
+    "name": "String.padEnd",
+    "url": "/ecmascript-builtins/string-methods/#padend",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "String."
+  },
+  {
+    "name": "String.repeat",
+    "url": "/ecmascript-builtins/string-methods/#repeat",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "String."
+  },
+  {
+    "name": "String.includes",
+    "url": "/ecmascript-builtins/string-methods/#includes",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "String."
+  },
+  {
+    "name": "String.codePointAt",
+    "url": "/ecmascript-builtins/string-methods/#codepointat",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "String."
+  },
+  {
+    "name": "Array.flat",
+    "url": "/ecmascript-builtins/array-methods/#flat",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Array."
+  },
+  {
+    "name": "Array.flatMap",
+    "url": "/ecmascript-builtins/array-methods/#flatmap",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Array."
+  },
+  {
+    "name": "Array.findLast",
+    "url": "/ecmascript-builtins/array-methods/#findlast",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Array."
+  },
+  {
+    "name": "Array.at",
+    "url": "/ecmascript-builtins/array-methods/#at",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Array."
+  },
+  {
+    "name": "Array.keys",
+    "url": "/ecmascript-builtins/array-methods/#keys",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Array."
+  },
+  {
+    "name": "Array.values",
+    "url": "/ecmascript-builtins/array-methods/#values",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Array."
+  },
+  {
+    "name": "Array.from",
+    "url": "/ecmascript-builtins/array-methods/#from",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Array."
+  },
+  {
+    "name": "Number.isInteger",
+    "url": "/ecmascript-builtins/number-methods/#isinteger",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Number."
+  },
+  {
+    "name": "Number.isNaN",
+    "url": "/ecmascript-builtins/number-methods/#isnan",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Number."
+  },
+  {
+    "name": "Number.isFinite",
+    "url": "/ecmascript-builtins/number-methods/#isfinite",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Number."
+  },
+  {
+    "name": "Number.parseInt",
+    "url": "/ecmascript-builtins/number-methods/#parseint",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Number."
+  },
+  {
+    "name": "Number.MAX_SAFE_INTEGER",
+    "url": "/ecmascript-builtins/number-methods/#max_safe_integer",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "Number."
+  },
+  {
+    "name": "Math.trunc",
+    "url": "/ecmascript-builtins/math/#trunc",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Math."
+  },
+  {
+    "name": "Math.sign",
+    "url": "/ecmascript-builtins/math/#sign",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Math."
+  },
+  {
+    "name": "Math.cbrt",
+    "url": "/ecmascript-builtins/math/#cbrt",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Math."
+  },
+  {
+    "name": "Math.log2",
+    "url": "/ecmascript-builtins/math/#log2",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Math."
+  },
+  {
+    "name": "Math.log10",
+    "url": "/ecmascript-builtins/math/#log10",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Math."
+  },
+  {
+    "name": "Math.hypot",
+    "url": "/ecmascript-builtins/math/#hypot",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Math."

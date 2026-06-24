@@ -4,80 +4,58 @@ title: Function Methods
 parent: ECMAScript Built-ins
 parent_url: /ecmascript-builtins/
 permalink: /ecmascript-builtins/function-methods/
-description: Function prototype methods in SSJS — call and apply work natively (ES3), while bind is unavailable because Function.prototype is sealed.
+description: Function prototype methods in SSJS — call and apply work natively (ES3), while bind is missing because Function.prototype is sealed; use the bindFn helper.
 ---
 
-`Function.prototype.call` and `Function.prototype.apply` are ES3 and work natively in SSJS — both are value-confirmed on a CloudPage. `Function.prototype.bind` (ES5) is **not** available, and unlike `Array.prototype` / `String.prototype`, `Function.prototype` is **sealed**, so `bind` cannot be installed on the prototype — use a standalone helper instead. Each section heading is tagged with its ECMAScript edition.
+`Function.prototype.call` and `Function.prototype.apply` are ES3 and work natively in SSJS. `Function.prototype.bind` (ES5) is **not** available, and `Function.prototype` is **sealed**, so `bind` cannot be installed on the prototype — use a standalone helper.
+
+## Status legend
+
+| Icon | Meaning |
+|------|---------|
+| ✅ Works | Available and behaves as expected |
+| ⚠️ Partial | Available but with a documented caveat or bug |
+| ❌ Missing | Not available — use the workaround / polyfill |
+
+## Members
+
+| Member | ES | Status | Notes |
+|--------|----|--------|-------|
+| [`Function.prototype.call(thisArg, ...args)`](#call) | ES3 | ✅ Works | |
+| [`Function.prototype.apply(thisArg, argsArray)`](#apply) | ES3 | ✅ Works | |
+| [`Function.prototype.bind(thisArg, ...args)`](#bind) | ES5 | ❌ Missing | Prototype is sealed — use the `bindFn` helper |
 
 ---
 
-## call `(ES3)`
+## call {#call}
 
-Calls the function with a given `this` value and arguments supplied individually.
-
-```javascript
-fn.call(thisArg[, arg1[, arg2[, ...]]])
-```
-
-### Parameters
-
-| Name | Type | Description |
-|------|------|-------------|
-| `thisArg` | any | The value to use as `this` when calling the function |
-| `arg1, arg2, …` | any | Arguments passed to the function (optional, repeatable) |
-
-### Return Value
-
-`any` — whatever the called function returns.
-
-### Example
+`(ES3)` — ✅ Works. Calls the function with a given `this` value and arguments supplied individually.
 
 ```javascript
 function greet(greeting) {
     return greeting + ", " + this.name;
 }
 var r = greet.call({ name: "Sam" }, "Hi");
-Write(r);  // Hi, Sam
+Write(r);   // Hi, Sam
 ```
 
----
+## apply {#apply}
 
-## apply `(ES3)`
-
-Calls the function with a given `this` value and arguments supplied as an array.
+`(ES3)` — ✅ Works. Calls the function with a given `this` value and arguments supplied as an array.
 
 ```javascript
-fn.apply(thisArg[, argsArray])
-```
-
-### Parameters
-
-| Name | Type | Description |
-|------|------|-------------|
-| `thisArg` | any | The value to use as `this` when calling the function |
-| `argsArray` | Array | Array of arguments to pass to the function (optional) |
-
-### Return Value
-
-`any` — whatever the called function returns.
-
-### Example
-
-```javascript
-function sum(a, b) {
-    return a + b;
-}
+function sum(a, b) { return a + b; }
 var r = sum.apply(null, [2, 3]);
-Write(r);  // 5
+Write(r);   // 5
 ```
 
----
+## bind {#bind}
 
-## bind (unavailable — use the bindFn helper) `(ES5)`
+`(ES5)` — ❌ Missing.
 
-{% include callout.html type="danger" content="`Function.prototype.bind` is not available in SSJS, and `Function.prototype` is sealed — assigning `Function.prototype.bind = …` silently has no effect. Use the standalone `bindFn` helper from [Polyfills](/engine-limitations/polyfills/) instead." %}
+{% include callout.html type="danger" content="`Function.prototype.bind` is not available in SSJS, and `Function.prototype` is sealed — assigning `Function.prototype.bind = …` silently has no effect. Use the standalone `bindFn` helper from [Polyfills](/engine-limitations/polyfills/#function-prototype-bind) instead." %}
 
-`bindFn(fn, thisArg[, ...preArgs])` returns a new function with `this` and any leading arguments pre-bound (it is built on the native `apply`):
+`bindFn(fn, thisArg[, ...preArgs])` returns a new function with `this` and any leading arguments pre-bound (built on the native `apply`):
 
 ```javascript
 function bindFn(fn, thisArg) {
@@ -93,5 +71,15 @@ function bindFn(fn, thisArg) {
 
 var greet = function (greeting, name) { return greeting + ", " + name + "!"; };
 var sayHi = bindFn(greet, null, "Hi");
-Write(sayHi("Ada"));  // Hi, Ada!
+Write(sayHi("Ada"));   // Hi, Ada!
 ```
+
+## See Also
+
+<div class="see-also">
+<h4>See Also</h4>
+<ul>
+  <li><a href="/engine-limitations/polyfills/">Polyfills</a></li>
+  <li><a href="/ecmascript-builtins/">ECMAScript Built-ins</a></li>
+</ul>
+</div>

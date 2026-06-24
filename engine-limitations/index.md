@@ -11,8 +11,8 @@ This section documents every known limitation along with practical workarounds.
 ## In This Section
 
 - [Unsupported Syntax](/engine-limitations/unsupported-syntax/) — 24 ES6+ features that cause runtime errors
-- [Missing Methods](/engine-limitations/missing-methods/) — Broken or unavailable Array and String methods
-- [Polyfills](/engine-limitations/polyfills/) — Ready-to-paste polyfill implementations for all 20 missing methods
+- [ECMAScript Built-ins](/ecmascript-builtins/) — Which Array, String, Number, Math, Object, Date, RegExp, and JSON members work, are partial, or are missing
+- [Polyfills](/engine-limitations/polyfills/) — Ready-to-paste polyfill implementations for the missing and broken methods
 - [Known Bugs](/engine-limitations/known-bugs/) — Platform-specific behaviors that differ from documented/expected behavior
 
 ## Quick Reference: What to Use Instead
@@ -34,13 +34,13 @@ This section documents every known limitation along with practical workarounds.
 | `JSON.parse()` | `Platform.Function.ParseJSON(str + "")` |
 | `JSON.stringify()` | `Stringify(obj)` |
 | `Array.isArray()` | `Object.prototype.toString.call(v) === "[object Array]"` |
-| `arr.forEach()` | `for` loop — or add the [`forEach` polyfill](/engine-limitations/polyfills/#foreach) |
-| `arr.map()` | Manual loop — or add the [`map` polyfill](/engine-limitations/polyfills/#map) |
-| `arr.filter()` | Manual loop — or add the [`filter` polyfill](/engine-limitations/polyfills/#filter) |
-| `arr.indexOf()` | Manual loop — or add the [`indexOf` polyfill](/engine-limitations/polyfills/#indexof-array) |
-| `str.trim()` | `str.replace(/^\s+\|\s+$/g, "")` — or add the [`trim` polyfill](/engine-limitations/polyfills/#trim) |
-| `str.startsWith()` | `str.indexOf(sub) === 0` — or add the [polyfill](/engine-limitations/polyfills/#startswith) |
-| `str.endsWith()` | Manual substring check — or add the [polyfill](/engine-limitations/polyfills/#endswith) |
+| `arr.forEach()` | `for` loop — or add the [`forEach` polyfill](/engine-limitations/polyfills/#array-prototype-foreach) |
+| `arr.map()` | Manual loop — or add the [`map` polyfill](/engine-limitations/polyfills/#array-prototype-map) |
+| `arr.filter()` | Manual loop — or add the [`filter` polyfill](/engine-limitations/polyfills/#array-prototype-filter) |
+| `arr.indexOf()` | Manual loop — or add the [`indexOf` polyfill](/engine-limitations/polyfills/#array-prototype-indexof) |
+| `str.trim()` | `str.replace(/^\s+\|\s+$/g, "")` — or add the [`trim` polyfill](/engine-limitations/polyfills/#string-prototype-trim) |
+| `str.startsWith()` | `str.indexOf(sub) === 0` — or add the [polyfill](/engine-limitations/polyfills/#string-prototype-startswith) |
+| `str.endsWith()` | Manual substring check — or add the [polyfill](/engine-limitations/polyfills/#string-prototype-endswith) |
 
 ## ESLint Plugin
 

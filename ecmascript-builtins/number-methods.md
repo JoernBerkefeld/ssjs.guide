@@ -3,110 +3,129 @@ layout: page
 title: Number Methods
 parent: ECMAScript Built-ins
 parent_url: /ecmascript-builtins/
-description: Number prototype methods, static constants, and global numeric functions available in SSJS — and which ES6 Number statics are missing.
+description: Number prototype methods, constants, and the global numeric functions in SSJS — plus the ES6 Number statics that are missing and their fallbacks.
 ---
 
-`Number` is fully available in SSJS as an ES3/ES5 object. Instance methods like `toFixed()` and `toString()` work natively. ES6 static methods such as `Number.isInteger()` are not available — use the equivalent global functions or patterns instead.
+`Number` instance methods (`toFixed`, `toExponential`, `toPrecision`) and the ES3/ES5 constants work in SSJS. The global numeric functions `parseInt`/`parseFloat`/`isNaN`/`isFinite` work but have parsing caveats. ES6 `Number.*` statics are missing — use the global equivalents.
+
+## Status legend
+
+| Icon | Meaning |
+|------|---------|
+| ✅ Works | Available and behaves as expected |
+| ⚠️ Partial | Available but with a documented caveat or bug |
+| ❌ Missing | Not available (or `undefined`) — use the workaround |
+
+## Members
+
+| Member | ES | Status | Notes |
+|--------|----|--------|-------|
+| [`Number.prototype.toFixed(digits)`](#tofixed) | ES3 | ✅ Works | |
+| [`Number.prototype.toExponential(digits)`](#toexponential) | ES3 | ✅ Works | |
+| [`Number.prototype.toPrecision(digits)`](#toprecision) | ES3 | ✅ Works | |
+| [Constants (`MAX_VALUE`, `MIN_VALUE`, …)](#constants) | ES3 | ✅ Works | |
+| [`parseInt(str, radix)`](#parseint-global) | ES3 | ⚠️ Partial | `NaN` on trailing non-numeric chars |
+| [`parseFloat(str)`](#parsefloat-global) | ES3 | ⚠️ Partial | `NaN` on trailing non-numeric chars; 32-bit precision |
+| [`Number.isInteger(val)`](#isinteger) | ES6 | ❌ Missing | `typeof n === "number" && Math.floor(n) === n` |
+| [`Number.isNaN(val)`](#isnan) | ES6 | ❌ Missing | Use the global `isNaN(value)` |
+| [`Number.isFinite(val)`](#isfinite) | ES6 | ❌ Missing | Use the global `isFinite(value)` |
+| [`Number.parseInt(str)`](#parseint) | ES6 | ❌ Missing | Use the global `parseInt(string, 10)` |
+| [`Number.MAX_SAFE_INTEGER`](#max_safe_integer) | ES6 | ❌ Missing | `undefined` — use the literal `9007199254740991` |
 
 ---
 
-The **ES** column shows the ECMAScript edition that standardized each member.
+## toFixed {#tofixed}
 
-## Global Numeric Functions
-
-These are standard ECMAScript global functions (not SFMC-proprietary), available without any namespace in all SSJS contexts.
-
-| Function | ES | Returns | Description |
-|----------|----|---------|-------------|
-| `parseFloat(str)` | ES3 | number | Parse a string and return a floating-point number |
-| `parseInt(str[, radix])` | ES3 | number | Parse a string and return an integer |
-| `isNaN(val)` | ES3 | boolean | Returns `true` if the value is `NaN` |
-| `isFinite(val)` | ES3 | boolean | Returns `true` if the value is a finite number |
-
-{% include callout.html type="warning" content="In SFMC SSJS, `parseInt` / `parseFloat` return `NaN` when the string has **trailing non-numeric characters** (e.g. `parseInt(\"10px\", 10)` is `NaN`, not `10`). Strip non-digits before parsing. `parseFloat` results also use 32-bit precision — compare with a tolerance rather than `===`." %}
+`(ES3)` — ✅ Works. Formats a number with a fixed number of decimal places.
 
 ```javascript
-parseFloat("3.14");      // 3.14 (32-bit precision)
-parseInt("255", 16);     // 255 (hex)
-parseInt("10px", 10);    // NaN in SFMC (spec would give 10)
-parseFloat("1.5kg");     // NaN in SFMC (spec would give 1.5)
-isNaN("hello");          // true
-isFinite(Infinity);      // false
-isFinite(42);            // true
+(3.14159).toFixed(2);   // "3.14"
 ```
 
----
+## toExponential {#toexponential}
 
-## Number Instance Methods
-
-| Method | ES | Returns | Description |
-|--------|----|---------|-------------|
-| `Number.prototype.toFixed(digits)` | ES3 | string | Format with a fixed number of decimal places |
-| `Number.prototype.toExponential([digits])` | ES3 | string | Format in exponential notation |
-| `Number.prototype.toPrecision([digits])` | ES3 | string | Format to a specified number of significant digits |
-| `Number.prototype.toString([radix])` | ES3 | string | Convert to string, optionally in another base |
-| `Number.prototype.valueOf()` | ES3 | number | Return the primitive numeric value |
+`(ES3)` — ✅ Works. Formats in exponential notation.
 
 ```javascript
-var n = 3.14159;
-n.toFixed(2);          // "3.14"
-n.toPrecision(4);      // "3.142"
-n.toExponential(2);    // "3.14e+0"
-n.toString();          // "3.14159"
-(255).toString(16);    // "ff" (hex)
-(255).toString(2);     // "11111111" (binary)
+(3.14159).toExponential(2);   // "3.14e+0"
 ```
 
----
+## toPrecision {#toprecision}
 
-## Number Constants
-
-ES3/ES5 constants on the `Number` constructor — all available in SSJS.
-
-| Constant | ES | Value | Description |
-|----------|----|-------|-------------|
-| `Number.MAX_VALUE` | ES3 | `1.7976931348623157e+308` | Largest positive representable number |
-| `Number.MIN_VALUE` | ES3 | `5e-324` | Smallest positive non-zero number |
-| `Number.NaN` | ES3 | `NaN` | Not-a-Number (same as global `NaN`) |
-| `Number.NEGATIVE_INFINITY` | ES3 | `-Infinity` | Negative infinity |
-| `Number.POSITIVE_INFINITY` | ES3 | `Infinity` | Positive infinity |
-
----
-
-## ES6 Static Methods (Not Available)
-
-The following ES6 `Number.*` static methods do not exist in SSJS. Use the global equivalents or inline expressions instead.
-
-| Missing Method | ES | ES5 Alternative |
-|----------------|----|-----------------|
-| `Number.isFinite(val)` | ES6 | `isFinite(val)` |
-| `Number.isNaN(val)` | ES6 | `isNaN(val)` _(note: differs for non-numbers)_ |
-| `Number.isInteger(val)` | ES6 | `val === Math.floor(val)` |
-| `Number.isSafeInteger(val)` | ES6 | `val === Math.floor(val) && Math.abs(val) <= 9007199254740991` |
-| `Number.parseInt(str)` | ES6 | `parseInt(str, 10)` |
-| `Number.parseFloat(str)` | ES6 | `parseFloat(str)` |
-| `Number.EPSILON` | ES6 | Hardcode `2.220446049250313e-16` if needed |
-| `Number.MAX_SAFE_INTEGER` | ES6 | Hardcode `9007199254740991` if needed |
-| `Number.MIN_SAFE_INTEGER` | ES6 | Hardcode `-9007199254740991` if needed |
-
----
-
-## Type Checking Patterns
+`(ES3)` — ✅ Works. Formats to a number of significant digits.
 
 ```javascript
-// Check if a value is a number type
-typeof val === "number"        // true for NaN and Infinity too
+(3.14159).toPrecision(4);   // "3.142"
+```
 
-// Check for a real, usable number
-isFinite(val)                  // true only if finite and not NaN
+## Constants {#constants}
 
-// Check for integer
-val === Math.floor(val)        // true for whole numbers
-val % 1 === 0                  // alternative
+`(ES3)` — ✅ Works. `Number.MAX_VALUE`, `Number.MIN_VALUE`, `Number.NaN`, `Number.NEGATIVE_INFINITY`, `Number.POSITIVE_INFINITY` are all available.
 
-// Explicit NaN check
-isNaN(val)                     // true if val is NaN (or non-numeric string)
-val !== val                    // true only if val is NaN (reliable inline check)
+```javascript
+Number.MAX_VALUE;          // 1.7976931348623157e+308
+Number.POSITIVE_INFINITY;  // Infinity
+```
+
+## parseInt (global) {#parseint-global}
+
+`(ES3)` — ⚠️ Partial. The global `parseInt(str[, radix])` returns `NaN` when the string has **trailing non-numeric characters** (e.g. `parseInt("10px", 10)` is `NaN`, not `10`). Strip non-digits before parsing.
+
+```javascript
+parseInt("42", 10);     // 42
+parseInt("255", 16);    // 255
+parseInt("10px", 10);   // NaN in SFMC (spec would give 10)
+```
+
+## parseFloat (global) {#parsefloat-global}
+
+`(ES3)` — ⚠️ Partial. The global `parseFloat(str)` returns `NaN` on trailing non-numeric characters and uses 32-bit precision — compare with a tolerance rather than `===`.
+
+```javascript
+parseFloat("3.14");    // 3.14 (32-bit precision)
+parseFloat("1.5kg");   // NaN in SFMC (spec would give 1.5)
+```
+
+## Number.isInteger {#isinteger}
+
+`(ES6)` — ❌ Missing. Use `typeof n === "number" && Math.floor(n) === n`.
+
+```javascript
+function isInteger(n) { return typeof n === "number" && Math.floor(n) === n; }
+```
+
+## Number.isNaN {#isnan}
+
+`(ES6)` — ❌ Missing. Use the global `isNaN(value)` (note: the global coerces non-numbers, unlike `Number.isNaN`).
+
+```javascript
+isNaN(NaN);       // true
+value !== value;  // reliable inline NaN check
+```
+
+## Number.isFinite {#isfinite}
+
+`(ES6)` — ❌ Missing. Use the global `isFinite(value)`.
+
+```javascript
+isFinite(42);         // true
+isFinite(Infinity);   // false
+```
+
+## Number.parseInt {#parseint}
+
+`(ES6)` — ❌ Missing. Use the global `parseInt(string, 10)`.
+
+```javascript
+parseInt("42", 10);   // 42
+```
+
+## Number.MAX_SAFE_INTEGER {#max_safe_integer}
+
+`(ES6)` — ❌ Missing. `Number.MAX_SAFE_INTEGER` is `undefined` in SFMC. Use the literal `9007199254740991`. The related `Number.EPSILON` (`2.220446049250313e-16`), `Number.MIN_SAFE_INTEGER` (`-9007199254740991`), and `Number.isSafeInteger` are likewise unavailable.
+
+```javascript
+var MAX_SAFE_INTEGER = 9007199254740991;
 ```
 
 ## See Also

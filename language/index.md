@@ -16,7 +16,7 @@ SFMC's SSJS engine runs JavaScript using JINT (JavaScript Interpreter for .NET),
 - [Functions & Scope](/language/functions-and-scope/) — declarations, expressions, closures, module pattern
 - [Objects & JSON](/language/objects-and-json/) — object literals, JSON stringify/parse, iteration
 - [Error Handling](/language/error-handling/) — `try`/`catch`/`finally`, `throw`, error patterns
-- [Regular Expressions](/language/regular-expressions/) — patterns, `test`, `match`, `replace`
+- [Regular Expressions](/ecmascript-builtins/regular-expressions/) — patterns, `test`, `match`, `replace`
 
 ## Quick Reference
 

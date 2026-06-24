@@ -31,16 +31,12 @@
         url: /language/objects-and-json/
       - title: Error Handling
         url: /language/error-handling/
-      - title: Regular Expressions
-        url: /language/regular-expressions/
 
 - title: Engine Limitations
   url: /engine-limitations/
   children:
       - title: Unsupported Syntax
         url: /engine-limitations/unsupported-syntax/
-      - title: Missing Methods
-        url: /engine-limitations/missing-methods/
       - title: Polyfills
         url: /engine-limitations/polyfills/
       - title: Known Bugs
@@ -343,7 +339,9 @@
       - title: Date Methods
         url: /ecmascript-builtins/date-methods/
       - title: Regular Expressions
-        url: /language/regular-expressions/
+        url: /ecmascript-builtins/regular-expressions/
+      - title: JSON
+        url: /ecmascript-builtins/json/
 
 - title: Best Practices
   url: /best-practices/
