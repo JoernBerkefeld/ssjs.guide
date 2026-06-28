@@ -40,6 +40,7 @@ Each member below is tagged with the ECMAScript edition that standardized it: `(
 | [`reduce(fn, initial)`](#reduce) | ES5 | ❌ Missing | Use a `for` loop or the polyfill |
 | [`reduceRight(fn, initial)`](#reduceright) | ES5 | ❌ Missing | Use a `for` loop or the polyfill |
 | [`some(fn)`](#some) | ES5 | ❌ Missing | Use a `for` loop or the polyfill |
+| [`every(fn)`](#every) | ES5 | ❌ Missing | Use a `for` loop or the polyfill |
 | [`find(fn)`](#find) | ES6 | ❌ Missing | Use a `for` loop or the polyfill |
 | [`findIndex(fn)`](#findindex) | ES6 | ❌ Missing | Use a `for` loop or the polyfill |
 | [`includes(searchValue)`](#includes) | ES6 | ❌ Missing | Use `indexOf(x) !== -1` or the polyfill |
@@ -262,6 +263,17 @@ for (var i = arr.length - 1; i >= 0; i--) {
 var hasLarge = false;
 for (var i = 0; i < arr.length; i++) {
     if (arr[i] > 10) { hasLarge = true; break; }
+}
+```
+
+## every {#every}
+
+`(ES5)` — ❌ Missing. Use a `for` loop or the [polyfill](/engine-limitations/polyfills/#array-prototype-every).
+
+```javascript
+var allLarge = true;
+for (var i = 0; i < arr.length; i++) {
+    if (arr[i] <= 10) { allLarge = false; break; }
 }
 ```
 

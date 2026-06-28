@@ -48,6 +48,7 @@ The **ES** column shows the ECMAScript edition that standardized each member (ES
 | [`Array.prototype.reduce(fn)`](/ecmascript-builtins/array-methods/#reduce) | ES5 | ❌ Missing | Use `for` loop or [Polyfills](/engine-limitations/polyfills/#array-prototype-reduce) |
 | [`Array.prototype.reduceRight(fn)`](/ecmascript-builtins/array-methods/#reduceright) | ES5 | ❌ Missing | Use `for` loop or [Polyfills](/engine-limitations/polyfills/#array-prototype-reduceright) |
 | [`Array.prototype.some(fn)`](/ecmascript-builtins/array-methods/#some) | ES5 | ❌ Missing | Use `for` loop or [Polyfills](/engine-limitations/polyfills/#array-prototype-some) |
+| [`Array.prototype.every(fn)`](/ecmascript-builtins/array-methods/#every) | ES5 | ❌ Missing | Use `for` loop or [Polyfills](/engine-limitations/polyfills/#array-prototype-every) |
 | [`Array.prototype.find(fn)`](/ecmascript-builtins/array-methods/#find) | ES6 | ❌ Missing | Use `for` loop or [Polyfills](/engine-limitations/polyfills/#array-prototype-find) |
 | [`Array.prototype.findIndex(fn)`](/ecmascript-builtins/array-methods/#findindex) | ES6 | ❌ Missing | Use `for` loop or [Polyfills](/engine-limitations/polyfills/#array-prototype-findindex) |
 | [`Array.prototype.includes(item)`](/ecmascript-builtins/array-methods/#includes) | ES6 | ❌ Missing | Use `indexOf(x) !== -1` or [Polyfills](/engine-limitations/polyfills/#array-prototype-includes) |
@@ -63,7 +64,6 @@ The **ES** column shows the ECMAScript edition that standardized each member (ES
 | [`Array.isArray(val)`](/ecmascript-builtins/array-methods/#isarray) | ES5 | ❌ Missing | See [Polyfills](/engine-limitations/polyfills/#array-isarray) |
 | [`Array.of(...)`](/ecmascript-builtins/array-methods/#of) | ES6 | ❌ Missing | See [Polyfills](/engine-limitations/polyfills/#array-of) |
 | [`Array.from(source)`](/ecmascript-builtins/array-methods/#from) | ES6 | ❌ Missing | Build the array with a `for` loop over the source |
-| `Array.prototype.every(fn)` | ES5 | ❌ Missing | Use `for` loop |
 
 ### String Methods
 
