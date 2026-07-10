@@ -15,7 +15,7 @@ collected, which cookies are used, and how you stay in control.
 
 ssjs.guide is a personal, non-commercial project by Jörn Berkefeld. It is not
 affiliated with or endorsed by Salesforce. Contact:
-[joern.berkefeld@gmail.com](mailto:joern.berkefeld@gmail.com).
+[joernberkefeld.com](https://joernberkefeld.com).
 
 ## Hosting
 
