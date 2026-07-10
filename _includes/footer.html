@@ -69,6 +69,12 @@
         </svg>
         GitHub
       </a>
+      &middot;
+      <a href="{{ '/privacy/' | relative_url }}" class="footer-social-link">Privacy</a>
+      {% if jekyll.environment == "production" and site.google_analytics %}
+      &middot;
+      <button type="button" class="footer-cookie-btn" data-cc="show-preferencesModal">Manage cookies</button>
+      {% endif %}
     </p>
     <p>The views and opinions expressed here are my own personal views and do not represent those of any employer, client, or affiliated organisation. Not affiliated with or endorsed by Salesforce.</p>
   </div>
