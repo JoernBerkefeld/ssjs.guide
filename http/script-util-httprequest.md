@@ -66,6 +66,56 @@ The `req` object returned by `Script.Util.HttpRequest(url)` has these methods yo
 | [`send()`](#send) | `HttpResponseInstance` | Send the request |
 | [`setHeader(name, value)`](#setheader) | void | Set a custom request header |
 
+### clearHeaders {#clearheaders}
+
+Removes all custom headers previously set on the request.
+
+```javascript
+var req = new Script.Util.HttpRequest("https://api.example.com/data");
+req.method = "GET";
+req.setHeader("Authorization", "Bearer " + token);
+req.clearHeaders(); // removes Authorization and all other custom headers
+var resp = req.send();
+```
+
+### removeHeader {#removeheader}
+
+Removes a specific header from the request by name.
+
+```javascript
+var req = new Script.Util.HttpRequest("https://api.example.com/data");
+req.method = "GET";
+req.setHeader("Authorization", "Bearer " + token);
+req.setHeader("X-Debug", "1");
+req.removeHeader("X-Debug");
+var resp = req.send();
+```
+
+### send {#send}
+
+Sends the request and returns an `HttpResponseInstance`. May throw on connection failure or timeout — wrap in `try/catch` for production code.
+
+```javascript
+try {
+    var resp = req.send();
+} catch (e) {
+    Write("Request failed: " + e.message);
+}
+```
+
+### setHeader {#setheader}
+
+Adds or replaces a header on the outgoing request. Call it once per header.
+
+```javascript
+var req = new Script.Util.HttpRequest("https://api.example.com/data");
+req.method = "GET";
+req.setHeader("Authorization", "Bearer " + token);
+req.setHeader("Accept", "application/json");
+req.setHeader("X-Custom-Header", "my-value");
+var resp = req.send();
+```
+
 ## HttpResponseInstance Properties
 
 {% include callout.html type="info" content="`HttpResponseInstance` is equal for `HttpGet` and `HttpRequest`." %}
@@ -205,56 +255,6 @@ req.method = "GET";
 req.timeout = 10000; // 10 second timeout
 req.setHeader("Authorization", "Bearer " + token);
 var resp = req.send();
-```
-
-### setHeader {#setheader}
-
-Adds or replaces a header on the outgoing request. Call it once per header.
-
-```javascript
-var req = new Script.Util.HttpRequest("https://api.example.com/data");
-req.method = "GET";
-req.setHeader("Authorization", "Bearer " + token);
-req.setHeader("Accept", "application/json");
-req.setHeader("X-Custom-Header", "my-value");
-var resp = req.send();
-```
-
-### clearHeaders {#clearheaders}
-
-Removes all custom headers previously set on the request.
-
-```javascript
-var req = new Script.Util.HttpRequest("https://api.example.com/data");
-req.method = "GET";
-req.setHeader("Authorization", "Bearer " + token);
-req.clearHeaders(); // removes Authorization and all other custom headers
-var resp = req.send();
-```
-
-### removeHeader {#removeheader}
-
-Removes a specific header from the request by name.
-
-```javascript
-var req = new Script.Util.HttpRequest("https://api.example.com/data");
-req.method = "GET";
-req.setHeader("Authorization", "Bearer " + token);
-req.setHeader("X-Debug", "1");
-req.removeHeader("X-Debug");
-var resp = req.send();
-```
-
-### send {#send}
-
-Sends the request and returns an `HttpResponseInstance`. May throw on connection failure or timeout — wrap in `try/catch` for production code.
-
-```javascript
-try {
-    var resp = req.send();
-} catch (e) {
-    Write("Request failed: " + e.message);
-}
 ```
 
 ## Complete REST API Helper Pattern
