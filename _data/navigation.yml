@@ -299,10 +299,10 @@
       - title: resetClientIds
         url: /wsproxy/resetclientids/
 
-- title: HTTP & REST
+- title: HTTP Functions
   url: /http/
   children:
-      - title: HTTP Methods Overview
+      - title: Overview
         url: /http/
       - title: HTTP.Get
         url: /http/get/

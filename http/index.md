@@ -1,6 +1,6 @@
 ---
 layout: category
-title: HTTP & REST APIs
+title: HTTP Functions
 description: Three approaches to making HTTP requests from SSJS — Platform.Function.HTTPGet/HTTPPost, Core HTTP.Get/HTTP.Post, and Script.Util.HttpRequest for full control.
 nav_order: 8
 has_children: true
