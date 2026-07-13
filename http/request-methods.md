@@ -6,6 +6,7 @@ parent_url: /http/
 permalink: /http/request-methods/
 description: Reference for the instance methods and response object properties of Script.Util.HttpRequest and Script.Util.HttpGet — setHeader, clearHeaders, removeHeader, send, and the response object.
 verification: verified
+differs_from_docs: true
 ---
 
 This page is a quick reference for the `Script.Util.HttpRequest` instance API: the methods you call on the request object before sending, and the properties available on the response object returned by `send()`.
@@ -25,6 +26,8 @@ Set these on the request object before calling `send()`.
 | `req.encoding` | string | `"UTF-8"` | Character encoding |
 | `req.timeout` | number | `30000` | Request timeout in milliseconds |
 | `req.postData` | string | `""` | Request body — used for `POST`, `PUT`, `PATCH` |
+
+{% include differs-from-docs.html note="`timeout` is not listed as a configuration property in the official docs (which only note that `send()` times out after 30 seconds), but the property exists and is applied at runtime." %}
 
 ## Request Object — Methods
 
@@ -124,7 +127,7 @@ if (resp.statusCode === 200) {
 
 ### Reading a response header
 
-{% include callout.html type="warning" content="Direct access — `resp.headers[\"Content-Type\"]`, `.Get()`, `.Item()` — throws **\"Use of Common Language Runtime (CLR) is not allowed\"**. Use the `for..in` pattern below instead." %}
+{% include differs-from-docs.html note="The official docs example reads a single header via `resp.headers[\"...\"]`, but that access throws **\"Use of Common Language Runtime (CLR) is not allowed\"** at runtime. Individual headers are only readable by enumerating with `for..in` (see below)." %}
 
 A `for..in` loop over `resp.headers` yields keys shaped `"[Name, Value]"` — the value is embedded in the key string. Strip the `[ ]` wrapper and split on the first `", "` to build a plain header map without reading any CLR value:
 
