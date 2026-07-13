@@ -27,9 +27,10 @@
 {% endfor %}
 
 {% assign status = "pending" %}
+{% assign differs = false %}
 
 {% if child_pages.size > 0 %}
-  {% comment %} Overview page: aggregate child statuses. {% endcomment %}
+  {% comment %} Overview page: aggregate child statuses and differs flags. {% endcomment %}
   {% assign total = 0 %}
   {% assign verified_count = 0 %}
   {% assign active_count = 0 %}
@@ -41,6 +42,9 @@
     {% elsif child_status == "in-progress" %}
       {% assign active_count = active_count | plus: 1 %}
     {% endif %}
+    {% if child.differs_from_docs %}
+      {% assign differs = true %}
+    {% endif %}
   {% endfor %}
 
   {% if verified_count == total %}
@@ -51,8 +55,11 @@
     {% assign status = "pending" %}
   {% endif %}
 {% else %}
-  {% comment %} Leaf page: use its own field. {% endcomment %}
+  {% comment %} Leaf page: use its own fields. {% endcomment %}
   {% assign status = page.verification | default: "pending" %}
+  {% if page.differs_from_docs %}
+    {% assign differs = true %}
+  {% endif %}
 {% endif %}
 
 {% if status == "verified" %}
@@ -89,4 +96,14 @@
     {% endif %}
     {{ status_label }}
   </span>
+
+  {% if differs %}
+  <span class="verified-badge differs-from-docs" title="Some runtime behaviour on this page differs from the official Salesforce documentation. See the “Differs from official Salesforce docs” note(s) further down the page for details.">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <path d="M6 1.5L11 10.5H1L6 1.5z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+      <path d="M6 4.5v3M6 8.8v.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+    </svg>
+    Differs from official docs
+  </span>
+  {% endif %}
 </div>

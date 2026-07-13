@@ -5,11 +5,10 @@ parent: HTTP & REST APIs
 parent_url: /http/
 description: Full-featured HTTP request object supporting all methods, custom headers, timeouts, and full response inspection. The most powerful HTTP option in SSJS.
 verification: verified
+differs_from_docs: true
 ---
 
 `Script.Util.HttpRequest` is the most flexible HTTP client available in SSJS. It supports all HTTP methods, custom headers, timeouts, and gives you full access to response status codes, headers, and body.
-
-{% include verified.html %}
 
 {% include callout.html type="note" content="`Script.Util.HttpRequest` does **not** require `Platform.Load`. It is available in all SSJS contexts." %}
 
@@ -50,9 +49,9 @@ The `req` object returned by `Script.Util.HttpRequest(url)` has these properties
 | `retries` | number | `1` | The number of times to retry the request before throwing an exception |
 | `continueOnError` | boolean | `false` | If `true`, continues after receiving a non-fatal error; if `false`, throws an exception |
 
-{% include verified.html differs=true note="The official Salesforce docs type `emptyContentHandling` as a boolean, but the runtime accepts only a numeric value (`0`/`1`/`2`) and rejects `true`/`false` — identical to `Script.Util.HttpGet`." %}
+{% include differs-from-docs.html note="The official Salesforce docs type `emptyContentHandling` as a boolean, but the runtime accepts only a numeric value (`0`/`1`/`2`) and rejects `true`/`false` — identical to `Script.Util.HttpGet`." %}
 
-{% include verified.html differs=true note="`timeout` is not listed as a configuration property in the official docs (which only note that `send()` times out after 30 seconds), but the property exists and is applied at runtime." %}
+{% include differs-from-docs.html note="`timeout` is not listed as a configuration property in the official docs (which only note that `send()` times out after 30 seconds), but the property exists and is applied at runtime." %}
 
 ## HttpRequestInstance Methods
 
@@ -82,7 +81,7 @@ The `resp` object returned by `req.send()` has these properties:
 
 {% include callout.html type="warning" content="`resp.content` is a CLR string, not a JavaScript string. Always wrap it with `String(resp.content)` before calling `ParseJSON()` or string methods." %}
 
-{% include verified.html differs=true note="The official docs example reads a single header via `resp.headers[\"...\"]`, but that access throws **\"Use of Common Language Runtime (CLR) is not allowed\"** at runtime. Individual headers are only readable by enumerating with `for..in` (see below)." %}
+{% include differs-from-docs.html note="The official docs example reads a single header via `resp.headers[\"...\"]`, but that access throws **\"Use of Common Language Runtime (CLR) is not allowed\"** at runtime. Individual headers are only readable by enumerating with `for..in` (see below)." %}
 
 ### Reading response headers
 

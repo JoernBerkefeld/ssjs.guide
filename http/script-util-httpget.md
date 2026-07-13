@@ -6,6 +6,7 @@ parent_url: /http/
 permalink: /http/script-util-httpget/
 description: HTTP GET request constructor — creates an HttpRequestInstance that caches content for mail sends and supports custom headers.
 verification: verified
+differs_from_docs: true
 availability:
   email: true
   cloudpage: true
@@ -18,8 +19,6 @@ max_args: 1
 ---
 
 `Script.Util.HttpGet` creates an HTTP GET request handler. Unlike `Platform.Function.HTTPGet`, it caches content for use in mail sends and supports custom headers via `setHeader()`. Only works with HTTP on port 80 and HTTPS on port 443.
-
-{% include verified.html %}
 
 {% include callout.html type="note" content="For full control over HTTP method, timeouts, and all status codes, use [`Script.Util.HttpRequest`](/http/script-util-httprequest/) instead." %}
 
@@ -42,7 +41,7 @@ Returns an `HttpGetInstance`. Call `send()` to execute the request.
 | `emptyContentHandling` | number | `0` | Indicates what to do if the GET request doesn’t return any content. `0` = continue, `1` = stop the request, `2` = continue to the next subscriber (only works in email sends) |
 | `timeout` | number | `30000` | Request timeout in milliseconds |
 
-{% include verified.html differs=true note="`timeout` is not listed in the official docs, but the property exists and is applied end-to-end at runtime (same behaviour as on `Script.Util.HttpRequest`)." %}
+{% include differs-from-docs.html note="`timeout` is not listed in the official docs, but the property exists and is applied end-to-end at runtime (same behaviour as on `Script.Util.HttpRequest`)." %}
 
 
 ## HttpGetInstance Methods
@@ -73,7 +72,7 @@ The `resp` object returned by `req.send()` has these properties:
 
 {% include callout.html type="warning" content="`resp.content` is a CLR string, not a JavaScript string. Always wrap it with `String(resp.content)` before calling `ParseJSON()` or string methods." %}
 
-{% include verified.html differs=true note="The official docs example reads a single header via `resp.headers[\"...\"]`, but that access throws **\"Use of Common Language Runtime (CLR) is not allowed\"** at runtime. Individual headers are only readable by enumerating with `for..in` (see below)." %}
+{% include differs-from-docs.html note="The official docs example reads a single header via `resp.headers[\"...\"]`, but that access throws **\"Use of Common Language Runtime (CLR) is not allowed\"** at runtime. Individual headers are only readable by enumerating with `for..in` (see below)." %}
 
 ### Reading response headers
 

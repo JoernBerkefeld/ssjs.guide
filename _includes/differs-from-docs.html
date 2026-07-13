@@ -1,0 +1,18 @@
+{% comment %}
+  Renders the "differs from official docs" detail callout for a single method/property.
+  Maps 1:1 to the differsFromOfficialDocs / officialDocsNote flags in ssjs-data.
+
+  The page-level "Runtime verified" and "Differs from official docs" badges are rendered
+  up top by verification-status.html (driven by front matter). This include only emits the
+  inline detail box that explains a specific discrepancy.
+
+  Usage:
+    {% include differs-from-docs.html note="The official docs type this as a boolean, but the runtime accepts only 0/1/2." %}
+
+  Parameters:
+    note  (string) - one-sentence explanation of the discrepancy.
+{% endcomment %}
+
+{% if include.note %}
+{% include callout.html type="warning" title="Differs from official Salesforce docs" content=include.note %}
+{% endif %}
