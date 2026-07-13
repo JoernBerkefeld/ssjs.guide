@@ -3,6 +3,7 @@ layout: category
 title: Platform Functions
 description: The Platform.Function.* API — Data Extension CRUD, dates, HTTP helpers, SOAP wrappers, and content helpers. Most calls do not require Platform.Load.
 verification: in-progress
+differs_from_docs: true
 ---
 
 Most methods here are invoked as `Platform.Function.MethodName(...)`.

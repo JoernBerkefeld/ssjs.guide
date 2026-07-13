@@ -1,36 +1,52 @@
 {% comment %}
   Renders a single page-level verification-status badge.
 
-  Status values (front matter `verification:` on leaf pages):
+  Status values (front matter `verification:`):
     verified     - every method/constructor/property on the page is runtime-verified (green)
     in-progress  - some but not all are verified (yellow)
     pending      - none verified yet, or field absent (grey; default)
 
-  Overview pages (an index.md that has child pages) aggregate their children by
-  URL prefix instead of reading their own `verification` field:
-    - verified     if every child is verified
-    - pending      if no child is verified or in-progress
-    - in-progress  otherwise
+  The page's own `verification:` front matter is the source of truth for BOTH
+  leaf pages and overview (index) pages. Overview pages are cross-listed in
+  _data/navigation.yml (a page can appear under several sections — e.g.
+  HTTP.Get is listed under both /http/ and /core-library/), so a URL-prefix
+  scan cannot reliably find an overview's children. The verify-ssjs-guide-docs
+  skill computes and writes each overview's `verification:` (and
+  `differs_from_docs:`) explicitly from navigation.yml membership.
 
-  Source of truth is ssjs-data's isConfirmed flags; the `verification:` front
-  matter mirrors the aggregate state once a page is fully confirmed.
+  Only when an overview page has NO explicit `verification:` field do we fall
+  back to aggregating URL-prefix children (legacy behaviour), skipping
+  jekyll-redirect-from stubs (which carry a `redirect` object and no
+  `verification` field).
 {% endcomment %}
-
-{% comment %} Collect child pages whose URL sits below this page's URL. {% endcomment %}
-{% assign child_pages = "" | split: "" %}
-{% for candidate in site.html_pages %}
-  {% if candidate.url != page.url
-        and candidate.url contains page.url
-        and page.url != "/" %}
-    {% assign child_pages = child_pages | push: candidate %}
-  {% endif %}
-{% endfor %}
 
 {% assign status = "pending" %}
 {% assign differs = false %}
 
-{% if child_pages.size > 0 %}
-  {% comment %} Overview page: aggregate child statuses and differs flags. {% endcomment %}
+{% if page.verification %}
+  {% comment %} Explicit front matter wins for leaf and overview pages alike. {% endcomment %}
+  {% assign status = page.verification %}
+  {% if page.differs_from_docs %}
+    {% assign differs = true %}
+  {% endif %}
+{% else %}
+  {% comment %}
+    No explicit status: fall back to URL-prefix child aggregation.
+    Skip redirect stubs so a verified section is not held back by them.
+  {% endcomment %}
+  {% assign child_pages = "" | split: "" %}
+  {% for candidate in site.html_pages %}
+    {% if candidate.url != page.url
+          and candidate.url contains page.url
+          and page.url != "/"
+          and candidate.redirect == nil
+          and candidate.sitemap != false %}
+      {% assign child_pages = child_pages | push: candidate %}
+    {% endif %}
+  {% endfor %}
+
+  {% if child_pages.size > 0 %}
+  {% comment %} Overview page without explicit status: aggregate children. {% endcomment %}
   {% assign total = 0 %}
   {% assign verified_count = 0 %}
   {% assign active_count = 0 %}
@@ -54,11 +70,12 @@
   {% else %}
     {% assign status = "pending" %}
   {% endif %}
-{% else %}
-  {% comment %} Leaf page: use its own fields. {% endcomment %}
-  {% assign status = page.verification | default: "pending" %}
-  {% if page.differs_from_docs %}
-    {% assign differs = true %}
+  {% else %}
+    {% comment %} Leaf page with no explicit status: default to pending. {% endcomment %}
+    {% assign status = "pending" %}
+    {% if page.differs_from_docs %}
+      {% assign differs = true %}
+    {% endif %}
   {% endif %}
 {% endif %}
 

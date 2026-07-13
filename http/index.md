@@ -5,6 +5,7 @@ description: Three approaches to making HTTP requests from SSJS — Platform.Fun
 nav_order: 8
 has_children: true
 verification: verified
+differs_from_docs: true
 ---
 
 SSJS offers three different ways to make HTTP requests. Choose based on how much control you need:
