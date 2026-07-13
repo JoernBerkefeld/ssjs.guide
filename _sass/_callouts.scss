@@ -132,6 +132,39 @@
   }
 }
 
+// ── Verification badges ──────────────────────────────────────────────────────
+
+.verified-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $space-2;
+  margin: $space-4 0;
+}
+
+.verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: $space-1;
+  font-size: $text-xs;
+  font-weight: 500;
+  padding: 0.2em 0.6em;
+  border-radius: $radius-full;
+  border: 1px solid;
+
+  &.is-confirmed {
+    color: $color-success;
+    background-color: rgba($color-success, 0.08);
+    border-color: rgba($color-success, 0.3);
+  }
+
+  &.differs-from-docs {
+    color: $color-warning;
+    background-color: rgba($color-warning, 0.08);
+    border-color: rgba($color-warning, 0.3);
+  }
+}
+
 // ── Function page header decorations ─────────────────────────────────────────
 
 .function-header {

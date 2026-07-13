@@ -8,6 +8,8 @@ description: Full-featured HTTP request object supporting all methods, custom he
 
 `Script.Util.HttpRequest` is the most flexible HTTP client available in SSJS. It supports all HTTP methods, custom headers, timeouts, and gives you full access to response status codes, headers, and body.
 
+{% include verified.html %}
+
 {% include callout.html type="note" content="`Script.Util.HttpRequest` does **not** require `Platform.Load`. It is available in all SSJS contexts." %}
 
 ## Syntax
@@ -20,7 +22,7 @@ req.encoding = "UTF-8";                     // Encoding (default UTF-8)
 req.timeout = 30000;                        // Timeout in ms
 req.setHeader(name, value);                 // Set a request header
 req.postData = body;                        // Request body (POST/PUT/PATCH)
-req.emptyContentHandling = false;           // throw if no content returned
+req.emptyContentHandling = 0;               // 0 = continue, 1 = stop, 2 = next subscriber
 req.retries = 2;                            // Number of retries on failure
 req.continueOnError = true;                 // If true, don't throw on HTTP error status
 var resp = req.send();
@@ -43,11 +45,13 @@ The `req` object returned by `Script.Util.HttpRequest(url)` has these properties
 | `encoding` | string | `"UTF-8"` | Character encoding |
 | `timeout` | number | `30000` | Timeout in milliseconds |
 | `postData` | string | `""` | Request body (for POST/PUT/PATCH) |
-| `emptyContentHandling` | boolean | `false` | If `false`, throws an exception when no content is returned; if `true`, continues without throwing |
+| `emptyContentHandling` | number | `0` | Indicates what to do if the request doesn't return any content. `0` = continue, `1` = stop the request, `2` = continue to the next subscriber (only works in email sends) |
 | `retries` | number | `1` | The number of times to retry the request before throwing an exception |
 | `continueOnError` | boolean | `false` | If `true`, continues after receiving a non-fatal error; if `false`, throws an exception |
 
-{% include callout.html type="warning" content="`emptyContentHandling` is defined differently for `HttpGet` compared to `HttpRequest`." %}
+{% include verified.html differs=true note="The official Salesforce docs type `emptyContentHandling` as a boolean, but the runtime accepts only a numeric value (`0`/`1`/`2`) and rejects `true`/`false` — identical to `Script.Util.HttpGet`." %}
+
+{% include verified.html differs=true note="`timeout` is not listed as a configuration property in the official docs (which only note that `send()` times out after 30 seconds), but the property exists and is applied at runtime." %}
 
 ## HttpRequestInstance Methods
 
@@ -71,11 +75,47 @@ The `resp` object returned by `req.send()` has these properties:
 | `content` | CLR string | Response body (must use `String()` to convert) |
 | `contentType` | string | The content type returned in the response |
 | `encoding` | string | The encoding type returned in the response |
-| `headers` | object | Response headers |
+| `headers` | object | Response headers as a CLR object — not directly indexable; read via the `for..in` pattern below |
 | `returnStatus` | number | A status value: `0` = OK, `1` = Empty URL, `2` = Call failed, `3` = Call succeeded with empty content |
 | `statusCode` | number | HTTP status code |
 
 {% include callout.html type="warning" content="`resp.content` is a CLR string, not a JavaScript string. Always wrap it with `String(resp.content)` before calling `ParseJSON()` or string methods." %}
+
+{% include verified.html differs=true note="The official docs example reads a single header via `resp.headers[\"...\"]`, but that access throws **\"Use of Common Language Runtime (CLR) is not allowed\"** at runtime. Individual headers are only readable by enumerating with `for..in` (see below)." %}
+
+### Reading response headers
+
+Direct access — `resp.headers["Content-Type"]`, `.Get()`, `.Item()`, or `String(resp.headers[key])` — throws **"Use of Common Language Runtime (CLR) is not allowed"**. However, a `for..in` loop over `resp.headers` yields keys shaped `"[Name, Value]"` — the value is embedded in the key string itself. Strip the `[ ]` wrapper and split on the first `", "` to build a plain header map without ever reading a CLR value:
+
+```javascript
+/**
+ * Build a plain { name: value } header map from an HttpResponse.
+ * Reads only the for..in enumeration keys (shaped "[Name, Value]") so it never
+ * touches a CLR value — avoiding "Use of CLR is not allowed".
+ * @param {object} resp - the response returned by req.send()
+ * @returns {object} map of lowercased header name => value string
+ */
+function getHeaderMap(resp) {
+    var map = {};
+    for (var k in resp.headers) {
+        var pair = String(k);
+        // Enumeration keys are wrapped in [ ] — strip them.
+        if (pair.charAt(0) === "[") { pair = pair.substring(1); }
+        if (pair.charAt(pair.length - 1) === "]") { pair = pair.substring(0, pair.length - 1); }
+        var idx = pair.indexOf(", ");
+        if (idx > -1) {
+            map[pair.substring(0, idx).toLowerCase()] = pair.substring(idx + 2);
+        }
+    }
+    return map;
+}
+
+var resp = req.send();
+var headers = getHeaderMap(resp);
+var contentType = headers["content-type"]; // "application/json; charset=utf-8"
+```
+
+Header names are lowercased in the map above so lookups are case-insensitive. A missing header returns `undefined`.
 
 ## Examples
 

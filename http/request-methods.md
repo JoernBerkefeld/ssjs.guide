@@ -94,7 +94,7 @@ try {
 | `content` | CLR string | Response body (must use `String()` to convert) |
 | `contentType` | string | The content type returned in the response |
 | `encoding` | string | The encoding type returned in the response |
-| `headers` | object | Response headers |
+| `headers` | object | Response headers as a CLR object — not directly indexable; read via the `for..in` pattern below |
 | `returnStatus` | number | A status value: `0` = OK, `1` = Empty URL, `2` = Call failed, `3` = Call succeeded with empty content |
 | `statusCode` | number | HTTP status code |
 
@@ -123,9 +123,35 @@ if (resp.statusCode === 200) {
 
 ### Reading a response header
 
+{% include callout.html type="warning" content="Direct access — `resp.headers[\"Content-Type\"]`, `.Get()`, `.Item()` — throws **\"Use of Common Language Runtime (CLR) is not allowed\"**. Use the `for..in` pattern below instead." %}
+
+A `for..in` loop over `resp.headers` yields keys shaped `"[Name, Value]"` — the value is embedded in the key string. Strip the `[ ]` wrapper and split on the first `", "` to build a plain header map without reading any CLR value:
+
 ```javascript
+/**
+ * Build a plain { name: value } header map from an HttpResponse.
+ * Reads only the for..in enumeration keys (shaped "[Name, Value]") so it never
+ * touches a CLR value — avoiding "Use of CLR is not allowed".
+ * @param {object} resp - the response returned by req.send()
+ * @returns {object} map of lowercased header name => value string
+ */
+function getHeaderMap(resp) {
+    var map = {};
+    for (var k in resp.headers) {
+        var pair = String(k);
+        if (pair.charAt(0) === "[") { pair = pair.substring(1); }
+        if (pair.charAt(pair.length - 1) === "]") { pair = pair.substring(0, pair.length - 1); }
+        var idx = pair.indexOf(", ");
+        if (idx > -1) {
+            map[pair.substring(0, idx).toLowerCase()] = pair.substring(idx + 2);
+        }
+    }
+    return map;
+}
+
 var resp = req.send();
-var contentType = resp.headers["Content-Type"];
+var headers = getHeaderMap(resp);
+var contentType = headers["content-type"]; // case-insensitive; undefined if missing
 ```
 
 ---
