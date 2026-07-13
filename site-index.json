@@ -492,7 +492,7 @@
     "url": "/platform-functions/httpget/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Performs an HTTP GET request and returns the response body.",
+    "description": "Performs an HTTP GET request and returns the response body as a string.",
     "params": [
       "url",
       "continueOnError",
@@ -667,7 +667,7 @@
       "headerNames",
       "headerValues"
     ],
-    "returnType": "{ StatusCode: string, Response: string }"
+    "returnType": "{ StatusCode: number, Response: string[] }"
   },
   {
     "name": "<WSProxyInstance>.createItem",

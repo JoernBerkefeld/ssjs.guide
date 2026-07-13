@@ -7,16 +7,18 @@ permalink: /http/post/
 redirect_from:
   - /http/http-post/
 description: Core library HTTP POST — posts a payload and returns an object with StatusCode and Response. Requires Platform.Load.
+verification: verified
+differs_from_docs: true
 ---
 
-`HTTP.Post` sends a POST with the given content type and body. It returns an **object** with two fields: `StatusCode` (the HTTP status as a string) and `Response` (the response body as a string).
+`HTTP.Post` sends a POST with the given content type and body. It returns an **object** with two fields: `StatusCode` (the HTTP status as a **number**) and `Response` (an array whose first element `Response[0]` is the response body string).
 
 {% include callout.html type="warning" content="Requires `Platform.Load(\"core\", \"1.1.5\")` before use." %}
 
 ## Syntax
 
 ```javascript
-var response = HTTP.Post(url, contentType, payload, headerNames, headerValues);
+var response = HTTP.Post(url, contentType, payload[, headerNames, headerValues]);
 ```
 
 ## Parameters
@@ -26,8 +28,10 @@ var response = HTTP.Post(url, contentType, payload, headerNames, headerValues);
 | `url` | string | Yes | Target URL |
 | `contentType` | string | Yes | MIME type of the request body |
 | `payload` | string | Yes | Request body string |
-| `headerNames` | string[] | Yes | Header names (pass an empty array if none are needed) |
-| `headerValues` | string[] | Yes | Values paired with `headerNames` (pass an empty array if none are needed) |
+| `headerNames` | string[] | No | Header names (co-required with `headerValues`) |
+| `headerValues` | string[] | No | Values paired with `headerNames` (co-required) |
+
+{% include differs-from-docs.html note="The official docs list `headerNames` and `headerValues` as required, but the runtime accepts a 3-argument call (`url`, `contentType`, `payload`); the two header arrays are optional and only need to be paired when supplied." %}
 
 ## Return value
 
@@ -35,8 +39,10 @@ Returns an **object** (not a bare string) with these fields:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `StatusCode` | string | HTTP status code of the response |
-| `Response` | string | Response body |
+| `StatusCode` | number | HTTP status code of the response |
+| `Response` | string[] | Array whose first element `Response[0]` is the response body |
+
+{% include differs-from-docs.html note="The official docs type `StatusCode` as a string and `Response` as a single string, but the runtime returns `StatusCode` as a number and `Response` as an array whose first element (`Response[0]`) holds the body." %}
 
 Note that `HTTP.Post` uses different field names than [`HTTP.Get`](/http/get/), which returns `{ Status, Content }`.
 
@@ -59,8 +65,8 @@ var response = HTTP.Post(
     ["mysecretkey"]
 );
 
-if (response.StatusCode == "200") {
-    var result = Platform.Function.ParseJSON(String(response.Response));
+if (response.StatusCode == 200) {
+    var result = Platform.Function.ParseJSON(String(response.Response[0]));
 }
 ```
 

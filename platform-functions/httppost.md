@@ -13,6 +13,7 @@ syntax: "Platform.Function.HTTPPost(url, contentType, payload[, headerNames, hea
 return_type: number
 min_args: 3
 max_args: 6
+verification: verified
 ---
 
 ## Parameters
@@ -24,44 +25,40 @@ max_args: 6
 | `payload` | string | Yes | Request body |
 | `headerNames` | string[] | No | Array of additional header names |
 | `headerValues` | string[] | No | Array of corresponding header values |
-| `response` | array | No | Array that receives the response body from the POST request |
+| `response` | array | No | Array intended to receive the response body. **Unreliable** — observed empty even on successful (200) responses (see below) |
+
+{% include callout.html type="warning" content="The `response` out-parameter is unreliable: in runtime tests it stayed empty (`response[0]` was `undefined`) even for successful `200` requests. Read the HTTP status from the return value, and use [`HTTP.Post`](/http/post/) or [`Script.Util.HttpRequest`](/http/script-util-httprequest/) when you need the response body." %}
 
 ## Examples
 
 ```javascript
-// Simple JSON POST
+// Simple JSON POST — read the status code from the return value
 var payload = Stringify({ event: "pageview", page: "/home" });
-var response = [];
 var statusCode = Platform.Function.HTTPPost(
     "https://api.example.com/events",
     "application/json",
-    payload,
-    null,
-    null,
-    response
+    payload
 );
-var body = response[0];
-var result = Platform.Function.ParseJSON(body + "");
+if (statusCode == 200) {
+    Write("posted");
+}
 
 // POST with auth header
 var headers = ["Authorization"];
 var vals = ["Bearer " + token];
-var res = [];
 var code = Platform.Function.HTTPPost(
     "https://api.example.com/track",
     "application/json",
     payload,
     headers,
-    vals,
-    res
+    vals
 );
-var statusCode = code; // HTTP status code (number)
-var body = res[0];    // response body string
+// code is the HTTP status code (number). To read the body, use HTTP.Post or Script.Util.HttpRequest.
 ```
 
 ## Return Value
 
-Returns the HTTP status code as a number. The response body is written into the `response` array argument (if provided) as `response[0]`.
+Returns the HTTP status code as a number. The `response` array out-parameter is documented to receive the body as `response[0]`, but is unreliable at runtime (see the warning above) — do not depend on it.
 
 ## See Also
 

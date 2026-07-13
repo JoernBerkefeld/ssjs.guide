@@ -7,6 +7,7 @@ permalink: /http/get/
 redirect_from:
   - /http/http-get/
 description: Core library HTTP GET — returns status and response body as an object. Requires Platform.Load.
+verification: verified
 ---
 
 `HTTP.Get` performs a GET request and returns a **single object** with numeric status information and the response payload (see official SOAP/Core HTTP documentation for the exact shape in your stack).
