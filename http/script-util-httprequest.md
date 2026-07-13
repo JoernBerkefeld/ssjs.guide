@@ -3,6 +3,8 @@ layout: page
 title: Script.Util.HttpRequest
 parent: HTTP & REST APIs
 parent_url: /http/
+redirect_from:
+  - /http/request-methods/
 description: Full-featured HTTP request object supporting all methods, custom headers, timeouts, and full response inspection. The most powerful HTTP option in SSJS.
 verification: verified
 differs_from_docs: true
@@ -59,10 +61,10 @@ The `req` object returned by `Script.Util.HttpRequest(url)` has these methods yo
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `clearHeaders()` | void | Remove all custom headers |
-| `removeHeader(name)` | void | Remove a specific header by name |
-| `send()` | `HttpResponseInstance` | Send the request |
-| `setHeader(name, value)` | void | Set a custom request header |
+| [`clearHeaders()`](#clearheaders) | void | Remove all custom headers |
+| [`removeHeader(name)`](#removeheader) | void | Remove a specific header by name |
+| [`send()`](#send) | `HttpResponseInstance` | Send the request |
+| [`setHeader(name, value)`](#setheader) | void | Set a custom request header |
 
 ## HttpResponseInstance Properties
 
@@ -116,6 +118,19 @@ var contentType = headers["content-type"]; // "application/json; charset=utf-8"
 ```
 
 Header names are lowercased in the map above so lookups are case-insensitive. A missing header returns `undefined`.
+
+### Checking the status code
+
+```javascript
+var resp = req.send();
+if (resp.statusCode === 200) {
+    var data = Platform.Function.ParseJSON(String(resp.content));
+} else if (resp.statusCode === 404) {
+    Write("Not found.");
+} else {
+    Write("Error: " + resp.statusCode);
+}
+```
 
 ## Examples
 
@@ -192,7 +207,20 @@ req.setHeader("Authorization", "Bearer " + token);
 var resp = req.send();
 ```
 
-### clearHeaders
+### setHeader {#setheader}
+
+Adds or replaces a header on the outgoing request. Call it once per header.
+
+```javascript
+var req = new Script.Util.HttpRequest("https://api.example.com/data");
+req.method = "GET";
+req.setHeader("Authorization", "Bearer " + token);
+req.setHeader("Accept", "application/json");
+req.setHeader("X-Custom-Header", "my-value");
+var resp = req.send();
+```
+
+### clearHeaders {#clearheaders}
 
 Removes all custom headers previously set on the request.
 
@@ -204,7 +232,7 @@ req.clearHeaders(); // removes Authorization and all other custom headers
 var resp = req.send();
 ```
 
-### removeHeader
+### removeHeader {#removeheader}
 
 Removes a specific header from the request by name.
 
@@ -215,6 +243,18 @@ req.setHeader("Authorization", "Bearer " + token);
 req.setHeader("X-Debug", "1");
 req.removeHeader("X-Debug");
 var resp = req.send();
+```
+
+### send {#send}
+
+Sends the request and returns an `HttpResponseInstance`. May throw on connection failure or timeout — wrap in `try/catch` for production code.
+
+```javascript
+try {
+    var resp = req.send();
+} catch (e) {
+    Write("Request failed: " + e.message);
+}
 ```
 
 ## Complete REST API Helper Pattern

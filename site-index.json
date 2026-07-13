@@ -881,7 +881,7 @@
   },
   {
     "name": "<HttpRequestInstance>.send",
-    "url": "/http/request-methods/",
+    "url": "/http/script-util-httprequest/#send",
     "section": "HTTP & REST",
     "type": "method",
     "description": "Executes the HTTP request and returns a Script.",
@@ -889,7 +889,7 @@
   },
   {
     "name": "<HttpRequestInstance>.setHeader",
-    "url": "/http/request-methods/",
+    "url": "/http/script-util-httprequest/#setheader",
     "section": "HTTP & REST",
     "type": "method",
     "description": "Sets a request header on the Script.",
@@ -901,7 +901,7 @@
   },
   {
     "name": "<HttpRequestInstance>.clearHeaders",
-    "url": "/http/request-methods/",
+    "url": "/http/script-util-httprequest/#clearheaders",
     "section": "HTTP & REST",
     "type": "method",
     "description": "Removes all custom headers previously set on the request.",
@@ -909,7 +909,7 @@
   },
   {
     "name": "<HttpRequestInstance>.removeHeader",
-    "url": "/http/request-methods/",
+    "url": "/http/script-util-httprequest/#removeheader",
     "section": "HTTP & REST",
     "type": "method",
     "description": "Removes a specific header from the request by name.",

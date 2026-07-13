@@ -414,10 +414,10 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 |------|----------|---------|-------------|
 | [`new Script.Util.HttpRequest(url)`](/http/script-util-httprequest/) | HTTP | HttpRequestInstance | Full HTTP request object |
 | [`new Script.Util.HttpGet(url)`](/http/script-util-httpget/) | HTTP | HttpRequestInstance | HTTP GET shorthand |
-| [`<HttpRequestInstance>.send()`](/http/request-methods/#send) | HTTP | object | Execute HTTP request |
-| [`<HttpRequestInstance>.setHeader(name, value)`](/http/request-methods/#setheader) | HTTP | void | Set request header |
-| [`<HttpRequestInstance>.clearHeaders()`](/http/request-methods/#clearheaders) | HTTP | void | Clear all custom headers |
-| [`<HttpRequestInstance>.removeHeader(name)`](/http/request-methods/#removeheader) | HTTP | void | Remove one header |
+| [`<HttpRequestInstance>.send()`](/http/script-util-httprequest/#send) | HTTP | object | Execute HTTP request |
+| [`<HttpRequestInstance>.setHeader(name, value)`](/http/script-util-httprequest/#setheader) | HTTP | void | Set request header |
+| [`<HttpRequestInstance>.clearHeaders()`](/http/script-util-httprequest/#clearheaders) | HTTP | void | Clear all custom headers |
+| [`<HttpRequestInstance>.removeHeader(name)`](/http/script-util-httprequest/#removeheader) | HTTP | void | Remove one header |
 | [`new Script.Util.WSProxy()`](/wsproxy/constructor/) | WSProxy | WSProxyInstance | Create WSProxy instance |
 | [`Platform.Function.SetObjectProperty(apiObject, propertyName, value)`](/platform-functions/setobjectproperty/) | Platform Functions | void | Set SOAP object property (legacy) |
 | [`String(value)`](/global-functions/string/) | Global Functions | string | Convert CLR object to JS string |

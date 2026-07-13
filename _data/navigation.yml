@@ -316,8 +316,6 @@
         url: /http/script-util-httprequest/
       - title: Script.Util.HttpGet
         url: /http/script-util-httpget/
-      - title: Request Instance Methods
-        url: /http/request-methods/
 
 - title: ECMAScript Builtins
   url: /ecmascript-builtins/
