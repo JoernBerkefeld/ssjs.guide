@@ -19,6 +19,8 @@ layout: default
     {% if page.description %}
       <p class="page-description">{{ page.description }}</p>
     {% endif %}
+
+    {% include verification-status.html %}
   </div>
 
   <div class="page-body prose">

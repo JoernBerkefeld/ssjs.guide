@@ -163,6 +163,33 @@
     background-color: rgba($color-warning, 0.08);
     border-color: rgba($color-warning, 0.3);
   }
+
+  // ── Page-level verification status ──────────────────────────────────────
+  &.status-verified {
+    color: $color-success;
+    background-color: rgba($color-success, 0.08);
+    border-color: rgba($color-success, 0.3);
+  }
+
+  &.status-in-progress {
+    color: $color-warning;
+    background-color: rgba($color-warning, 0.08);
+    border-color: rgba($color-warning, 0.3);
+  }
+
+  &.status-pending {
+    color: $text-muted;
+    background-color: $bg-elevated;
+    border-color: $border-muted;
+  }
+}
+
+.verification-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $space-2;
+  margin: $space-4 0;
 }
 
 // ── Function page header decorations ─────────────────────────────────────────

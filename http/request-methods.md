@@ -5,6 +5,7 @@ parent: HTTP & REST APIs
 parent_url: /http/
 permalink: /http/request-methods/
 description: Reference for the instance methods and response object properties of Script.Util.HttpRequest and Script.Util.HttpGet — setHeader, clearHeaders, removeHeader, send, and the response object.
+verification: verified
 ---
 
 This page is a quick reference for the `Script.Util.HttpRequest` instance API: the methods you call on the request object before sending, and the properties available on the response object returned by `send()`.

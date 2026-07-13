@@ -5,6 +5,7 @@ parent: HTTP & REST APIs
 parent_url: /http/
 permalink: /http/script-util-httpget/
 description: HTTP GET request constructor — creates an HttpRequestInstance that caches content for mail sends and supports custom headers.
+verification: verified
 availability:
   email: true
   cloudpage: true

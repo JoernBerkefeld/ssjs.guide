@@ -4,6 +4,7 @@ title: Script.Util.HttpRequest
 parent: HTTP & REST APIs
 parent_url: /http/
 description: Full-featured HTTP request object supporting all methods, custom headers, timeouts, and full response inspection. The most powerful HTTP option in SSJS.
+verification: verified
 ---
 
 `Script.Util.HttpRequest` is the most flexible HTTP client available in SSJS. It supports all HTTP methods, custom headers, timeouts, and gives you full access to response status codes, headers, and body.

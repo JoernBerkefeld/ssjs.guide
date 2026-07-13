@@ -25,9 +25,7 @@ layout: default
       <p class="page-description">{{ page.description }}</p>
     {% endif %}
 
-    {% if page.availability %}
-      {% include availability.html %}
-    {% endif %}
+    {% include verification-status.html %}
   </div>
 
   {% if page.syntax %}
