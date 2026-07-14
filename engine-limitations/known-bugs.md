@@ -8,6 +8,8 @@ description: Platform-specific SFMC SSJS behaviors that differ from documented o
 
 These are behaviors in SFMC SSJS that are inconsistent with the official documentation or with standard JavaScript expectations. They are not theoretical — they have been observed by practitioners and documented in community resources.
 
+{% include callout.html type="info" content="This page covers features that are **broken** or that **do not exist at runtime** despite being officially documented. For working features whose behavior merely differs from the docs (wrong return types, undocumented properties, etc.), see [Differs from Official Docs](/engine-limitations/differs-from-docs/)." %}
+
 ## switch default May Not Execute
 
 **Severity: High** — can silently skip fallback logic
@@ -72,6 +74,28 @@ Platform.Response.Redirect("https://www.example.com", false);
 ```
 
 **Works correctly:** [`Platform.Response.Redirect(url, movedPermanently)`](/platform-objects/platform-response/#redirect) is the working equivalent.
+
+---
+
+## Bare-name Recipient Does Not Exist
+
+**Severity: High** — the alias is `undefined`
+
+The bare-name global `Recipient` is documented as an alias for [`Platform.Recipient`](/platform-objects/platform-recipient/), but runtime testing on CloudPages shows it is **undefined both before and after** `Platform.Load("core", ...)` — it does not exist as a usable alias.
+
+```javascript
+// ❌ undefined regardless of Platform.Load — throws when you call a member
+var v = Recipient.GetAttributeValue("FirstName");
+
+// ✅ Use the fully-qualified Platform.Recipient
+var v = Platform.Recipient.GetAttributeValue("FirstName");
+
+// ✅ Or Attribute.GetValue after Platform.Load("core", ...)
+Platform.Load("core", "1.1.5");
+var v2 = Attribute.GetValue("FirstName");
+```
+
+**Works correctly:** [`Platform.Recipient.GetAttributeValue(...)`](/platform-objects/platform-recipient/), or [`Attribute.GetValue(...)`](/global-functions/attribute/) after `Platform.Load`.
 
 ---
 

@@ -14,6 +14,7 @@ This section documents every known limitation along with practical workarounds.
 - [ECMAScript Built-ins](/ecmascript-builtins/) — Which Array, String, Number, Math, Object, Date, RegExp, and JSON members work, are partial, or are missing
 - [Polyfills](/engine-limitations/polyfills/) — Ready-to-paste polyfill implementations for the missing and broken methods
 - [Known Bugs](/engine-limitations/known-bugs/) — Platform-specific behaviors that differ from documented/expected behavior
+- [Differs from Official Docs](/engine-limitations/differs-from-docs/) — Runtime-verified cases where a working feature behaves differently than the official Salesforce documentation describes
 
 ## Quick Reference: What to Use Instead
 
