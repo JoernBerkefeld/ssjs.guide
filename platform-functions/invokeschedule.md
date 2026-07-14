@@ -9,11 +9,15 @@ availability:
   cloudpage: true
   automation: true
   triggered_send: false
-syntax: "Platform.Function.InvokeSchedule(apiObject, action, schedule[, statusArray, options])"
+syntax: "Platform.Function.InvokeSchedule(apiObject, action, schedule, statusArray[, options])"
 return_type: string
-min_args: 3
+min_args: 4
 max_args: 5
+verification: verified
+differs_from_docs: true
 ---
+
+{% include differs-from-docs.html note="The official docs type the return value as an object and imply `statusArray` is optional, but at runtime the call returns the OverallStatus message as a string and requires the `statusArray` argument — the request ID is written into it." %}
 
 ## Parameters
 
@@ -22,7 +26,7 @@ max_args: 5
 | `apiObject` | object | Yes | SOAP API object built with `CreateObject` and configured with `SetObjectProperty` |
 | `action` | string | Yes | Action to perform on the object (e.g. `"start"`) |
 | `schedule` | object | Yes | Schedule definition object specifying timing and recurrence |
-| `statusArray` | array | No | Array that receives the status and RequestID of the API call |
+| `statusArray` | array | Yes | Array that receives the status and RequestID of the API call |
 | `options` | object | No | Additional API options; may be null |
 
 ## Examples

@@ -372,103 +372,101 @@
     "url": "/platform-functions/invokecreate/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Executes a SOAP API Create call on an API object.",
+    "description": "Executes a SOAP API Create call on an API object and returns the OverallStatus message as a string.",
     "params": [
       "apiObject",
       "status",
       "options"
     ],
-    "returnType": "object"
+    "returnType": "string"
   },
   {
     "name": "InvokeUpdate",
     "url": "/platform-functions/invokeupdate/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Executes a SOAP API Update call on an API object.",
+    "description": "Executes a SOAP API Update call on an API object and returns the OverallStatus message as a string.",
     "params": [
       "apiObject",
       "status",
       "options"
     ],
-    "returnType": "object"
+    "returnType": "string"
   },
   {
     "name": "InvokeDelete",
     "url": "/platform-functions/invokedelete/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Executes a SOAP API Delete call on an API object.",
+    "description": "Executes a SOAP API Delete call on an API object and returns the OverallStatus message as a string.",
     "params": [
       "apiObject",
       "status",
       "options"
     ],
-    "returnType": "object"
+    "returnType": "string"
   },
   {
     "name": "InvokeRetrieve",
     "url": "/platform-functions/invokeretrieve/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Executes a SOAP API Retrieve call.",
+    "description": "Executes a SOAP API Retrieve call, returning an array of result objects when records match or null on error / no match.",
     "params": [
       "apiObject",
       "status"
     ],
-    "returnType": "object"
+    "returnType": "object[]|null"
   },
   {
     "name": "InvokePerform",
     "url": "/platform-functions/invokeperform/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Executes a SOAP API Perform action on an API object.",
+    "description": "Executes a SOAP API Perform action on an API object and returns the OverallStatus message as a string.",
     "params": [
       "apiObject",
       "method",
       "status",
       "options"
     ],
-    "returnType": "object"
+    "returnType": "string"
   },
   {
     "name": "InvokeConfigure",
     "url": "/platform-functions/invokeconfigure/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Executes a SOAP API Configure call on an API object.",
+    "description": "Executes a SOAP API Configure call on an API object and returns the OverallStatus message as a string.",
     "params": [
       "apiObject",
       "method",
       "status",
       "options"
     ],
-    "returnType": "object"
+    "returnType": "string"
   },
   {
     "name": "InvokeExecute",
     "url": "/platform-functions/invokeexecute/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Executes a SOAP API Execute call on an API object.",
+    "description": "Executes a SOAP API Execute call on an API object and returns an array of result objects.",
     "params": [
       "apiObject",
-      "status",
-      "options"
+      "status"
     ],
-    "returnType": "object"
+    "returnType": "object[]"
   },
   {
     "name": "InvokeExtract",
     "url": "/platform-functions/invokeextract/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Invokes the Extract SOAP API method on the specified object.",
+    "description": "Invokes the Extract SOAP API method on the specified object and returns the OverallStatus message as a string.",
     "params": [
       "apiObject",
-      "statusArray",
-      "options"
+      "statusArray"
     ],
     "returnType": "string"
   },
@@ -477,7 +475,7 @@
     "url": "/platform-functions/invokeschedule/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Invokes the Schedule SOAP API method on the specified object.",
+    "description": "Invokes the Schedule SOAP API method on the specified object and returns the OverallStatus message as a string.",
     "params": [
       "apiObject",
       "action",

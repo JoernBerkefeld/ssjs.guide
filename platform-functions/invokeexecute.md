@@ -9,11 +9,15 @@ availability:
   cloudpage: true
   automation: true
   triggered_send: false
-syntax: "Platform.Function.InvokeExecute(apiObject, status, options)"
-return_type: object
-min_args: 3
-max_args: 3
+syntax: "Platform.Function.InvokeExecute(apiObject, status)"
+return_type: object[]
+min_args: 2
+max_args: 2
+verification: verified
+differs_from_docs: true
 ---
+
+{% include differs-from-docs.html note="The official docs list an optional third `options` argument and type the return value as an object, but at runtime the call takes exactly two arguments and returns an array of result objects — passing a third argument throws an \"Unable to retrieve security descriptor for this frame\" error." %}
 
 ## Parameters
 
@@ -21,7 +25,6 @@ max_args: 3
 |------|------|----------|-------------|
 | `apiObject` | object | Yes | SOAP object built with `CreateObject` and configured with `SetObjectProperty` |
 | `status` | array | Yes | Array that receives the status and request ID of the API call (e.g. `[0, 0]`) |
-| `options` | object | Yes | API configure options to include in the call. Can contain a `null` value. |
 
 ## Examples
 
@@ -30,7 +33,7 @@ var execObj = Platform.Function.CreateObject("ExecuteRequest");
 Platform.Function.SetObjectProperty(execObj, "Name", "LogUnsubEvent");
 
 var StatusAndRequestID = [0, 0];
-var result = Platform.Function.InvokeExecute(execObj, StatusAndRequestID, null);
+var result = Platform.Function.InvokeExecute(execObj, StatusAndRequestID);
 var status = StatusAndRequestID[0];
 var requestID = StatusAndRequestID[1];
 ```

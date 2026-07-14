@@ -61,12 +61,12 @@ Low-level SOAP API wrappers. For most SOAP operations, prefer [WSProxy](/wsproxy
   <a href="/platform-functions/setobjectproperty/" class="function-card"><div class="fn-name">SetObjectProperty</div><div class="fn-desc">Set a property on a SOAP API object.</div><div class="fn-return">→ void</div></a>
   <a href="/platform-functions/addobjectarrayitem/" class="function-card"><div class="fn-name">AddObjectArrayItem</div><div class="fn-desc">Append an item to a SOAP API object array property.</div><div class="fn-return">→ void</div></a>
   <a href="/platform-functions/invokecreate/" class="function-card"><div class="fn-name">InvokeCreate</div><div class="fn-desc">Execute a SOAP Create call.</div><div class="fn-return">→ string</div></a>
-  <a href="/platform-functions/invokeretrieve/" class="function-card"><div class="fn-name">InvokeRetrieve</div><div class="fn-desc">Execute a SOAP Retrieve call.</div><div class="fn-return">→ object</div></a>
+  <a href="/platform-functions/invokeretrieve/" class="function-card"><div class="fn-name">InvokeRetrieve</div><div class="fn-desc">Execute a SOAP Retrieve call.</div><div class="fn-return">→ object[]</div></a>
   <a href="/platform-functions/invokeupdate/" class="function-card"><div class="fn-name">InvokeUpdate</div><div class="fn-desc">Execute a SOAP Update call.</div><div class="fn-return">→ string</div></a>
   <a href="/platform-functions/invokedelete/" class="function-card"><div class="fn-name">InvokeDelete</div><div class="fn-desc">Execute a SOAP Delete call.</div><div class="fn-return">→ string</div></a>
   <a href="/platform-functions/invokeperform/" class="function-card"><div class="fn-name">InvokePerform</div><div class="fn-desc">Execute a SOAP Perform action.</div><div class="fn-return">→ string</div></a>
   <a href="/platform-functions/invokeconfigure/" class="function-card"><div class="fn-name">InvokeConfigure</div><div class="fn-desc">Execute a SOAP Configure call.</div><div class="fn-return">→ string</div></a>
-  <a href="/platform-functions/invokeexecute/" class="function-card"><div class="fn-name">InvokeExecute</div><div class="fn-desc">Execute a SOAP Execute call.</div><div class="fn-return">→ string</div></a>
+  <a href="/platform-functions/invokeexecute/" class="function-card"><div class="fn-name">InvokeExecute</div><div class="fn-desc">Execute a SOAP Execute call.</div><div class="fn-return">→ object[]</div></a>
   <a href="/platform-functions/invokeextract/" class="function-card"><div class="fn-name">InvokeExtract</div><div class="fn-desc">Execute a SOAP Extract call.</div><div class="fn-return">→ string</div></a>
   <a href="/platform-functions/invokeschedule/" class="function-card"><div class="fn-name">InvokeSchedule</div><div class="fn-desc">Execute a SOAP Schedule call.</div><div class="fn-return">→ string</div></a>
 </div>

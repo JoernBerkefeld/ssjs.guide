@@ -10,10 +10,14 @@ availability:
   automation: true
   triggered_send: false
 syntax: "Platform.Function.InvokeRetrieve(apiObject, status)"
-return_type: object[]
+return_type: object[]|null
 min_args: 2
 max_args: 2
+verification: verified
+differs_from_docs: true
 ---
+
+{% include differs-from-docs.html note="The official docs type the return value as an object and list an optional third `options` argument, but at runtime the call takes exactly two arguments and returns an array of result objects — or `null` when the retrieve errors or matches no rows. The status message is written to `status[0]` and the request ID (a GUID) to `status[1]`." %}
 
 ## Parameters
 

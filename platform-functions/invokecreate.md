@@ -10,10 +10,14 @@ availability:
   automation: true
   triggered_send: false
 syntax: "Platform.Function.InvokeCreate(apiObject, status, options)"
-return_type: object
+return_type: string
 min_args: 3
 max_args: 3
+verification: verified
+differs_from_docs: true
 ---
+
+{% include differs-from-docs.html note="The official docs type the return value as an object, but at runtime the call returns the OverallStatus message as a string (`\"OK\"` / `\"Error: ...\"`); the request ID is written to `status[1]` and, on error, a numeric error code is written into the status array." %}
 
 ## Parameters
 

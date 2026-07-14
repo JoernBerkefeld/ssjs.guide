@@ -9,11 +9,15 @@ availability:
   cloudpage: true
   automation: true
   triggered_send: false
-syntax: "Platform.Function.InvokeExtract(apiObject, statusArray[, options])"
+syntax: "Platform.Function.InvokeExtract(apiObject, statusArray)"
 return_type: string
 min_args: 2
-max_args: 3
+max_args: 2
+verification: verified
+differs_from_docs: true
 ---
+
+{% include differs-from-docs.html note="The official docs list an optional third `options` argument and type the return value as an object, but at runtime the call takes exactly two arguments and returns the OverallStatus message as a string — passing a third argument throws an \"Unable to retrieve security descriptor for this frame\" error." %}
 
 ## Parameters
 
@@ -21,7 +25,6 @@ max_args: 3
 |------|------|----------|-------------|
 | `apiObject` | object | Yes | SOAP API object built with `CreateObject` and configured with `SetObjectProperty` |
 | `statusArray` | array | Yes | Array that receives the status and RequestID of the API call |
-| `options` | object | No | Additional API configure options; may be null |
 
 ## Examples
 
@@ -30,7 +33,7 @@ var extractDef = Platform.Function.CreateObject("DataExtractDefinition");
 Platform.Function.SetObjectProperty(extractDef, "CustomerKey", "MyExtractDef");
 
 var statusArr = [];
-var result = Platform.Function.InvokeExtract(extractDef, statusArr, null);
+var result = Platform.Function.InvokeExtract(extractDef, statusArr);
 Write("Result: " + result);
 Write("Request ID: " + statusArr[1]);
 ```

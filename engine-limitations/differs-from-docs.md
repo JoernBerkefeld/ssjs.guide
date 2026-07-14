@@ -127,6 +127,60 @@ The official docs show a flat/variadic form (`UpsertData(deName, field1, value1,
 
 All eleven `Platform.Function` Data Extension functions resolve the DE by its **Name** only. Passing the external key / CustomerKey throws *"A Data Extension of this name does not exist."* — verified per-function against a fixture whose CustomerKey deliberately differs from its Name. None of them accept the external key, and none accept both.
 
+### Platform.Function.InvokeCreate — returns the OverallStatus string, not an object
+
+[Reference: Platform.Function.InvokeCreate](/platform-functions/invokecreate/)
+
+The official docs type the return value as an object, but at runtime the call returns the **OverallStatus message as a string** (`"OK"` / `"Error: ..."`). The request ID is written to `status[1]` and, on error, a numeric error code is written into the status array.
+
+### Platform.Function.InvokeUpdate — returns the OverallStatus string, not an object
+
+[Reference: Platform.Function.InvokeUpdate](/platform-functions/invokeupdate/)
+
+The official docs type the return value as an object, but at runtime the call returns the **OverallStatus message as a string** (`"OK"` / `"Error: ..."`). The request ID is written to `status[1]` and, on error, a numeric error code is written into the status array.
+
+### Platform.Function.InvokeDelete — returns the OverallStatus string, not an object
+
+[Reference: Platform.Function.InvokeDelete](/platform-functions/invokedelete/)
+
+The official docs type the return value as an object, but at runtime the call returns the **OverallStatus message as a string** (`"OK"` / `"Error: ..."`). The request ID is written to `status[1]` and, on error, a numeric error code is written into the status array.
+
+### Platform.Function.InvokeRetrieve — 2 args, returns object[] or null
+
+[Reference: Platform.Function.InvokeRetrieve](/platform-functions/invokeretrieve/)
+
+The official docs type the return value as an object and list an optional third `options` argument, but at runtime the call takes **exactly two arguments** and returns an **array of result objects — or `null`** when the retrieve errors or matches no rows. The status message is written to `status[0]` and the request ID (a GUID) to `status[1]`.
+
+### Platform.Function.InvokePerform — returns the OverallStatus string, not an object
+
+[Reference: Platform.Function.InvokePerform](/platform-functions/invokeperform/)
+
+The official docs type the return value as an object, but at runtime the call returns the **OverallStatus message as a string** (`"OK"` / `"Error: ..."`); the request details are written into the status array.
+
+### Platform.Function.InvokeConfigure — returns the OverallStatus string, not an object
+
+[Reference: Platform.Function.InvokeConfigure](/platform-functions/invokeconfigure/)
+
+The official docs type the return value as an object, but at runtime the call returns the **OverallStatus message as a string** (`"OK"` / `"Error: ..."`); the request details are written into the status array.
+
+### Platform.Function.InvokeExecute — 2 args, returns object[]
+
+[Reference: Platform.Function.InvokeExecute](/platform-functions/invokeexecute/)
+
+The official docs list an optional third `options` argument and type the return value as an object, but at runtime the call takes **exactly two arguments** and returns an **array of result objects**. Passing a third argument throws an *"Unable to retrieve security descriptor for this frame."* error.
+
+### Platform.Function.InvokeExtract — 2 args, returns the OverallStatus string
+
+[Reference: Platform.Function.InvokeExtract](/platform-functions/invokeextract/)
+
+The official docs list an optional third `options` argument and type the return value as an object, but at runtime the call takes **exactly two arguments** and returns the **OverallStatus message as a string**. Passing a third argument throws an *"Unable to retrieve security descriptor for this frame."* error.
+
+### Platform.Function.InvokeSchedule — statusArray required, returns the OverallStatus string
+
+[Reference: Platform.Function.InvokeSchedule](/platform-functions/invokeschedule/)
+
+The official docs type the return value as an object and imply `statusArray` is optional, but at runtime the call returns the **OverallStatus message as a string** and **requires** the `statusArray` argument — the request ID is written into it.
+
 ## Platform Objects
 
 ### Platform.Request.GetQueryStringParameter — returns null (not "") when absent
