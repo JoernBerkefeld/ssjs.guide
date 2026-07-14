@@ -13,6 +13,8 @@ availability:
   automation: true
   triggered_send: true
 requires_core_load: true
+verification: verified
+differs_from_docs: "Runtime-verified: the bare-name Format works after Platform.Load(\"core\") but only in the same scope the load ran in — it is undefined inside nested helper-function bodies. The official docs do not mention this scope rule. In a bare CloudPage the prefixed Platform.Function.Format can throw \"Unable to retrieve security descriptor for this frame\" while the bare-name form succeeds."
 syntax: "Format(textToFormat, formatCode)"
 return_type: string
 min_args: 2

@@ -14,6 +14,7 @@ availability:
   cloudpage: true
   automation: false
   triggered_send: true
+verification: verified
 syntax: "ContentArea(id[, regionName, errorMsg, fallbackContent])"
 return_type: string
 min_args: 1

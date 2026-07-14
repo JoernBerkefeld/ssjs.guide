@@ -13,6 +13,7 @@ availability:
   cloudpage: true
   automation: false
   triggered_send: true
+verification: verified
 syntax: "Attribute.GetValue(name)"
 return_type: string
 min_args: 1

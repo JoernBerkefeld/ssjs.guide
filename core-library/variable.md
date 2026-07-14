@@ -13,6 +13,7 @@ availability:
   cloudpage: true
   automation: false
   triggered_send: true
+verification: verified
 syntax: "Variable.GetValue(name)\nVariable.SetValue(name, value)"
 return_type: object
 min_args: 1

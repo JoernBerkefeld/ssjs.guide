@@ -13,6 +13,8 @@ availability:
   cloudpage: true
   automation: true
   triggered_send: true
+verification: verified
+differs_from_docs: "Runtime-verified: the bare-name Stringify works after Platform.Load(\"core\") but only in the same scope the load ran in — it is undefined inside nested helper-function bodies. The official docs do not mention this scope rule. Platform.Function.Stringify(value) works in any scope without Platform.Load."
 syntax: "Stringify(value)"
 return_type: string
 min_args: 1
