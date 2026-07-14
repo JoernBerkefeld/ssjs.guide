@@ -1191,7 +1191,7 @@
     "url": "/core-library/httpheader/",
     "section": "Core Library",
     "type": "method",
-    "description": "Retrieves the value of the specified HTTP request header.",
+    "description": "Retrieves the value of the specified INBOUND HTTP request header (e.",
     "params": [
       "name"
     ],
@@ -1202,7 +1202,7 @@
     "url": "/core-library/httpheader/",
     "section": "Core Library",
     "type": "method",
-    "description": "Sets the value of the specified HTTP header.",
+    "description": "Sets the value of the specified OUTBOUND HTTP header.",
     "params": [
       "name",
       "value"
@@ -1218,7 +1218,7 @@
     "params": [
       "headerName"
     ],
-    "returnType": "string"
+    "returnType": "void"
   },
   {
     "name": "DateTime.SystemDateToLocalDate",
@@ -1258,11 +1258,12 @@
     "url": "/wsproxy/errorutil/",
     "section": "WSProxy",
     "type": "method",
-    "description": "Inspects a WSProxy result object and throws an exception when its `Status` property starts with `\"Error:\"`.",
+    "description": "Inspects a WSProxy result object and throws when its `Status` property indicates an error.",
     "params": [
       "result"
     ],
-    "returnType": "void"
+    "returnType": "void",
+    "deprecated": true
   },
   {
     "name": "Attribute.GetValue",

@@ -1,4 +1,4 @@
-﻿---
+---
 layout: function
 title: SystemDateToLocalDate
 parent: Platform Functions

@@ -7,12 +7,16 @@ permalink: /core-library/datetime/
 redirect_from:
   - /platform-objects/datetime/
   - /platform-objects/datetime-timezone/
+verification: verified
+differs_from_docs: "Runtime note: SystemDateToLocalDate / LocalDateToSystemDate return CLR DateTime objects (typeof \"object\") that coerce transparently to strings via String(value), \"\" + value, or Write(value). DateTime.TimeZone.Retrieve rows are CLR objects that Stringify() cannot serialize — enumerate with for..in."
 description: Date-time utilities for converting between system time and local time, and for retrieving time zone definitions. Requires the Core library.
 ---
 
 The `DateTime` namespace provides date-time conversion helpers and time zone lookup, available after loading the Core library.
 
 {% include callout.html type="warning" content="Requires <code>Platform.Load(\"core\", \"1.1.5\")</code> before use." %}
+
+{% include callout.html type="info" content="Runtime-verified: the conversion methods return CLR <code>DateTime</code> objects that coerce to a string automatically (via <code>String(value)</code>, <code>\"\" + value</code>, or <code>Write(value)</code>). <code>DateTime.TimeZone.Retrieve()</code> rows are CLR objects that <code>Stringify()</code> cannot serialize — enumerate their fields with <code>for..in</code>." %}
 
 ## Methods
 
