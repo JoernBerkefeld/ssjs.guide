@@ -4,9 +4,13 @@ title: Platform.Variable
 parent: Platform Objects
 parent_url: /platform-objects/
 description: The AMPscript–SSJS variable bridge. Read and write AMPscript variables from within SSJS script blocks.
+verification: verified
+differs_from_docs: "Runtime-verified (CloudPage): Platform.Variable is available WITHOUT Platform.Load. GetValue returns null (typeof \"object\") when the variable was NEVER set — not an empty string; a variable explicitly set to \"\" returns \"\". The leading @ is optional (auto-added): GetValue(\"v\") and GetValue(\"@v\") are equivalent. The bare-name Variable alias only exists AFTER Platform.Load(\"core\", ...)."
 ---
 
 `Platform.Variable` provides two methods for bridging between AMPscript and SSJS execution contexts. Any variable set in AMPscript can be read in SSJS, and vice versa.
+
+Does not require `Platform.Load`. The bare-name `Variable` alias, however, only exists **after** `Platform.Load("core", "1.1.5")`.
 
 ## Methods
 
@@ -29,11 +33,11 @@ Platform.Variable.GetValue(variableName)
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `variableName` | string | Yes | AMPscript variable name, prefixed with `@` |
+| `variableName` | string | Yes | AMPscript variable name. The leading `@` is optional — it is added automatically |
 
 ### Return Value
 
-Returns the variable's value as a string. Returns `""` (empty string) if the variable is not set.
+Returns the variable's value as a string. Returns **`null`** (typeof `"object"`) when the variable was never set — not an empty string. A variable explicitly set to `""` returns `""`, so you can distinguish "never set" (`null`) from "set to empty" (`""`).
 
 ### Examples
 
@@ -57,7 +61,7 @@ Platform.Variable.SetValue(variableName, value)
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `variableName` | string | Yes | AMPscript variable name, prefixed with `@` |
+| `variableName` | string | Yes | AMPscript variable name. The leading `@` is optional — it is added automatically |
 | `value` | any | Yes | Value to assign |
 
 ### Examples

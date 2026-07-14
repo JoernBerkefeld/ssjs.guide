@@ -4,9 +4,15 @@ title: Platform.Request
 parent: Platform Objects
 parent_url: /platform-objects/
 description: Read HTTP request data including query string parameters, POST body, form data, request headers, and cookies.
+verification: verified
+differs_from_docs: "Runtime-verified (CloudPage): Platform.Request is available WITHOUT Platform.Load. The getters GetQueryStringParameter / GetFormField / GetCookieValue / GetRequestHeader return null (typeof \"object\") for an absent key, NOT an empty string. GetPostData returns \"\" (empty string) on a GET. GetUserLanguages throws \"Unable to retrieve security descriptor for this frame.\" in a plain CloudPage GET."
 ---
 
 `Platform.Request` provides methods to inspect every aspect of the incoming HTTP request in CloudPage, JSON Resource, and Triggered Send contexts.
+
+Does not require `Platform.Load`.
+
+{% include callout.html type="warning" content="The value getters (`GetQueryStringParameter`, `GetFormField`, `GetCookieValue`, `GetRequestHeader`) return **`null`** — not an empty string — when the requested key is absent. Guard reads with a truthiness or `!= null` check. `GetUserLanguages()` throws in a plain CloudPage context; wrap it in try/catch." %}
 
 ## Properties
 
@@ -43,7 +49,7 @@ All properties return `null` (or `false` for boolean properties) when no valid r
 Platform.Request.GetQueryStringParameter(parameterName)
 ```
 
-Returns the value of a URL query string parameter. Returns `""` if not present.
+Returns the value of a URL query string parameter. Returns **`null`** if the parameter is not present (runtime-verified — the official docs' claim of an empty string is incorrect).
 
 ### Parameters
 
@@ -57,7 +63,7 @@ Returns the value of a URL query string parameter. Returns `""` if not present.
 // URL: /page?id=42&mode=preview
 var id = Platform.Request.GetQueryStringParameter("id");     // "42"
 var mode = Platform.Request.GetQueryStringParameter("mode"); // "preview"
-var missing = Platform.Request.GetQueryStringParameter("foo"); // ""
+var missing = Platform.Request.GetQueryStringParameter("foo"); // null
 ```
 
 ---
@@ -68,7 +74,7 @@ var missing = Platform.Request.GetQueryStringParameter("foo"); // ""
 Platform.Request.GetFormField(fieldName)
 ```
 
-Reads a field from either a GET query string or POST form body (application/x-www-form-urlencoded or multipart/form-data).
+Reads a field from either a GET query string or POST form body (application/x-www-form-urlencoded or multipart/form-data). Returns **`null`** when the field is absent.
 
 ### Examples
 
@@ -123,12 +129,19 @@ if (Platform.Request.Method === "POST") {
 Platform.Request.GetUserLanguages()
 ```
 
-Returns the raw value of the HTTP `Accept-Language` header (for example a comma-separated list with quality values). Returns `null` when the header is absent.
+Returns the raw value of the HTTP `Accept-Language` header (for example a comma-separated list with quality values).
+
+{% include callout.html type="warning" content="Runtime-verified: in a plain CloudPage GET this method **throws** `\"Unable to retrieve security descriptor for this frame.\"`. Wrap it in try/catch, or prefer reading the header directly via `GetRequestHeader(\"Accept-Language\")`." %}
 
 ### Examples
 
 ```javascript
-var langs = Platform.Request.GetUserLanguages();
+var langs;
+try {
+    langs = Platform.Request.GetUserLanguages();
+} catch (e) {
+    langs = Platform.Request.GetRequestHeader("Accept-Language");
+}
 if (langs) {
     Write("<!-- Accept-Language: " + langs + " -->");
 }
@@ -142,7 +155,7 @@ if (langs) {
 Platform.Request.GetRequestHeader(headerName)
 ```
 
-Returns the value of an HTTP request header. Header names are case-insensitive.
+Returns the value of an HTTP request header. Header names are case-insensitive. Returns **`null`** when the header is absent.
 
 ### Examples
 
@@ -168,7 +181,7 @@ if (token !== expectedToken) {
 Platform.Request.GetCookieValue(cookieName)
 ```
 
-Returns the value of a cookie sent with the request.
+Returns the value of a cookie sent with the request. Returns **`null`** when the cookie is absent.
 
 ### Examples
 

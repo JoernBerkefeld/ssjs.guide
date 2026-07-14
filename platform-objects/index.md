@@ -4,6 +4,8 @@ title: Platform Objects
 description: Global Platform namespace objects for loading libraries, bridging AMPscript variables, managing HTTP responses, reading requests, and recipient context.
 nav_order: 5
 has_children: true
+verification: verified
+differs_from_docs: true
 ---
 
 The `Platform` namespace exposes a set of objects beyond `Platform.Function.*` that give you direct control over the execution environment. These are available without loading the Core library.

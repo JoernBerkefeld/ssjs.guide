@@ -4,6 +4,7 @@ title: Platform.Response
 parent: Platform Objects
 parent_url: /platform-objects/
 description: Control the HTTP response from CloudPages and JSON Code Resources — set status codes, content types, cookies, response headers, and perform redirects.
+verification: verified
 ---
 
 `Platform.Response` lets you control the HTTP response sent back to the browser. Useful for REST-style CloudPage APIs, redirects, cookie management, and setting response headers and content type.

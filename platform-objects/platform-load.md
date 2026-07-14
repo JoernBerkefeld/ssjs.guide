@@ -4,6 +4,7 @@ title: Platform.Load
 parent: Platform Objects
 parent_url: /platform-objects/
 description: Loads a named SSJS library namespace (e.g. Core) into the current script execution context. Must be called before using any Core library objects.
+verification: verified
 ---
 
 ## Syntax
@@ -29,6 +30,8 @@ Platform.Load("core", "1.1.5");
 var de = DataExtension.Init("MyDE");
 var rows = de.Rows.Retrieve();
 ```
+
+{% include callout.html type="note" content="Runtime-verified: the `Platform.*` objects (`Platform.Request`, `Platform.Response`, `Platform.Variable`, `Platform.Recipient`, `Platform.Function.*`) are available **without** calling `Platform.Load`. Only the bare-name Core aliases (`DataExtension`, `Variable`, `Attribute`, `HTTP`, `Script.Util`, …) require it." %}
 
 ## Available Libraries
 
