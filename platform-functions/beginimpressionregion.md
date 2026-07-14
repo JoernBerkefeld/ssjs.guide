@@ -13,6 +13,8 @@ syntax: "Platform.Function.BeginImpressionRegion(name)"
 return_type: void
 min_args: 1
 max_args: 1
+verification: verified
+differs_from_docs: true
 ---
 
 ## Parameters
@@ -20,6 +22,8 @@ max_args: 1
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `name` | string | Yes | Identifier for the impression region |
+
+{% include differs-from-docs.html note="The region name must be a compile-time literal; passing a variable is rejected at runtime with a resolved-value error, which the official docs do not mention." %}
 
 ## Examples
 

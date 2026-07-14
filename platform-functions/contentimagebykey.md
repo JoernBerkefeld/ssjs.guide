@@ -13,6 +13,7 @@ syntax: "Platform.Function.ContentImageByKey(key[, fallbackKey])"
 return_type: string
 min_args: 1
 max_args: 2
+verification: verified
 ---
 
 ## Parameters

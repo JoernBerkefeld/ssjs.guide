@@ -14,6 +14,7 @@ syntax: "Platform.Function.ContentArea(id[, regionName, stopOnError, fallbackCon
 return_type: string
 min_args: 1
 max_args: 4
+verification: verified
 ---
 
 ## Parameters

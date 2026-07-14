@@ -13,6 +13,8 @@ syntax: "Platform.Function.AddObjectArrayItem(apiObject, propertyName, value)"
 return_type: void
 min_args: 3
 max_args: 3
+verification: verified
+differs_from_docs: true
 ---
 
 ## Parameters
@@ -22,6 +24,8 @@ max_args: 3
 | `apiObject` | object | Yes | SOAP API object instance created with `CreateObject` |
 | `propertyName` | string | Yes | Name of the array property to append to |
 | `value` | any | Yes | Item to append to the array property |
+
+{% include differs-from-docs.html note="The official docs list a return value, but at runtime the call returns nothing (undefined) — it mutates the passed object in place." %}
 
 ## Examples
 

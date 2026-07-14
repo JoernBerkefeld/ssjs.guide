@@ -558,7 +558,7 @@
     "url": "/platform-functions/base64encode/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Encodes any string value to Base64.",
+    "description": "Encodes any string value to standard Base64.",
     "params": [
       "string",
       "charset"
@@ -570,7 +570,7 @@
     "url": "/platform-functions/base64decode/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Decodes a Base64-encoded string.",
+    "description": "Decodes a standard Base64-encoded string.",
     "params": [
       "encodedString",
       "charset"

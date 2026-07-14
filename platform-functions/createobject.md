@@ -13,6 +13,7 @@ syntax: "Platform.Function.CreateObject(objectType)"
 return_type: object
 min_args: 1
 max_args: 1
+verification: verified
 ---
 
 ## Parameters

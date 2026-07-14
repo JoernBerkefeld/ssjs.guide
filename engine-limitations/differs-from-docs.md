@@ -63,6 +63,30 @@ The official docs are wrong on two counts:
 1. They state this returns a **numeric status**, but it actually returns the **response body as a string**; the numeric status is written to the `statusVariable` out-parameter (`statusVariable[0]`).
 2. They list `emptyContentHandling`, `headerNames`, `headerValues`, and `statusVariable` as optional, but runtime testing shows **all six arguments are required** — the call throws a security-descriptor error otherwise. Pass `null` for unused header arrays.
 
+### Platform.Function.Base64Encode — standard interoperable Base64
+
+[Reference: Platform.Function.Base64Encode](/platform-functions/base64encode/)
+
+The official docs state the output "can only be decoded by the matching `Base64Decode()` function." Runtime testing shows the output is **standard, interoperable Base64** — any Base64 decoder (in any language) can decode it. There is nothing proprietary about the encoding.
+
+### Platform.Function.Base64Decode — decodes any standard Base64
+
+[Reference: Platform.Function.Base64Decode](/platform-functions/base64decode/)
+
+The official docs imply this only decodes values produced by the matching `Base64Encode()` function. Runtime testing shows it **decodes any valid standard Base64 string**, regardless of how it was produced.
+
+### Platform.Function.BeginImpressionRegion — name must be a literal
+
+[Reference: Platform.Function.BeginImpressionRegion](/platform-functions/beginimpressionregion/)
+
+The region name must be a **compile-time literal**. Passing a variable is rejected at runtime with a resolved-value (`ResolvedValueParameter`) error. The official docs describe the argument as an ordinary string and do not mention this literal-only restriction.
+
+### Platform.Function.AddObjectArrayItem — returns nothing
+
+[Reference: Platform.Function.AddObjectArrayItem](/platform-functions/addobjectarrayitem/)
+
+The official docs list a return value, but at runtime the call returns nothing (`undefined`). It appends the item to the object's array property **in place** — capture the mutated object, not a return value.
+
 ## Platform Objects
 
 ### Platform.Request.GetQueryStringParameter — returns null (not "") when absent

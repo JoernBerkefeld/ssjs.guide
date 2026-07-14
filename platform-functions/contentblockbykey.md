@@ -13,6 +13,8 @@ syntax: "Platform.Function.ContentBlockByKey(customerKey[, regionName, stopOnErr
 return_type: string
 min_args: 1
 max_args: 4
+verification: verified
+differs_from_docs: true
 ---
 
 ## Parameters
@@ -23,6 +25,8 @@ max_args: 4
 | `regionName` | string | No | The impression region name to associate with this content block. |
 | `stopOnError` | boolean | No | When `true`, stops rendering if the block is not found. Defaults to `false`. |
 | `fallbackContent` | string | No | HTML string to render if the block is not found. |
+
+{% include differs-from-docs.html note="Once any optional argument is supplied, every argument must be a compile-time literal; a variable in a multi-argument call is rejected at runtime. Passing the key alone as a variable still works." %}
 
 ## Description
 

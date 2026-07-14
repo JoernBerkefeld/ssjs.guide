@@ -13,6 +13,7 @@ syntax: "Platform.Function.ContentBlockByName(name[, regionName, stopOnError, fa
 return_type: string
 min_args: 1
 max_args: 5
+verification: verified
 ---
 
 ## Parameters
@@ -24,6 +25,8 @@ max_args: 5
 | `stopOnError` | boolean | No | When `true`, stops rendering if the block is not found. Defaults to `false`. |
 | `fallbackContent` | string | No | HTML string to render if the block is not found. |
 | `statusVariable` | string | No | Variable name that receives the lookup status. |
+
+{% include callout.html type="note" content="Once any optional argument is supplied, every argument must be a compile-time literal — a variable in a multi-argument call is rejected at runtime." %}
 
 ## Description
 

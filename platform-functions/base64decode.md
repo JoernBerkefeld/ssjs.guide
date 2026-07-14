@@ -3,7 +3,7 @@ layout: function
 title: Base64Decode
 parent: Platform Functions
 parent_url: /platform-functions/
-description: Decodes a Base64-encoded string. Only works with values encoded using Platform.Function.Base64Encode() or Base64Encode() — not arbitrary Base64 strings.
+description: Decodes a standard Base64-encoded string. Optionally specify the character set. Decodes any valid standard Base64 string, not only values produced by Base64Encode().
 availability:
   email: true
   cloudpage: true
@@ -13,6 +13,8 @@ syntax: "Platform.Function.Base64Decode(encodedString[, charset])"
 return_type: string
 min_args: 1
 max_args: 2
+verification: verified
+differs_from_docs: true
 ---
 
 ## Parameters
@@ -24,7 +26,11 @@ max_args: 2
 
 ## Description
 
-Decodes a Base64-encoded string back to its original value. Use the optional `charset` parameter to match the encoding used when the string was encoded.
+Decodes a standard Base64-encoded string back to its original value. Use the optional `charset` parameter to control how the decoded bytes are interpreted.
+
+It decodes any valid standard Base64 string — the input does not have to have been produced by `Base64Encode()`.
+
+{% include differs-from-docs.html note="The official docs imply it only decodes values created by the matching Base64Encode() function, but the runtime decodes any valid standard Base64 string." %}
 
 For a single-argument form without charset control, see [`Base64Decode()`](/core-library/base64decode/) under the Core Library bare-name functions.
 
