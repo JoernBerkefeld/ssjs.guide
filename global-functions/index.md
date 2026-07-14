@@ -4,7 +4,7 @@ title: Global Functions
 description: Top-level functions and objects available in every SSJS execution context without any import or Platform.Load call.
 ---
 
-These functions and objects are available globally in any SSJS script block without requiring `Platform.Load` or any other initialization.
+These functions and objects are available at the top level of an SSJS script block. Some (marked "Requires Platform.Load" below — e.g. `Base64Encode`/`Base64Decode`, `Format`, `Variable`, `Attribute`) require a preceding `Platform.Load("Core", ...)`. Note that bare-name Core globals only exist in the **same scope** `Platform.Load` was called in — they are not visible inside `eval()` or nested helper-function bodies.
 
 <div class="function-grid">
   <a href="/global-functions/write/" class="function-card">
@@ -44,7 +44,7 @@ These functions and objects are available globally in any SSJS script block with
   </a>
   <a href="/global-functions/attribute/" class="function-card">
     <div class="fn-name">Attribute</div>
-    <div class="fn-desc">Global object providing access to subscriber attribute values.</div>
+    <div class="fn-desc">Global object providing access to subscriber attribute values. Requires Platform.Load. Available in CloudPages (returns empty string with no recipient context).</div>
     <div class="fn-return">object</div>
   </a>
   <a href="/global-functions/format/" class="function-card">

@@ -6,7 +6,7 @@ parent_url: /global-functions/
 description: Global object providing access to subscriber attribute values in email send context.
 availability:
   email: true
-  cloudpage: false
+  cloudpage: true
   automation: false
   triggered_send: true
 syntax: "Attribute.GetValue(name)"
@@ -17,15 +17,19 @@ max_args: 1
 
 ## Description
 
-The global `Attribute` object provides access to subscriber attribute (profile attribute) values when SSJS runs in an email or triggered send context. It is not available in CloudPages.
+The global `Attribute` object provides access to subscriber attribute (profile attribute) values for the current recipient. It requires `Platform.Load("Core", ...)` before use.
 
-For CloudPages, read subscriber data from a Data Extension via `Platform.Function.Lookup()` / `Platform.Function.LookupRows()`, or use [`Platform.Recipient.GetAttributeValue`](/platform-objects/platform-recipient/) in recipient-aware contexts.
+`Attribute.GetValue(name)` is available in CloudPages: after the Core library is loaded, the `Attribute` object exists and `GetValue` executes and returns a string. When there is no recipient/attribute context (for example an anonymously published CloudPage GET), it returns an **empty string** rather than throwing. In email, triggered send, and personalized (recipient-aware) contexts it returns the actual attribute value.
+
+In non-recipient CloudPage scenarios where you need subscriber data, read it from a Data Extension via `Platform.Function.Lookup()` / `Platform.Function.LookupRows()`, or use [`Platform.Recipient.GetAttributeValue`](/platform-objects/platform-recipient/) (equivalent to `Attribute.GetValue`).
 
 The AMPscript parallel is `AttributeValue()` (different language); SSJS uses `Attribute.GetValue(name)`.
 
 ## Example
 
 ```javascript
+Platform.Load("Core", "1.1.1");
+
 var firstName = Attribute.GetValue("FirstName");
 var city      = Attribute.GetValue("City");
 

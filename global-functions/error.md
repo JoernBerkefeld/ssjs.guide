@@ -19,13 +19,13 @@ max_args: 1
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `message` | string | No | Human-readable description of the error. Accessible as `error.message`. |
+| `message` | string | No | Human-readable description of the error. See the caveat below — in the SFMC engine it is **not** readable back via `error.message`. |
 
 ## Description
 
 `Error` is the native JavaScript Error constructor. Use it with `throw` and `try/catch` for structured error handling in SSJS.
 
-The caught error object has a `.message` property that contains the string you passed to `new Error(message)`.
+> **Engine caveat (runtime-verified):** Unlike standard JavaScript, a JS-constructed `new Error("msg")` in the SFMC (Jint) engine does **not** expose the message via `.message` — `e.message` reads back `undefined`. Recover the message with `String(e)` or `("" + e)` (both return the constructor argument), or `e.toString()` (returns `"Error: undefined"`). This differs from **engine-raised** errors (thrown by the platform itself, e.g. a bad `Platform.Function` call), which **do** carry both `.message` (short text) and `.description` (fuller text).
 
 ## Examples
 
@@ -35,7 +35,8 @@ The caught error object has a `.message` property that contains the string you p
 try {
     throw new Error("Something went wrong");
 } catch (e) {
-    Write(e.message); // "Something went wrong"
+    // e.message is undefined for a JS-constructed Error — use String(e).
+    Write(String(e)); // "Something went wrong"
 }
 ```
 
@@ -60,7 +61,8 @@ try {
     var email = getSubscriberEmail(subscriberKey);
     Write("<p>Email: " + email + "</p>");
 } catch (e) {
-    Write('<p class="error">' + e.message + "</p>");
+    // String(e) recovers the thrown message; e.message would be undefined here.
+    Write('<p class="error">' + String(e) + "</p>");
 }
 ```
 
@@ -83,33 +85,45 @@ try {
     // process data...
 
 } catch (e) {
-    Platform.Function.InsertData("ErrorLog", "Message", e.message, "Timestamp", Platform.Function.Now());
+    // Use String(e) — e.message is undefined for JS-constructed Error objects.
+    Platform.Function.InsertData("ErrorLog", "Message", String(e), "Timestamp", Platform.Function.Now());
     Platform.Response.Redirect("/error", false);
 }
 ```
 
 ### Error in serialization
 
-`Stringify(e)` serializes the error object for logging:
+`Stringify(e)` behaves differently depending on how the error was created:
+
+- For a **JS-constructed** `new Error(...)`, `Stringify(e)` surfaces only a hidden `{"jintException": ...}` (the .NET stack) — **not** the message. Use `String(e)` to log the message.
+- For an **engine-raised** error, `Stringify(e)` yields `{"message": ..., "description": ...}`.
 
 ```javascript
 try {
     performOperation();
 } catch (e) {
-    Write("<pre>Error details: " + Stringify(e) + "</pre>");
+    // For engine-raised errors this includes message + description;
+    // for new Error(...) prefer String(e) to capture the message.
+    Write("<pre>Error details: " + String(e) + " | " + Stringify(e) + "</pre>");
 }
 ```
 
 ## Notes
 
-The error object in SSJS is similar to but not always identical to the standard ECMAScript `Error` object. It reliably has `.message`, but properties like `.stack` are not available.
+The error object in SSJS is similar to but **not** identical to the standard ECMAScript `Error` object, and its shape depends on origin:
 
-SFMC platform errors (not thrown by your code) are also catchable:
+- **JS-constructed** (`new Error("msg")`): `.message` is `undefined`; the message is only recoverable via `String(e)` / `("" + e)`. Carries a hidden `.jintException`. `.stack` is not available.
+- **Engine-raised** (platform-thrown, e.g. a bad `Platform.Function` call): exposes `.message` (short) and `.description` (fuller text, ending with a Jint/.NET exception detail). `.number` and `.jintException` are `undefined`.
+- **Thrown primitives / plain objects** (`throw "text"`, `throw { message: ..., description: ... }`) are valid; in `catch (e)`, `e` may be a string, a plain object, or an engine error — probe accordingly. Avoid `String(e)` on a thrown plain object (it can throw a .NET null-reference); prefer `Stringify(e)` or `e.toString()` there.
+- `for (var k in e)` is unreliable for property discovery: on engine errors, JS `Error` instances, and thrown strings it enumerates the message **characters**, not property names.
+
+SFMC platform errors (not thrown by your code) are also catchable, and these DO carry `.message`:
 
 ```javascript
 try {
     Platform.Function.Lookup("NonExistentDE", "Field", "Key", "value");
 } catch (e) {
+    // Engine-raised errors expose .message and .description.
     Write("Platform error: " + e.message);
 }
 ```
