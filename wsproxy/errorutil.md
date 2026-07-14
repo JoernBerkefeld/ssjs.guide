@@ -1,8 +1,11 @@
 ---
 layout: page
 title: ErrorUtil
-parent: Platform Objects
-parent_url: /platform-objects/
+parent: WSProxy
+parent_url: /wsproxy/
+permalink: /wsproxy/errorutil/
+redirect_from:
+  - /platform-objects/errorutil/
 description: Throw when a WSProxy result indicates failure so try/catch can handle SOAP-level errors. Requires the Core library.
 ---
 

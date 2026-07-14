@@ -57,6 +57,10 @@
         url: /global-functions/contentareabyname/
       - title: Error
         url: /global-functions/error/
+      - title: Redirect
+        url: /global-functions/redirect/
+      - title: Request (global)
+        url: /global-functions/request/
       - title: String
         url: /global-functions/string/
       - title: Stringify
@@ -201,12 +205,6 @@
         url: /platform-objects/platform-request/
       - title: Platform.Recipient
         url: /platform-objects/platform-recipient/
-      - title: HTTPHeader
-        url: /platform-objects/httpheader/
-      - title: DateTime
-        url: /platform-objects/datetime/
-      - title: ErrorUtil
-        url: /platform-objects/errorutil/
 - title: Core Library
   url: /core-library/
   children:
@@ -224,6 +222,8 @@
         url: /core-library/dataextension-fields/
       - title: DataExtension.Rows
         url: /core-library/dataextension-rows/
+      - title: DateTime
+        url: /core-library/datetime/
       - title: DeliveryProfile
         url: /core-library/deliveryprofile/
       - title: Email
@@ -232,6 +232,8 @@
         url: /core-library/filterdefinition/
       - title: Folder
         url: /core-library/folder/
+      - title: HTTPHeader
+        url: /core-library/httpheader/
       - title: HTTP.Get
         url: /http/get/
       - title: HTTP.Post
@@ -298,6 +300,8 @@
         url: /wsproxy/setclientid/
       - title: resetClientIds
         url: /wsproxy/resetclientids/
+      - title: ErrorUtil
+        url: /wsproxy/errorutil/
 
 - title: HTTP Functions
   url: /http/
@@ -316,6 +320,8 @@
         url: /http/script-util-httprequest/
       - title: Script.Util.HttpGet
         url: /http/script-util-httpget/
+      - title: HTTPHeader
+        url: /core-library/httpheader/
 
 - title: ECMAScript Builtins
   url: /ecmascript-builtins/

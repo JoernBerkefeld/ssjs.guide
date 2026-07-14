@@ -1,10 +1,11 @@
 ---
 layout: page
 title: DateTime
-parent: Platform Objects
-parent_url: /platform-objects/
-permalink: /platform-objects/datetime/
+parent: Core Library
+parent_url: /core-library/
+permalink: /core-library/datetime/
 redirect_from:
+  - /platform-objects/datetime/
   - /platform-objects/datetime-timezone/
 description: Date-time utilities for converting between system time and local time, and for retrieving time zone definitions. Requires the Core library.
 ---

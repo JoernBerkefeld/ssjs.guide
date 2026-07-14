@@ -16,6 +16,7 @@ SSJS offers three different ways to make HTTP requests. Choose based on how much
 | [HTTP.Get](/http/get/) / [HTTP.Post](/http/post/) (Core) | Medium | Same transport as syndicated HTTP docs — returns a **status + body object** |
 | [Script.Util.HttpGet](/http/script-util-httpget/) | Full-ish | Shorthand for `Script.Util.HttpRequest` with GET method but without control over timeouts and returned encoding/content-type |
 | [Script.Util.HttpRequest](/http/script-util-httprequest/) | Full | Custom methods, headers, auth, timeouts, status codes and returns most details |
+| [HTTPHeader](/core-library/httpheader/) | Header helpers | Read, set, and remove named HTTP headers (Core library; documented under Core Library) |
 
 ---
 

@@ -1,7 +1,7 @@
 ---
 layout: category
 title: Platform Objects
-description: Global Platform namespace objects for loading libraries, bridging AMPscript variables, managing HTTP responses, reading requests, Core-library helpers (HTTPHeader, DateTime.TimeZone, ErrorUtil), and recipient context.
+description: Global Platform namespace objects for loading libraries, bridging AMPscript variables, managing HTTP responses, reading requests, and recipient context.
 nav_order: 5
 has_children: true
 ---
@@ -17,9 +17,8 @@ The `Platform` namespace exposes a set of objects beyond `Platform.Function.*` t
 | [`Platform.Response`](/platform-objects/platform-response/) | Control HTTP response (status, redirect, content-type) |
 | [`Platform.Request`](/platform-objects/platform-request/) | Read HTTP request data (query string, POST, headers, cookies) |
 | [`Platform.Recipient`](/platform-objects/platform-recipient/) | Read subscriber attributes and sendable DE fields for the current recipient |
-| [`HTTPHeader`](/platform-objects/httpheader/) | Core-library helpers for HTTP headers (requires Core load) |
-| [`DateTime`](/platform-objects/datetime/) | Date-time conversion helpers and time zone lookup (requires Core load) |
-| [`ErrorUtil`](/platform-objects/errorutil/) | Throw on WSProxy error status (requires Core load) |
+
+Core-library helpers that were previously grouped here have moved to their natural sections: [`HTTPHeader`](/core-library/httpheader/) and [`DateTime`](/core-library/datetime/) are documented under the [Core Library](/core-library/), and [`ErrorUtil`](/wsproxy/errorutil/) under [WSProxy](/wsproxy/).
 
 ---
 

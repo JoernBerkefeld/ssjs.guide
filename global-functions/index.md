@@ -27,6 +27,16 @@ These functions and objects are available at the top level of an SSJS script blo
     <div class="fn-desc">Native Error constructor for creating throwable error objects with a message property.</div>
     <div class="fn-return">→ object</div>
   </a>
+  <a href="/global-functions/redirect/" class="function-card">
+    <div class="fn-name">Redirect()</div>
+    <div class="fn-desc">Redirect the browser to another URL with a 301 (permanent) or 302 (temporary) response. Requires Platform.Load. Alias of Platform.Response.Redirect.</div>
+    <div class="fn-return">→ void</div>
+  </a>
+  <a href="/global-functions/request/" class="function-card">
+    <div class="fn-name">Request</div>
+    <div class="fn-desc">Global object for reading request values (URL, method, page path, application context). Requires Platform.Load. Alias of Platform.Request.</div>
+    <div class="fn-return">object</div>
+  </a>
   <a href="/global-functions/base64encode/" class="function-card">
     <div class="fn-name">Base64Encode()</div>
     <div class="fn-desc">Encode plain text to a Base64 string. Requires Platform.Load. For charset control use Platform.Function.Base64Encode().</div>

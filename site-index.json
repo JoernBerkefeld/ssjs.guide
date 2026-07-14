@@ -1188,8 +1188,8 @@
   },
   {
     "name": "HTTPHeader.GetValue",
-    "url": "/platform-objects/httpheader/",
-    "section": "Platform Objects",
+    "url": "/core-library/httpheader/",
+    "section": "Core Library",
     "type": "method",
     "description": "Retrieves the value of the specified HTTP request header.",
     "params": [
@@ -1199,8 +1199,8 @@
   },
   {
     "name": "HTTPHeader.SetValue",
-    "url": "/platform-objects/httpheader/",
-    "section": "Platform Objects",
+    "url": "/core-library/httpheader/",
+    "section": "Core Library",
     "type": "method",
     "description": "Sets the value of the specified HTTP header.",
     "params": [
@@ -1211,8 +1211,8 @@
   },
   {
     "name": "HTTPHeader.Remove",
-    "url": "/platform-objects/httpheader/",
-    "section": "Platform Objects",
+    "url": "/core-library/httpheader/",
+    "section": "Core Library",
     "type": "method",
     "description": "Removes the specified entry from the HTTP header.",
     "params": [
@@ -1222,8 +1222,8 @@
   },
   {
     "name": "DateTime.SystemDateToLocalDate",
-    "url": "/platform-objects/datetime/",
-    "section": "Platform Objects",
+    "url": "/core-library/datetime/",
+    "section": "Core Library",
     "type": "method",
     "description": "Converts a date-time value from Marketing Cloud system time (CST) to the local time of the account or user.",
     "params": [
@@ -1233,8 +1233,8 @@
   },
   {
     "name": "DateTime.LocalDateToSystemDate",
-    "url": "/platform-objects/datetime/",
-    "section": "Platform Objects",
+    "url": "/core-library/datetime/",
+    "section": "Core Library",
     "type": "method",
     "description": "Converts a date-time value from the local time of the account or user to Marketing Cloud system time (CST).",
     "params": [
@@ -1244,8 +1244,8 @@
   },
   {
     "name": "DateTime.TimeZone.Retrieve",
-    "url": "/platform-objects/datetime/",
-    "section": "Platform Objects",
+    "url": "/core-library/datetime/",
+    "section": "Core Library",
     "type": "method",
     "description": "Retrieves an array of time zones matching the specified filter criteria.",
     "params": [
@@ -1255,8 +1255,8 @@
   },
   {
     "name": "ErrorUtil.ThrowWSProxyError",
-    "url": "/platform-objects/errorutil/",
-    "section": "Platform Objects",
+    "url": "/wsproxy/errorutil/",
+    "section": "WSProxy",
     "type": "method",
     "description": "Inspects a WSProxy result object and throws an exception when its `Status` property starts with `\"Error:\"`.",
     "params": [
@@ -2920,7 +2920,7 @@
   },
   {
     "name": "DateTime.TimeZone",
-    "url": "/platform-objects/datetime/",
+    "url": "/core-library/datetime/",
     "section": "Core Library",
     "type": "object",
     "description": "Time zone utilities for SSJS date/time conversions."
@@ -4237,6 +4237,18 @@
     "returnType": "string"
   },
   {
+    "name": "Redirect",
+    "url": "/global-functions/redirect/",
+    "section": "Global Functions",
+    "type": "function",
+    "description": "Redirects the browser to another address.",
+    "params": [
+      "url",
+      "movedPermanently"
+    ],
+    "returnType": "void"
+  },
+  {
     "name": "Format",
     "url": "/global-functions/format/",
     "section": "Global Functions",
@@ -4247,5 +4259,12 @@
       "formatCode"
     ],
     "returnType": "string"
+  },
+  {
+    "name": "Request",
+    "url": "/global-functions/request/",
+    "section": "Global Functions",
+    "type": "object",
+    "description": "Object for reading incoming request values in CloudPage context."
   }
 ]

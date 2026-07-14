@@ -45,4 +45,4 @@ Write("Your local time: " + formatDate(localTime, "M/D/YYYY H:MM"));
 
 ## See Also
 
-- [`DateTime.SystemDateToLocalDate()`](/platform-objects/datetime/#systemdatetolocaldate) — short form available after `Platform.Load("core", "1.1.5")`; equivalent to this function.
+- [`DateTime.SystemDateToLocalDate()`](/core-library/datetime/#systemdatetolocaldate) — short form available after `Platform.Load("core", "1.1.5")`; equivalent to this function.

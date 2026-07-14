@@ -1,8 +1,11 @@
 ---
 layout: page
 title: HTTPHeader
-parent: Platform Objects
-parent_url: /platform-objects/
+parent: Core Library
+parent_url: /core-library/
+permalink: /core-library/httpheader/
+redirect_from:
+  - /platform-objects/httpheader/
 description: Read, set, and remove named HTTP headers via the Core library HTTPHeader helpers.
 ---
 

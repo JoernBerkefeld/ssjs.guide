@@ -26,10 +26,12 @@ Platform.Load("core", "1.1.5");
 | [`DataExtension`](/core-library/dataextension/) | Initialize and work with Data Extensions |
 | [`DataExtension.Fields`](/core-library/dataextension-fields/) | Field definitions on a DE |
 | [`DataExtension.Rows`](/core-library/dataextension-rows/) | Retrieve, Add, Update, Remove rows |
+| [`DateTime`](/core-library/datetime/) | Date-time conversion helpers and time zone lookup |
 | [`DeliveryProfile`](/core-library/deliveryprofile/) | Delivery profiles |
 | [`Email`](/core-library/email/) | Email message definitions |
 | [`FilterDefinition`](/core-library/filterdefinition/) | Data filters |
 | [`Folder`](/core-library/folder/) | Content folders |
+| [`HTTPHeader`](/core-library/httpheader/) | Read, set, and remove named HTTP headers |
 | [`List`](/core-library/list/) | Work with publication lists |
 | [`List.Subscribers`](/core-library/list-subscribers/) | Subscribers on a specific list |
 | [`Portfolio`](/core-library/portfolio/) | Portfolio (file) assets |

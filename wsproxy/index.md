@@ -46,6 +46,7 @@ var items = result.Results;
 | [`<WSProxyInstance>.performBatch(...)`](/wsproxy/performbatch/) | SOAP Perform on many objects |
 | [`<WSProxyInstance>.setClientId(...)`](/wsproxy/setclientid/) | Target another business unit |
 | [`<WSProxyInstance>.resetClientIds()`](/wsproxy/resetclientids/) | Clear BU override |
+| [`ErrorUtil.ThrowWSProxyError(...)`](/wsproxy/errorutil/) | Throw on a WSProxy error status so `try`/`catch` can handle SOAP failures (requires Core load) |
 
 ---
 

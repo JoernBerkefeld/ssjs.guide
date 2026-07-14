@@ -104,9 +104,9 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`DateTime.TimeZone.Retrieve(filter)`](/platform-objects/datetime/#timezone-retrieve) | Platform Object | object[] | Time zone definitions (requires Core load) |
-| [`DateTime.LocalDateToSystemDate(dateString)`](/platform-objects/datetime/#localdatetolocaldate) | Platform Object | string | Local account/user time to system time (CST) |
-| [`DateTime.SystemDateToLocalDate(dateString)`](/platform-objects/datetime/#systemdatetolocaldate) | Platform Object | string | System time (CST) to local account/user time |
+| [`DateTime.TimeZone.Retrieve(filter)`](/core-library/datetime/#timezone-retrieve) | Core Library | object[] | Time zone definitions (requires Core load) |
+| [`DateTime.LocalDateToSystemDate(dateString)`](/core-library/datetime/#localdatetolocaldate) | Core Library | string | Local account/user time to system time (CST) |
+| [`DateTime.SystemDateToLocalDate(dateString)`](/core-library/datetime/#systemdatetolocaldate) | Core Library | string | System time (CST) to local account/user time |
 | [`Date.now()`](/ecmascript-builtins/date-methods/#now) | ECMAScript Builtins | number | Milliseconds since the Unix epoch (static) |
 | [`Date.parse(dateString)`](/ecmascript-builtins/date-methods/#parse) | ECMAScript Builtins | number | Parse a date string to milliseconds since epoch (static) |
 | [`Date.UTC(year, month[, day, hours, minutes, seconds, milliseconds])`](/ecmascript-builtins/date-methods/#utc) | ECMAScript Builtins | number | Milliseconds since epoch for the given UTC date parts (static) |
@@ -158,7 +158,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`<EmailInstance>.CheckContent()`](/core-library/email/#instance-checkcontent) | Core Library | object | Content checks |
 | [`Platform.Function.EndImpressionRegion([closeAll])`](/platform-functions/endimpressionregion/) | Platform Functions | void | End an impression region |
 | [`Error(message)`](/global-functions/error/) | Global Functions | Error | Create Error object (`new Error([message])`) |
-| [`ErrorUtil.ThrowWSProxyError(result)`](/platform-objects/errorutil/) | Platform Object | void | Throw when WSProxy status indicates failure |
+| [`ErrorUtil.ThrowWSProxyError(result)`](/wsproxy/errorutil/) | WSProxy | void | Throw when WSProxy status indicates failure |
 
 ---
 
@@ -207,9 +207,9 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 |------|----------|---------|-------------|
 | [`HTTP.Get(url[, headerNames, headerValues])`](/http/get/) | Core HTTP | object | HTTP GET — structured status + body |
 | [`HTTP.Post(url, contentType, payload, headerNames, headerValues)`](/http/post/) | Core HTTP | object | HTTP POST — structured status + body |
-| [`HTTPHeader.GetValue(name)`](/platform-objects/httpheader/) | Platform Object | string | Read HTTP request header (Core load) |
-| [`HTTPHeader.SetValue(name, value)`](/platform-objects/httpheader/) | Platform Object | void | Set HTTP request header (Core load) |
-| [`HTTPHeader.Remove(headerName)`](/platform-objects/httpheader/) | Platform Object | string | Remove HTTP request header (Core load) |
+| [`HTTPHeader.GetValue(name)`](/core-library/httpheader/) | Core Library | string | Read HTTP request header (Core load) |
+| [`HTTPHeader.SetValue(name, value)`](/core-library/httpheader/) | Core Library | void | Set HTTP request header (Core load) |
+| [`HTTPHeader.Remove(headerName)`](/core-library/httpheader/) | Core Library | string | Remove HTTP request header (Core load) |
 | [`Platform.Function.HTTPGet(url, continueOnError[, emptyContentHandling, headerNames, headerValues, statusVariable])`](/platform-functions/httpget/) | Platform Functions | string | HTTP GET — body string only |
 | [`Platform.Function.HTTPPost(url, contentType, payload[, headerNames, headerValues, response])`](/platform-functions/httppost/) | Platform Functions | string | HTTP POST — body string only |
 
@@ -395,9 +395,11 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 |------|----------|---------|-------------|
 | [`Platform.Function.RaiseError(message[, currentRecipientOnly[, errorCode[, errorNumber]]])`](/platform-functions/raiseerror/) | Platform Functions | void | Halt execution with error |
 | [`Platform.Function.RedirectTo(url)`](/platform-functions/redirectto/) | Platform Functions | void | Email href redirect helper |
+| [`Redirect(url, movedPermanently)`](/global-functions/redirect/) | Global Functions | void | Redirect the browser (alias of Platform.Response.Redirect; requires Platform.Load) |
 | [`Platform.Response.Redirect(url, movedPermanently)`](/platform-objects/platform-response/#redirect) | Platform Response | void | Redirect the browser |
 | [`Platform.Response.RemoveCookie(name)`](/platform-objects/platform-response/#removecookie) | Platform Response | void | Remove a cookie |
 | [`Platform.Response.RemoveResponseHeader(headerName)`](/platform-objects/platform-response/#removeresponseheader) | Platform Response | void | Remove a response header |
+| [`Request.URL() / Request.Method() / Request.PagePath() / …`](/global-functions/request/) | Global Object | string | Read request values (alias of Platform.Request; requires Platform.Load) |
 | [`<RegExpInstance>.exec(string)`](/ecmascript-builtins/regular-expressions/#exec) | ECMAScript Builtins | array | ⚠️ Partial — `lastIndex` does not advance; avoid the `g`-flag loop pattern |
 | [`<RegExpInstance>.global`](/ecmascript-builtins/regular-expressions/#global) | ECMAScript Builtins | boolean | True if the `g` flag was set |
 | [`<RegExpInstance>.ignoreCase`](/ecmascript-builtins/regular-expressions/#ignorecase) | ECMAScript Builtins | boolean | True if the `i` flag was set |
