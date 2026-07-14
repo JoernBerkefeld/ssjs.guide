@@ -19,7 +19,7 @@ max_args: 5
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `deName` | string | Yes | Data Extension name or external key |
+| `deName` | string | Yes | Data Extension **Name** (the external key / CustomerKey is **not** accepted — runtime-verified) |
 | `count` | number | Yes | Maximum number of rows to return; values below 1 return up to 2,000 |
 | `orderBy` | string | Yes | Sort expression using `"ColumnName ASC"` or `"ColumnName DESC"` syntax (e.g. `"LastName ASC, FirstName ASC"`) |
 | `whereFieldNames` | string\|string[] | Yes | Filter field name, or an array of field names connected with AND logic |
@@ -31,6 +31,8 @@ max_args: 5
 - Results in a specific order
 - Only the top N rows (e.g., most recent 10 orders)
 - Pagination patterns
+
+Like `LookupRows`, each returned row object also carries the system fields `_CustomObjectKey` (a `number`) and `_CreatedDate` (a `string`), and the DE is resolved by its **Name** (not the external key / CustomerKey) — both runtime-verified. It returns `null` when no rows match, so guard before reading `.length`.
 
 ## Examples
 

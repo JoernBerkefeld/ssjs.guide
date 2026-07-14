@@ -87,6 +87,46 @@ The region name must be a **compile-time literal**. Passing a variable is reject
 
 The official docs list a return value, but at runtime the call returns nothing (`undefined`). It appends the item to the object's array property **in place** — capture the mutated object, not a return value.
 
+### Platform.Function.Lookup — returns native types and null (not string / "")
+
+[Reference: Platform.Function.Lookup](/platform-functions/lookup/)
+
+The official docs type the return as a `string`, but at runtime `Lookup` returns the column's **native type**: Number/Decimal → `number`, Boolean → `boolean`, Date → a real `Date` object, Text/EmailAddress → `string`.
+
+There are **three distinct empty-ish returns** — a strict `=== null` check catches only one of them:
+
+| Situation | Value | `typeof` | `=== null` | `String()` |
+|---|---|---|---|---|
+| No matching row | genuine JS `null` | `object` | `true` | `"null"` |
+| Row exists, field is empty/NULL | CLR null | `"clr"` | **`false`** | `""` |
+| Field is populated | native value | native | `false` | value |
+
+The empty/NULL-field case is the trap: it is **not** `=== null` and its `typeof` is the SFMC-only `"clr"`. Guard empty fields with a loose `== null` (which is `true` for both null forms) or a `String()`/truthiness coercion — never a strict `=== null`.
+
+### Platform.Function.LookupRows / LookupOrderedRows — null on no-match, plus system fields
+
+[Reference: LookupRows](/platform-functions/lookuprows/) · [LookupOrderedRows](/platform-functions/lookuporderedrows/)
+
+Both return **`null`** (not an empty array `[]`) when no row matches — guard before reading `.length`. Each returned row object also carries two undocumented **system fields**: `_CustomObjectKey` (a `number`) and `_CreatedDate` (a `string`). When rows do match, the collection is a **genuine JavaScript `Array`** (`object[]`): `Array.isArray()` returns `true` and its **own** `.push`/`.slice`/`.sort` methods work — but `instanceof Array` is unreliable in the SFMC engine (it returns `false` even for a plain array literal), so test with the `Array.isArray` polyfill rather than `instanceof`. Note that **borrowed** `Array.prototype` methods fail on it: `Array.prototype.slice.call(rows)` throws *"Index was outside the bounds of the array."* — call the array's own `rows.slice(...)` instead.
+
+### Platform.Function.InsertDE / UpdateDE / UpsertDE / DeleteDE — run on CloudPages, return null
+
+[Reference: InsertDE](/platform-functions/insertde/) · [UpdateDE](/platform-functions/updatede/) · [UpsertDE](/platform-functions/upsertde/) · [DeleteDE](/platform-functions/deletede/)
+
+The official docs restrict the `*DE` variants to **email contexts**, but at runtime all four **execute and commit** their write on a CloudPage too (verified within the same request and across requests). They return **`null`** rather than the affected-row count that the `*Data` variants return, so the `*Data` functions remain preferable outside email when you need the count.
+
+### Platform.Function.UpsertData — no flat/variadic signature
+
+[Reference: Platform.Function.UpsertData](/platform-functions/upsertdata/)
+
+The official docs show a flat/variadic form (`UpsertData(deName, field1, value1, …, filterField, filterValue)`). That form is **not supported** — it throws at runtime. Only the array-based five-argument signature (`deName`, `whereFieldNames`, `whereFieldValues`, `fieldNames`, `fieldValues`) works.
+
+### Data Extension functions — resolve by Name, not external key
+
+[Reference: Lookup](/platform-functions/lookup/) · [LookupRows](/platform-functions/lookuprows/) · [LookupOrderedRows](/platform-functions/lookuporderedrows/) · [InsertData](/platform-functions/insertdata/) · [UpdateData](/platform-functions/updatedata/) · [UpsertData](/platform-functions/upsertdata/) · [DeleteData](/platform-functions/deletedata/) · [InsertDE](/platform-functions/insertde/) · [UpdateDE](/platform-functions/updatede/) · [UpsertDE](/platform-functions/upsertde/) · [DeleteDE](/platform-functions/deletede/)
+
+All eleven `Platform.Function` Data Extension functions resolve the DE by its **Name** only. Passing the external key / CustomerKey throws *"A Data Extension of this name does not exist."* — verified per-function against a fixture whose CustomerKey deliberately differs from its Name. None of them accept the external key, and none accept both.
+
 ## Platform Objects
 
 ### Platform.Request.GetQueryStringParameter — returns null (not "") when absent

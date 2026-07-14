@@ -19,7 +19,7 @@ max_args: 3
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `deName` | string | Yes | Data Extension name or external key |
+| `deName` | string | Yes | Data Extension **Name** (the external key / CustomerKey is **not** accepted — runtime-verified) |
 | `whereFieldNames` | string[] | Yes | Array of column names to match for deletion |
 | `whereFieldValues` | array | Yes | Array of values aligned to `whereFieldNames` that identify rows to delete |
 
@@ -62,7 +62,8 @@ if (exists) {
 ## Notes
 
 - Returns `0` when no rows match (not an error)
-- `DeleteDE` is an alias with identical behavior — however it is limited to emails.
+- Resolves the DE by **Name**, not external key / CustomerKey
+- `DeleteDE` performs the same delete but returns `null` instead of a row count. The official docs describe `DeleteDE` as email-only, yet it was runtime-verified to run and commit on a CloudPage too — prefer `DeleteData` outside email for the affected-row count.
 - **Irreversible** — SFMC DEs have no built-in undo. Always verify the filter before deleting.
 
 ## See Also

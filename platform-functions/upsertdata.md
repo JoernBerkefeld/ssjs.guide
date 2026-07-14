@@ -17,21 +17,17 @@ max_args: 5
 
 ## Parameters
 
-The standard `UpsertData` signature accepts:
+`UpsertData` takes exactly these five array-based arguments:
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `deName` | string | Yes | Data Extension name or external key |
+| `deName` | string | Yes | Data Extension **Name** (the external key / CustomerKey is **not** accepted — runtime-verified) |
 | `whereFieldNames` | string\|string[] | Yes | Column name(s) to identify whether the row exists; use an array for composite keys |
 | `whereFieldValues` | string\|array | Yes | Value(s) matching `whereFieldNames`; must be an array of equal length when `whereFieldNames` is an array |
 | `fieldNames` | string[] | Yes | Array of column names to insert or update |
 | `fieldValues` | array | Yes | Array of values aligned to `fieldNames` |
 
-Alternatively, use the flat variadic signature:
-
-```javascript
-Platform.Function.UpsertData(deName, field1, value1, ..., filterField, filterValue)
-```
+> **No flat/variadic form.** A flat argument list such as `UpsertData(deName, field1, value1, filterField, filterValue)` is **not supported** — it throws at runtime (verified). Always pass the `fieldNames` / `fieldValues` and `whereFieldNames` / `whereFieldValues` pairs as arrays.
 
 ## Description
 
@@ -69,14 +65,14 @@ Platform.Function.UpsertData(
 );
 ```
 
-### Single column upsert (variadic)
+### Single column upsert
 
 ```javascript
-// Variadic form: field-value pairs, last pair is the filter
+// Even a single column/key must be passed as arrays
 Platform.Function.UpsertData(
     "PageViews",
-    "Count",    viewCount,  // column to set
-    "PageID",   pageId      // filter (key)
+    ["PageID"], [pageId],     // whereFieldNames / whereFieldValues (key)
+    ["Count"],  [viewCount]   // fieldNames / fieldValues (column to set)
 );
 ```
 
@@ -111,7 +107,9 @@ try {
 
 ## Notes
 
-- `UpsertDE` is an alias for `UpsertData`
+- Resolves the DE by **Name**, not external key / CustomerKey
+- The flat/variadic argument form is not supported and throws — always use arrays for the where and field pairs
+- `UpsertDE` performs the same upsert but returns `null` instead of a row count. The official docs describe `UpsertDE` as email-only, yet it was runtime-verified to run and commit on a CloudPage too — prefer `UpsertData` outside email for the affected-row count.
 - The key columns must match the DE's primary key or sendable field to avoid creating duplicates
 - For large batch upserts, consider WSProxy's `updateBatch` for better performance
 

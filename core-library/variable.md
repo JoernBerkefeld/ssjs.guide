@@ -1,6 +1,6 @@
 ---
 layout: function
-title: Variable (Global Object)
+title: Variable
 parent: Core Library
 parent_url: /core-library/
 permalink: /core-library/variable/

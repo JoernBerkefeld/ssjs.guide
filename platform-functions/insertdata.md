@@ -19,13 +19,13 @@ max_args: 3
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `deName` | string | Yes | Data Extension name or external key |
+| `deName` | string | Yes | Data Extension **Name** (the external key / CustomerKey is **not** accepted — runtime-verified) |
 | `fieldNames` | string[] | Yes | Array of column names to populate |
 | `fieldValues` | array | Yes | Array of values aligned to `fieldNames` |
 
 ## Description
 
-`InsertData` adds a new row to a Data Extension. Returns the number of affected rows (1 on success).
+`InsertData` adds a new row to a Data Extension. Returns the number of affected rows (1 on success). The Data Extension is resolved by its **Name**, not the external key / CustomerKey.
 
 If the DE has a primary key and a row with the same key already exists, `InsertData` will **throw an error**. Use `UpsertData` for insert-or-update behavior.
 
@@ -82,7 +82,7 @@ if (Platform.Request.Method === "POST") {
 ## Notes
 
 - `InsertData` always creates a new row — use `UpsertData` to avoid duplicate errors
-- The `InsertDE` function is an alias with identical behavior, however it is limited to emails.
+- The `InsertDE` function performs the same insert, but it returns `null` instead of a row count. The official docs describe `InsertDE` as email-only, yet it was runtime-verified to run and commit on a CloudPage too — `InsertData` is still preferred outside email because it returns the affected-row count.
 - Returns `1` on success, throws on failure
 
 ## See Also

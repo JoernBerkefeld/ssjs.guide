@@ -4,34 +4,34 @@
     "url": "/platform-functions/lookup/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Retrieves a single field value from a Data Extension row matching filter criteria.",
+    "description": "Retrieves a single field value from the first Data Extension row matching filter criteria.",
     "params": [
       "deName",
       "returnField",
       "whereFieldNames",
       "whereFieldValues"
     ],
-    "returnType": "string"
+    "returnType": "string|number|boolean|object|null"
   },
   {
     "name": "LookupRows",
     "url": "/platform-functions/lookuprows/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Returns a result set of rows from a Data Extension matching filter criteria.",
+    "description": "Returns an array of row objects from a Data Extension matching filter criteria (up to 2,000 rows).",
     "params": [
       "deName",
       "whereFieldNames",
       "whereFieldValues"
     ],
-    "returnType": "object"
+    "returnType": "object[]|null"
   },
   {
     "name": "LookupOrderedRows",
     "url": "/platform-functions/lookuporderedrows/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Returns an ordered result set from a Data Extension.",
+    "description": "Returns an ordered array of row objects from a Data Extension.",
     "params": [
       "deName",
       "count",
@@ -39,14 +39,14 @@
       "whereFieldNames",
       "whereFieldValues"
     ],
-    "returnType": "object"
+    "returnType": "object[]|null"
   },
   {
     "name": "InsertData",
     "url": "/platform-functions/insertdata/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Adds a new row to a Data Extension.",
+    "description": "Adds a new row to a Data Extension and returns the number of rows inserted.",
     "params": [
       "deName",
       "fieldNames",
@@ -65,14 +65,14 @@
       "fieldNames",
       "fieldValues"
     ],
-    "returnType": "void"
+    "returnType": "null"
   },
   {
     "name": "UpdateData",
     "url": "/platform-functions/updatedata/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Modifies existing rows in a Data Extension matching filter criteria.",
+    "description": "Modifies existing rows in a Data Extension matching filter criteria and returns the number of rows updated.",
     "params": [
       "deName",
       "whereFieldNames",
@@ -95,14 +95,14 @@
       "fieldNames",
       "fieldValues"
     ],
-    "returnType": "number"
+    "returnType": "null"
   },
   {
     "name": "UpsertData",
     "url": "/platform-functions/upsertdata/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Inserts a new row or updates an existing one in a Data Extension.",
+    "description": "Inserts a new row or updates an existing one in a Data Extension and returns the number of rows affected.",
     "params": [
       "deName",
       "whereFieldNames",
@@ -125,14 +125,14 @@
       "fieldNames",
       "fieldValues"
     ],
-    "returnType": "number"
+    "returnType": "null"
   },
   {
     "name": "DeleteData",
     "url": "/platform-functions/deletedata/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Removes rows from a Data Extension matching filter criteria.",
+    "description": "Removes rows from a Data Extension matching filter criteria and returns the number of rows deleted.",
     "params": [
       "deName",
       "whereFieldNames",
@@ -151,7 +151,7 @@
       "whereFieldNames",
       "whereFieldValues"
     ],
-    "returnType": "number"
+    "returnType": "null"
   },
   {
     "name": "ContentBlockByKey",

@@ -1,6 +1,6 @@
 ---
 layout: function
-title: Attribute (Global Object)
+title: Attribute
 parent: Core Library
 parent_url: /core-library/
 permalink: /core-library/attribute/

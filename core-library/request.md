@@ -1,6 +1,6 @@
 ---
 layout: function
-title: Request (Global Object)
+title: Request
 parent: Core Library
 parent_url: /core-library/
 permalink: /core-library/request/

@@ -10,7 +10,7 @@ availability:
   automation: true
   triggered_send: true
 syntax: "Platform.Function.Lookup(deName, returnField, whereFieldNames, whereFieldValues)"
-return_type: string
+return_type: string|number|boolean|object|null
 min_args: 4
 max_args: 4
 ---
@@ -19,16 +19,30 @@ max_args: 4
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `deName` | string | Yes | Data Extension name or external key |
+| `deName` | string | Yes | Data Extension **Name** (the external key / CustomerKey is **not** accepted — runtime-verified) |
 | `returnField` | string | Yes | Column name whose value to return |
 | `whereFieldNames` | string\|string[] | Yes | Filter field name, or an array of field names connected with AND logic |
 | `whereFieldValues` | string\|array | Yes | Filter field value matching `whereFieldNames`; must be an array of equal length when `whereFieldNames` is an array |
 
 ## Description
 
-`Lookup` searches a Data Extension for the **first** row where all filter conditions match, and returns the value of the specified `returnField`. When no row matches, it returns an empty string `""`.
+`Lookup` searches a Data Extension for the **first** row where all filter conditions match, and returns the value of the specified `returnField`. When no row matches, it returns `null` (runtime-verified — **not** an empty string `""`, despite what the official docs imply).
+
+The returned value keeps the column's **native runtime type**: Text/EmailAddress columns return a `string`, Number/Decimal columns return a `number`, Boolean columns return a `boolean`, and Date columns return a real `Date` object (not a formatted string — `getFullYear()`, `getMonth()`, etc. work).
 
 When multiple rows match, `Lookup` returns the value from the **first** row found (ordering is not guaranteed — use `LookupOrderedRows` if order matters).
+
+### Three distinct empty-ish returns (runtime-verified)
+
+`Lookup` has three different "no value" outcomes, and a strict `=== null` check only catches one of them:
+
+| Situation | Value | `typeof` | `=== null` | `String()` |
+|---|---|---|---|---|
+| No matching row | genuine JS `null` | `object` | `true` | `"null"` |
+| Row exists, field is empty/NULL | CLR null | `"clr"` | **`false`** | `""` |
+| Field is populated | native value | native | `false` | value |
+
+The empty/NULL-field case is a trap: it is **not** `=== null` and its `typeof` is the SFMC-only `"clr"`. Guard empty fields with a loose `== null` (true for both null forms) or a truthiness / `String()` coercion — never a strict `=== null`.
 
 ## Examples
 
@@ -62,13 +76,13 @@ var phone = Platform.Function.Lookup(
 
 ### Null-safe pattern
 
-`Lookup` returns `""` (empty string) when no match is found — not `null`:
+`Lookup` returns `null` when no match is found (runtime-verified):
 
 ```javascript
 var status = Platform.Function.Lookup("Users", "Status", "Email", email);
 
-// Check with either !status or === ""
-if (!status || status === "") {
+// A simple truthiness check covers null (and any empty value)
+if (!status) {
     Write("Not found");
 } else {
     Write("Status: " + status);
@@ -88,24 +102,32 @@ var loyaltyTier = Platform.Function.Lookup(
 Variable.SetValue("@tier", loyaltyTier || "Standard");
 ```
 
-### Lookup with external key
+### Data Extension Name (not external key)
 
-If your DE name contains spaces or special characters, use the external key:
+`Lookup` resolves the Data Extension by its **Name**, not its external key / CustomerKey. Passing the CustomerKey throws *"A Data Extension of this name does not exist."* (runtime-verified). This applies to every `Platform.Function` DE function.
 
 ```javascript
-var val = Platform.Function.Lookup("my-de-external-key", "FieldName", "ID", "123");
+// ✅ Use the DE Name
+var val = Platform.Function.Lookup("My Data Extension Name", "FieldName", "ID", "123");
 ```
 
 ## Common Mistakes
 
-**Expecting null instead of empty string:**
+**Expecting an empty string instead of null:**
 
 ```javascript
-// ❌ This won't work — Lookup returns "" not null
-if (result === null) { ... }
+// ❌ This won't work — Lookup returns null on no-match, not ""
+if (result === "") { ... }
 
 // ✅ Correct check
 if (!result) { ... }
+```
+
+**Passing the external key instead of the Name:**
+
+```javascript
+// ❌ Throws — the CustomerKey / external key is not accepted
+var val = Platform.Function.Lookup("my-de-external-key", "FieldName", "ID", "123");
 ```
 
 **Using Lookup for multiple rows:** `Lookup` returns only one row's value. Use `LookupRows` for multiple rows.

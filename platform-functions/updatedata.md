@@ -19,7 +19,7 @@ max_args: 5
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `deName` | string | Yes | Data Extension name or external key |
+| `deName` | string | Yes | Data Extension **Name** (the external key / CustomerKey is **not** accepted — runtime-verified) |
 | `whereFieldNames` | string\|string[] | Yes | Column name(s) to identify the rows to update; use an array for multiple columns (AND logic) |
 | `whereFieldValues` | string\|array | Yes | Value(s) to match in `whereFieldNames`; must be an array of equal length when `whereFieldNames` is an array |
 | `fieldNames` | string[] | Yes | Array of column names to update |
@@ -69,7 +69,8 @@ try {
 ## Notes
 
 - If no rows match the filter, returns `0` (not an error)
-- `UpdateDE` is an alias for `UpdateData`
+- Resolves the DE by **Name**, not external key / CustomerKey
+- `UpdateDE` performs the same update but returns `null` instead of a row count. The official docs describe `UpdateDE` as email-only, yet it was runtime-verified to run and commit on a CloudPage too — prefer `UpdateData` outside email for the affected-row count.
 - For insert-or-update logic, use `UpsertData`
 
 ## See Also
