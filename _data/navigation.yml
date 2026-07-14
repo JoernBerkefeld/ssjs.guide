@@ -45,7 +45,7 @@
 - title: Global Functions
   url: /global-functions/
   children:
-      - title: Attribute (global)
+      - title: Attribute
         url: /global-functions/attribute/
       - title: Base64Encode
         url: /global-functions/base64encode/
@@ -59,13 +59,13 @@
         url: /global-functions/error/
       - title: Redirect
         url: /global-functions/redirect/
-      - title: Request (global)
+      - title: Request
         url: /global-functions/request/
       - title: String
         url: /global-functions/string/
       - title: Stringify
         url: /global-functions/stringify/
-      - title: Variable (global)
+      - title: Variable
         url: /global-functions/variable/
       - title: Write
         url: /global-functions/write/

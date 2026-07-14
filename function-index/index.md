@@ -395,7 +395,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 |------|----------|---------|-------------|
 | [`Platform.Function.RaiseError(message[, currentRecipientOnly[, errorCode[, errorNumber]]])`](/platform-functions/raiseerror/) | Platform Functions | void | Halt execution with error |
 | [`Platform.Function.RedirectTo(url)`](/platform-functions/redirectto/) | Platform Functions | void | Email href redirect helper |
-| [`Redirect(url, movedPermanently)`](/global-functions/redirect/) | Global Functions | void | Redirect the browser (alias of Platform.Response.Redirect; requires Platform.Load) |
+| [`Redirect(url, movedPermanently)`](/global-functions/redirect/) | Global Functions | void | ⚠️ Does not exist at runtime (throws ReferenceError) — use `Platform.Response.Redirect` instead |
 | [`Platform.Response.Redirect(url, movedPermanently)`](/platform-objects/platform-response/#redirect) | Platform Response | void | Redirect the browser |
 | [`Platform.Response.RemoveCookie(name)`](/platform-objects/platform-response/#removecookie) | Platform Response | void | Remove a cookie |
 | [`Platform.Response.RemoveResponseHeader(headerName)`](/platform-objects/platform-response/#removeresponseheader) | Platform Response | void | Remove a response header |

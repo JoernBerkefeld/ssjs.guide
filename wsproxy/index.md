@@ -4,6 +4,8 @@ title: WSProxy
 description: WSProxy is the modern SSJS interface to the Salesforce Marketing Cloud SOAP API — create, retrieve, update, delete, and execute SFMC objects without raw SOAP XML.
 nav_order: 7
 has_children: true
+verification: in-progress
+differs_from_docs: "ErrorUtil is runtime-verified and differs from the official docs (only available under Platform.Load(\"Core\", \"1\"); throws a plain string). The remaining WSProxy methods are not yet runtime-verified."
 ---
 
 WSProxy is the recommended way to interact with the SFMC SOAP API from SSJS. It abstracts the verbose `CreateObject`/`SetObjectProperty`/`InvokeCreate` pattern behind simple JavaScript method calls.

@@ -18,7 +18,7 @@ min_args: 0
 max_args: 0
 ---
 
-{% include callout.html type="info" content="Runtime-verified: prefer the bare-name <code>Request</code> in CloudPages. <code>Request.URL()</code> returns the full request URL, while <code>Platform.Request.URL()</code> throws <em>\"Unable to retrieve security descriptor for this frame.\"</em> The other members return CLR values (empty on a plain CloudPage GET, with <code>Method()</code> = <code>\"GET\"</code>)." %}
+{% include callout.html type="note" content="Runtime-verified: prefer the bare-name <code>Request</code> in CloudPages. <code>Request.URL()</code> returns the full request URL, while <code>Platform.Request.URL()</code> throws <em>\"Unable to retrieve security descriptor for this frame.\"</em> The other members return CLR values (empty on a plain CloudPage GET, with <code>Method()</code> = <code>\"GET\"</code>)." %}
 
 ## Description
 

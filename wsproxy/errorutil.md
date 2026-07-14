@@ -6,12 +6,12 @@ parent_url: /wsproxy/
 permalink: /wsproxy/errorutil/
 redirect_from:
   - /platform-objects/errorutil/
-verification: differs
+verification: verified
 differs_from_docs: "Runtime-verified: ErrorUtil is only provided by Platform.Load(\"Core\", \"1\") — it is undefined under newer Core versions (1.1.1, 1.1.5), so it is effectively deprecated. A preceding Script.Util.WSProxy() instance is NOT required. On a real WSProxy error it throws a plain string (no .message/.description). Prefer checking result.Status and throwing new Error() instead."
 description: Throw when a WSProxy result indicates failure so try/catch can handle SOAP-level errors. Deprecated in newer Core versions.
 ---
 
-{% include callout.html type="danger" content="<strong>Deprecated / version-locked.</strong> Runtime testing shows <code>ErrorUtil</code> is provided <strong>only</strong> by <code>Platform.Load(\"Core\", \"1\")</code>. Under newer Core versions (<code>1.1.1</code>, <code>1.1.5</code>) <code>ErrorUtil</code> is <code>undefined</code> and <code>ErrorUtil.ThrowWSProxyError()</code> throws a <code>ReferenceError</code>. Prefer the <code>result.Status</code> check shown below, which works on every Core version." %}
+{% include callout.html type="caution" content="<strong>Deprecated / version-locked.</strong> Runtime testing shows <code>ErrorUtil</code> is provided <strong>only</strong> by <code>Platform.Load(\"Core\", \"1\")</code>. Under newer Core versions (<code>1.1.1</code>, <code>1.1.5</code>) <code>ErrorUtil</code> is <code>undefined</code> and <code>ErrorUtil.ThrowWSProxyError()</code> throws a <code>ReferenceError</code>. Prefer the <code>result.Status</code> check shown below, which works on every Core version." %}
 
 WSProxy methods return a **result object** with a `Status` field instead of throwing on many SOAP failures. Historically `ErrorUtil.ThrowWSProxyError(result)` inspected that status and threw when the call failed, so you could use ordinary `try` / `catch` flow.
 

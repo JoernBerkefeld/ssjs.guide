@@ -16,7 +16,7 @@ The `DateTime` namespace provides date-time conversion helpers and time zone loo
 
 {% include callout.html type="warning" content="Requires <code>Platform.Load(\"core\", \"1.1.5\")</code> before use." %}
 
-{% include callout.html type="info" content="Runtime-verified: the conversion methods return CLR <code>DateTime</code> objects that coerce to a string automatically (via <code>String(value)</code>, <code>\"\" + value</code>, or <code>Write(value)</code>). <code>DateTime.TimeZone.Retrieve()</code> rows are CLR objects that <code>Stringify()</code> cannot serialize — enumerate their fields with <code>for..in</code>." %}
+{% include callout.html type="note" content="Runtime-verified: the conversion methods return CLR <code>DateTime</code> objects that coerce to a string automatically (via <code>String(value)</code>, <code>\"\" + value</code>, or <code>Write(value)</code>). <code>DateTime.TimeZone.Retrieve()</code> rows are CLR objects that <code>Stringify()</code> cannot serialize — enumerate their fields with <code>for..in</code>." %}
 
 ## Methods
 

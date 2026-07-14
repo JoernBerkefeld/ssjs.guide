@@ -57,6 +57,24 @@ Write(result);
 
 ---
 
+## Bare-name Redirect() Does Not Exist
+
+**Severity: High** — throws a `ReferenceError`
+
+The bare-name global [`Redirect(url, movedPermanently)`](/global-functions/redirect/) appears in the official Salesforce documentation, but runtime testing on CloudPages shows it is **undefined under every Core version** (`1`, `1.1.1`, `1.1.5`) — `Platform.Load` does not inject it. Calling it throws a `ReferenceError`.
+
+```javascript
+// ❌ Not defined — throws ReferenceError regardless of Platform.Load version
+Redirect("https://www.example.com", false);
+
+// ✅ Use Platform.Response.Redirect — always available, no Platform.Load needed
+Platform.Response.Redirect("https://www.example.com", false);
+```
+
+**Works correctly:** [`Platform.Response.Redirect(url, movedPermanently)`](/platform-objects/platform-response/#redirect) is the working equivalent.
+
+---
+
 ## DataExtension.Rows.Retrieve() on CloudPages
 
 **Severity: High** — silently returns empty results

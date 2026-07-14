@@ -10,7 +10,7 @@ availability:
   automation: false
   triggered_send: false
 requires_core_load: true
-verification: differs
+verification: verified
 differs_from_docs: "Runtime-verified: the bare-name Redirect global is undefined under every Core version tested (1, 1.1.1, 1.1.5) — Platform.Load does not inject it, contrary to the official example. Use Platform.Response.Redirect(url, movedPermanently) instead, which is always available."
 syntax: "Redirect(url, movedPermanently)"
 return_type: void
@@ -18,7 +18,7 @@ min_args: 2
 max_args: 2
 ---
 
-{% include callout.html type="danger" content="<strong>Does not exist at runtime.</strong> Despite appearing in the official documentation, the bare-name <code>Redirect</code> global is <code>undefined</code> in CloudPages under every Core version tested (<code>1</code>, <code>1.1.1</code>, <code>1.1.5</code>). Calling it throws a <code>ReferenceError</code>. Use <a href=\"/platform-objects/platform-response/#redirect\"><code>Platform.Response.Redirect(url, movedPermanently)</code></a> instead — it is always available." %}
+{% include callout.html type="bug" content="<strong>Does not exist at runtime.</strong> Despite appearing in the official documentation, the bare-name <code>Redirect</code> global is <code>undefined</code> in CloudPages under every Core version tested (<code>1</code>, <code>1.1.1</code>, <code>1.1.5</code>). Calling it throws a <code>ReferenceError</code>. Use <a href=\"/platform-objects/platform-response/#redirect\"><code>Platform.Response.Redirect(url, movedPermanently)</code></a> instead — it is always available." %}
 
 ## Parameters
 

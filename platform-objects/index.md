@@ -18,8 +18,6 @@ The `Platform` namespace exposes a set of objects beyond `Platform.Function.*` t
 | [`Platform.Request`](/platform-objects/platform-request/) | Read HTTP request data (query string, POST, headers, cookies) |
 | [`Platform.Recipient`](/platform-objects/platform-recipient/) | Read subscriber attributes and sendable DE fields for the current recipient |
 
-Core-library helpers that were previously grouped here have moved to their natural sections: [`HTTPHeader`](/core-library/httpheader/) and [`DateTime`](/core-library/datetime/) are documented under the [Core Library](/core-library/), and [`ErrorUtil`](/wsproxy/errorutil/) under [WSProxy](/wsproxy/).
-
 ---
 
 ## Platform.Load
