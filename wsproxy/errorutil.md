@@ -17,7 +17,7 @@ WSProxy methods return a **result object** with a `Status` field instead of thro
 
 ## Recommended replacement (works on any Core version)
 
-Check `result.Status` yourself and throw a standard [`Error`](/global-functions/error/):
+Check `result.Status` yourself and throw a standard [`Error`](/ecmascript-builtins/error/):
 
 ```javascript
 var api = new Script.Util.WSProxy();
@@ -53,4 +53,4 @@ Returns nothing when `Status` indicates success; throws when status indicates an
 
 - [WSProxy overview](/wsproxy/)
 - [proxy.retrieve](/wsproxy/retrieve/)
-- [Error](/global-functions/error/)
+- [Error](/ecmascript-builtins/error/)

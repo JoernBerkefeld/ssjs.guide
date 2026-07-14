@@ -1,8 +1,11 @@
 ---
 layout: function
 title: Request (Global Object)
-parent: Global Functions
-parent_url: /global-functions/
+parent: Core Library
+parent_url: /core-library/
+permalink: /core-library/request/
+redirect_from:
+  - /global-functions/request/
 description: Global object for reading incoming request values (URL, method, page path, application context). Behaves like Platform.Request.
 availability:
   email: false

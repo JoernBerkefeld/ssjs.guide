@@ -1,8 +1,11 @@
 ---
 layout: function
 title: ContentAreaByName
-parent: Global Functions
-parent_url: /global-functions/
+parent: Core Library
+parent_url: /core-library/
+permalink: /core-library/contentareabyname/
+redirect_from:
+  - /global-functions/contentareabyname/
 description: "Retrieves rendered content from a classic Content Area by name. Deprecated — Content Areas are no longer supported on current SFMC infrastructure."
 deprecated: true
 requires_core_load: true
@@ -63,7 +66,7 @@ Platform.Response.Write(content);
 <h4>See Also</h4>
 <ul>
   <li><a href="/platform-functions/contentareabyname/">Platform.Function.ContentAreaByName — qualified form (no Platform.Load required, boolean stopOnError)</a></li>
-  <li><a href="/global-functions/contentarea/">ContentArea() — global form</a></li>
+  <li><a href="/core-library/contentarea/">ContentArea() — bare-name Core form</a></li>
   <li><a href="/platform-functions/contentblockbyname/">Platform.Function.ContentBlockByName — modern replacement</a></li>
   <li><a href="/platform-functions/contentblockbykey/">Platform.Function.ContentBlockByKey — modern replacement</a></li>
 </ul>

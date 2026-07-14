@@ -22,7 +22,7 @@ The native `JSON` object is **not available** in SFMC SSJS — `JSON.parse` and 
 | Member | ES | Status | Notes |
 |--------|----|--------|-------|
 | [`JSON.parse(text)`](#parse) | ES5 | ❌ Missing | Use [`Platform.Function.ParseJSON`](/platform-functions/parsejson/) |
-| [`JSON.stringify(value)`](#stringify) | ES5 | ❌ Missing | Use [`Platform.Function.Stringify`](/platform-functions/stringify/) or the [`Stringify`](/global-functions/stringify/) global |
+| [`JSON.stringify(value)`](#stringify) | ES5 | ❌ Missing | Use [`Platform.Function.Stringify`](/platform-functions/stringify/) or the bare-name [`Stringify`](/core-library/stringify/) Core global |
 
 ---
 
@@ -61,7 +61,7 @@ Write(text);   // '{"name":"Jane","age":30}'
 var text2 = Stringify(obj);
 ```
 
-See [`Platform.Function.Stringify`](/platform-functions/stringify/) and [`Stringify`](/global-functions/stringify/) for full details.
+See [`Platform.Function.Stringify`](/platform-functions/stringify/) and [`Stringify`](/core-library/stringify/) for full details.
 
 ## See Also
 
@@ -70,7 +70,7 @@ See [`Platform.Function.Stringify`](/platform-functions/stringify/) and [`String
 <ul>
   <li><a href="/platform-functions/parsejson/">Platform.Function.ParseJSON</a></li>
   <li><a href="/platform-functions/stringify/">Platform.Function.Stringify</a></li>
-  <li><a href="/global-functions/stringify/">Stringify (global)</a></li>
+  <li><a href="/core-library/stringify/">Stringify (bare-name Core form)</a></li>
   <li><a href="/language/objects-and-json/">Objects &amp; JSON</a></li>
 </ul>
 </div>

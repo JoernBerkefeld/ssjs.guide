@@ -44,6 +44,26 @@ Platform.Load("core", "1.1.5");
 | [`Template`](/core-library/template/) | Email templates |
 | [`TriggeredSend`](/core-library/triggeredsend/) | Triggered send definitions and sends |
 
+## Bare-name Core functions and objects {#bare-name-globals}
+
+`Platform.Load("core", ...)` also injects a set of **bare-name** functions and objects (historically documented as "global functions"). They exist **only after** the load, and **only in the same scope** the load ran in — inside nested helper-function bodies (or `eval()`) they are `undefined`. Where a scope-independent `Platform.*` sibling exists, prefer it inside helpers.
+
+| Function / Object | Description |
+|--------|-------------|
+| [`Attribute`](/core-library/attribute/) | Subscriber attribute values (`Attribute.GetValue`) |
+| [`Base64Decode(encodedString)`](/core-library/base64decode/) | Decode Base64 to plain text |
+| [`Base64Encode(string)`](/core-library/base64encode/) | Encode plain text to Base64 |
+| [`ContentArea(id, …)`](/core-library/contentarea/) | Classic Content Area by ID (**deprecated**) |
+| [`ContentAreaByName(name, …)`](/core-library/contentareabyname/) | Classic Content Area by name (**deprecated**) |
+| [`Format(value, formatCode)`](/core-library/format/) | Format numbers and dates |
+| [`Redirect(url, movedPermanently)`](/core-library/redirect/) | Redirect the browser (CloudPages) |
+| [`Request`](/core-library/request/) | Read incoming request values (`Request.URL()`, …) |
+| [`Stringify(value)`](/core-library/stringify/) | Serialize a value to JSON |
+| [`Variable`](/core-library/variable/) | AMPscript variable bridge (`Variable.GetValue` / `SetValue`) |
+| [`Write(content)`](/core-library/write/) | Output a string to the rendered page |
+
+---
+
 HTTP utilities are also part of the Core library but documented separately:
 
 | Object | Description |

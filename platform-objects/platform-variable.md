@@ -127,7 +127,7 @@ var encoded = Variable.GetValue("@encoded");
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
-  <li><a href="/global-functions/variable/">Variable (global alias)</a></li>
+  <li><a href="/core-library/variable/">Variable (bare-name Core form)</a></li>
   <li><a href="/platform-functions/treatascontent/">Platform.Function.TreatAsContent</a></li>
   <li><a href="/getting-started/embedding-ssjs/">Embedding SSJS</a></li>
 </ul>

@@ -44,36 +44,6 @@
       - title: Differs from Official Docs
         url: /engine-limitations/differs-from-docs/
 
-- title: Global Functions
-  url: /global-functions/
-  children:
-      - title: Attribute
-        url: /global-functions/attribute/
-      - title: Base64Encode
-        url: /global-functions/base64encode/
-      - title: Base64Decode
-        url: /global-functions/base64decode/
-      - title: "ContentArea (deprecated)"
-        url: /global-functions/contentarea/
-      - title: "ContentAreaByName (deprecated)"
-        url: /global-functions/contentareabyname/
-      - title: Error
-        url: /global-functions/error/
-      - title: Redirect
-        url: /global-functions/redirect/
-      - title: Request
-        url: /global-functions/request/
-      - title: String
-        url: /global-functions/string/
-      - title: Stringify
-        url: /global-functions/stringify/
-      - title: Variable
-        url: /global-functions/variable/
-      - title: Write
-        url: /global-functions/write/
-      - title: Format
-        url: /global-functions/format/
-
 - title: Platform Functions
   url: /platform-functions/
   children:
@@ -264,6 +234,30 @@
         url: /core-library/triggeredsend/
       - title: Tracking events
         url: /core-library/events/
+      - title: '— Bare-name functions —'
+        url: /core-library/#bare-name-globals
+      - title: Attribute
+        url: /core-library/attribute/
+      - title: Base64Encode
+        url: /core-library/base64encode/
+      - title: Base64Decode
+        url: /core-library/base64decode/
+      - title: "ContentArea (deprecated)"
+        url: /core-library/contentarea/
+      - title: "ContentAreaByName (deprecated)"
+        url: /core-library/contentareabyname/
+      - title: Format
+        url: /core-library/format/
+      - title: Redirect
+        url: /core-library/redirect/
+      - title: Request
+        url: /core-library/request/
+      - title: Stringify
+        url: /core-library/stringify/
+      - title: Variable
+        url: /core-library/variable/
+      - title: Write
+        url: /core-library/write/
 
 - title: WSProxy
   url: /wsproxy/
@@ -334,6 +328,8 @@
         url: /ecmascript-builtins/array-methods/
       - title: String Methods
         url: /ecmascript-builtins/string-methods/
+      - title: Error
+        url: /ecmascript-builtins/error/
       - title: Math
         url: /ecmascript-builtins/math/
       - title: Number Methods

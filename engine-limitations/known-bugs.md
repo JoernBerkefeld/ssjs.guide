@@ -59,21 +59,30 @@ Write(result);
 
 ---
 
-## Bare-name Redirect() Does Not Exist
+## Bare-name Core Globals Are Scope-Sensitive {#bare-name-redirect-does-not-exist}
 
-**Severity: High** — throws a `ReferenceError`
+**Severity: High** — `ReferenceError` / `undefined` inside nested scopes
 
-The bare-name global [`Redirect(url, movedPermanently)`](/global-functions/redirect/) appears in the official Salesforce documentation, but runtime testing on CloudPages shows it is **undefined under every Core version** (`1`, `1.1.1`, `1.1.5`) — `Platform.Load` does not inject it. Calling it throws a `ReferenceError`.
+The bare-name Core globals ([`Write`](/core-library/write/), [`Stringify`](/core-library/stringify/), [`Redirect`](/core-library/redirect/), [`Base64Encode`](/core-library/base64encode/), [`Format`](/core-library/format/), …) are injected by `Platform.Load("core", ...)` **only into the scope where the load runs**. Inside nested helper-function bodies (or `eval()`) they are `undefined` — even though the load already happened. This makes them look "not defined at runtime" when probed from inside a function, which is a scope artifact, not a real absence.
 
 ```javascript
-// ❌ Not defined — throws ReferenceError regardless of Platform.Load version
-Redirect("https://www.example.com", false);
+Platform.Load("core", "1.1.5");
 
-// ✅ Use Platform.Response.Redirect — always available, no Platform.Load needed
+// ✅ Same scope as Platform.Load — works
+Redirect("https://www.example.com", false);
+Write("hello");
+
+function helper() {
+    // ❌ Nested scope — bare names are undefined here, throws ReferenceError
+    Write("hello from helper");
+}
+
+// ✅ Scope-independent alternatives work everywhere, no Platform.Load needed
+Platform.Response.Write("hello from anywhere");
 Platform.Response.Redirect("https://www.example.com", false);
 ```
 
-**Works correctly:** [`Platform.Response.Redirect(url, movedPermanently)`](/platform-objects/platform-response/#redirect) is the working equivalent.
+**Works correctly:** call bare names in the same scope as `Platform.Load`, or use the `Platform.*` siblings (e.g. [`Platform.Response.Redirect`](/platform-objects/platform-response/#redirect), [`Platform.Response.Write`](/platform-objects/platform-response/#write), [`Platform.Function.Stringify`](/platform-functions/stringify/)) inside helpers.
 
 ---
 
@@ -95,7 +104,7 @@ Platform.Load("core", "1.1.5");
 var v2 = Attribute.GetValue("FirstName");
 ```
 
-**Works correctly:** [`Platform.Recipient.GetAttributeValue(...)`](/platform-objects/platform-recipient/), or [`Attribute.GetValue(...)`](/global-functions/attribute/) after `Platform.Load`.
+**Works correctly:** [`Platform.Recipient.GetAttributeValue(...)`](/platform-objects/platform-recipient/), or [`Attribute.GetValue(...)`](/core-library/attribute/) after `Platform.Load`.
 
 ---
 

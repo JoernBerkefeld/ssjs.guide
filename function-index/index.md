@@ -7,7 +7,7 @@ nav_order: 12
 
 Alphabetical listing of APIs covered in this guide. **Instance-style Core and WSProxy calls** use placeholders such as `<WSProxyInstance>` for the variable you initialized (for example from `new Script.Util.WSProxy()`). That name is documentation shorthand — it is not a literal prefix like `proxy.` that you must type.
 
-For category browsing, see [Platform Functions](/platform-functions/), [Global Functions](/global-functions/), [WSProxy](/wsproxy/), [HTTP](/http/), and [Core Library](/core-library/).
+For category browsing, see [Platform Functions](/platform-functions/), [WSProxy](/wsproxy/), [HTTP](/http/), [Core Library](/core-library/), and [ECMAScript Built-ins](/ecmascript-builtins/).
 
 ---
 
@@ -16,7 +16,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
 | [`Platform.Function.AddObjectArrayItem(apiObject, propertyName, value)`](/platform-functions/addobjectarrayitem/) | Platform Functions | void | Append item to a SOAP API object array property |
-| [`Attribute.GetValue(name)`](/global-functions/attribute/) | Global Object | string | Profile attribute in email / triggered send context |
+| [`Attribute.GetValue(name)`](/core-library/attribute/) | Core Library | string | Profile attribute in email / triggered send context (requires Platform.Load) |
 | [`Account.Init(key)`](/core-library/account/#init) | Core Library | AccountInstance | Initialize Account |
 | [`Account.Retrieve(filter)`](/core-library/account/#retrieve) | Core Library | object[] | Retrieve accounts |
 | [`Account.Tracking.Retrieve(filter)`](/core-library/account/#tracking-retrieve) | Core Library | object[] | Account-level tracking |
@@ -68,9 +68,9 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`Base64Decode(encodedString)`](/global-functions/base64decode/) | Global Functions | string | Decode Base64 string to plain text (requires Platform.Load) |
+| [`Base64Decode(encodedString)`](/core-library/base64decode/) | Core Library | string | Decode Base64 string to plain text (requires Platform.Load) |
 | [`Platform.Function.Base64Decode(encodedString[, charset])`](/platform-functions/base64decode/) | Platform Functions | string | Decode a Base64-encoded string |
-| [`Base64Encode(string)`](/global-functions/base64encode/) | Global Functions | string | Encode plain text to Base64 (requires Platform.Load) |
+| [`Base64Encode(string)`](/core-library/base64encode/) | Core Library | string | Encode plain text to Base64 (requires Platform.Load) |
 | [`Platform.Function.Base64Encode(string[, charset])`](/platform-functions/base64encode/) | Platform Functions | string | Encode a string to Base64 |
 | [`Platform.Function.BeginImpressionRegion(name)`](/platform-functions/beginimpressionregion/) | Platform Functions | void | Start a named impression region |
 | [`BounceEvent.Retrieve(filter)`](/core-library/events/#bounce-event) | Core Library | object[] | Bounce tracking events |
@@ -81,8 +81,8 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`ContentArea(id[, regionName, errorMsg, fallbackContent])`](/global-functions/contentarea/) | Global Functions | string | Classic Content Area by ID — **deprecated**, requires Platform.Load |
-| [`ContentAreaByName(name[, regionName, errorMsg, fallbackContent])`](/global-functions/contentareabyname/) | Global Functions | string | Classic Content Area by name — **deprecated**, requires Platform.Load |
+| [`ContentArea(id[, regionName, errorMsg, fallbackContent])`](/core-library/contentarea/) | Core Library | string | Classic Content Area by ID — **deprecated**, requires Platform.Load |
+| [`ContentAreaByName(name[, regionName, errorMsg, fallbackContent])`](/core-library/contentareabyname/) | Core Library | string | Classic Content Area by name — **deprecated**, requires Platform.Load |
 | [`Platform.Function.ContentArea(id[, regionName, stopOnError, fallbackContent])`](/platform-functions/contentarea/) | Platform Functions | string | Classic Content Area by ID — **deprecated** |
 | [`Platform.Function.ContentAreaByName(name[, regionName, stopOnError, fallbackContent])`](/platform-functions/contentareabyname/) | Platform Functions | string | Classic Content Area by name — **deprecated** |
 | [`Platform.Function.ContentBlockByID(id[, regionName, stopOnError, fallbackContent])`](/platform-functions/contentblockbyid/) | Platform Functions | string | Render Content Builder block by ID |
@@ -157,7 +157,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`<EmailInstance>.Validate()`](/core-library/email/#instance-validate) | Core Library | object | Validate email |
 | [`<EmailInstance>.CheckContent()`](/core-library/email/#instance-checkcontent) | Core Library | object | Content checks |
 | [`Platform.Function.EndImpressionRegion([closeAll])`](/platform-functions/endimpressionregion/) | Platform Functions | void | End an impression region |
-| [`Error(message)`](/global-functions/error/) | Global Functions | Error | Create Error object (`new Error([message])`) |
+| [`Error(message)`](/ecmascript-builtins/error/) | ECMAScript Builtins | Error | Create Error object (`new Error([message])`) — `.message` reads `undefined`; use `String(e)` |
 | [`ErrorUtil.ThrowWSProxyError(result)`](/wsproxy/errorutil/) | WSProxy | void | Throw when WSProxy status indicates failure |
 
 ---
@@ -177,7 +177,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`<FolderInstance>.Update(properties)`](/core-library/folder/#instance-update) | Core Library | string | Update folder |
 | [`<FolderInstance>.Remove()`](/core-library/folder/#instance-remove) | Core Library | string | Remove folder |
 | [`<FolderInstance>.SetID(id)`](/core-library/folder/#instance-setid) | Core Library | void | Set folder ID |
-| [`Format(textToFormat, formatCode)`](/global-functions/format/) | Global Functions | string | Format a date/number string |
+| [`Format(textToFormat, formatCode)`](/core-library/format/) | Core Library | string | Format a date/number string (requires Platform.Load) |
 | [`<FunctionInstance>.apply(thisArg[, argsArray])`](/ecmascript-builtins/function-methods/#apply) | ECMAScript Builtins | any | Call function with `this` and an array of arguments |
 | [`<FunctionInstance>.bind(thisArg[, ...args])`](/ecmascript-builtins/function-methods/#bind) | ECMAScript Builtins | function | ❌ Missing (ES5) — needs polyfill |
 | [`<FunctionInstance>.call(thisArg[, ...args])`](/ecmascript-builtins/function-methods/#call) | ECMAScript Builtins | any | Call function with `this` and individual arguments |
@@ -395,11 +395,11 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 |------|----------|---------|-------------|
 | [`Platform.Function.RaiseError(message[, currentRecipientOnly[, errorCode[, errorNumber]]])`](/platform-functions/raiseerror/) | Platform Functions | void | Halt execution with error |
 | [`Platform.Function.RedirectTo(url)`](/platform-functions/redirectto/) | Platform Functions | void | Email href redirect helper |
-| [`Redirect(url, movedPermanently)`](/global-functions/redirect/) | Global Functions | void | ⚠️ Does not exist at runtime (throws ReferenceError) — use `Platform.Response.Redirect` instead |
+| [`Redirect(url, movedPermanently)`](/core-library/redirect/) | Core Library | void | Redirect the browser — requires Platform.Load and same-scope call; `Platform.Response.Redirect` works in any scope |
 | [`Platform.Response.Redirect(url, movedPermanently)`](/platform-objects/platform-response/#redirect) | Platform Response | void | Redirect the browser |
 | [`Platform.Response.RemoveCookie(name)`](/platform-objects/platform-response/#removecookie) | Platform Response | void | Remove a cookie |
 | [`Platform.Response.RemoveResponseHeader(headerName)`](/platform-objects/platform-response/#removeresponseheader) | Platform Response | void | Remove a response header |
-| [`Request.URL() / Request.Method() / Request.PagePath() / …`](/global-functions/request/) | Global Object | string | Read request values (alias of Platform.Request; requires Platform.Load) |
+| [`Request.URL() / Request.Method() / Request.PagePath() / …`](/core-library/request/) | Core Library | string | Read request values (behaves like Platform.Request; requires Platform.Load) |
 | [`<RegExpInstance>.exec(string)`](/ecmascript-builtins/regular-expressions/#exec) | ECMAScript Builtins | array | ⚠️ Partial — `lastIndex` does not advance; avoid the `g`-flag loop pattern |
 | [`<RegExpInstance>.global`](/ecmascript-builtins/regular-expressions/#global) | ECMAScript Builtins | boolean | True if the `g` flag was set |
 | [`<RegExpInstance>.ignoreCase`](/ecmascript-builtins/regular-expressions/#ignorecase) | ECMAScript Builtins | boolean | True if the `i` flag was set |
@@ -422,8 +422,8 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 | [`<HttpRequestInstance>.removeHeader(name)`](/http/script-util-httprequest/#removeheader) | HTTP | void | Remove one header |
 | [`new Script.Util.WSProxy()`](/wsproxy/constructor/) | WSProxy | WSProxyInstance | Create WSProxy instance |
 | [`Platform.Function.SetObjectProperty(apiObject, propertyName, value)`](/platform-functions/setobjectproperty/) | Platform Functions | void | Set SOAP object property (legacy) |
-| [`String(value)`](/global-functions/string/) | Global Functions | string | Convert CLR object to JS string |
-| [`Stringify(value)`](/global-functions/stringify/) | Global Functions | string | Object to JSON string (requires Platform.Load) |
+| [`String(value)`](/ecmascript-builtins/string-methods/#string-constructor) | ECMAScript Builtins | string | Convert any value (incl. CLR objects) to JS string |
+| [`Stringify(value)`](/core-library/stringify/) | Core Library | string | Object to JSON string (requires Platform.Load) |
 | [`Platform.Function.Stringify(object)`](/platform-functions/stringify/) | Platform Functions | string | Object to JSON string (no Platform.Load needed) |
 | [`Subscriber.Init(key)`](/core-library/subscriber/#init) | Core Library | SubscriberInstance | Initialize subscriber |
 | [`Subscriber.Add(properties)`](/core-library/subscriber/#add) | Core Library | string | Create subscriber |
@@ -536,8 +536,8 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`Variable.GetValue(variableName)`](/global-functions/variable/) | Global Object | string | Read AMPscript variable (alias) |
-| [`Variable.SetValue(variableName, value)`](/global-functions/variable/) | Global Object | void | Write AMPscript variable (alias) |
+| [`Variable.GetValue(variableName)`](/core-library/variable/) | Core Library | string | Read AMPscript variable (requires Platform.Load) |
+| [`Variable.SetValue(variableName, value)`](/core-library/variable/) | Core Library | void | Write AMPscript variable (requires Platform.Load) |
 | [`Platform.Variable.GetValue(name)`](/platform-objects/platform-variable/) | Platform Variable | string | Reads the value of an AMPscript variable |
 | [`Platform.Variable.SetValue(name, value)`](/platform-objects/platform-variable/#setvalue) | Platform Variable | void | Writes a value to an AMPscript variable |
 
@@ -547,7 +547,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [Global F
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`Write(content)`](/global-functions/write/) | Global Functions | void | Output to page |
+| [`Write(content)`](/core-library/write/) | Core Library | void | Output to page (requires Platform.Load) |
 | [`Platform.Response.Write(content)`](/platform-objects/platform-response/#write) | Platform Response | void | Write content to the HTTP response output |
 
 ---

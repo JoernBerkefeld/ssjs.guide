@@ -3,10 +3,49 @@ layout: page
 title: String Methods
 parent: ECMAScript Built-ins
 parent_url: /ecmascript-builtins/
-description: String prototype methods in SSJS — which work natively, which are partial, and which are missing, with ES3/ES5-safe alternatives and polyfill links.
+redirect_from:
+  - /global-functions/string/
+description: The String() constructor/conversion function and String prototype methods in SSJS — which work natively, which are partial, and which are missing, with ES3/ES5-safe alternatives and polyfill links.
 ---
 
 Each member below is tagged with the ECMAScript edition that standardized it: `(ES3)`, `(ES5)`, or `(ES6)`. Methods that need a polyfill link to [Polyfills](/engine-limitations/polyfills/).
+
+## The String() constructor {#string-constructor}
+
+`(ES3)` — ✅ Works. `String(value)` is the native constructor called as a conversion function: it converts any value to its string representation. Called with no argument, `String()` returns `""`. In SFMC SSJS it has a critical extra use case: **converting CLR/.NET objects** — most importantly the `.content` of a [`Script.Util.HttpRequest`](/http/script-util-httprequest/) response — into real JavaScript strings.
+
+```javascript
+String(42);       // "42"
+String(true);     // "true"
+String();         // ""
+```
+
+### Converting CLR HTTP response content
+
+`resp.content` is a .NET object, not a JS string — it cannot be passed directly to `Platform.Function.ParseJSON()`. Convert it first:
+
+```javascript
+var req = new Script.Util.HttpRequest("https://api.example.com/data");
+req.method = "GET";
+var resp = req.send();
+
+// resp.content is a CLR object — convert before parsing
+var bodyStr = String(resp.content);                       // CLR → JS string
+var data    = Platform.Function.ParseJSON(bodyStr + "");  // JS string → object
+```
+
+### String() vs Stringify()
+
+- `String(value)` — converts any value (including CLR objects) to a plain JS string; objects become `"[object Object]"`.
+- [`Stringify(value)`](/core-library/stringify/) — serializes a JavaScript value to a **JSON** string.
+
+```javascript
+var obj = { a: 1, b: 2 };
+String(obj);      // "[object Object]"   — NOT useful for JSON
+Stringify(obj);   // '{"a":1,"b":2}'     — JSON serialization
+```
+
+Do not call `String(e)` on a thrown plain object (it can raise a .NET null-reference error) — see [Error()](/ecmascript-builtins/error/).
 
 ## Status legend
 

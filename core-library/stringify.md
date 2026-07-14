@@ -1,8 +1,11 @@
 ---
 layout: function
 title: Stringify
-parent: Global Functions
-parent_url: /global-functions/
+parent: Core Library
+parent_url: /core-library/
+permalink: /core-library/stringify/
+redirect_from:
+  - /global-functions/stringify/
 description: Converts an object or value to its JSON string representation. SFMC's equivalent of JSON.stringify() — not the same as the native String() function.
 requires_core_load: true
 availability:
@@ -133,9 +136,9 @@ See [Platform.Function.Stringify](/platform-functions/stringify/) for the qualif
 <h4>See Also</h4>
 <ul>
   <li><a href="/platform-functions/stringify/">Platform.Function.Stringify — qualified form (no Platform.Load required)</a></li>
-  <li><a href="/global-functions/string/">String()</a></li>
+  <li><a href="/ecmascript-builtins/string-methods/#string-constructor">String()</a></li>
   <li><a href="/platform-functions/parsejson/">Platform.Function.ParseJSON</a></li>
-  <li><a href="/global-functions/write/">Write</a></li>
+  <li><a href="/core-library/write/">Write</a></li>
   <li><a href="/language/objects-and-json/">Objects & JSON</a></li>
 </ul>
 </div>

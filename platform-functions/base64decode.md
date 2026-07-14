@@ -26,7 +26,7 @@ max_args: 2
 
 Decodes a Base64-encoded string back to its original value. Use the optional `charset` parameter to match the encoding used when the string was encoded.
 
-For a single-argument form without charset control, see [`Base64Decode()`](/global-functions/base64decode/) under Global Functions.
+For a single-argument form without charset control, see [`Base64Decode()`](/core-library/base64decode/) under the Core Library bare-name functions.
 
 ## Example
 
@@ -42,7 +42,7 @@ Write(decodedStr);
 <h4>See Also</h4>
 <ul>
   <li><a href="/platform-functions/base64encode/">Platform.Function.Base64Encode</a></li>
-  <li><a href="/global-functions/base64decode/">Base64Decode (global)</a></li>
+  <li><a href="/core-library/base64decode/">Base64Decode (bare-name Core form)</a></li>
   <li><a href="/platform-functions/md5/">Platform.Function.MD5</a></li>
 </ul>
 </div>

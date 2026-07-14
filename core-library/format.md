@@ -1,8 +1,11 @@
 ---
 layout: function
 title: Format
-parent: Global Functions
-parent_url: /global-functions/
+parent: Core Library
+parent_url: /core-library/
+permalink: /core-library/format/
+redirect_from:
+  - /global-functions/format/
 description: Applies a formatting rule to a string or numeric value — currencies, decimals, percentages, ISO dates, custom date patterns, and more. Requires the Core library.
 availability:
   email: true
@@ -146,6 +149,6 @@ Platform.Response.SetCookie("session", token, expiry, true);
 <ul>
   <li><a href="/recipes/date-and-time/">Date and Time Recipes</a></li>
   <li><a href="/platform-objects/platform-load/">Platform.Load</a></li>
-  <li><a href="/global-functions/stringify/">Stringify</a></li>
+  <li><a href="/core-library/stringify/">Stringify</a></li>
 </ul>
 </div>

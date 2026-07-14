@@ -101,7 +101,7 @@ var isVIP = Variable.GetValue("@isVIP");
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
-  <li><a href="/global-functions/variable/">Variable (global)</a></li>
+  <li><a href="/core-library/variable/">Variable (bare-name Core form)</a></li>
   <li><a href="/recipes/ampscript-bridge/">AMPscript Bridge recipe</a></li>
   <li><a href="/best-practices/security/">Security</a></li>
 </ul>

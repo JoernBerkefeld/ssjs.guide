@@ -26,7 +26,7 @@ max_args: 2
 
 Encodes a string value to Base64. Use the optional `charset` parameter to control encoding for non-ASCII strings.
 
-For a single-argument form without charset control, see [`Base64Encode()`](/global-functions/base64encode/) under Global Functions.
+For a single-argument form without charset control, see [`Base64Encode()`](/core-library/base64encode/) under the Core Library bare-name functions.
 
 ## Example
 
@@ -42,7 +42,7 @@ Write(encodedStr);
 <h4>See Also</h4>
 <ul>
   <li><a href="/platform-functions/base64decode/">Platform.Function.Base64Decode</a></li>
-  <li><a href="/global-functions/base64encode/">Base64Encode (global)</a></li>
+  <li><a href="/core-library/base64encode/">Base64Encode (bare-name Core form)</a></li>
   <li><a href="/platform-functions/md5/">Platform.Function.MD5</a></li>
 </ul>
 </div>

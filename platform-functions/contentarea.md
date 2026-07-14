@@ -40,7 +40,7 @@ The bare-name global `ContentArea()` function accepts the same first two paramet
 | 3rd parameter | `stopOnError: boolean` | `errorMsg: string` |
 | Requires `Platform.Load` | No | Yes — `Platform.Load("core", "1.1.5")` |
 
-See [ContentArea (global)](/global-functions/contentarea/) for the global variant.
+See [ContentArea](/core-library/contentarea/) for the bare-name Core variant.
 
 ## Examples
 
@@ -59,7 +59,7 @@ Platform.Response.Write(content);
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
-  <li><a href="/global-functions/contentarea/">ContentArea() — global form (requires Platform.Load, different 3rd parameter)</a></li>
+  <li><a href="/core-library/contentarea/">ContentArea() — bare-name Core form (requires Platform.Load, different 3rd parameter)</a></li>
   <li><a href="/platform-functions/contentareabyname/">Platform.Function.ContentAreaByName</a></li>
   <li><a href="/platform-functions/contentblockbyid/">Platform.Function.ContentBlockByID — modern replacement</a></li>
   <li><a href="/platform-functions/contentblockbykey/">Platform.Function.ContentBlockByKey — modern replacement</a></li>

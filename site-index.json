@@ -1267,8 +1267,8 @@
   },
   {
     "name": "Attribute.GetValue",
-    "url": "/global-functions/attribute/",
-    "section": "Global Functions",
+    "url": "/core-library/attribute/",
+    "section": "Core Library",
     "type": "method",
     "description": "Returns the value of the specified subscriber attribute or sendable data extension field for the current recipient.",
     "params": [
@@ -4195,8 +4195,8 @@
   },
   {
     "name": "String",
-    "url": "/global-functions/string/",
-    "section": "Global Functions",
+    "url": "/ecmascript-builtins/string-methods/#string-constructor",
+    "section": "ECMAScript Builtins",
     "type": "function",
     "description": "Native JavaScript function that converts any value to its string representation.",
     "params": [
@@ -4206,8 +4206,8 @@
   },
   {
     "name": "Error",
-    "url": "/global-functions/error/",
-    "section": "Global Functions",
+    "url": "/ecmascript-builtins/error/",
+    "section": "ECMAScript Builtins",
     "type": "function",
     "description": "Native JavaScript Error constructor.",
     "params": [
@@ -4217,8 +4217,8 @@
   },
   {
     "name": "Base64Encode",
-    "url": "/global-functions/base64encode/",
-    "section": "Global Functions",
+    "url": "/core-library/base64encode/",
+    "section": "Core Library",
     "type": "function",
     "description": "Encodes plain text to a Base64 encoded string.",
     "params": [
@@ -4228,8 +4228,8 @@
   },
   {
     "name": "Base64Decode",
-    "url": "/global-functions/base64decode/",
-    "section": "Global Functions",
+    "url": "/core-library/base64decode/",
+    "section": "Core Library",
     "type": "function",
     "description": "Decodes a Base64 encoded string to plain text.",
     "params": [
@@ -4239,8 +4239,8 @@
   },
   {
     "name": "Redirect",
-    "url": "/global-functions/redirect/",
-    "section": "Global Functions",
+    "url": "/core-library/redirect/",
+    "section": "Core Library",
     "type": "function",
     "description": "Redirects the browser to another address.",
     "params": [
@@ -4250,9 +4250,31 @@
     "returnType": "void"
   },
   {
+    "name": "Write",
+    "url": "/core-library/write/",
+    "section": "Core Library",
+    "type": "function",
+    "description": "Writes text to the HTTP response output.",
+    "params": [
+      "text"
+    ],
+    "returnType": "void"
+  },
+  {
+    "name": "Stringify",
+    "url": "/core-library/stringify/",
+    "section": "Core Library",
+    "type": "function",
+    "description": "Serializes a value to a JSON string.",
+    "params": [
+      "value"
+    ],
+    "returnType": "string"
+  },
+  {
     "name": "Format",
-    "url": "/global-functions/format/",
-    "section": "Global Functions",
+    "url": "/core-library/format/",
+    "section": "Core Library",
     "type": "function",
     "description": "Applies a formatting rule to a string or numeric value.",
     "params": [
@@ -4263,8 +4285,8 @@
   },
   {
     "name": "Request",
-    "url": "/global-functions/request/",
-    "section": "Global Functions",
+    "url": "/core-library/request/",
+    "section": "Core Library",
     "type": "object",
     "description": "Object for reading incoming request values in CloudPage context."
   }

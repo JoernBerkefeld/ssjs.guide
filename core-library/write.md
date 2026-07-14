@@ -1,8 +1,11 @@
 ---
 layout: function
 title: Write
-parent: Global Functions
-parent_url: /global-functions/
+parent: Core Library
+parent_url: /core-library/
+permalink: /core-library/write/
+redirect_from:
+  - /global-functions/write/
 description: Outputs a string to the rendered page. The primary mechanism for producing HTML output from an SSJS block.
 availability:
   email: true
@@ -113,7 +116,7 @@ Write("<p>" + escapeHtml(userInput) + "</p>");
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
-  <li><a href="/global-functions/stringify/">Stringify</a></li>
+  <li><a href="/core-library/stringify/">Stringify</a></li>
   <li><a href="/platform-objects/platform-response/">Platform.Response.Write</a></li>
   <li><a href="/best-practices/debugging/">Debugging with Write</a></li>
 </ul>

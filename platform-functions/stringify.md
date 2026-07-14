@@ -35,7 +35,7 @@ Both functions produce identical output, but they differ in one important way:
 
 Prefer `Platform.Function.Stringify()` when you do not already have a `Platform.Load` call in scope, or when you want to avoid the initialization overhead.
 
-See [Stringify (global)](/global-functions/stringify/) for the global variant.
+See [Stringify](/core-library/stringify/) for the bare-name Core variant.
 
 **Important distinction from `String()`:**
 - `Platform.Function.Stringify(obj)` → produces JSON output: `{"name":"Jane","age":30}`
@@ -89,8 +89,8 @@ Platform.Function.Write("<pre>" + Platform.Function.Stringify(rows) + "</pre>");
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
-  <li><a href="/global-functions/stringify/">Stringify() — global form (requires Platform.Load)</a></li>
-  <li><a href="/global-functions/string/">String()</a></li>
+  <li><a href="/core-library/stringify/">Stringify() — bare-name Core form (requires Platform.Load)</a></li>
+  <li><a href="/ecmascript-builtins/string-methods/#string-constructor">String()</a></li>
   <li><a href="/platform-functions/parsejson/">Platform.Function.ParseJSON</a></li>
   <li><a href="/platform-functions/write/">Platform.Function.Write</a></li>
 </ul>

@@ -123,8 +123,8 @@ if (!data) {
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
-  <li><a href="/global-functions/stringify/">Stringify</a></li>
-  <li><a href="/global-functions/string/">String()</a></li>
+  <li><a href="/core-library/stringify/">Stringify</a></li>
+  <li><a href="/ecmascript-builtins/string-methods/#string-constructor">String()</a></li>
   <li><a href="/language/objects-and-json/">Objects & JSON</a></li>
 </ul>
 </div>

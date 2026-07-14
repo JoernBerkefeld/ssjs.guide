@@ -69,6 +69,7 @@ The **ES** column shows the ECMAScript edition that standardized each member (ES
 
 | Method | ES | Status | Notes |
 |--------|----|--------|-------|
+| [`String(value)`](/ecmascript-builtins/string-methods/#string-constructor) | ES3 | ✅ Works | Constructor as conversion function; also converts CLR/.NET objects (e.g. `resp.content`) to JS strings |
 | [`String.prototype.charAt(i)`](/ecmascript-builtins/string-methods/#charat) | ES3 | ✅ Works | |
 | [`String.prototype.charCodeAt(i)`](/ecmascript-builtins/string-methods/#charcodeat) | ES3 | ✅ Works | |
 | [`String.prototype.concat(...)`](/ecmascript-builtins/string-methods/#concat) | ES3 | ✅ Works | |
@@ -173,6 +174,12 @@ Standard ECMAScript global functions (not SFMC-specific) — callable without an
 | [`Function.prototype.apply(thisArg, argsArray)`](/ecmascript-builtins/function-methods/#apply) | ES3 | ✅ Works | |
 | [`Function.prototype.bind(thisArg, ...)`](/ecmascript-builtins/function-methods/#bind) | ES5 | ❌ Missing | Prototype is sealed — use the `bindFn` helper in [Polyfills](/engine-limitations/polyfills/#function-prototype-bind) |
 
+### Error
+
+| Member | ES | Status | Notes |
+|--------|----|--------|-------|
+| [`new Error([message])`](/ecmascript-builtins/error/) | ES3 | ⚠️ Partial | Constructor works, but `.message` on a JS-constructed Error reads `undefined` — recover the message via `String(e)`; engine-raised platform errors do carry `.message` / `.description` |
+
 ### Date Methods
 
 Value-confirmed `Date` members — see [Date Methods](/ecmascript-builtins/date-methods/) for examples.
@@ -219,14 +226,15 @@ The native `JSON` object is unavailable — see [JSON](/ecmascript-builtins/json
 | Method | ES | Status | Notes |
 |--------|----|--------|-------|
 | [`JSON.parse(text)`](/ecmascript-builtins/json/#parse) | ES5 | ❌ Missing | Use [`Platform.Function.ParseJSON`](/platform-functions/parsejson/) |
-| [`JSON.stringify(value)`](/ecmascript-builtins/json/#stringify) | ES5 | ❌ Missing | Use [`Platform.Function.Stringify`](/platform-functions/stringify/) or the [`Stringify`](/global-functions/stringify/) global |
+| [`JSON.stringify(value)`](/ecmascript-builtins/json/#stringify) | ES5 | ❌ Missing | Use [`Platform.Function.Stringify`](/platform-functions/stringify/) or the bare-name [`Stringify`](/core-library/stringify/) Core global |
 
 ## In This Section
 
 | Page | Description |
 |------|-------------|
 | [Array Methods](/ecmascript-builtins/array-methods/) | Safe and polyfillable array methods |
-| [String Methods](/ecmascript-builtins/string-methods/) | Safe and polyfillable string methods |
+| [String Methods](/ecmascript-builtins/string-methods/) | The `String()` constructor/conversion function and safe / polyfillable string methods |
+| [Error()](/ecmascript-builtins/error/) | The `Error` constructor and the SFMC-specific `.message` caveat |
 | [Math](/ecmascript-builtins/math/) | Math object reference |
 | [Number Methods](/ecmascript-builtins/number-methods/) | Number methods, constants, and global numeric functions |
 | [Object Methods](/ecmascript-builtins/object-methods/) | `hasOwnProperty`, `defineProperty`, and missing Object statics |

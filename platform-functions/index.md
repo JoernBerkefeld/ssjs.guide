@@ -82,7 +82,7 @@ Simple HTTP functions — for full REST control see [Script.Util.HttpRequest](/h
 
 ## Output helpers {#output}
 
-`Platform.Function.Write` and `Platform.Function.Stringify` are documented alongside their global forms under [Global Functions](/global-functions/write/) and [Stringify](/global-functions/stringify/).
+`Platform.Function.Write` and `Platform.Function.Stringify` are documented alongside their bare-name Core forms under [Write](/core-library/write/) and [Stringify](/core-library/stringify/).
 
 ## Content {#content}
 

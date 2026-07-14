@@ -1,9 +1,13 @@
 ---
 layout: function
 title: Attribute (Global Object)
-parent: Global Functions
-parent_url: /global-functions/
+parent: Core Library
+parent_url: /core-library/
+permalink: /core-library/attribute/
+redirect_from:
+  - /global-functions/attribute/
 description: Global object providing access to subscriber attribute values in email send context.
+requires_core_load: true
 availability:
   email: true
   cloudpage: true

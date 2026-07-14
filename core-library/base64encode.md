@@ -1,8 +1,11 @@
 ---
 layout: function
 title: Base64Encode
-parent: Global Functions
-parent_url: /global-functions/
+parent: Core Library
+parent_url: /core-library/
+permalink: /core-library/base64encode/
+redirect_from:
+  - /global-functions/base64encode/
 description: Encodes plain text to a Base64 string. Single-argument form requiring Platform.Load. For charset control use Platform.Function.Base64Encode().
 availability:
   email: true
@@ -42,7 +45,7 @@ Write(encoded); // "Q29udmVydCB0byBCYXNlNjQ="
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
-  <li><a href="/global-functions/base64decode/">Base64Decode (global)</a></li>
+  <li><a href="/core-library/base64decode/">Base64Decode (bare-name Core form)</a></li>
   <li><a href="/platform-functions/base64encode/">Platform.Function.Base64Encode</a></li>
 </ul>
 </div>

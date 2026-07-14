@@ -1,9 +1,13 @@
 ---
 layout: function
 title: Variable (Global Object)
-parent: Global Functions
-parent_url: /global-functions/
+parent: Core Library
+parent_url: /core-library/
+permalink: /core-library/variable/
+redirect_from:
+  - /global-functions/variable/
 description: The global Variable object provides access to AMPscript variables from SSJS, enabling bidirectional data exchange between the two scripting languages.
+requires_core_load: true
 availability:
   email: true
   cloudpage: true

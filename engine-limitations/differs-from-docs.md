@@ -16,13 +16,13 @@ This page is the single, growing catalog of those discrepancies. Each row links 
 
 ### Request (bare-name global) — more reliable than Platform.Request
 
-[Reference: Request](/global-functions/request/)
+[Reference: Request](/core-library/request/)
 
 The bare-name global `Request` works after `Platform.Load("core", "1.1.5")` and is **more reliable than `Platform.Request` for `.URL()`**: `Request.URL()` returns the full request URL as a string, whereas `Platform.Request.URL()` throws *"Unable to retrieve security descriptor for this frame."* in CloudPages. Other members (`PagePath`, `Method`, `ApplicationID`, `PackageID`, `ApplicationBaseURL`) return CLR values (empty in a plain CloudPage GET, with `Method` = `"GET"`). Prefer the bare-name `Request` in CloudPages.
 
 ### Error — new Error("msg") does not expose .message
 
-[Reference: Error](/global-functions/error/)
+[Reference: Error](/ecmascript-builtins/error/)
 
 Unlike standard JavaScript, a JS-constructed `new Error("msg")` in the SFMC Jint engine does **not** expose the message via `.message` — `err.message` reads back `undefined`, and `Stringify(err)` surfaces only a hidden `{jintException}` (the .NET stack), not the message. Recover the message with `String(err)` or `("" + err)` (both yield the constructor argument), or `err.toString()` (yields `"Error: undefined"`). This differs from **engine-raised** errors, which DO carry `.message` + `.description`. Do not rely on `new Error(...).message`.
 
@@ -32,11 +32,11 @@ Unlike standard JavaScript, a JS-constructed `new Error("msg")` in the SFMC Jint
 
 Available after `Platform.Load("core", ...)`. `GetValue` reads **inbound** request headers and returns `null` for a header you set via `SetValue` (separate inbound vs outbound collections). `Remove` returns `undefined`, not the `"OK"` string implied by some docs.
 
-### Redirect (bare-name global) — does not exist at runtime
+### Bare-name Core globals — only visible in the Platform.Load scope
 
-[Reference: Redirect](/global-functions/redirect/)
+[Reference: Redirect](/core-library/redirect/) · [Write](/core-library/write/) · [Stringify](/core-library/stringify/)
 
-The bare-name global `Redirect` is `undefined` under **every** Core version tested (`"1"`, `"1.1.1"`, `"1.1.5"`) — `Platform.Load` does not inject it at all, contrary to the official example. Calling it throws a `ReferenceError`. Use `Platform.Response.Redirect(url, movedPermanently)` instead, which is always available. (Also listed in [Known Bugs](/engine-limitations/known-bugs/#bare-name-redirect-does-not-exist).)
+Every bare-name Core global (`Write`, `Stringify`, `Redirect`, `Base64Encode`, `Format`, …) is injected by `Platform.Load("core", ...)` **only into the scope where the load ran**. Inside nested helper-function bodies (or `eval()`) the bare name is `undefined`, even though the load already happened. The official docs show the top-scope example (`Platform.Load("Core", "1"); Redirect(...)`) but never mention this same-scope-only limitation. Use the `Platform.*` siblings (`Platform.Response.Write`, `Platform.Response.Redirect`, `Platform.Function.Stringify`, …) inside helpers — they work in any scope with no `Platform.Load`. (Detailed in [Known Bugs](/engine-limitations/known-bugs/#bare-name-redirect-does-not-exist).)
 
 ### ErrorUtil (bare-name global) — only in Core "1"
 
@@ -44,11 +44,11 @@ The bare-name global `Redirect` is `undefined` under **every** Core version test
 
 `ErrorUtil` is provided **only** by `Platform.Load("Core", "1")`. Under newer Core versions (`"1.1.1"`, `"1.1.5"`, …) it is `undefined`. Effectively deprecated in Core > 1. Prefer checking `result.Status` and throwing `new Error(...)` instead of `ErrorUtil.ThrowWSProxyError`.
 
-## Global Functions
+## Core Library bare-name functions
 
 ### Attribute.GetValue — works in CloudPages, returns "" when no recipient
 
-[Reference: Attribute](/global-functions/attribute/)
+[Reference: Attribute](/core-library/attribute/)
 
 After `Platform.Load("Core", ...)` the `Attribute` object exists and `Attribute.GetValue(name)` executes and returns a string — it is **not** unavailable in CloudPages, contrary to what the docs imply. When no subscriber/attribute is in context (e.g. an anonymous CloudPage GET) it returns an **empty string** rather than throwing. In email/triggered-send/personalized contexts it returns the actual attribute value.
 

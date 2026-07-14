@@ -1,9 +1,14 @@
 ---
 layout: function
 title: Error()
-parent: Global Functions
-parent_url: /global-functions/
+parent: ECMAScript Built-ins
+parent_url: /ecmascript-builtins/
+permalink: /ecmascript-builtins/error/
+redirect_from:
+  - /global-functions/error/
 description: Native JavaScript Error constructor for creating throwable error objects in try/catch error handling.
+verification: verified
+differs_from_docs: "Runtime-verified: a JS-constructed new Error(\"msg\") does not expose .message (reads undefined) — recover the message via String(e); engine-raised platform errors do carry .message and .description."
 availability:
   email: true
   cloudpage: true

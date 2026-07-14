@@ -36,13 +36,13 @@ description: "The complete reference for Server-Side JavaScript (SSJS) in Salesf
 </div>
 
 <div class="home-grid">
-  <a href="/global-functions/" class="home-card">
+  <a href="/ecmascript-builtins/" class="home-card">
     <div class="card-icon">
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/><path d="M10 6v4l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
     </div>
-    <div class="card-title">Global Functions</div>
-    <div class="card-description">Top-level functions available in every SSJS context: <code>Write</code>, <code>Stringify</code>, <code>TreatAsContent</code>, content blocks, and more.</div>
-    <div class="card-count">12 functions</div>
+    <div class="card-title">ECMAScript Built-ins</div>
+    <div class="card-description">Native JavaScript in SSJS: which <code>Array</code>, <code>String</code>, <code>Math</code>, <code>Date</code>, <code>RegExp</code>, and <code>JSON</code> members work, which are partial, and which are missing.</div>
+    <div class="card-count">10 sections</div>
   </a>
 
   <a href="/platform-functions/" class="home-card">
@@ -68,8 +68,8 @@ description: "The complete reference for Server-Side JavaScript (SSJS) in Salesf
       <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M10 2v3M10 15v3M2 10h3M15 10h3M4.2 4.2l2.1 2.1M13.7 13.7l2.1 2.1M4.2 15.8l2.1-2.1M13.7 6.3l2.1-2.1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
     </div>
     <div class="card-title">Core Library</div>
-    <div class="card-description">SOAP-style object wrappers after <code>Platform.Load("core","1.1.5")</code> — DataExtension, Subscriber, Email, TriggeredSend, and 20+ more.</div>
-    <div class="card-count">30 objects</div>
+    <div class="card-description">SOAP-style object wrappers and bare-name functions after <code>Platform.Load("core","1.1.5")</code> — DataExtension, Subscriber, Email, TriggeredSend, <code>Write</code>, <code>Stringify</code>, and more.</div>
+    <div class="card-count">30 objects · 11 bare-name functions</div>
   </a>
 
   <a href="/wsproxy/" class="home-card">
