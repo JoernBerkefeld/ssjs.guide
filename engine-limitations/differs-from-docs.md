@@ -61,7 +61,7 @@ After `Platform.Load("Core", ...)` the `Attribute` object exists and `Attribute.
 The official docs are wrong on two counts:
 
 1. They state this returns a **numeric status**, but it actually returns the **response body as a string**; the numeric status is written to the `statusVariable` out-parameter (`statusVariable[0]`).
-2. They list `emptyContentHandling`, `headerNames`, `headerValues`, and `statusVariable` as optional, but runtime testing shows **all six arguments are required** — the call throws a security-descriptor error otherwise. Pass `null` for unused header arrays.
+2. They list `emptyContentHandling`, `headerNames`, `headerValues`, and `statusVariable` as optional, but runtime testing shows **all six arguments are required**. Pass `null` for unused header arrays.
 
 ### Platform.Function.Base64Encode — standard interoperable Base64
 
@@ -81,11 +81,23 @@ The official docs imply this only decodes values produced by the matching `Base6
 
 The region name must be a **compile-time literal**. Passing a variable is rejected at runtime with a resolved-value (`ResolvedValueParameter`) error. The official docs describe the argument as an ordinary string and do not mention this literal-only restriction.
 
+### Platform.Function.EndImpressionRegion — returns null, not void
+
+[Reference: Platform.Function.EndImpressionRegion](/platform-functions/endimpressionregion/)
+
+The official docs type the return as `void`, but at runtime the call always returns a genuine JS `null` (`typeof "object"`, strict `=== null` is `true`) — even when called with no matching `BeginImpressionRegion`. The optional `closeAll` argument accepts a boolean (string values are coerced).
+
 ### Platform.Function.AddObjectArrayItem — returns nothing
 
 [Reference: Platform.Function.AddObjectArrayItem](/platform-functions/addobjectarrayitem/)
 
 The official docs list a return value, but at runtime the call returns nothing (`undefined`). It appends the item to the object's array property **in place** — capture the mutated object, not a return value.
+
+### Platform.Function.SetObjectProperty — returns null (not void), validates the property
+
+[Reference: Platform.Function.SetObjectProperty](/platform-functions/setobjectproperty/)
+
+The official docs type the return as `void`, but at runtime the call returns a genuine JS `null` (`typeof "object"`, strict `=== null` is `true`) on success. The property name is validated against the object's SOAP schema at set-time: setting an unknown property (or a value the property rejects) throws. The assigned property **cannot be read back from SSJS** — the object is a .NET **CLR host object** (`typeof "clr"`) and the engine blocks all introspection of it. Runtime-proven: dot and bracket property access both throw `Use of Common Language Runtime (CLR) is not allowed`, `for..in` yields zero keys, and both `Stringify()` and `String()` return only the type name (`"ExactTarget.Integration.WSDL.Subscriber"`) rather than the values. Pass the populated object straight into the consuming SOAP call instead.
 
 ### Platform.Function.Lookup — returns native types and null (not string / "")
 
@@ -145,11 +157,11 @@ The official docs type the return value as an object, but at runtime the call re
 
 The official docs type the return value as an object, but at runtime the call returns the **OverallStatus message as a string** (`"OK"` / `"Error: ..."`). The request ID is written to `status[1]` and, on error, a numeric error code is written into the status array.
 
-### Platform.Function.InvokeRetrieve — 2 args, returns object[] or null
+### Platform.Function.InvokeRetrieve — returns object[] or null
 
 [Reference: Platform.Function.InvokeRetrieve](/platform-functions/invokeretrieve/)
 
-The official docs type the return value as an object and list an optional third `options` argument, but at runtime the call takes **exactly two arguments** and returns an **array of result objects — or `null`** when the retrieve errors or matches no rows. The status message is written to `status[0]` and the request ID (a GUID) to `status[1]`.
+The official docs type the return value as an object, but at runtime the call returns an **array of result objects — or `null`** when the retrieve errors or matches no rows. The status message is written to `status[0]` and the request ID (a GUID) to `status[1]`. (The two-argument signature matches the docs; unlike its `InvokeExecute`/`InvokeExtract` siblings, the docs do not list an `options` argument here.)
 
 ### Platform.Function.InvokePerform — returns the OverallStatus string, not an object
 
@@ -163,23 +175,71 @@ The official docs type the return value as an object, but at runtime the call re
 
 The official docs type the return value as an object, but at runtime the call returns the **OverallStatus message as a string** (`"OK"` / `"Error: ..."`); the request details are written into the status array.
 
-### Platform.Function.InvokeExecute — 2 args, returns object[]
+### Platform.Function.InvokeExecute — undocumented arity, returns object[]
 
 [Reference: Platform.Function.InvokeExecute](/platform-functions/invokeexecute/)
 
-The official docs list an optional third `options` argument and type the return value as an object, but at runtime the call takes **exactly two arguments** and returns an **array of result objects**. Passing a third argument throws an *"Unable to retrieve security descriptor for this frame."* error.
+The official docs are wrong on two counts. **Signature:** they list a **third `options` argument**, but at runtime the function accepts **only two arguments** (`apiObject`, `status`) — passing a third throws an *"Unable to retrieve security descriptor for this frame"* error. **Return:** they type the return value as an object, but at runtime the call returns an **array of result objects**.
 
-### Platform.Function.InvokeExtract — 2 args, returns the OverallStatus string
+### Platform.Function.InvokeExtract — undocumented arity, returns the OverallStatus string
 
 [Reference: Platform.Function.InvokeExtract](/platform-functions/invokeextract/)
 
-The official docs list an optional third `options` argument and type the return value as an object, but at runtime the call takes **exactly two arguments** and returns the **OverallStatus message as a string**. Passing a third argument throws an *"Unable to retrieve security descriptor for this frame."* error.
+The official docs are wrong on two counts. **Signature:** they list a **third `options` argument**, but at runtime the function accepts **only two arguments** (`apiObject`, `statusArray`) — passing a third throws an *"Unable to retrieve security descriptor for this frame"* error. **Return:** they type the return value as an object, but at runtime the call returns the **OverallStatus message as a string**.
 
-### Platform.Function.InvokeSchedule — statusArray required, returns the OverallStatus string
+### Platform.Function.InvokeSchedule — options argument optional (docs mark it required), returns the OverallStatus string
 
 [Reference: Platform.Function.InvokeSchedule](/platform-functions/invokeschedule/)
 
-The official docs type the return value as an object and imply `statusArray` is optional, but at runtime the call returns the **OverallStatus message as a string** and **requires** the `statusArray` argument — the request ID is written into it.
+The official docs are wrong on two counts. **Signature:** they mark the trailing **`options` argument as required** (five required arguments), but at runtime it is **optional** — a four-argument call (`apiObject`, `action`, `schedule`, `statusArray`) succeeds. **Return:** they type the return value as an object, but at runtime the call returns the **OverallStatus message as a string**; the request ID is written into the `statusArray`.
+
+### Platform.Function.IsPhoneNumber — digits-only, no leading zero, no spaces
+
+[Reference: Platform.Function.IsPhoneNumber](/platform-functions/isphonenumber/)
+
+The official docs describe generic "valid phone number" validation, but at runtime the function enforces a stricter, specific format: **digits `0`–`9` only, no spaces, and no leading `0`**. To present any country's country code (including the US), you **omit** the leading `00`/`+` and write the country code as bare digits with no leading zero. Values containing spaces, a leading `0`, or a `+`/`00` international prefix return `false`. This is the **same** digits-only, no-leading-zero format that SFMC phone-number fields and the SMS (MobileConnect) service expect — a value that passes `IsPhoneNumber` is already in the shape those services accept.
+
+### Platform.Function.LocalDateToSystemDate — returns a Date object, not a string
+
+[Reference: Platform.Function.LocalDateToSystemDate](/platform-functions/localdatetosystemdate/)
+
+The official docs type the return value as a `string`, but at runtime the call returns a genuine **`Date` object** (`typeof "object"`, `Object.prototype.toString` reports `[object Date]`, and `getFullYear()` / `getHours()` / `getTime()` all work). It only serializes to an ISO-like string (e.g. `2025-08-05T04:00:00.000`) when written or passed through `Stringify()`. The conversion strips daylight saving, so the same wall-clock local input yields a system hour one hour earlier in summer than in winter.
+
+### Platform.Function.SystemDateToLocalDate — returns a Date object, not a string
+
+[Reference: Platform.Function.SystemDateToLocalDate](/platform-functions/systemdatetolocaldate/)
+
+The official docs type the return value as a `string`, but at runtime the call returns a genuine **`Date` object** (`typeof "object"`, `Object.prototype.toString` reports `[object Date]`, and `getFullYear()` / `getHours()` / `getTime()` all work) — symmetric with its sibling [`LocalDateToSystemDate`](/platform-functions/localdatetosystemdate/). It only serializes to an ISO-like string when written or passed through `Stringify()`. The conversion shifts system (Central, no daylight saving) time to the account/user local offset — the opposite direction to `LocalDateToSystemDate`.
+
+### Platform.Function.Now — returns a Date object, not a string
+
+[Reference: Platform.Function.Now](/platform-functions/now/)
+
+The official docs describe the return as an RFC 2822-compliant date-time **string**, but at runtime the call returns a genuine **`Date` object** (`typeof "object"`, `Object.prototype.toString` reports `[object Date]`, and `getFullYear()` / `getMonth()` / `getTime()` all work). It only appears as the RFC 2822-style value (e.g. `Tue, 14 Jul 2026 17:59:40 GMT-06:00`) when coerced to a string during output. The time is in the account timezone (Central by default), not UTC. The optional `useContextTime` argument is truly optional (`Now()`, `Now(false)`, and `Now(true)` all work); outside a send context `Now(true)` equals `Now(false)`.
+
+### Platform.Function.ParseJSON — string-only argument, returns string/null for scalars & invalid input
+
+[Reference: Platform.Function.ParseJSON](/platform-functions/parsejson/)
+
+The official docs are wrong on two counts:
+
+1. They type the argument as `string or string[]` and describe passing an "array of strings". At runtime passing an array — or any non-string object — throws `System.InvalidOperationException` (*"Unable to retrieve security descriptor for this frame."*). Only a **single string argument** is accepted.
+2. They give the return type as `object|object[]`. That is incomplete: JSON objects/arrays deserialise as expected, but a **scalar** JSON value (`"42"`, `'"hello"'`, `"true"`) is returned **unchanged as a string**, and **invalid**, **empty**, `null`, or `undefined` input returns a genuine JS **`null`** — it does **not** throw. Non-string scalar arguments (number, boolean) are coerced to their string form. The genuine throw case is a non-string object/array argument.
+
+### Platform.Function.RaiseError — only message is required; errorCode/errorNumber not exposed on the caught error
+
+[Reference: Platform.Function.RaiseError](/platform-functions/raiseerror/)
+
+The official docs are wrong on two counts:
+
+1. They mark `currentRecipientOnly`, `errorCode`, and `errorNumber` as **required**, but at runtime a single `message` argument raises correctly — those three are **optional** (`minArgs: 1`).
+2. When the raised error is caught in a CloudPage `try`/`catch`, the exception exposes only `.message` (the passed text) and `.description` (an `ExactTarget.OMM.AMPScriptRaiseErrorException`); the `errorCode` and `errorNumber` values are **not** surfaced on the error object (`.errorCode` and `.number` read back `undefined`). The exception is a normal catchable object (`.name` is `"TypeError"`), so on a CloudPage `RaiseError` can be caught rather than fatally halting the page.
+
+### Platform.Function.RedirectTo — returns the URL string, does not redirect from SSJS
+
+[Reference: Platform.Function.RedirectTo](/platform-functions/redirectto/)
+
+The official docs present `RedirectTo` as an email link-target helper with no documented return value. Proven at runtime from SSJS: it **returns the passed-in URL as a `string`** (not `void`); execution continues after the call and no HTTP redirect is issued in a CloudPage context. For CloudPage HTTP redirects use `Platform.Response.Redirect` instead.
 
 ## Platform Objects
 
@@ -244,3 +304,29 @@ The official example reads a single header via `headers["..."]`, but that access
 [Reference: Script.Util.HttpGet](/http/script-util-httpget/)
 
 Not listed in the official docs, but the property exists and is applied end-to-end at runtime (same behavior as on `Script.Util.HttpRequest`).
+
+## Core Library
+
+### &lt;AccountInstance&gt;.Update — returns "Error", does not throw on failure
+
+[Reference: Account](/core-library/account/)
+
+The official docs state the call throws on failure, but at runtime `<AccountInstance>.Update(properties)` returns the plain string `"Error"` instead of throwing (the success return is the string `"OK"`).
+
+### ContentAreaObj.Add — returns an initialized instance, not "OK"
+
+[Reference: ContentAreaObj](/core-library/contentareaobj/)
+
+The official `Add` reference annotates the return as `@returns {Enum("OK")}`, but at runtime `ContentAreaObj.Add(properties)` returns an **initialized `ContentAreaObjInstance`** — an object exposing `Update`/`Remove`, identical in shape to `ContentAreaObj.Init`. This matches the doc's own H1 summary ("returns an initialized object") rather than the `@returns` annotation. Sibling methods `Retrieve` returns a host array (`[object Array]` with `.length`, but `instanceof Array` is `false`); `Update`/`Remove` return the string `"OK"`.
+
+### DataExtension.Retrieve — filter is optional at runtime
+
+[Reference: DataExtension](/core-library/dataextension/)
+
+The official docs list the `filter` argument as **required**, but at runtime it is **optional**: calling `DataExtension.Retrieve()` with no arguments does not throw — it returns the full list of data extensions. A filter that matches nothing returns a **real empty array** (`Object.prototype.toString` reports `[object Array]`, `typeof .length` is `number`, `.length === 0`, zero enumerable keys) — not `null` and not `undefined`. Note the SFMC engine quirk that an empty array is **falsy** here, so guard on `.length` (`results.length > 0`) rather than truthiness of the array itself.
+
+### &lt;DataExtensionInstance&gt;.Fields.Retrieve — field objects include an undocumented ObjectID
+
+[Reference: DataExtension.Fields](/core-library/dataextension-fields/)
+
+The official docs example response lists only `Name`, `FieldType`, `IsPrimaryKey`, `MaxLength`, `Ordinal`, and `DefaultValue`. At runtime each returned field object also carries an undocumented **`ObjectID`** (`string`) property. The collection is a genuine JS `Array` (`[object Array]`). Sibling methods `<DataExtensionInstance>.Fields.Add` and `<DataExtensionInstance>.Fields.UpdateSendableField` return the string `"OK"` on success and the string `"Error"` on failure — they do **not** throw, contrary to the docs' "throws on failure" wording.

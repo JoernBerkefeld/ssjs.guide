@@ -13,6 +13,7 @@ syntax: "Platform.Function.DeleteData(deName, whereFieldNames, whereFieldValues)
 return_type: number
 min_args: 3
 max_args: 3
+verification: verified
 ---
 
 ## Parameters

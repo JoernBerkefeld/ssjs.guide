@@ -4,6 +4,9 @@ title: DataExtension
 parent: Core Library
 parent_url: /core-library/
 description: Initialize a Data Extension object for row-level CRUD operations. The starting point for all Core library DE operations.
+verification: verified
+differs_from_docs: true
+requires_core_load: true
 ---
 
 `DataExtension` is a Core library object that provides object-oriented access to Data Extensions. Initialize it with `DataExtension.Init()`, then use the `.Rows` and `.Fields` properties.
@@ -22,7 +25,7 @@ description: Initialize a Data Extension object for row-level CRUD operations. T
 
 ### DataExtension.Init {#init}
 
-Initializes a DataExtension instance bound to the specified external key. Required before invoking any `Fields` or `Rows` sub-namespace method on the returned instance.
+Initializes a DataExtension instance bound to the specified Data Extension. Required before invoking any `Fields` or `Rows` sub-namespace method on the returned instance. At runtime the argument may be **either** the External Key **or** the Name of the Data Extension — both resolve to the same DE. Binding is lazy: `Init` never throws for a missing DE; the error surfaces on the first `Rows`/`Fields` operation.
 
 #### Syntax
 
@@ -34,7 +37,7 @@ DataExtension.Init(key)
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `key` | string | Yes | The External Key of the Data Extension |
+| `key` | string | Yes | The External Key **or** Name of the Data Extension (either resolves) |
 
 #### Return value
 
@@ -147,6 +150,8 @@ var de = DataExtension.Add(deObj);
 
 Returns an array of data extensions matching the specified filter. Pass `queryAllAccounts: true` to search all accounts accessible to the authenticated user.
 
+{% include differs-from-docs.html note="The official docs document `filter` as required, but at runtime it is optional: `DataExtension.Retrieve()` with no arguments does not throw and returns the full list of data extensions. A filter matching nothing returns a real empty array (`length: 0`)." %}
+
 #### Syntax
 
 ```javascript
@@ -157,12 +162,12 @@ DataExtension.Retrieve(filter, [queryAllAccounts])
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `filter` | object | Yes | PascalCase WSProxy-style filter object: `{Property, SimpleOperator, Value}` |
+| `filter` | object | No* | PascalCase WSProxy-style filter object: `{Property, SimpleOperator, Value}`. *Documented as required, but optional at runtime — omitting it returns all data extensions. |
 | `queryAllAccounts` | boolean | No | When `true`, search across all accessible accounts. Defaults to `false`. |
 
 #### Return value
 
-`object[]`
+`object[]` — a real array (`length: 0` when nothing matches).
 
 #### Examples
 
@@ -175,7 +180,7 @@ var results = DataExtension.Retrieve({ Property: "CustomerKey", SimpleOperator: 
 
 ### External Key vs Name
 
-`DataExtension.Init()` requires the **External Key**, not the display name. Find it in:
+At runtime `DataExtension.Init()` resolves **either** the **External Key** or the **Name** of the Data Extension to the same DE. Prefer the External Key for stability (the display name can change). Find the External Key in:
 - Email Studio → Data Extensions → Edit → External Key
 - Contact Builder → Data Extensions → (click DE name) → Properties
 

@@ -4,6 +4,9 @@ title: Account
 parent: Core Library
 parent_url: /core-library/
 description: Core library namespace for account-level settings and account tracking retrieval.
+verification: in-progress
+differs_from_docs: true
+requires_core_load: true
 ---
 
 The `Account` Core library namespace manages Marketing Cloud account configuration for the current context and exposes static helpers for account retrieval and updates.
@@ -22,6 +25,8 @@ The `Account` Core library namespace manages Marketing Cloud account configurati
 ---
 
 ### Account.Init {#init}
+
+{% include method-status.html status="verified" %}
 
 Initializes an `Account` instance for the given external key. Call this before any instance method on the returned object.
 
@@ -52,6 +57,8 @@ var myAccount = Account.Init("MyCustomerKey");
 
 ### Account.Retrieve {#retrieve}
 
+{% include method-status.html status="verified" %}
+
 Retrieves account objects that match the filter (WSProxy-style `Property` / `SimpleOperator` / `Value` or a compatible filter object).
 
 #### Syntax
@@ -68,7 +75,7 @@ Account.Retrieve(filter)
 
 #### Return value
 
-`object[]` — rows matching the filter.
+`object[]` — a real array of account rows matching the filter. When nothing matches it returns an empty array (which is falsy in this engine, so guard with `.length` rather than truthiness).
 
 #### Examples
 
@@ -80,6 +87,8 @@ var getAcct = Account.Retrieve({ Property: "CustomerKey", SimpleOperator: "equal
 ---
 
 ### &lt;AccountInstance&gt;.Update {#instance-update}
+
+{% include method-status.html status="in-progress" differs=true %}
 
 Updates the account represented by the instance. If `properties` includes `TimeZoneID`, the account time zone is updated to that value.
 
@@ -97,7 +106,9 @@ Updates the account represented by the instance. If `properties` includes `TimeZ
 
 #### Return value
 
-`"OK"` on success, or the call throws on failure.
+`string` — `"OK"` on success. On failure the call returns the string `"Error"` (proven at runtime) instead of throwing.
+
+{% include differs-from-docs.html note="The official docs state the call throws on failure, but at runtime it returns the plain string \"Error\" instead of throwing." %}
 
 #### Examples
 
@@ -110,6 +121,8 @@ var status = myAccount.Update({ FromName: "Demo From Name" });
 ---
 
 ### Account.Tracking.Retrieve {#tracking-retrieve}
+
+{% include method-status.html status="verified" %}
 
 Returns tracking data for sends associated with accounts that match the filter. This is a static call on `Account.Tracking`; you do not need `Account.Init()` first.
 
@@ -127,7 +140,7 @@ Account.Tracking.Retrieve(filter)
 
 #### Return value
 
-`object[]` — tracking records matching the filter.
+`object[]` — tracking rows matching the filter. Each row exposes `Sends`, `Bounces`, `Clicks`, `Opens` and `Unsubscribes` counters (each an object such as `{ "Total": 0 }`).
 
 #### Examples
 

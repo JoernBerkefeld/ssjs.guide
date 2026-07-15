@@ -13,6 +13,7 @@ syntax: "Platform.Function.IsEmailAddress(value)"
 return_type: boolean
 min_args: 1
 max_args: 1
+verification: verified
 ---
 
 ## Parameters

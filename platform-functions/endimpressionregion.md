@@ -10,9 +10,11 @@ availability:
   automation: false
   triggered_send: true
 syntax: "Platform.Function.EndImpressionRegion([closeAll])"
-return_type: void
+return_type: "null"
 min_args: 0
 max_args: 1
+verification: verified
+differs_from_docs: true
 ---
 
 ## Parameters
@@ -20,6 +22,8 @@ max_args: 1
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `closeAll` | boolean | No | When `true`, closes every nested impression region still open |
+
+{% include differs-from-docs.html note="The official docs type the return as void, but the runtime always returns a genuine null (typeof \"object\", === null) — even when called with no matching BeginImpressionRegion." %}
 
 ## Examples
 

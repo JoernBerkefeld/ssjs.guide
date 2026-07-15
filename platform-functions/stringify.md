@@ -13,6 +13,7 @@ syntax: "Platform.Function.Stringify(object)"
 return_type: string
 min_args: 1
 max_args: 1
+verification: verified
 ---
 
 ## Parameters
@@ -20,6 +21,8 @@ max_args: 1
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `object` | any | Yes | The object or value to serialize to JSON. |
+
+Passing an explicit `undefined` or `null` returns the literal string `"null"` (a JSON string, not the JavaScript `null` value).
 
 ## Description
 

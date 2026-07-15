@@ -29,9 +29,9 @@ Read and write rows in SFMC Data Extensions.
 ## Dates {#dates}
 
 <div class="function-grid">
-  <a href="/platform-functions/now/" class="function-card"><div class="fn-name">Now</div><div class="fn-desc">Current SFMC server date and time.</div><div class="fn-return">→ string</div></a>
-  <a href="/platform-functions/systemdatetolocaldate/" class="function-card"><div class="fn-name">SystemDateToLocalDate</div><div class="fn-desc">Convert system date to subscriber local timezone (send contexts).</div><div class="fn-return">→ string</div></a>
-  <a href="/platform-functions/localdatetosystemdate/" class="function-card"><div class="fn-name">LocalDateToSystemDate</div><div class="fn-desc">Convert a local date value to the SFMC system date.</div><div class="fn-return">→ string</div></a>
+  <a href="/platform-functions/now/" class="function-card"><div class="fn-name">Now</div><div class="fn-desc">Current SFMC server date and time.</div><div class="fn-return">→ Date</div></a>
+  <a href="/platform-functions/systemdatetolocaldate/" class="function-card"><div class="fn-name">SystemDateToLocalDate</div><div class="fn-desc">Convert system date to subscriber local timezone (send contexts).</div><div class="fn-return">→ Date</div></a>
+  <a href="/platform-functions/localdatetosystemdate/" class="function-card"><div class="fn-name">LocalDateToSystemDate</div><div class="fn-desc">Convert a local date value to the SFMC system date.</div><div class="fn-return">→ Date</div></a>
 </div>
 
 ## URLs, redirects, and browser detection {#urls}
@@ -93,7 +93,7 @@ Simple HTTP functions — for full REST control see [Script.Util.HttpRequest](/h
   <a href="/platform-functions/contentimagebykey/" class="function-card"><div class="fn-name">ContentImageByKey</div><div class="fn-desc">Output an img tag for a Content Builder image by key.</div><div class="fn-return">→ string</div></a>
   <a href="/platform-functions/contentimagebyid/" class="function-card"><div class="fn-name">ContentImageByID</div><div class="fn-desc">Output an img tag for a Content Builder image by ID.</div><div class="fn-return">→ string</div></a>
   <a href="/platform-functions/beginimpressionregion/" class="function-card"><div class="fn-name">BeginImpressionRegion</div><div class="fn-desc">Start a named impression tracking region.</div><div class="fn-return">→ void</div></a>
-  <a href="/platform-functions/endimpressionregion/" class="function-card"><div class="fn-name">EndImpressionRegion</div><div class="fn-desc">End an impression region.</div><div class="fn-return">→ void</div></a>
+  <a href="/platform-functions/endimpressionregion/" class="function-card"><div class="fn-name">EndImpressionRegion</div><div class="fn-desc">End an impression region.</div><div class="fn-return">→ null</div></a>
   <a href="/platform-functions/treatascontent/" class="function-card"><div class="fn-name">TreatAsContent</div><div class="fn-desc">Evaluate AMPscript/HTML server-side. Security: never pass unvalidated user input.</div><div class="fn-return">→ string</div></a>
 </div>
 

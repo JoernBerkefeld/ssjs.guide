@@ -13,6 +13,7 @@ syntax: "Platform.Function.GUID()"
 return_type: string
 min_args: 0
 max_args: 0
+verification: verified
 ---
 
 ## Description

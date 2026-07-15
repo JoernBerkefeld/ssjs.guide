@@ -4,6 +4,8 @@ title: AccountUser
 parent: Core Library
 parent_url: /core-library/
 description: Core library AccountUser — manage users in the business unit (init, add, retrieve, update, activate, deactivate).
+verification: in-progress
+requires_core_load: true
 ---
 
 `AccountUser` manages **Marketing Cloud users** in the account: creating users, querying them, updating profile fields, and activating or deactivating a user. User records cannot be deleted via SSJS — use **Deactivate** as the removal path.
@@ -24,6 +26,8 @@ description: Core library AccountUser — manage users in the business unit (ini
 ---
 
 ### AccountUser.Init {#init}
+
+{% include method-status.html status="verified" %}
 
 Initializes an `AccountUser` instance bound to the given user external key and business unit MID.
 
@@ -54,6 +58,10 @@ var acctUser = AccountUser.Init("myAccountUser", 123456789);
 ---
 
 ### AccountUser.Add {#add}
+
+{% include method-status.html status="in-progress" %}
+
+{% include callout.html type="info" content="Verification blocked: the Core AccountUser write API requires an authenticated employee context. An anonymous CloudPage yields `accountEmployeeID invalid`, so this destructive method could not be runtime-proven in the test environment." %}
 
 Creates a new Marketing Cloud user with the specified properties.
 
@@ -93,6 +101,8 @@ var status = AccountUser.Add(newUser);
 
 ### AccountUser.Retrieve {#retrieve}
 
+{% include method-status.html status="verified" %}
+
 Retrieves user records matching the given filter criteria.
 
 #### Syntax
@@ -126,6 +136,10 @@ var accountUser = AccountUser.Retrieve({
 
 ### &lt;AccountUserInstance&gt;.Update {#instance-update}
 
+{% include method-status.html status="in-progress" %}
+
+{% include callout.html type="info" content="Verification blocked: the Core AccountUser write API requires an authenticated employee context. An anonymous CloudPage yields `accountEmployeeID invalid`, so this destructive method could not be runtime-proven in the test environment." %}
+
 Updates the initialized user's profile with the given properties.
 
 #### Syntax
@@ -156,6 +170,10 @@ var status = acctUser.Update({ Password: "XXXXX" });
 
 ### &lt;AccountUserInstance&gt;.Activate {#instance-activate}
 
+{% include method-status.html status="in-progress" %}
+
+{% include callout.html type="info" content="Verification blocked: the Core AccountUser write API requires an authenticated employee context. An anonymous CloudPage yields `accountEmployeeID invalid`, so this destructive method could not be runtime-proven in the test environment." %}
+
 Activates the initialized user account.
 
 #### Syntax
@@ -179,6 +197,10 @@ var status = acctUser.Activate();
 ---
 
 ### &lt;AccountUserInstance&gt;.Deactivate {#instance-deactivate}
+
+{% include method-status.html status="in-progress" %}
+
+{% include callout.html type="info" content="Verification blocked: the Core AccountUser write API requires an authenticated employee context. An anonymous CloudPage yields `accountEmployeeID invalid`, so this destructive method could not be runtime-proven in the test environment." %}
 
 Deactivates the initialized user. Account users **cannot** be deleted via SSJS; deactivation is the supported "offboarding" path.
 

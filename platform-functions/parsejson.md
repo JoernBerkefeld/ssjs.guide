@@ -13,19 +13,34 @@ syntax: "Platform.Function.ParseJSON(jsonString)"
 return_type: object
 min_args: 1
 max_args: 1
+verification: verified
+differs_from_docs: true
 ---
 
 ## Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `jsonString` | string | Yes | Well-formed JSON string to deserialise |
+| `jsonString` | string | Yes | A single well-formed JSON string to deserialise. Must be a string — an array or other object argument throws a runtime error. |
+
+{% include differs-from-docs.html note="The official docs type the argument as \"string or string[]\" and describe passing an \"array of strings\". Runtime-verified: passing an array (or any non-string object) throws System.InvalidOperationException (\"Unable to retrieve security descriptor for this frame\"). Only a single string argument is accepted." %}
+
+## Return value
+
+Runtime-verified on a CloudPage:
+
+- A JSON **object** string returns a native object; a JSON **array** string returns a host array (with `.length` and index access, though `instanceof Array` is `false`).
+- A **scalar** JSON value (`"42"`, `'"hello"'`, `"true"`, `"null"`) is returned **unchanged as a string** — scalars are not deserialised to primitives.
+- **Invalid**, **empty**, `null`, or `undefined` input returns **`null`** — it does **not** throw.
+- Non-string scalar arguments (number, boolean) are coerced to their string form rather than throwing.
+
+{% include differs-from-docs.html note="The official docs give the return type as \"object or object[]\". Runtime-verified: scalar JSON values come back as strings and invalid/empty/null/undefined input returns null (no error thrown), so the effective return type is object, array, string, or null." %}
 
 ## Description
 
 `ParseJSON` is the SSJS stand-in for `JSON.parse()` — the native method is absent from the JINT engine that powers SFMC scripting.
 
-> **Critical caveat:** `ParseJSON` throws a server **500 error** if passed `null`, `undefined`, or a non-string value. Always coerce to string with `+ ""` before calling.
+> **Runtime-verified behaviour:** contrary to a common belief, `ParseJSON` does **not** throw when passed `null`, `undefined`, or a non-string scalar — it returns `null` (for null/undefined/invalid input) or a coerced string. The genuine error case is a **wrong argument count** (zero args, or a second argument) or a **non-string object/array** argument, which throw an engine `InvalidOperationException`. Always check the return value for `null`.
 
 ## Examples
 
@@ -39,11 +54,11 @@ Write(obj.name);   // Jane
 Write(obj.score);  // 95
 ```
 
-### Safe pattern: always use `+ ""`
+### Always check the return value
 
 ```javascript
-// ✅ Safe — even if responseBody is null, this won't throw
-var data = Platform.Function.ParseJSON(responseBody + "");
+// Invalid/empty/null input returns null — it does not throw.
+var data = Platform.Function.ParseJSON(responseBody);
 
 if (data) {
     Write(data.title);
@@ -96,27 +111,33 @@ for (var i = 0; i < colors.length; i++) {
 
 ## Common Mistakes
 
-**Not using `+ ""`:**
+**Passing a non-string object or array argument:**
 
 ```javascript
-// ❌ If jsonString is null/undefined → 500 error
-var obj = Platform.Function.ParseJSON(jsonString);
+// ❌ Passing an array (or any non-string object) throws
+//    System.InvalidOperationException at runtime.
+var obj = Platform.Function.ParseJSON(["a", "b"]);
 
-// ✅ Safe coercion
-var obj = Platform.Function.ParseJSON(jsonString + "");
+// ✅ Pass a single JSON string
+var obj = Platform.Function.ParseJSON('["a","b"]');
 ```
 
-**Not checking the return value:** `ParseJSON` returns `null` if the string is `"null"`, `""`, or invalid JSON:
+**Not checking the return value:** `ParseJSON` returns `null` for the JSON `null` literal, an empty string, or invalid JSON — it does not throw:
 
 ```javascript
-var data = Platform.Function.ParseJSON(str + "");
+var data = Platform.Function.ParseJSON(str);
 if (!data) {
     Write("No data or invalid JSON.");
     return;
 }
 ```
 
-**ESLint rule:** `sfmc/ssjs-prefer-parsejson-safe-arg` auto-fixes missing `+ ""` coercion.
+**Expecting scalar deserialisation:** a scalar JSON value is returned unchanged as a **string**, not a primitive:
+
+```javascript
+Platform.Function.ParseJSON("42");     // "42"  (string, not number 42)
+Platform.Function.ParseJSON("true");   // "true" (string, not boolean true)
+```
 
 ## See Also
 

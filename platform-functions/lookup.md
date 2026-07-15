@@ -13,6 +13,7 @@ syntax: "Platform.Function.Lookup(deName, returnField, whereFieldNames, whereFie
 return_type: string|number|boolean|object|null
 min_args: 4
 max_args: 4
+verification: verified
 ---
 
 ## Parameters

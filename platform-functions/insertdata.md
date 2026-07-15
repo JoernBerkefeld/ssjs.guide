@@ -13,6 +13,7 @@ syntax: "Platform.Function.InsertData(deName, fieldNames, fieldValues)"
 return_type: number
 min_args: 3
 max_args: 3
+verification: verified
 ---
 
 ## Parameters

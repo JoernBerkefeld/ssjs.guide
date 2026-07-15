@@ -13,6 +13,8 @@ syntax: "Platform.Function.IsPhoneNumber(value)"
 return_type: boolean
 min_args: 1
 max_args: 1
+verification: verified
+differs_from_docs: true
 ---
 
 ## Parameters
@@ -20,6 +22,20 @@ max_args: 1
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `value` | string | Yes | String to evaluate as a phone number |
+
+## Return value
+
+Returns a `boolean`. The accepted format is **digits `0`–`9` only, no spaces, and no
+leading `0`**. To present any country's country code (including the US), **omit** the
+leading `00`/`+` — the country code is written as its bare digits with no leading zero.
+This is the **same** digits-only, no-leading-zero format that SFMC phone-number fields
+and the SMS (MobileConnect) service expect, so a value that passes `IsPhoneNumber` is
+already in the shape those services accept.
+
+Strings containing spaces, a leading `0`, a `+`/`00` international prefix, letters, mixed
+text, or that are empty all return `false`.
+
+{% include differs-from-docs.html note="The official docs describe generic \"valid phone number\" validation, but the runtime enforces a stricter format: digits 0-9 only, no spaces, and no leading 0 — country codes must be written without the leading 00/+ (this is the same format SFMC phone fields and the SMS service expect)." %}
 
 ## Examples
 

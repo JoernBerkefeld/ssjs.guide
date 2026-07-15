@@ -4,6 +4,9 @@ title: DataExtension.Fields
 parent: Core Library
 parent_url: /core-library/
 description: After DataExtension.Init — add fields, retrieve field definitions, update the sendable field mapping.
+verification: verified
+requires_core_load: true
+differs_from_docs: "Runtime-verified: Fields.Retrieve() field objects also include an ObjectID (string) property that the official docs example response omits (docs list only Name, FieldType, IsPrimaryKey, MaxLength, Ordinal, DefaultValue). Fields.Add() and Fields.UpdateSendableField() return the string \"Error\" on failure rather than throwing."
 ---
 
 Use **`DataExtension.Init`** first, then **`de.Fields`** to manage columns: add fields, list definitions, or change which field maps to subscribers for sendable DEs.

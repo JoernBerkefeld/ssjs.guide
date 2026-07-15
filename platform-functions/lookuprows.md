@@ -13,6 +13,7 @@ syntax: "Platform.Function.LookupRows(deName, whereFieldNames, whereFieldValues)
 return_type: "object[]"
 min_args: 3
 max_args: 3
+verification: verified
 ---
 
 ## Parameters

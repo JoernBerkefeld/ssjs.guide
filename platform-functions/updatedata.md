@@ -13,6 +13,7 @@ syntax: "Platform.Function.UpdateData(deName, whereFieldNames, whereFieldValues,
 return_type: number
 min_args: 5
 max_args: 5
+verification: verified
 ---
 
 ## Parameters

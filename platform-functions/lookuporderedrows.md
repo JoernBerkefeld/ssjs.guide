@@ -13,6 +13,7 @@ syntax: "Platform.Function.LookupOrderedRows(deName, count, orderBy, whereFieldN
 return_type: "object[]"
 min_args: 5
 max_args: 5
+verification: verified
 ---
 
 ## Parameters

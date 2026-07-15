@@ -13,6 +13,8 @@ syntax: "Platform.Function.RaiseError(message[, currentRecipientOnly[, errorCode
 return_type: void
 min_args: 1
 max_args: 4
+verification: verified
+differs_from_docs: true
 ---
 
 ## Parameters
@@ -23,6 +25,10 @@ max_args: 4
 | `currentRecipientOnly` | boolean | No | When `true`, the error applies only to the current recipient. When `false`, the entire send job stops. |
 | `errorCode` | string | No | Short user-defined code identifying the error type |
 | `errorNumber` | number | No | User-defined numeric error code for reference |
+
+{% include differs-from-docs.html note="The official docs mark <code>currentRecipientOnly</code>, <code>errorCode</code>, and <code>errorNumber</code> as required, but the runtime raises correctly when called with just <code>message</code>, so they are optional." %}
+
+{% include differs-from-docs.html note="When caught in a CloudPage <code>try</code>/<code>catch</code>, the raised exception exposes only <code>message</code> and <code>description</code> (an <code>AMPScriptRaiseErrorException</code>); the <code>errorCode</code> and <code>errorNumber</code> arguments are not surfaced on the error object." %}
 
 ## Examples
 

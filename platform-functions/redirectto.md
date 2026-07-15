@@ -10,9 +10,11 @@ availability:
   automation: false
   triggered_send: true
 syntax: "Platform.Function.RedirectTo(url)"
-return_type: void
+return_type: string
 min_args: 1
 max_args: 1
+verification: verified
+differs_from_docs: true
 ---
 
 ## Parameters
@@ -20,6 +22,12 @@ max_args: 1
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `url` | string | Yes | Complete URL to use as the link target |
+
+## Return value
+
+Returns the passed-in URL as a `string`. When called from SSJS it does **not** issue an HTTP redirect and does not halt execution.
+
+{% include differs-from-docs.html note="The official docs imply RedirectTo has no return value, but at runtime it returns the passed-in URL as a string and does not perform an HTTP redirect or halt the script when called from SSJS." %}
 
 ## Example
 

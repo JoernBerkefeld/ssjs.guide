@@ -225,7 +225,7 @@
     "url": "/platform-functions/treatascontent/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Processes a string as AMPscript/HTML and returns rendered output.",
+    "description": "Processes a string as AMPscript/HTML on the SFMC server and returns the rendered result directly as a string.",
     "params": [
       "content"
     ],
@@ -251,40 +251,40 @@
     "params": [
       "closeAll"
     ],
-    "returnType": "void"
+    "returnType": "null"
   },
   {
     "name": "Now",
     "url": "/platform-functions/now/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Returns the current system timestamp, or the timestamp of the triggering send when called with true.",
+    "description": "Returns the current server date/time as a Date object (in the account timezone, Central by default), or the timestamp of the triggering send when called with true.",
     "params": [
       "useContextTime"
     ],
-    "returnType": "string"
+    "returnType": "Date"
   },
   {
     "name": "SystemDateToLocalDate",
     "url": "/platform-functions/systemdatetolocaldate/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Converts a date-time value from Marketing Cloud system time (CST) to the local time of the account or user.",
+    "description": "Converts a date-time value from Marketing Cloud system time (CST, without daylight saving) to the local time of the account or user.",
     "params": [
       "dateString"
     ],
-    "returnType": "string"
+    "returnType": "Date"
   },
   {
     "name": "LocalDateToSystemDate",
     "url": "/platform-functions/localdatetosystemdate/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Converts a date-time value from the local time of the account or user to Marketing Cloud system time (CST).",
+    "description": "Converts a date-time value from the local time of the account or user to Marketing Cloud system time (CST, without daylight saving).",
     "params": [
       "dateString"
     ],
-    "returnType": "string"
+    "returnType": "Date"
   },
   {
     "name": "RaiseError",
@@ -305,7 +305,7 @@
     "url": "/platform-functions/guid/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Generates a new globally unique identifier string.",
+    "description": "Generates a new globally unique identifier as a lowercase canonical UUID v4 string (36 characters).",
     "returnType": "string"
   },
   {
@@ -324,7 +324,7 @@
     "url": "/platform-functions/isphonenumber/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Evaluates whether a string contains a valid phone number.",
+    "description": "Evaluates whether a string is a valid phone number and returns a boolean.",
     "params": [
       "value"
     ],
@@ -346,13 +346,13 @@
     "url": "/platform-functions/setobjectproperty/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Assigns a property value on a SOAP API object.",
+    "description": "Assigns a property value on a SOAP API object created with CreateObject.",
     "params": [
       "apiObject",
       "propertyName",
       "value"
     ],
-    "returnType": "void"
+    "returnType": "null"
   },
   {
     "name": "AddObjectArrayItem",
@@ -522,7 +522,7 @@
     "url": "/platform-functions/parsejson/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Parses a JSON-formatted string (or array of strings) and returns the resulting JavaScript object (or array of objects).",
+    "description": "Parses a JSON-formatted string and returns the resulting JavaScript object or array.",
     "params": [
       "jsonString"
     ],
@@ -537,7 +537,7 @@
     "params": [
       "url"
     ],
-    "returnType": "void"
+    "returnType": "string"
   },
   {
     "name": "UrlEncode",
@@ -580,7 +580,7 @@
     "url": "/platform-functions/md5/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Returns an MD5 hash for a given string value.",
+    "description": "Returns a lowercase 32-character hexadecimal MD5 hash for a given string value.",
     "params": [
       "string",
       "charset"
@@ -1279,7 +1279,7 @@
     "url": "/core-library/dataextension/",
     "section": "Core Library",
     "type": "method",
-    "description": "Initializes a DataExtension instance bound to the specified external key.",
+    "description": "Initializes a DataExtension instance bound to the specified data extension.",
     "params": [
       "key"
     ],
@@ -1290,7 +1290,7 @@
     "url": "/core-library/dataextension/",
     "section": "Core Library",
     "type": "method",
-    "description": "Creates a new data extension from the supplied properties and returns an initialized DataExtension instance.",
+    "description": "Creates a new data extension from the supplied properties and returns an initialized DataExtension instance (the same shape as `DataExtension.",
     "params": [
       "properties"
     ],
@@ -2559,11 +2559,11 @@
     "url": "/core-library/contentareaobj/",
     "section": "Core Library",
     "type": "method",
-    "description": "Creates a new content area from the supplied properties.",
+    "description": "Creates a new content area from the supplied properties and returns an initialized ContentAreaObj instance bound to it.",
     "params": [
       "properties"
     ],
-    "returnType": "string",
+    "returnType": "ContentAreaObjInstance",
     "deprecated": true
   },
   {

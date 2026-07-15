@@ -13,6 +13,7 @@ syntax: "Platform.Function.TreatAsContent(content)"
 return_type: string
 min_args: 1
 max_args: 1
+verification: verified
 ---
 
 ## Parameters
@@ -92,7 +93,7 @@ var isVIP = Variable.GetValue("@isVIP");
 
 ## Notes
 
-`Platform.Function.TreatAsContent()` doesn't return the rendered output directly — use `Variable.GetValue()` to retrieve values set inside the AMPscript block.
+`Platform.Function.TreatAsContent()` returns the rendered output **directly** as a string — inline AMPscript such as `%%=Add(2,3)=%%` comes back in the return value (e.g. `"5"`). A **block-only** string (`%%[ ... ]%%` with no inline output) renders to an **empty string**, so when you only run a block to set variables, retrieve those values afterwards with `Variable.GetValue()` instead of reading the return value. Variable side effects persist across calls, and the function does not require `Platform.Load("core")`. Non-string arguments are coerced to string; calling with zero or two-plus arguments throws.
 
 **ESLint rule:** `sfmc/ssjs-no-treatascontent-injection` warns when the argument to `TreatAsContent` contains string concatenation with variables (injection risk).
 
