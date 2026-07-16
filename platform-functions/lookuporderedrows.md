@@ -35,6 +35,25 @@ verification: verified
 
 Like `LookupRows`, each returned row object also carries the system fields `_CustomObjectKey` (a `number`) and `_CreatedDate` (a `string`), and the DE is resolved by its **Name** (not the external key / CustomerKey) — both runtime-verified. It returns `null` when no rows match, so guard before reading `.length`.
 
+Also like `LookupRows`, most fields are returned as their **typed/native JS value** (Number and Decimal columns come back as `number`, Boolean columns as `boolean`) — useful when you need those types without manual casting. **Date columns are the exception:** they come back as an ISO-8601 `string` (e.g. `"2024-01-15T00:00:00.000"`), **not** a `Date` object — unlike [`Lookup`](/platform-functions/lookup/), which returns a real `Date` (runtime-verified). This still contrasts with `DataExtension.Rows.Retrieve()`, which stringifies **every** field, including Number/Boolean (but gives you an empty array `[]` instead of `null` on no match).
+
+### Field type → returned JavaScript type (runtime-verified)
+
+Result of probing a Data Extension containing one column of each valid [field type](https://developer.salesforce.com/docs/marketing/marketing-cloud/references/mc_getting_started/dataextensionfieldtype.html) via `Platform.Function.LookupOrderedRows`:
+
+| DE field type | Returned type | Notes |
+|---|---|---|
+| Text | `string` | |
+| EmailAddress | `string` | |
+| Locale | `string` | e.g. `"en-US"` |
+| Phone | `string` | |
+| Number | `number` | |
+| Decimal | `number` | |
+| Boolean | `boolean` | `true` / `false` |
+| Date | `string` | ISO-8601 string (e.g. `"2024-01-15T00:00:00.000"`) — **not** a `Date` |
+
+Identical to [`LookupRows`](/platform-functions/lookuprows/): Date columns are stringified, unlike [`Lookup`](/platform-functions/lookup/) which returns a real `Date`.
+
 ## Examples
 
 ### Get most recent 10 orders

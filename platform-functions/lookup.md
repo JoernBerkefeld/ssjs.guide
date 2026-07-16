@@ -10,7 +10,7 @@ availability:
   automation: true
   triggered_send: true
 syntax: "Platform.Function.Lookup(deName, returnField, whereFieldNames, whereFieldValues)"
-return_type: string|number|boolean|object|null
+return_type: string|number|boolean|Date|null
 min_args: 4
 max_args: 4
 verification: verified
@@ -29,9 +29,26 @@ verification: verified
 
 `Lookup` searches a Data Extension for the **first** row where all filter conditions match, and returns the value of the specified `returnField`. When no row matches, it returns `null` (runtime-verified — **not** an empty string `""`, despite what the official docs imply).
 
-The returned value keeps the column's **native runtime type**: Text/EmailAddress columns return a `string`, Number/Decimal columns return a `number`, Boolean columns return a `boolean`, and Date columns return a real `Date` object (not a formatted string — `getFullYear()`, `getMonth()`, etc. work).
+The returned value keeps the column's **native runtime type**: Text/EmailAddress columns return a `string`, Number/Decimal columns return a `number`, Boolean columns return a `boolean`, and Date columns return a real `Date` object (not a formatted string — `getFullYear()`, `getMonth()`, etc. work). This contrasts with [`DataExtension.Rows.Retrieve()`](/core-library/dataextension-rows/), which returns every field as a `string`.
 
 When multiple rows match, `Lookup` returns the value from the **first** row found (ordering is not guaranteed — use `LookupOrderedRows` if order matters).
+
+### Field type → returned JavaScript type (runtime-verified)
+
+Result of probing a Data Extension containing one column of each valid [field type](https://developer.salesforce.com/docs/marketing/marketing-cloud/references/mc_getting_started/dataextensionfieldtype.html) via `Platform.Function.Lookup`:
+
+| DE field type | Returned type | Notes |
+|---|---|---|
+| Text | `string` | |
+| EmailAddress | `string` | |
+| Locale | `string` | e.g. `"en-US"` |
+| Phone | `string` | |
+| Number | `number` | |
+| Decimal | `number` | |
+| Boolean | `boolean` | `true` / `false` |
+| Date | `Date` | a real `Date` object (`getFullYear()` etc. work) |
+
+Only `Lookup` returns Date columns as a real `Date`; the multi-row lookups and `Retrieve` return Date columns as strings.
 
 ### Three distinct empty-ish returns (runtime-verified)
 

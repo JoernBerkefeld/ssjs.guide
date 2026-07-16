@@ -4,6 +4,8 @@ title: Folder
 parent: Core Library
 parent_url: /core-library/
 description: Core library Folder — create, query, update, and remove folders; bind instances by key or folder ID.
+verification: verified
+requires_core_load: true
 ---
 
 `Folder` manages **Content Builder / Email Studio folders**. Call `Folder.Init()` with no arguments when the folder has no external key, then **`SetID`** to bind by numeric folder ID.

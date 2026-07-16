@@ -4,6 +4,8 @@ title: Tracking events
 parent: Core Library
 parent_url: /core-library/
 description: SOAP-style tracking event namespaces — each exposes Retrieve(filter) for send metrics (bounce, click, open, sent, unsub, not-sent, forward, survey).
+verification: verified
+requires_core_load: true
 ---
 
 These Core library objects expose **tracking rows** for email sends. Each namespace implements **`Retrieve(filter)`** with a WSProxy-style filter (for example `{ Property, SimpleOperator, Value }` on `SendID`, subscriber keys, or job fields appropriate to your query).

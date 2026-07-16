@@ -11,7 +11,7 @@
       "whereFieldNames",
       "whereFieldValues"
     ],
-    "returnType": "string|number|boolean|object|null"
+    "returnType": "string|number|boolean|Date|null"
   },
   {
     "name": "LookupRows",
@@ -1348,7 +1348,7 @@
     "params": [
       "rowData"
     ],
-    "returnType": "string"
+    "returnType": "number"
   },
   {
     "name": "DataExtension.Rows.Lookup",
@@ -1398,7 +1398,7 @@
       "whereFieldNames",
       "whereValues"
     ],
-    "returnType": "string"
+    "returnType": "number"
   },
   {
     "name": "Account.Init",
@@ -1963,7 +1963,7 @@
     "params": [
       "properties"
     ],
-    "returnType": "string"
+    "returnType": "object"
   },
   {
     "name": "DeliveryProfile.Update",

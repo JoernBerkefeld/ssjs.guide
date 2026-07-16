@@ -4,6 +4,9 @@ title: DataExtension.Rows
 parent: Core Library
 parent_url: /core-library/
 description: Row-level CRUD methods on a DataExtension object. Retrieve, Add, Update, and Remove rows using object-oriented syntax.
+verification: verified
+requires_core_load: true
+differs_from_docs: "Runtime-verified on a live CloudPage: Add and Update return a number (rows affected), not the string \"OK\"; Update returns 0 (does not throw) on no match. Retrieve() without a filter DOES work on CloudPages (the \"returns empty\" bug could not be reproduced) and returns every field as a string, whereas Lookup returns typed values. Retrieve returns an empty array on no match; Lookup returns null on no match. Retrieve/Lookup results are host arrays (instanceof Array is false, but .length and index access work)."
 ---
 
 `DataExtension.Rows` is the primary interface for reading and writing Data Extension rows via the Core library. Access it through a `DataExtension.Init()` object.
@@ -15,9 +18,9 @@ description: Row-level CRUD methods on a DataExtension object. Retrieve, Add, Up
 | Method | Returns | Description |
 |--------|---------|-------------|
 | [`<DataExtensionInstance>.Rows.Retrieve([filter])`](#instance-rows-retrieve) | object[] | Retrieve rows, optionally filtered |
-| [`<DataExtensionInstance>.Rows.Add(rowData)`](#instance-rows-add) | string | Insert new row(s) |
+| [`<DataExtensionInstance>.Rows.Add(rowData)`](#instance-rows-add) | number | Insert new row(s) |
 | [`<DataExtensionInstance>.Rows.Lookup(searchFieldNames, searchValues[, limit[, orderByFieldName]])`](#instance-rows-lookup) | object[] | Look up rows by column values |
-| [`<DataExtensionInstance>.Rows.Update(rowData, whereFieldNames, whereValues)`](#instance-rows-update) | string | Update existing rows |
+| [`<DataExtensionInstance>.Rows.Update(rowData, whereFieldNames, whereValues)`](#instance-rows-update) | number | Update existing rows |
 | [`<DataExtensionInstance>.Rows.Remove(columnNames, columnValues)`](#instance-rows-remove) | number | Delete rows matching column values |
 
 ---
@@ -66,7 +69,26 @@ var filter = {
 
 #### Return value
 
-`object[]` — row objects with properties matching DE column names.
+`object[]` — row objects with properties matching DE column names. **All field values are returned as strings** (even Number/Boolean/Date columns) — unlike `Lookup`, which returns typed values. On no match, returns an empty array (`length === 0`), not `null` — an ergonomic advantage: you can iterate the result directly without a null-guard. If you need typed/native values instead of strings, use [`Platform.Function.LookupRows`](/platform-functions/lookuprows/) or [`Platform.Function.LookupOrderedRows`](/platform-functions/lookuporderedrows/).
+
+##### Field type → returned JavaScript type (runtime-verified)
+
+Result of probing a Data Extension containing one column of each valid [field type](https://developer.salesforce.com/docs/marketing/marketing-cloud/references/mc_getting_started/dataextensionfieldtype.html) via `<DataExtensionInstance>.Rows.Retrieve()`:
+
+| DE field type | Returned type | Notes |
+|---|---|---|
+| Text | `string` | |
+| EmailAddress | `string` | |
+| Locale | `string` | e.g. `"en-US"` |
+| Phone | `string` | |
+| Number | `string` | stringified number (e.g. `"42"`) |
+| Decimal | `string` | stringified number (e.g. `"3.14"`) |
+| Boolean | `string` | stringified boolean (`"True"` / `"False"`, capitalized) |
+| Date | `string` | .NET-formatted date string (e.g. `"1/15/2024 12:00:00 AM"`) |
+
+**Every** field comes back as a `string` — including Number, Decimal, Boolean, and Date. This is the key difference from the `Platform.Function.Lookup*` family, which returns typed values. Note the Boolean stringifies to the capitalized `"True"`/`"False"` and the Date to a locale-style `M/D/YYYY h:mm:ss AM/PM` string (not ISO-8601).
+
+{% include differs-from-docs.html note="Runtime-verified on a CloudPage: `de.Rows.Retrieve()` without a filter DOES work on CloudPages and returns all rows — the widely-repeated \"returns empty on CloudPages\" bug could not be reproduced. Every field value is returned as a string (Number/Decimal as stringified numbers, Boolean as capitalized \"True\"/\"False\", Date as a locale-formatted string, not ISO-8601). The result is a host array (`instanceof Array` is `false`, but `.length` and index access work)." %}
 
 #### Examples
 
@@ -91,8 +113,6 @@ for (var i = 0; i < active.length; i++) {
 }
 ```
 
-{% include callout.html type="bug" content="On CloudPages, `de.Rows.Retrieve()` without a filter may return empty. Always pass a filter on CloudPages or use `Platform.Function.LookupRows()` instead. See [Known Bugs](/engine-limitations/known-bugs/)." %}
-
 ---
 
 ### &lt;DataExtensionInstance&gt;.Rows.Add {#instance-rows-add}
@@ -109,11 +129,13 @@ Adds one or more rows to the previously initialized data extension.
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `rowData` | array | Yes | Array of objects, one per row to add. Each object's keys must match data extension field names. |
+| `rowData` | array | Yes | Array of row objects (or a single row object). Each object's keys must match data extension field names. |
 
 #### Return value
 
-`"OK"` on success.
+`number` — the count of rows that were added.
+
+{% include differs-from-docs.html note="Runtime-verified on a CloudPage: `Add()` returns a number (the count of rows added), not the string `\"OK\"`. It also accepts a single row object in addition to an array of objects." %}
 
 #### Examples
 
@@ -152,7 +174,9 @@ Returns rows where the specified columns equal the specified values (AND-joined)
 
 #### Return value
 
-`object[]`
+`object[]` — rows with **typed values** (Number/Boolean/Date columns come back as their native types). On no match, returns `null` (not an empty array).
+
+{% include differs-from-docs.html note="Runtime-verified on a CloudPage: `Lookup()` returns typed values (unlike `Retrieve`, which returns every field as a string) and returns `null` on no match. The result is a host array (`instanceof Array` is `false`, but `.length` and index access work)." %}
 
 #### Examples
 
@@ -184,7 +208,9 @@ Updates the columns of rows where `whereFieldNames` equal `whereValues` (AND-joi
 
 #### Return value
 
-`"OK"` on success.
+`number` — the count of rows that were updated. Returns `0` (does not throw) when no row matches.
+
+{% include differs-from-docs.html note="Runtime-verified on a CloudPage: `Update()` returns a number (the count of rows updated), not the string `\"OK\"`. When no row matches the WHERE clause it returns `0` and does NOT throw." %}
 
 #### Examples
 
@@ -265,6 +291,6 @@ if (existing.length === 0) {
 <ul>
   <li><a href="/core-library/dataextension/">DataExtension.Init</a></li>
   <li><a href="/platform-functions/lookuprows/">Platform.Function.LookupRows</a></li>
-  <li><a href="/engine-limitations/known-bugs/">Known Bugs — Retrieve on CloudPages</a></li>
+  <li><a href="/engine-limitations/differs-from-docs/">Differs from Docs — Rows return types</a></li>
 </ul>
 </div>

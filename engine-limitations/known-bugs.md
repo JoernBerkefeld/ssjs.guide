@@ -108,26 +108,24 @@ var v2 = Attribute.GetValue("FirstName");
 
 ---
 
-## DataExtension.Rows.Retrieve() on CloudPages
+## DataExtension.Rows.Retrieve() on CloudPages — not reproducible
 
-**Severity: High** — silently returns empty results
+**Status: Retracted** — could not be reproduced under runtime verification
 
-The Core library method `DataExtension.Rows.Retrieve()` does **not work on CloudPages**. It returns empty results without an error.
+This entry previously claimed that `DataExtension.Rows.Retrieve()` returns empty results on CloudPages and that the `filter` argument is required. **Runtime verification on a live CloudPage disproved both claims**: `de.Rows.Retrieve()` with **no filter** returned all rows, and a filtered call returned the matching rows.
 
 ```javascript
 Platform.Load("core", "1.1.5");
 var de = DataExtension.Init("MyDE");
 
-// ❌ On CloudPages — returns [] silently
-var rows = de.Rows.Retrieve({ Property: "Status", SimpleOperator: "equals", Value: "active" });
+// ✅ Works on CloudPages — returns all rows
+var all = de.Rows.Retrieve();
 
-// ✅ Use Platform.Function.LookupRows instead on CloudPages
-var rows = Platform.Function.LookupRows("MyDE", "Status", "active");
+// ✅ Works on CloudPages — returns matching rows
+var rows = de.Rows.Retrieve({ Property: "Status", SimpleOperator: "equals", Value: "active" });
 ```
 
-The `filter` parameter is also **required** despite the Salesforce documentation saying it is optional.
-
-**Works correctly in:** Automation Studio, Email (precompile).
+For the confirmed runtime characteristics of `Rows.Retrieve` / `Rows.Lookup` (string vs typed values, empty-array vs `null` on no match, host-array shape), see [Differs from Official Docs](/engine-limitations/differs-from-docs/) and the [DataExtension.Rows reference](/core-library/dataextension-rows/).
 
 ---
 

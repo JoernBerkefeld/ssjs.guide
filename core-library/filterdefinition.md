@@ -4,6 +4,9 @@ title: FilterDefinition
 parent: Core Library
 parent_url: /core-library/
 description: Core library FilterDefinition — create and manage data filter definitions for lists or Data Extensions.
+verification: in-progress
+requires_core_load: true
+differs_from_docs: "Runtime-verified on a live CloudPage: Init and Retrieve are confirmed. Retrieve returns an empty array on an equals no-match but null on isNotNull when no definitions exist. Add/Update/Remove return the string \"Error\" on failure (they do NOT throw, contrary to the docs' \"returns OK or throws\"); their success path is BLOCKED — a valid FilterDefinition could not be created on the test BU (audience/DataSource configuration the account could not satisfy)."
 ---
 
 `FilterDefinition` manages **filter definitions** used for audiences and queries. `DataSource.Type` must be `"SubscriberList"` or `"DataExtension"`. The `Filter` property accepts simple or compound filter structures.
@@ -23,6 +26,8 @@ description: Core library FilterDefinition — create and manage data filter def
 ---
 
 ### FilterDefinition.Init {#init}
+
+{% include method-status.html status="verified" %}
 
 Initializes a `FilterDefinition` instance for the given external key.
 
@@ -53,6 +58,8 @@ var fd = FilterDefinition.Init("myFilterDef");
 
 ### FilterDefinition.Add {#add}
 
+{% include method-status.html status="in-progress" differs=true %}
+
 Creates a new filter definition with the specified properties.
 
 #### Syntax
@@ -69,7 +76,9 @@ FilterDefinition.Add(properties)
 
 #### Return value
 
-`"OK"` on success.
+`"OK"` on success. On failure the Core library returns the string `"Error"` (it does **not** throw).
+
+{% include differs-from-docs.html note="Runtime-verification of the success path is BLOCKED — a valid FilterDefinition could not be created on the test BU (creating one needs an audience/DataSource configuration the account could not satisfy). Confirmed behaviour: on failure `Add()` returns the string `\"Error\"` and does NOT throw, whereas the docs say it returns `\"OK\"` or throws." %}
 
 #### Examples
 
@@ -89,6 +98,8 @@ var status = FilterDefinition.Add(newFD);
 
 ### FilterDefinition.Retrieve {#retrieve}
 
+{% include method-status.html status="verified" differs=true %}
+
 Queries filter definitions matching the given filter criteria.
 
 #### Syntax
@@ -105,7 +116,9 @@ FilterDefinition.Retrieve(filter)
 
 #### Return value
 
-`object[]`
+`object[]` — the list of matching filter definitions. May be `null` when none exist.
+
+{% include differs-from-docs.html note="Runtime-verified on a CloudPage. The no-match return type is inconsistent: an `equals` filter that matches nothing returns an empty array (`.length === 0`), but an `isNotNull` filter returns `null` when no filter definitions exist on the account. Guard for both `null` and an empty array." %}
 
 #### Examples
 
@@ -121,6 +134,8 @@ var results = FilterDefinition.Retrieve({
 ---
 
 ### &lt;FilterDefinitionInstance&gt;.Update {#instance-update}
+
+{% include method-status.html status="in-progress" differs=true %}
 
 Updates the initialized filter definition with the given properties.
 
@@ -138,7 +153,9 @@ Updates the initialized filter definition with the given properties.
 
 #### Return value
 
-`"OK"` on success.
+`"OK"` on success. On failure the Core library returns the string `"Error"` (it does **not** throw).
+
+{% include differs-from-docs.html note="Runtime-verification is BLOCKED — no valid FilterDefinition could be created on the test BU (see Add), so Update could not be exercised against a real definition. Against a non-existent definition it returned the string `\"Error\"` and did NOT throw, whereas the docs say it returns `\"OK\"` or throws." %}
 
 #### Examples
 
@@ -152,6 +169,8 @@ var status = fd.Update({ Name: "Updated Name" });
 
 ### &lt;FilterDefinitionInstance&gt;.Remove {#instance-remove}
 
+{% include method-status.html status="in-progress" differs=true %}
+
 Removes the initialized filter definition.
 
 #### Syntax
@@ -162,7 +181,9 @@ Removes the initialized filter definition.
 
 #### Return value
 
-`"OK"` on success.
+`"OK"` on success. On failure the Core library returns the string `"Error"` (it does **not** throw).
+
+{% include differs-from-docs.html note="Runtime-verification is BLOCKED — no valid FilterDefinition could be created on the test BU (see Add), so Remove could not be exercised against a real definition. Against a non-existent definition it returned the string `\"Error\"` and did NOT throw, whereas the docs say it returns `\"OK\"` or throws." %}
 
 #### Examples
 

@@ -4,6 +4,9 @@ title: DeliveryProfile
 parent: Core Library
 parent_url: /core-library/
 description: Core library DeliveryProfile — create, update, and remove delivery profiles (no Retrieve in this namespace).
+verification: verified
+requires_core_load: true
+differs_from_docs: "Runtime-verified on a live CloudPage: DeliveryProfile.Add returns a CLR object (ExactTarget.Integration.WSDL.DeliveryProfile) whose properties are not readable from SSJS, not the string \"OK\". Init returns an instance; Update and Remove return \"OK\"; DeliveryProfile.Retrieve is undefined (as documented)."
 ---
 
 `DeliveryProfile` manages **delivery profiles** (routing / delivery settings used with send classifications). The Core library exposes `Init`, `Add`, `Update`, and `Remove` — there is **no** `DeliveryProfile.Retrieve` in this namespace; query profiles with WSProxy or another API if you need read access outside an instance.
@@ -15,7 +18,7 @@ description: Core library DeliveryProfile — create, update, and remove deliver
 | Method | Returns | Description |
 |--------|---------|-------------|
 | [`DeliveryProfile.Init(key)`](#init) | DeliveryProfileInstance | Bind by external key |
-| [`DeliveryProfile.Add(properties)`](#add) | string | Create a delivery profile |
+| [`DeliveryProfile.Add(properties)`](#add) | object | Create a delivery profile |
 | [`<DeliveryProfileInstance>.Update(properties)`](#instance-update) | string | Update the initialized profile |
 | [`<DeliveryProfileInstance>.Remove()`](#instance-remove) | string | Delete the profile |
 
@@ -68,7 +71,9 @@ DeliveryProfile.Add(properties)
 
 #### Return value
 
-`"OK"` on success.
+`object` — a CLR `DeliveryProfile` object on success. Its properties are not readable from SSJS; treat a non-throwing return as success.
+
+{% include differs-from-docs.html note="Runtime-verified on a CloudPage: `Add()` returns a CLR object (`ExactTarget.Integration.WSDL.DeliveryProfile`), not the string `\"OK\"`. Reading a property off it throws *\"Use of Common Language Runtime (CLR) is not allowed\"*. Treat any non-throwing return as success." %}
 
 #### Examples
 
@@ -80,7 +85,7 @@ var newDP = {
     Description: "An SSJS Added Profile",
     SourceAddressType: "DefaultPrivateIPAddress"
 };
-var status = DeliveryProfile.Add(newDP);
+var result = DeliveryProfile.Add(newDP);
 ```
 
 ---

@@ -325,17 +325,52 @@ The official docs (and this page's earlier return-value table) type `Task.Valida
 
 The official `Add` reference annotates the return as `@returns {Enum("OK")}`, but at runtime `ContentAreaObj.Add(properties)` returns an **initialized `ContentAreaObjInstance`** — an object exposing `Update`/`Remove`, identical in shape to `ContentAreaObj.Init`. This matches the doc's own H1 summary ("returns an initialized object") rather than the `@returns` annotation. Sibling methods `Retrieve` returns a host array (`[object Array]` with `.length`, but `instanceof Array` is `false`); `Update`/`Remove` return the string `"OK"`.
 
+### DeliveryProfile.Add — returns a CLR object, not "OK"
+
+[Reference: DeliveryProfile](/core-library/deliveryprofile/)
+
+The official docs annotate `DeliveryProfile.Add(properties)` as returning the string `"OK"`. At runtime it returns a **CLR object** (`typeof` is `clr`; it stringifies to `ExactTarget.Integration.WSDL.DeliveryProfile`). Reading any property off it throws *"Use of Common Language Runtime (CLR) is not allowed"*, so the object is opaque from SSJS — treat any non-throwing return as success. Sibling instance methods `<DeliveryProfileInstance>.Update(properties)` and `<DeliveryProfileInstance>.Remove()` do return the string `"OK"` as documented. `DeliveryProfile.Retrieve` does not exist (`undefined`).
+
 ### DataExtension.Retrieve — filter is optional at runtime
 
 [Reference: DataExtension](/core-library/dataextension/)
 
 The official docs list the `filter` argument as **required**, but at runtime it is **optional**: calling `DataExtension.Retrieve()` with no arguments does not throw — it returns the full list of data extensions. A filter that matches nothing returns a **real empty array** (`Object.prototype.toString` reports `[object Array]`, `typeof .length` is `number`, `.length === 0`, zero enumerable keys) — not `null` and not `undefined`. Note the SFMC engine quirk that an empty array is **falsy** here, so guard on `.length` (`results.length > 0`) rather than truthiness of the array itself.
 
+### &lt;DataExtensionInstance&gt;.Rows.Add / Update — return a row count, not "OK"
+
+[Reference: DataExtension.Rows](/core-library/dataextension-rows/)
+
+The official docs annotate `<DataExtensionInstance>.Rows.Add(rowData)` and `<DataExtensionInstance>.Rows.Update(rowData, whereFieldNames, whereValues)` as returning the string `"OK"`. At runtime both return a **number** — the count of rows added / updated. `Update` returns **`0` and does not throw** when the WHERE clause matches no rows (the docs imply it throws). `Add` also accepts a **single row object** in addition to an array of objects.
+
+### &lt;DataExtensionInstance&gt;.Rows.Retrieve / Lookup — string vs typed values, empty-array vs null, and Retrieve works on CloudPages
+
+[Reference: DataExtension.Rows](/core-library/dataextension-rows/)
+
+Runtime-verified on a live CloudPage:
+
+1. `<DataExtensionInstance>.Rows.Retrieve()` **without a filter DOES work on CloudPages** and returns all rows — the widely-repeated "returns empty on CloudPages" bug could not be reproduced.
+2. `Retrieve` returns **every field value as a string** (even Number/Boolean/Date columns); `Lookup` returns **typed values**.
+3. On no match, `Retrieve` returns an **empty array** (`.length === 0`) while `Lookup` returns **`null`**.
+4. Both `Retrieve` and `Lookup` results are **host arrays**: `Object.prototype.toString` reports `[object Array]` and `.length` / index access work, but `instanceof Array` is `false`.
+
 ### &lt;DataExtensionInstance&gt;.Fields.Retrieve — field objects include an undocumented ObjectID
 
 [Reference: DataExtension.Fields](/core-library/dataextension-fields/)
 
 The official docs example response lists only `Name`, `FieldType`, `IsPrimaryKey`, `MaxLength`, `Ordinal`, and `DefaultValue`. At runtime each returned field object also carries an undocumented **`ObjectID`** (`string`) property. The collection is a genuine JS `Array` (`[object Array]`). Sibling methods `<DataExtensionInstance>.Fields.Add` and `<DataExtensionInstance>.Fields.UpdateSendableField` return the string `"OK"` on success and the string `"Error"` on failure — they do **not** throw, contrary to the docs' "throws on failure" wording.
+
+### FilterDefinition.Add / Update / Remove — return "Error", do not throw on failure
+
+[Reference: FilterDefinition](/core-library/filterdefinition/)
+
+The official docs state these return `"OK"` on success or throw on failure. At runtime, on failure they return the plain string **`"Error"`** and do **not** throw. Their success path is **BLOCKED** for verification — a valid `FilterDefinition` could not be created on the test BU (creating one requires an audience/DataSource configuration the test account could not satisfy; every `Add` attempt with SubscriberList and DataExtension DataSources returned `"Error"`, and a direct WSProxy `createItem("FilterDefinition")` throws a SOAP inner exception *"Invalid property name: Type"* on `DataSource`). Treat a non-`"OK"` return as failure rather than relying on a thrown exception.
+
+### FilterDefinition.Retrieve — empty array vs null on no-match is inconsistent
+
+[Reference: FilterDefinition](/core-library/filterdefinition/)
+
+Runtime-verified on a live CloudPage: `FilterDefinition.Retrieve(filter)` executes and returns a host array of matching definitions. The no-match return type is **inconsistent** — an `equals` filter that matches nothing returns an **empty array** (`.length === 0`), but an `isNotNull` filter returns **`null`** when no filter definitions exist on the account. Guard for both `null` and an empty array before reading `.length`.
 
 ### &lt;SendInstance&gt;.Tracking click & interval retrieval — Clicks.Retrieve / TotalByInterval.Retrieve, not ClickRetrieve / TotalByIntervalRetrieve
 

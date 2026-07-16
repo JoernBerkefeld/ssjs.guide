@@ -32,7 +32,24 @@ Returns `null` when no rows match (runtime-verified — **not** an empty array `
 
 The Data Extension is resolved by its **Name**; the external key / CustomerKey is not accepted.
 
-Unlike `DataExtension.Rows.Retrieve()`, `LookupRows` works correctly on **CloudPages**.
+`LookupRows` returns most fields as their **typed/native JS value** (Number and Decimal columns come back as `number`, Boolean columns as `boolean`), so you can use them without manual casting. **Date columns are the exception:** they are returned as an ISO-8601 `string` (e.g. `"2024-01-15T00:00:00.000"`), **not** as a `Date` object — this differs from [`Lookup`](/platform-functions/lookup/), which returns a real `Date` for Date columns (runtime-verified). Text and EmailAddress columns are `string` in both. This still contrasts with `DataExtension.Rows.Retrieve()`, which stringifies **every** field (including Number/Boolean). In return, `Retrieve` gives you an empty array (`[]`) rather than `null` on no match — see [DataExtension.Rows](/core-library/dataextension-rows/) for that trade-off.
+
+### Field type → returned JavaScript type (runtime-verified)
+
+Result of probing a Data Extension containing one column of each valid [field type](https://developer.salesforce.com/docs/marketing/marketing-cloud/references/mc_getting_started/dataextensionfieldtype.html) via `Platform.Function.LookupRows`:
+
+| DE field type | Returned type | Notes |
+|---|---|---|
+| Text | `string` | |
+| EmailAddress | `string` | |
+| Locale | `string` | e.g. `"en-US"` |
+| Phone | `string` | |
+| Number | `number` | |
+| Decimal | `number` | |
+| Boolean | `boolean` | `true` / `false` |
+| Date | `string` | ISO-8601 string (e.g. `"2024-01-15T00:00:00.000"`) — **not** a `Date` |
+
+Unlike [`Lookup`](/platform-functions/lookup/) (which returns a real `Date` for Date columns), the multi-row lookups stringify Date columns. All other types match `Lookup`.
 
 > **Row limit:** `LookupRows` may return up to 2,000 rows by default. Use `LookupOrderedRows` with a `sortCount` limit for larger datasets.
 
@@ -106,7 +123,7 @@ var date  = row["CreatedDate"];
 
 ## Notes
 
-- Works on CloudPages (unlike `DataExtension.Rows.Retrieve()`)
+- Returns Number/Decimal columns as `number` and Boolean columns as `boolean`; **Date columns come back as an ISO-8601 `string`** (unlike `Lookup`, which returns a real `Date`). By contrast, `DataExtension.Rows.Retrieve()` stringifies every field, including numbers and booleans
 - Returns `null` (not `[]`) when no rows match — always guard before reading `.length`
 - Each row object includes the system fields `_CustomObjectKey` (number) and `_CreatedDate` (string)
 - Resolves the DE by **Name**, not external key / CustomerKey
