@@ -4,6 +4,9 @@ title: SenderProfile
 parent: Core Library
 parent_url: /core-library/
 description: Core library SenderProfile — from-name / from-address profiles (Core library has no Retrieve here).
+verification: verified
+requires_core_load: true
+differs_from_docs: "Runtime-verified on a live CloudPage (full Add → Init → Update → Remove lifecycle). One discrepancy: `SenderProfile.Add` returns a CLR object (`ExactTarget.Integration.WSDL.SenderProfile`), not the documented `\"OK\"` string; Init/Update/Remove behave as documented."
 ---
 
 `SenderProfile` manages **sender profiles** (From name, From address, etc.). **SenderProfile methods only run on CloudPages / landing pages** — they **cannot** run inside an email message at send time.
@@ -17,7 +20,7 @@ There is **no** `SenderProfile.Retrieve` in this Core namespace; use **Init** wi
 | Method | Returns | Description |
 |--------|---------|-------------|
 | [`SenderProfile.Init(key)`](#init) | SenderProfileInstance | Bind by external key |
-| [`SenderProfile.Add(properties)`](#add) | string | Create a sender profile |
+| [`SenderProfile.Add(properties)`](#add) | object | Create a sender profile (returns a CLR object, not `"OK"`) |
 | [`<SenderProfileInstance>.Update(properties)`](#instance-update) | string | Update the initialized profile |
 | [`<SenderProfileInstance>.Remove()`](#instance-remove) | string | Delete the profile |
 
@@ -54,6 +57,8 @@ var myProfile = SenderProfile.Init("mySenderProfile");
 
 ### SenderProfile.Add {#add}
 
+{% include differs-from-docs.html note="The official docs say `SenderProfile.Add` returns `\"OK\"`. Runtime-verified on a live CloudPage: it returns a **CLR object** (`typeof` is `clr`; it stringifies to `ExactTarget.Integration.WSDL.SenderProfile`). Reading any property off it throws *\"Use of Common Language Runtime (CLR) is not allowed\"*, so the object is opaque from SSJS — treat any non-throwing return as success. This mirrors `DeliveryProfile.Add`." %}
+
 Creates a new sender profile with the specified properties.
 
 #### Syntax
@@ -70,7 +75,7 @@ SenderProfile.Add(properties)
 
 #### Return value
 
-`"OK"` on success.
+`object` — a CLR `SenderProfile` object (opaque from SSJS) on success; throws on failure. **Not** the `"OK"` string the docs imply.
 
 #### Examples
 
@@ -83,7 +88,7 @@ var newSP = {
     FromName: "Andrea Cruz",
     FromAddress: "acruz@example.com"
 };
-var status = SenderProfile.Add(newSP);
+var status = SenderProfile.Add(newSP); // CLR object, not "OK"
 ```
 
 ---

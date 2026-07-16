@@ -4,6 +4,9 @@ title: Portfolio
 parent: Core Library
 parent_url: /core-library/
 description: Core library Portfolio — file / portfolio items in Content Builder (init, add, retrieve, update, remove).
+verification: in-progress
+requires_core_load: true
+differs_from_docs: "Runtime-verified on a live CloudPage: Init is confirmed. Add returns the string \"Error\" (not \"OK\", and does NOT throw), Retrieve returns an `object` with no `.length` (not the documented `object[]`), and Update/Remove against a non-existent key also return \"Error\" without throwing. Add/Retrieve/Update/Remove success paths are BLOCKED (no test data could be created)."
 ---
 
 `Portfolio` manages **portfolio** file objects in the account (display name, file location, category, and so on).
@@ -23,6 +26,8 @@ description: Core library Portfolio — file / portfolio items in Content Builde
 ---
 
 ### Portfolio.Init {#init}
+
+{% include method-status.html status="verified" %}
 
 Initializes a `Portfolio` instance for the given external key.
 
@@ -53,6 +58,8 @@ var portObj = Portfolio.Init("myPortfolioCK");
 
 ### Portfolio.Add {#add}
 
+{% include method-status.html status="in-progress" differs=true %}
+
 Creates a new portfolio item with the specified properties.
 
 #### Syntax
@@ -69,7 +76,9 @@ Portfolio.Add(properties)
 
 #### Return value
 
-`"OK"` on success.
+`"OK"` on success. On failure the Core library returns the string `"Error"` (it does **not** throw).
+
+{% include differs-from-docs.html note="Runtime-verification of the success path is BLOCKED — no portfolio item could be created on the test BU (no valid category/file to reference), so the success path could not be exercised. Every `Add()` attempt (including a full `DisplayName`/`CustomerKey`/`FileName`/`FileLocation` payload) returned the string `\"Error\"` and did NOT throw, whereas the docs say it returns `\"OK\"` or throws." %}
 
 #### Examples
 
@@ -89,6 +98,8 @@ var status = Portfolio.Add(newPortfolio);
 
 ### Portfolio.Retrieve {#retrieve}
 
+{% include method-status.html status="in-progress" differs=true %}
+
 Queries portfolio items matching the given filter criteria.
 
 #### Syntax
@@ -107,6 +118,8 @@ Portfolio.Retrieve(filter)
 
 `object[]`
 
+{% include differs-from-docs.html note="Runtime-verification is BLOCKED — no portfolio item could be created on the test BU (no valid category/file to reference), so a populated array could not be produced. Against an empty account the call returned an `object` with no `.length` property (not a JS array), so the documented `object[]` shape could not be confirmed." %}
+
 #### Examples
 
 ```javascript
@@ -121,6 +134,8 @@ var portObjArr = Portfolio.Retrieve({
 ---
 
 ### &lt;PortfolioInstance&gt;.Update {#instance-update}
+
+{% include method-status.html status="in-progress" differs=true %}
 
 Updates the initialized portfolio item with the given properties.
 
@@ -138,7 +153,9 @@ Updates the initialized portfolio item with the given properties.
 
 #### Return value
 
-`"OK"` on success.
+`"OK"` on success. On failure the Core library returns the string `"Error"` (it does **not** throw).
+
+{% include differs-from-docs.html note="Runtime-verification of the success path is BLOCKED — no portfolio item could be created on the test BU (no valid category/file to reference), so Update could not be exercised against a real item. Against a non-existent key it returned the string `\"Error\"` and did NOT throw, whereas the docs say it returns `\"OK\"` or throws." %}
 
 #### Examples
 
@@ -152,6 +169,8 @@ var status = portObj.Update({ DisplayName: "Updated SSJS Image" });
 
 ### &lt;PortfolioInstance&gt;.Remove {#instance-remove}
 
+{% include method-status.html status="in-progress" differs=true %}
+
 Removes the initialized portfolio item.
 
 #### Syntax
@@ -162,7 +181,9 @@ Removes the initialized portfolio item.
 
 #### Return value
 
-`"OK"` on success.
+`"OK"` on success. On failure the Core library returns the string `"Error"` (it does **not** throw).
+
+{% include differs-from-docs.html note="Runtime-verification of the success path is BLOCKED — no portfolio item could be created on the test BU (no valid category/file to reference), so Remove could not be exercised against a real item. Against a non-existent key it returned the string `\"Error\"` and did NOT throw, whereas the docs say it returns `\"OK\"` or throws." %}
 
 #### Examples
 

@@ -4,6 +4,8 @@ title: SendClassification
 parent: Core Library
 parent_url: /core-library/
 description: Core library SendClassification — ties a sender profile and delivery profile for compliant sends.
+verification: in-progress
+requires_core_load: true
 ---
 
 `SendClassification` groups a **sender profile** and **delivery profile** for use when creating sends and send definitions. Updates must include **both** `SenderProfileKey` and `DeliveryProfileKey` in the properties object.
@@ -23,6 +25,8 @@ description: Core library SendClassification — ties a sender profile and deliv
 ---
 
 ### SendClassification.Init {#init}
+
+{% include method-status.html status="verified" %}
 
 Initializes a `SendClassification` instance for the given external key.
 
@@ -52,6 +56,10 @@ var sc = SendClassification.Init("mySendClassification");
 ---
 
 ### SendClassification.Add {#add}
+
+{% include method-status.html status="in-progress" %}
+
+{% include callout.html type="warning" content="**Verification blocked (no test data).** New send classifications could not be created from SSJS in the test BU. `SendClassification.Add` throws `\"Error adding SendClassification.\"` (with an `undefined` `.message`) even with the account's proven-valid `Default` sender + `Default` delivery profiles. A direct WSProxy `createItem(\"SendClassification\")` returns `StatusMessage=\"SenderProfile given an invalid identifier.\"` `ErrorCode=24101` — the SOAP path needs the SenderProfile **ObjectID**, not its CustomerKey, so the `\"OK\"` success return could not be runtime-confirmed." %}
 
 Creates a new send classification with the specified properties.
 
@@ -89,6 +97,8 @@ SendClassification.Add(newSC);
 
 ### SendClassification.Retrieve {#retrieve}
 
+{% include method-status.html status="verified" %}
+
 Queries send classifications matching the given filter criteria.
 
 #### Syntax
@@ -121,6 +131,10 @@ var results = SendClassification.Retrieve({
 ---
 
 ### &lt;SendClassificationInstance&gt;.Update {#instance-update}
+
+{% include method-status.html status="in-progress" %}
+
+{% include callout.html type="warning" content="**Verification blocked (no test data).** Depends on first creating a send classification, which is blocked in the test BU (see Add). Update could not be runtime-confirmed." %}
 
 Updates the initialized send classification. You must include **both** `SenderProfileKey` and `DeliveryProfileKey` for the update to succeed.
 
@@ -156,6 +170,10 @@ var status = sc.Update(updatedSC);
 ---
 
 ### &lt;SendClassificationInstance&gt;.Remove {#instance-remove}
+
+{% include method-status.html status="in-progress" %}
+
+{% include callout.html type="warning" content="**Verification blocked (no test data).** Depends on first creating a send classification, which is blocked in the test BU (see Add). Remove could not be runtime-confirmed." %}
 
 Removes the initialized send classification.
 

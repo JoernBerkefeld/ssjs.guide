@@ -4,6 +4,8 @@ title: List.Subscribers
 parent: Core Library
 parent_url: /core-library/
 description: After List.Init, manage subscribers on that list — add, retrieve, unsubscribe, update, upsert, and optional tracking retrieval.
+verification: verified
+requires_core_load: true
 ---
 
 After [`List.Init`](/core-library/list/), use `list.Subscribers` to work with subscribers on that publication list.

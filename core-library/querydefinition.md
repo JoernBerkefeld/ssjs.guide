@@ -4,6 +4,9 @@ title: QueryDefinition
 parent: Core Library
 parent_url: /core-library/
 description: Core library QueryDefinition — SQL query activities (add, retrieve, update, remove, perform).
+verification: verified
+requires_core_load: true
+differs_from_docs: "Runtime-verified on a live CloudPage (full Add → Retrieve → Update → Perform → Remove lifecycle against a real target DE). One discrepancy: `Perform(\"start\")` returns the string `\"QueryDefinition perform called successfully\"`, not the documented `\"OK\"` — it queues the run asynchronously and returns immediately."
 ---
 
 `QueryDefinition` manages **Query Activities**: SQL text, target Data Extension, update type, and execution via **`Perform("start")`**.
@@ -19,7 +22,7 @@ description: Core library QueryDefinition — SQL query activities (add, retriev
 | [`QueryDefinition.Retrieve(filter)`](#retrieve) | object[] | Query definitions (simple or compound filters) |
 | [`<QueryDefinitionInstance>.Update(properties)`](#instance-update) | string | Update the initialized definition |
 | [`<QueryDefinitionInstance>.Remove()`](#instance-remove) | string | Delete the definition |
-| [`<QueryDefinitionInstance>.Perform(action)`](#instance-perform) | string | Run the query (`action`: `"start"`) |
+| [`<QueryDefinitionInstance>.Perform(action)`](#instance-perform) | string | Run the query (`action`: `"start"`); returns `"QueryDefinition perform called successfully"`, not `"OK"` |
 
 ---
 
@@ -182,7 +185,9 @@ var status = qd.Remove();
 
 ### &lt;QueryDefinitionInstance&gt;.Perform {#instance-perform}
 
-Runs the SQL and writes results to the configured target Data Extension. Use **`"start"`** as the action.
+{% include method-status.html differs=true %}
+
+Runs the SQL and writes results to the configured target Data Extension. Use **`"start"`** as the action. The run is queued **asynchronously** — `Perform` returns as soon as the run is accepted, not when the query finishes.
 
 #### Syntax
 
@@ -198,7 +203,9 @@ Runs the SQL and writes results to the configured target Data Extension. Use **`
 
 #### Return value
 
-`"OK"` on success.
+`string` — `"QueryDefinition perform called successfully"` when the run is accepted; throws on failure.
+
+{% include differs-from-docs.html note="The official docs (and older versions of this page) say `Perform` returns `\"OK\"`. Runtime-verified on a live CloudPage: it returns the string `\"QueryDefinition perform called successfully\"`. The call queues the query asynchronously and returns immediately — the string only confirms acceptance, not completion. Detect failure via a thrown error, not by string-matching `\"OK\"`." %}
 
 #### Examples
 
@@ -206,7 +213,7 @@ Runs the SQL and writes results to the configured target Data Extension. Use **`
 Platform.Load("core", "1");
 var qd = QueryDefinition.Init("MY_QUERY_KEY");
 var result = qd.Perform("start");
-Write(Stringify(result));
+Write(Stringify(result)); // "QueryDefinition perform called successfully"
 ```
 
 ## See also

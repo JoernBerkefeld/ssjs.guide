@@ -325,11 +325,29 @@ The official docs (and this page's earlier return-value table) type `Task.Valida
 
 The official `Add` reference annotates the return as `@returns {Enum("OK")}`, but at runtime `ContentAreaObj.Add(properties)` returns an **initialized `ContentAreaObjInstance`** — an object exposing `Update`/`Remove`, identical in shape to `ContentAreaObj.Init`. This matches the doc's own H1 summary ("returns an initialized object") rather than the `@returns` annotation. Sibling methods `Retrieve` returns a host array (`[object Array]` with `.length`, but `instanceof Array` is `false`); `Update`/`Remove` return the string `"OK"`.
 
+### Portfolio.Add / Update / Remove — return "Error", do not throw; Retrieve is not a JS array
+
+[Reference: Portfolio](/core-library/portfolio/)
+
+`Portfolio` is a legacy Classic file feature. The official docs state `Add`/`Update`/`Remove` return `"OK"` on success or throw on failure; at runtime, on the Content Builder-era test BU they return the plain string **`"Error"`** and do **not** throw. Their success path is **BLOCKED** for verification — no portfolio item could be created on the BU (every `Add` with a full payload returned `"Error"`). `Portfolio.Retrieve` returns an `object` with **no `.length`** property (not the documented `object[]` array) when the account has no portfolio items, so the array shape could not be confirmed. `Portfolio.Init` binds a key and returns a working instance object as documented. Treat any non-`"OK"` return as failure.
+
+### &lt;QueryDefinitionInstance&gt;.Perform — returns a status string, not "OK"
+
+[Reference: QueryDefinition](/core-library/querydefinition/)
+
+The official docs annotate `<QueryDefinitionInstance>.Perform(action)` as `@returns {Enum("OK")}`, but at runtime `Perform("start")` returns the string **`"QueryDefinition perform called successfully"`** (not `"OK"`). The call **queues the query run asynchronously** and returns immediately — the string only confirms the run was accepted, not that the query finished. Detect failure via a thrown error, not by string-matching `"OK"`. The full `QueryDefinition` lifecycle (`Add` → `Retrieve` → `Update` → `Perform` → `Remove`) is runtime-proven on a live CloudPage; `Add`/`Update`/`Remove` return `"OK"` and `Retrieve` returns a real JS array (`[object Array]` with `.length`) as documented.
+
 ### DeliveryProfile.Add — returns a CLR object, not "OK"
 
 [Reference: DeliveryProfile](/core-library/deliveryprofile/)
 
 The official docs annotate `DeliveryProfile.Add(properties)` as returning the string `"OK"`. At runtime it returns a **CLR object** (`typeof` is `clr`; it stringifies to `ExactTarget.Integration.WSDL.DeliveryProfile`). Reading any property off it throws *"Use of Common Language Runtime (CLR) is not allowed"*, so the object is opaque from SSJS — treat any non-throwing return as success. Sibling instance methods `<DeliveryProfileInstance>.Update(properties)` and `<DeliveryProfileInstance>.Remove()` do return the string `"OK"` as documented. `DeliveryProfile.Retrieve` does not exist (`undefined`).
+
+### SenderProfile.Add — returns a CLR object, not "OK"
+
+[Reference: SenderProfile](/core-library/senderprofile/)
+
+The official docs annotate `SenderProfile.Add(properties)` as returning the string `"OK"`. Runtime-verified on a live CloudPage: it returns a **CLR object** (`typeof` is `clr`; it stringifies to `ExactTarget.Integration.WSDL.SenderProfile`), not `"OK"`. Reading any property off it throws *"Use of Common Language Runtime (CLR) is not allowed"*, so the object is opaque from SSJS — treat any non-throwing return as success. This mirrors `DeliveryProfile.Add`. Sibling instance methods `<SenderProfileInstance>.Update(properties)` and `<SenderProfileInstance>.Remove()` return the string `"OK"` as documented; `SenderProfile.Init` binds a key and returns a working instance.
 
 ### DataExtension.Retrieve — filter is optional at runtime
 

@@ -2004,7 +2004,7 @@
     "params": [
       "properties"
     ],
-    "returnType": "string"
+    "returnType": "object"
   },
   {
     "name": "SenderProfile.Update",
