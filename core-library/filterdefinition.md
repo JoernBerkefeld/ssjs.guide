@@ -6,7 +6,7 @@ parent_url: /core-library/
 description: Core library FilterDefinition — create and manage data filter definitions for lists or Data Extensions.
 verification: in-progress
 requires_core_load: true
-differs_from_docs: "Runtime-verified on a live CloudPage: Init and Retrieve are confirmed. Retrieve returns an empty array on an equals no-match but null on isNotNull when no definitions exist. Add/Update/Remove return the string \"Error\" on failure (they do NOT throw, contrary to the docs' \"returns OK or throws\"); their success path is BLOCKED — a valid FilterDefinition could not be created on the test BU (audience/DataSource configuration the account could not satisfy)."
+differs_from_docs: "Runtime-verified on a live CloudPage: Init and Retrieve are confirmed. Retrieve always returns an array — an empty array when nothing matches, never null. Add/Update/Remove return the string \"Error\" on failure (they do NOT throw, contrary to the docs' \"returns OK or throws\"); their success path is BLOCKED — a valid FilterDefinition could not be created on the test BU (audience/DataSource configuration the account could not satisfy)."
 ---
 
 `FilterDefinition` manages **filter definitions** used for audiences and queries. `DataSource.Type` must be `"SubscriberList"` or `"DataExtension"`. The `Filter` property accepts simple or compound filter structures.
@@ -98,7 +98,7 @@ var status = FilterDefinition.Add(newFD);
 
 ### FilterDefinition.Retrieve {#retrieve}
 
-{% include method-status.html status="verified" differs=true %}
+{% include method-status.html status="verified" %}
 
 Queries filter definitions matching the given filter criteria.
 
@@ -116,9 +116,7 @@ FilterDefinition.Retrieve(filter)
 
 #### Return value
 
-`object[]` — the list of matching filter definitions. May be `null` when none exist.
-
-{% include differs-from-docs.html note="Runtime-verified on a CloudPage. The no-match return type is inconsistent: an `equals` filter that matches nothing returns an empty array (`.length === 0`), but an `isNotNull` filter returns `null` when no filter definitions exist on the account. Guard for both `null` and an empty array." %}
+`object[]` — the list of matching filter definitions; an empty array when nothing matches.
 
 #### Examples
 

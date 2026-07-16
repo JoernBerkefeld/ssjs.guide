@@ -102,7 +102,7 @@ The Core library and `Platform.Function.*` both interact with SFMC data, but hav
 | DE operations | Object-based (Init → Rows.Retrieve) | Functional (Lookup, InsertData) |
 | Subscriber | Rich object model | No direct equivalent |
 | Performance (large datasets) | Better for bulk | Better for single lookups |
-| CloudPage retrieve | Works correctly | `DataExtension.Rows.Retrieve()` bug |
+| Returned field types | `DataExtension.Rows.Retrieve()` stringifies every value | `Lookup*` can return typed values (`string`, `number`, `boolean`, `Date`) |
 | Error handling | Exceptions on failure | Returns 0/null |
 
 See [Platform.Function vs Core Library](/getting-started/platform-vs-core/) for a detailed comparison.

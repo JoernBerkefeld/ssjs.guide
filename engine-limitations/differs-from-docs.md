@@ -384,12 +384,6 @@ The official docs example response lists only `Name`, `FieldType`, `IsPrimaryKey
 
 The official docs state these return `"OK"` on success or throw on failure. At runtime, on failure they return the plain string **`"Error"`** and do **not** throw. Their success path is **BLOCKED** for verification — a valid `FilterDefinition` could not be created on the test BU (creating one requires an audience/DataSource configuration the test account could not satisfy; every `Add` attempt with SubscriberList and DataExtension DataSources returned `"Error"`, and a direct WSProxy `createItem("FilterDefinition")` throws a SOAP inner exception *"Invalid property name: Type"* on `DataSource`). Treat a non-`"OK"` return as failure rather than relying on a thrown exception.
 
-### FilterDefinition.Retrieve — empty array vs null on no-match is inconsistent
-
-[Reference: FilterDefinition](/core-library/filterdefinition/)
-
-Runtime-verified on a live CloudPage: `FilterDefinition.Retrieve(filter)` executes and returns a host array of matching definitions. The no-match return type is **inconsistent** — an `equals` filter that matches nothing returns an **empty array** (`.length === 0`), but an `isNotNull` filter returns **`null`** when no filter definitions exist on the account. Guard for both `null` and an empty array before reading `.length`.
-
 ### &lt;SendInstance&gt;.Tracking click & interval retrieval — Clicks.Retrieve / TotalByInterval.Retrieve, not ClickRetrieve / TotalByIntervalRetrieve
 
 [Reference: Send](/core-library/send/)
