@@ -4,6 +4,8 @@ title: Subscriber
 parent: Core Library
 parent_url: /core-library/
 description: Core library object for managing All Subscribers list entries — add, retrieve, upsert, update, remove, unsubscribe, and retrieve attributes and lists.
+verification: in-progress
+requires_core_load: true
 ---
 
 The `Subscriber` Core library object manages entries in the All Subscribers list. Use it to create, look up, update, or unsubscribe subscribers, and to retrieve their attributes and list memberships.
@@ -17,8 +19,8 @@ The `Subscriber` Core library object manages entries in the All Subscribers list
 | [`Subscriber.Init(key)`](#init) | SubscriberInstance | Initialize a Subscriber instance by key |
 | [`Subscriber.Add(properties)`](#add) | string | Create a new subscriber |
 | [`Subscriber.Retrieve(filter)`](#retrieve) | object[] | Retrieve subscribers matching a filter |
-| [`Subscriber.Upsert(properties)`](#upsert) | string | Create or update a subscriber |
-| [`Subscriber.Statistics(subscriberKey)`](#statistics) | object | Retrieve statistics for a subscriber |
+| [`<SubscriberInstance>.Upsert(properties)`](#instance-upsert) | string | Create or update the initialized subscriber |
+| [`<SubscriberInstance>.Statistics()`](#instance-statistics) | object | Retrieve statistics for the initialized subscriber |
 | [`<SubscriberInstance>.Update(properties)`](#instance-update) | string | Update the initialized subscriber |
 | [`<SubscriberInstance>.Remove()`](#instance-remove) | string | Delete the initialized subscriber |
 | [`<SubscriberInstance>.Unsubscribe()`](#instance-unsubscribe) | string | Set the subscriber status to Unsubscribed |
@@ -28,6 +30,8 @@ The `Subscriber` Core library object manages entries in the All Subscribers list
 ---
 
 ### Subscriber.Init {#init}
+
+{% include method-status.html status="verified" %}
 
 Initializes a Subscriber instance bound to the specified subscriber key. Required before invoking any instance method on the returned object.
 
@@ -57,6 +61,10 @@ var sub = Subscriber.Init("mySubscriber");
 ---
 
 ### Subscriber.Add {#add}
+
+{% include method-status.html status="in-progress" %}
+
+{% include callout.html type="info" content="Verification blocked by a BU-level guardrail: on the QA test BU, programmatic subscriber creation is rejected by the spam filter — a live round-trip returned SOAP `StatusMessage: \"TriggeredSpamFilter\"` (`ErrorCode 12002`). Presence and signature are runtime-proven (`typeof Subscriber.Add === \"function\"`), but the create path cannot complete on this BU. Verify on a BU whose spam-filter policy allows programmatic subscriber writes." %}
 
 Creates a new subscriber from the supplied properties.
 
@@ -94,6 +102,8 @@ var status = Subscriber.Add(newSubscriber);
 
 ### Subscriber.Retrieve {#retrieve}
 
+{% include method-status.html status="verified" %}
+
 Returns an array of subscribers matching the specified filter.
 
 #### Syntax
@@ -121,14 +131,20 @@ var results = Subscriber.Retrieve({ Property: "SubscriberKey", SimpleOperator: "
 
 ---
 
-### Subscriber.Upsert {#upsert}
+### &lt;SubscriberInstance&gt;.Upsert {#instance-upsert}
 
-Creates a new subscriber, or updates an existing one matched by `EmailAddress` / `SubscriberKey`.
+{% include method-status.html status="in-progress" %}
+
+{% include callout.html type="warning" title="Differs from official Salesforce docs" content="The official docs document this as a **static** `Subscriber.Upsert(properties)`, but at runtime `Subscriber.Upsert` is `undefined` — the method lives on the **instance** (`Subscriber.Init(key).Upsert(properties)`). See [Differs from Official Docs](/engine-limitations/differs-from-docs/#subscriber-upsert--statistics--instance-methods-not-static)." %}
+
+{% include callout.html type="info" content="Verification blocked by a BU-level guardrail: on the QA test BU, programmatic subscriber writes are rejected by the spam filter (SOAP `TriggeredSpamFilter`, `ErrorCode 12002`). Presence and signature are runtime-proven (`typeof Subscriber.Init(key).Upsert === \"function\"`), but the upsert path cannot complete on this BU. Verify on a BU whose spam-filter policy allows programmatic subscriber writes." %}
+
+Creates a new subscriber, or updates the initialized one matched by `EmailAddress` / `SubscriberKey`.
 
 #### Syntax
 
 ```javascript
-Subscriber.Upsert(properties)
+<SubscriberInstance>.Upsert(properties)
 ```
 
 #### Parameters
@@ -144,33 +160,30 @@ Subscriber.Upsert(properties)
 #### Examples
 
 ```javascript
-Platform.Load("core", "1");
-var sub = {
+Platform.Load("core", "1.1.5");
+var subObj = Subscriber.Init("test@example.com");
+var result = subObj.Upsert({
     EmailAddress: "test@example.com",
     SubscriberKey: "test@example.com",
     Attributes: [ { Name: "FirstName", Value: "Jane" } ]
-};
-var result = Subscriber.Upsert(sub);
-Write(Stringify(result));
+});
 ```
 
 ---
 
-### Subscriber.Statistics {#statistics}
+### &lt;SubscriberInstance&gt;.Statistics {#instance-statistics}
 
-Retrieves statistical data for the specified subscriber (sends, opens, clicks, bounces, unsubscribes).
+{% include method-status.html status="verified" %}
+
+{% include callout.html type="warning" title="Differs from official Salesforce docs" content="The official docs document this as a **static** `Subscriber.Statistics(subscriberKey)`, but at runtime `Subscriber.Statistics` is `undefined` — the method lives on the **instance** (`Subscriber.Init(key).Statistics()`). See [Differs from Official Docs](/engine-limitations/differs-from-docs/#subscriber-upsert--statistics--instance-methods-not-static)." %}
+
+Retrieves statistical data for the initialized subscriber (sends, opens, clicks, bounces, unsubscribes).
 
 #### Syntax
 
 ```javascript
-Subscriber.Statistics(subscriberKey)
+<SubscriberInstance>.Statistics()
 ```
-
-#### Parameters
-
-| Name | Type | Required | Description |
-|------|------|----------|-------------|
-| `subscriberKey` | string | Yes | The subscriber key identifying the subscriber |
 
 #### Return value
 
@@ -179,14 +192,18 @@ Subscriber.Statistics(subscriberKey)
 #### Examples
 
 ```javascript
-Platform.Load("core", "1");
-var stats = Subscriber.Statistics("test@example.com");
-Write(Stringify(stats));
+Platform.Load("core", "1.1.5");
+var subObj = Subscriber.Init("test@example.com");
+var stats = subObj.Statistics();
 ```
 
 ---
 
 ### &lt;SubscriberInstance&gt;.Update {#instance-update}
+
+{% include method-status.html status="in-progress" %}
+
+{% include callout.html type="info" content="Verification blocked by a BU-level guardrail: on the QA test BU, programmatic subscriber writes are rejected by the spam filter (SOAP `TriggeredSpamFilter`, `ErrorCode 12002`), so the modify path cannot complete. Presence and signature are runtime-proven (`typeof Subscriber.Init(key).Update === \"function\"`). Verify on a BU whose spam-filter policy allows programmatic subscriber writes." %}
 
 Updates the previously initialized subscriber with the supplied attributes.
 
@@ -218,6 +235,10 @@ var status = subObj.Update({ EmailTypePreference: "HTML", Attributes: { "First N
 
 ### &lt;SubscriberInstance&gt;.Remove {#instance-remove}
 
+{% include method-status.html status="in-progress" %}
+
+{% include callout.html type="info" content="Verification blocked by a BU-level guardrail: on the QA test BU, programmatic subscriber writes are rejected by the spam filter (SOAP `TriggeredSpamFilter`, `ErrorCode 12002`), so a throwaway subscriber cannot be created to then delete. Presence and signature are runtime-proven (`typeof Subscriber.Init(key).Remove === \"function\"`). Verify on a BU whose spam-filter policy allows programmatic subscriber writes." %}
+
 Deletes the previously initialized subscriber.
 
 #### Syntax
@@ -241,6 +262,10 @@ var status = subObj.Remove();
 ---
 
 ### &lt;SubscriberInstance&gt;.Unsubscribe {#instance-unsubscribe}
+
+{% include method-status.html status="in-progress" %}
+
+{% include callout.html type="info" content="Verification blocked by a BU-level guardrail: on the QA test BU, programmatic subscriber writes are rejected by the spam filter (SOAP `TriggeredSpamFilter`, `ErrorCode 12002`), so a throwaway subscriber cannot be created to then unsubscribe. Presence and signature are runtime-proven (`typeof Subscriber.Init(key).Unsubscribe === \"function\"`). Verify on a BU whose spam-filter policy allows programmatic subscriber writes." %}
 
 Sets the previously initialized subscriber's status to `"Unsubscribed"`.
 
@@ -266,6 +291,8 @@ var status = subObj.Unsubscribe();
 
 ### &lt;SubscriberInstance&gt;.Attributes.Retrieve {#instance-attributes-retrieve}
 
+{% include method-status.html status="verified" %}
+
 Returns an array of attributes associated with the previously initialized subscriber.
 
 #### Syntax
@@ -289,6 +316,8 @@ var attributes = subObj.Attributes.Retrieve();
 ---
 
 ### &lt;SubscriberInstance&gt;.Lists.Retrieve {#instance-lists-retrieve}
+
+{% include method-status.html status="verified" %}
 
 Returns the lists the previously initialized subscriber is a member of.
 

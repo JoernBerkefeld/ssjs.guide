@@ -1514,64 +1514,71 @@
     "params": [
       "key"
     ],
-    "returnType": "EmailInstance"
+    "returnType": "EmailInstance",
+    "deprecated": true
   },
   {
     "name": "Email.Add",
     "url": "/core-library/email/",
     "section": "Core Library",
     "type": "method",
-    "description": "Creates a new email message from the supplied properties and returns an initialized email instance.",
+    "description": "Creates a new classic email message from the supplied properties and returns an initialized email instance.",
     "params": [
       "properties"
     ],
-    "returnType": "EmailInstance"
+    "returnType": "EmailInstance",
+    "deprecated": true
   },
   {
     "name": "Email.Retrieve",
     "url": "/core-library/email/",
     "section": "Core Library",
     "type": "method",
-    "description": "Returns an array of email messages matching the specified filter.",
+    "description": "Returns an array of classic email messages matching the specified filter.",
     "params": [
       "filter"
     ],
-    "returnType": "object[]"
+    "returnType": "object[]",
+    "deprecated": true
   },
   {
     "name": "Email.Update",
     "url": "/core-library/email/",
     "section": "Core Library",
     "type": "method",
-    "description": "Updates the email message with the supplied attributes.",
+    "description": "Updates the classic email message with the supplied attributes.",
     "params": [
       "properties"
     ],
-    "returnType": "string"
+    "returnType": "string",
+    "deprecated": true
   },
   {
     "name": "Email.Remove",
     "url": "/core-library/email/",
     "section": "Core Library",
     "type": "method",
-    "description": "Removes the previously initialized email message.",
-    "returnType": "string"
+    "description": "Removes the previously initialized classic email message.",
+    "returnType": "string",
+    "deprecated": true
   },
   {
     "name": "Email.Validate",
     "url": "/core-library/email/",
     "section": "Core Library",
     "type": "method",
-    "description": "Runs validation checks on the previously initialized email message.",
-    "returnType": "object"
+    "description": "Runs validation checks on the previously initialized classic email message.",
+    "returnType": "object",
+    "deprecated": true
   },
   {
     "name": "Email.CheckContent",
     "url": "/core-library/email/",
     "section": "Core Library",
     "type": "method",
-    "description": "Runs content checks on the previously initialized email message.",
-    "returnType": "object"
+    "description": "Runs content checks on the previously initialized classic email message.",
+    "returnType": "object",
+    "deprecated": true
   },
   {
     "name": "FilterDefinition.Init",
@@ -1835,7 +1842,7 @@
     "url": "/core-library/subscriber/",
     "section": "Core Library",
     "type": "method",
-    "description": "Creates a new subscriber, or updates an existing one matched by EmailAddress / SubscriberKey.",
+    "description": "Creates a new subscriber, or updates the initialized one matched by EmailAddress / SubscriberKey.",
     "params": [
       "properties"
     ],
@@ -1846,10 +1853,7 @@
     "url": "/core-library/subscriber/",
     "section": "Core Library",
     "type": "method",
-    "description": "Retrieves statistical data for the specified subscriber (sends, opens, clicks, bounces, unsubscribes).",
-    "params": [
-      "subscriberKey"
-    ],
+    "description": "Retrieves statistical data for the initialized subscriber (sends, opens, clicks, bounces, unsubscribes).",
     "returnType": "object"
   },
   {
@@ -2206,31 +2210,6 @@
     "description": "Returns tracking data for sends matching the filter.",
     "params": [
       "filter"
-    ],
-    "returnType": "object[]"
-  },
-  {
-    "name": "Send.Tracking.ClickRetrieve",
-    "url": "/core-library/send/",
-    "section": "Core Library",
-    "type": "method",
-    "description": "Returns click tracking data for the previously initialized send.",
-    "params": [
-      "filter"
-    ],
-    "returnType": "object[]"
-  },
-  {
-    "name": "Send.Tracking.TotalByIntervalRetrieve",
-    "url": "/core-library/send/",
-    "section": "Core Library",
-    "type": "method",
-    "description": "Returns aggregated tracking data for the previously initialized send.",
-    "params": [
-      "type",
-      "startDate",
-      "endDate",
-      "groupBy"
     ],
     "returnType": "object[]"
   },
@@ -2698,7 +2677,7 @@
     "url": "/core-library/email/",
     "section": "Core Library",
     "type": "object",
-    "description": "Manages email message definitions."
+    "description": "Manages classic Email Studio email message definitions."
   },
   {
     "name": "TriggeredSend",
@@ -2783,6 +2762,20 @@
     "section": "Core Library",
     "type": "object",
     "description": "Retrieves tracking data for a specific send."
+  },
+  {
+    "name": "Send.Tracking.Clicks",
+    "url": "/core-library/send/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Retrieves click tracking data for the initialized send."
+  },
+  {
+    "name": "Send.Tracking.TotalByInterval",
+    "url": "/core-library/send/",
+    "section": "Core Library",
+    "type": "object",
+    "description": "Retrieves aggregated tracking data by interval for the initialized send."
   },
   {
     "name": "Send.Definition",

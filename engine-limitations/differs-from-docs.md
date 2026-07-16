@@ -313,6 +313,12 @@ Not listed in the official docs, but the property exists and is applied end-to-e
 
 The official docs state the call throws on failure, but at runtime `<AccountInstance>.Update(properties)` returns the plain string `"Error"` instead of throwing (the success return is the string `"OK"`).
 
+### &lt;EmailInstance&gt;.Validate — Task.ValidationStatus is a string, not a boolean
+
+[Reference: Email](/core-library/email/)
+
+The official docs (and this page's earlier return-value table) type `Task.ValidationStatus` as a **boolean**, but at runtime `<EmailInstance>.Validate()` returns it as a **string** (e.g. `"Fail"`). Compare against string values, not `true`/`false`. The whole classic `Email` object (Init/Add/Retrieve/Update/Remove/Validate/CheckContent) is runtime-proven to work on a live CloudPage — it is **deprecated** (legacy classic Email Studio type) but not broken.
+
 ### ContentAreaObj.Add — returns an initialized instance, not "OK"
 
 [Reference: ContentAreaObj](/core-library/contentareaobj/)
@@ -330,3 +336,21 @@ The official docs list the `filter` argument as **required**, but at runtime it 
 [Reference: DataExtension.Fields](/core-library/dataextension-fields/)
 
 The official docs example response lists only `Name`, `FieldType`, `IsPrimaryKey`, `MaxLength`, `Ordinal`, and `DefaultValue`. At runtime each returned field object also carries an undocumented **`ObjectID`** (`string`) property. The collection is a genuine JS `Array` (`[object Array]`). Sibling methods `<DataExtensionInstance>.Fields.Add` and `<DataExtensionInstance>.Fields.UpdateSendableField` return the string `"OK"` on success and the string `"Error"` on failure — they do **not** throw, contrary to the docs' "throws on failure" wording.
+
+### &lt;SendInstance&gt;.Tracking click & interval retrieval — Clicks.Retrieve / TotalByInterval.Retrieve, not ClickRetrieve / TotalByIntervalRetrieve
+
+[Reference: Send](/core-library/send/)
+
+The official docs document per-send tracking as `<SendInstance>.Tracking.ClickRetrieve(filter)` and `<SendInstance>.Tracking.TotalByIntervalRetrieve(type, startDate, endDate, groupBy)`. At runtime both of those names are `undefined`. The instance `Tracking` property is an object exposing two **sub-objects** — `Clicks` and `TotalByInterval` — each with a `Retrieve` method. The working calls are `<SendInstance>.Tracking.Clicks.Retrieve(filter)` and `<SendInstance>.Tracking.TotalByInterval.Retrieve(type, startDate, endDate, groupBy)`. This mirrors the `TriggeredSend.Tracking.Clicks` / `TriggeredSend.Tracking.TotalByInterval` shape. The static `Send.Tracking.Retrieve(filter)` (no `Send.Init` required) is unaffected.
+
+### &lt;SendInstance&gt;.CancelSend — returns "status", not "OK"
+
+[Reference: Send](/core-library/send/)
+
+The official docs describe `<SendInstance>.CancelSend()` as returning `"OK"` on success, but at runtime it returns the literal string **`"status"`** (runtime-verified on a live CloudPage — the send was cancelled successfully). Do not compare its return value against `"OK"`; treat any non-throwing return as success.
+
+### Subscriber.Upsert / Subscriber.Statistics — instance methods, not static
+
+[Reference: Subscriber](/core-library/subscriber/)
+
+The official docs present `Subscriber.Upsert(properties)` and `Subscriber.Statistics(subscriberKey)` as **static** members of `Subscriber`. At runtime the static names are `undefined` (`typeof Subscriber.Upsert === "undefined"`, `typeof Subscriber.Statistics === "undefined"`). Both are actually **instance** methods on the object returned by `Subscriber.Init(subscriberKey)`: `<SubscriberInstance>.Upsert(properties)` and `<SubscriberInstance>.Statistics()` (the subscriber key comes from `Init`, so `Statistics` takes no argument).

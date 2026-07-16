@@ -3,10 +3,16 @@ layout: page
 title: Email
 parent: Core Library
 parent_url: /core-library/
-description: Core library object for managing Email Studio email messages — create, retrieve, update, remove, validate, and check content.
+description: "Core library object for managing classic Email Studio email messages — create, retrieve, update, remove, validate, and check content. Deprecated — operates on the classic (legacy) email type; prefer Content Builder htmlemail assets for new work."
+verification: verified
+deprecated: true
+requires_core_load: true
+differs_from_docs: "Runtime-verified on a live CloudPage: the whole Email object (Init/Add/Retrieve/Update/Remove/Validate/CheckContent) works. <EmailInstance>.Validate() returns Task.ValidationStatus as a STRING (e.g. \"Fail\"), not the boolean the official docs and this page's return-value table previously claimed."
 ---
 
-The `Email` Core library object provides programmatic management of email message assets in Email Studio. Use it to create, retrieve, update, remove, validate, and check content of email messages.
+{% include callout.html type="warning" content="**Deprecated.** The `Email` object manages **classic Email Studio** email messages (the legacy email type). It still works at runtime, but classic emails are legacy — prefer **Content Builder** `htmlemail` assets and the modern send methods for new development." %}
+
+The `Email` Core library object provides programmatic management of classic Email Studio email message assets. Use it to create, retrieve, update, remove, validate, and check content of classic email messages. It does **not** manage Content Builder `htmlemail` assets.
 
 {% include callout.html type="warning" content="Requires `Platform.Load(\"core\", \"1.1.5\")` before use." %}
 
@@ -55,7 +61,7 @@ var myEmail = Email.Init("myEmail");
 
 ### Email.Add {#add}
 
-Creates a new email message from the supplied properties and returns an initialized email instance. Unlike most static `Add` methods, this returns an `EmailInstance`, not `"OK"`.
+Creates a new classic email message from the supplied properties and returns an initialized email instance. Unlike most static `Add` methods, this returns an `EmailInstance`, not `"OK"`.
 
 #### Syntax
 
@@ -122,7 +128,7 @@ var results = Email.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals"
 
 ### &lt;EmailInstance&gt;.Update {#instance-update}
 
-Updates the email message with the supplied attributes.
+Updates the classic email message with the supplied attributes.
 
 #### Syntax
 
@@ -152,7 +158,7 @@ var status = myEmail.Update({ Name: "Updated Name", Subject: "Updated Email Subj
 
 ### &lt;EmailInstance&gt;.Remove {#instance-remove}
 
-Removes the previously initialized email message.
+Removes the previously initialized classic email message.
 
 #### Syntax
 
@@ -176,7 +182,9 @@ myEmail.Remove();
 
 ### &lt;EmailInstance&gt;.Validate {#instance-validate}
 
-Runs validation checks on the previously initialized email message. Returns a `{Task: {ValidationStatus: boolean, ValidationMessages: string}}` object.
+Runs validation checks on the previously initialized classic email message. Returns a `{Task: {ValidationStatus: string, ValidationMessages: string}}` object.
+
+{% include differs-from-docs.html note="The official docs type `Task.ValidationStatus` as a boolean, but at runtime it is a string (e.g. \"Fail\") — compare against string values, not `true`/`false`." %}
 
 #### Syntax
 
@@ -186,7 +194,7 @@ Runs validation checks on the previously initialized email message. Returns a `{
 
 #### Return value
 
-`object` — with `Task.ValidationStatus` (boolean) and `Task.ValidationMessages` (string).
+`object` — with `Task.ValidationStatus` (string, e.g. `"Fail"`) and `Task.ValidationMessages` (string).
 
 #### Examples
 
@@ -202,7 +210,7 @@ Write(results.Task.ValidationMessages);
 
 ### &lt;EmailInstance&gt;.CheckContent {#instance-checkcontent}
 
-Runs content checks on the previously initialized email message. Returns a `{Task: {CheckPassed: boolean, ResultMessage: string}}` object.
+Runs content checks on the previously initialized classic email message. Returns a `{Task: {CheckPassed: boolean, ResultMessage: string}}` object.
 
 #### Syntax
 

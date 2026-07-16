@@ -4,11 +4,15 @@ title: Send
 parent: Core Library
 parent_url: /core-library/
 description: Core library Send — create and manage sends, cancel a send, and retrieve aggregate or per-send tracking.
+verification: verified
+requires_core_load: true
 ---
 
 The `Send` namespace covers **user-initiated sends**: creating sends from an email and lists, retrieving send rows, listing targeted lists, canceling a send, and accessing tracking (including static `Send.Tracking.Retrieve` and instance helpers on `send.Tracking`).
 
 {% include callout.html type="warning" content="Requires `Platform.Load(\"core\", \"1.1.5\")` before use." %}
+
+{% include callout.html type="info" content="Per-send click and interval tracking live on <strong>sub-objects</strong> of the instance `Tracking` property: <code>&lt;SendInstance&gt;.Tracking.Clicks.Retrieve(filter)</code> and <code>&lt;SendInstance&gt;.Tracking.TotalByInterval.Retrieve(...)</code>. The Salesforce-documented names <code>ClickRetrieve</code> / <code>TotalByIntervalRetrieve</code> are <code>undefined</code> at runtime — see <a href=\"/engine-limitations/differs-from-docs/\">Differs from docs</a>." %}
 
 ## Methods
 
@@ -21,8 +25,8 @@ The `Send` namespace covers **user-initiated sends**: creating sends from an ema
 | [`<SendInstance>.Remove()`](#instance-remove) | string | Delete the bound send |
 | [`<SendInstance>.CancelSend()`](#instance-cancelsend) | string | Attempt to cancel the send |
 | [`Send.Tracking.Retrieve(filter)`](#tracking-retrieve) | object[] | Tracking rows (static; no `Send.Init` required) |
-| [`<SendInstance>.Tracking.ClickRetrieve(filter)`](#instance-tracking-clickretrieve) | object[] | Click tracking for this send |
-| [`<SendInstance>.Tracking.TotalByIntervalRetrieve(type, startDate, endDate, groupBy)`](#instance-tracking-totalbyintervalretrieve) | object[] | Aggregated tracking by interval |
+| [`<SendInstance>.Tracking.Clicks.Retrieve(filter)`](#instance-tracking-clicks-retrieve) | object[] | Click tracking for this send |
+| [`<SendInstance>.Tracking.TotalByInterval.Retrieve(type, startDate, endDate, groupBy)`](#instance-tracking-totalbyinterval-retrieve) | object[] | Aggregated tracking by interval |
 
 ---
 
@@ -182,6 +186,8 @@ s.Remove();
 
 Attempts to cancel the bound send.
 
+{% include differs-from-docs.html note="Runtime-verified: `CancelSend()` returns the literal string `\"status\"` on success, not the `\"OK\"` the official docs describe. Don't compare its return value against `\"OK\"`." %}
+
 #### Syntax
 
 ```javascript
@@ -190,7 +196,7 @@ Attempts to cancel the bound send.
 
 #### Return value
 
-`"OK"` on success.
+`string` — returns the literal string `"status"` on success (not `"OK"`); throws on failure.
 
 #### Examples
 
@@ -235,14 +241,16 @@ var sendTracking = Send.Tracking.Retrieve({
 
 ---
 
-### &lt;SendInstance&gt;.Tracking.ClickRetrieve {#instance-tracking-clickretrieve}
+### &lt;SendInstance&gt;.Tracking.Clicks.Retrieve {#instance-tracking-clicks-retrieve}
+
+{% include callout.html type="warning" content="Salesforce docs call this <code>&lt;SendInstance&gt;.Tracking.ClickRetrieve(filter)</code>, but that name is <code>undefined</code> at runtime. The working member is <code>&lt;SendInstance&gt;.Tracking.Clicks.Retrieve(filter)</code> — a <code>Clicks</code> sub-object with a <code>Retrieve</code> method. See <a href=\"/engine-limitations/differs-from-docs/\">Differs from docs</a>." %}
 
 Returns click-tracking rows for the bound send that match the filter.
 
 #### Syntax
 
 ```javascript
-<SendInstance>.Tracking.ClickRetrieve(filter)
+<SendInstance>.Tracking.Clicks.Retrieve(filter)
 ```
 
 #### Parameters
@@ -260,7 +268,7 @@ Returns click-tracking rows for the bound send that match the filter.
 ```javascript
 Platform.Load("core", "1.1.5");
 var singleSend = Send.Init(12345);
-var results = singleSend.Tracking.ClickRetrieve({
+var results = singleSend.Tracking.Clicks.Retrieve({
     Property: "ID",
     SimpleOperator: "equals",
     Value: 12345
@@ -269,14 +277,16 @@ var results = singleSend.Tracking.ClickRetrieve({
 
 ---
 
-### &lt;SendInstance&gt;.Tracking.TotalByIntervalRetrieve {#instance-tracking-totalbyintervalretrieve}
+### &lt;SendInstance&gt;.Tracking.TotalByInterval.Retrieve {#instance-tracking-totalbyinterval-retrieve}
+
+{% include callout.html type="warning" content="Salesforce docs call this <code>&lt;SendInstance&gt;.Tracking.TotalByIntervalRetrieve(...)</code>, but that name is <code>undefined</code> at runtime. The working member is <code>&lt;SendInstance&gt;.Tracking.TotalByInterval.Retrieve(...)</code> — a <code>TotalByInterval</code> sub-object with a <code>Retrieve</code> method. See <a href=\"/engine-limitations/differs-from-docs/\">Differs from docs</a>." %}
 
 Aggregates tracking by `type` over the date range, grouped by `groupBy` (`"day"` or `"hour"`). Dates use **MM-DD-YYYY**.
 
 #### Syntax
 
 ```javascript
-<SendInstance>.Tracking.TotalByIntervalRetrieve(type, startDate, endDate, groupBy)
+<SendInstance>.Tracking.TotalByInterval.Retrieve(type, startDate, endDate, groupBy)
 ```
 
 #### Parameters
@@ -297,7 +307,7 @@ Aggregates tracking by `type` over the date range, grouped by `groupBy` (`"day"`
 ```javascript
 Platform.Load("core", "1.1.5");
 var singleSend = Send.Init(12345);
-var results = singleSend.Tracking.TotalByIntervalRetrieve(
+var results = singleSend.Tracking.TotalByInterval.Retrieve(
     "Click",
     "07-01-2010",
     "07-31-2010",

@@ -28,7 +28,7 @@ Platform.Load("core", "1.1.5");
 | [`DataExtension.Rows`](/core-library/dataextension-rows/) | Retrieve, Add, Update, Remove rows |
 | [`DateTime`](/core-library/datetime/) | Date-time conversion helpers and time zone lookup |
 | [`DeliveryProfile`](/core-library/deliveryprofile/) | Delivery profiles |
-| [`Email`](/core-library/email/) | Email message definitions |
+| [`Email`](/core-library/email/) | Classic Email Studio message definitions (**deprecated** — prefer Content Builder `htmlemail`) |
 | [`FilterDefinition`](/core-library/filterdefinition/) | Data filters |
 | [`Folder`](/core-library/folder/) | Content folders |
 | [`HTTPHeader`](/core-library/httpheader/) | Read, set, and remove named HTTP headers |

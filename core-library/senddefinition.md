@@ -4,6 +4,8 @@ title: Send.Definition
 parent: Core Library
 parent_url: /core-library/
 description: Core library namespace Send.Definition — create, configure, query, update, remove, and execute user-initiated send definitions.
+verification: in-progress
+requires_core_load: true
 ---
 
 `Send.Definition` is the Core library namespace for **Email Studio send definitions** (reusable send configurations). Call static methods without an instance, or use `Send.Definition.Init` when you need instance methods (`Update`, `Remove`, `Send`).
@@ -26,6 +28,8 @@ description: Core library namespace Send.Definition — create, configure, query
 ---
 
 ### Send.Definition.Init {#init}
+
+{% include method-status.html status="verified" %}
 
 Initializes a send definition instance from its external key. Required before calling instance methods (`Update`, `Remove`, `Send`).
 
@@ -55,6 +59,10 @@ var esd = Send.Definition.Init("myESD");
 ---
 
 ### Send.Definition.Add {#add}
+
+{% include method-status.html status="in-progress" %}
+
+{% include callout.html type="info" content="Runtime-attempted, blocked by environment: the destructive create path was exercised on the QA BU but the underlying SOAP <code>CreateEmailSendDefinition</code> fails with <code>ErrorCode 42116</code> (the classic email is unapproved and this BU lacks the sender/delivery-profile + send-classification setup a send definition requires). Presence and signature are runtime-proven (<code>typeof Send.Definition.Add === \"function\"</code>); a successful create needs an approved email and a fully-configured send classification." %}
 
 Creates a send definition. `esdParams` includes `CustomerKey`, `Name`, and `EmailSubject`.
 
@@ -92,6 +100,10 @@ Send.Definition.Add(esdParams, "example_sc_key", "example_email_key", [12345, 12
 ---
 
 ### Send.Definition.AddWithDE {#addwithde}
+
+{% include method-status.html status="in-progress" %}
+
+{% include callout.html type="info" content="Runtime-attempted, blocked by environment: shares the same <code>CreateEmailSendDefinition</code> path as <code>Send.Definition.Add</code>, which fails on this BU with SOAP <code>ErrorCode 42116</code> (unapproved email + missing send-classification/sender-profile configuration). Presence and signature are runtime-proven (<code>typeof Send.Definition.AddWithDE === \"function\"</code>); a successful create needs an approved email and a sendable DE + configured send classification." %}
 
 Creates a send definition that sends to a **sendable Data Extension**.
 
@@ -131,6 +143,10 @@ var status = Send.Definition.AddWithDE(esdParams, "scKey", "test_email", "deKey"
 
 ### Send.Definition.AddWithFilterDefinition {#addwithfilterdefinition}
 
+{% include method-status.html status="in-progress" %}
+
+{% include callout.html type="info" content="Runtime-attempted, blocked by environment: shares the same <code>CreateEmailSendDefinition</code> path as <code>Send.Definition.Add</code>, which fails on this BU with SOAP <code>ErrorCode 42116</code> (unapproved email + missing send-classification/sender-profile configuration). Presence and signature are runtime-proven (<code>typeof Send.Definition.AddWithFilterDefinition === \"function\"</code>); a successful create needs an approved email and a valid filter definition + configured send classification." %}
+
 Creates a send definition whose audience comes from a **filter definition**.
 
 #### Syntax
@@ -169,6 +185,8 @@ var status = Send.Definition.AddWithFilterDefinition(esdParams, "scKey", "test_e
 
 ### Send.Definition.Retrieve {#retrieve}
 
+{% include method-status.html status="verified" %}
+
 Returns send definitions. Omit `filter` to return all definitions visible in context.
 
 #### Syntax
@@ -202,6 +220,10 @@ var esd = Send.Definition.Retrieve({
 
 ### &lt;SendDefinitionInstance&gt;.Update {#instance-update}
 
+{% include method-status.html status="in-progress" %}
+
+{% include callout.html type="info" content="Runtime-attempted, blocked by environment: exercising <code>&lt;SendDefinitionInstance&gt;.Update</code> requires first creating a send definition, but <code>Send.Definition.Add</code> fails on this BU with SOAP <code>ErrorCode 42116</code> (unapproved email + missing send-classification/sender-profile configuration), so no instance could be obtained to update. Presence and signature are runtime-proven (<code>typeof sdi.Update === \"function\"</code>)." %}
+
 Updates properties on the initialized send definition.
 
 #### Syntax
@@ -232,6 +254,10 @@ var result = sendDef.Update({ Name: "Updated Send Definition Name" });
 
 ### &lt;SendDefinitionInstance&gt;.Remove {#instance-remove}
 
+{% include method-status.html status="in-progress" %}
+
+{% include callout.html type="info" content="Runtime-attempted, blocked by environment: exercising <code>&lt;SendDefinitionInstance&gt;.Remove</code> requires first creating a send definition, but <code>Send.Definition.Add</code> fails on this BU with SOAP <code>ErrorCode 42116</code> (unapproved email + missing send-classification/sender-profile configuration), so no instance could be obtained to delete. Presence and signature are runtime-proven (<code>typeof sdi.Remove === \"function\"</code>)." %}
+
 Deletes the send definition bound to this instance.
 
 #### Syntax
@@ -255,6 +281,10 @@ var status = esd.Remove();
 ---
 
 ### &lt;SendDefinitionInstance&gt;.Send {#instance-send}
+
+{% include method-status.html status="in-progress" %}
+
+{% include callout.html type="info" content="Runtime-attempted, blocked by environment: exercising <code>&lt;SendDefinitionInstance&gt;.Send</code> requires first creating a send definition, but <code>Send.Definition.Add</code> fails on this BU with SOAP <code>ErrorCode 42116</code> (unapproved email + missing send-classification/sender-profile configuration), so no instance could be obtained to send. Presence and signature are runtime-proven (<code>typeof sdi.Send === \"function\"</code>)." %}
 
 Sends using the lists or audience configured on this send definition.
 
