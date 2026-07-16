@@ -4,6 +4,8 @@ title: TriggeredSend
 parent: Core Library
 parent_url: /core-library/
 description: Core library object for creating, managing, and sending Triggered Send Definitions (TSD) from SSJS.
+verification: in-progress
+requires_core_load: true
 ---
 
 The `TriggeredSend` Core library object is the recommended way to send transactional emails from SSJS. It provides full lifecycle management of Triggered Send Definitions — create, retrieve, update, start, pause, publish, send, and track.
@@ -29,6 +31,8 @@ The `TriggeredSend` Core library object is the recommended way to send transacti
 ---
 
 ### TriggeredSend.Init {#init}
+
+{% include method-status.html status="verified" %}
 
 Initializes a TriggeredSend instance bound to the specified external key. Required before invoking any instance method on the returned object.
 
@@ -58,6 +62,10 @@ var triggeredSend = TriggeredSend.Init("support");
 ---
 
 ### TriggeredSend.Add {#add}
+
+{% include method-status.html status="in-progress" %}
+
+{% include callout.html type="info" content="Runtime-attempted, blocked by environment: the destructive create path was exercised on the QA BU but both <code>TriggeredSend.Add</code> (opaque <code>Error adding TSD.</code>) and the equivalent SOAP <code>CreateTriggeredSendDefinition</code> (ErrorCode 2, no actionable status message) fail — even with a valid classic email, the Default send classification, and the All Subscribers list. This BU cannot provision a working Triggered Send Definition, so the documented <code>TriggeredSendInstance</code> return could not be proven." %}
 
 Creates a new triggered send definition from the supplied properties and returns an initialized TriggeredSend instance. Unlike most static `Add` methods, this returns a `TriggeredSendInstance`, not `"OK"`.
 
@@ -96,6 +104,8 @@ var tsd = TriggeredSend.Add(newTSD);
 
 ### TriggeredSend.Retrieve {#retrieve}
 
+{% include method-status.html status="verified" %}
+
 Returns an array of triggered send definitions matching the specified filter.
 
 #### Syntax
@@ -124,6 +134,10 @@ var results = TriggeredSend.Retrieve({ Property: "CustomerKey", SimpleOperator: 
 ---
 
 ### &lt;TriggeredSendInstance&gt;.Update {#instance-update}
+
+{% include method-status.html status="in-progress" %}
+
+{% include callout.html type="info" content="Runtime-attempted, blocked by environment: no Triggered Send Definition could be created or found in the QA BU (see <a href=\"#add\">Add</a>), so there was no valid TSD to update. The call itself returns a string, but its documented <code>\"OK\"</code> success value and side effects could not be proven." %}
 
 Updates the previously initialized triggered send definition.
 
@@ -155,6 +169,10 @@ var status = tsd.Update({ Name: "Updated TSD Name" });
 
 ### &lt;TriggeredSendInstance&gt;.Start {#instance-start}
 
+{% include method-status.html status="in-progress" %}
+
+{% include callout.html type="info" content="Runtime-attempted, blocked by environment: no Triggered Send Definition could be created or found in the QA BU (see <a href=\"#add\">Add</a>), so there was no paused TSD to start. The documented <code>\"OK\"</code> success value could not be proven." %}
+
 Starts (reactivates) a paused triggered send definition.
 
 #### Syntax
@@ -178,6 +196,10 @@ var result = ts.Start();
 ---
 
 ### &lt;TriggeredSendInstance&gt;.Pause {#instance-pause}
+
+{% include method-status.html status="in-progress" %}
+
+{% include callout.html type="info" content="Runtime-attempted, blocked by environment: no Triggered Send Definition could be created or found in the QA BU (see <a href=\"#add\">Add</a>), so there was no active TSD to pause. The documented <code>\"OK\"</code> success value could not be proven." %}
 
 Pauses an active triggered send definition.
 
@@ -203,6 +225,10 @@ var status = ts.Pause();
 
 ### &lt;TriggeredSendInstance&gt;.Publish {#instance-publish}
 
+{% include method-status.html status="in-progress" %}
+
+{% include callout.html type="info" content="Runtime-attempted, blocked by environment: no Triggered Send Definition could be created or found in the QA BU (see <a href=\"#add\">Add</a>), so there was no TSD to publish. The documented <code>\"OK\"</code> success value could not be proven." %}
+
 Publishes a triggered send definition, making it active and ready to accept sends. Use this to move a definition from Draft / Inactive to Active.
 
 #### Syntax
@@ -226,6 +252,10 @@ var result = ts.Publish();
 ---
 
 ### &lt;TriggeredSendInstance&gt;.Send {#instance-send}
+
+{% include method-status.html status="in-progress" %}
+
+{% include callout.html type="info" content="Runtime-attempted, blocked by environment: no Triggered Send Definition could be created or found in the QA BU (see <a href=\"#add\">Add</a>), so there was no active TSD to send through. The call returns a string and populates <code>LastMessage</code>, but a successful send could not be proven." %}
 
 Sends an email using the previously initialized triggered send definition. On failure, inspect `<TriggeredSendInstance>.LastMessage` for error details.
 
@@ -290,6 +320,8 @@ The attribute keys in `sendTimeAttributes` must exactly match the AMPscript vari
 
 ### &lt;TriggeredSendInstance&gt;.Tracking.Retrieve {#instance-tracking-retrieve}
 
+{% include method-status.html status="verified" %}
+
 Returns tracking data for the previously initialized triggered send definition.
 
 #### Syntax
@@ -320,6 +352,8 @@ var tsdTracking = tsd.Tracking.Retrieve();
 
 ### &lt;TriggeredSendInstance&gt;.Tracking.Clicks.Retrieve {#instance-tracking-clicks-retrieve}
 
+{% include method-status.html status="verified" %}
+
 Returns click tracking information for the previously initialized triggered send definition.
 
 #### Syntax
@@ -349,6 +383,8 @@ var results = tsd.Tracking.Clicks.Retrieve({ Property: "SendUrlID", SimpleOperat
 ---
 
 ### &lt;TriggeredSendInstance&gt;.Tracking.TotalByInterval.Retrieve {#instance-tracking-totalbyinterval-retrieve}
+
+{% include method-status.html status="verified" %}
 
 Returns aggregated tracking data for the previously initialized triggered send. Aggregates by `type` over the date range, grouped by `groupBy`.
 

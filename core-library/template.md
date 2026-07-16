@@ -4,6 +4,8 @@ title: Template
 parent: Core Library
 parent_url: /core-library/
 description: Core library Template — HTML templates for messages (init, add, retrieve, update, remove).
+verification: verified
+requires_core_load: true
 ---
 
 `Template` manages **template** definitions (`TemplateName`, `LayoutHTML`, customer key, etc.). Use `Retrieve` with optional `QueryAllAccounts: true` to search across accessible accounts.

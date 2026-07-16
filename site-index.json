@@ -2587,7 +2587,8 @@
     "params": [
       "key"
     ],
-    "returnType": "PortfolioInstance"
+    "returnType": "PortfolioInstance",
+    "deprecated": true
   },
   {
     "name": "Portfolio.Add",
@@ -2598,7 +2599,8 @@
     "params": [
       "properties"
     ],
-    "returnType": "string"
+    "returnType": "string",
+    "deprecated": true
   },
   {
     "name": "Portfolio.Retrieve",
@@ -2609,7 +2611,8 @@
     "params": [
       "filter"
     ],
-    "returnType": "object[]"
+    "returnType": "object[]",
+    "deprecated": true
   },
   {
     "name": "Portfolio.Update",
@@ -2620,7 +2623,8 @@
     "params": [
       "properties"
     ],
-    "returnType": "string"
+    "returnType": "string",
+    "deprecated": true
   },
   {
     "name": "Portfolio.Remove",
@@ -2628,7 +2632,8 @@
     "section": "Core Library",
     "type": "method",
     "description": "Removes the previously initialized portfolio object.",
-    "returnType": "string"
+    "returnType": "string",
+    "deprecated": true
   },
   {
     "name": "DataExtension",
