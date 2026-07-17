@@ -107,7 +107,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
 | [`DateTime.TimeZone.Retrieve(filter)`](/core-library/datetime/#timezone-retrieve) | Core Library | object[] | Time zone definitions (requires Core load) |
-| [`DateTime.LocalDateToSystemDate(dateString)`](/core-library/datetime/#localdatetolocaldate) | Core Library | string | Local account/user time to system time (CST) |
+| [`DateTime.LocalDateToSystemDate(dateString)`](/core-library/datetime/#localdatetosystemdate) | Core Library | string | Local account/user time to system time (CST) |
 | [`DateTime.SystemDateToLocalDate(dateString)`](/core-library/datetime/#systemdatetolocaldate) | Core Library | string | System time (CST) to local account/user time |
 | [`Date.now()`](/ecmascript-builtins/date-methods/#now) | ECMAScript Builtins | object | ⚠️ Returns a **Date object** in SFMC, not a number — use `new Date().getTime()` (static) |
 | [`Date.parse(dateString)`](/ecmascript-builtins/date-methods/#parse) | ECMAScript Builtins | number | ⚠️ Invalid strings return **`0`**, not `NaN`; date-only parses as local (static) |

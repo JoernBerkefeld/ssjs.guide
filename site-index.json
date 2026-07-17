@@ -3994,6 +3994,13 @@
     "description": "Function."
   },
   {
+    "name": "Date.toISOString",
+    "url": "/ecmascript-builtins/date-methods/#toisostring",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Date."
+  },
+  {
     "name": "Array.isArray",
     "url": "/ecmascript-builtins/array-methods/#isarray",
     "section": "ECMAScript Builtins",

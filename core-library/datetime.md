@@ -23,7 +23,7 @@ The `DateTime` namespace provides date-time conversion helpers and time zone loo
 | Method | Returns | Description |
 |--------|---------|-------------|
 | [`DateTime.SystemDateToLocalDate(dateString)`](#systemdatetolocaldate) | string | Convert system time (CST) to local account/user time |
-| [`DateTime.LocalDateToSystemDate(dateString)`](#localdatetolocaldate) | string | Convert local account/user time to system time (CST) |
+| [`DateTime.LocalDateToSystemDate(dateString)`](#localdatetosystemdate) | string | Convert local account/user time to system time (CST) |
 | [`DateTime.TimeZone.Retrieve(filter)`](#timezone-retrieve) | object[] | Retrieve time zone definitions |
 
 ---
@@ -50,7 +50,7 @@ Write(localTime);
 
 ---
 
-### DateTime.LocalDateToSystemDate {#localdatetolocaldate}
+### DateTime.LocalDateToSystemDate {#localdatetosystemdate}
 
 Converts a date-time value from the local time of the account or user to Marketing Cloud system time (Central Standard Time, no daylight saving adjustments).
 

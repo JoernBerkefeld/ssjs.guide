@@ -281,6 +281,15 @@ Does **not** throw outside a send context — in a plain CloudPage it returns `"
 
 ## HTTP Functions
 
+### HTTP.Post — header arrays optional; StatusCode is a number, Response is an array
+
+[Reference: HTTP.Post](/http/post/)
+
+The official docs are wrong on two counts:
+
+1. They list `headerNames` and `headerValues` as **required**, but at runtime a three-argument call (`url`, `contentType`, `payload`) works — the two header arrays are **optional** and only need to be paired when supplied.
+2. They type `StatusCode` as a **string** and `Response` as a single **string**, but at runtime the call returns an object whose `StatusCode` is a **number** and whose `Response` is an **array** — the body is `Response[0]`. (Note the field names differ from `HTTP.Get`, which returns `{ Status, Content }`.)
+
 ### Script.Util.HttpRequest.timeout — undocumented but works
 
 [Reference: Script.Util.HttpRequest](/http/script-util-httprequest/)
@@ -402,15 +411,27 @@ The official docs describe `<SendInstance>.CancelSend()` as returning `"OK"` on 
 
 The official docs present `Subscriber.Upsert(properties)` and `Subscriber.Statistics(subscriberKey)` as **static** members of `Subscriber`. At runtime the static names are `undefined` (`typeof Subscriber.Upsert === "undefined"`, `typeof Subscriber.Statistics === "undefined"`). Both are actually **instance** methods on the object returned by `Subscriber.Init(subscriberKey)`: `<SubscriberInstance>.Upsert(properties)` and `<SubscriberInstance>.Statistics()` (the subscriber key comes from `Init`, so `Statistics` takes no argument).
 
+### DateTime.SystemDateToLocalDate / LocalDateToSystemDate — return CLR DateTime objects, not strings
+
+[Reference: DateTime](/core-library/datetime/)
+
+The official docs type the Core-library `DateTime` conversion methods as returning a `string`, but at runtime `DateTime.SystemDateToLocalDate(...)` and `DateTime.LocalDateToSystemDate(...)` return **CLR `DateTime` objects** (`typeof "object"`) that coerce transparently to a string via `String(value)`, `"" + value`, or `Write(value)`. Separately, `DateTime.TimeZone.Retrieve()` rows are CLR objects that `Stringify()` **cannot** serialize — enumerate their fields with `for..in` instead.
+
 ## ECMAScript Built-ins
 
-### Date.now() — returns a Date object, not a number
+### Date.prototype.getMilliseconds() — off-by-one for some values
+
+[Reference: Date Methods](/ecmascript-builtins/date-methods/#getmilliseconds)
+
+MDN specifies `getMilliseconds()` returns the exact milliseconds (0–999) of the date. In the SFMC Jint engine some values come back **one less than they were set**: a date constructed with 123 ms reports **122**; 555 → 554, 666 → 665, 777 → 776 (runtime-verified). Other values (0, 111, 888, 999) are exact. Never compare sub-second precision — round or avoid milliseconds.
+
+### Date.now() — returns a Date object, not a number {#datenow-returns-a-date-object-not-a-number}
 
 [Reference: Date Methods](/ecmascript-builtins/date-methods/#now)
 
 MDN specifies `Date.now()` as a **static method that returns a Number** (milliseconds since the epoch). In the SFMC Jint engine it instead returns a **`Date` object** (`typeof Date.now()` is `"object"`; it stringifies to a date-time string). Numeric coercion (`Date.now() + 0` or `Date.now() * 1`) recovers the epoch milliseconds, but any code that treats the return value as a number without coercion will break. Prefer `new Date().getTime()`, which returns a clean `number`.
 
-### Date.parse() — returns 0 (never NaN) for invalid strings, and parses date-only strings as local
+### Date.parse() — returns 0 (never NaN) for invalid strings, and parses date-only strings as local {#dateparse-returns-0-never-nan-for-invalid-strings-and-parses-date-only-strings-as-local}
 
 [Reference: Date Methods](/ecmascript-builtins/date-methods/#parse)
 

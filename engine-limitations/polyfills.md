@@ -3,7 +3,7 @@ layout: page
 title: Polyfills
 parent: Engine Limitations
 parent_url: /engine-limitations/
-description: Ready-to-use polyfill implementations and helpers for the missing or broken Array, String, Math, Object, and Function methods in SFMC SSJS.
+description: Ready-to-use polyfill implementations and helpers for the missing or broken Array, String, Math, Date, and Function methods in SFMC SSJS.
 ---
 
 Copy the polyfills you need to the top of your SSJS script block (before any usage). Add only the ones you actually use — each one adds a small amount of overhead.
@@ -62,6 +62,7 @@ The `|| function(...)` guard prevents re-defining methods that may become availa
 | [`String.prototype.search`](#string-prototype-search) | Broken |
 | [`String.prototype.split`](#string-prototype-split) | Broken (empty separator) |
 | [`Math.max` / `Math.min`](#math-max-min) | Broken |
+| [`toISOStringUTC` (for `Date.prototype.toISOString`)](#date-toisostring) | Missing |
 | [`bindFn` (for `Function.prototype.bind`)](#function-prototype-bind) | Missing |
 
 ---
@@ -643,6 +644,33 @@ Math.min = function () {
 
 ---
 
+## Date Helpers
+
+`Date.prototype.toISOString` (ES5) is **not** available in SFMC SSJS — `typeof d.toISOString` is `undefined` and calling it throws `Object expected: toISOString`. `Date.prototype.toJSON` is also missing because it depends on `toISOString`. Since installing a working method on `Date.prototype` is unreliable here, use a standalone helper that builds the ISO 8601 string from the (working) `getUTC*` getters. Alternatively use `Platform.Function.FormatDate`.
+
+### toISOStringUTC (standalone helper — builds the ISO 8601 UTC string) {#date-toisostring}
+
+```javascript
+/**
+ * Standalone replacement for the missing Date.prototype.toISOString (SFMC SSJS).
+ * @param {Date} d - the date to serialize
+ * @returns {string} the date in ISO 8601 UTC form, e.g. "2026-06-18T00:00:00Z"
+ */
+function toISOStringUTC(d) {
+    function pad(n) { return n < 10 ? '0' + n : '' + n; }
+    return d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate()) +
+        'T' + pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ':' + pad(d.getUTCSeconds()) + 'Z';
+}
+```
+
+Usage — `toISOStringUTC(new Date())` returns the current time as an ISO 8601 UTC string. Use it wherever you would have called `d.toISOString()` or relied on `d.toJSON()`:
+
+```javascript
+var iso = toISOStringUTC(new Date(0));   // "1970-01-01T00:00:00Z"
+```
+
+---
+
 ## Function Helpers
 
 `Function.prototype.call` and `Function.prototype.apply` are **ES3 and work natively** in SFMC SSJS — no polyfill is needed for either.
@@ -743,6 +771,9 @@ Math.min = function() { if (arguments.length===0) return Number.POSITIVE_INFINIT
 Array.isArray = Array.isArray || function(v) { return Object.prototype.toString.call(v)==='[object Array]'; };
 /** @param {...*} [items] - elements to place in the new array @returns {Array} a new array containing the arguments */
 Array.of = Array.of || function() { var r=[]; for (var i=0;i<arguments.length;i++) r.push(arguments[i]); return r; };
+// Date.prototype.toISOString is unavailable (and toJSON depends on it) — use this standalone helper:
+/** @param {Date} d - the date to serialize @returns {string} the date in ISO 8601 UTC form, e.g. "2026-06-18T00:00:00Z" */
+function toISOStringUTC(d) { function pad(n){return n<10?'0'+n:''+n;} return d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1)+'-'+pad(d.getUTCDate())+'T'+pad(d.getUTCHours())+':'+pad(d.getUTCMinutes())+':'+pad(d.getUTCSeconds())+'Z'; }
 // Function.prototype.bind is unavailable AND the prototype is sealed — use this standalone helper instead:
 /** @param {Function} fn - the function to bind @param {*} thisArg - the value to use as `this` when calling fn @param {...*} [preArgs] - arguments to prepend to every call @returns {Function} a new function with `this` and leading arguments pre-bound */
 function bindFn(fn,thisArg) { var preArgs=[]; for (var i=2;i<arguments.length;i++) preArgs.push(arguments[i]); return function() { var callArgs=[]; for (var a=0;a<preArgs.length;a++) callArgs.push(preArgs[a]); for (var b=0;b<arguments.length;b++) callArgs.push(arguments[b]); return fn.apply(thisArg,callArgs); }; }

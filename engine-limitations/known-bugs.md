@@ -243,22 +243,29 @@ Use the [lastIndexOf polyfill](/engine-limitations/polyfills/#array-prototype-la
 
 ---
 
-## ParseJSON Throws 500 on null/undefined
+## ParseJSON Throws on a Non-String Object/Array (not on null/undefined)
 
 **Severity: Medium** — causes page to error
 
-`Platform.Function.ParseJSON()` throws a server 500 error if passed `null`, `undefined`, or a non-string value.
+A common belief is that `Platform.Function.ParseJSON()` throws a 500 on `null`/`undefined` — **runtime verification disproves this**. Passing `null`, `undefined`, an empty string, or invalid JSON returns **`null`** (it does **not** throw). The genuine error cases are a **wrong argument count** (zero args, or a second argument) and a **non-string object/array** argument, which throw an engine `InvalidOperationException`.
 
 ```javascript
-// ❌ If responseBody is null/undefined, this throws 500
+// ✅ null / undefined / invalid / empty input returns null — no error
 var data = Platform.Function.ParseJSON(responseBody);
+if (data) {
+    // safe to use
+}
 
-// ✅ Coerce to string first with + ""
-var data = Platform.Function.ParseJSON(responseBody + "");
-// If responseBody is null, this passes "null" to ParseJSON, which returns null safely
+// ❌ Passing an array or any non-string object THROWS
+var bad = Platform.Function.ParseJSON(["a", "b"]);
+
+// ✅ Coerce to a string first with + "" so non-string scalars stay valid input
+var safe = Platform.Function.ParseJSON(responseBody + "");
 ```
 
-**ESLint rule:** `sfmc/ssjs-prefer-parsejson-safe-arg` auto-fixes this.
+Always check the return value for `null` rather than relying on a thrown error. See the [ParseJSON reference](/platform-functions/parsejson/) for the full runtime-verified behavior.
+
+**ESLint rule:** `sfmc/ssjs-prefer-parsejson-safe-arg` auto-fixes the string-coercion pattern.
 
 ---
 
@@ -441,3 +448,19 @@ typeof ({}).isPrototypeOf;        // "function"  — it appears to exist
 ```
 
 Never call `isPrototypeOf`. To test prototype/instance relationships, compare the constructor directly (`obj.constructor === Ctor`) or walk the prototype chain manually. See [Object Methods](/ecmascript-builtins/object-methods/#isprototypeof).
+
+---
+
+## Object.prototype.propertyIsEnumerable Always Returns false {#objectprototypepropertyisenumerable-broken}
+
+**Severity: Low** — incorrect result
+
+`Object.prototype.propertyIsEnumerable(prop)` exists in the SFMC Jint engine but is **broken**: it returns `false` even for own enumerable properties (runtime-verified). Use `hasOwnProperty` for own-property checks instead.
+
+```javascript
+var o = { a: 1 };
+o.propertyIsEnumerable("a"); // false — WRONG, should be true
+o.hasOwnProperty("a");       // true  — use this instead
+```
+
+See [Object Methods](/ecmascript-builtins/object-methods/#propertyisenumerable) and [Differs from Official Docs](/engine-limitations/differs-from-docs/#objectprototypepropertyisenumerable-broken).

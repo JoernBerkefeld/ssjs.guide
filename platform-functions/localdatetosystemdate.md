@@ -41,4 +41,4 @@ Write(systemTime);
 
 ## See Also
 
-- [`DateTime.LocalDateToSystemDate()`](/core-library/datetime/#localdatetolocaldate) — short form available after `Platform.Load("core", "1.1.5")`; equivalent to this function.
+- [`DateTime.LocalDateToSystemDate()`](/core-library/datetime/#localdatetosystemdate) — short form available after `Platform.Load("core", "1.1.5")`; equivalent to this function.
