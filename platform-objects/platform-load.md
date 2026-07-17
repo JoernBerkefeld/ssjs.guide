@@ -7,6 +7,10 @@ description: Loads a named SSJS library namespace (e.g. Core) into the current s
 verification: verified
 ---
 
+### Platform.Load {#load}
+
+Loads a named SSJS library namespace (for example Core) into the current script execution context. Must be called before using any Core library objects.
+
 ## Syntax
 
 ```javascript

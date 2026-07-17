@@ -26,12 +26,12 @@ Does not require `Platform.Load`.
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `Platform.Response.ContentType` | string | Gets or sets the `Content-Type` of the HTTP response |
-| `Platform.Response.CharacterSet` | string | Gets or sets the character set of the HTTP response |
+| [`Platform.Response.ContentType`](#contenttype) | string | Gets or sets the `Content-Type` of the HTTP response |
+| [`Platform.Response.CharacterSet`](#characterset) | string | Gets or sets the character set of the HTTP response |
 
 ---
 
-## Property: ContentType
+### Platform.Response.ContentType {#contenttype}
 
 ```javascript
 Platform.Response.ContentType = "application/json";
@@ -39,7 +39,7 @@ Platform.Response.ContentType = "application/json";
 
 Gets or sets the `Content-Type` header of the HTTP response. Set this before writing any output.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Response.ContentType = "application/json";
@@ -53,7 +53,7 @@ Platform.Response.Write("plain text response");
 
 ---
 
-## Property: CharacterSet
+### Platform.Response.CharacterSet {#characterset}
 
 ```javascript
 Platform.Response.CharacterSet = "UTF-8";
@@ -61,7 +61,7 @@ Platform.Response.CharacterSet = "UTF-8";
 
 Gets or sets the character set of the HTTP response.
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Response.ContentType = "application/json";
@@ -71,7 +71,7 @@ Platform.Response.Write(Stringify(data));
 
 ---
 
-## Method: Write
+### Platform.Response.Write {#write}
 
 ```javascript
 Platform.Response.Write(content)
@@ -81,13 +81,13 @@ Writes a string directly to the HTTP response output. Does not require `Platform
 
 {% include callout.html type="note" content="This is distinct from the global `Write()` function. The global `Write()` requires `Platform.Load(\"core\", \"1.1.5\")` and writes to the rendered page output. `Platform.Response.Write()` does not require Core and writes to the HTTP response body — use it in scripts where Core is not loaded." %}
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `content` | string | Yes | String to write to the response |
 
-### Examples
+#### Examples
 
 ```javascript
 // JSON API endpoint — no Platform.Load required
@@ -104,7 +104,7 @@ Platform.Response.Write(Stringify(rows));
 
 ---
 
-## Method: SetResponseHeader
+### Platform.Response.SetResponseHeader {#setresponseheader}
 
 ```javascript
 Platform.Response.SetResponseHeader(headerName, value)
@@ -112,14 +112,14 @@ Platform.Response.SetResponseHeader(headerName, value)
 
 Sets a header on the HTTP response.
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `headerName` | string | Yes | Name of the response header |
 | `value` | string | Yes | Value for the response header |
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Response.SetResponseHeader("Content-Type", "application/json");
@@ -134,7 +134,7 @@ Platform.Response.SetResponseHeader("X-Frame-Options", "DENY");
 
 ---
 
-## Method: RemoveResponseHeader
+### Platform.Response.RemoveResponseHeader {#removeresponseheader}
 
 ```javascript
 Platform.Response.RemoveResponseHeader(headerName)
@@ -142,13 +142,13 @@ Platform.Response.RemoveResponseHeader(headerName)
 
 Removes a previously set HTTP response header.
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `headerName` | string | Yes | Name of the response header to remove |
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Response.RemoveResponseHeader("X-Powered-By");
@@ -156,7 +156,7 @@ Platform.Response.RemoveResponseHeader("X-Powered-By");
 
 ---
 
-## Method: SetCookie
+### Platform.Response.SetCookie {#setcookie}
 
 ```javascript
 Platform.Response.SetCookie(name, value [, expires [, secure]])
@@ -164,7 +164,7 @@ Platform.Response.SetCookie(name, value [, expires [, secure]])
 
 Sets a cookie in the response.
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
@@ -173,7 +173,7 @@ Sets a cookie in the response.
 | `expires` | string | No | Expiration datetime string |
 | `secure` | boolean | No | Send only over HTTPS |
 
-### Examples
+#### Examples
 
 ```javascript
 // Session cookie (expires when browser closes)
@@ -207,7 +207,7 @@ Platform.Response.SetCookie("sessionToken", "", "Thu, 01 Jan 1970 00:00:00 GMT")
 
 ---
 
-## Method: RemoveCookie
+### Platform.Response.RemoveCookie {#removecookie}
 
 ```javascript
 Platform.Response.RemoveCookie(name)
@@ -215,13 +215,13 @@ Platform.Response.RemoveCookie(name)
 
 Removes a cookie from the client browser by setting its expiration to a past date.
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `name` | string | Yes | Name of the cookie to remove |
 
-### Examples
+#### Examples
 
 ```javascript
 Platform.Response.RemoveCookie("sessionToken");
@@ -229,7 +229,7 @@ Platform.Response.RemoveCookie("sessionToken");
 
 ---
 
-## Method: Redirect
+### Platform.Response.Redirect {#redirect}
 
 ```javascript
 Platform.Response.Redirect(url , movedPermanently)
@@ -237,14 +237,14 @@ Platform.Response.Redirect(url , movedPermanently)
 
 Redirects the browser to the specified URL.
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `url` | string | Yes | Destination URL |
 | `movedPermanently` | boolean | Yes | `true` for 301 redirect, `false`/omitted for 302 |
 
-### Examples
+#### Examples
 
 ```javascript
 // Temporary redirect (302)

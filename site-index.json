@@ -819,7 +819,8 @@
     "description": "Creates multiple Marketing Cloud objects in a single SOAP API call.",
     "params": [
       "objectType",
-      "propertiesArray"
+      "propertiesArray",
+      "createOptions"
     ],
     "returnType": "WSProxyResult"
   },
@@ -918,7 +919,7 @@
   },
   {
     "name": "Platform.Load",
-    "url": "/platform-objects/platform-load/",
+    "url": "/platform-objects/platform-load/#load",
     "section": "Platform Objects",
     "type": "method",
     "description": "Loads a platform library.",
@@ -930,7 +931,7 @@
   },
   {
     "name": "Platform.Variable.GetValue",
-    "url": "/platform-objects/platform-variable/",
+    "url": "/platform-objects/platform-variable/#getvalue",
     "section": "Platform Objects",
     "type": "method",
     "description": "Retrieves the value of an AMPscript variable from the SSJS context.",
@@ -941,7 +942,7 @@
   },
   {
     "name": "Platform.Variable.SetValue",
-    "url": "/platform-objects/platform-variable/",
+    "url": "/platform-objects/platform-variable/#setvalue",
     "section": "Platform Objects",
     "type": "method",
     "description": "Assigns a value to an AMPscript variable from the SSJS context.",
@@ -953,7 +954,7 @@
   },
   {
     "name": "Platform.Response.SetResponseHeader",
-    "url": "/platform-objects/platform-response/",
+    "url": "/platform-objects/platform-response/#setresponseheader",
     "section": "Platform Objects",
     "type": "method",
     "description": "Sets a response header on the current page response.",
@@ -965,7 +966,7 @@
   },
   {
     "name": "Platform.Response.RemoveResponseHeader",
-    "url": "/platform-objects/platform-response/",
+    "url": "/platform-objects/platform-response/#removeresponseheader",
     "section": "Platform Objects",
     "type": "method",
     "description": "Removes a previously set HTTP response header from the response.",
@@ -976,7 +977,7 @@
   },
   {
     "name": "Platform.Response.Redirect",
-    "url": "/platform-objects/platform-response/",
+    "url": "/platform-objects/platform-response/#redirect",
     "section": "Platform Objects",
     "type": "method",
     "description": "Redirects the current page to a new URL.",
@@ -988,7 +989,7 @@
   },
   {
     "name": "Platform.Response.SetCookie",
-    "url": "/platform-objects/platform-response/",
+    "url": "/platform-objects/platform-response/#setcookie",
     "section": "Platform Objects",
     "type": "method",
     "description": "Sets a cookie on the client browser response.",
@@ -1002,7 +1003,7 @@
   },
   {
     "name": "Platform.Response.RemoveCookie",
-    "url": "/platform-objects/platform-response/",
+    "url": "/platform-objects/platform-response/#removecookie",
     "section": "Platform Objects",
     "type": "method",
     "description": "Removes a cookie from the client browser by setting its expiration to a past date.",
@@ -1013,7 +1014,7 @@
   },
   {
     "name": "Platform.Response.Write",
-    "url": "/platform-objects/platform-response/",
+    "url": "/platform-objects/platform-response/#write",
     "section": "Platform Objects",
     "type": "method",
     "description": "Writes content to the HTTP response output.",
@@ -1024,7 +1025,7 @@
   },
   {
     "name": "Platform.Response.ContentType",
-    "url": "/platform-objects/platform-response/",
+    "url": "/platform-objects/platform-response/#contenttype",
     "section": "Platform Objects",
     "type": "property",
     "description": "Gets or sets the Content-Type of the HTTP response.",
@@ -1032,7 +1033,7 @@
   },
   {
     "name": "Platform.Response.CharacterSet",
-    "url": "/platform-objects/platform-response/",
+    "url": "/platform-objects/platform-response/#characterset",
     "section": "Platform Objects",
     "type": "property",
     "description": "Gets or sets the character set of the HTTP response.",
@@ -1040,7 +1041,7 @@
   },
   {
     "name": "Platform.Request.GetQueryStringParameter",
-    "url": "/platform-objects/platform-request/",
+    "url": "/platform-objects/platform-request/#getquerystringparameter",
     "section": "Platform Objects",
     "type": "method",
     "description": "Retrieves the value of a URL query string parameter.",
@@ -1051,7 +1052,7 @@
   },
   {
     "name": "Platform.Request.GetFormField",
-    "url": "/platform-objects/platform-request/",
+    "url": "/platform-objects/platform-request/#getformfield",
     "section": "Platform Objects",
     "type": "method",
     "description": "Retrieves data from a named form field, including values sent via POST.",
@@ -1062,7 +1063,7 @@
   },
   {
     "name": "Platform.Request.GetPostData",
-    "url": "/platform-objects/platform-request/",
+    "url": "/platform-objects/platform-request/#getpostdata",
     "section": "Platform Objects",
     "type": "method",
     "description": "Returns the raw body of the HTTP POST request.",
@@ -1073,7 +1074,7 @@
   },
   {
     "name": "Platform.Request.GetCookieValue",
-    "url": "/platform-objects/platform-request/",
+    "url": "/platform-objects/platform-request/#getcookievalue",
     "section": "Platform Objects",
     "type": "method",
     "description": "Retrieves the value of a named cookie from the HTTP request sent by the client browser.",
@@ -1084,7 +1085,7 @@
   },
   {
     "name": "Platform.Request.GetUserLanguages",
-    "url": "/platform-objects/platform-request/",
+    "url": "/platform-objects/platform-request/#getuserlanguages",
     "section": "Platform Objects",
     "type": "method",
     "description": "Returns the language preferences of the client browser as specified in the HTTP Accept-Language request header.",
@@ -1092,7 +1093,7 @@
   },
   {
     "name": "Platform.Request.GetRequestHeader",
-    "url": "/platform-objects/platform-request/",
+    "url": "/platform-objects/platform-request/#getrequestheader",
     "section": "Platform Objects",
     "type": "method",
     "description": "Returns the value of the named HTTP request header, or null if not present.",
@@ -1103,7 +1104,7 @@
   },
   {
     "name": "Platform.Request.Browser",
-    "url": "/platform-objects/platform-request/",
+    "url": "/platform-objects/platform-request/#browser",
     "section": "Platform Objects",
     "type": "property",
     "description": "Returns an object describing the client browser.",
@@ -1111,7 +1112,7 @@
   },
   {
     "name": "Platform.Request.ClientIP",
-    "url": "/platform-objects/platform-request/",
+    "url": "/platform-objects/platform-request/#clientip",
     "section": "Platform Objects",
     "type": "property",
     "description": "Returns the IP address of the client.",
@@ -1119,7 +1120,7 @@
   },
   {
     "name": "Platform.Request.HasSSL",
-    "url": "/platform-objects/platform-request/",
+    "url": "/platform-objects/platform-request/#hasssl",
     "section": "Platform Objects",
     "type": "property",
     "description": "Returns true if the current request was made over HTTPS.",
@@ -1127,7 +1128,7 @@
   },
   {
     "name": "Platform.Request.IsSSL",
-    "url": "/platform-objects/platform-request/",
+    "url": "/platform-objects/platform-request/#isssl",
     "section": "Platform Objects",
     "type": "property",
     "description": "Returns true if the current request was made over HTTPS (alias of HasSSL).",
@@ -1135,7 +1136,7 @@
   },
   {
     "name": "Platform.Request.Method",
-    "url": "/platform-objects/platform-request/",
+    "url": "/platform-objects/platform-request/#method",
     "section": "Platform Objects",
     "type": "property",
     "description": "Returns the HTTP method (GET, POST, etc.",
@@ -1143,7 +1144,7 @@
   },
   {
     "name": "Platform.Request.QueryString",
-    "url": "/platform-objects/platform-request/",
+    "url": "/platform-objects/platform-request/#querystring",
     "section": "Platform Objects",
     "type": "property",
     "description": "Returns the full query string of the current request URL.",
@@ -1151,7 +1152,7 @@
   },
   {
     "name": "Platform.Request.ReferrerURL",
-    "url": "/platform-objects/platform-request/",
+    "url": "/platform-objects/platform-request/#referrerurl",
     "section": "Platform Objects",
     "type": "property",
     "description": "Returns the referrer URL from the HTTP Referer header.",
@@ -1159,7 +1160,7 @@
   },
   {
     "name": "Platform.Request.RequestURL",
-    "url": "/platform-objects/platform-request/",
+    "url": "/platform-objects/platform-request/#requesturl",
     "section": "Platform Objects",
     "type": "property",
     "description": "Returns the full URL of the current page request.",
@@ -1167,7 +1168,7 @@
   },
   {
     "name": "Platform.Request.UserAgent",
-    "url": "/platform-objects/platform-request/",
+    "url": "/platform-objects/platform-request/#useragent",
     "section": "Platform Objects",
     "type": "property",
     "description": "Returns the user-agent string from the HTTP request.",
@@ -1175,7 +1176,7 @@
   },
   {
     "name": "Platform.Recipient.GetAttributeValue",
-    "url": "/platform-objects/platform-recipient/",
+    "url": "/platform-objects/platform-recipient/#getattributevalue",
     "section": "Platform Objects",
     "type": "method",
     "description": "Returns the value of a subscriber attribute or sendable data extension field for the current recipient.",
@@ -1186,7 +1187,7 @@
   },
   {
     "name": "HTTPHeader.GetValue",
-    "url": "/core-library/httpheader/",
+    "url": "/core-library/httpheader/#getvalue",
     "section": "Core Library",
     "type": "method",
     "description": "Retrieves the value of the specified INBOUND HTTP request header (e.",
@@ -1197,7 +1198,7 @@
   },
   {
     "name": "HTTPHeader.SetValue",
-    "url": "/core-library/httpheader/",
+    "url": "/core-library/httpheader/#setvalue",
     "section": "Core Library",
     "type": "method",
     "description": "Sets the value of the specified OUTBOUND HTTP header.",
@@ -1209,7 +1210,7 @@
   },
   {
     "name": "HTTPHeader.Remove",
-    "url": "/core-library/httpheader/",
+    "url": "/core-library/httpheader/#remove",
     "section": "Core Library",
     "type": "method",
     "description": "Removes the specified entry from the HTTP header.",
@@ -1220,7 +1221,7 @@
   },
   {
     "name": "DateTime.SystemDateToLocalDate",
-    "url": "/core-library/datetime/",
+    "url": "/core-library/datetime/#systemdatetolocaldate",
     "section": "Core Library",
     "type": "method",
     "description": "Converts a date-time value from Marketing Cloud system time (CST) to the local time of the account or user.",
@@ -1231,7 +1232,7 @@
   },
   {
     "name": "DateTime.LocalDateToSystemDate",
-    "url": "/core-library/datetime/",
+    "url": "/core-library/datetime/#localdatetosystemdate",
     "section": "Core Library",
     "type": "method",
     "description": "Converts a date-time value from the local time of the account or user to Marketing Cloud system time (CST).",
@@ -1242,7 +1243,7 @@
   },
   {
     "name": "DateTime.TimeZone.Retrieve",
-    "url": "/core-library/datetime/",
+    "url": "/core-library/datetime/#timezone-retrieve",
     "section": "Core Library",
     "type": "method",
     "description": "Retrieves an array of time zones matching the specified filter criteria.",
@@ -1253,7 +1254,7 @@
   },
   {
     "name": "ErrorUtil.ThrowWSProxyError",
-    "url": "/wsproxy/errorutil/",
+    "url": "/wsproxy/errorutil/#throwwsproxyerror",
     "section": "WSProxy",
     "type": "method",
     "description": "Inspects a WSProxy result object and throws when its `Status` property indicates an error.",
@@ -1265,7 +1266,7 @@
   },
   {
     "name": "Attribute.GetValue",
-    "url": "/core-library/attribute/",
+    "url": "/core-library/attribute/#getvalue",
     "section": "Core Library",
     "type": "method",
     "description": "Returns the value of the specified subscriber attribute or sendable data extension field for the current recipient.",
@@ -1276,7 +1277,7 @@
   },
   {
     "name": "DataExtension.Init",
-    "url": "/core-library/dataextension/",
+    "url": "/core-library/dataextension/#init",
     "section": "Core Library",
     "type": "method",
     "description": "Initializes a DataExtension instance bound to the specified data extension.",
@@ -1287,7 +1288,7 @@
   },
   {
     "name": "DataExtension.Add",
-    "url": "/core-library/dataextension/",
+    "url": "/core-library/dataextension/#add",
     "section": "Core Library",
     "type": "method",
     "description": "Creates a new data extension from the supplied properties and returns an initialized DataExtension instance (the same shape as `DataExtension.",
@@ -1298,7 +1299,7 @@
   },
   {
     "name": "DataExtension.Retrieve",
-    "url": "/core-library/dataextension/",
+    "url": "/core-library/dataextension/#retrieve",
     "section": "Core Library",
     "type": "method",
     "description": "Returns an array of data extensions matching the specified filter.",
@@ -1310,7 +1311,7 @@
   },
   {
     "name": "DataExtension.Fields.Add",
-    "url": "/core-library/dataextension-fields/",
+    "url": "/core-library/dataextension-fields/#instance-fields-add",
     "section": "Core Library",
     "type": "method",
     "description": "Adds a field to the previously initialized data extension.",
@@ -1321,7 +1322,7 @@
   },
   {
     "name": "DataExtension.Fields.Retrieve",
-    "url": "/core-library/dataextension-fields/",
+    "url": "/core-library/dataextension-fields/#instance-fields-retrieve",
     "section": "Core Library",
     "type": "method",
     "description": "Returns an array of field definitions for the previously initialized data extension.",
@@ -1329,7 +1330,7 @@
   },
   {
     "name": "DataExtension.Fields.UpdateSendableField",
-    "url": "/core-library/dataextension-fields/",
+    "url": "/core-library/dataextension-fields/#instance-fields-updatesendablefield",
     "section": "Core Library",
     "type": "method",
     "description": "Updates which data extension field is used to relate the data extension to the All Subscribers list during sending.",
@@ -1341,7 +1342,7 @@
   },
   {
     "name": "DataExtension.Rows.Add",
-    "url": "/core-library/dataextension-rows/",
+    "url": "/core-library/dataextension-rows/#instance-rows-add",
     "section": "Core Library",
     "type": "method",
     "description": "Adds one or more rows to the previously initialized data extension.",
@@ -1352,7 +1353,7 @@
   },
   {
     "name": "DataExtension.Rows.Lookup",
-    "url": "/core-library/dataextension-rows/",
+    "url": "/core-library/dataextension-rows/#instance-rows-lookup",
     "section": "Core Library",
     "type": "method",
     "description": "Returns rows where the specified columns equal the specified values (AND-joined).",
@@ -1366,7 +1367,7 @@
   },
   {
     "name": "DataExtension.Rows.Remove",
-    "url": "/core-library/dataextension-rows/",
+    "url": "/core-library/dataextension-rows/#instance-rows-remove",
     "section": "Core Library",
     "type": "method",
     "description": "Deletes rows from the previously initialized data extension where the specified columns equal the specified values (AND-joined).",
@@ -1378,7 +1379,7 @@
   },
   {
     "name": "DataExtension.Rows.Retrieve",
-    "url": "/core-library/dataextension-rows/",
+    "url": "/core-library/dataextension-rows/#instance-rows-retrieve",
     "section": "Core Library",
     "type": "method",
     "description": "Retrieves up to 2500 rows from the previously initialized data extension.",
@@ -1389,7 +1390,7 @@
   },
   {
     "name": "DataExtension.Rows.Update",
-    "url": "/core-library/dataextension-rows/",
+    "url": "/core-library/dataextension-rows/#instance-rows-update",
     "section": "Core Library",
     "type": "method",
     "description": "Updates the columns of rows where `whereFieldNames` equal `whereValues` (AND-joined).",
@@ -1402,7 +1403,7 @@
   },
   {
     "name": "Account.Init",
-    "url": "/core-library/account/",
+    "url": "/core-library/account/#init",
     "section": "Core Library",
     "type": "method",
     "description": "Initializes an Account instance bound to the specified external key.",
@@ -1413,7 +1414,7 @@
   },
   {
     "name": "Account.Retrieve",
-    "url": "/core-library/account/",
+    "url": "/core-library/account/#retrieve",
     "section": "Core Library",
     "type": "method",
     "description": "Retrieves accounts based on the specified filter criteria.",
@@ -1424,7 +1425,7 @@
   },
   {
     "name": "Account.Update",
-    "url": "/core-library/account/",
+    "url": "/core-library/account/#instance-update",
     "section": "Core Library",
     "type": "method",
     "description": "Updates the account with the supplied attributes.",
@@ -1435,7 +1436,7 @@
   },
   {
     "name": "Account.Tracking.Retrieve",
-    "url": "/core-library/account/",
+    "url": "/core-library/account/#tracking-retrieve",
     "section": "Core Library",
     "type": "method",
     "description": "Returns an array of tracking data related to the accounts specified by the passed filter argument.",
@@ -1446,7 +1447,7 @@
   },
   {
     "name": "AccountUser.Init",
-    "url": "/core-library/accountuser/",
+    "url": "/core-library/accountuser/#init",
     "section": "Core Library",
     "type": "method",
     "description": "Initializes an AccountUser instance bound to the specified external key and client ID (MID).",
@@ -1458,7 +1459,7 @@
   },
   {
     "name": "AccountUser.Add",
-    "url": "/core-library/accountuser/",
+    "url": "/core-library/accountuser/#add",
     "section": "Core Library",
     "type": "method",
     "description": "Creates a new account user from the supplied properties object.",
@@ -1469,7 +1470,7 @@
   },
   {
     "name": "AccountUser.Retrieve",
-    "url": "/core-library/accountuser/",
+    "url": "/core-library/accountuser/#retrieve",
     "section": "Core Library",
     "type": "method",
     "description": "Retrieves account users based on the specified filter criteria.",
@@ -1480,7 +1481,7 @@
   },
   {
     "name": "AccountUser.Update",
-    "url": "/core-library/accountuser/",
+    "url": "/core-library/accountuser/#instance-update",
     "section": "Core Library",
     "type": "method",
     "description": "Updates the account user with the supplied attributes.",
@@ -1491,7 +1492,7 @@
   },
   {
     "name": "AccountUser.Activate",
-    "url": "/core-library/accountuser/",
+    "url": "/core-library/accountuser/#instance-activate",
     "section": "Core Library",
     "type": "method",
     "description": "Activates the account user.",
@@ -1499,7 +1500,7 @@
   },
   {
     "name": "AccountUser.Deactivate",
-    "url": "/core-library/accountuser/",
+    "url": "/core-library/accountuser/#instance-deactivate",
     "section": "Core Library",
     "type": "method",
     "description": "Deactivates the account user.",
@@ -1507,7 +1508,7 @@
   },
   {
     "name": "Email.Init",
-    "url": "/core-library/email/",
+    "url": "/core-library/email/#init",
     "section": "Core Library",
     "type": "method",
     "description": "Initializes an Email instance bound to the specified external key.",
@@ -1519,7 +1520,7 @@
   },
   {
     "name": "Email.Add",
-    "url": "/core-library/email/",
+    "url": "/core-library/email/#add",
     "section": "Core Library",
     "type": "method",
     "description": "Creates a new classic email message from the supplied properties and returns an initialized email instance.",
@@ -1531,7 +1532,7 @@
   },
   {
     "name": "Email.Retrieve",
-    "url": "/core-library/email/",
+    "url": "/core-library/email/#retrieve",
     "section": "Core Library",
     "type": "method",
     "description": "Returns an array of classic email messages matching the specified filter.",
@@ -1543,7 +1544,7 @@
   },
   {
     "name": "Email.Update",
-    "url": "/core-library/email/",
+    "url": "/core-library/email/#instance-update",
     "section": "Core Library",
     "type": "method",
     "description": "Updates the classic email message with the supplied attributes.",
@@ -1555,7 +1556,7 @@
   },
   {
     "name": "Email.Remove",
-    "url": "/core-library/email/",
+    "url": "/core-library/email/#instance-remove",
     "section": "Core Library",
     "type": "method",
     "description": "Removes the previously initialized classic email message.",
@@ -1564,7 +1565,7 @@
   },
   {
     "name": "Email.Validate",
-    "url": "/core-library/email/",
+    "url": "/core-library/email/#instance-validate",
     "section": "Core Library",
     "type": "method",
     "description": "Runs validation checks on the previously initialized classic email message.",
@@ -1573,7 +1574,7 @@
   },
   {
     "name": "Email.CheckContent",
-    "url": "/core-library/email/",
+    "url": "/core-library/email/#instance-checkcontent",
     "section": "Core Library",
     "type": "method",
     "description": "Runs content checks on the previously initialized classic email message.",
@@ -1582,7 +1583,7 @@
   },
   {
     "name": "FilterDefinition.Init",
-    "url": "/core-library/filterdefinition/",
+    "url": "/core-library/filterdefinition/#init",
     "section": "Core Library",
     "type": "method",
     "description": "Initializes a FilterDefinition instance bound to the specified external key.",
@@ -1593,7 +1594,7 @@
   },
   {
     "name": "FilterDefinition.Add",
-    "url": "/core-library/filterdefinition/",
+    "url": "/core-library/filterdefinition/#add",
     "section": "Core Library",
     "type": "method",
     "description": "Creates a new filter definition from the supplied properties.",
@@ -1604,7 +1605,7 @@
   },
   {
     "name": "FilterDefinition.Retrieve",
-    "url": "/core-library/filterdefinition/",
+    "url": "/core-library/filterdefinition/#retrieve",
     "section": "Core Library",
     "type": "method",
     "description": "Returns an array of filter definitions matching the specified filter.",
@@ -1615,7 +1616,7 @@
   },
   {
     "name": "FilterDefinition.Update",
-    "url": "/core-library/filterdefinition/",
+    "url": "/core-library/filterdefinition/#instance-update",
     "section": "Core Library",
     "type": "method",
     "description": "Updates the filter definition with the supplied attributes.",
@@ -1626,7 +1627,7 @@
   },
   {
     "name": "FilterDefinition.Remove",
-    "url": "/core-library/filterdefinition/",
+    "url": "/core-library/filterdefinition/#instance-remove",
     "section": "Core Library",
     "type": "method",
     "description": "Deletes the previously initialized filter definition.",
@@ -1634,7 +1635,7 @@
   },
   {
     "name": "Folder.Init",
-    "url": "/core-library/folder/",
+    "url": "/core-library/folder/#init",
     "section": "Core Library",
     "type": "method",
     "description": "Initializes a Folder instance, optionally bound to the specified external key.",
@@ -1645,7 +1646,7 @@
   },
   {
     "name": "Folder.Add",
-    "url": "/core-library/folder/",
+    "url": "/core-library/folder/#add",
     "section": "Core Library",
     "type": "method",
     "description": "Creates a new folder as a child of an existing folder.",
@@ -1656,7 +1657,7 @@
   },
   {
     "name": "Folder.Retrieve",
-    "url": "/core-library/folder/",
+    "url": "/core-library/folder/#retrieve",
     "section": "Core Library",
     "type": "method",
     "description": "Returns an array of folders matching the specified filter.",
@@ -1667,7 +1668,7 @@
   },
   {
     "name": "Folder.Update",
-    "url": "/core-library/folder/",
+    "url": "/core-library/folder/#instance-update",
     "section": "Core Library",
     "type": "method",
     "description": "Updates the folder with the supplied attributes.",
@@ -1678,7 +1679,7 @@
   },
   {
     "name": "Folder.Remove",
-    "url": "/core-library/folder/",
+    "url": "/core-library/folder/#instance-remove",
     "section": "Core Library",
     "type": "method",
     "description": "Removes the previously initialized folder.",
@@ -1686,7 +1687,7 @@
   },
   {
     "name": "Folder.SetID",
-    "url": "/core-library/folder/",
+    "url": "/core-library/folder/#instance-setid",
     "section": "Core Library",
     "type": "method",
     "description": "Binds a previously initialized Folder instance to a specific folder ID.",
@@ -1697,7 +1698,7 @@
   },
   {
     "name": "List.Init",
-    "url": "/core-library/list/",
+    "url": "/core-library/list/#init",
     "section": "Core Library",
     "type": "method",
     "description": "Initializes a List instance bound to the specified external key.",
@@ -1708,7 +1709,7 @@
   },
   {
     "name": "List.Add",
-    "url": "/core-library/list/",
+    "url": "/core-library/list/#add",
     "section": "Core Library",
     "type": "method",
     "description": "Creates a new list from the supplied properties and returns an initialized list instance.",
@@ -1719,7 +1720,7 @@
   },
   {
     "name": "List.Retrieve",
-    "url": "/core-library/list/",
+    "url": "/core-library/list/#retrieve",
     "section": "Core Library",
     "type": "method",
     "description": "Returns an array of lists matching the specified filter.",
@@ -1730,7 +1731,7 @@
   },
   {
     "name": "List.Remove",
-    "url": "/core-library/list/",
+    "url": "/core-library/list/#instance-remove",
     "section": "Core Library",
     "type": "method",
     "description": "Removes the previously initialized list.",
@@ -1738,7 +1739,7 @@
   },
   {
     "name": "List.Subscribers.Add",
-    "url": "/core-library/list-subscribers/",
+    "url": "/core-library/list-subscribers/#instance-subscribers-add",
     "section": "Core Library",
     "type": "method",
     "description": "Adds a subscriber to the previously initialized list.",
@@ -1749,7 +1750,7 @@
   },
   {
     "name": "List.Subscribers.Retrieve",
-    "url": "/core-library/list-subscribers/",
+    "url": "/core-library/list-subscribers/#instance-subscribers-retrieve",
     "section": "Core Library",
     "type": "method",
     "description": "Returns the subscribers belonging to the previously initialized list.",
@@ -1760,7 +1761,7 @@
   },
   {
     "name": "List.Subscribers.Unsubscribe",
-    "url": "/core-library/list-subscribers/",
+    "url": "/core-library/list-subscribers/#instance-subscribers-unsubscribe",
     "section": "Core Library",
     "type": "method",
     "description": "Removes the specified subscriber from the previously initialized list.",
@@ -1771,7 +1772,7 @@
   },
   {
     "name": "List.Subscribers.Update",
-    "url": "/core-library/list-subscribers/",
+    "url": "/core-library/list-subscribers/#instance-subscribers-update",
     "section": "Core Library",
     "type": "method",
     "description": "Updates the status of the specified subscriber on the previously initialized list.",
@@ -1783,7 +1784,7 @@
   },
   {
     "name": "List.Subscribers.Upsert",
-    "url": "/core-library/list-subscribers/",
+    "url": "/core-library/list-subscribers/#instance-subscribers-upsert",
     "section": "Core Library",
     "type": "method",
     "description": "Adds the subscriber if not on the list, otherwise updates the supplied attributes.",
@@ -1795,7 +1796,7 @@
   },
   {
     "name": "List.Subscribers.Tracking.Retrieve",
-    "url": "/core-library/list-subscribers/",
+    "url": "/core-library/list-subscribers/#instance-subscribers-tracking-retrieve",
     "section": "Core Library",
     "type": "method",
     "description": "Returns an array of tracking data for subscribers matching the filter.",
@@ -1806,7 +1807,7 @@
   },
   {
     "name": "Subscriber.Init",
-    "url": "/core-library/subscriber/",
+    "url": "/core-library/subscriber/#init",
     "section": "Core Library",
     "type": "method",
     "description": "Initializes a Subscriber instance bound to the specified subscriber key.",
@@ -1817,7 +1818,7 @@
   },
   {
     "name": "Subscriber.Add",
-    "url": "/core-library/subscriber/",
+    "url": "/core-library/subscriber/#add",
     "section": "Core Library",
     "type": "method",
     "description": "Creates a new subscriber from the supplied properties.",
@@ -1828,7 +1829,7 @@
   },
   {
     "name": "Subscriber.Retrieve",
-    "url": "/core-library/subscriber/",
+    "url": "/core-library/subscriber/#retrieve",
     "section": "Core Library",
     "type": "method",
     "description": "Returns an array of subscribers matching the specified filter.",
@@ -1839,7 +1840,7 @@
   },
   {
     "name": "Subscriber.Upsert",
-    "url": "/core-library/subscriber/",
+    "url": "/core-library/subscriber/#instance-upsert",
     "section": "Core Library",
     "type": "method",
     "description": "Creates a new subscriber, or updates the initialized one matched by EmailAddress / SubscriberKey.",
@@ -1850,7 +1851,7 @@
   },
   {
     "name": "Subscriber.Statistics",
-    "url": "/core-library/subscriber/",
+    "url": "/core-library/subscriber/#instance-statistics",
     "section": "Core Library",
     "type": "method",
     "description": "Retrieves statistical data for the initialized subscriber (sends, opens, clicks, bounces, unsubscribes).",
@@ -1858,7 +1859,7 @@
   },
   {
     "name": "Subscriber.Update",
-    "url": "/core-library/subscriber/",
+    "url": "/core-library/subscriber/#instance-update",
     "section": "Core Library",
     "type": "method",
     "description": "Updates the previously initialized subscriber with the supplied attributes.",
@@ -1869,7 +1870,7 @@
   },
   {
     "name": "Subscriber.Remove",
-    "url": "/core-library/subscriber/",
+    "url": "/core-library/subscriber/#instance-remove",
     "section": "Core Library",
     "type": "method",
     "description": "Deletes the previously initialized subscriber.",
@@ -1877,7 +1878,7 @@
   },
   {
     "name": "Subscriber.Unsubscribe",
-    "url": "/core-library/subscriber/",
+    "url": "/core-library/subscriber/#instance-unsubscribe",
     "section": "Core Library",
     "type": "method",
     "description": "Sets the previously initialized subscriber's status to `\"Unsubscribed\"`.",
@@ -1885,7 +1886,7 @@
   },
   {
     "name": "Subscriber.Attributes.Retrieve",
-    "url": "/core-library/subscriber/",
+    "url": "/core-library/subscriber/#instance-attributes-retrieve",
     "section": "Core Library",
     "type": "method",
     "description": "Returns an array of attributes associated with the previously initialized subscriber.",
@@ -1893,7 +1894,7 @@
   },
   {
     "name": "Subscriber.Lists.Retrieve",
-    "url": "/core-library/subscriber/",
+    "url": "/core-library/subscriber/#instance-lists-retrieve",
     "section": "Core Library",
     "type": "method",
     "description": "Returns the lists the previously initialized subscriber is a member of.",
@@ -1901,7 +1902,7 @@
   },
   {
     "name": "Template.Init",
-    "url": "/core-library/template/",
+    "url": "/core-library/template/#init",
     "section": "Core Library",
     "type": "method",
     "description": "Initializes a Template instance bound to the specified external key.",
@@ -1912,7 +1913,7 @@
   },
   {
     "name": "Template.Add",
-    "url": "/core-library/template/",
+    "url": "/core-library/template/#add",
     "section": "Core Library",
     "type": "method",
     "description": "Creates a new template from the supplied properties.",
@@ -1923,7 +1924,7 @@
   },
   {
     "name": "Template.Retrieve",
-    "url": "/core-library/template/",
+    "url": "/core-library/template/#retrieve",
     "section": "Core Library",
     "type": "method",
     "description": "Returns an array of templates matching the specified filter.",
@@ -1934,7 +1935,7 @@
   },
   {
     "name": "Template.Update",
-    "url": "/core-library/template/",
+    "url": "/core-library/template/#instance-update",
     "section": "Core Library",
     "type": "method",
     "description": "Updates the template with the supplied attributes.",
@@ -1945,7 +1946,7 @@
   },
   {
     "name": "DeliveryProfile.Init",
-    "url": "/core-library/deliveryprofile/",
+    "url": "/core-library/deliveryprofile/#init",
     "section": "Core Library",
     "type": "method",
     "description": "Initializes a DeliveryProfile instance bound to the specified external key.",
@@ -1956,7 +1957,7 @@
   },
   {
     "name": "DeliveryProfile.Add",
-    "url": "/core-library/deliveryprofile/",
+    "url": "/core-library/deliveryprofile/#add",
     "section": "Core Library",
     "type": "method",
     "description": "Creates a new delivery profile from the supplied properties.",
@@ -1967,7 +1968,7 @@
   },
   {
     "name": "DeliveryProfile.Update",
-    "url": "/core-library/deliveryprofile/",
+    "url": "/core-library/deliveryprofile/#instance-update",
     "section": "Core Library",
     "type": "method",
     "description": "Updates the delivery profile with the supplied attributes.",
@@ -1978,7 +1979,7 @@
   },
   {
     "name": "DeliveryProfile.Remove",
-    "url": "/core-library/deliveryprofile/",
+    "url": "/core-library/deliveryprofile/#instance-remove",
     "section": "Core Library",
     "type": "method",
     "description": "Removes the previously initialized delivery profile.",
@@ -1986,7 +1987,7 @@
   },
   {
     "name": "SenderProfile.Init",
-    "url": "/core-library/senderprofile/",
+    "url": "/core-library/senderprofile/#init",
     "section": "Core Library",
     "type": "method",
     "description": "Initializes a SenderProfile instance bound to the specified external key.",
@@ -1997,7 +1998,7 @@
   },
   {
     "name": "SenderProfile.Add",
-    "url": "/core-library/senderprofile/",
+    "url": "/core-library/senderprofile/#add",
     "section": "Core Library",
     "type": "method",
     "description": "Creates a new sender profile from the supplied properties.",
@@ -2008,7 +2009,7 @@
   },
   {
     "name": "SenderProfile.Update",
-    "url": "/core-library/senderprofile/",
+    "url": "/core-library/senderprofile/#instance-update",
     "section": "Core Library",
     "type": "method",
     "description": "Updates the sender profile with the supplied attributes.",
@@ -2019,7 +2020,7 @@
   },
   {
     "name": "SenderProfile.Remove",
-    "url": "/core-library/senderprofile/",
+    "url": "/core-library/senderprofile/#instance-remove",
     "section": "Core Library",
     "type": "method",
     "description": "Removes the previously initialized sender profile.",
@@ -2027,7 +2028,7 @@
   },
   {
     "name": "SendClassification.Init",
-    "url": "/core-library/sendclassification/",
+    "url": "/core-library/sendclassification/#init",
     "section": "Core Library",
     "type": "method",
     "description": "Initializes a SendClassification instance bound to the specified external key.",
@@ -2038,7 +2039,7 @@
   },
   {
     "name": "SendClassification.Add",
-    "url": "/core-library/sendclassification/",
+    "url": "/core-library/sendclassification/#add",
     "section": "Core Library",
     "type": "method",
     "description": "Creates a new send classification from the supplied properties.",
@@ -2049,7 +2050,7 @@
   },
   {
     "name": "SendClassification.Retrieve",
-    "url": "/core-library/sendclassification/",
+    "url": "/core-library/sendclassification/#retrieve",
     "section": "Core Library",
     "type": "method",
     "description": "Returns an array of send classifications matching the specified filter.",
@@ -2060,7 +2061,7 @@
   },
   {
     "name": "SendClassification.Update",
-    "url": "/core-library/sendclassification/",
+    "url": "/core-library/sendclassification/#instance-update",
     "section": "Core Library",
     "type": "method",
     "description": "Updates the send classification with the supplied attributes.",
@@ -2071,7 +2072,7 @@
   },
   {
     "name": "SendClassification.Remove",
-    "url": "/core-library/sendclassification/",
+    "url": "/core-library/sendclassification/#instance-remove",
     "section": "Core Library",
     "type": "method",
     "description": "Removes the previously initialized send classification.",
@@ -2079,7 +2080,7 @@
   },
   {
     "name": "QueryDefinition.Init",
-    "url": "/core-library/querydefinition/",
+    "url": "/core-library/querydefinition/#init",
     "section": "Core Library",
     "type": "method",
     "description": "Initializes a QueryDefinition instance bound to the specified external key.",
@@ -2090,7 +2091,7 @@
   },
   {
     "name": "QueryDefinition.Add",
-    "url": "/core-library/querydefinition/",
+    "url": "/core-library/querydefinition/#add",
     "section": "Core Library",
     "type": "method",
     "description": "Creates a new query definition from the supplied properties.",
@@ -2101,7 +2102,7 @@
   },
   {
     "name": "QueryDefinition.Retrieve",
-    "url": "/core-library/querydefinition/",
+    "url": "/core-library/querydefinition/#retrieve",
     "section": "Core Library",
     "type": "method",
     "description": "Returns an array of query definitions matching the specified filter.",
@@ -2112,7 +2113,7 @@
   },
   {
     "name": "QueryDefinition.Update",
-    "url": "/core-library/querydefinition/",
+    "url": "/core-library/querydefinition/#instance-update",
     "section": "Core Library",
     "type": "method",
     "description": "Updates the query definition with the supplied attributes.",
@@ -2123,7 +2124,7 @@
   },
   {
     "name": "QueryDefinition.Remove",
-    "url": "/core-library/querydefinition/",
+    "url": "/core-library/querydefinition/#instance-remove",
     "section": "Core Library",
     "type": "method",
     "description": "Removes the previously initialized query definition.",
@@ -2131,7 +2132,7 @@
   },
   {
     "name": "QueryDefinition.Perform",
-    "url": "/core-library/querydefinition/",
+    "url": "/core-library/querydefinition/#instance-perform",
     "section": "Core Library",
     "type": "method",
     "description": "Executes the query definition.",
@@ -2142,7 +2143,7 @@
   },
   {
     "name": "Send.Init",
-    "url": "/core-library/send/",
+    "url": "/core-library/send/#init",
     "section": "Core Library",
     "type": "method",
     "description": "Initializes a Send instance bound to the specified send ID.",
@@ -2153,7 +2154,7 @@
   },
   {
     "name": "Send.Add",
-    "url": "/core-library/send/",
+    "url": "/core-library/send/#add",
     "section": "Core Library",
     "type": "method",
     "description": "Creates a new send to the specified email and list(s).",
@@ -2166,7 +2167,7 @@
   },
   {
     "name": "Send.Retrieve",
-    "url": "/core-library/send/",
+    "url": "/core-library/send/#retrieve",
     "section": "Core Library",
     "type": "method",
     "description": "Returns an array of sends matching the specified filter.",
@@ -2177,7 +2178,7 @@
   },
   {
     "name": "Send.RetrieveLists",
-    "url": "/core-library/send/",
+    "url": "/core-library/send/#retrievelists",
     "section": "Core Library",
     "type": "method",
     "description": "Returns information about the lists targeted by a send.",
@@ -2188,7 +2189,7 @@
   },
   {
     "name": "Send.Remove",
-    "url": "/core-library/send/",
+    "url": "/core-library/send/#instance-remove",
     "section": "Core Library",
     "type": "method",
     "description": "Removes the previously initialized send.",
@@ -2196,7 +2197,7 @@
   },
   {
     "name": "Send.CancelSend",
-    "url": "/core-library/send/",
+    "url": "/core-library/send/#instance-cancelsend",
     "section": "Core Library",
     "type": "method",
     "description": "Attempts to cancel the previously initialized send.",
@@ -2204,7 +2205,7 @@
   },
   {
     "name": "Send.Tracking.Retrieve",
-    "url": "/core-library/send/",
+    "url": "/core-library/send/#tracking-retrieve",
     "section": "Core Library",
     "type": "method",
     "description": "Returns tracking data for sends matching the filter.",
@@ -2215,7 +2216,7 @@
   },
   {
     "name": "Send.Definition.Init",
-    "url": "/core-library/senddefinition/",
+    "url": "/core-library/senddefinition/#init",
     "section": "Core Library",
     "type": "method",
     "description": "Initializes a SendDefinition instance bound to the specified external key.",
@@ -2226,7 +2227,7 @@
   },
   {
     "name": "Send.Definition.Add",
-    "url": "/core-library/senddefinition/",
+    "url": "/core-library/senddefinition/#add",
     "section": "Core Library",
     "type": "method",
     "description": "Creates a new send definition.",
@@ -2240,7 +2241,7 @@
   },
   {
     "name": "Send.Definition.AddWithDE",
-    "url": "/core-library/senddefinition/",
+    "url": "/core-library/senddefinition/#addwithde",
     "section": "Core Library",
     "type": "method",
     "description": "Creates a new send definition that targets a sendable Data Extension.",
@@ -2255,7 +2256,7 @@
   },
   {
     "name": "Send.Definition.AddWithFilterDefinition",
-    "url": "/core-library/senddefinition/",
+    "url": "/core-library/senddefinition/#addwithfilterdefinition",
     "section": "Core Library",
     "type": "method",
     "description": "Creates a new send definition that targets the audience defined by a filter definition.",
@@ -2270,7 +2271,7 @@
   },
   {
     "name": "Send.Definition.Retrieve",
-    "url": "/core-library/senddefinition/",
+    "url": "/core-library/senddefinition/#retrieve",
     "section": "Core Library",
     "type": "method",
     "description": "Returns an array of send definitions, optionally filtered.",
@@ -2281,7 +2282,7 @@
   },
   {
     "name": "Send.Definition.Update",
-    "url": "/core-library/senddefinition/",
+    "url": "/core-library/senddefinition/#instance-update",
     "section": "Core Library",
     "type": "method",
     "description": "Updates the previously initialized send definition.",
@@ -2292,7 +2293,7 @@
   },
   {
     "name": "Send.Definition.Remove",
-    "url": "/core-library/senddefinition/",
+    "url": "/core-library/senddefinition/#instance-remove",
     "section": "Core Library",
     "type": "method",
     "description": "Deletes the previously initialized send definition.",
@@ -2300,7 +2301,7 @@
   },
   {
     "name": "Send.Definition.Send",
-    "url": "/core-library/senddefinition/",
+    "url": "/core-library/senddefinition/#instance-send",
     "section": "Core Library",
     "type": "method",
     "description": "Sends email messages to the lists associated with the previously initialized send definition.",
@@ -2308,7 +2309,7 @@
   },
   {
     "name": "TriggeredSend.Init",
-    "url": "/core-library/triggeredsend/",
+    "url": "/core-library/triggeredsend/#init",
     "section": "Core Library",
     "type": "method",
     "description": "Initializes a TriggeredSend instance bound to the specified external key.",
@@ -2319,7 +2320,7 @@
   },
   {
     "name": "TriggeredSend.Add",
-    "url": "/core-library/triggeredsend/",
+    "url": "/core-library/triggeredsend/#add",
     "section": "Core Library",
     "type": "method",
     "description": "Creates a new triggered send definition from the supplied properties and returns an initialized TriggeredSend instance.",
@@ -2330,7 +2331,7 @@
   },
   {
     "name": "TriggeredSend.Retrieve",
-    "url": "/core-library/triggeredsend/",
+    "url": "/core-library/triggeredsend/#retrieve",
     "section": "Core Library",
     "type": "method",
     "description": "Returns an array of triggered send definitions matching the specified filter.",
@@ -2341,7 +2342,7 @@
   },
   {
     "name": "TriggeredSend.Update",
-    "url": "/core-library/triggeredsend/",
+    "url": "/core-library/triggeredsend/#instance-update",
     "section": "Core Library",
     "type": "method",
     "description": "Updates the previously initialized triggered send definition.",
@@ -2352,7 +2353,7 @@
   },
   {
     "name": "TriggeredSend.Start",
-    "url": "/core-library/triggeredsend/",
+    "url": "/core-library/triggeredsend/#instance-start",
     "section": "Core Library",
     "type": "method",
     "description": "Starts (reactivates) a paused triggered send definition.",
@@ -2360,7 +2361,7 @@
   },
   {
     "name": "TriggeredSend.Pause",
-    "url": "/core-library/triggeredsend/",
+    "url": "/core-library/triggeredsend/#instance-pause",
     "section": "Core Library",
     "type": "method",
     "description": "Pauses an active triggered send definition.",
@@ -2368,7 +2369,7 @@
   },
   {
     "name": "TriggeredSend.Publish",
-    "url": "/core-library/triggeredsend/",
+    "url": "/core-library/triggeredsend/#instance-publish",
     "section": "Core Library",
     "type": "method",
     "description": "Publishes a triggered send definition, making it active and ready to accept sends.",
@@ -2376,7 +2377,7 @@
   },
   {
     "name": "TriggeredSend.Send",
-    "url": "/core-library/triggeredsend/",
+    "url": "/core-library/triggeredsend/#instance-send",
     "section": "Core Library",
     "type": "method",
     "description": "Sends an email using the previously initialized triggered send definition.",
@@ -2388,7 +2389,7 @@
   },
   {
     "name": "TriggeredSend.Tracking.Retrieve",
-    "url": "/core-library/triggeredsend/",
+    "url": "/core-library/triggeredsend/#instance-tracking-retrieve",
     "section": "Core Library",
     "type": "method",
     "description": "Returns tracking data for the previously initialized triggered send definition.",
@@ -2399,7 +2400,7 @@
   },
   {
     "name": "TriggeredSend.Tracking.Clicks.Retrieve",
-    "url": "/core-library/triggeredsend/",
+    "url": "/core-library/triggeredsend/#instance-tracking-clicks-retrieve",
     "section": "Core Library",
     "type": "method",
     "description": "Returns click tracking information for the previously initialized triggered send definition.",
@@ -2410,7 +2411,7 @@
   },
   {
     "name": "TriggeredSend.Tracking.TotalByInterval.Retrieve",
-    "url": "/core-library/triggeredsend/",
+    "url": "/core-library/triggeredsend/#instance-tracking-totalbyinterval-retrieve",
     "section": "Core Library",
     "type": "method",
     "description": "Returns aggregated tracking data for the previously initialized triggered send.",
@@ -2424,7 +2425,7 @@
   },
   {
     "name": "Tracking.Retrieve",
-    "url": "/core-library/events/",
+    "url": "/core-library/events/#bounce-event",
     "section": "Core Library",
     "type": "method",
     "description": "Retrieves bounce event data for message sends matching the specified filter.",
@@ -2435,7 +2436,7 @@
   },
   {
     "name": "Tracking.Retrieve",
-    "url": "/core-library/events/",
+    "url": "/core-library/events/#click-event",
     "section": "Core Library",
     "type": "method",
     "description": "Retrieves click tracking event data for message sends matching the specified filter.",
@@ -2446,7 +2447,7 @@
   },
   {
     "name": "Tracking.Retrieve",
-    "url": "/core-library/events/",
+    "url": "/core-library/events/#forwarded-email-event",
     "section": "Core Library",
     "type": "method",
     "description": "Retrieves forwarded email event data for message sends matching the specified filter.",
@@ -2457,7 +2458,7 @@
   },
   {
     "name": "Tracking.Retrieve",
-    "url": "/core-library/events/",
+    "url": "/core-library/events/#forwarded-email-opt-in-event",
     "section": "Core Library",
     "type": "method",
     "description": "Retrieves forwarded email opt-in event data for message sends matching the specified filter.",
@@ -2468,7 +2469,7 @@
   },
   {
     "name": "Tracking.Retrieve",
-    "url": "/core-library/events/",
+    "url": "/core-library/events/#not-sent-event",
     "section": "Core Library",
     "type": "method",
     "description": "Retrieves not-sent event data for message sends matching the specified filter.",
@@ -2479,7 +2480,7 @@
   },
   {
     "name": "Tracking.Retrieve",
-    "url": "/core-library/events/",
+    "url": "/core-library/events/#open-event",
     "section": "Core Library",
     "type": "method",
     "description": "Retrieves open tracking event data for message sends matching the specified filter.",
@@ -2490,7 +2491,7 @@
   },
   {
     "name": "Tracking.Retrieve",
-    "url": "/core-library/events/",
+    "url": "/core-library/events/#sent-event",
     "section": "Core Library",
     "type": "method",
     "description": "Retrieves sent event data for message sends matching the specified filter.",
@@ -2501,7 +2502,7 @@
   },
   {
     "name": "Tracking.Retrieve",
-    "url": "/core-library/events/",
+    "url": "/core-library/events/#survey-event",
     "section": "Core Library",
     "type": "method",
     "description": "Retrieves survey response event data for message sends matching the specified filter.",
@@ -2512,7 +2513,7 @@
   },
   {
     "name": "Tracking.Retrieve",
-    "url": "/core-library/events/",
+    "url": "/core-library/events/#unsub-event",
     "section": "Core Library",
     "type": "method",
     "description": "Retrieves unsubscribe event data for message sends matching the specified filter.",
@@ -2523,7 +2524,7 @@
   },
   {
     "name": "ContentAreaObj.Init",
-    "url": "/core-library/contentareaobj/",
+    "url": "/core-library/contentareaobj/#init",
     "section": "Core Library",
     "type": "method",
     "description": "Initializes a ContentAreaObj instance bound to the specified external key.",
@@ -2535,7 +2536,7 @@
   },
   {
     "name": "ContentAreaObj.Add",
-    "url": "/core-library/contentareaobj/",
+    "url": "/core-library/contentareaobj/#add",
     "section": "Core Library",
     "type": "method",
     "description": "Creates a new content area from the supplied properties and returns an initialized ContentAreaObj instance bound to it.",
@@ -2547,7 +2548,7 @@
   },
   {
     "name": "ContentAreaObj.Retrieve",
-    "url": "/core-library/contentareaobj/",
+    "url": "/core-library/contentareaobj/#retrieve",
     "section": "Core Library",
     "type": "method",
     "description": "Returns an array of content areas matching the specified filter.",
@@ -2559,7 +2560,7 @@
   },
   {
     "name": "ContentAreaObj.Update",
-    "url": "/core-library/contentareaobj/",
+    "url": "/core-library/contentareaobj/#instance-update",
     "section": "Core Library",
     "type": "method",
     "description": "Updates the content area with the supplied attributes.",
@@ -2571,7 +2572,7 @@
   },
   {
     "name": "ContentAreaObj.Remove",
-    "url": "/core-library/contentareaobj/",
+    "url": "/core-library/contentareaobj/#instance-remove",
     "section": "Core Library",
     "type": "method",
     "description": "Removes the previously initialized content area.",
@@ -2580,7 +2581,7 @@
   },
   {
     "name": "Portfolio.Init",
-    "url": "/core-library/portfolio/",
+    "url": "/core-library/portfolio/#init",
     "section": "Core Library",
     "type": "method",
     "description": "Initializes a Portfolio instance bound to the specified external key.",
@@ -2592,7 +2593,7 @@
   },
   {
     "name": "Portfolio.Add",
-    "url": "/core-library/portfolio/",
+    "url": "/core-library/portfolio/#add",
     "section": "Core Library",
     "type": "method",
     "description": "Creates a new portfolio (file) object from the supplied properties.",
@@ -2604,7 +2605,7 @@
   },
   {
     "name": "Portfolio.Retrieve",
-    "url": "/core-library/portfolio/",
+    "url": "/core-library/portfolio/#retrieve",
     "section": "Core Library",
     "type": "method",
     "description": "Returns an array of portfolio objects matching the specified filter.",
@@ -2616,7 +2617,7 @@
   },
   {
     "name": "Portfolio.Update",
-    "url": "/core-library/portfolio/",
+    "url": "/core-library/portfolio/#instance-update",
     "section": "Core Library",
     "type": "method",
     "description": "Updates the portfolio object with the supplied attributes.",
@@ -2628,7 +2629,7 @@
   },
   {
     "name": "Portfolio.Remove",
-    "url": "/core-library/portfolio/",
+    "url": "/core-library/portfolio/#instance-remove",
     "section": "Core Library",
     "type": "method",
     "description": "Removes the previously initialized portfolio object.",

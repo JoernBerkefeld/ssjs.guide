@@ -18,15 +18,15 @@ Does not require `Platform.Load`.
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `Platform.Request.Browser` | object | Browser metadata: `Platform`, `Browser`, `Version`, `MajorVersion`, `MinorVersion` |
-| `Platform.Request.ClientIP` | string | IP address of the requesting client |
-| `Platform.Request.HasSSL` | boolean | Whether the current request supports SSL (HTTPS) |
-| `Platform.Request.IsSSL` | boolean | Whether the current request used an SSL (HTTPS) connection |
-| `Platform.Request.Method` | string | HTTP method: `"GET"` or `"POST"` |
-| `Platform.Request.QueryString` | string | Full raw query string of the request URL |
-| `Platform.Request.ReferrerURL` | string | URL of the referring web address |
-| `Platform.Request.RequestURL` | string | Full resolved URL of the current page |
-| `Platform.Request.UserAgent` | string | User-agent string of the requesting browser |
+| [`Platform.Request.Browser`](#browser) | object | Browser metadata: `Platform`, `Browser`, `Version`, `MajorVersion`, `MinorVersion` |
+| [`Platform.Request.ClientIP`](#clientip) | string | IP address of the requesting client |
+| [`Platform.Request.HasSSL`](#hasssl) | boolean | Whether the current request supports SSL (HTTPS) |
+| [`Platform.Request.IsSSL`](#isssl) | boolean | Whether the current request used an SSL (HTTPS) connection |
+| [`Platform.Request.Method`](#method) | string | HTTP method: `"GET"` or `"POST"` |
+| [`Platform.Request.QueryString`](#querystring) | string | Full raw query string of the request URL |
+| [`Platform.Request.ReferrerURL`](#referrerurl) | string | URL of the referring web address |
+| [`Platform.Request.RequestURL`](#requesturl) | string | Full resolved URL of the current page |
+| [`Platform.Request.UserAgent`](#useragent) | string | User-agent string of the requesting browser |
 
 All properties return `null` (or `false` for boolean properties) when no valid request object exists or the value is absent.
 
@@ -43,7 +43,7 @@ All properties return `null` (or `false` for boolean properties) when no valid r
 
 ---
 
-## Method: GetQueryStringParameter
+### Platform.Request.GetQueryStringParameter {#getquerystringparameter}
 
 ```javascript
 Platform.Request.GetQueryStringParameter(parameterName)
@@ -51,13 +51,13 @@ Platform.Request.GetQueryStringParameter(parameterName)
 
 Returns the value of a URL query string parameter. Returns **`null`** if the parameter is not present (runtime-verified — the official docs' claim of an empty string is incorrect).
 
-### Parameters
+#### Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `parameterName` | string | Yes | Query parameter name |
 
-### Examples
+#### Examples
 
 ```javascript
 // URL: /page?id=42&mode=preview
@@ -68,7 +68,7 @@ var missing = Platform.Request.GetQueryStringParameter("foo"); // null
 
 ---
 
-## Method: GetFormField
+### Platform.Request.GetFormField {#getformfield}
 
 ```javascript
 Platform.Request.GetFormField(fieldName)
@@ -76,7 +76,7 @@ Platform.Request.GetFormField(fieldName)
 
 Reads a field from either a GET query string or POST form body (application/x-www-form-urlencoded or multipart/form-data). Returns **`null`** when the field is absent.
 
-### Examples
+#### Examples
 
 ```javascript
 var email = Platform.Request.GetFormField("email");
@@ -85,7 +85,7 @@ var firstName = Platform.Request.GetFormField("firstName");
 
 ---
 
-## Method: GetPostData
+### Platform.Request.GetPostData {#getpostdata}
 
 ```javascript
 Platform.Request.GetPostData([encoding])
@@ -97,7 +97,7 @@ When `encoding` is omitted, the platform default applies (often a legacy Windows
 
 {% include callout.html type="warning" content="`GetPostData()` can only be called **once per request**. Calling it a second time returns an empty string. Read it into a variable immediately at the top of your script." %}
 
-### Examples
+#### Examples
 
 ```javascript
 // CORRECT — read once, reuse the variable
@@ -109,7 +109,7 @@ var a = Platform.Request.GetPostData();
 var b = Platform.Request.GetPostData(); // b === ""
 ```
 
-### Checking Request Method First
+#### Checking Request Method First
 
 ```javascript
 if (Platform.Request.Method === "POST") {
@@ -123,7 +123,7 @@ if (Platform.Request.Method === "POST") {
 
 ---
 
-## Method: GetUserLanguages
+### Platform.Request.GetUserLanguages {#getuserlanguages}
 
 ```javascript
 Platform.Request.GetUserLanguages()
@@ -133,7 +133,7 @@ Returns the raw value of the HTTP `Accept-Language` header (for example a comma-
 
 {% include callout.html type="warning" content="Runtime-verified: in a plain CloudPage GET this method **throws** `\"Unable to retrieve security descriptor for this frame.\"`. Wrap it in try/catch, or prefer reading the header directly via `GetRequestHeader(\"Accept-Language\")`." %}
 
-### Examples
+#### Examples
 
 ```javascript
 var langs;
@@ -149,7 +149,7 @@ if (langs) {
 
 ---
 
-## Method: GetRequestHeader
+### Platform.Request.GetRequestHeader {#getrequestheader}
 
 ```javascript
 Platform.Request.GetRequestHeader(headerName)
@@ -157,7 +157,7 @@ Platform.Request.GetRequestHeader(headerName)
 
 Returns the value of an HTTP request header. Header names are case-insensitive. Returns **`null`** when the header is absent.
 
-### Examples
+#### Examples
 
 ```javascript
 var contentType = Platform.Request.GetRequestHeader("Content-Type");
@@ -175,7 +175,7 @@ if (token !== expectedToken) {
 
 ---
 
-## Method: GetCookieValue
+### Platform.Request.GetCookieValue {#getcookievalue}
 
 ```javascript
 Platform.Request.GetCookieValue(cookieName)
@@ -183,7 +183,7 @@ Platform.Request.GetCookieValue(cookieName)
 
 Returns the value of a cookie sent with the request. Returns **`null`** when the cookie is absent.
 
-### Examples
+#### Examples
 
 ```javascript
 var sessionId = Platform.Request.GetCookieValue("sfmc_session");
@@ -195,7 +195,7 @@ if (!sessionId) {
 
 ---
 
-## Property: RequestURL
+### Platform.Request.RequestURL {#requesturl}
 
 ```javascript
 Platform.Request.RequestURL
@@ -203,7 +203,7 @@ Platform.Request.RequestURL
 
 Returns the full URL of the current CloudPage as it was resolved, including CloudPages URL encryption parameters.
 
-### Examples
+#### Examples
 
 ```javascript
 var currentUrl = Platform.Request.RequestURL;
@@ -211,7 +211,7 @@ var currentUrl = Platform.Request.RequestURL;
 
 ---
 
-## Property: Browser
+### Platform.Request.Browser {#browser}
 
 ```javascript
 Platform.Request.Browser
@@ -219,7 +219,7 @@ Platform.Request.Browser
 
 Returns an object describing the requesting client's browser with the following fields: `Platform`, `Browser`, `Version`, `MajorVersion`, `MinorVersion`.
 
-### Examples
+#### Examples
 
 ```javascript
 var browser = Platform.Request.Browser;
@@ -229,7 +229,7 @@ Write(Stringify(browser));
 
 ---
 
-## Property: ClientIP
+### Platform.Request.ClientIP {#clientip}
 
 ```javascript
 Platform.Request.ClientIP
@@ -237,7 +237,7 @@ Platform.Request.ClientIP
 
 Returns the IP address of the requesting client as a string.
 
-### Examples
+#### Examples
 
 ```javascript
 var ip = Platform.Request.ClientIP;
@@ -246,7 +246,7 @@ Write("Request from: " + ip);
 
 ---
 
-## Property: HasSSL
+### Platform.Request.HasSSL {#hasssl}
 
 ```javascript
 Platform.Request.HasSSL
@@ -254,7 +254,7 @@ Platform.Request.HasSSL
 
 Returns `true` if the current request supports SSL (HTTPS), `false` otherwise.
 
-### Examples
+#### Examples
 
 ```javascript
 if (!Platform.Request.HasSSL) {
@@ -264,7 +264,7 @@ if (!Platform.Request.HasSSL) {
 
 ---
 
-## Property: IsSSL
+### Platform.Request.IsSSL {#isssl}
 
 ```javascript
 Platform.Request.IsSSL
@@ -274,7 +274,27 @@ Returns `true` if the current request was made over an SSL (HTTPS) connection. A
 
 ---
 
-## Property: QueryString
+### Platform.Request.Method {#method}
+
+```javascript
+Platform.Request.Method
+```
+
+Returns the HTTP method of the current request — `"GET"` or `"POST"`.
+
+#### Examples
+
+```javascript
+var method = Platform.Request.Method;
+if (method === "POST") {
+    var body = Platform.Request.GetPostData();
+    // handle POST
+}
+```
+
+---
+
+### Platform.Request.QueryString {#querystring}
 
 ```javascript
 Platform.Request.QueryString
@@ -282,7 +302,7 @@ Platform.Request.QueryString
 
 Returns the full raw query string of the request URL (everything after `?`). Use `GetQueryStringParameter(name)` to read individual values.
 
-### Examples
+#### Examples
 
 ```javascript
 var qs = Platform.Request.QueryString;
@@ -291,7 +311,7 @@ var qs = Platform.Request.QueryString;
 
 ---
 
-## Property: ReferrerURL
+### Platform.Request.ReferrerURL {#referrerurl}
 
 ```javascript
 Platform.Request.ReferrerURL
@@ -299,7 +319,7 @@ Platform.Request.ReferrerURL
 
 Returns the URL of the referring web address (the HTTP `Referer` header value). Returns `null` when no referrer is present.
 
-### Examples
+#### Examples
 
 ```javascript
 var referrer = Platform.Request.ReferrerURL;
@@ -310,7 +330,7 @@ if (referrer) {
 
 ---
 
-## Property: UserAgent
+### Platform.Request.UserAgent {#useragent}
 
 ```javascript
 Platform.Request.UserAgent
@@ -318,7 +338,7 @@ Platform.Request.UserAgent
 
 Returns the user-agent string from the HTTP request. Use with [`Platform.Function.IsCHTMLBrowser()`](/platform-functions/ischtmlbrowser/) to detect browser types.
 
-### Examples
+#### Examples
 
 ```javascript
 var ua = Platform.Request.UserAgent;

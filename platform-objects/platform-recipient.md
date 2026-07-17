@@ -14,11 +14,13 @@ differs_from_docs: "Runtime-verified (CloudPage): Platform.Recipient.GetAttribut
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `Platform.Recipient.GetAttributeValue(attributeName)` | string | Returns the value of a subscriber attribute or sendable DE field for the current recipient |
+| [`Platform.Recipient.GetAttributeValue(attributeName)`](#getattributevalue) | string | Returns the value of a subscriber attribute or sendable DE field for the current recipient |
 
-### GetAttributeValue(attributeName)
+### Platform.Recipient.GetAttributeValue {#getattributevalue}
 
 Returns the value of a subscriber attribute or sendable data extension field for the recipient currently being processed in the send context.
+
+#### Parameters
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
@@ -26,7 +28,7 @@ Returns the value of a subscriber attribute or sendable data extension field for
 
 {% include callout.html type="warning" content="The bare-name `Recipient` global is **not defined at runtime** — it is `undefined` both before and after `Platform.Load`, contrary to older documentation. Always call `Platform.Recipient.GetAttributeValue(...)`, or use `Attribute.GetValue(name)` after `Platform.Load(\"core\", \"1.1.5\")`." %}
 
-## Examples
+#### Examples
 
 ```javascript
 var email = Platform.Recipient.GetAttributeValue("EmailAddress");
