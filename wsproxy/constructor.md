@@ -8,6 +8,7 @@ syntax: "new Script.Util.WSProxy()"
 return_type: WSProxyInstance
 min_args: 0
 max_args: 0
+verification: verified
 ---
 
 Creates a new WSProxy instance. No arguments are needed. The proxy automatically authenticates using the current SFMC account credentials.

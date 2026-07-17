@@ -9,9 +9,12 @@ syntax: "<WSProxyInstance>.getNextBatch(objectType, requestId)"
 return_type: object
 min_args: 2
 max_args: 2
+verification: verified
 ---
 
 `<WSProxyInstance>.getNextBatch(objectType, requestId)` continues a paginated [`retrieve`](/wsproxy/retrieve/) sequence after `HasMoreRows` is true.
+
+{% include callout.html type="note" content="**Runtime verified.** A `retrieve` of a Data Extension seeded with 2,600 rows returned a first page with `Status: \"MoreDataAvailable\"`, `HasMoreRows: true`, a `RequestID`, and exactly 2,500 rows (the default page size). Passing that same object type and `RequestID` to <code>getNextBatch</code> returned the next page (`Status: \"OK\"`, `HasMoreRows: false`, the remaining 100 rows) — 2,600 rows total across two pages, with `HasMoreRows` flipping to `false` on the last page. Each `Results` row carries a `Properties` array of `{ Name, Value }` pairs. Pagination happens **naturally** once a result set exceeds the 2,500-row default page size; <code>setBatchSize</code> is **not** required (and does throw in the anonymous CloudPage context)." %}
 
 ## Parameters
 
@@ -30,17 +33,18 @@ Same shape as [`retrieve`](/wsproxy/retrieve/): `Status`, `RequestID`, `Results`
 
 ```javascript
 var proxy = new Script.Util.WSProxy();
-var result = proxy.retrieve("DataExtension", ["Name", "CustomerKey"]);
+var objectType = "DataExtension";
+var result = proxy.retrieve(objectType, ["Name", "CustomerKey"]);
 
-while (result.Status === "OK") {
+do {
     for (var i = 0; i < result.Results.length; i++) {
         Write(result.Results[i].Name + "<br>");
     }
-    if (!result.HasMoreRows) {
-        break;
+    if (result.HasMoreRows) {
+        // carry the RequestID from the previous response into the next page
+        result = proxy.getNextBatch(objectType, result.RequestID);
     }
-    result = proxy.getNextBatch("DataExtension", result.RequestID);
-}
+} while (result.HasMoreRows);
 ```
 
 ## Notes

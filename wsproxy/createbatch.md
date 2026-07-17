@@ -7,10 +7,11 @@ permalink: /wsproxy/createbatch/
 redirect_from:
   - /wsproxy/create-batch/
 description: Create multiple SFMC objects in a single SOAP API call — more efficient than calling proxy.createItem() in a loop.
-syntax: "<WSProxyInstance>.createBatch(objectType, propertiesArray)"
+syntax: "<WSProxyInstance>.createBatch(objectType, propertiesArray[, createOptions])"
 return_type: object
 min_args: 2
-max_args: 2
+max_args: 3
+verification: verified
 ---
 
 ## Parameters
@@ -19,6 +20,7 @@ max_args: 2
 |------|------|----------|-------------|
 | `objectType` | string | Yes | SOAP API object type |
 | `propertiesArray` | object[] | Yes | Array of property objects, one per item to create |
+| `createOptions` | object | No | Optional SOAP `CreateOptions` object (e.g. `RequestType`, `QueuePriority`) |
 
 ## Return Value
 

@@ -7,10 +7,11 @@ permalink: /wsproxy/createitem/
 redirect_from:
   - /wsproxy/create-item/
 description: Create a new SFMC object via the SOAP API — subscribers, data extensions, triggered send definitions, and more. Returns an object with Status, RequestID, and Results.
-syntax: "<WSProxyInstance>.createItem(objectType, properties)"
+syntax: "<WSProxyInstance>.createItem(objectType, properties[, createOptions])"
 return_type: object
 min_args: 2
-max_args: 2
+max_args: 3
+verification: verified
 ---
 
 ## Parameters
@@ -19,6 +20,7 @@ max_args: 2
 |------|------|----------|-------------|
 | `objectType` | string | Yes | SOAP API object type |
 | `properties` | object | Yes | Object properties to set |
+| `createOptions` | object | No | Optional SOAP `CreateOptions` (e.g. `RequestType`, `QueuePriority`) |
 
 ## Return Value
 

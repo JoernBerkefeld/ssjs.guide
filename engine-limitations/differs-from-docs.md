@@ -417,6 +417,38 @@ The official docs present `Subscriber.Upsert(properties)` and `Subscriber.Statis
 
 The official docs type the Core-library `DateTime` conversion methods as returning a `string`, but at runtime `DateTime.SystemDateToLocalDate(...)` and `DateTime.LocalDateToSystemDate(...)` return **CLR `DateTime` objects** (`typeof "object"`) that coerce transparently to a string via `String(value)`, `"" + value`, or `Write(value)`. Separately, `DateTime.TimeZone.Retrieve()` rows are CLR objects that `Stringify()` **cannot** serialize — enumerate their fields with `for..in` instead.
 
+## WSProxy
+
+### &lt;WSProxyInstance&gt;.describe — Results elements are the ObjectDefinition itself, not a nested wrapper
+
+[Reference: describe](/wsproxy/describe/)
+
+The official docs show `describe` returning `{ RequestID, Results: [{ ObjectDefinition: { Properties: [...] } }] }` — one `ObjectDefinition` wrapper per requested type. At runtime each element of `Results` **is** the object definition directly: `result.Results[0]` already carries `ObjectType`, `Name`, `Properties`, `IsCreatable`, etc., and there is **no** `Results[0].ObjectDefinition` key (it is `undefined`). Read fields as `result.Results[0].Properties`, not `result.Results[0].ObjectDefinition.Properties`. `objectType` accepts a single string **or** an array of strings; the returned `Results` array element order matches the input order. Describing an unknown object type does **not** throw — it returns `{ RequestID, Results: [null] }`, so guard against a `null` element. The return object exposes `RequestID` but no `Status` field.
+
+### &lt;WSProxyInstance&gt;.performBatch — action verb is case-insensitive; each Results entry carries a Task sub-object
+
+[Reference: performBatch](/wsproxy/performbatch/)
+
+The official docs list the `action` argument as `Enum('Start')` without noting case behaviour. Runtime-verified against a freshly-created active `QueryDefinition`: both `"Start"` and lowercase `"start"` return `Status` `"OK"` with `Results[0].StatusMessage` `"QueryDefinition perform called successfully"` — the perform verb is **case-insensitive**. The return object is `{ Status (string), StatusMessage (string, empty on success), RequestID (string), Results (Array, one entry per input item) }`, and each `Results` entry exposes not just `StatusCode`/`StatusMessage`/`OrdinalID`/`ErrorCode` but also an `Object` wrapper (the acted-on API object) and a `Task` sub-object carrying `StatusCode`, `StatusMessage`, and `InteractionObjectID` — per-item detail the official docs do not describe.
+
+### &lt;WSProxyInstance&gt;.performItem — action verb is case-insensitive; the single Results entry carries a Task sub-object
+
+[Reference: performItem](/wsproxy/performitem/)
+
+The official docs list the `action` argument as `Enum('Start')` without noting case behaviour. Runtime-verified against a freshly-created active `QueryDefinition`: both `"Start"` and lowercase `"start"` return `Status` `"OK"` with `Results[0].StatusMessage` `"QueryDefinition perform called successfully"` — the perform verb is **case-insensitive**, so this page's earlier "lowercase `\"start\"` fails" claim was wrong. The return object is `{ Status (string), StatusMessage (string, empty on success), RequestID (string), Results (Array with a single entry for the acted-on item) }`, and that `Results` entry exposes not just `StatusCode`/`StatusMessage`/`OrdinalID`/`ErrorCode` but also an `Object` wrapper (the acted-on API object) and a `Task` sub-object carrying `StatusCode`, `StatusMessage`, and `InteractionObjectID` — per-item detail the official docs do not describe. This mirrors the sibling [`performBatch`](/wsproxy/performbatch/).
+
+### &lt;WSProxyInstance&gt;.setClientId — returns null, not void
+
+[Reference: setClientId](/wsproxy/setclientid/)
+
+The official docs type the return as `void`, but at runtime `setClientId(options)` returns a genuine JS `null` (`typeof "object"`, strict `=== null` is `true`), not `undefined` — matching its sibling `resetClientIds`. The impersonation itself is runtime-verified on a live CloudPage: after `setClientId({ ID: <otherBU> })` the very next `retrieve` runs in the target ClientId's context (a request for a BU the caller cannot access is rejected with *"MemberID … does not have access to ClientID …"*, proving the context switched), and after `resetClientIds()` the baseline BU context is restored. The single argument is an **object** (`{ ID, UserID }`) — this page's earlier Parameters table wrongly typed it as a `number`.
+
+### &lt;WSProxyInstance&gt;.resetClientIds — returns null, not void
+
+[Reference: resetClientIds](/wsproxy/resetclientids/)
+
+The official docs type the return as `void`, but at runtime `resetClientIds()` returns a genuine JS `null` (`typeof "object"`, strict `=== null` is `true`), not `undefined`. The method itself works as documented: runtime-verified on a live CloudPage, a retrieve after `setClientId({ ID: <otherBU> })` targets the impersonated BU, and after `resetClientIds()` the very next retrieve returns to the script's own default BU context (identical result set to the pre-impersonation baseline).
+
 ## ECMAScript Built-ins
 
 ### Date.prototype.getMilliseconds() — off-by-one for some values

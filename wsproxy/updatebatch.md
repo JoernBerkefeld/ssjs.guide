@@ -7,10 +7,11 @@ permalink: /wsproxy/updatebatch/
 redirect_from:
   - /wsproxy/update-batch/
 description: Update multiple SFMC objects in a single SOAP API call for better performance than looping proxy.updateItem().
-syntax: "<WSProxyInstance>.updateBatch(objectType, propertiesArray)"
+syntax: "<WSProxyInstance>.updateBatch(objectType, propertiesArray[, updateOptions])"
 return_type: object
 min_args: 2
-max_args: 2
+max_args: 3
+verification: verified
 ---
 
 ## Parameters
@@ -19,6 +20,11 @@ max_args: 2
 |------|------|----------|-------------|
 | `objectType` | string | Yes | SOAP API object type |
 | `propertiesArray` | object[] | Yes | Array of update property objects |
+| `updateOptions` | object | No | SOAP `UpdateOptions` (e.g. `{ SaveOptions: [{ PropertyName: "*", SaveAction: "UpdateAdd" }] }`) |
+
+## Return Value
+
+Returns an object with `Status` (e.g. `"OK"`), `RequestID`, and a `Results` array containing one entry per input item. Each `Results` entry carries `StatusCode`, `StatusMessage`, `OrdinalID`, `ErrorCode`, and an `Object` wrapper for the updated record.
 
 ## Examples
 
@@ -38,7 +44,7 @@ for (var i = 0; i < submissions.length; i++) {
     });
 }
 
-var result = proxy.updateBatch("Subscriber", batch, [{ SaveAction: "UpdateAdd" }]);
+var result = proxy.updateBatch("Subscriber", batch, { SaveOptions: [{ PropertyName: "*", SaveAction: "UpdateAdd" }] });
 ```
 
 ## See Also

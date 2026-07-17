@@ -7,10 +7,11 @@ permalink: /wsproxy/deleteitem/
 redirect_from:
   - /wsproxy/delete-item/
 description: Delete an SFMC object via the SOAP API.
-syntax: "<WSProxyInstance>.deleteItem(objectType, properties)"
+syntax: "<WSProxyInstance>.deleteItem(objectType, properties[, deleteOptions])"
 return_type: object
 min_args: 2
-max_args: 2
+max_args: 3
+verification: verified
 ---
 
 ## Parameters
@@ -19,14 +20,17 @@ max_args: 2
 |------|------|----------|-------------|
 | `objectType` | string | Yes | SOAP API object type |
 | `properties` | object | Yes | Object properties identifying the record to delete |
+| `deleteOptions` | object | No | Optional SOAP DeleteOptions object (e.g. `RequestType`, `QueuePriority`) |
 
 ## Return Value
+
+The top-level object exposes `Status`, `RequestID`, and a `Results` array of per-item results. Each entry in `Results` carries `StatusCode`, `StatusMessage`, and `ErrorCode`. The top-level object has no `StatusMessage`.
 
 ```javascript
 {
     Status: "OK",
     RequestID: "...",
-    Results: [{ StatusCode: "OK", StatusMessage: "..." }]
+    Results: [{ StatusCode: "OK", StatusMessage: "...", ErrorCode: "0" }]
 }
 ```
 

@@ -6,11 +6,12 @@ parent_url: /wsproxy/
 permalink: /wsproxy/updateitem/
 redirect_from:
   - /wsproxy/update-item/
-description: Update an existing SFMC object via the SOAP API. Can be used with SaveOption for upsert behavior.
-syntax: "<WSProxyInstance>.updateItem(objectType, properties)"
+verification: verified
+description: Update a single existing SFMC object via the SOAP API. Accepts an optional UpdateOptions argument (e.g. SaveOptions for upsert behavior).
+syntax: "<WSProxyInstance>.updateItem(objectType, properties[, updateOptions])"
 return_type: object
 min_args: 2
-max_args: 2
+max_args: 3
 ---
 
 ## Parameters
@@ -18,7 +19,8 @@ max_args: 2
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `objectType` | string | Yes | SOAP API object type |
-| `properties` | object | Yes | Properties to update (must include identifier) |
+| `properties` | object | Yes | Single object to update (must include identifier) |
+| `updateOptions` | object | No | SOAP `UpdateOptions` object (e.g. `{ SaveOptions: [...] }`) |
 
 ## Return Value
 
@@ -26,9 +28,19 @@ max_args: 2
 {
     Status: "OK",
     RequestID: "...",
-    Results: [{ StatusCode: "OK", StatusMessage: "...", Object: {...} }]
+    Results: [
+        {
+            StatusCode: "OK",
+            StatusMessage: "Updated DataExtensionObject",
+            OrdinalID: 0,
+            ErrorCode: 0,
+            Object: { /* the updated object */ }
+        }
+    ]
 }
 ```
+
+`updateItem` updates a single object, so `Results` always contains exactly one entry. There is no top-level `StatusMessage` — the per-item status text lives on the `Results` entry.
 
 ## Examples
 
@@ -47,16 +59,32 @@ var result = proxy.updateItem("Subscriber", {
 ```javascript
 var proxy = new Script.Util.WSProxy();
 var result = proxy.updateItem(
-    "DataExtensionObject[MyDE_Key]",
+    "DataExtensionObject",
     {
-        Properties: {
-            Property: [
-                { Name: "SubscriberKey", Value: "sub_jane" },
-                { Name: "Score", Value: "95" },
-                { Name: "UpdatedAt", Value: Platform.Function.Now() }
-            ]
-        }
+        CustomerKey: "MyDE_Key",
+        Keys: [
+            { Name: "SubscriberKey", Value: "sub_jane" }
+        ],
+        Properties: [
+            { Name: "Score", Value: "95" },
+            { Name: "UpdatedAt", Value: Platform.Function.Now() }
+        ]
     }
+);
+```
+
+### Upsert with SaveOptions
+
+```javascript
+var proxy = new Script.Util.WSProxy();
+var result = proxy.updateItem(
+    "DataExtensionObject",
+    {
+        CustomerKey: "MyDE_Key",
+        Keys: [{ Name: "SubscriberKey", Value: "sub_jane" }],
+        Properties: [{ Name: "Score", Value: "95" }]
+    },
+    { SaveOptions: [{ PropertyName: "*", SaveAction: "UpdateAdd" }] }
 );
 ```
 

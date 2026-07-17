@@ -11,6 +11,8 @@ syntax: "<WSProxyInstance>.performBatch(objectType, propertiesArray, action[, pe
 return_type: object
 min_args: 3
 max_args: 4
+verification: verified
+differs_from_docs: "Runtime-verified: the action verb is case-insensitive (\"start\" behaves identically to \"Start\"), and each Results entry carries a Task sub-object (with InteractionObjectID) plus StatusCode/StatusMessage detail the official docs do not describe."
 ---
 
 Performs the same action on **multiple** rows/objects in one SOAP request. For a **single** object, use [`<WSProxyInstance>.performItem`](/wsproxy/performitem/).
@@ -21,12 +23,14 @@ Performs the same action on **multiple** rows/objects in one SOAP request. For a
 |------|------|----------|-------------|
 | `objectType` | string | Yes | SOAP API object type |
 | `propertiesArray` | object[] | Yes | One property object per target row (identify each item, e.g. `ObjectID`) |
-| `action` | string | Yes | Must be `"Start"` (lowercase `"start"` fails) |
+| `action` | string | Yes | The perform verb, typically `"Start"`. Runtime-verified as **case-insensitive** — `"start"` behaves identically to `"Start"` |
 | `performOptions` | object | No | SOAP `PerformOptions` fields |
+
+{% include differs-from-docs.html note="The official docs list `action` as `Enum('Start')` without noting case behaviour; at runtime the verb is case-insensitive, and each `Results` entry carries a `Task` sub-object plus per-item `StatusCode`/`StatusMessage` not detailed in the docs." %}
 
 ## Return value
 
-Object with `Status`, `StatusMessage`, `RequestID`, and `Results` (one entry per input item when successful).
+Object with `Status` (`"OK"` on success), `StatusMessage` (empty on success), `RequestID`, and `Results` — an array with one entry per input item. Each `Results` entry carries `StatusCode`, `StatusMessage`, `OrdinalID`, `ErrorCode`, an `Object` wrapper (the acted-on API object) and a `Task` sub-object (with `StatusCode`, `StatusMessage`, `InteractionObjectID`).
 
 ## Example
 

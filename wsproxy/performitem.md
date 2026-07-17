@@ -11,6 +11,8 @@ syntax: "<WSProxyInstance>.performItem(objectType, properties, action[, performO
 return_type: object
 min_args: 3
 max_args: 4
+verification: verified
+differs_from_docs: true
 ---
 
 SFMC exposes SOAP **Perform** for lifecycle actions. WSProxy surfaces this as **`performItem`** for one target row and **`performBatch`** for many (see [`proxy.performBatch`](/wsproxy/performbatch/)).
@@ -23,12 +25,16 @@ There is **no** method named `proxy.perform` — older samples used informal sho
 |------|------|----------|-------------|
 | `objectType` | string | Yes | SOAP API object type |
 | `properties` | object | Yes | Fields identifying the target (e.g. `{ CustomerKey: "..." }` or `{ ObjectID: "..." }`) |
-| `action` | string | Yes | Must be `"Start"` where applicable (lowercase `"start"` fails) |
+| `action` | string | Yes | Perform verb, typically `"Start"`. Case-insensitive at runtime (`"start"` works identically to `"Start"`) |
 | `performOptions` | object | No | SOAP `PerformOptions` |
+
+{% include differs-from-docs.html note="The official docs type `action` as `Enum('Start')` and this page previously claimed lowercase `\"start\"` fails, but the runtime accepts the verb case-insensitively — `\"start\"` returns the same `Status: \"OK\"` as `\"Start\"`." %}
 
 ## Return value
 
-Object with `Status`, `StatusMessage`, `RequestID`, and `Results`.
+Object with `Status` (string, `"OK"` on success), `StatusMessage` (string, empty on success), `RequestID` (string), and `Results` (an array with a single entry for the acted-on item). Each `Results` element carries `StatusCode`, `StatusMessage` (e.g. `"QueryDefinition perform called successfully"`), `OrdinalID`, `ErrorCode`, an `Object` (the acted-on API object), and a `Task` sub-object (`StatusCode`, `StatusMessage`, `ID`, `TblAsyncID`, `InteractionObjectID`).
+
+{% include differs-from-docs.html note="The official docs list only `Status`, `StatusMessage`, `RequestID`, and `Results` and do not detail the per-item `Results[0]` structure (`StatusCode`, `ErrorCode`, `Object`, and the `Task` sub-object with `InteractionObjectID`) proven at runtime." %}
 
 ## Examples
 

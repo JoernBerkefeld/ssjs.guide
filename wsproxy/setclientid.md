@@ -7,17 +7,30 @@ permalink: /wsproxy/setclientid/
 redirect_from:
   - /wsproxy/set-client-id/
 description: Set the Business Unit client ID for WSProxy operations — allows parent BU scripts to operate on child BU data.
-syntax: "<WSProxyInstance>.setClientId({ ID: clientId })"
-return_type: void
+syntax: "<WSProxyInstance>.setClientId(options)"
+return_type: "null"
 min_args: 1
 max_args: 1
+verification: verified
+differs_from_docs: true
 ---
 
 ## Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `clientId` | number | Yes | The MID (Member ID) of the target Business Unit |
+| `options` | object | Yes | Object with the target ClientId properties; supply the MID under the `ID` key (and optionally `UserID`). |
+
+The `options` object keys:
+
+| Key | Type | Required | Description |
+|------|------|----------|-------------|
+| `ID` | number | No* | The MID (Member ID) of the target Business Unit. |
+| `UserID` | number | No | Internal ID of a user to impersonate. Rarely used. |
+
+*At least one of `ID` / `UserID` should be supplied.
+
+{% include differs-from-docs.html note="The official docs type `setClientId` as returning `void`, but at runtime it returns a genuine `null` (`=== null`), not `undefined`." %}
 
 ## Examples
 
@@ -53,7 +66,7 @@ for (var i = 0; i < businessUnits.length; i++) {
 
 ## Return Value
 
-`void`
+`null` — the runtime returns a genuine `null` (proven `=== null`), even though the official docs describe it as `void`.
 
 ## Notes
 
