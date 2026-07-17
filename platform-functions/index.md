@@ -95,12 +95,15 @@ Simple HTTP functions — for full REST control see [Script.Util.HttpRequest](/h
   <a href="/platform-functions/beginimpressionregion/" class="function-card"><div class="fn-name">BeginImpressionRegion</div><div class="fn-desc">Start a named impression tracking region.</div><div class="fn-return">→ void</div></a>
   <a href="/platform-functions/endimpressionregion/" class="function-card"><div class="fn-name">EndImpressionRegion</div><div class="fn-desc">End an impression region.</div><div class="fn-return">→ null</div></a>
   <a href="/platform-functions/treatascontent/" class="function-card"><div class="fn-name">TreatAsContent</div><div class="fn-desc">Evaluate AMPscript/HTML server-side. Security: never pass unvalidated user input.</div><div class="fn-return">→ string</div></a>
+  <a href="/platform-functions/contentarea/" class="function-card"><div class="fn-name">ContentArea <span class="deprecated-tag">(deprecated)</span></div><div class="fn-desc">Retrieve a classic Content Area by numeric ID. No longer supported.</div><div class="fn-return">→ string</div></a>
+  <a href="/platform-functions/contentareabyname/" class="function-card"><div class="fn-name">ContentAreaByName <span class="deprecated-tag">(deprecated)</span></div><div class="fn-desc">Retrieve a classic Content Area by name. No longer supported.</div><div class="fn-return">→ string</div></a>
 </div>
 
 ## Encoding & Hashing {#encoding}
 
 <div class="function-grid">
   <a href="/platform-functions/md5/" class="function-card"><div class="fn-name">MD5</div><div class="fn-desc">Returns an MD5 hash for a given string value.</div><div class="fn-return">→ string</div></a>
+  <a href="/platform-functions/stringify/" class="function-card"><div class="fn-name">Stringify</div><div class="fn-desc">Convert an object or value to its JSON string representation.</div><div class="fn-return">→ string</div></a>
   <a href="/platform-functions/base64encode/" class="function-card"><div class="fn-name">Base64Encode</div><div class="fn-desc">Encode a string to Base64 with optional charset.</div><div class="fn-return">→ string</div></a>
   <a href="/platform-functions/base64decode/" class="function-card"><div class="fn-name">Base64Decode</div><div class="fn-desc">Decode a Base64-encoded string with optional charset.</div><div class="fn-return">→ string</div></a>
 </div>

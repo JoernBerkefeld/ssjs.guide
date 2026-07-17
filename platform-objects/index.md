@@ -67,3 +67,14 @@ Control the HTTP response before output is sent:
 Platform.Response.ContentType = "application/json";
 Platform.Response.Redirect("https://example.com", false);
 ```
+
+---
+
+## Platform.Recipient
+
+Read subscriber attributes and sendable DE fields for the current recipient during a send:
+
+```javascript
+var email = Platform.Recipient.GetAttributeValue("EmailAddress");
+var firstName = Platform.Recipient.GetAttributeValue("FirstName");
+```
