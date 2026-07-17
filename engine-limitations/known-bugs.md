@@ -171,20 +171,59 @@ function getConfig() {
 
 ---
 
-## Array.prototype.splice Ignores Parameters
+## Array.prototype.slice Throws on the No-Argument Form
 
-**Severity: Medium** — silent incorrect behavior
+**Severity: Low** — throws instead of copying
 
-`Array.prototype.splice(start[, deleteCount[, item1 … itemN]])` works correctly in SFMC SSJS for the **delete-only** form (`splice(start)` and `splice(start, deleteCount)`). The bug surfaces **only when you insert items**: as soon as a third argument (`item1`) is passed, the engine ignores `start` and `deleteCount` and just overwrites from the left with the items to insert.
+`Array.prototype.slice` handles positive **and** negative indices correctly in SFMC SSJS (`slice(1, 3)`, `slice(-2)`, `slice(1, -1)` all return the expected ranges — runtime-verified). The one bug is the **no-argument** form `slice()`, which throws instead of returning a shallow copy.
+
+```javascript
+[0, 1, 2, 3, 4].slice();
+// Expected: [0, 1, 2, 3, 4]  (shallow copy)
+// Actual:   THROWS "Index was outside the bounds of the array."
+```
+
+Pass an explicit start index — `arr.slice(0)` — to copy the whole array, or use the [slice polyfill](/engine-limitations/polyfills/#array-prototype-slice).
+
+---
+
+## Array.prototype.sort Throws Without a Compare Function
+
+**Severity: Low** — throws instead of default sort
+
+`Array.prototype.sort(compareFn)` works correctly in SFMC SSJS when you pass a compare function (numeric and string comparators both sort as expected — runtime-verified). The **no-argument** form `sort()` (default lexicographic order) throws.
+
+```javascript
+[3, 1, 4, 1, 5].sort();
+// Expected: [1, 1, 3, 4, 5]  (default string compare)
+// Actual:   THROWS "Failed to compare two elements in the array."
+```
+
+Always pass an explicit compare function, or use the [sort polyfill](/engine-limitations/polyfills/#array-prototype-sort) if you need the default order.
+
+---
+
+## Array.prototype.splice — splice(start) Throws and the Insert Form Ignores Parameters
+
+**Severity: Medium** — throws or silent incorrect behavior
+
+`Array.prototype.splice(start[, deleteCount[, item1 … itemN]])` works correctly in SFMC SSJS **only** for the two-argument delete form `splice(start, deleteCount)` (an over-large `deleteCount` is clamped to the remaining length — runtime-verified). Two forms are broken:
+
+- The **one-argument** form `splice(start)` throws `Index was outside the bounds of the array.`
+- The **insert** form: as soon as a third argument (`item1`) is passed, the engine ignores `start` and `deleteCount` and just overwrites from the left with the items to insert.
 
 ```javascript
 var arr = [1, 2, 3, 4, 5];
+arr.splice(2);
+// Expected: removes from index 2 on, arr becomes [1, 2]
+// Actual:   THROWS "Index was outside the bounds of the array."
+
 arr.splice(2, 1, 'a');
 // Expected: removes element at index 2, arr becomes [1, 2, 'a', 4, 5]
 // Actual:   first element is replaced = ['a', 2, 3, 4, 5] as if you ran arr.splice(null, null, "a");
 ```
 
-Use the [splice polyfill](/engine-limitations/polyfills/#array-prototype-splice).
+Use the two-argument delete form `splice(start, arr.length)` in place of `splice(start)`, or the [splice polyfill](/engine-limitations/polyfills/#array-prototype-splice) for the one-argument delete form and any insert.
 
 ---
 
@@ -276,3 +315,129 @@ var de = DataExtension.Init("MyDE");
 Even declaring a variable that holds a Core object before `Platform.Load` can fail.
 
 **ESLint rules:** `sfmc/ssjs-require-platform-load`, `sfmc/ssjs-require-platform-load-order`, `sfmc/ssjs-prefer-platform-load-version`
+
+---
+
+## Date.prototype.getMilliseconds Is Off by One
+
+**Severity: Low** — incorrect sub-second value
+
+`Date.prototype.getMilliseconds()` frequently reads back one less than the value the date was constructed with.
+
+```javascript
+new Date(2020, 0, 1, 0, 0, 0, 123).getMilliseconds();
+// Expected: 123
+// Actual:   122
+
+new Date(2020, 0, 1, 0, 0, 0, 555).getMilliseconds(); // 554
+new Date(2020, 0, 1, 0, 0, 0, 666).getMilliseconds(); // 665
+new Date(2020, 0, 1, 0, 0, 0, 777).getMilliseconds(); // 776
+// Some values are exact: 0, 111, 222, 333, 444, 888, 999
+```
+
+Never compare or store sub-second precision from a `Date`. Round to whole seconds, or read milliseconds from `getTime()` arithmetic if you must. The UTC variant `getUTCMilliseconds()` was accurate at the epoch in testing, but treat local millisecond precision as unreliable.
+
+---
+
+## Date.now() Returns a Date Object, Not a Number
+
+**Severity: Medium** — type mismatch breaks numeric code
+
+`Date.now()` returns a **`Date` object** in the SFMC engine, not the numeric timestamp the spec requires.
+
+```javascript
+typeof Date.now();   // "object"  (spec: "number")
+
+// ❌ math on the result is wrong unless you coerce
+// ✅ use getTime() for a clean number
+var ms = new Date().getTime();   // number of ms since epoch
+```
+
+Numeric coercion (`Date.now() + 0`) does recover the epoch milliseconds, but prefer `new Date().getTime()`. See [Differs from Official Docs](/engine-limitations/differs-from-docs/#datenow-returns-a-date-object-not-a-number).
+
+---
+
+## Date.parse() Returns 0 (Never NaN) for Invalid Strings
+
+**Severity: Medium** — invalid dates silently become 1970-01-01
+
+`Date.parse()` returns **`0`** (the Unix epoch) for any unparseable string instead of `NaN`, so `isNaN()` cannot detect a bad date.
+
+```javascript
+Date.parse("garbage");     // 0   (spec: NaN)
+Date.parse("");            // 0   (spec: NaN)
+Date.parse("2021-13-45");  // 0   (spec: NaN)
+isNaN(Date.parse("garbage")); // false — bad input looks like 1970-01-01
+```
+
+Validate date strings yourself before calling `Date.parse()`; do not rely on `NaN` for error detection. Note also that date-only strings parse as **local** midnight, not UTC. See [Differs from Official Docs](/engine-limitations/differs-from-docs/#dateparse-returns-0-never-nan-for-invalid-strings-and-parses-date-only-strings-as-local).
+
+---
+
+## Function.prototype.length Throws {#functionprototypelength-throws}
+
+**Severity: Medium** — reading a function's arity crashes the page
+
+Reading `fn.length` (the declared argument count) **throws** `Object reference not set to an instance of an object.` in the SFMC engine instead of returning a number. `fn.hasOwnProperty("length")` is `false`.
+
+```javascript
+function sum(a, b) { return a + b; }
+sum.length;
+// Expected: 2
+// Actual:   THROWS "Object reference not set to an instance of an object."
+```
+
+Track expected arity yourself (a plain variable or constant) rather than reading `fn.length`. Related missing/altered `Function.prototype` members: `fn.name` and `fn.caller` are `undefined`, `fn.toString()` returns `[object Function]` not the source, and `fn.constructor === Function` is `false` — see [Function Methods](/ecmascript-builtins/function-methods/) and [Differs from Official Docs](/engine-limitations/differs-from-docs/#functionprototypetostring-returns-object-function-not-source).
+
+---
+
+## Math.max / Math.min Throw with 3+ Arguments {#math-max-min-throw}
+
+**Severity: Medium** — the variadic form crashes the page
+
+`Math.max` and `Math.min` are variadic in standard JavaScript, but in the SFMC engine they only accept **exactly two** arguments. Passing **three or more** throws, and the **no-argument** form returns `0` instead of `-Infinity` / `+Infinity`. The two-argument form is runtime-verified correct.
+
+```javascript
+Math.max(1, 5);       // 5   — safe
+Math.max(1, 5, 3);    // THROWS "Index was outside the bounds of the array."
+Math.max();           // 0   — expected -Infinity
+
+Math.min(1, 5);       // 1   — safe
+Math.min(1, 5, 3);    // THROWS "Index was outside the bounds of the array."
+Math.min();           // 0   — expected +Infinity
+```
+
+Compare two values at a time — `Math.max(Math.max(a, b), c)` — fold with a loop, or use the [Math.max / Math.min polyfill](/engine-limitations/polyfills/#math-max-min). See [Math Object](/ecmascript-builtins/math/#max) for the full list of `Math` members and which ES6 methods are missing.
+
+---
+
+## Infinity Has an Inverted Sign and Broken Comparisons {#infinity-inverted}
+
+**Severity: Medium** — silent wrong results in numeric edge cases
+
+The global `Infinity` identifier exists (`typeof Infinity` is `"number"`), but the SFMC Jint engine mishandles it. When stringified it shows the **wrong sign**: `String(Infinity)` and `(1/0)` render as `"-infinity"`, while `-Infinity` and `(-1/0)` render as `"infinity"`. Worse, comparisons are also broken — `(Infinity > 0)` and `(1/0 > 0)` both return **`false`** instead of `true` (runtime-verified). `Number.POSITIVE_INFINITY` / `Number.NEGATIVE_INFINITY` do not exist to work around this (both are `undefined` — see [Number Methods](/ecmascript-builtins/number-methods/#constants)).
+
+```javascript
+typeof Infinity;    // "number"
+String(Infinity);   // "-infinity"  — inverted sign
+(1 / 0);            // "-infinity"  — inverted sign
+(Infinity > 0);     // false        — expected true
+isFinite(Infinity); // false        — this one is correct
+```
+
+Avoid relying on `Infinity` semantics. Use `isFinite(x)` to detect non-finite values (it returns the correct answer), and never branch on the sign or ordering of an `Infinity` value. See [Number Methods](/ecmascript-builtins/number-methods/#constants).
+
+---
+
+## Object.prototype.isPrototypeOf Hangs the Engine {#objectprototypeisprototypeof-hangs}
+
+**Severity: High** — the page never renders (request times out)
+
+`Object.prototype.isPrototypeOf` exists in the SFMC Jint engine (`typeof obj.isPrototypeOf` is `"function"`), but **calling it hangs the engine indefinitely** — the CloudPage times out and never returns any output (runtime-verified: a probe that called it produced a request timeout, and removing the call let the same script render). There is no argument form that is safe.
+
+```javascript
+typeof ({}).isPrototypeOf;        // "function"  — it appears to exist
+// Ctor.prototype.isPrototypeOf(obj);  // HANGS — never call it (request times out)
+```
+
+Never call `isPrototypeOf`. To test prototype/instance relationships, compare the constructor directly (`obj.constructor === Ctor`) or walk the prototype chain manually. See [Object Methods](/ecmascript-builtins/object-methods/#isprototypeof).

@@ -5,6 +5,7 @@ parent: ECMAScript Built-ins
 parent_url: /ecmascript-builtins/
 permalink: /ecmascript-builtins/json/
 description: The JSON built-in is unavailable in SFMC SSJS — use Platform.Function.ParseJSON and Platform.Function.Stringify (or the Stringify global) instead.
+verification: verified
 ---
 
 The native `JSON` object is **not available** in SFMC SSJS — `JSON.parse` and `JSON.stringify` both throw. Use the SFMC-proprietary `Platform.Function.ParseJSON` and `Platform.Function.Stringify` (or the `Stringify` global) instead.

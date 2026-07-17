@@ -3486,6 +3486,25 @@
     "returnType": "string"
   },
   {
+    "name": "Number.toString",
+    "url": "/ecmascript-builtins/number-methods/#tostring",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns a string representing the number.",
+    "params": [
+      "radix"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Number.valueOf",
+    "url": "/ecmascript-builtins/number-methods/#valueof",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the primitive number value of a Number object.",
+    "returnType": "number"
+  },
+  {
     "name": "Object.hasOwnProperty",
     "url": "/ecmascript-builtins/object-methods/#hasownproperty",
     "section": "ECMAScript Builtins",
@@ -3495,6 +3514,22 @@
       "v"
     ],
     "returnType": "boolean"
+  },
+  {
+    "name": "Object.toString",
+    "url": "/ecmascript-builtins/object-methods/#tostring",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns a string representation of the object.",
+    "returnType": "string"
+  },
+  {
+    "name": "Object.valueOf",
+    "url": "/ecmascript-builtins/object-methods/#valueof",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the primitive value of the object.",
+    "returnType": "object"
   },
   {
     "name": "RegExp.test",
@@ -3655,6 +3690,78 @@
     "returnType": "number"
   },
   {
+    "name": "Date.getUTCFullYear",
+    "url": "/ecmascript-builtins/date-methods/#getutcfullyear",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the four-digit year of the date according to universal time (UTC).",
+    "returnType": "number"
+  },
+  {
+    "name": "Date.getUTCMonth",
+    "url": "/ecmascript-builtins/date-methods/#getutcmonth",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the month (0 = January … 11 = December) of the date according to universal time (UTC).",
+    "returnType": "number"
+  },
+  {
+    "name": "Date.getUTCDate",
+    "url": "/ecmascript-builtins/date-methods/#getutcdate",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the day of the month (1–31) of the date according to universal time (UTC).",
+    "returnType": "number"
+  },
+  {
+    "name": "Date.getUTCDay",
+    "url": "/ecmascript-builtins/date-methods/#getutcday",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the day of the week (0 = Sunday … 6 = Saturday) according to universal time (UTC).",
+    "returnType": "number"
+  },
+  {
+    "name": "Date.getUTCHours",
+    "url": "/ecmascript-builtins/date-methods/#getutchours",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the hour (0–23) of the date according to universal time (UTC).",
+    "returnType": "number"
+  },
+  {
+    "name": "Date.getUTCMinutes",
+    "url": "/ecmascript-builtins/date-methods/#getutcminutes",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the minutes (0–59) of the date according to universal time (UTC).",
+    "returnType": "number"
+  },
+  {
+    "name": "Date.getUTCSeconds",
+    "url": "/ecmascript-builtins/date-methods/#getutcseconds",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the seconds (0–59) of the date according to universal time (UTC).",
+    "returnType": "number"
+  },
+  {
+    "name": "Date.getUTCMilliseconds",
+    "url": "/ecmascript-builtins/date-methods/#getutcmilliseconds",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the milliseconds (0–999) of the date according to universal time (UTC).",
+    "returnType": "number"
+  },
+  {
+    "name": "Date.toTimeString",
+    "url": "/ecmascript-builtins/date-methods/#totimestring",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the time portion of the date as a human-readable string.",
+    "returnType": "string"
+  },
+  {
     "name": "Date.UTC",
     "url": "/ecmascript-builtins/date-methods/#utc",
     "section": "ECMAScript Builtins",
@@ -3676,7 +3783,7 @@
     "url": "/ecmascript-builtins/date-methods/#parse",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Parses a date string and returns the numeric timestamp (milliseconds since the Unix epoch), or NaN if the string cannot be parsed.",
+    "description": "Parses a date string and returns the numeric timestamp (milliseconds since the Unix epoch).",
     "params": [
       "dateString"
     ],
@@ -3687,8 +3794,8 @@
     "url": "/ecmascript-builtins/date-methods/#now",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the current time as the numeric timestamp (milliseconds since the Unix epoch).",
-    "returnType": "number"
+    "description": "Returns the current time.",
+    "returnType": "object"
   },
   {
     "name": "Object.defineProperty",
@@ -3700,6 +3807,17 @@
       "obj",
       "prop",
       "descriptor"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "Object.getPrototypeOf",
+    "url": "/ecmascript-builtins/object-methods/#getprototypeof",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the prototype (internal [[Prototype]]) of the specified object.",
+    "params": [
+      "obj"
     ],
     "returnType": "object"
   },
@@ -3726,6 +3844,14 @@
       "argsArray"
     ],
     "returnType": "any"
+  },
+  {
+    "name": "Function.toString",
+    "url": "/ecmascript-builtins/function-methods/#tostring",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns a string representing the function.",
+    "returnType": "string"
   },
   {
     "name": "Array.copyWithin",
@@ -3868,13 +3994,6 @@
     "description": "Function."
   },
   {
-    "name": "Object.getPrototypeOf",
-    "url": "/ecmascript-builtins/object-methods/#getprototypeof",
-    "section": "ECMAScript Builtins",
-    "type": "method",
-    "description": "Object."
-  },
-  {
     "name": "Array.isArray",
     "url": "/ecmascript-builtins/array-methods/#isarray",
     "section": "ECMAScript Builtins",
@@ -3959,8 +4078,43 @@
     "description": "RegExp."
   },
   {
+    "name": "RegExp.instanceof",
+    "url": "/ecmascript-builtins/regular-expressions/#instanceof",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "The instanceof operator against RegExp is broken in SFMC: `re instanceof RegExp` always returns false, even for objects created with `new RegExp(."
+  },
+  {
+    "name": "Function.length",
+    "url": "/ecmascript-builtins/function-methods/#length",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "fn."
+  },
+  {
+    "name": "Function.name",
+    "url": "/ecmascript-builtins/function-methods/#name",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "fn."
+  },
+  {
+    "name": "Function.caller",
+    "url": "/ecmascript-builtins/function-methods/#caller",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "fn."
+  },
+  {
     "name": "Date.toISOString",
     "url": "/ecmascript-builtins/date-methods/#toisostring",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Date."
+  },
+  {
+    "name": "Date.toJSON",
+    "url": "/ecmascript-builtins/date-methods/#tojson",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Date."
@@ -3980,8 +4134,36 @@
     "description": "JSON is undefined in SFMC SSJS."
   },
   {
+    "name": "Object.isPrototypeOf",
+    "url": "/ecmascript-builtins/object-methods/#isprototypeof",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Object."
+  },
+  {
+    "name": "Object.propertyIsEnumerable",
+    "url": "/ecmascript-builtins/object-methods/#propertyisenumerable",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Object."
+  },
+  {
     "name": "Object.keys",
     "url": "/ecmascript-builtins/object-methods/#keys",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Object."
+  },
+  {
+    "name": "Object.values",
+    "url": "/ecmascript-builtins/object-methods/#values",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Object."
+  },
+  {
+    "name": "Object.entries",
+    "url": "/ecmascript-builtins/object-methods/#entries",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Object."
@@ -4010,6 +4192,55 @@
   {
     "name": "Object.getOwnPropertyNames",
     "url": "/ecmascript-builtins/object-methods/#getownpropertynames",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Object."
+  },
+  {
+    "name": "Object.defineProperties",
+    "url": "/ecmascript-builtins/object-methods/#defineproperties",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Object."
+  },
+  {
+    "name": "Object.getOwnPropertyDescriptor",
+    "url": "/ecmascript-builtins/object-methods/#getownpropertydescriptor",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Object."
+  },
+  {
+    "name": "Object.isFrozen",
+    "url": "/ecmascript-builtins/object-methods/#isfrozen",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Object."
+  },
+  {
+    "name": "Object.seal",
+    "url": "/ecmascript-builtins/object-methods/#seal",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Object."
+  },
+  {
+    "name": "Object.isSealed",
+    "url": "/ecmascript-builtins/object-methods/#issealed",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Object."
+  },
+  {
+    "name": "Object.preventExtensions",
+    "url": "/ecmascript-builtins/object-methods/#preventextensions",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Object."
+  },
+  {
+    "name": "Object.isExtensible",
+    "url": "/ecmascript-builtins/object-methods/#isextensible",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Object."
@@ -4148,6 +4379,69 @@
     "description": "Number."
   },
   {
+    "name": "Number.isSafeInteger",
+    "url": "/ecmascript-builtins/number-methods/#issafeinteger",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Number."
+  },
+  {
+    "name": "Number.parseFloat",
+    "url": "/ecmascript-builtins/number-methods/#parsefloat",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Number."
+  },
+  {
+    "name": "Number.MIN_SAFE_INTEGER",
+    "url": "/ecmascript-builtins/number-methods/#min_safe_integer",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "Number."
+  },
+  {
+    "name": "Number.EPSILON",
+    "url": "/ecmascript-builtins/number-methods/#epsilon",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "Number."
+  },
+  {
+    "name": "Number.MAX_VALUE",
+    "url": "/ecmascript-builtins/number-methods/#max_value",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "Number."
+  },
+  {
+    "name": "Number.MIN_VALUE",
+    "url": "/ecmascript-builtins/number-methods/#min_value",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "Number."
+  },
+  {
+    "name": "Number.NaN",
+    "url": "/ecmascript-builtins/number-methods/#nan",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "Number."
+  },
+  {
+    "name": "Number.POSITIVE_INFINITY",
+    "url": "/ecmascript-builtins/number-methods/#positive_infinity",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "Number."
+  },
+  {
+    "name": "Number.NEGATIVE_INFINITY",
+    "url": "/ecmascript-builtins/number-methods/#negative_infinity",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "Number."
+  },
+  {
     "name": "Math.trunc",
     "url": "/ecmascript-builtins/math/#trunc",
     "section": "ECMAScript Builtins",
@@ -4185,6 +4479,83 @@
   {
     "name": "Math.hypot",
     "url": "/ecmascript-builtins/math/#hypot",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Math."
+  },
+  {
+    "name": "Math.expm1",
+    "url": "/ecmascript-builtins/math/#expm1",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Math."
+  },
+  {
+    "name": "Math.log1p",
+    "url": "/ecmascript-builtins/math/#log1p",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Math."
+  },
+  {
+    "name": "Math.sinh",
+    "url": "/ecmascript-builtins/math/#sinh",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Math."
+  },
+  {
+    "name": "Math.cosh",
+    "url": "/ecmascript-builtins/math/#cosh",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Math."
+  },
+  {
+    "name": "Math.tanh",
+    "url": "/ecmascript-builtins/math/#tanh",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Math."
+  },
+  {
+    "name": "Math.asinh",
+    "url": "/ecmascript-builtins/math/#asinh",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Math."
+  },
+  {
+    "name": "Math.acosh",
+    "url": "/ecmascript-builtins/math/#acosh",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Math."
+  },
+  {
+    "name": "Math.atanh",
+    "url": "/ecmascript-builtins/math/#atanh",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Math."
+  },
+  {
+    "name": "Math.clz32",
+    "url": "/ecmascript-builtins/math/#clz32",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Math."
+  },
+  {
+    "name": "Math.fround",
+    "url": "/ecmascript-builtins/math/#fround",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Math."
+  },
+  {
+    "name": "Math.imul",
+    "url": "/ecmascript-builtins/math/#imul",
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Math."

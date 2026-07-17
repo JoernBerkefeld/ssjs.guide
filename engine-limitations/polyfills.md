@@ -62,7 +62,6 @@ The `|| function(...)` guard prevents re-defining methods that may become availa
 | [`String.prototype.search`](#string-prototype-search) | Broken |
 | [`String.prototype.split`](#string-prototype-split) | Broken (empty separator) |
 | [`Math.max` / `Math.min`](#math-max-min) | Broken |
-| [`Object.getPrototypeOf`](#object-getprototypeof) | Broken |
 | [`bindFn` (for `Function.prototype.bind`)](#function-prototype-bind) | Missing |
 
 ---
@@ -644,26 +643,6 @@ Math.min = function () {
 
 ---
 
-## Object Polyfills
-
-### Object.getPrototypeOf (broken — must override) {#object-getprototypeof}
-
-`Object.getPrototypeOf` exists but throws at runtime, so it cannot be used. This polyfill returns the constructor prototype instead. Override it unconditionally:
-
-```javascript
-/**
- * Polyfill for Object.getPrototypeOf (SFMC SSJS).
- * @param {object} obj - the object whose prototype to return
- * @returns {object|null} the prototype, or null
- */
-Object.getPrototypeOf = function (obj) {
-    if (obj === null || obj === undefined) { return null; }
-    return obj.constructor ? obj.constructor.prototype : null;
-};
-```
-
----
-
 ## Function Helpers
 
 `Function.prototype.call` and `Function.prototype.apply` are **ES3 and work natively** in SFMC SSJS — no polyfill is needed for either.
@@ -760,8 +739,6 @@ String.prototype.split    = (function(){ var nativeSplit=String.prototype.split;
 Math.max = function() { if (arguments.length===0) return Number.NEGATIVE_INFINITY; var best=Number(arguments[0]); if (best!==best) return NaN; for (var i=1;i<arguments.length;i++){var v=Number(arguments[i]); if (v!==v) return NaN; if (v>best) best=v;} return best; }; // broken native — always override
 /** @param {...number} [values] - numbers to compare @returns {number} the smallest value, or NaN if any value is NaN */
 Math.min = function() { if (arguments.length===0) return Number.POSITIVE_INFINITY; var best=Number(arguments[0]); if (best!==best) return NaN; for (var i=1;i<arguments.length;i++){var v=Number(arguments[i]); if (v!==v) return NaN; if (v<best) best=v;} return best; }; // broken native — always override
-/** @param {object} obj - the object whose prototype to return @returns {object|null} the prototype, or null */
-Object.getPrototypeOf = function(obj) { if (obj===null||obj===undefined) return null; return obj.constructor ? obj.constructor.prototype : null; }; // broken native — always override
 /** @param {*} v - the value to test @returns {boolean} true when the value is an Array */
 Array.isArray = Array.isArray || function(v) { return Object.prototype.toString.call(v)==='[object Array]'; };
 /** @param {...*} [items] - elements to place in the new array @returns {Array} a new array containing the arguments */

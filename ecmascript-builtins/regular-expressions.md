@@ -6,10 +6,12 @@ parent_url: /ecmascript-builtins/
 permalink: /ecmascript-builtins/regular-expressions/
 redirect_from:
     - /language/regular-expressions/
-description: RegExp in SSJS — creation, flags, test, exec, and the source/global/lastIndex accessors, with the SFMC engine quirks for capture groups, lastIndex, ignoreCase, and multiline.
+description: RegExp in SSJS — creation, flags, test, exec, and the source/global/lastIndex accessors, with the SFMC engine quirks for capture groups, lastIndex, ignoreCase, multiline, and instanceof.
+verification: verified
+differs_from_docs: true
 ---
 
-Regular expressions work in SSJS using the ES3/ES5 `RegExp` API. Literal and constructor syntax both work, and `test`, `String.match`, `String.replace`, and `String.split` behave as expected. A few accessors and `exec`'s capture-group / `lastIndex` behavior differ from the spec — those are flagged below.
+Regular expressions work in SSJS using the ES3/ES5 `RegExp` API. Literal and constructor syntax both work, and `test`, `String.match`, `String.replace` (including `$1` back-references and function replacers), and `String.split` behave as expected. A few accessors, `exec`'s capture-group / `lastIndex` behavior, `instanceof RegExp`, and `String.search`'s return index differ from the spec — those are flagged below. Every fact on this page has been proven against live SFMC CloudPage runtime output.
 
 ## Status legend
 
@@ -24,12 +26,13 @@ Regular expressions work in SSJS using the ES3/ES5 `RegExp` API. Literal and con
 | Member | ES | Status | Notes |
 |--------|----|--------|-------|
 | [`RegExp.prototype.test(string)`](#test) | ES3 | ✅ Works | Most reliable way to check for a match |
-| [`RegExp.prototype.exec(string)`](#exec) | ES3 | ⚠️ Partial | Full match `result[0]` works; capture groups `result[1]+` are `undefined` and `lastIndex` does not advance |
+| [`RegExp.prototype.exec(string)`](#exec) | ES3 | ⚠️ Partial | Full match `result[0]`, `result.index`, and `result.input` work; capture groups `result[1]+` are `undefined` and `lastIndex` does not advance |
 | [`RegExp.prototype.source`](#source) | ES3 | ✅ Works | Pattern text without slashes or flags |
 | [`RegExp.prototype.global`](#global) | ES3 | ✅ Works | `true` if the `g` flag was set |
-| [`RegExp.prototype.lastIndex`](#lastindex) | ES3 | ⚠️ Partial | Does not advance after `exec()` / `test()` with the `g` flag |
+| [`RegExp.prototype.lastIndex`](#lastindex) | ES3 | ⚠️ Partial | Does not advance after `exec()` / `test()` with the `g` flag; setting it manually is ignored |
 | [`RegExp.prototype.ignoreCase`](#ignorecase) | ES3 | ❌ Missing | `undefined` in SFMC — track the `i` flag yourself |
 | [`RegExp.prototype.multiline`](#multiline) | ES3 | ❌ Missing | `undefined` in SFMC — track the `m` flag yourself |
+| [`re instanceof RegExp`](#instanceof) | ES3 | ⚠️ Partial | Always `false` (even for `new RegExp(...)`) — use `re.constructor === RegExp` |
 
 ---
 
@@ -84,7 +87,7 @@ if (emailRe.test(email)) {
 
 ## exec {#exec}
 
-`(ES3)` — ⚠️ Partial. `exec` returns an array whose `result[0]` (full match) is correct, but **capture groups `result[1]` and beyond are `undefined`**, and **`lastIndex` does not advance**, so the usual `while ((m = re.exec(str)) !== null)` loop never terminates with the `g` flag. To collect all matches or read capture groups, use `String.match` instead.
+`(ES3)` — ⚠️ Partial. `exec` returns an array whose `result[0]` (full match), `result.index`, and `result.input` are all correct, but **capture groups `result[1]` and beyond are `undefined`**, and **`lastIndex` does not advance**, so the usual `while ((m = re.exec(str)) !== null)` loop never terminates with the `g` flag. Note that `result.length` is always `3` regardless of how many groups the pattern has, so it cannot be used to count captures. To collect all matches or read capture groups, use `String.match` instead.
 
 {% include callout.html type="warning" content="`RegExp.exec` capture groups (`result[1]+`) are `undefined` in SFMC SSJS, and `lastIndex` does not advance with the `g` flag — do not loop on `exec()`. Use `String.match(/.../g)` to collect all matches." %}
 
@@ -144,8 +147,25 @@ var re = /\d+/g;
 re.exec("a1 b2 c3");
 re.lastIndex;   // stays 0 in SFMC — does not advance
 
+// Setting lastIndex manually is also ignored — the next exec still
+// matches from the start:
+re.lastIndex = 3;
+re.exec("a1 b2 c3");   // still matches "1" at index 1, not from position 3
+
 // Use String.match instead to get every match:
 "a1 b2 c3".match(/\d+/g);   // ["1", "2", "3"]
+```
+
+---
+
+## instanceof {#instanceof}
+
+`(ES3)` — ⚠️ Partial. In the SFMC engine, `re instanceof RegExp` is **always `false`** — even for objects created with `new RegExp(...)`. This differs from standard JavaScript, where it returns `true`. Unlike `Function` (where `.constructor` is broken but `instanceof` works), for `RegExp` the reverse holds: `re.constructor === RegExp` correctly returns `true`. Use the constructor comparison to detect a RegExp.
+
+```javascript
+var re = new RegExp("\\d+");
+re instanceof RegExp;        // false in SFMC (true in standard JS)
+re.constructor === RegExp;   // true — use this instead
 ```
 
 ---

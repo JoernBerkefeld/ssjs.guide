@@ -4,6 +4,8 @@ title: Array Methods
 parent: ECMAScript Built-ins
 parent_url: /ecmascript-builtins/
 description: Array prototype methods and statics in SSJS — which work natively, which are partial, and which are missing, with safe ES3/ES5 alternatives and polyfill links.
+verification: verified
+differs_from_docs: true
 ---
 
 Each member below is tagged with the ECMAScript edition that standardized it: `(ES3)`, `(ES5)`, or `(ES6)`. Methods that need a polyfill link to [Polyfills](/engine-limitations/polyfills/).
@@ -29,9 +31,9 @@ Each member below is tagged with the ECMAScript edition that standardized it: `(
 | [`reverse()`](#reverse) | ES3 | ✅ Works | |
 | [`length`](#length) | ES3 | ✅ Works | |
 | [`toLocaleString()`](#tolocalestring) | ES3 | ✅ Works | |
-| [`slice(start, end)`](#slice) | ES3 | ⚠️ Partial | Negative indices unreliable — see Polyfills |
-| [`sort(compareFn)`](#sort) | ES3 | ⚠️ Partial | Comparator behavior unreliable — see Polyfills |
-| [`splice(start, deleteCount, ...items)`](#splice) | ES3 | ⚠️ Partial | Delete form works; insert form (3rd+ arg) ignores `start`/`deleteCount` — see Polyfills |
+| [`slice(start, end)`](#slice) | ES3 | ⚠️ Partial | Positive/negative indices work; the no-arg `slice()` throws — see Polyfills |
+| [`sort(compareFn)`](#sort) | ES3 | ⚠️ Partial | Works with a compare function; the no-arg `sort()` throws — see Polyfills |
+| [`splice(start, deleteCount, ...items)`](#splice) | ES3 | ⚠️ Partial | Only `splice(start, deleteCount)` works; `splice(start)` throws and the insert form is broken — see Polyfills |
 | [`indexOf(searchValue, fromIndex)`](#indexof) | ES5 | ❌ Missing | See Polyfills |
 | [`lastIndexOf(searchValue, fromIndex)`](#lastindexof) | ES5 | ⚠️ Partial | Broken — always returns -1; see Polyfills |
 | [`forEach(fn)`](#foreach) | ES5 | ❌ Missing | Use a `for` loop or the polyfill |
@@ -138,40 +140,46 @@ arr.reverse();   // [3, 2, 1]
 
 ## slice {#slice}
 
-`(ES3)` — ⚠️ Partial. Returns a shallow copy of a portion of the array. Negative indices are unreliable in SFMC; apply the [polyfill](/engine-limitations/polyfills/#array-prototype-slice) for full ES5 behavior.
+`(ES3)` — ⚠️ Partial. Returns a shallow copy of a portion of the array. Positive **and** negative indices work correctly (`slice(-2)`, `slice(1, -1)` return the expected ranges). The one bug is the **no-argument** form `slice()`, which throws `Index was outside the bounds of the array.` — always pass at least a start index (`slice(0)`) to copy the whole array, or apply the [polyfill](/engine-limitations/polyfills/#array-prototype-slice).
 
 ```javascript
 var arr = [0, 1, 2, 3, 4];
 arr.slice(1, 3);   // [1, 2]
-arr.slice();       // copy of arr
-// arr.slice(-2) — negative indices unreliable; use the polyfill
+arr.slice(-2);     // [3, 4]   — negative indices work
+arr.slice(1, -1);  // [1, 2, 3]
+arr.slice(0);      // copy of arr — use this instead of arr.slice()
+// arr.slice() — no-arg form THROWS; use arr.slice(0) or the polyfill
 ```
 
 ## sort {#sort}
 
-`(ES3)` — ⚠️ Partial. Sorts in place. The comparator behavior is unreliable in SFMC; apply the [polyfill](/engine-limitations/polyfills/#array-prototype-sort) for predictable results.
+`(ES3)` — ⚠️ Partial. Sorts in place. A supplied compare function works correctly (numeric and string comparators both sort as expected). The one bug is the **no-argument** form `sort()`, which throws `Failed to compare two elements in the array.` — always pass an explicit compare function, or apply the [polyfill](/engine-limitations/polyfills/#array-prototype-sort) if you need the default lexicographic order.
 
 ```javascript
 var arr = [3, 1, 4, 1, 5];
-arr.sort(function (a, b) { return a - b; });   // ascending
+arr.sort(function (a, b) { return a - b; });   // ascending — works
+// arr.sort() — no-arg form THROWS; pass a compare function or use the polyfill
 ```
 
 ## splice {#splice}
 
 `(ES3)` — ⚠️ Partial. Signature: `splice(start[, deleteCount[, item1[, ...itemN]]])`.
 
-{% include callout.html type="warning" content="The delete-only form — `splice(start)` and `splice(start, deleteCount)` — works correctly. The bug surfaces **only when you insert items**: as soon as a third argument is passed, the engine ignores `start` and `deleteCount` and overwrites from the left. Apply the polyfill from [Polyfills](/engine-limitations/polyfills/#array-prototype-splice) if you use the insert form." %}
+{% include callout.html type="warning" content="Only the **two-argument** delete form `splice(start, deleteCount)` works correctly (an over-large `deleteCount` is clamped to the remaining length). The **one-argument** form `splice(start)` throws `Index was outside the bounds of the array.` The **insert** form is also broken: as soon as a third argument is passed, the engine ignores `start` and `deleteCount` and overwrites from the left. Apply the polyfill from [Polyfills](/engine-limitations/polyfills/#array-prototype-splice) for the one-argument delete form or any insert." %}
 
 ```javascript
-// Delete-only form works natively:
+// Two-argument delete form works natively:
 var arr = ["a", "b", "c", "d"];
-arr.splice(1, 1);   // ["a", "c", "d"]
-arr.splice(2);      // ["a", "c"]
+arr.splice(1, 1);    // ["a", "c", "d"]
+arr.splice(1, 10);   // deleteCount is clamped to the remaining length
 
-// Insert form REQUIRES the polyfill:
+// One-argument delete form REQUIRES the polyfill:
+// arr.splice(2) — THROWS "Index was outside the bounds of the array."
+
+// Insert form REQUIRES the polyfill (native engine overwrites from the left):
 var arr2 = ["a", "b", "c", "d"];
-arr2.splice(1, 1, "X");        // ["a", "X", "c", "d"]
-arr2.splice(1, 0, "B", "C");   // insert without removing
+arr2.splice(1, 1, "X");        // native gives ["X", "b", "c", "d"] (wrong)
+arr2.splice(1, 0, "B", "C");   // native gives ["B", "C", "c", "d"] (wrong)
 ```
 
 ## indexOf {#indexof}

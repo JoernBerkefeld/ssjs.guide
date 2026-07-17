@@ -37,9 +37,9 @@ The **ES** column shows the ECMAScript edition that standardized each member (ES
 | [`Array.prototype.shift()`](/ecmascript-builtins/array-methods/#shift) | ES3 | ✅ Works | |
 | [`Array.prototype.toLocaleString()`](/ecmascript-builtins/array-methods/#tolocalestring) | ES3 | ✅ Works | |
 | [`Array.prototype.unshift(item)`](/ecmascript-builtins/array-methods/#unshift) | ES3 | ✅ Works | |
-| [`Array.prototype.slice(start, end)`](/ecmascript-builtins/array-methods/#slice) | ES3 | ⚠️ Partial | Negative indices unreliable — see [Polyfills](/engine-limitations/polyfills/#array-prototype-slice) |
-| [`Array.prototype.sort(fn)`](/ecmascript-builtins/array-methods/#sort) | ES3 | ⚠️ Partial | Comparator behavior unreliable — see [Polyfills](/engine-limitations/polyfills/#array-prototype-sort) |
-| [`Array.prototype.splice(start, deleteCount, ...items)`](/ecmascript-builtins/array-methods/#splice) | ES3 | ⚠️ Partial | Delete form works; insert form (3rd+ arg) ignores `start`/`deleteCount` — see [Polyfills](/engine-limitations/polyfills/#array-prototype-splice) |
+| [`Array.prototype.slice(start, end)`](/ecmascript-builtins/array-methods/#slice) | ES3 | ⚠️ Partial | Positive/negative indices work; no-arg `slice()` throws — see [Polyfills](/engine-limitations/polyfills/#array-prototype-slice) |
+| [`Array.prototype.sort(fn)`](/ecmascript-builtins/array-methods/#sort) | ES3 | ⚠️ Partial | Works with a compare function; no-arg `sort()` throws — see [Polyfills](/engine-limitations/polyfills/#array-prototype-sort) |
+| [`Array.prototype.splice(start, deleteCount, ...items)`](/ecmascript-builtins/array-methods/#splice) | ES3 | ⚠️ Partial | Only `splice(start, deleteCount)` works; `splice(start)` throws and insert form is broken — see [Polyfills](/engine-limitations/polyfills/#array-prototype-splice) |
 | [`Array.prototype.lastIndexOf(item)`](/ecmascript-builtins/array-methods/#lastindexof) | ES5 | ⚠️ Partial | Always returns -1; see [Polyfills](/engine-limitations/polyfills/#array-prototype-lastindexof) |
 | [`Array.prototype.indexOf(item)`](/ecmascript-builtins/array-methods/#indexof) | ES5 | ❌ Missing | See [Polyfills](/engine-limitations/polyfills/#array-prototype-indexof) |
 | [`Array.prototype.forEach(fn)`](/ecmascript-builtins/array-methods/#foreach) | ES5 | ❌ Missing | Use `for` loop or [Polyfills](/engine-limitations/polyfills/#array-prototype-foreach) |
@@ -70,7 +70,7 @@ The **ES** column shows the ECMAScript edition that standardized each member (ES
 | Method | ES | Status | Notes |
 |--------|----|--------|-------|
 | [`String(value)`](/ecmascript-builtins/string-methods/#string-constructor) | ES3 | ✅ Works | Constructor as conversion function; also converts CLR/.NET objects (e.g. `resp.content`) to JS strings |
-| [`String.prototype.charAt(i)`](/ecmascript-builtins/string-methods/#charat) | ES3 | ✅ Works | |
+| [`String.prototype.charAt(i)`](/ecmascript-builtins/string-methods/#charat) | ES3 | ⚠️ Partial | Out-of-range index returns the last char, not `""` |
 | [`String.prototype.charCodeAt(i)`](/ecmascript-builtins/string-methods/#charcodeat) | ES3 | ✅ Works | |
 | [`String.prototype.concat(...)`](/ecmascript-builtins/string-methods/#concat) | ES3 | ✅ Works | |
 | [`String.prototype.indexOf(sub)`](/ecmascript-builtins/string-methods/#indexof) | ES3 | ✅ Works | |
@@ -101,7 +101,7 @@ The **ES** column shows the ECMAScript edition that standardized each member (ES
 
 ### Math Object
 
-All `Math` members below are ES3. Most work natively; `Math.max` / `Math.min` have argument-count caveats and `Math.LOG10E` is missing.
+The ES3 `Math` members below work natively; `Math.max` / `Math.min` have argument-count caveats, the ES3 constant `Math.LOG10E` is missing, and **all** ES6 `Math` methods are unavailable.
 
 | Method / Constant | ES | Status | Notes |
 |-------------------|----|--------|-------|
@@ -125,17 +125,24 @@ All `Math` members below are ES3. Most work natively; `Math.max` / `Math.min` ha
 | [`Math.log2(x)`](/ecmascript-builtins/math/#log2) | ES6 | ❌ Missing | `Math.log(x) / Math.LN2` |
 | [`Math.log10(x)`](/ecmascript-builtins/math/#log10) | ES6 | ❌ Missing | `Math.log(x) / Math.LN10` |
 | [`Math.hypot(a, b)`](/ecmascript-builtins/math/#hypot) | ES6 | ❌ Missing | `Math.sqrt(a * a + b * b)` |
+| [`Math.expm1(x)`](/ecmascript-builtins/math/#expm1) | ES6 | ❌ Missing | `Math.exp(x) - 1` |
+| [`Math.log1p(x)`](/ecmascript-builtins/math/#log1p) | ES6 | ❌ Missing | `Math.log(1 + x)` |
+| [`Math.sinh/cosh/tanh(x)`](/ecmascript-builtins/math/#hyperbolic) | ES6 | ❌ Missing | Build from `Math.exp` |
+| [`Math.asinh/acosh/atanh(x)`](/ecmascript-builtins/math/#inverse-hyperbolic) | ES6 | ❌ Missing | Build from `Math.log`/`Math.sqrt` |
+| [`Math.clz32(x)`](/ecmascript-builtins/math/#clz32) | ES6 | ❌ Missing | Count leading zero bits manually |
+| [`Math.fround(x)`](/ecmascript-builtins/math/#fround) | ES6 | ❌ Missing | No ES3-safe equivalent |
+| [`Math.imul(a, b)`](/ecmascript-builtins/math/#imul) | ES6 | ❌ Missing | Emulate with bitwise ops |
 
 ### Number
 
 | Method / Constant | ES | Status | Notes |
 |-------------------|----|--------|-------|
 | [`Number.prototype.toFixed(digits)`](/ecmascript-builtins/number-methods/#tofixed) | ES3 | ✅ Works | |
-| [`Number.prototype.toExponential([digits])`](/ecmascript-builtins/number-methods/#toexponential) | ES3 | ✅ Works | |
+| [`Number.prototype.toExponential([digits])`](/ecmascript-builtins/number-methods/#toexponential) | ES3 | ⚠️ Partial | No-arg form pads trailing zeros — always pass `digits` |
 | [`Number.prototype.toPrecision([digits])`](/ecmascript-builtins/number-methods/#toprecision) | ES3 | ✅ Works | |
-| `Number.prototype.toString([radix])` | ES3 | ✅ Works | |
+| [`Number.prototype.toString([radix])`](/ecmascript-builtins/number-methods/#tostring) | ES3 | ⚠️ Partial | `radix` only supports 2, 8, 10, 16 — others throw "Invalid Base." |
 | `Number.prototype.valueOf()` | ES3 | ✅ Works | |
-| [`Number.MAX_VALUE / MIN_VALUE / NaN / NEGATIVE_INFINITY / POSITIVE_INFINITY`](/ecmascript-builtins/number-methods/#constants) | ES3 | ✅ Works | |
+| [`Number.MAX_VALUE / MIN_VALUE / NaN / NEGATIVE_INFINITY / POSITIVE_INFINITY`](/ecmascript-builtins/number-methods/#constants) | ES3 | ❌ Missing | All `undefined` in SFMC — use global identifiers / literals |
 | [`Number.isInteger(val)`](/ecmascript-builtins/number-methods/#isinteger) | ES6 | ❌ Missing | Use `typeof n === "number" && Math.floor(n) === n` |
 | [`Number.isNaN(val)`](/ecmascript-builtins/number-methods/#isnan) | ES6 | ❌ Missing | Use global `isNaN()` |
 | [`Number.isFinite(val)`](/ecmascript-builtins/number-methods/#isfinite) | ES6 | ❌ Missing | Use global `isFinite()` |
@@ -158,21 +165,37 @@ Standard ECMAScript global functions (not SFMC-specific) — callable without an
 | Method | ES | Status | Notes |
 |--------|----|--------|-------|
 | [`Object.prototype.hasOwnProperty(v)`](/ecmascript-builtins/object-methods/#hasownproperty) | ES3 | ✅ Works | Use inside `for...in` to skip inherited properties |
+| [`Object.prototype.toString()`](/ecmascript-builtins/object-methods/#tostring) | ES3 | ✅ Works | |
+| [`Object.prototype.valueOf()`](/ecmascript-builtins/object-methods/#valueof) | ES3 | ✅ Works | |
+| [`Object.prototype.isPrototypeOf(obj)`](/ecmascript-builtins/object-methods/#isprototypeof) | ES3 | ❌ Missing | **Hangs the engine** — never call it; compare `obj.constructor === Ctor` |
+| [`Object.prototype.propertyIsEnumerable(v)`](/ecmascript-builtins/object-methods/#propertyisenumerable) | ES3 | ⚠️ Partial | Broken — always returns `false`; use `hasOwnProperty` |
 | [`Object.defineProperty(obj, prop, desc)`](/ecmascript-builtins/object-methods/#defineproperty) | ES5 | ✅ Works | Static method |
-| [`Object.getPrototypeOf(obj)`](/ecmascript-builtins/object-methods/#getprototypeof) | ES5 | ⚠️ Partial | Exists but throws at runtime; see [Polyfills](/engine-limitations/polyfills/#object-getprototypeof) |
-| [`Object.keys(obj)`](/ecmascript-builtins/object-methods/#keys) | ES6 | ❌ Missing | Use `for...in` with `hasOwnProperty` |
+| [`Object.getPrototypeOf(obj)`](/ecmascript-builtins/object-methods/#getprototypeof) | ES5 | ✅ Works | Static method |
+| [`Object.keys(obj)`](/ecmascript-builtins/object-methods/#keys) | ES5 | ❌ Missing | Use `for...in` with `hasOwnProperty` |
+| [`Object.values(obj)`](/ecmascript-builtins/object-methods/#values) | ES6 | ❌ Missing | Use `for...in` with `hasOwnProperty` |
+| [`Object.entries(obj)`](/ecmascript-builtins/object-methods/#entries) | ES6 | ❌ Missing | Use `for...in` with `hasOwnProperty` |
 | [`Object.assign(target, ...src)`](/ecmascript-builtins/object-methods/#assign) | ES6 | ❌ Missing | Copy properties manually in a `for...in` loop |
 | [`Object.create(proto)`](/ecmascript-builtins/object-methods/#create) | ES5 | ❌ Missing | Use a constructor function with `new` |
 | [`Object.freeze(obj)`](/ecmascript-builtins/object-methods/#freeze) | ES5 | ❌ Missing | No equivalent — enforce immutability by convention |
 | [`Object.getOwnPropertyNames(obj)`](/ecmascript-builtins/object-methods/#getownpropertynames) | ES5 | ❌ Missing | Use `for...in` with `hasOwnProperty` |
+| [`Object.getOwnPropertyDescriptor(obj, prop)`](/ecmascript-builtins/object-methods/#getownpropertydescriptor) | ES5 | ❌ Missing | Read the value directly + `hasOwnProperty` |
+| [`Object.defineProperties(obj, descs)`](/ecmascript-builtins/object-methods/#defineproperties) | ES5 | ❌ Missing | Call `Object.defineProperty` once per property |
+| [`Object.seal / isSealed / preventExtensions / isExtensible`](/ecmascript-builtins/object-methods/#extensibility) | ES5 | ❌ Missing | No runtime extensibility control |
 
 ### Function Methods
 
-| Method | ES | Status | Notes |
-|--------|----|--------|-------|
+| Method / Property | ES | Status | Notes |
+|-------------------|----|--------|-------|
 | [`Function.prototype.call(thisArg, ...)`](/ecmascript-builtins/function-methods/#call) | ES3 | ✅ Works | |
 | [`Function.prototype.apply(thisArg, argsArray)`](/ecmascript-builtins/function-methods/#apply) | ES3 | ✅ Works | |
+| [`arguments`](/ecmascript-builtins/function-methods/#arguments) | ES3 | ✅ Works | Array-like object inside every function |
+| [`Function(...args, body)`](/ecmascript-builtins/function-methods/#function-constructor) | ES3 | ✅ Works | Constructor works with or without `new` |
+| [`Function.prototype.toString()`](/ecmascript-builtins/function-methods/#tostring) | ES3 | ⚠️ Partial | Returns `[object Function]`, not the source |
+| [`fn.constructor`](/ecmascript-builtins/function-methods/#constructor) | ES3 | ⚠️ Partial | `fn.constructor === Function` is `false`; use `instanceof Function` |
 | [`Function.prototype.bind(thisArg, ...)`](/ecmascript-builtins/function-methods/#bind) | ES5 | ❌ Missing | Prototype is sealed — use the `bindFn` helper in [Polyfills](/engine-limitations/polyfills/#function-prototype-bind) |
+| [`Function.prototype.length`](/ecmascript-builtins/function-methods/#length) | ES3 | ❌ Broken | Reading it throws; track arity yourself — see [Known Bugs](/engine-limitations/known-bugs/#functionprototypelength-throws) |
+| [`Function.prototype.name`](/ecmascript-builtins/function-methods/#name) | ES3 | ❌ Missing | `undefined` |
+| [`Function.prototype.caller`](/ecmascript-builtins/function-methods/#caller) | ES3 | ❌ Missing | `undefined` (deprecated) |
 
 ### Error
 
@@ -197,13 +220,16 @@ Value-confirmed `Date` members — see [Date Methods](/ecmascript-builtins/date-
 | [`Date.prototype.getTime()`](/ecmascript-builtins/date-methods/#gettime) | ES3 | ✅ Works | |
 | [`Date.prototype.getTimezoneOffset()`](/ecmascript-builtins/date-methods/#gettimezoneoffset) | ES3 | ✅ Works | |
 | [`Date.prototype.valueOf()`](/ecmascript-builtins/date-methods/#valueof) | ES3 | ✅ Works | |
+| [`Date.prototype.getUTCFullYear()` … `getUTCMilliseconds()`](/ecmascript-builtins/date-methods/#getutcfullyear) | ES3 | ✅ Works | Full `getUTC*` family confirmed |
 | [`Date.prototype.toString()`](/ecmascript-builtins/date-methods/#tostring) | ES3 | ✅ Works | |
 | [`Date.prototype.toDateString()`](/ecmascript-builtins/date-methods/#todatestring) | ES3 | ✅ Works | |
+| [`Date.prototype.toTimeString()`](/ecmascript-builtins/date-methods/#totimestring) | ES3 | ✅ Works | |
 | [`Date.prototype.toUTCString()`](/ecmascript-builtins/date-methods/#toutcstring) | ES3 | ✅ Works | |
 | [`Date.prototype.toISOString()`](/ecmascript-builtins/date-methods/#toisostring) | ES5 | ❌ Missing | Build the ISO string manually or use `Platform.Function.FormatDate` |
-| [`Date.now()`](/ecmascript-builtins/date-methods/#now) | ES5 | ✅ Works | Static |
-| [`Date.parse(str)`](/ecmascript-builtins/date-methods/#parse) | ES3 | ✅ Works | Static |
-| [`Date.UTC(year[, ...])`](/ecmascript-builtins/date-methods/#utc) | ES3 | ✅ Works | Static |
+| [`Date.prototype.toJSON()`](/ecmascript-builtins/date-methods/#tojson) | ES5 | ❌ Missing | Absent (depends on `toISOString`) |
+| [`Date.now()`](/ecmascript-builtins/date-methods/#now) | ES5 | ⚠️ Partial | Static — returns a **Date object**, not a number |
+| [`Date.parse(str)`](/ecmascript-builtins/date-methods/#parse) | ES3 | ⚠️ Partial | Static — invalid strings return **`0`**, not `NaN`; date-only parses as local |
+| [`Date.UTC(year[, ...])`](/ecmascript-builtins/date-methods/#utc) | ES3 | ✅ Works | Static — pass ≥ 2 args (year-only form misbehaves) |
 
 ### RegExp
 
@@ -212,12 +238,13 @@ Value-confirmed `RegExp` members — see [Regular Expressions](/ecmascript-built
 | Method / Property | ES | Status | Notes |
 |-------------------|----|--------|-------|
 | [`RegExp.prototype.test(string)`](/ecmascript-builtins/regular-expressions/#test) | ES3 | ✅ Works | |
-| [`RegExp.prototype.exec(string)`](/ecmascript-builtins/regular-expressions/#exec) | ES3 | ⚠️ Partial | Full match `result[0]` works, but capture groups `result[1]+` are `undefined`; `lastIndex` does not advance |
+| [`RegExp.prototype.exec(string)`](/ecmascript-builtins/regular-expressions/#exec) | ES3 | ⚠️ Partial | Full match `result[0]`, `.index`, `.input` work, but capture groups `result[1]+` are `undefined` and `result.length` is always 3; `lastIndex` does not advance |
 | [`RegExp.prototype.source`](/ecmascript-builtins/regular-expressions/#source) | ES3 | ✅ Works | |
 | [`RegExp.prototype.global`](/ecmascript-builtins/regular-expressions/#global) | ES3 | ✅ Works | |
-| [`RegExp.prototype.lastIndex`](/ecmascript-builtins/regular-expressions/#lastindex) | ES3 | ⚠️ Partial | Does not advance after `exec()`/`test()` with the `g` flag — use `String.match(/.../g)` to get all matches |
+| [`RegExp.prototype.lastIndex`](/ecmascript-builtins/regular-expressions/#lastindex) | ES3 | ⚠️ Partial | Does not advance after `exec()`/`test()` with the `g` flag, and manual assignment is ignored — use `String.match(/.../g)` to get all matches |
 | [`RegExp.prototype.ignoreCase`](/ecmascript-builtins/regular-expressions/#ignorecase) | ES3 | ❌ Missing | `undefined` in SFMC; track the `i` flag yourself |
 | [`RegExp.prototype.multiline`](/ecmascript-builtins/regular-expressions/#multiline) | ES3 | ❌ Missing | `undefined` in SFMC; track the `m` flag yourself |
+| [`re instanceof RegExp`](/ecmascript-builtins/regular-expressions/#instanceof) | ES3 | ⚠️ Partial | Always `false` (even for `new RegExp(...)`) — use `re.constructor === RegExp` |
 
 ### JSON
 
@@ -238,7 +265,7 @@ The native `JSON` object is unavailable — see [JSON](/ecmascript-builtins/json
 | [Math](/ecmascript-builtins/math/) | Math object reference |
 | [Number Methods](/ecmascript-builtins/number-methods/) | Number methods, constants, and global numeric functions |
 | [Object Methods](/ecmascript-builtins/object-methods/) | `hasOwnProperty`, `defineProperty`, and missing Object statics |
-| [Function Methods](/ecmascript-builtins/function-methods/) | Native `call` / `apply` and the `bind` (`bindFn`) helper |
+| [Function Methods](/ecmascript-builtins/function-methods/) | Native `call` / `apply`, the `arguments` object and `Function()` constructor, the `bind` (`bindFn`) helper, and the broken `.length` / `.name` / `toString` / `constructor` members |
 | [Date Methods](/ecmascript-builtins/date-methods/) | Value-confirmed `Date` getters, string conversions, and `Date.UTC` |
 | [Regular Expressions](/ecmascript-builtins/regular-expressions/) | `RegExp` `test`, `exec`, and the `source` / `global` / `lastIndex` accessors (`ignoreCase` / `multiline` are `undefined` in SFMC) |
 | [JSON](/ecmascript-builtins/json/) | `JSON.parse` / `JSON.stringify` are unavailable — use `Platform.Function.ParseJSON` / `Platform.Function.Stringify` |

@@ -401,3 +401,107 @@ The official docs describe `<SendInstance>.CancelSend()` as returning `"OK"` on 
 [Reference: Subscriber](/core-library/subscriber/)
 
 The official docs present `Subscriber.Upsert(properties)` and `Subscriber.Statistics(subscriberKey)` as **static** members of `Subscriber`. At runtime the static names are `undefined` (`typeof Subscriber.Upsert === "undefined"`, `typeof Subscriber.Statistics === "undefined"`). Both are actually **instance** methods on the object returned by `Subscriber.Init(subscriberKey)`: `<SubscriberInstance>.Upsert(properties)` and `<SubscriberInstance>.Statistics()` (the subscriber key comes from `Init`, so `Statistics` takes no argument).
+
+## ECMAScript Built-ins
+
+### Date.now() — returns a Date object, not a number
+
+[Reference: Date Methods](/ecmascript-builtins/date-methods/#now)
+
+MDN specifies `Date.now()` as a **static method that returns a Number** (milliseconds since the epoch). In the SFMC Jint engine it instead returns a **`Date` object** (`typeof Date.now()` is `"object"`; it stringifies to a date-time string). Numeric coercion (`Date.now() + 0` or `Date.now() * 1`) recovers the epoch milliseconds, but any code that treats the return value as a number without coercion will break. Prefer `new Date().getTime()`, which returns a clean `number`.
+
+### Date.parse() — returns 0 (never NaN) for invalid strings, and parses date-only strings as local
+
+[Reference: Date Methods](/ecmascript-builtins/date-methods/#parse)
+
+MDN specifies that `Date.parse()` returns **`NaN`** when the string cannot be parsed, and that **date-only** ISO forms (`"2026-06-18"`) are interpreted as **UTC**. In the SFMC engine both differ: an unparseable or invalid string (`"garbage"`, `""`, `"2021-13-45"`) returns **`0`** — the Unix epoch — so `isNaN()` cannot detect a bad date and invalid input silently becomes 1970-01-01; and a date-only string is parsed as **local** midnight (`getUTCHours()` = 6 at GMT-06:00), not UTC. Validate input explicitly; do not rely on `NaN` for error detection.
+
+### Date.UTC() — year-only form returns a nonsense value, not NaN
+
+[Reference: Date Methods](/ecmascript-builtins/date-methods/#utc)
+
+With year + month (and further components) `Date.UTC()` returns the correct UTC timestamp. But the **year-only** form `Date.UTC(2026)` returns a nonsense small number (observed **-21597974**) instead of a valid timestamp — and does not return `NaN`. Always pass at least year and month, e.g. `Date.UTC(2026, 0, 1)`.
+
+### Function.prototype.toString() — returns "[object Function]", not source {#functionprototypetostring-returns-object-function-not-source}
+
+[Reference: Function Methods](/ecmascript-builtins/function-methods/#tostring)
+
+MDN specifies that `fn.toString()` returns a string containing the **function source code**. In the SFMC Jint engine it instead returns the generic **`[object Function]`** object tag (runtime-verified). `String(fn)` and `("" + fn)` yield `"function"` rather than the source. Do not rely on reading a function's source at runtime for introspection or hashing.
+
+### Function.prototype.constructor identity is broken {#functionprototypeconstructor-identity-is-broken}
+
+[Reference: Function Methods](/ecmascript-builtins/function-methods/#constructor)
+
+MDN specifies that a function's `constructor` is the `Function` object, so `fn.constructor === Function` is `true`. In the SFMC engine `fn instanceof Function` is `true` (as expected) but `fn.constructor === Function` is **`false`** — the constructor-identity link is broken. Test "is this a function" with `instanceof Function` (or `typeof fn === "function"`), never with a `fn.constructor === Function` comparison.
+
+### Number constants — every Number static/constant is undefined {#number-constants-undefined}
+
+[Reference: Number Methods](/ecmascript-builtins/number-methods/#constants)
+
+MDN specifies the classic ES3 `Number` constants (`Number.MAX_VALUE`, `Number.MIN_VALUE`, `Number.NaN`, `Number.POSITIVE_INFINITY`, `Number.NEGATIVE_INFINITY`) as always-present static properties. In the SFMC Jint engine **all of them are `undefined`** (runtime-verified), along with the ES6 statics (`Number.isInteger`, `Number.isNaN`, `Number.MAX_SAFE_INTEGER`, `Number.EPSILON`, …). Use the global `NaN`/`Infinity` identifiers or numeric literals instead. Note the global `Infinity` is itself unreliable — see Known Bugs.
+
+### Number.prototype.toString(radix) — only 2, 8, 10, 16 supported {#numberprototypetostring-radix}
+
+[Reference: Number Methods](/ecmascript-builtins/number-methods/#tostring)
+
+MDN specifies `Number.prototype.toString(radix)` accepts any radix from **2 to 36**. In the SFMC Jint engine only radix **2, 8, 10, and 16** work — every other base throws `"Invalid Base."` (runtime-verified). Fractional values are also truncated to their integer part before non-decimal conversion (`(3.5).toString(2)` → `"100"`, not `"11.1"`). Restrict `toString` radix conversions to those four bases.
+
+### Number.prototype.toExponential() — no-arg form pads trailing zeros {#numberprototypetoexponential-noarg}
+
+[Reference: Number Methods](/ecmascript-builtins/number-methods/#toexponential)
+
+MDN specifies that `toExponential()` with no argument uses the minimal number of digits needed to represent the value. In the SFMC Jint engine the no-arg form instead pads the significand with trailing zeros (`(3.14159).toExponential()` → `"3.1415900000000000e+0"`). Always pass an explicit `fractionDigits` argument for predictable output.
+
+### Object.prototype.isPrototypeOf — exists but hangs the engine {#objectprototypeisprototypeof-hangs}
+
+[Reference: Object Methods](/ecmascript-builtins/object-methods/#isprototypeof)
+
+MDN specifies `isPrototypeOf` as a normal `Object.prototype` method that returns a boolean. In the SFMC Jint engine the method is present (`typeof` is `"function"`) but **calling it hangs the engine** — the request times out and no output is produced (runtime-verified). Never call it; compare `obj.constructor === Ctor` instead. See also [Known Bugs](/engine-limitations/known-bugs/#objectprototypeisprototypeof-hangs).
+
+### Object.prototype.propertyIsEnumerable — always returns false {#objectprototypepropertyisenumerable-broken}
+
+[Reference: Object Methods](/ecmascript-builtins/object-methods/#propertyisenumerable)
+
+MDN specifies `propertyIsEnumerable(prop)` returns `true` for an own enumerable property. In the SFMC Jint engine it is present but **broken — it returns `false` even for own enumerable properties** (runtime-verified). Use `hasOwnProperty` for own-property checks instead.
+
+### Object ES5/ES6 statics — most are missing {#object-statics-missing}
+
+[Reference: Object Methods](/ecmascript-builtins/object-methods/)
+
+MDN documents a large set of `Object` statics. In the SFMC Jint engine only `Object.defineProperty` and `Object.getPrototypeOf` are present and working — **`keys`, `values`, `entries`, `assign`, `create`, `freeze`, `isFrozen`, `defineProperties`, `getOwnPropertyNames`, `getOwnPropertyDescriptor`, `seal`, `isSealed`, `preventExtensions`, and `isExtensible` are all `undefined`** (runtime-verified). Use a `for...in` loop with `hasOwnProperty` for key/value enumeration; there is no runtime immutability or extensibility control. See [Object Methods](/ecmascript-builtins/object-methods/) for per-member workarounds.
+
+### RegExp instanceof is always false — use .constructor === RegExp {#regexp-instanceof-broken}
+
+[Reference: Regular Expressions](/ecmascript-builtins/regular-expressions/#instanceof)
+
+MDN specifies that `re instanceof RegExp` is `true` for any regular expression, whether created as a literal (`/…/`) or with `new RegExp(…)`. In the SFMC Jint engine `instanceof RegExp` is **always `false`** — even for `new RegExp("\\d+")` (runtime-verified). This is the mirror image of the `Function` quirk above: for `RegExp`, `re.constructor === RegExp` correctly returns **`true`**, so use the constructor comparison (not `instanceof`) to detect a RegExp.
+
+### RegExp.exec — capture groups undefined, result.length always 3, index/input work {#regexp-exec-capture-groups}
+
+[Reference: Regular Expressions](/ecmascript-builtins/regular-expressions/#exec)
+
+MDN specifies that `exec()` returns an array whose element `[0]` is the full match and `[1]…[n]` are the captured groups, with `length` reflecting the group count and `index`/`input` properties set. In the SFMC Jint engine `result[0]`, `result.index`, and `result.input` are correct, but **capture groups `result[1]+` are all `undefined`** and **`result.length` is always `3`** regardless of how many groups the pattern has (runtime-verified). Read capture groups by matching a non-global pattern with `String.match` instead.
+
+### RegExp lastIndex — never advances and manual assignment is ignored {#regexp-lastindex-inert}
+
+[Reference: Regular Expressions](/ecmascript-builtins/regular-expressions/#lastindex)
+
+MDN specifies that with the `g` (or `y`) flag, `exec()` and `test()` update `lastIndex` so successive calls advance through the string, and that assigning `lastIndex` repositions the next search. In the SFMC Jint engine `lastIndex` **stays `0`** after `exec()`/`test()` with the `g` flag, and **manually setting `lastIndex` is ignored** — the next `exec()` still matches from the start (runtime-verified). The classic `while ((m = re.exec(str)) !== null)` loop never terminates. Use `String.match(/…/g)` to collect all matches in one call.
+
+### RegExp.ignoreCase / multiline — undefined {#regexp-ignorecase-multiline-undefined}
+
+[Reference: Regular Expressions](/ecmascript-builtins/regular-expressions/#ignorecase)
+
+MDN specifies `RegExp.prototype.ignoreCase` and `RegExp.prototype.multiline` as boolean accessors reflecting the `i` and `m` flags. In the SFMC Jint engine both are **`undefined`** on every RegExp (runtime-verified), even when the corresponding flag is set — the flags themselves still work at match time (`/x/i` is case-insensitive, `/^…/m` matches line starts), you just cannot read them back. `source`, `global`, and `lastIndex` are the only readable accessors. Track the `i`/`m` flags yourself if you need them.
+
+### String.search — unreliable index, no-match returns 0 not -1 {#string-search-unreliable}
+
+[Reference: Polyfills — String.prototype.search](/engine-limitations/polyfills/#string-prototype-search)
+
+MDN specifies `String.prototype.search(regexp)` returns the **index of the first match, or `-1`** when there is no match. In the SFMC Jint engine it is unreliable: a **no-match returns `0`** instead of `-1`, and some real matches return the **wrong index** (a match at position 9 was observed returning `10`; a no-match returns `0` which is indistinguishable from a match at the start) — runtime-verified. Do not use `search` to detect or locate a match. Use `RegExp.test` to detect a match, or `String.match` (whose `[0]` is correct) to read it, or apply the search polyfill.
+
+### String.charAt — out-of-range index returns the last char, not "" {#string-charat-out-of-range}
+
+[Reference: String Methods — charAt](/ecmascript-builtins/string-methods/#charat)
+
+MDN specifies `String.prototype.charAt(index)` returns the **empty string `""`** when `index` is negative or `>= str.length`. In the SFMC Jint engine an out-of-range index instead returns the **last character** of the string — `"Hello".charAt(99)` and `"Hello".charAt(5)` both return `"o"` (runtime-verified). Bracket access for an out-of-range index behaves differently again: `"Hello"[99]` **throws** `"Index was outside the bounds of the array"` rather than returning `undefined`. Guard the index against `.length` before reading a character.

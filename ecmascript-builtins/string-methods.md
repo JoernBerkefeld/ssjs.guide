@@ -3,6 +3,8 @@ layout: page
 title: String Methods
 parent: ECMAScript Built-ins
 parent_url: /ecmascript-builtins/
+verification: verified
+differs_from_docs: true
 redirect_from:
   - /global-functions/string/
 description: The String() constructor/conversion function and String prototype methods in SSJS — which work natively, which are partial, and which are missing, with ES3/ES5-safe alternatives and polyfill links.
@@ -60,7 +62,7 @@ Do not call `String(e)` on a thrown plain object (it can raise a .NET null-refer
 | Member | ES | Status | Notes |
 |--------|----|--------|-------|
 | [`length`](#length) | ES3 | ✅ Works | |
-| [`charAt(index)`](#charat) | ES3 | ✅ Works | `str[i]` also works |
+| [`charAt(index)`](#charat) | ES3 | ⚠️ Partial | Out-of-range index returns the last char, not `""` |
 | [`charCodeAt(index)`](#charcodeat) | ES3 | ✅ Works | |
 | [`indexOf(search, fromIndex)`](#indexof) | ES3 | ✅ Works | |
 | [`lastIndexOf(search, fromIndex)`](#lastindexof) | ES3 | ✅ Works | |
@@ -99,11 +101,15 @@ Do not call `String(e)` on a thrown plain object (it can raise a .NET null-refer
 
 ## charAt {#charat}
 
-`(ES3)` — ✅ Works. Returns the character at the given index. `str[i]` also works in SSJS.
+`(ES3)` — ⚠️ Partial. Returns the character at the given index. In-range indices behave normally, but **out-of-range indices are broken**: instead of the spec-mandated empty string `""`, SFMC returns the **last character** of the string. Guard the index against `.length` before calling.
 
 ```javascript
-"Hello".charAt(0);   // "H"
-"Hello"[0];          // "H"
+"Hello".charAt(0);    // "H"
+"Hello"[0];           // "H"  (bracket access works in range)
+
+"Hello".charAt(99);   // "o"  — ❌ SFMC returns the last char, not ""
+"Hello".charAt(5);    // "o"  — ❌ same bug (spec says "")
+"Hello"[99];          // throws "Index was outside the bounds of the array"
 ```
 
 ## charCodeAt {#charcodeat}

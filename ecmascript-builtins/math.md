@@ -4,9 +4,11 @@ title: Math Object
 parent: ECMAScript Built-ins
 parent_url: /ecmascript-builtins/
 description: The Math built-in object in SSJS — which methods and constants work, which are partial, and which ES6 members are missing, with fallbacks.
+verification: verified
+differs_from_docs: true
 ---
 
-Almost every `Math` member is **ES3** and works in SSJS. Two members are partial (`Math.max` / `Math.min`), one constant is missing (`Math.LOG10E`), and several ES6 methods are not available. Members that need a fallback are flagged below.
+Almost every `Math` member is **ES3** and works in SSJS. Two members are partial (`Math.max` / `Math.min`), one ES3 constant is missing (`Math.LOG10E`), and **all** ES6 `Math` methods are unavailable. Members that need a fallback are flagged below.
 
 ## Status legend
 
@@ -40,6 +42,13 @@ Almost every `Math` member is **ES3** and works in SSJS. Two members are partial
 | [`Math.log2(x)`](#log2) | ES6 | ❌ Missing | `Math.log(x) / Math.LN2` |
 | [`Math.log10(x)`](#log10) | ES6 | ❌ Missing | `Math.log(x) / Math.LN10` |
 | [`Math.hypot(a, b)`](#hypot) | ES6 | ❌ Missing | `Math.sqrt(a * a + b * b)` |
+| [`Math.expm1(x)`](#expm1) | ES6 | ❌ Missing | `Math.exp(x) - 1` |
+| [`Math.log1p(x)`](#log1p) | ES6 | ❌ Missing | `Math.log(1 + x)` |
+| [`Math.sinh/cosh/tanh(x)`](#hyperbolic) | ES6 | ❌ Missing | Build from `Math.exp` — see below |
+| [`Math.asinh/acosh/atanh(x)`](#inverse-hyperbolic) | ES6 | ❌ Missing | Build from `Math.log`/`Math.sqrt` — see below |
+| [`Math.clz32(x)`](#clz32) | ES6 | ❌ Missing | Count leading zero bits manually |
+| [`Math.fround(x)`](#fround) | ES6 | ❌ Missing | No ES3-safe equivalent — keep doubles |
+| [`Math.imul(a, b)`](#imul) | ES6 | ❌ Missing | Emulate with bitwise ops |
 
 ---
 
@@ -234,6 +243,76 @@ Math.log(100) / Math.LN10;   // 2
 ```javascript
 function hypot(a, b) { return Math.sqrt(a * a + b * b); }
 hypot(3, 4);   // 5
+```
+
+## expm1 {#expm1}
+
+`(ES6)` — ❌ Missing. Use `Math.exp(x) - 1`.
+
+```javascript
+function expm1(x) { return Math.exp(x) - 1; }
+```
+
+## log1p {#log1p}
+
+`(ES6)` — ❌ Missing. Use `Math.log(1 + x)`.
+
+```javascript
+function log1p(x) { return Math.log(1 + x); }
+```
+
+## Hyperbolic {#hyperbolic}
+
+<a id="sinh"></a><a id="cosh"></a><a id="tanh"></a>
+
+`(ES6)` — ❌ Missing. `Math.sinh`, `Math.cosh`, and `Math.tanh` are all `undefined`. Build them from `Math.exp`.
+
+```javascript
+function sinh(x) { return (Math.exp(x) - Math.exp(-x)) / 2; }
+function cosh(x) { return (Math.exp(x) + Math.exp(-x)) / 2; }
+function tanh(x) { var e = Math.exp(2 * x); return (e - 1) / (e + 1); }
+```
+
+## Inverse hyperbolic {#inverse-hyperbolic}
+
+<a id="asinh"></a><a id="acosh"></a><a id="atanh"></a>
+
+`(ES6)` — ❌ Missing. `Math.asinh`, `Math.acosh`, and `Math.atanh` are all `undefined`. Build them from `Math.log` and `Math.sqrt`.
+
+```javascript
+function asinh(x) { return Math.log(x + Math.sqrt(x * x + 1)); }
+function acosh(x) { return Math.log(x + Math.sqrt(x * x - 1)); }
+function atanh(x) { return Math.log((1 + x) / (1 - x)) / 2; }
+```
+
+## clz32 {#clz32}
+
+`(ES6)` — ❌ Missing. Count leading zero bits over a 32-bit unsigned value manually.
+
+```javascript
+function clz32(x) {
+    x = x >>> 0;
+    if (x === 0) { return 32; }
+    var n = 0;
+    while (x <= 0x7fffffff) { n++; x = x << 1; }
+    return n;
+}
+```
+
+## fround {#fround}
+
+`(ES6)` — ❌ Missing. There is no ES3-safe equivalent (no typed arrays); keep values as doubles.
+
+## imul {#imul}
+
+`(ES6)` — ❌ Missing. Emulate 32-bit integer multiplication with bitwise operations.
+
+```javascript
+function imul(a, b) {
+    var aHi = (a >>> 16) & 0xffff, aLo = a & 0xffff;
+    var bHi = (b >>> 16) & 0xffff, bLo = b & 0xffff;
+    return ((aLo * bLo) + (((aHi * bLo + aLo * bHi) << 16) >>> 0)) | 0;
+}
 ```
 
 ## See Also
