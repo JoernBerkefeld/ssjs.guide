@@ -1,0 +1,1106 @@
+# GENERATED CONTENT — migrated verbatim from engine-limitations/differs-from-docs.md. One record per ### entry. Do not hand-edit prose; edit the source entry instead.
+- name: "Request (bare-name global)"
+  url: "/core-library/request/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_utilitiesRequestObject.html"
+  tagline: "more reliable than Platform.Request"
+  part: "sfmc"
+  category: "Core Library"
+  object: "Request"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "request-bare-name-global-more-reliable-than-platform-request"
+  body: |
+    The bare-name global `Request` works after `Platform.Load("core", "1.1.5")` and is **more reliable than `Platform.Request` for `.URL()`**: `Request.URL()` returns the full request URL as a string, whereas `Platform.Request.URL()` throws *"Unable to retrieve security descriptor for this frame."* in CloudPages. Other members (`PagePath`, `Method`, `ApplicationID`, `PackageID`, `ApplicationBaseURL`) return CLR values (empty in a plain CloudPage GET, with `Method` = `"GET"`). Prefer the bare-name `Request` in CloudPages.
+
+- name: "Error"
+  url: "/ecmascript-builtins/error/"
+  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error"
+  tagline: "new Error(\"msg\") does not expose .message"
+  part: "ecmascript"
+  category: "ECMAScript Builtins"
+  object: "Error"
+  severity: "high"
+  discrepancy: "A4"
+  anchor: "error-new-error-msg-does-not-expose-message"
+  body: |
+    Unlike standard JavaScript, a JS-constructed `new Error("msg")` in the SFMC Jint engine does **not** expose the message via `.message` — `err.message` reads back `undefined`, and `Stringify(err)` surfaces only a hidden `{jintException}` (the .NET stack), not the message. Recover the message with `String(err)` or `("" + err)` (both yield the constructor argument), or `err.toString()` (yields `"Error: undefined"`). This differs from **engine-raised** errors, which DO carry `.message` + `.description`. Do not rely on `new Error(...).message`.
+
+- name: "HTTPHeader (bare-name global)"
+  url: "/core-library/httpheader/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_utilitiesHTTPHeaderObject.html"
+  tagline: "separate inbound/outbound collections"
+  part: "sfmc"
+  category: "Core Library"
+  object: "HTTPHeader"
+  severity: "medium"
+  discrepancy: "A2"
+  anchor: "httpheader-bare-name-global-separate-inbound-outbound-collections"
+  body: |
+    Available after `Platform.Load("core", ...)`. `GetValue` reads **inbound** request headers and returns `null` for a header you set via `SetValue` (separate inbound vs outbound collections). `Remove` returns `undefined`, not the `"OK"` string implied by some docs.
+
+- name: "Core Library"
+  url: "/core-library/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_utilitiesFunctions.html"
+  tagline: "only visible in the Platform.Load scope"
+  part: "sfmc"
+  category: "Core Library"
+  object: "Core"
+  severity: "high"
+  discrepancy: "A6"
+  anchor: "bare-name-core-globals-only-visible-in-the-platform-load-scope"
+  body: |
+    Every bare-name Core global (`Write`, `Stringify`, `Redirect`, `Base64Encode`, `Format`, …) is injected by `Platform.Load("core", ...)` **only into the scope where the load ran**. Inside nested helper-function bodies (or `eval()`) the bare name is `undefined`, even though the load already happened. The official docs show the top-scope example (`Platform.Load("Core", "1"); Redirect(...)`) but never mention this same-scope-only limitation. Use the `Platform.*` siblings (`Platform.Response.Write`, `Platform.Response.Redirect`, `Platform.Function.Stringify`, …) inside helpers — they work in any scope with no `Platform.Load`. (Detailed in [Known Bugs](/engine-limitations/known-bugs/#bare-name-redirect-does-not-exist).)
+
+- name: "ErrorUtil (bare-name global)"
+  url: "/wsproxy/errorutil/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_WSProxy_errorUtilThrow.html"
+  tagline: "only in Core \"1\""
+  part: "sfmc"
+  category: "WSProxy"
+  object: "ErrorUtil"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "errorutil-bare-name-global-only-in-core-1"
+  body: |
+    `ErrorUtil` is provided **only** by `Platform.Load("Core", "1")`. Under newer Core versions (`"1.1.1"`, `"1.1.5"`, …) it is `undefined`. Effectively deprecated in Core > 1. Prefer checking `result.Status` and throwing `new Error(...)` instead of `ErrorUtil.ThrowWSProxyError`.
+
+- name: "Attribute.GetValue"
+  url: "/core-library/attribute/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_recipientGetValue.html"
+  tagline: "works in CloudPages, returns \"\" when no recipient"
+  part: "sfmc"
+  category: "Core Library"
+  object: "Attribute"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "attribute-getvalue-works-in-cloudpages-returns-when-no-recipient"
+  body: |
+    After `Platform.Load("Core", ...)` the `Attribute` object exists and `Attribute.GetValue(name)` executes and returns a string — it is **not** unavailable in CloudPages, contrary to what the docs imply. When no subscriber/attribute is in context (e.g. an anonymous CloudPage GET) it returns an **empty string** rather than throwing. In email/triggered-send/personalized contexts it returns the actual attribute value.
+
+- name: "Platform.Function.HTTPGet"
+  url: "/platform-functions/httpget/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformContentSyndicationHTTPGet.html"
+  tagline: "returns the body, and all 6 args are required"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "high"
+  discrepancy: "A1"
+  anchor: "platform-function-httpget-returns-the-body-and-all-6-args-are-required"
+  body: |
+    The official docs are wrong on two counts:
+
+    1. They state this returns a **numeric status**, but it actually returns the **response body as a string**; the numeric status is written to the `statusVariable` out-parameter (`statusVariable[0]`).
+    2. They list `emptyContentHandling`, `headerNames`, `headerValues`, and `statusVariable` as optional, but runtime testing shows **all six arguments are required**. Pass `null` for unused header arrays.
+
+- name: "Platform.Function.Base64Encode"
+  url: "/platform-functions/base64encode/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformUtilityBase64Encode.html"
+  tagline: "standard interoperable Base64"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "low"
+  discrepancy: "A7"
+  anchor: "platform-function-base64encode-standard-interoperable-base64"
+  body: |
+    The official docs state the output "can only be decoded by the matching `Base64Decode()` function." Runtime testing shows the output is **standard, interoperable Base64** — any Base64 decoder (in any language) can decode it. There is nothing proprietary about the encoding.
+
+- name: "Platform.Function.Base64Decode"
+  url: "/platform-functions/base64decode/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformUtilityBase64Decode.html"
+  tagline: "decodes any standard Base64"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "low"
+  discrepancy: "A7"
+  anchor: "platform-function-base64decode-decodes-any-standard-base64"
+  body: |
+    The official docs imply this only decodes values produced by the matching `Base64Encode()` function. Runtime testing shows it **decodes any valid standard Base64 string**, regardless of how it was produced.
+
+- name: "Platform.Function.BeginImpressionRegion"
+  url: "/platform-functions/beginimpressionregion/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformContentBeginImpressionRegion.html"
+  tagline: "name must be a literal"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "medium"
+  discrepancy: "A7"
+  anchor: "platform-function-beginimpressionregion-name-must-be-a-literal"
+  body: |
+    The region name must be a **compile-time literal**. Passing a variable is rejected at runtime with a resolved-value (`ResolvedValueParameter`) error. The official docs describe the argument as an ordinary string and do not mention this literal-only restriction.
+
+- name: "Platform.Function.EndImpressionRegion"
+  url: "/platform-functions/endimpressionregion/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformContentEndImpressionRegion.html"
+  tagline: "returns null, not void"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "low"
+  discrepancy: "A1"
+  anchor: "platform-function-endimpressionregion-returns-null-not-void"
+  body: |
+    The official docs type the return as `void`, but at runtime the call always returns a genuine JS `null` (`typeof "object"`, strict `=== null` is `true`) — even when called with no matching `BeginImpressionRegion`. The optional `closeAll` argument accepts a boolean (string values are coerced).
+
+- name: "Platform.Function.AddObjectArrayItem"
+  url: "/platform-functions/addobjectarrayitem/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformAPIAddObjectArrayItem.html"
+  tagline: "returns nothing"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "platform-function-addobjectarrayitem-returns-nothing"
+  body: |
+    The official docs list a return value, but at runtime the call returns nothing (`undefined`). It appends the item to the object's array property **in place** — capture the mutated object, not a return value.
+
+- name: "Platform.Function.SetObjectProperty"
+  url: "/platform-functions/setobjectproperty/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformAPISetObjectProperty.html"
+  tagline: "returns null (not void), validates the property"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "platform-function-setobjectproperty-returns-null-not-void-validates-the-property"
+  body: |
+    The official docs type the return as `void`, but at runtime the call returns a genuine JS `null` (`typeof "object"`, strict `=== null` is `true`) on success. The property name is validated against the object's SOAP schema at set-time: setting an unknown property (or a value the property rejects) throws. The assigned property **cannot be read back from SSJS** — the object is a .NET **CLR host object** (`typeof "clr"`) and the engine blocks all introspection of it. Runtime-proven: dot and bracket property access both throw `Use of Common Language Runtime (CLR) is not allowed`, `for..in` yields zero keys, and both `Stringify()` and `String()` return only the type name (`"ExactTarget.Integration.WSDL.Subscriber"`) rather than the values. Pass the populated object straight into the consuming SOAP call instead.
+
+- name: "Platform.Function.Lookup"
+  url: "/platform-functions/lookup/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformDataExtensionLookup.html"
+  tagline: "returns native types and null (not string / \"\")"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "high"
+  discrepancy: "A1"
+  anchor: "platform-function-lookup-returns-native-types-and-null-not-string"
+  body: |
+    The official docs type the return as a `string`, but at runtime `Lookup` returns the column's **native type**: Number/Decimal → `number`, Boolean → `boolean`, Date → a real `Date` object, Text/EmailAddress → `string`.
+
+    There are **three distinct empty-ish returns** — a strict `=== null` check catches only one of them:
+
+    | Situation | Value | `typeof` | `=== null` | `String()` |
+    |---|---|---|---|---|
+    | No matching row | genuine JS `null` | `object` | `true` | `"null"` |
+    | Row exists, field is empty/NULL | CLR null | `"clr"` | **`false`** | `""` |
+    | Field is populated | native value | native | `false` | value |
+
+    The empty/NULL-field case is the trap: it is **not** `=== null` and its `typeof` is the SFMC-only `"clr"`. Guard empty fields with a loose `== null` (which is `true` for both null forms) or a `String()`/truthiness coercion — never a strict `=== null`.
+
+- name: "Platform.Function.LookupRows / LookupOrderedRows"
+  url: null
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformDataExtensionLookupRows.html"
+  tagline: "null on no-match, plus system fields"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "high"
+  discrepancy: "A2"
+  anchor: "platform-function-lookuprows-lookuporderedrows-null-on-no-match-plus-system-fields"
+  body: |
+    Reference: [LookupRows](/platform-functions/lookuprows/) · [LookupOrderedRows](/platform-functions/lookuporderedrows/)
+
+    Both return **`null`** (not an empty array `[]`) when no row matches — guard before reading `.length`. Each returned row object also carries two undocumented **system fields**: `_CustomObjectKey` (a `number`) and `_CreatedDate` (a `string`). When rows do match, the collection is a **genuine JavaScript `Array`** (`object[]`): `Array.isArray()` returns `true` and its **own** `.push`/`.slice`/`.sort` methods work — but `instanceof Array` is unreliable in the SFMC engine (it returns `false` even for a plain array literal), so test with the `Array.isArray` polyfill rather than `instanceof`. Note that **borrowed** `Array.prototype` methods fail on it: `Array.prototype.slice.call(rows)` throws *"Index was outside the bounds of the array."* — call the array's own `rows.slice(...)` instead.
+
+- name: "Platform.Function.InsertDE / UpdateDE / UpsertDE / DeleteDE"
+  url: null
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformDataExtensionInsertDE.html"
+  tagline: "run on CloudPages, return null"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "medium"
+  discrepancy: "A6"
+  anchor: "platform-function-insertde-updatede-upsertde-deletede-run-on-cloudpages-return-null"
+  body: |
+    Reference: [InsertDE](/platform-functions/insertde/) · [UpdateDE](/platform-functions/updatede/) · [UpsertDE](/platform-functions/upsertde/) · [DeleteDE](/platform-functions/deletede/)
+
+    The official docs restrict the `*DE` variants to **email contexts**, but at runtime all four **execute and commit** their write on a CloudPage too (verified within the same request and across requests). They return **`null`** rather than the affected-row count that the `*Data` variants return, so the `*Data` functions remain preferable outside email when you need the count.
+
+- name: "Platform.Function.UpsertData"
+  url: "/platform-functions/upsertdata/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformDataExtensionUpsertData.html"
+  tagline: "no flat/variadic signature"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "high"
+  discrepancy: "A3"
+  anchor: "platform-function-upsertdata-no-flat-variadic-signature"
+  body: |
+    The official docs show a flat/variadic form (`UpsertData(deName, field1, value1, …, filterField, filterValue)`). That form is **not supported** — it throws at runtime. Only the array-based five-argument signature (`deName`, `whereFieldNames`, `whereFieldValues`, `fieldNames`, `fieldValues`) works.
+
+- name: "Data Extension functions"
+  url: null
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformDataExtensionFunctions.html"
+  tagline: "resolve by Name, not external key"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Data"
+  severity: "high"
+  discrepancy: "A6"
+  anchor: "data-extension-functions-resolve-by-name-not-external-key"
+  body: |
+    Reference: [Lookup](/platform-functions/lookup/) · [LookupRows](/platform-functions/lookuprows/) · [LookupOrderedRows](/platform-functions/lookuporderedrows/) · [InsertData](/platform-functions/insertdata/) · [UpdateData](/platform-functions/updatedata/) · [UpsertData](/platform-functions/upsertdata/) · [DeleteData](/platform-functions/deletedata/) · [InsertDE](/platform-functions/insertde/) · [UpdateDE](/platform-functions/updatede/) · [UpsertDE](/platform-functions/upsertde/) · [DeleteDE](/platform-functions/deletede/)
+
+    All eleven `Platform.Function` Data Extension functions resolve the DE by its **Name** only. Passing the external key / CustomerKey throws *"A Data Extension of this name does not exist."* — verified per-function against a fixture whose CustomerKey deliberately differs from its Name. None of them accept the external key, and none accept both.
+
+- name: "Platform.Function.InvokeCreate"
+  url: "/platform-functions/invokecreate/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformAPIInvokeCreate.html"
+  tagline: "returns the OverallStatus string, not an object"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "high"
+  discrepancy: "A1"
+  anchor: "platform-function-invokecreate-returns-the-overallstatus-string-not-an-object"
+  body: |
+    The official docs type the return value as an object, but at runtime the call returns the **OverallStatus message as a string** (`"OK"` / `"Error: ..."`). The request ID is written to `status[1]` and, on error, a numeric error code is written into the status array.
+
+- name: "Platform.Function.InvokeUpdate"
+  url: "/platform-functions/invokeupdate/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformAPIInvokeUpdate.html"
+  tagline: "returns the OverallStatus string, not an object"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "high"
+  discrepancy: "A1"
+  anchor: "platform-function-invokeupdate-returns-the-overallstatus-string-not-an-object"
+  body: |
+    The official docs type the return value as an object, but at runtime the call returns the **OverallStatus message as a string** (`"OK"` / `"Error: ..."`). The request ID is written to `status[1]` and, on error, a numeric error code is written into the status array.
+
+- name: "Platform.Function.InvokeDelete"
+  url: "/platform-functions/invokedelete/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformAPIInvokeDelete.html"
+  tagline: "returns the OverallStatus string, not an object"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "high"
+  discrepancy: "A1"
+  anchor: "platform-function-invokedelete-returns-the-overallstatus-string-not-an-object"
+  body: |
+    The official docs type the return value as an object, but at runtime the call returns the **OverallStatus message as a string** (`"OK"` / `"Error: ..."`). The request ID is written to `status[1]` and, on error, a numeric error code is written into the status array.
+
+- name: "Platform.Function.InvokeRetrieve"
+  url: "/platform-functions/invokeretrieve/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformAPIInvokeRetrieve.html"
+  tagline: "returns object[] or null"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "high"
+  discrepancy: "A1"
+  anchor: "platform-function-invokeretrieve-returns-object-or-null"
+  body: |
+    The official docs type the return value as an object, but at runtime the call returns an **array of result objects — or `null`** when the retrieve errors or matches no rows. The status message is written to `status[0]` and the request ID (a GUID) to `status[1]`. (The two-argument signature matches the docs; unlike its `InvokeExecute`/`InvokeExtract` siblings, the docs do not list an `options` argument here.)
+
+- name: "Platform.Function.InvokePerform"
+  url: "/platform-functions/invokeperform/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformAPIInvokePerform.html"
+  tagline: "returns the OverallStatus string, not an object"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "high"
+  discrepancy: "A1"
+  anchor: "platform-function-invokeperform-returns-the-overallstatus-string-not-an-object"
+  body: |
+    The official docs type the return value as an object, but at runtime the call returns the **OverallStatus message as a string** (`"OK"` / `"Error: ..."`); the request details are written into the status array.
+
+- name: "Platform.Function.InvokeConfigure"
+  url: "/platform-functions/invokeconfigure/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformAPIInvokeConfigure.html"
+  tagline: "returns the OverallStatus string, not an object"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "high"
+  discrepancy: "A1"
+  anchor: "platform-function-invokeconfigure-returns-the-overallstatus-string-not-an-object"
+  body: |
+    The official docs type the return value as an object, but at runtime the call returns the **OverallStatus message as a string** (`"OK"` / `"Error: ..."`); the request details are written into the status array.
+
+- name: "Platform.Function.InvokeExecute"
+  url: "/platform-functions/invokeexecute/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformAPIInvokeExecute.html"
+  tagline: "undocumented arity, returns object[]"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "high"
+  discrepancy: "A3"
+  anchor: "platform-function-invokeexecute-undocumented-arity-returns-object"
+  body: |
+    The official docs are wrong on two counts. **Signature:** they list a **third `options` argument**, but at runtime the function accepts **only two arguments** (`apiObject`, `status`) — passing a third throws an *"Unable to retrieve security descriptor for this frame"* error. **Return:** they type the return value as an object, but at runtime the call returns an **array of result objects**.
+
+- name: "Platform.Function.InvokeExtract"
+  url: "/platform-functions/invokeextract/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformAPIInvokeExtract.html"
+  tagline: "undocumented arity, returns the OverallStatus string"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "high"
+  discrepancy: "A3"
+  anchor: "platform-function-invokeextract-undocumented-arity-returns-the-overallstatus-string"
+  body: |
+    The official docs are wrong on two counts. **Signature:** they list a **third `options` argument**, but at runtime the function accepts **only two arguments** (`apiObject`, `statusArray`) — passing a third throws an *"Unable to retrieve security descriptor for this frame"* error. **Return:** they type the return value as an object, but at runtime the call returns the **OverallStatus message as a string**.
+
+- name: "Platform.Function.InvokeSchedule"
+  url: "/platform-functions/invokeschedule/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformAPIInvokeSchedule.html"
+  tagline: "options argument optional (docs mark it required), returns the OverallStatus string"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "high"
+  discrepancy: "A3"
+  anchor: "platform-function-invokeschedule-options-argument-optional-docs-mark-it-required-returns-the-overallstatus-string"
+  body: |
+    The official docs are wrong on two counts. **Signature:** they mark the trailing **`options` argument as required** (five required arguments), but at runtime it is **optional** — a four-argument call (`apiObject`, `action`, `schedule`, `statusArray`) succeeds. **Return:** they type the return value as an object, but at runtime the call returns the **OverallStatus message as a string**; the request ID is written into the `statusArray`.
+
+- name: "Platform.Function.IsPhoneNumber"
+  url: "/platform-functions/isphonenumber/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformUtilityIsPhoneNumber.html"
+  tagline: "digits-only, no leading zero, no spaces"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "medium"
+  discrepancy: "A7"
+  anchor: "platform-function-isphonenumber-digits-only-no-leading-zero-no-spaces"
+  body: |
+    The official docs describe generic "valid phone number" validation, but at runtime the function enforces a stricter, specific format: **digits `0`–`9` only, no spaces, and no leading `0`**. To present any country's country code (including the US), you **omit** the leading `00`/`+` and write the country code as bare digits with no leading zero. Values containing spaces, a leading `0`, or a `+`/`00` international prefix return `false`. This is the **same** digits-only, no-leading-zero format that SFMC phone-number fields and the SMS (MobileConnect) service expect — a value that passes `IsPhoneNumber` is already in the shape those services accept.
+
+- name: "Platform.Function.LocalDateToSystemDate"
+  url: "/platform-functions/localdatetosystemdate/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformDateTimeLocalDateToSystemDate.html"
+  tagline: "returns a Date object, not a string"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "high"
+  discrepancy: "A1"
+  anchor: "platform-function-localdatetosystemdate-returns-a-date-object-not-a-string"
+  body: |
+    The official docs type the return value as a `string`, but at runtime the call returns a genuine **`Date` object** (`typeof "object"`, `Object.prototype.toString` reports `[object Date]`, and `getFullYear()` / `getHours()` / `getTime()` all work). It only serializes to an ISO-like string (e.g. `2025-08-05T04:00:00.000`) when written or passed through `Stringify()`. The conversion strips daylight saving, so the same wall-clock local input yields a system hour one hour earlier in summer than in winter.
+
+- name: "Platform.Function.SystemDateToLocalDate"
+  url: "/platform-functions/systemdatetolocaldate/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformDateTimeSystemDateToLocalDate.html"
+  tagline: "returns a Date object, not a string"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "high"
+  discrepancy: "A1"
+  anchor: "platform-function-systemdatetolocaldate-returns-a-date-object-not-a-string"
+  body: |
+    The official docs type the return value as a `string`, but at runtime the call returns a genuine **`Date` object** (`typeof "object"`, `Object.prototype.toString` reports `[object Date]`, and `getFullYear()` / `getHours()` / `getTime()` all work) — symmetric with its sibling [`LocalDateToSystemDate`](/platform-functions/localdatetosystemdate/). It only serializes to an ISO-like string when written or passed through `Stringify()`. The conversion shifts system (Central, no daylight saving) time to the account/user local offset — the opposite direction to `LocalDateToSystemDate`.
+
+- name: "Platform.Function.Now"
+  url: "/platform-functions/now/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformDateTimeNow.html"
+  tagline: "returns a Date object, not a string"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "high"
+  discrepancy: "A1"
+  anchor: "platform-function-now-returns-a-date-object-not-a-string"
+  body: |
+    The official docs describe the return as an RFC 2822-compliant date-time **string**, but at runtime the call returns a genuine **`Date` object** (`typeof "object"`, `Object.prototype.toString` reports `[object Date]`, and `getFullYear()` / `getMonth()` / `getTime()` all work). It only appears as the RFC 2822-style value (e.g. `Tue, 14 Jul 2026 17:59:40 GMT-06:00`) when coerced to a string during output. The time is in the account timezone (Central by default), not UTC. The optional `useContextTime` argument is truly optional (`Now()`, `Now(false)`, and `Now(true)` all work); outside a send context `Now(true)` equals `Now(false)`.
+
+- name: "Platform.Function.ParseJSON"
+  url: "/platform-functions/parsejson/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformUtilityParseJSON.html"
+  tagline: "string-only argument, returns string/null for scalars & invalid input"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "high"
+  discrepancy: "A3"
+  anchor: "platform-function-parsejson-string-only-argument-returns-string-null-for-scalars-invalid-input"
+  body: |
+    The official docs are wrong on two counts:
+
+    1. They type the argument as `string or string[]` and describe passing an "array of strings". At runtime passing an array — or any non-string object — throws `System.InvalidOperationException` (*"Unable to retrieve security descriptor for this frame."*). Only a **single string argument** is accepted.
+    2. They give the return type as `object|object[]`. That is incomplete: JSON objects/arrays deserialise as expected, but a **scalar** JSON value (`"42"`, `'"hello"'`, `"true"`) is returned **unchanged as a string**, and **invalid**, **empty**, `null`, or `undefined` input returns a genuine JS **`null`** — it does **not** throw. Non-string scalar arguments (number, boolean) are coerced to their string form. The genuine throw case is a non-string object/array argument.
+
+- name: "Platform.Function.RaiseError"
+  url: "/platform-functions/raiseerror/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformUtilityRaiseError.html"
+  tagline: "only message is required; errorCode/errorNumber not exposed on the caught error"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "medium"
+  discrepancy: "A3"
+  anchor: "platform-function-raiseerror-only-message-is-required-errorcode-errornumber-not-exposed-on-the-caught-error"
+  body: |
+    The official docs are wrong on two counts:
+
+    1. They mark `currentRecipientOnly`, `errorCode`, and `errorNumber` as **required**, but at runtime a single `message` argument raises correctly — those three are **optional** (`minArgs: 1`).
+    2. When the raised error is caught in a CloudPage `try`/`catch`, the exception exposes only `.message` (the passed text) and `.description` (an `ExactTarget.OMM.AMPScriptRaiseErrorException`); the `errorCode` and `errorNumber` values are **not** surfaced on the error object (`.errorCode` and `.number` read back `undefined`). The exception is a normal catchable object (`.name` is `"TypeError"`), so on a CloudPage `RaiseError` can be caught rather than fatally halting the page.
+
+- name: "Platform.Function.RedirectTo"
+  url: "/platform-functions/redirectto/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformHTTPRedirectTo.html"
+  tagline: "returns the URL string, does not redirect from SSJS"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "high"
+  discrepancy: "A1"
+  anchor: "platform-function-redirectto-returns-the-url-string-does-not-redirect-from-ssjs"
+  body: |
+    The official docs present `RedirectTo` as an email link-target helper with no documented return value. Proven at runtime from SSJS: it **returns the passed-in URL as a `string`** (not `void`); execution continues after the call and no HTTP redirect is issued in a CloudPage context. For CloudPage HTTP redirects use `Platform.Response.Redirect` instead.
+- name: "Platform.Request.GetQueryStringParameter"
+  url: "/platform-objects/platform-request/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformHTTPPropertyGetQueryStringParameter.html"
+  tagline: "returns null (not \"\") when absent"
+  part: "sfmc"
+  category: "Platform Objects"
+  object: "Platform.Request"
+  severity: "medium"
+  discrepancy: "A2"
+  anchor: "platform-request-getquerystringparameter"
+  body: |
+    For an **absent** parameter this returns `null` (`typeof "object"`), **not** an empty string — the docs give no indication of the empty-vs-null behavior. A present parameter returns its string value. Guard reads with a truthiness / `!= null` check.
+
+- name: "Platform.Request.GetFormField"
+  url: "/platform-objects/platform-request/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformHTTPPropertyGetFormField.html"
+  tagline: "returns null (not \"\") when absent"
+  part: "sfmc"
+  category: "Platform Objects"
+  object: "Platform.Request"
+  severity: "medium"
+  discrepancy: "A2"
+  anchor: "platform-request-getformfield"
+  body: |
+    For an **absent** field this returns `null` (`typeof "object"`), **not** an empty string.
+
+- name: "Platform.Request.GetCookieValue"
+  url: "/platform-objects/platform-request/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformHTTPPropertyGetCookieValue.html"
+  tagline: "returns null (not \"\") when absent"
+  part: "sfmc"
+  category: "Platform Objects"
+  object: "Platform.Request"
+  severity: "medium"
+  discrepancy: "A2"
+  anchor: "platform-request-getcookievalue"
+  body: |
+    For an **absent** cookie this returns `null` (`typeof "object"`), **not** an empty string.
+
+- name: "Platform.Request.GetUserLanguages"
+  url: "/platform-objects/platform-request/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformHTTPPropertyGetUserLanguages.html"
+  tagline: "throws in a plain CloudPage GET"
+  part: "sfmc"
+  category: "Platform Objects"
+  object: "Platform.Request"
+  severity: "high"
+  discrepancy: "A6"
+  anchor: "platform-request-getuserlanguages"
+  body: |
+    Throws *"Unable to retrieve security descriptor for this frame."* in a plain CloudPage GET context. Wrap in `try/catch` or avoid; may only work in specific contexts.
+
+- name: "Platform.Variable.GetValue"
+  url: "/platform-objects/platform-variable/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformAMPscriptVariableGetValue.html"
+  tagline: "returns null (not \"\") when never set"
+  part: "sfmc"
+  category: "Platform Objects"
+  object: "Platform.Variable"
+  severity: "medium"
+  discrepancy: "A2"
+  anchor: "platform-variable-getvalue"
+  body: |
+    When the variable was **never set** this returns `null` (`typeof "object"`), **not** an empty string. A variable explicitly set to `""` returns `""`. The leading `@` is optional — `GetValue("v")` and `GetValue("@v")` return the same value. (The bare-name `Variable` alias only exists **after** `Platform.Load("core", ...)`.)
+
+- name: "Platform.Recipient.GetAttributeValue"
+  url: "/platform-objects/platform-recipient/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformFieldAttributeGetAttributeValue.html"
+  tagline: "returns \"\" outside a send, does not throw"
+  part: "sfmc"
+  category: "Platform Objects"
+  object: "Platform.Recipient"
+  severity: "medium"
+  discrepancy: "A2"
+  anchor: "platform-recipient-getattributevalue"
+  body: |
+    Does **not** throw outside a send context — in a plain CloudPage it returns `""` (empty string, `typeof "string"`) for any attribute because no recipient is bound. The bare-name `Recipient` alias is **not** available even after `Platform.Load`; use `Platform.Recipient.GetAttributeValue(...)` (or `Attribute.GetValue(...)` after load).
+
+- name: "HTTP.Post"
+  url: "/http/post/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_httpPost.html"
+  tagline: "header arrays optional; StatusCode is a number, Response is an array"
+  part: "sfmc"
+  category: "HTTP"
+  object: "HTTP"
+  severity: "high"
+  discrepancy: "A1"
+  anchor: "http-post"
+  body: |
+    The official docs are wrong on two counts:
+
+    1. They list `headerNames` and `headerValues` as **required**, but at runtime a three-argument call (`url`, `contentType`, `payload`) works — the two header arrays are **optional** and only need to be paired when supplied.
+    2. They type `StatusCode` as a **string** and `Response` as a single **string**, but at runtime the call returns an object whose `StatusCode` is a **number** and whose `Response` is an **array** — the body is `Response[0]`. (Note the field names differ from `HTTP.Get`, which returns `{ Status, Content }`.)
+
+- name: "Script.Util.HttpRequest.timeout"
+  url: "/http/script-util-httprequest/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformContentSyndicationScriptUtilHttpRequest.html"
+  tagline: "undocumented but works"
+  part: "sfmc"
+  category: "HTTP"
+  object: "Script"
+  severity: "low"
+  discrepancy: "A5"
+  anchor: "script-util-httprequest-timeout"
+  body: |
+    Not listed as a configuration property in the official docs (which only mention that `send()` times out after 30 seconds), but the property exists and is applied at runtime.
+
+- name: "Script.Util.HttpRequest.emptyContentHandling"
+  url: "/http/script-util-httprequest/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformContentSyndicationScriptUtilHttpRequest.html"
+  tagline: "numeric, not boolean"
+  part: "sfmc"
+  category: "HTTP"
+  object: "Script"
+  severity: "medium"
+  discrepancy: "A7"
+  anchor: "script-util-httprequest-emptycontenthandling"
+  body: |
+    The official docs type this as a **boolean**, but the runtime accepts only a **numeric** value (`0`/`1`/`2`) and rejects `true`/`false` — identical to `Script.Util.HttpGet`.
+
+- name: "Script.Util.HttpRequest response headers"
+  url: "/http/script-util-httprequest/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformContentSyndicationScriptUtilHttpRequest.html"
+  tagline: "not indexable"
+  part: "sfmc"
+  category: "HTTP"
+  object: "Script"
+  severity: "medium"
+  discrepancy: "A7"
+  anchor: "script-util-httprequest-response-headers"
+  body: |
+    The official example reads a single header via `headers["..."]`, but that access throws *"Use of CLR is not allowed"* at runtime. Individual values are only readable by parsing the `for..in` enumeration keys (shaped `"[Name, Value]"`), not by indexing.
+
+- name: "Script.Util.HttpGet.timeout"
+  url: "/http/script-util-httpget/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformContentSyndicationScriptUtilHttpGet.html"
+  tagline: "undocumented but works"
+  part: "sfmc"
+  category: "HTTP"
+  object: "Script"
+  severity: "low"
+  discrepancy: "A5"
+  anchor: "script-util-httpget-timeout"
+  body: |
+    Not listed in the official docs, but the property exists and is applied end-to-end at runtime (same behavior as on `Script.Util.HttpRequest`).
+
+- name: "&lt;AccountInstance&gt;.Update"
+  url: "/core-library/account/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_accountUpdate.html"
+  tagline: "returns \"Error\", does not throw on failure"
+  part: "sfmc"
+  category: "Core Library"
+  object: "AccountInstance"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "accountinstance-update"
+  body: |
+    The official docs state the call throws on failure, but at runtime `<AccountInstance>.Update(properties)` returns the plain string `"Error"` instead of throwing (the success return is the string `"OK"`).
+
+- name: "&lt;EmailInstance&gt;.Validate"
+  url: "/core-library/email/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_emailValidate.html"
+  tagline: "Task.ValidationStatus is a string, not a boolean"
+  part: "sfmc"
+  category: "Core Library"
+  object: "EmailInstance"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "emailinstance-validate"
+  body: |
+    The official docs (and this page's earlier return-value table) type `Task.ValidationStatus` as a **boolean**, but at runtime `<EmailInstance>.Validate()` returns it as a **string** (e.g. `"Fail"`). Compare against string values, not `true`/`false`. The whole classic `Email` object (Init/Add/Retrieve/Update/Remove/Validate/CheckContent) is runtime-proven to work on a live CloudPage — it is **deprecated** (legacy classic Email Studio type) but not broken.
+
+- name: "ContentAreaObj.Add"
+  url: "/core-library/contentareaobj/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_contentAreaAdd.html"
+  tagline: "returns an initialized instance, not \"OK\""
+  part: "sfmc"
+  category: "Core Library"
+  object: "ContentAreaObj"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "contentareaobj-add"
+  body: |
+    The official `Add` reference annotates the return as `@returns {Enum("OK")}`, but at runtime `ContentAreaObj.Add(properties)` returns an **initialized `ContentAreaObjInstance`** — an object exposing `Update`/`Remove`, identical in shape to `ContentAreaObj.Init`. This matches the doc's own H1 summary ("returns an initialized object") rather than the `@returns` annotation. Sibling methods `Retrieve` returns a host array (`[object Array]` with `.length`, but `instanceof Array` is `false`); `Update`/`Remove` return the string `"OK"`.
+
+- name: "Portfolio.Add / Update / Remove"
+  url: "/core-library/portfolio/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_portfolioAdd.html"
+  tagline: "return \"Error\", do not throw; Retrieve is not a JS array"
+  part: "sfmc"
+  category: "Core Library"
+  object: "Portfolio"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "portfolio-add-update-remove"
+  body: |
+    `Portfolio` is a legacy Classic file feature. The official docs state `Add`/`Update`/`Remove` return `"OK"` on success or throw on failure; at runtime, on the Content Builder-era test BU they return the plain string **`"Error"`** and do **not** throw. Their success path is **BLOCKED** for verification — no portfolio item could be created on the BU (every `Add` with a full payload returned `"Error"`). `Portfolio.Retrieve` returns an `object` with **no `.length`** property (not the documented `object[]` array) when the account has no portfolio items, so the array shape could not be confirmed. `Portfolio.Init` binds a key and returns a working instance object as documented. Treat any non-`"OK"` return as failure.
+
+- name: "&lt;QueryDefinitionInstance&gt;.Perform"
+  url: "/core-library/querydefinition/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_queryDefinitionPerform.html"
+  tagline: "returns a status string, not \"OK\""
+  part: "sfmc"
+  category: "Core Library"
+  object: "QueryDefinitionInstance"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "querydefinitioninstance-perform"
+  body: |
+    The official docs annotate `<QueryDefinitionInstance>.Perform(action)` as `@returns {Enum("OK")}`, but at runtime `Perform("start")` returns the string **`"QueryDefinition perform called successfully"`** (not `"OK"`). The call **queues the query run asynchronously** and returns immediately — the string only confirms the run was accepted, not that the query finished. Detect failure via a thrown error, not by string-matching `"OK"`. The full `QueryDefinition` lifecycle (`Add` → `Retrieve` → `Update` → `Perform` → `Remove`) is runtime-proven on a live CloudPage; `Add`/`Update`/`Remove` return `"OK"` and `Retrieve` returns a real JS array (`[object Array]` with `.length`) as documented.
+
+- name: "DeliveryProfile.Add"
+  url: "/core-library/deliveryprofile/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_deliveryProfileAdd.html"
+  tagline: "returns a CLR object, not \"OK\""
+  part: "sfmc"
+  category: "Core Library"
+  object: "DeliveryProfile"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "deliveryprofile-add"
+  body: |
+    The official docs annotate `DeliveryProfile.Add(properties)` as returning the string `"OK"`. At runtime it returns a **CLR object** (`typeof` is `clr`; it stringifies to `ExactTarget.Integration.WSDL.DeliveryProfile`). Reading any property off it throws *"Use of Common Language Runtime (CLR) is not allowed"*, so the object is opaque from SSJS — treat any non-throwing return as success. Sibling instance methods `<DeliveryProfileInstance>.Update(properties)` and `<DeliveryProfileInstance>.Remove()` do return the string `"OK"` as documented. `DeliveryProfile.Retrieve` does not exist (`undefined`).
+
+- name: "SenderProfile.Add"
+  url: "/core-library/senderprofile/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_senderProfileAdd.html"
+  tagline: "returns a CLR object, not \"OK\""
+  part: "sfmc"
+  category: "Core Library"
+  object: "SenderProfile"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "senderprofile-add"
+  body: |
+    The official docs annotate `SenderProfile.Add(properties)` as returning the string `"OK"`. Runtime-verified on a live CloudPage: it returns a **CLR object** (`typeof` is `clr`; it stringifies to `ExactTarget.Integration.WSDL.SenderProfile`), not `"OK"`. Reading any property off it throws *"Use of Common Language Runtime (CLR) is not allowed"*, so the object is opaque from SSJS — treat any non-throwing return as success. This mirrors `DeliveryProfile.Add`. Sibling instance methods `<SenderProfileInstance>.Update(properties)` and `<SenderProfileInstance>.Remove()` return the string `"OK"` as documented; `SenderProfile.Init` binds a key and returns a working instance.
+
+- name: "DataExtension.Retrieve"
+  url: "/core-library/dataextension/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_dataExtensionRetrieve.html"
+  tagline: "filter is optional at runtime"
+  part: "sfmc"
+  category: "Core Library"
+  object: "DataExtension"
+  severity: "medium"
+  discrepancy: "A3"
+  anchor: "dataextension-retrieve"
+  body: |
+    The official docs list the `filter` argument as **required**, but at runtime it is **optional**: calling `DataExtension.Retrieve()` with no arguments does not throw — it returns the full list of data extensions. A filter that matches nothing returns a **real empty array** (`Object.prototype.toString` reports `[object Array]`, `typeof .length` is `number`, `.length === 0`, zero enumerable keys) — not `null` and not `undefined`. Note the SFMC engine quirk that an empty array is **falsy** here, so guard on `.length` (`results.length > 0`) rather than truthiness of the array itself.
+
+- name: "&lt;DataExtensionInstance&gt;.Rows.Add / Update"
+  url: "/core-library/dataextension-rows/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_dataExtensionRowsAdd.html"
+  tagline: "return a row count, not \"OK\""
+  part: "sfmc"
+  category: "Core Library"
+  object: "DataExtensionInstance"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "dataextensioninstance-rows-add-update"
+  body: |
+    The official docs annotate `<DataExtensionInstance>.Rows.Add(rowData)` and `<DataExtensionInstance>.Rows.Update(rowData, whereFieldNames, whereValues)` as returning the string `"OK"`. At runtime both return a **number** — the count of rows added / updated. `Update` returns **`0` and does not throw** when the WHERE clause matches no rows (the docs imply it throws). `Add` also accepts a **single row object** in addition to an array of objects.
+
+- name: "&lt;DataExtensionInstance&gt;.Rows.Retrieve / Lookup"
+  url: "/core-library/dataextension-rows/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_dataExtensionRowsRetrieve.html"
+  tagline: "string vs typed values, empty-array vs null, and Retrieve works on CloudPages"
+  part: "sfmc"
+  category: "Core Library"
+  object: "DataExtensionInstance"
+  severity: "high"
+  discrepancy: "A1"
+  anchor: "dataextensioninstance-rows-retrieve-lookup"
+  body: |
+    Runtime-verified on a live CloudPage:
+
+    1. `<DataExtensionInstance>.Rows.Retrieve()` **without a filter DOES work on CloudPages** and returns all rows — the widely-repeated "returns empty on CloudPages" bug could not be reproduced.
+    2. `Retrieve` returns **every field value as a string** (even Number/Boolean/Date columns); `Lookup` returns **typed values**.
+    3. On no match, `Retrieve` returns an **empty array** (`.length === 0`) while `Lookup` returns **`null`**.
+    4. Both `Retrieve` and `Lookup` results are **host arrays**: `Object.prototype.toString` reports `[object Array]` and `.length` / index access work, but `instanceof Array` is `false`.
+
+- name: "&lt;DataExtensionInstance&gt;.Fields.Retrieve"
+  url: "/core-library/dataextension-fields/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_dataExtensionFieldsRetrieve.html"
+  tagline: "field objects include an undocumented ObjectID"
+  part: "sfmc"
+  category: "Core Library"
+  object: "DataExtensionInstance"
+  severity: "low"
+  discrepancy: "A5"
+  anchor: "dataextensioninstance-fields-retrieve"
+  body: |
+    The official docs example response lists only `Name`, `FieldType`, `IsPrimaryKey`, `MaxLength`, `Ordinal`, and `DefaultValue`. At runtime each returned field object also carries an undocumented **`ObjectID`** (`string`) property. The collection is a genuine JS `Array` (`[object Array]`). Sibling methods `<DataExtensionInstance>.Fields.Add` and `<DataExtensionInstance>.Fields.UpdateSendableField` return the string `"OK"` on success and the string `"Error"` on failure — they do **not** throw, contrary to the docs' "throws on failure" wording.
+
+- name: "FilterDefinition.Add / Update / Remove"
+  url: "/core-library/filterdefinition/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_filterDefinitionAdd.html"
+  tagline: "return \"Error\", do not throw on failure"
+  part: "sfmc"
+  category: "Core Library"
+  object: "FilterDefinition"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "filterdefinition-add-update-remove"
+  body: |
+    The official docs state these return `"OK"` on success or throw on failure. At runtime, on failure they return the plain string **`"Error"`** and do **not** throw. Their success path is **BLOCKED** for verification — a valid `FilterDefinition` could not be created on the test BU (creating one requires an audience/DataSource configuration the test account could not satisfy; every `Add` attempt with SubscriberList and DataExtension DataSources returned `"Error"`, and a direct WSProxy `createItem("FilterDefinition")` throws a SOAP inner exception *"Invalid property name: Type"* on `DataSource`). Treat a non-`"OK"` return as failure rather than relying on a thrown exception.
+
+- name: "&lt;SendInstance&gt;.Tracking click & interval retrieval"
+  url: "/core-library/send/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_sendTrackingClicksRetrieve.html"
+  tagline: "Clicks.Retrieve / TotalByInterval.Retrieve, not ClickRetrieve / TotalByIntervalRetrieve"
+  part: "sfmc"
+  category: "Core Library"
+  object: "SendInstance"
+  severity: "medium"
+  discrepancy: "A4"
+  anchor: "sendinstance-tracking-click-interval-retrieval"
+  body: |
+    The official docs document per-send tracking as `<SendInstance>.Tracking.ClickRetrieve(filter)` and `<SendInstance>.Tracking.TotalByIntervalRetrieve(type, startDate, endDate, groupBy)`. At runtime both of those names are `undefined`. The instance `Tracking` property is an object exposing two **sub-objects** — `Clicks` and `TotalByInterval` — each with a `Retrieve` method. The working calls are `<SendInstance>.Tracking.Clicks.Retrieve(filter)` and `<SendInstance>.Tracking.TotalByInterval.Retrieve(type, startDate, endDate, groupBy)`. This mirrors the `TriggeredSend.Tracking.Clicks` / `TriggeredSend.Tracking.TotalByInterval` shape. The static `Send.Tracking.Retrieve(filter)` (no `Send.Init` required) is unaffected.
+
+- name: "&lt;SendInstance&gt;.CancelSend"
+  url: "/core-library/send/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_sendCancelSend.html"
+  tagline: "returns \"status\", not \"OK\""
+  part: "sfmc"
+  category: "Core Library"
+  object: "SendInstance"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "sendinstance-cancelsend"
+  body: |
+    The official docs describe `<SendInstance>.CancelSend()` as returning `"OK"` on success, but at runtime it returns the literal string **`"status"`** (runtime-verified on a live CloudPage — the send was cancelled successfully). Do not compare its return value against `"OK"`; treat any non-throwing return as success.
+
+- name: "Subscriber.Upsert / Subscriber.Statistics"
+  url: "/core-library/subscriber/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_subscriberUpsert.html"
+  tagline: "instance methods, not static"
+  part: "sfmc"
+  category: "Core Library"
+  object: "Subscriber"
+  severity: "medium"
+  discrepancy: "A4"
+  anchor: "subscriber-upsert-subscriber-statistics"
+  body: |
+    The official docs present `Subscriber.Upsert(properties)` and `Subscriber.Statistics(subscriberKey)` as **static** members of `Subscriber`. At runtime the static names are `undefined` (`typeof Subscriber.Upsert === "undefined"`, `typeof Subscriber.Statistics === "undefined"`). Both are actually **instance** methods on the object returned by `Subscriber.Init(subscriberKey)`: `<SubscriberInstance>.Upsert(properties)` and `<SubscriberInstance>.Statistics()` (the subscriber key comes from `Init`, so `Statistics` takes no argument).
+
+- name: "DateTime.SystemDateToLocalDate / LocalDateToSystemDate"
+  url: "/core-library/datetime/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_dateTimeSystemDateToLocalDate.html"
+  tagline: "return CLR DateTime objects, not strings"
+  part: "sfmc"
+  category: "Core Library"
+  object: "DateTime"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "datetime-systemdatetolocaldate-localdatetosystemdate"
+  body: |
+    The official docs type the Core-library `DateTime` conversion methods as returning a `string`, but at runtime `DateTime.SystemDateToLocalDate(...)` and `DateTime.LocalDateToSystemDate(...)` return **CLR `DateTime` objects** (`typeof "object"`) that coerce transparently to a string via `String(value)`, `"" + value`, or `Write(value)`. Separately, `DateTime.TimeZone.Retrieve()` rows are CLR objects that `Stringify()` **cannot** serialize — enumerate their fields with `for..in` instead.
+
+- name: "&lt;WSProxyInstance&gt;.describe"
+  url: "/wsproxy/describe/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_WSProxy_describe.html"
+  tagline: "Results elements are the ObjectDefinition itself, not a nested wrapper"
+  part: "sfmc"
+  category: "WSProxy"
+  object: "WSProxyInstance"
+  severity: "high"
+  discrepancy: "A4"
+  anchor: "wsproxyinstance-describe"
+  body: |
+    The official docs show `describe` returning `{ RequestID, Results: [{ ObjectDefinition: { Properties: [...] } }] }` — one `ObjectDefinition` wrapper per requested type. At runtime each element of `Results` **is** the object definition directly: `result.Results[0]` already carries `ObjectType`, `Name`, `Properties`, `IsCreatable`, etc., and there is **no** `Results[0].ObjectDefinition` key (it is `undefined`). Read fields as `result.Results[0].Properties`, not `result.Results[0].ObjectDefinition.Properties`. `objectType` accepts a single string **or** an array of strings; the returned `Results` array element order matches the input order. Describing an unknown object type does **not** throw — it returns `{ RequestID, Results: [null] }`, so guard against a `null` element. The return object exposes `RequestID` but no `Status` field.
+
+- name: "&lt;WSProxyInstance&gt;.performBatch"
+  url: "/wsproxy/performbatch/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_WSProxy_perform.html"
+  tagline: "action verb is case-insensitive; each Results entry carries a Task sub-object"
+  part: "sfmc"
+  category: "WSProxy"
+  object: "WSProxyInstance"
+  severity: "low"
+  discrepancy: "A5"
+  anchor: "wsproxyinstance-performbatch"
+  body: |
+    The official docs list the `action` argument as `Enum('Start')` without noting case behaviour. Runtime-verified against a freshly-created active `QueryDefinition`: both `"Start"` and lowercase `"start"` return `Status` `"OK"` with `Results[0].StatusMessage` `"QueryDefinition perform called successfully"` — the perform verb is **case-insensitive**. The return object is `{ Status (string), StatusMessage (string, empty on success), RequestID (string), Results (Array, one entry per input item) }`, and each `Results` entry exposes not just `StatusCode`/`StatusMessage`/`OrdinalID`/`ErrorCode` but also an `Object` wrapper (the acted-on API object) and a `Task` sub-object carrying `StatusCode`, `StatusMessage`, and `InteractionObjectID` — per-item detail the official docs do not describe.
+
+- name: "&lt;WSProxyInstance&gt;.performItem"
+  url: "/wsproxy/performitem/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_WSProxy_perform.html"
+  tagline: "action verb is case-insensitive; the single Results entry carries a Task sub-object"
+  part: "sfmc"
+  category: "WSProxy"
+  object: "WSProxyInstance"
+  severity: "low"
+  discrepancy: "A5"
+  anchor: "wsproxyinstance-performitem"
+  body: |
+    The official docs list the `action` argument as `Enum('Start')` without noting case behaviour. Runtime-verified against a freshly-created active `QueryDefinition`: both `"Start"` and lowercase `"start"` return `Status` `"OK"` with `Results[0].StatusMessage` `"QueryDefinition perform called successfully"` — the perform verb is **case-insensitive**, so this page's earlier "lowercase `\"start\"` fails" claim was wrong. The return object is `{ Status (string), StatusMessage (string, empty on success), RequestID (string), Results (Array with a single entry for the acted-on item) }`, and that `Results` entry exposes not just `StatusCode`/`StatusMessage`/`OrdinalID`/`ErrorCode` but also an `Object` wrapper (the acted-on API object) and a `Task` sub-object carrying `StatusCode`, `StatusMessage`, and `InteractionObjectID` — per-item detail the official docs do not describe. This mirrors the sibling [`performBatch`](/wsproxy/performbatch/).
+
+- name: "&lt;WSProxyInstance&gt;.setClientId"
+  url: "/wsproxy/setclientid/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_WSProxy_impersonate.html"
+  tagline: "returns null, not void"
+  part: "sfmc"
+  category: "WSProxy"
+  object: "WSProxyInstance"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "wsproxyinstance-setclientid"
+  body: |
+    The official docs type the return as `void`, but at runtime `setClientId(options)` returns a genuine JS `null` (`typeof "object"`, strict `=== null` is `true`), not `undefined` — matching its sibling `resetClientIds`. The impersonation itself is runtime-verified on a live CloudPage: after `setClientId({ ID: <otherBU> })` the very next `retrieve` runs in the target ClientId's context (a request for a BU the caller cannot access is rejected with *"MemberID … does not have access to ClientID …"*, proving the context switched), and after `resetClientIds()` the baseline BU context is restored. The single argument is an **object** (`{ ID, UserID }`) — this page's earlier Parameters table wrongly typed it as a `number`.
+
+- name: "&lt;WSProxyInstance&gt;.resetClientIds"
+  url: "/wsproxy/resetclientids/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_WSProxy_impersonate_clear.html"
+  tagline: "returns null, not void"
+  part: "sfmc"
+  category: "WSProxy"
+  object: "WSProxyInstance"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "wsproxyinstance-resetclientids"
+  body: |
+    The official docs type the return as `void`, but at runtime `resetClientIds()` returns a genuine JS `null` (`typeof "object"`, strict `=== null` is `true`), not `undefined`. The method itself works as documented: runtime-verified on a live CloudPage, a retrieve after `setClientId({ ID: <otherBU> })` targets the impersonated BU, and after `resetClientIds()` the very next retrieve returns to the script's own default BU context (identical result set to the pre-impersonation baseline).
+- name: "Date.prototype.getMilliseconds()"
+  url: "/ecmascript-builtins/date-methods/#getmilliseconds"
+  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getMilliseconds"
+  tagline: "off-by-one for some values"
+  part: "ecmascript"
+  category: "ECMAScript Builtins"
+  object: "Date"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "dateprototypegetmilliseconds-off-by-one-for-some-values"
+  body: |
+    MDN specifies `getMilliseconds()` returns the exact milliseconds (0–999) of the date. In the SFMC Jint engine some values come back **one less than they were set**: a date constructed with 123 ms reports **122**; 555 → 554, 666 → 665, 777 → 776 (runtime-verified). Other values (0, 111, 888, 999) are exact. Never compare sub-second precision — round or avoid milliseconds.
+- name: "Date.now()"
+  url: "/ecmascript-builtins/date-methods/#now"
+  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/now"
+  tagline: "returns a Date object, not a number"
+  part: "ecmascript"
+  category: "ECMAScript Builtins"
+  object: "Date"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "datenow-returns-a-date-object-not-a-number"
+  body: |
+    MDN specifies `Date.now()` as a **static method that returns a Number** (milliseconds since the epoch). In the SFMC Jint engine it instead returns a **`Date` object** (`typeof Date.now()` is `"object"`; it stringifies to a date-time string). Numeric coercion (`Date.now() + 0` or `Date.now() * 1`) recovers the epoch milliseconds, but any code that treats the return value as a number without coercion will break. Prefer `new Date().getTime()`, which returns a clean `number`.
+- name: "Date.parse()"
+  url: "/ecmascript-builtins/date-methods/#parse"
+  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/parse"
+  tagline: "returns 0 (never NaN) for invalid strings, and parses date-only strings as local"
+  part: "ecmascript"
+  category: "ECMAScript Builtins"
+  object: "Date"
+  severity: "high"
+  discrepancy: "A1"
+  anchor: "dateparse-returns-0-never-nan-for-invalid-strings-and-parses-date-only-strings-as-local"
+  body: |
+    MDN specifies that `Date.parse()` returns **`NaN`** when the string cannot be parsed, and that **date-only** ISO forms (`"2026-06-18"`) are interpreted as **UTC**. In the SFMC engine both differ: an unparseable or invalid string (`"garbage"`, `""`, `"2021-13-45"`) returns **`0`** — the Unix epoch — so `isNaN()` cannot detect a bad date and invalid input silently becomes 1970-01-01; and a date-only string is parsed as **local** midnight (`getUTCHours()` = 6 at GMT-06:00), not UTC. Validate input explicitly; do not rely on `NaN` for error detection.
+- name: "Date.UTC()"
+  url: "/ecmascript-builtins/date-methods/#utc"
+  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/UTC"
+  tagline: "year-only form returns a nonsense value, not NaN"
+  part: "ecmascript"
+  category: "ECMAScript Builtins"
+  object: "Date"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "dateutc-year-only-form-returns-a-nonsense-value-not-nan"
+  body: |
+    With year + month (and further components) `Date.UTC()` returns the correct UTC timestamp. But the **year-only** form `Date.UTC(2026)` returns a nonsense small number (observed **-21597974**) instead of a valid timestamp — and does not return `NaN`. Always pass at least year and month, e.g. `Date.UTC(2026, 0, 1)`.
+- name: "Function.prototype.toString()"
+  url: "/ecmascript-builtins/function-methods/#tostring"
+  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/toString"
+  tagline: "returns \"[object Function]\", not source"
+  part: "ecmascript"
+  category: "ECMAScript Builtins"
+  object: "Function"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "functionprototypetostring-returns-object-function-not-source"
+  body: |
+    MDN specifies that `fn.toString()` returns a string containing the **function source code**. In the SFMC Jint engine it instead returns the generic **`[object Function]`** object tag (runtime-verified). `String(fn)` and `("" + fn)` yield `"function"` rather than the source. Do not rely on reading a function's source at runtime for introspection or hashing.
+- name: "Function.prototype.constructor identity is broken"
+  url: "/ecmascript-builtins/function-methods/#constructor"
+  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/constructor"
+  tagline: ""
+  part: "ecmascript"
+  category: "ECMAScript Builtins"
+  object: "Function"
+  severity: "medium"
+  discrepancy: "B3"
+  anchor: "functionprototypeconstructor-identity-is-broken"
+  body: |
+    MDN specifies that a function's `constructor` is the `Function` object, so `fn.constructor === Function` is `true`. In the SFMC engine `fn instanceof Function` is `true` (as expected) but `fn.constructor === Function` is **`false`** — the constructor-identity link is broken. Test "is this a function" with `instanceof Function` (or `typeof fn === "function"`), never with a `fn.constructor === Function` comparison.
+- name: "Number constants"
+  url: "/ecmascript-builtins/number-methods/#constants"
+  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number"
+  tagline: "every Number static/constant is undefined"
+  part: "ecmascript"
+  category: "ECMAScript Builtins"
+  object: "Number"
+  severity: "medium"
+  discrepancy: "B2"
+  anchor: "number-constants-undefined"
+  body: |
+    MDN specifies the classic ES3 `Number` constants (`Number.MAX_VALUE`, `Number.MIN_VALUE`, `Number.NaN`, `Number.POSITIVE_INFINITY`, `Number.NEGATIVE_INFINITY`) as always-present static properties. In the SFMC Jint engine **all of them are `undefined`** (runtime-verified), along with the ES6 statics (`Number.isInteger`, `Number.isNaN`, `Number.MAX_SAFE_INTEGER`, `Number.EPSILON`, …). Use the global `NaN`/`Infinity` identifiers or numeric literals instead. Note the global `Infinity` is itself unreliable — see Known Bugs.
+- name: "Number.prototype.toString(radix)"
+  url: "/ecmascript-builtins/number-methods/#tostring"
+  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toString"
+  tagline: "only 2, 8, 10, 16 supported"
+  part: "ecmascript"
+  category: "ECMAScript Builtins"
+  object: "Number"
+  severity: "low"
+  discrepancy: "B1"
+  anchor: "numberprototypetostring-radix"
+  body: |
+    MDN specifies `Number.prototype.toString(radix)` accepts any radix from **2 to 36**. In the SFMC Jint engine only radix **2, 8, 10, and 16** work — every other base throws `"Invalid Base."` (runtime-verified). Fractional values are also truncated to their integer part before non-decimal conversion (`(3.5).toString(2)` → `"100"`, not `"11.1"`). Restrict `toString` radix conversions to those four bases.
+- name: "Number.prototype.toExponential()"
+  url: "/ecmascript-builtins/number-methods/#toexponential"
+  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toExponential"
+  tagline: "no-arg form pads trailing zeros"
+  part: "ecmascript"
+  category: "ECMAScript Builtins"
+  object: "Number"
+  severity: "low"
+  discrepancy: "B1"
+  anchor: "numberprototypetoexponential-noarg"
+  body: |
+    MDN specifies that `toExponential()` with no argument uses the minimal number of digits needed to represent the value. In the SFMC Jint engine the no-arg form instead pads the significand with trailing zeros (`(3.14159).toExponential()` → `"3.1415900000000000e+0"`). Always pass an explicit `fractionDigits` argument for predictable output.
+- name: "Object.prototype.isPrototypeOf"
+  url: "/ecmascript-builtins/object-methods/#isprototypeof"
+  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/isPrototypeOf"
+  tagline: "exists but hangs the engine"
+  part: "ecmascript"
+  category: "ECMAScript Builtins"
+  object: "Object"
+  severity: "high"
+  discrepancy: "B3"
+  anchor: "objectprototypeisprototypeof-hangs"
+  body: |
+    MDN specifies `isPrototypeOf` as a normal `Object.prototype` method that returns a boolean. In the SFMC Jint engine the method is present (`typeof` is `"function"`) but **calling it hangs the engine** — the request times out and no output is produced (runtime-verified). Never call it; compare `obj.constructor === Ctor` instead. See also [Known Bugs](/engine-limitations/known-bugs/#objectprototypeisprototypeof-hangs).
+- name: "Object.prototype.propertyIsEnumerable"
+  url: "/ecmascript-builtins/object-methods/#propertyisenumerable"
+  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/propertyIsEnumerable"
+  tagline: "always returns false"
+  part: "ecmascript"
+  category: "ECMAScript Builtins"
+  object: "Object"
+  severity: "medium"
+  discrepancy: "B3"
+  anchor: "objectprototypepropertyisenumerable-broken"
+  body: |
+    MDN specifies `propertyIsEnumerable(prop)` returns `true` for an own enumerable property. In the SFMC Jint engine it is present but **broken — it returns `false` even for own enumerable properties** (runtime-verified). Use `hasOwnProperty` for own-property checks instead.
+- name: "Object ES5/ES6 statics"
+  url: "/ecmascript-builtins/object-methods/"
+  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object"
+  tagline: "most are missing"
+  part: "ecmascript"
+  category: "ECMAScript Builtins"
+  object: "Object"
+  severity: "medium"
+  discrepancy: "B2"
+  anchor: "object-statics-missing"
+  body: |
+    MDN documents a large set of `Object` statics. In the SFMC Jint engine only `Object.defineProperty` and `Object.getPrototypeOf` are present and working — **`keys`, `values`, `entries`, `assign`, `create`, `freeze`, `isFrozen`, `defineProperties`, `getOwnPropertyNames`, `getOwnPropertyDescriptor`, `seal`, `isSealed`, `preventExtensions`, and `isExtensible` are all `undefined`** (runtime-verified). Use a `for...in` loop with `hasOwnProperty` for key/value enumeration; there is no runtime immutability or extensibility control. See [Object Methods](/ecmascript-builtins/object-methods/) for per-member workarounds.
+- name: "RegExp instanceof is always false"
+  url: "/ecmascript-builtins/regular-expressions/#instanceof"
+  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp"
+  tagline: "use .constructor === RegExp"
+  part: "ecmascript"
+  category: "ECMAScript Builtins"
+  object: "RegExp"
+  severity: "medium"
+  discrepancy: "B3"
+  anchor: "regexp-instanceof-broken"
+  body: |
+    MDN specifies that `re instanceof RegExp` is `true` for any regular expression, whether created as a literal (`/…/`) or with `new RegExp(…)`. In the SFMC Jint engine `instanceof RegExp` is **always `false`** — even for `new RegExp("\\d+")` (runtime-verified). This is the mirror image of the `Function` quirk above: for `RegExp`, `re.constructor === RegExp` correctly returns **`true`**, so use the constructor comparison (not `instanceof`) to detect a RegExp.
+- name: "RegExp.exec"
+  url: "/ecmascript-builtins/regular-expressions/#exec"
+  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/exec"
+  tagline: "capture groups undefined, result.length always 3, index/input work"
+  part: "ecmascript"
+  category: "ECMAScript Builtins"
+  object: "RegExp"
+  severity: "high"
+  discrepancy: "B3"
+  anchor: "regexp-exec-capture-groups"
+  body: |
+    MDN specifies that `exec()` returns an array whose element `[0]` is the full match and `[1]…[n]` are the captured groups, with `length` reflecting the group count and `index`/`input` properties set. In the SFMC Jint engine `result[0]`, `result.index`, and `result.input` are correct, but **capture groups `result[1]+` are all `undefined`** and **`result.length` is always `3`** regardless of how many groups the pattern has (runtime-verified). Read capture groups by matching a non-global pattern with `String.match` instead.
+- name: "RegExp lastIndex"
+  url: "/ecmascript-builtins/regular-expressions/#lastindex"
+  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/lastIndex"
+  tagline: "never advances and manual assignment is ignored"
+  part: "ecmascript"
+  category: "ECMAScript Builtins"
+  object: "RegExp"
+  severity: "high"
+  discrepancy: "B3"
+  anchor: "regexp-lastindex-inert"
+  body: |
+    MDN specifies that with the `g` (or `y`) flag, `exec()` and `test()` update `lastIndex` so successive calls advance through the string, and that assigning `lastIndex` repositions the next search. In the SFMC Jint engine `lastIndex` **stays `0`** after `exec()`/`test()` with the `g` flag, and **manually setting `lastIndex` is ignored** — the next `exec()` still matches from the start (runtime-verified). The classic `while ((m = re.exec(str)) !== null)` loop never terminates. Use `String.match(/…/g)` to collect all matches in one call.
+- name: "RegExp.ignoreCase / multiline"
+  url: "/ecmascript-builtins/regular-expressions/#ignorecase"
+  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/ignoreCase"
+  tagline: "undefined"
+  part: "ecmascript"
+  category: "ECMAScript Builtins"
+  object: "RegExp"
+  severity: "medium"
+  discrepancy: "B2"
+  anchor: "regexp-ignorecase-multiline-undefined"
+  body: |
+    MDN specifies `RegExp.prototype.ignoreCase` and `RegExp.prototype.multiline` as boolean accessors reflecting the `i` and `m` flags. In the SFMC Jint engine both are **`undefined`** on every RegExp (runtime-verified), even when the corresponding flag is set — the flags themselves still work at match time (`/x/i` is case-insensitive, `/^…/m` matches line starts), you just cannot read them back. `source`, `global`, and `lastIndex` are the only readable accessors. Track the `i`/`m` flags yourself if you need them.
+- name: "String.search"
+  url: "/ecmascript-builtins/string-methods/#search"
+  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/search"
+  tagline: "unreliable index, no-match returns 0 not -1"
+  part: "ecmascript"
+  category: "ECMAScript Builtins"
+  object: "String"
+  severity: "high"
+  discrepancy: "B3"
+  anchor: "string-search-unreliable"
+  body: |
+    MDN specifies `String.prototype.search(regexp)` returns the **index of the first match, or `-1`** when there is no match. In the SFMC Jint engine it is unreliable: a **no-match returns `0`** instead of `-1`, and some real matches return the **wrong index** (a match at position 9 was observed returning `10`; a no-match returns `0` which is indistinguishable from a match at the start) — runtime-verified. Do not use `search` to detect or locate a match. Use `RegExp.test` to detect a match, or `String.match` (whose `[0]` is correct) to read it, or apply the search polyfill.
+- name: "String.charAt"
+  url: "/ecmascript-builtins/string-methods/#charat"
+  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/charAt"
+  tagline: "out-of-range index returns the last char, not \"\""
+  part: "ecmascript"
+  category: "ECMAScript Builtins"
+  object: "String"
+  severity: "high"
+  discrepancy: "B3"
+  anchor: "string-charat-out-of-range"
+  body: |
+    MDN specifies `String.prototype.charAt(index)` returns the **empty string `""`** when `index` is negative or `>= str.length`. In the SFMC Jint engine an out-of-range index instead returns the **last character** of the string — `"Hello".charAt(99)` and `"Hello".charAt(5)` both return `"o"` (runtime-verified). Bracket access for an out-of-range index behaves differently again: `"Hello"[99]` **throws** `"Index was outside the bounds of the array"` rather than returning `undefined`. Guard the index against `.length` before reading a character.
