@@ -28,7 +28,7 @@ The global `Attribute` object provides access to subscriber attribute (profile a
 
 Returns the value of the specified subscriber attribute or sendable data extension field for the current recipient. Preferred over `Platform.Recipient.GetAttributeValue()` — the two are equivalent.
 
-`Attribute.GetValue(name)` is available in CloudPages: after the Core library is loaded, the `Attribute` object exists and `GetValue` executes and returns a string. When there is no recipient/attribute context (for example an anonymously published CloudPage GET), it returns an **empty string** rather than throwing. In email, triggered send, and personalized (recipient-aware) contexts it returns the actual attribute value.
+`Attribute.GetValue(name)` is available in CloudPages: after the Core library is loaded, the `Attribute` object exists and `GetValue` executes and returns a string. When there is no recipient/attribute context (for example a published CloudPage GET with no subscriber), it returns an **empty string** rather than throwing. In email, triggered send, and personalized (recipient-aware) contexts it returns the actual attribute value.
 
 In non-recipient CloudPage scenarios where you need subscriber data, read it from a Data Extension via `Platform.Function.Lookup()` / `Platform.Function.LookupRows()`, or use [`Platform.Recipient.GetAttributeValue`](/platform-objects/platform-recipient/) (equivalent to `Attribute.GetValue`).
 

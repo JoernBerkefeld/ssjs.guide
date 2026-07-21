@@ -57,6 +57,8 @@ var header = Platform.Request.GetRequestHeader("X-Token");  // request header
 var cookie = Platform.Request.GetCookieValue("sessionId");  // cookie value
 ```
 
+Not to be confused with the Core Library [`Request`](/core-library/request/) object — a **distinct** object (not an alias) with a smaller, method-only member set that **requires** `Platform.Load("core", ...)`. `Platform.Request` works without `Platform.Load`.
+
 ---
 
 ## Platform.Response

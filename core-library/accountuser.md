@@ -61,7 +61,7 @@ var acctUser = AccountUser.Init("myAccountUser", 123456789);
 
 {% include method-status.html status="in-progress" %}
 
-{% include callout.html type="info" content="Verification blocked: the Core AccountUser write API requires an authenticated employee context. An anonymous CloudPage yields `accountEmployeeID invalid`, so this destructive method could not be runtime-proven in the test environment." %}
+{% include callout.html type="info" content="Verification blocked: the Core AccountUser write API requires an authenticated employee context. A CloudPage without that employee session yields `accountEmployeeID invalid`, so this destructive method could not be runtime-proven in the test environment." %}
 
 Creates a new Marketing Cloud user with the specified properties.
 
@@ -138,7 +138,7 @@ var accountUser = AccountUser.Retrieve({
 
 {% include method-status.html status="in-progress" %}
 
-{% include callout.html type="info" content="Verification blocked: the Core AccountUser write API requires an authenticated employee context. An anonymous CloudPage yields `accountEmployeeID invalid`, so this destructive method could not be runtime-proven in the test environment." %}
+{% include callout.html type="info" content="Verification blocked: the Core AccountUser write API requires an authenticated employee context. A CloudPage without that employee session yields `accountEmployeeID invalid`, so this destructive method could not be runtime-proven in the test environment." %}
 
 Updates the initialized user's profile with the given properties.
 
@@ -172,7 +172,7 @@ var status = acctUser.Update({ Password: "XXXXX" });
 
 {% include method-status.html status="in-progress" %}
 
-{% include callout.html type="info" content="Verification blocked: the Core AccountUser write API requires an authenticated employee context. An anonymous CloudPage yields `accountEmployeeID invalid`, so this destructive method could not be runtime-proven in the test environment." %}
+{% include callout.html type="info" content="Verification blocked: the Core AccountUser write API requires an authenticated employee context. A CloudPage without that employee session yields `accountEmployeeID invalid`, so this destructive method could not be runtime-proven in the test environment." %}
 
 Activates the initialized user account.
 
@@ -200,7 +200,7 @@ var status = acctUser.Activate();
 
 {% include method-status.html status="in-progress" %}
 
-{% include callout.html type="info" content="Verification blocked: the Core AccountUser write API requires an authenticated employee context. An anonymous CloudPage yields `accountEmployeeID invalid`, so this destructive method could not be runtime-proven in the test environment." %}
+{% include callout.html type="info" content="Verification blocked: the Core AccountUser write API requires an authenticated employee context. A CloudPage without that employee session yields `accountEmployeeID invalid`, so this destructive method could not be runtime-proven in the test environment." %}
 
 Deactivates the initialized user. Account users **cannot** be deleted via SSJS; deactivation is the supported "offboarding" path.
 

@@ -174,6 +174,5 @@ var MAX_SAFE_INTEGER = 9007199254740991;
 <h4>See Also</h4>
 <ul>
   <li><a href="/ecmascript-builtins/math/">Math Object</a></li>
-  <li><a href="/platform-functions/format/">Platform.Function.Format</a></li>
 </ul>
 </div>

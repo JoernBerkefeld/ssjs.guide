@@ -14,7 +14,7 @@ availability:
   triggered_send: true
 requires_core_load: true
 verification: verified
-differs_from_docs: "Runtime-verified: the bare-name Base64Decode works after Platform.Load(\"core\") but only in the same scope the load ran in — it is undefined inside nested helper-function bodies. The official docs do not mention this scope rule. Platform.Function.Base64Decode(encodedString[, charset]) works in any scope and adds charset control."
+differs_from_docs: false
 syntax: "Base64Decode(encodedString)"
 return_type: string
 min_args: 1

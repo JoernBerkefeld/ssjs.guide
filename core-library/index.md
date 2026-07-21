@@ -46,18 +46,24 @@ Platform.Load("core", "1.1.5");
 
 ## Bare-name Core functions and objects {#bare-name-globals}
 
-`Platform.Load("core", ...)` also injects a set of **bare-name** functions and objects (historically documented as "global functions"). They exist **only after** the load, and **only in the same scope** the load ran in — inside nested helper-function bodies (or `eval()`) they are `undefined`. Where a scope-independent `Platform.*` sibling exists, prefer it inside helpers.
+`Platform.Load("core", ...)` also injects a set of **bare-name** functions and objects (historically documented as "global functions"). They exist **only after** the load has run — always call `Platform.Load("core", ...)` before you use them. Once loaded, they are visible in the scope the load ran in **and** inside nested helper-function bodies that close over that scope, so calling them from a helper works fine (a plain function declaration closes over the load scope by normal lexical closure). Where a scope-independent `Platform.*` sibling exists, you may still prefer it for clarity, but the bare names are not `undefined` inside helpers.
 
 | Function / Object | Description |
 |--------|-------------|
 | [`Attribute`](/core-library/attribute/) | Subscriber attribute values (`Attribute.GetValue`) |
 | [`Base64Decode(encodedString)`](/core-library/base64decode/) | Decode Base64 to plain text |
 | [`Base64Encode(string)`](/core-library/base64encode/) | Encode plain text to Base64 |
+| [`BeginImpressionRegion(name)`](/core-library/beginimpressionregion/) | Start an impression region (unusable from SSJS — AMPscript-only) |
 | [`ContentArea(id, …)`](/core-library/contentarea/) | Classic Content Area by ID (**deprecated**) |
 | [`ContentAreaByName(name, …)`](/core-library/contentareabyname/) | Classic Content Area by name (**deprecated**) |
+| [`EndImpressionRegion([closeAll])`](/core-library/endimpressionregion/) | End an impression region (returns `undefined`) |
 | [`Format(value, formatCode)`](/core-library/format/) | Format numbers and dates |
+| [`GUID()`](/core-library/guid/) | Generate a lowercase UUID v4 string |
+| [`IsEmailAddress(value)`](/core-library/isemailaddress/) | Validate email address format |
+| [`IsPhoneNumber(value)`](/core-library/isphonenumber/) | Validate phone number format |
+| [`Now([useContextTime])`](/core-library/now/) | Current server date/time as a `Date` object |
 | [`Redirect(url, movedPermanently)`](/core-library/redirect/) | Redirect the browser (CloudPages) |
-| [`Request`](/core-library/request/) | Read incoming request values (`Request.URL()`, …) |
+| [`Request`](/core-library/request/) | Read incoming request values (`Request.URL()`, …) — a distinct object from [`Platform.Request`](/platform-objects/platform-request/), not an alias |
 | [`Stringify(value)`](/core-library/stringify/) | Serialize a value to JSON |
 | [`Variable`](/core-library/variable/) | AMPscript variable bridge (`Variable.GetValue` / `SetValue`) |
 | [`Write(content)`](/core-library/write/) | Output a string to the rendered page |

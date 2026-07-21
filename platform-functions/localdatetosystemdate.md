@@ -27,7 +27,7 @@ Accepted formats include ISO 8601 (`2025-08-05T12:34:56.789Z`), US notation (`8/
 
 ## Return value
 
-Returns a **`Date` object** (runtime `typeof` is `"object"`, `Object.prototype.toString` reports `[object Date]`, and `getFullYear()` / `getHours()` / `getTime()` all work). It is not a plain string — it only serializes to an ISO-like string such as `2025-08-05T04:00:00.000` when written or passed through `Stringify()`. The value is expressed in Marketing Cloud system time (CST) with daylight saving removed, so the same wall-clock local input yields a system hour one hour earlier in summer than in winter.
+Returns a **`Date` object** (runtime `typeof` is `"object"`, `Object.prototype.toString` reports `[object Date]`, `.constructor === Date`, and `getFullYear()` / `getHours()` / `getTime()` all work — identical to `new Date()`). The one anomaly is that `instanceof Date` returns `false`, due to the engine-wide `instanceof`-on-builtins bug — test with `.constructor === Date`, not `instanceof`. It is not a plain string — it only serializes to an ISO-like string such as `2025-08-05T04:00:00.000` when written or passed through `Stringify()`. The value is expressed in Marketing Cloud system time (CST) with daylight saving removed, so the same wall-clock local input yields a system hour one hour earlier in summer than in winter.
 
 {% include differs-from-docs.html note="The official docs type the return value as a string, but the runtime returns a Date object that only serializes to a string when written or stringified." %}
 

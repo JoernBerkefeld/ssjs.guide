@@ -8,7 +8,7 @@ redirect_from:
   - /platform-objects/datetime/
   - /platform-objects/datetime-timezone/
 verification: verified
-differs_from_docs: "Runtime note: SystemDateToLocalDate / LocalDateToSystemDate return CLR DateTime objects (typeof \"object\") that coerce transparently to strings via String(value), \"\" + value, or Write(value). DateTime.TimeZone.Retrieve rows are CLR objects that Stringify() cannot serialize — enumerate with for..in."
+differs_from_docs: "Runtime note: SystemDateToLocalDate / LocalDateToSystemDate return genuine Date objects (typeof \"object\", Object.prototype.toString reports [object Date], .constructor === Date, working getFullYear()/getHours()/getTime(); only instanceof Date is false due to the engine-wide instanceof-on-builtins bug). They also coerce transparently to strings via String(value), \"\" + value, or Write(value). DateTime.TimeZone.Retrieve rows are CLR objects that Stringify() cannot serialize — enumerate with for..in."
 description: Date-time utilities for converting between system time and local time, and for retrieving time zone definitions. Requires the Core library.
 ---
 
@@ -16,14 +16,14 @@ The `DateTime` namespace provides date-time conversion helpers and time zone loo
 
 {% include callout.html type="warning" content="Requires <code>Platform.Load(\"core\", \"1.1.5\")</code> before use." %}
 
-{% include callout.html type="note" content="Runtime-verified: the conversion methods return CLR <code>DateTime</code> objects that coerce to a string automatically (via <code>String(value)</code>, <code>\"\" + value</code>, or <code>Write(value)</code>). <code>DateTime.TimeZone.Retrieve()</code> rows are CLR objects that <code>Stringify()</code> cannot serialize — enumerate their fields with <code>for..in</code>." %}
+{% include callout.html type="note" content="Runtime-verified: the conversion methods return genuine <code>Date</code> objects (<code>typeof \"object\"</code>, <code>Object.prototype.toString</code> reports <code>[object Date]</code>, <code>.constructor === Date</code>, working <code>getFullYear()</code>/<code>getHours()</code>/<code>getTime()</code>; only <code>instanceof Date</code> is false due to the engine-wide instanceof-on-builtins bug — test with <code>.constructor === Date</code>). They also coerce to a string automatically (via <code>String(value)</code>, <code>\"\" + value</code>, or <code>Write(value)</code>). <code>DateTime.TimeZone.Retrieve()</code> rows are CLR objects that <code>Stringify()</code> cannot serialize — enumerate their fields with <code>for..in</code>." %}
 
 ## Methods
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| [`DateTime.SystemDateToLocalDate(dateString)`](#systemdatetolocaldate) | string | Convert system time (CST) to local account/user time |
-| [`DateTime.LocalDateToSystemDate(dateString)`](#localdatetosystemdate) | string | Convert local account/user time to system time (CST) |
+| [`DateTime.SystemDateToLocalDate(dateString)`](#systemdatetolocaldate) | Date | Convert system time (CST) to local account/user time |
+| [`DateTime.LocalDateToSystemDate(dateString)`](#localdatetosystemdate) | Date | Convert local account/user time to system time (CST) |
 | [`DateTime.TimeZone.Retrieve(filter)`](#timezone-retrieve) | object[] | Retrieve time zone definitions |
 
 ---
@@ -38,7 +38,7 @@ Converts a date-time value from Marketing Cloud system time (Central Standard Ti
 
 Accepted formats include ISO 8601 (`2025-08-05T12:34:56.789Z`), US notation (`8/5/2025 12:34 PM`), long-form (`5 August 2025`), and time-only (`14:23:56`).
 
-**Returns:** `string` — the converted local date-time string.
+**Returns:** `Date` — the converted local date-time as a `Date` object (`typeof "object"`, `Object.prototype.toString` reports `[object Date]`, `.constructor === Date`; only `instanceof Date` is false). Coerces to an ISO-like string when written or stringified.
 
 **Equivalent full-form:** [`Platform.Function.SystemDateToLocalDate()`](/platform-functions/systemdatetolocaldate/)
 
@@ -60,7 +60,7 @@ Converts a date-time value from the local time of the account or user to Marketi
 
 Accepted formats include ISO 8601 (`2025-08-05T12:34:56.789Z`), US notation (`8/5/2025 12:34 PM`), long-form (`5 August 2025`), and time-only (`14:23:56`).
 
-**Returns:** `string` — the converted system date-time string.
+**Returns:** `Date` — the converted system date-time as a `Date` object (`typeof "object"`, `Object.prototype.toString` reports `[object Date]`, `.constructor === Date`; only `instanceof Date` is false). Coerces to an ISO-like string when written or stringified.
 
 **Equivalent full-form:** [`Platform.Function.LocalDateToSystemDate()`](/platform-functions/localdatetosystemdate/)
 

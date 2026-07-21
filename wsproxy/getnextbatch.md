@@ -14,7 +14,7 @@ verification: verified
 
 `<WSProxyInstance>.getNextBatch(objectType, requestId)` continues a paginated [`retrieve`](/wsproxy/retrieve/) sequence after `HasMoreRows` is true.
 
-{% include callout.html type="note" content="**Runtime verified.** A `retrieve` of a Data Extension seeded with 2,600 rows returned a first page with `Status: \"MoreDataAvailable\"`, `HasMoreRows: true`, a `RequestID`, and exactly 2,500 rows (the default page size). Passing that same object type and `RequestID` to <code>getNextBatch</code> returned the next page (`Status: \"OK\"`, `HasMoreRows: false`, the remaining 100 rows) — 2,600 rows total across two pages, with `HasMoreRows` flipping to `false` on the last page. Each `Results` row carries a `Properties` array of `{ Name, Value }` pairs. Pagination happens **naturally** once a result set exceeds the 2,500-row default page size; <code>setBatchSize</code> is **not** required (and does throw in the anonymous CloudPage context)." %}
+{% include callout.html type="note" content="**Runtime verified.** A `retrieve` of a Data Extension seeded with 2,600 rows returned a first page with `Status: \"MoreDataAvailable\"`, `HasMoreRows: true`, a `RequestID`, and exactly 2,500 rows (the default page size). Passing that same object type and `RequestID` to <code>getNextBatch</code> returned the next page (`Status: \"OK\"`, `HasMoreRows: false`, the remaining 100 rows) — 2,600 rows total across two pages, with `HasMoreRows` flipping to `false` on the last page. Each `Results` row carries a `Properties` array of `{ Name, Value }` pairs. Pagination happens **naturally** once a result set exceeds the 2,500-row default page size. To force a smaller page size, pass the <code>retrieveOptions.BatchSize</code> argument of <a href=\"/wsproxy/retrieve/\"><code>retrieve</code></a>." %}
 
 ## Parameters
 
@@ -57,6 +57,5 @@ do {
 <h4>See Also</h4>
 <ul>
   <li><a href="/wsproxy/retrieve/">proxy.retrieve</a></li>
-  <li><a href="/wsproxy/setbatchsize/">proxy.setBatchSize</a></li>
 </ul>
 </div>

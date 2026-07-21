@@ -5,14 +5,16 @@ parent: Platform Objects
 parent_url: /platform-objects/
 description: Read HTTP request data including query string parameters, POST body, form data, request headers, and cookies.
 verification: verified
-differs_from_docs: "Runtime-verified (CloudPage): Platform.Request is available WITHOUT Platform.Load. The getters GetQueryStringParameter / GetFormField / GetCookieValue / GetRequestHeader return null (typeof \"object\") for an absent key, NOT an empty string. GetPostData returns \"\" (empty string) on a GET. GetUserLanguages throws \"Unable to retrieve security descriptor for this frame.\" in a plain CloudPage GET."
+differs_from_docs: "Runtime-verified (CloudPage): Platform.Request is available WITHOUT Platform.Load. The getters GetQueryStringParameter / GetFormField / GetCookieValue / GetRequestHeader return null (typeof \"object\") for an absent key, NOT an empty string. GetPostData returns \"\" (empty string) on a GET."
 ---
 
 `Platform.Request` provides methods to inspect every aspect of the incoming HTTP request in CloudPage, JSON Resource, and Triggered Send contexts.
 
 Does not require `Platform.Load`.
 
-{% include callout.html type="warning" content="The value getters (`GetQueryStringParameter`, `GetFormField`, `GetCookieValue`, `GetRequestHeader`) return **`null`** — not an empty string — when the requested key is absent. Guard reads with a truthiness or `!= null` check. `GetUserLanguages()` throws in a plain CloudPage context; wrap it in try/catch." %}
+{% include callout.html type="info" content="**`Platform.Request` and the Core Library [`Request`](/core-library/request/) object are two different objects — not aliases.** They share a name and purpose but differ in member set and access style. `Platform.Request` (this page) works **without** `Platform.Load` and exposes a rich mix of **properties** (`RequestURL`, `Method`, `ClientIP`, `QueryString`, …) and **getter methods** (`GetQueryStringParameter()`, `GetCookieValue()`, `GetRequestHeader()`, …). Core `Request` is a smaller, method-only set — six zero-arg context methods (`Request.URL()`, `Request.Method()`, `Request.PagePath()`, …) plus the single-argument value getters `Request.GetQueryStringParameter(name)` and `Request.GetFormField(name)` — that **requires `Platform.Load(\"core\", ...)`**. For example, the current URL is the `RequestURL` **property** here, but the `URL()` **method** on Core `Request`. Pick the object that has the member you need — don't assume they mirror each other." %}
+
+{% include callout.html type="warning" content="The value getters (`GetQueryStringParameter`, `GetFormField`, `GetCookieValue`, `GetRequestHeader`) return **`null`** — not an empty string — when the requested key is absent. Guard reads with a truthiness or `!= null` check. `GetUserLanguages()` as called is **not defined at runtime** — the engine does not resolve it and it throws at every arity tried (0/1/2 args) — so read `GetRequestHeader(\"Accept-Language\")` instead for the same value." %}
 
 ## Properties
 
@@ -39,7 +41,7 @@ All properties return `null` (or `false` for boolean properties) when no valid r
 | [`GetPostData([encoding])`](#getpostdata) | string | Read raw POST body (optional character encoding) |
 | [`GetQueryStringParameter(name)`](#getquerystringparameter) | string | Read a URL query parameter |
 | [`GetRequestHeader(name)`](#getrequestheader) | string | Read a request header |
-| [`GetUserLanguages()`](#getuserlanguages) | string | Read the browser `Accept-Language` header value |
+| [`GetUserLanguages()`](#getuserlanguages) ⚠️ | string | Read the browser `Accept-Language` header value — `GetUserLanguages()` as called is **not defined at runtime** (the engine does not resolve it; throws at every arity tried); use `GetRequestHeader("Accept-Language")` |
 
 ---
 
@@ -129,19 +131,15 @@ if (Platform.Request.Method === "POST") {
 Platform.Request.GetUserLanguages()
 ```
 
-Returns the raw value of the HTTP `Accept-Language` header (for example a comma-separated list with quality values).
+Is documented to return the raw value of the HTTP `Accept-Language` header (for example a comma-separated list with quality values).
 
-{% include callout.html type="warning" content="Runtime-verified: in a plain CloudPage GET this method **throws** `\"Unable to retrieve security descriptor for this frame.\"`. Wrap it in try/catch, or prefer reading the header directly via `GetRequestHeader(\"Accept-Language\")`." %}
+{% include callout.html type="warning" content="**Not defined at runtime.** The engine does not resolve this member: a runtime probe found it throws `System.InvalidOperationException: \"Unable to retrieve security descriptor for this frame.\"` at every arity tried (0/1/2 args) — the generic error the SSJS engine raises for an unrecognized member name or an argument count the engine does not accept (**not** a security, frame, or context restriction). The same `Accept-Language` header **is** present and readable via `GetRequestHeader(\"Accept-Language\")` in the same run, so use that instead — it returns the same value this method is documented to expose." %}
 
-#### Examples
+#### Workaround
 
 ```javascript
-var langs;
-try {
-    langs = Platform.Request.GetUserLanguages();
-} catch (e) {
-    langs = Platform.Request.GetRequestHeader("Accept-Language");
-}
+// GetUserLanguages() is not defined at runtime — read the header directly.
+var langs = Platform.Request.GetRequestHeader("Accept-Language");
 if (langs) {
     Write("<!-- Accept-Language: " + langs + " -->");
 }
@@ -379,6 +377,7 @@ if (method === "GET") {
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
+  <li><a href="/core-library/request/">Request (Core Library)</a></li>
   <li><a href="/platform-objects/platform-response/">Platform.Response</a></li>
   <li><a href="/getting-started/execution-contexts/">Execution Contexts</a></li>
   <li><a href="/recipes/cloud-page-apps/">CloudPage App Recipes</a></li>

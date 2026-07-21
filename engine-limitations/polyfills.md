@@ -646,7 +646,7 @@ Math.min = function () {
 
 ## Date Helpers
 
-`Date.prototype.toISOString` (ES5) is **not** available in SFMC SSJS — `typeof d.toISOString` is `undefined` and calling it throws `Object expected: toISOString`. `Date.prototype.toJSON` is also missing because it depends on `toISOString`. Since installing a working method on `Date.prototype` is unreliable here, use a standalone helper that builds the ISO 8601 string from the (working) `getUTC*` getters. Alternatively use `Platform.Function.FormatDate`.
+`Date.prototype.toISOString` (ES5) is **not** available in SFMC SSJS — `typeof d.toISOString` is `undefined` and calling it throws `Object expected: toISOString`. `Date.prototype.toJSON` is also missing because it depends on `toISOString`. Since installing a working method on `Date.prototype` is unreliable here, use a standalone helper that builds the ISO 8601 string from the (working) `getUTC*` getters.
 
 ### toISOStringUTC (standalone helper — builds the ISO 8601 UTC string) {#date-toisostring}
 

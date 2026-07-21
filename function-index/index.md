@@ -16,7 +16,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
 | [`Platform.Function.AddObjectArrayItem(apiObject, propertyName, value)`](/platform-functions/addobjectarrayitem/) | Platform Functions | void | Append item to a SOAP API object array property |
-| [`Attribute.GetValue(name)`](/core-library/attribute/) | Core Library | string | Profile attribute in email / triggered send context (requires Platform.Load) |
+| [`Attribute.GetValue(name)`](/core-library/attribute/) | Core Library | string | Profile attribute in email / triggered send context |
 | [`Account.Init(key)`](/core-library/account/#init) | Core Library | AccountInstance | Initialize Account |
 | [`Account.Retrieve(filter)`](/core-library/account/#retrieve) | Core Library | object[] | Retrieve accounts |
 | [`Account.Tracking.Retrieve(filter)`](/core-library/account/#tracking-retrieve) | Core Library | object[] | Account-level tracking |
@@ -70,10 +70,11 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`Base64Decode(encodedString)`](/core-library/base64decode/) | Core Library | string | Decode Base64 string to plain text (requires Platform.Load) |
+| [`Base64Decode(encodedString)`](/core-library/base64decode/) | Core Library | string | Decode Base64 string to plain text |
 | [`Platform.Function.Base64Decode(encodedString[, charset])`](/platform-functions/base64decode/) | Platform Functions | string | Decode a Base64-encoded string |
-| [`Base64Encode(string)`](/core-library/base64encode/) | Core Library | string | Encode plain text to Base64 (requires Platform.Load) |
+| [`Base64Encode(string)`](/core-library/base64encode/) | Core Library | string | Encode plain text to Base64 |
 | [`Platform.Function.Base64Encode(string[, charset])`](/platform-functions/base64encode/) | Platform Functions | string | Encode a string to Base64 |
+| [`BeginImpressionRegion(name)`](/core-library/beginimpressionregion/) | Core Library | void | Bare-name Core form of Platform.Function.BeginImpressionRegion — unusable from SSJS |
 | [`Platform.Function.BeginImpressionRegion(name)`](/platform-functions/beginimpressionregion/) | Platform Functions | void | Start a named impression region |
 | [`BounceEvent.Retrieve(filter)`](/core-library/events/#bounce-event) | Core Library | object[] | Bounce tracking events |
 
@@ -83,8 +84,8 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`ContentArea(id[, regionName, errorMsg, fallbackContent])`](/core-library/contentarea/) | Core Library | string | Classic Content Area by ID — **deprecated**, requires Platform.Load |
-| [`ContentAreaByName(name[, regionName, errorMsg, fallbackContent])`](/core-library/contentareabyname/) | Core Library | string | Classic Content Area by name — **deprecated**, requires Platform.Load |
+| [`ContentArea(id[, regionName, errorMsg, fallbackContent])`](/core-library/contentarea/) | Core Library | string | Classic Content Area by ID — **deprecated** |
+| [`ContentAreaByName(name[, regionName, errorMsg, fallbackContent])`](/core-library/contentareabyname/) | Core Library | string | Classic Content Area by name — **deprecated** |
 | [`Platform.Function.ContentArea(id[, regionName, stopOnError, fallbackContent])`](/platform-functions/contentarea/) | Platform Functions | string | Classic Content Area by ID — **deprecated** |
 | [`Platform.Function.ContentAreaByName(name[, regionName, stopOnError, fallbackContent])`](/platform-functions/contentareabyname/) | Platform Functions | string | Classic Content Area by name — **deprecated** |
 | [`Platform.Function.ContentBlockByID(id[, regionName, stopOnError, fallbackContent])`](/platform-functions/contentblockbyid/) | Platform Functions | string | Render Content Builder block by ID |
@@ -106,7 +107,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`DateTime.TimeZone.Retrieve(filter)`](/core-library/datetime/#timezone-retrieve) | Core Library | object[] | Time zone definitions (requires Core load) |
+| [`DateTime.TimeZone.Retrieve(filter)`](/core-library/datetime/#timezone-retrieve) | Core Library | object[] | Time zone definitions |
 | [`DateTime.LocalDateToSystemDate(dateString)`](/core-library/datetime/#localdatetosystemdate) | Core Library | string | Local account/user time to system time (CST) |
 | [`DateTime.SystemDateToLocalDate(dateString)`](/core-library/datetime/#systemdatetolocaldate) | Core Library | string | System time (CST) to local account/user time |
 | [`Date.now()`](/ecmascript-builtins/date-methods/#now) | ECMAScript Builtins | object | ⚠️ Returns a **Date object** in SFMC, not a number — use `new Date().getTime()` (static) |
@@ -168,6 +169,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`<EmailInstance>.Remove()`](/core-library/email/#instance-remove) | Core Library | string | Remove email definition |
 | [`<EmailInstance>.Validate()`](/core-library/email/#instance-validate) | Core Library | object | Validate email |
 | [`<EmailInstance>.CheckContent()`](/core-library/email/#instance-checkcontent) | Core Library | object | Content checks |
+| [`EndImpressionRegion([closeAll])`](/core-library/endimpressionregion/) | Core Library | undefined | Bare-name Core form of Platform.Function.EndImpressionRegion — returns undefined, not null |
 | [`Platform.Function.EndImpressionRegion([closeAll])`](/platform-functions/endimpressionregion/) | Platform Functions | void | End an impression region |
 | [`Error(message)`](/ecmascript-builtins/error/) | ECMAScript Builtins | Error | Create Error object (`new Error([message])`) — `.message` reads `undefined`; use `String(e)` |
 | [`ErrorUtil.ThrowWSProxyError(result)`](/wsproxy/errorutil/) | WSProxy | void | Throw when WSProxy status indicates failure |
@@ -189,7 +191,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`<FolderInstance>.Update(properties)`](/core-library/folder/#instance-update) | Core Library | string | Update folder |
 | [`<FolderInstance>.Remove()`](/core-library/folder/#instance-remove) | Core Library | string | Remove folder |
 | [`<FolderInstance>.SetID(id)`](/core-library/folder/#instance-setid) | Core Library | void | Set folder ID |
-| [`Format(textToFormat, formatCode)`](/core-library/format/) | Core Library | string | Format a date/number string (requires Platform.Load) |
+| [`Format(textToFormat, formatCode)`](/core-library/format/) | Core Library | string | Format a date/number string |
 | [`<FunctionInstance>.apply(thisArg[, argsArray])`](/ecmascript-builtins/function-methods/#apply) | ECMAScript Builtins | any | Call function with `this` and an array of arguments |
 | [`<FunctionInstance>.bind(thisArg[, ...args])`](/ecmascript-builtins/function-methods/#bind) | ECMAScript Builtins | function | ❌ Missing (ES5) — needs polyfill |
 | [`<FunctionInstance>.call(thisArg[, ...args])`](/ecmascript-builtins/function-methods/#call) | ECMAScript Builtins | any | Call function with `this` and individual arguments |
@@ -206,6 +208,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
+| [`GUID()`](/core-library/guid/) | Core Library | string | Bare-name Core form of Platform.Function.GUID — generate UUID v4 |
 | [`Platform.Function.GUID()`](/platform-functions/guid/) | Platform Functions | string | Generate UUID v4 |
 | [`Platform.Recipient.GetAttributeValue(attributeName)`](/platform-objects/platform-recipient/) | Platform Functions | string | Returns the value of a subscriber attribute or sendable DE field for the current recipient |
 | [`Platform.Request.GetCookieValue(name)`](/platform-objects/platform-request/) | Platform Functions | string | Read a cookie value |
@@ -213,7 +216,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`Platform.Request.GetPostData([encoding])`](/platform-objects/platform-request/) | Platform Functions | string | Read raw POST body (optional character encoding) |
 | [`Platform.Request.GetQueryStringParameter(name)`](/platform-objects/platform-request/) | Platform Functions | string | Read a URL query parameter |
 | [`Platform.Request.GetRequestHeader(name)`](/platform-objects/platform-request/) | Platform Functions | string | Read a request header |
-| [`Platform.Request.GetUserLanguages()`](/platform-objects/platform-request/) | Platform Functions | string | Read the browser `Accept-Language` header value |
+| [`Platform.Request.GetUserLanguages()`](/platform-objects/platform-request/) ⚠️ | Platform Functions | string | Read the browser `Accept-Language` header value — `GetUserLanguages()` as called is **not defined at runtime** (the engine does not resolve it; throws at every arity tried); use `GetRequestHeader("Accept-Language")` |
 
 ---
 
@@ -223,9 +226,9 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 |------|----------|---------|-------------|
 | [`HTTP.Get(url[, headerNames, headerValues])`](/http/get/) | Core HTTP | object | HTTP GET — structured status + body |
 | [`HTTP.Post(url, contentType, payload, headerNames, headerValues)`](/http/post/) | Core HTTP | object | HTTP POST — structured status + body |
-| [`HTTPHeader.GetValue(name)`](/core-library/httpheader/) | Core Library | string | Read HTTP request header (Core load) |
-| [`HTTPHeader.SetValue(name, value)`](/core-library/httpheader/) | Core Library | void | Set HTTP request header (Core load) |
-| [`HTTPHeader.Remove(headerName)`](/core-library/httpheader/) | Core Library | string | Remove HTTP request header (Core load) |
+| [`HTTPHeader.GetValue(name)`](/core-library/httpheader/) | Core Library | string | Read HTTP request header |
+| [`HTTPHeader.SetValue(name, value)`](/core-library/httpheader/) | Core Library | void | Set HTTP request header |
+| [`HTTPHeader.Remove(headerName)`](/core-library/httpheader/) | Core Library | string | Remove HTTP request header |
 | [`Platform.Function.HTTPGet(url, continueOnError[, emptyContentHandling, headerNames, headerValues, statusVariable])`](/platform-functions/httpget/) | Platform Functions | string | HTTP GET — body string only |
 | [`Platform.Function.HTTPPost(url, contentType, payload[, headerNames, headerValues, response])`](/platform-functions/httppost/) | Platform Functions | string | HTTP POST — body string only |
 
@@ -246,7 +249,9 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`Platform.Function.InvokeRetrieve(apiObject, status)`](/platform-functions/invokeretrieve/) | Platform Functions | object[] | SOAP Retrieve (legacy) |
 | [`Platform.Function.InvokeSchedule(apiObject, action, schedule[, statusArray, options])`](/platform-functions/invokeschedule/) | Platform Functions | string | SOAP Schedule call (legacy) |
 | [`Platform.Function.InvokeUpdate(apiObject, status, options)`](/platform-functions/invokeupdate/) | Platform Functions | string | SOAP Update (legacy) |
+| [`IsEmailAddress(value)`](/core-library/isemailaddress/) | Core Library | boolean | Bare-name Core form of Platform.Function.IsEmailAddress — validate email format |
 | [`Platform.Function.IsEmailAddress(value)`](/platform-functions/isemailaddress/) | Platform Functions | boolean | Validate email format |
+| [`IsPhoneNumber(value)`](/core-library/isphonenumber/) | Core Library | boolean | Bare-name Core form of Platform.Function.IsPhoneNumber — validate NANP phone format |
 | [`Platform.Function.IsPhoneNumber(value)`](/platform-functions/isphonenumber/) | Platform Functions | boolean | Validate phone number format |
 | [`Platform.Function.IsCHTMLBrowser(userAgentString)`](/platform-functions/ischtmlbrowser/) | Platform Functions | boolean | Detect CHTML / feature-phone browsers |
 | [`isFinite(value)`](/ecmascript-builtins/number-methods/) | ECMAScript Builtins | boolean | Test if value is finite |
@@ -359,6 +364,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`<NumberInstance>.toPrecision([precision])`](/ecmascript-builtins/number-methods/#toprecision) | ECMAScript Builtins | string | Precision notation string |
 | [`<NumberInstance>.toString([radix])`](/ecmascript-builtins/number-methods/#tostring) | ECMAScript Builtins | string | ⚠️ Partial — `radix` only supports 2, 8, 10, 16 |
 | [`<NumberInstance>.valueOf()`](/ecmascript-builtins/number-methods/#valueof) | ECMAScript Builtins | number | Primitive number value |
+| [`Now([useContextTime])`](/core-library/now/) | Core Library | Date | Bare-name Core form of Platform.Function.Now — current server date/time as a Date object |
 | [`Platform.Function.Now([useContextTime])`](/platform-functions/now/) | Platform Functions | string | Current SFMC server date/time |
 
 ---
@@ -422,7 +428,6 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`<WSProxyInstance>.performBatch(objectType, propertiesArray, action[, performOptions])`](/wsproxy/performbatch/) | WSProxy | object | SOAP Perform (batch) |
 | [`<WSProxyInstance>.resetClientIds()`](/wsproxy/resetclientids/) | WSProxy | void | Clear BU override |
 | [`<WSProxyInstance>.retrieve(objectType, columns[, filter[, retrieveOptions[, requestProps]]])`](/wsproxy/retrieve/) | WSProxy | object | SOAP Retrieve |
-| [`<WSProxyInstance>.setBatchSize(batchSize)`](/wsproxy/setbatchsize/) | WSProxy | void | Retrieve page size |
 | [`<WSProxyInstance>.setClientId(clientId)`](/wsproxy/setclientid/) | WSProxy | void | Target another BU |
 
 ---
@@ -446,11 +451,13 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 |------|----------|---------|-------------|
 | [`Platform.Function.RaiseError(message[, currentRecipientOnly[, errorCode[, errorNumber]]])`](/platform-functions/raiseerror/) | Platform Functions | void | Halt execution with error |
 | [`Platform.Function.RedirectTo(url)`](/platform-functions/redirectto/) | Platform Functions | void | Email href redirect helper |
-| [`Redirect(url, movedPermanently)`](/core-library/redirect/) | Core Library | void | Redirect the browser — requires Platform.Load and same-scope call; `Platform.Response.Redirect` works in any scope |
+| [`Redirect(url, movedPermanently)`](/core-library/redirect/) | Core Library | void | Redirect the browser |
 | [`Platform.Response.Redirect(url, movedPermanently)`](/platform-objects/platform-response/#redirect) | Platform Response | void | Redirect the browser |
 | [`Platform.Response.RemoveCookie(name)`](/platform-objects/platform-response/#removecookie) | Platform Response | void | Remove a cookie |
 | [`Platform.Response.RemoveResponseHeader(headerName)`](/platform-objects/platform-response/#removeresponseheader) | Platform Response | void | Remove a response header |
-| [`Request.URL() / Request.Method() / Request.PagePath() / …`](/core-library/request/) | Core Library | string | Read request values (behaves like Platform.Request; requires Platform.Load) |
+| [`Request.URL() / PagePath() / Method() / ApplicationID() / PackageID() / ApplicationBaseURL()`](/core-library/request/) | Core Library | string | Read request values via the Core Library utility methods. A **distinct** object from `Platform.Request`, not an alias — smaller method-only set. |
+| [`Request.GetQueryStringParameter(name)`](/core-library/request/) | Core Library | string | Read a URL query parameter via the Core Library `Request` object |
+| [`Request.GetFormField(name)`](/core-library/request/) | Core Library | string | Read a form field (POST or GET) via the Core Library `Request` object |
 | [`<RegExpInstance>.exec(string)`](/ecmascript-builtins/regular-expressions/#exec) | ECMAScript Builtins | array | ⚠️ Partial — `lastIndex` does not advance; avoid the `g`-flag loop pattern |
 | [`<RegExpInstance>.global`](/ecmascript-builtins/regular-expressions/#global) | ECMAScript Builtins | boolean | True if the `g` flag was set |
 | [`re instanceof RegExp`](/ecmascript-builtins/regular-expressions/#instanceof) | ECMAScript Builtins | boolean | ⚠️ Partial — always `false`; use `re.constructor === RegExp` |
@@ -475,8 +482,8 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`new Script.Util.WSProxy()`](/wsproxy/constructor/) | WSProxy | WSProxyInstance | Create WSProxy instance |
 | [`Platform.Function.SetObjectProperty(apiObject, propertyName, value)`](/platform-functions/setobjectproperty/) | Platform Functions | void | Set SOAP object property (legacy) |
 | [`String(value)`](/ecmascript-builtins/string-methods/#string-constructor) | ECMAScript Builtins | string | Convert any value (incl. CLR objects) to JS string |
-| [`Stringify(value)`](/core-library/stringify/) | Core Library | string | Object to JSON string (requires Platform.Load) |
-| [`Platform.Function.Stringify(object)`](/platform-functions/stringify/) | Platform Functions | string | Object to JSON string (no Platform.Load needed) |
+| [`Stringify(value)`](/core-library/stringify/) | Core Library | string | Object to JSON string |
+| [`Platform.Function.Stringify(object)`](/platform-functions/stringify/) | Platform Functions | string | Object to JSON string |
 | [`Subscriber.Init(key)`](/core-library/subscriber/#init) | Core Library | SubscriberInstance | Initialize subscriber |
 | [`Subscriber.Add(properties)`](/core-library/subscriber/#add) | Core Library | string | Create subscriber |
 | [`Subscriber.Retrieve(filter)`](/core-library/subscriber/#retrieve) | Core Library | object[] | Retrieve subscribers |
@@ -588,8 +595,8 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`Variable.GetValue(variableName)`](/core-library/variable/) | Core Library | string | Read AMPscript variable (requires Platform.Load) |
-| [`Variable.SetValue(variableName, value)`](/core-library/variable/) | Core Library | void | Write AMPscript variable (requires Platform.Load) |
+| [`Variable.GetValue(variableName)`](/core-library/variable/) | Core Library | string | Read AMPscript variable |
+| [`Variable.SetValue(variableName, value)`](/core-library/variable/) | Core Library | void | Write AMPscript variable |
 | [`Platform.Variable.GetValue(name)`](/platform-objects/platform-variable/) | Platform Variable | string | Reads the value of an AMPscript variable |
 | [`Platform.Variable.SetValue(name, value)`](/platform-objects/platform-variable/#setvalue) | Platform Variable | void | Writes a value to an AMPscript variable |
 
@@ -599,7 +606,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`Write(content)`](/core-library/write/) | Core Library | void | Output to page (requires Platform.Load) |
+| [`Write(content)`](/core-library/write/) | Core Library | void | Output to page |
 | [`Platform.Response.Write(content)`](/platform-objects/platform-response/#write) | Platform Response | void | Write content to the HTTP response output |
 
 ---

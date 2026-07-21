@@ -112,6 +112,27 @@ This page is the single, growing catalog of those discrepancies. Each row links 
   font-size: 0.75rem;
   color: #8b949e;
 }
+/* Collapsible copy-paste test script that reproduces the discrepancy on a CloudPage. */
+.dfd-card__testscript {
+  margin: 0.5rem 0 0;
+}
+.dfd-card__testscript > summary {
+  cursor: pointer;
+  font-size: 0.72rem;
+  color: #8b949e;
+}
+.dfd-card__testscript > summary:hover {
+  color: #c9d1d9;
+}
+.dfd-card__testscript pre {
+  margin: 0.5rem 0 0;
+}
+/* Placeholder note shown when a claim's test script still needs manual review. */
+.dfd-card__testscript-note {
+  margin: 0.5rem 0 0;
+  font-size: 0.72rem;
+  color: #8b949e;
+}
 /* Link to the representative official documentation page, at the card bottom. */
 .dfd-card__ref {
   margin: 0.5rem 0 0;
@@ -198,7 +219,7 @@ This page is the single, growing catalog of those discrepancies. Each row links 
     </select>
   </div>
   <div class="dfd-control">
-    <label for="dfd-show">Show</label>
+    <label for="dfd-show">Issue type</label>
     <select id="dfd-show">
       <option value="both" selected>Show SFMC &amp; ECMAScript issues</option>
       <option value="sfmc">Show SFMC doc issues only</option>
@@ -208,7 +229,7 @@ This page is the single, growing catalog of those discrepancies. Each row links 
   <div class="dfd-control">
     <label for="dfd-dtype-filter">Discrepancy type</label>
     <details class="dfd-legend" id="dfd-dtype-filter">
-      <summary>Discrepancy type (legend)</summary>
+      <summary>Discrepancy type</summary>
       <div class="dfd-legend__toggle">
         <button type="button" id="dfd-dtype-all">Select all</button>
         <button type="button" id="dfd-dtype-none">Select none</button>
@@ -261,6 +282,9 @@ This page is the single, growing catalog of those discrepancies. Each row links 
     <span class="dfd-tag">{% if r.part == "ecmascript" %}ECMAScript {{ r.object }}{% else %}{{ r.category }}{% endif %}</span>
   </div>
   <div class="dfd-card__body">{{ r.body | markdownify }}</div>
+  {% if r.testScript %}{% if r.testScript == "needs review" %}<p class="dfd-card__testscript-note"><em>Test script: needs review.</em></p>{% else %}<details class="dfd-card__testscript"><summary>Show test script</summary>{{ '```html' | append: '
+' | append: r.testScript | append: '
+```' | markdownify }}</details>{% endif %}{% endif %}
   {% if r.officialUrl %}<p class="dfd-card__ref"><a href="{{ r.officialUrl }}" target="_blank" rel="noopener">Official documentation</a></p>{% endif %}
 </div>
 {% endif %}

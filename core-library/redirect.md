@@ -6,7 +6,7 @@ parent_url: /core-library/
 permalink: /core-library/redirect/
 redirect_from:
   - /global-functions/redirect/
-description: Bare-name redirect helper injected by Platform.Load("core") — scope-sensitive; for scope-independent use call Platform.Response.Redirect instead.
+description: Bare-name redirect helper injected by Platform.Load("core") — call Platform.Load first, or use Platform.Response.Redirect which needs no Platform.Load.
 availability:
   email: false
   cloudpage: true
@@ -14,14 +14,14 @@ availability:
   triggered_send: false
 requires_core_load: true
 verification: verified
-differs_from_docs: "Runtime-verified: the bare-name Redirect global IS defined after Platform.Load(\"core\") but only in the same scope the load ran in — it is not visible inside nested helper-function bodies. The official docs do not mention this scope rule. Platform.Response.Redirect(url, movedPermanently) works in any scope without Platform.Load."
+differs_from_docs: false
 syntax: "Redirect(url, movedPermanently)"
 return_type: void
 min_args: 2
 max_args: 2
 ---
 
-{% include callout.html type="warning" content="<strong>Scope-sensitive.</strong> The bare-name <code>Redirect</code> global exists only after <code>Platform.Load(\"core\", ...)</code> and only in the <em>same scope</em> the load ran in — inside nested helper-function bodies it is <code>undefined</code>. For scope-independent use, call <a href=\"/platform-objects/platform-response/#redirect\"><code>Platform.Response.Redirect(url, movedPermanently)</code></a>, which needs no <code>Platform.Load</code>." %}
+{% include callout.html type="note" content="The bare-name <code>Redirect</code> global exists only <em>after</em> <code>Platform.Load(\"core\", ...)</code> has run, so call the load first. Once loaded it is usable in that scope and inside nested helper-function bodies that close over it. If you have no <code>Platform.Load</code> in scope, use <a href=\"/platform-objects/platform-response/#redirect\"><code>Platform.Response.Redirect(url, movedPermanently)</code></a>, which needs no <code>Platform.Load</code>." %}
 
 ## Parameters
 
@@ -32,7 +32,7 @@ max_args: 2
 
 ## Description
 
-`Redirect(url, movedPermanently)` sends the visitor's browser to another URL. Runtime testing proves the bare name **is** injected by `Platform.Load("core", ...)` and performs the redirect — but **only in the same scope** the load ran in. Inside nested helper-function bodies (or `eval()`), the bare name is `undefined`. Its sibling [`Platform.Response.Redirect()`](/platform-objects/platform-response/#redirect) works in any scope and requires no `Platform.Load`.
+`Redirect(url, movedPermanently)` sends the visitor's browser to another URL. Runtime testing proves the bare name **is** injected by `Platform.Load("core", ...)` and performs the redirect. It exists only **after** the load has run, so call `Platform.Load` first; once loaded it works in that scope and inside nested helper-function bodies that close over it. Its sibling [`Platform.Response.Redirect()`](/platform-objects/platform-response/#redirect) works in any scope and requires no `Platform.Load`.
 
 ## Examples
 

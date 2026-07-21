@@ -38,3 +38,12 @@ Platform.Function.InsertData(
     "Timestamp", Platform.Function.Now()
 );
 ```
+
+## See Also
+
+<div class="see-also">
+<h4>See Also</h4>
+<ul>
+  <li><a href="/core-library/guid/">GUID — bare-name Core form (requires Platform.Load)</a></li>
+</ul>
+</div>

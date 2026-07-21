@@ -51,7 +51,7 @@ differs_from_docs: true
 | [`Date.now()`](#now) | ES5 | ⚠️ Partial | Returns a **`Date` object**, not a number — coerce it |
 | [`Date.parse(str)`](#parse) | ES3 | ⚠️ Partial | Invalid strings return **`0`**, not `NaN`; date-only strings parse as **local** |
 | [`Date.UTC(...)`](#utc) | ES3 | ✅ Works | Pass ≥ 2 args; year-only form misbehaves |
-| [`toISOString()`](#toisostring) | ES5 | ❌ Missing | Build the ISO string manually, or use `Platform.Function.FormatDate` |
+| [`toISOString()`](#toisostring) | ES5 | ❌ Missing | Build the ISO string manually |
 | [`toJSON()`](#tojson) | ES5 | ❌ Missing | Absent (depends on `toISOString`) |
 
 ---
@@ -201,7 +201,7 @@ var d = new Date(Date.UTC(2026, 0, 1));  // build a UTC-based Date
 
 ## toISOString {#toisostring}
 
-`(ES5)` — ❌ Missing. `Date.prototype.toISOString` is unavailable in SFMC (`typeof d.toISOString` is `undefined`; calling it throws *"Object expected: toISOString"*). Build the ISO string manually from the `getUTC*` methods, or use `Platform.Function.FormatDate` / `Platform.Function.SystemDateToLocalDate`.
+`(ES5)` — ❌ Missing. `Date.prototype.toISOString` is unavailable in SFMC (`typeof d.toISOString` is `undefined`; calling it throws *"Object expected: toISOString"*). Build the ISO string manually from the `getUTC*` methods, or use `Platform.Function.SystemDateToLocalDate`.
 
 ```javascript
 function toISOString(d) {
@@ -213,7 +213,7 @@ function toISOString(d) {
 
 ## toJSON {#tojson}
 
-`(ES5)` — ❌ Missing. `Date.prototype.toJSON` is unavailable (`typeof d.toJSON` is `undefined`) because it depends on the absent [`toISOString`](#toisostring). Serialize dates with the manual `toISOString` polyfill above or `Platform.Function.FormatDate`.
+`(ES5)` — ❌ Missing. `Date.prototype.toJSON` is unavailable (`typeof d.toJSON` is `undefined`) because it depends on the absent [`toISOString`](#toisostring). Serialize dates with the manual `toISOString` polyfill above.
 
 ## See Also
 
@@ -222,6 +222,5 @@ function toISOString(d) {
 <ul>
   <li><a href="/ecmascript-builtins/">ECMAScript Built-ins</a></li>
   <li><a href="/platform-functions/now/">Platform.Function.Now</a></li>
-  <li><a href="/platform-functions/formatdate/">Platform.Function.FormatDate</a></li>
 </ul>
 </div>

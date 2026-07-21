@@ -159,6 +159,7 @@ Standard ECMAScript global functions (not SFMC-specific) — callable without an
 | [`parseFloat(str)`](/ecmascript-builtins/number-methods/#parsefloat-global) | ES3 | ⚠️ Partial | Returns `NaN` for trailing non-digits (`parseFloat("1.5kg")` → `NaN`); result uses 32-bit precision |
 | `isNaN(val)` | ES3 | ✅ Works | |
 | `isFinite(val)` | ES3 | ✅ Works | |
+| `eval(script)` | ES3 | ✅ Works | Evaluates a JS source string; direct eval sees local scope and Platform.Load Core globals. Executes arbitrary code — use sparingly (injection risk); prefer `Platform.Function.ParseJSON` for data. |
 
 ### Object Methods
 
@@ -225,7 +226,7 @@ Value-confirmed `Date` members — see [Date Methods](/ecmascript-builtins/date-
 | [`Date.prototype.toDateString()`](/ecmascript-builtins/date-methods/#todatestring) | ES3 | ✅ Works | |
 | [`Date.prototype.toTimeString()`](/ecmascript-builtins/date-methods/#totimestring) | ES3 | ✅ Works | |
 | [`Date.prototype.toUTCString()`](/ecmascript-builtins/date-methods/#toutcstring) | ES3 | ✅ Works | |
-| [`Date.prototype.toISOString()`](/ecmascript-builtins/date-methods/#toisostring) | ES5 | ❌ Missing | Build the ISO string manually or use `Platform.Function.FormatDate` |
+| [`Date.prototype.toISOString()`](/ecmascript-builtins/date-methods/#toisostring) | ES5 | ❌ Missing | Build the ISO string manually |
 | [`Date.prototype.toJSON()`](/ecmascript-builtins/date-methods/#tojson) | ES5 | ❌ Missing | Absent (depends on `toISOString`) |
 | [`Date.now()`](/ecmascript-builtins/date-methods/#now) | ES5 | ⚠️ Partial | Static — returns a **Date object**, not a number |
 | [`Date.parse(str)`](/ecmascript-builtins/date-methods/#parse) | ES3 | ⚠️ Partial | Static — invalid strings return **`0`**, not `NaN`; date-only parses as local |

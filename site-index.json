@@ -785,17 +785,6 @@
     "returnType": "WSProxyResult"
   },
   {
-    "name": "<WSProxyInstance>.setBatchSize",
-    "url": "/wsproxy/setbatchsize/",
-    "section": "WSProxy",
-    "type": "method",
-    "description": "Sets the maximum number of objects returned per SOAP API page (default is 2500).",
-    "params": [
-      "batchSize"
-    ],
-    "returnType": "void"
-  },
-  {
     "name": "<WSProxyInstance>.setClientId",
     "url": "/wsproxy/setclientid/",
     "section": "WSProxy",
@@ -1233,7 +1222,7 @@
     "params": [
       "dateString"
     ],
-    "returnType": "string"
+    "returnType": "Date"
   },
   {
     "name": "DateTime.LocalDateToSystemDate",
@@ -1244,7 +1233,7 @@
     "params": [
       "dateString"
     ],
-    "returnType": "string"
+    "returnType": "Date"
   },
   {
     "name": "DateTime.TimeZone.Retrieve",
@@ -4574,6 +4563,67 @@
     "description": "Math."
   },
   {
+    "name": "parseInt",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/parseInt",
+    "section": "ECMAScript Builtins",
+    "type": "function",
+    "description": "Parses a string and returns an integer in the specified radix (base).",
+    "params": [
+      "string",
+      "radix"
+    ],
+    "returnType": "number",
+    "external": true
+  },
+  {
+    "name": "parseFloat",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/parseFloat",
+    "section": "ECMAScript Builtins",
+    "type": "function",
+    "description": "Parses a string and returns a floating-point number.",
+    "params": [
+      "string"
+    ],
+    "returnType": "number",
+    "external": true
+  },
+  {
+    "name": "isNaN",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/isNaN",
+    "section": "ECMAScript Builtins",
+    "type": "function",
+    "description": "Returns true if the value is NaN (Not-a-Number) after applying ToNumber conversion.",
+    "params": [
+      "value"
+    ],
+    "returnType": "boolean",
+    "external": true
+  },
+  {
+    "name": "isFinite",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/isFinite",
+    "section": "ECMAScript Builtins",
+    "type": "function",
+    "description": "Returns true if the value is a finite number (not NaN, +Infinity, or -Infinity) after applying ToNumber conversion.",
+    "params": [
+      "value"
+    ],
+    "returnType": "boolean",
+    "external": true
+  },
+  {
+    "name": "eval",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval",
+    "section": "ECMAScript Builtins",
+    "type": "function",
+    "description": "Parses a string of JavaScript source and executes it as a script, returning the completion value of the last evaluated expression (or undefined when there is nothing to complete).",
+    "params": [
+      "script"
+    ],
+    "returnType": "any",
+    "external": true
+  },
+  {
     "name": "String",
     "url": "/ecmascript-builtins/string-methods/#string-constructor",
     "section": "ECMAScript Builtins",
@@ -4618,6 +4668,39 @@
     "returnType": "string"
   },
   {
+    "name": "BeginImpressionRegion",
+    "url": "/core-library/beginimpressionregion/",
+    "section": "Core Library",
+    "type": "function",
+    "description": "Marks the start of a named impression tracking region within content.",
+    "params": [
+      "name"
+    ],
+    "returnType": "void"
+  },
+  {
+    "name": "EndImpressionRegion",
+    "url": "/core-library/endimpressionregion/",
+    "section": "Core Library",
+    "type": "function",
+    "description": "Marks the end of an impression tracking region within content.",
+    "params": [
+      "closeAll"
+    ],
+    "returnType": "undefined"
+  },
+  {
+    "name": "Now",
+    "url": "/core-library/now/",
+    "section": "Core Library",
+    "type": "function",
+    "description": "Returns the current server date/time as a Date object (in the account timezone, Central by default), or the timestamp of the triggering send when called with `true`.",
+    "params": [
+      "useContextTime"
+    ],
+    "returnType": "Date"
+  },
+  {
     "name": "Redirect",
     "url": "/core-library/redirect/",
     "section": "Core Library",
@@ -4628,6 +4711,36 @@
       "movedPermanently"
     ],
     "returnType": "void"
+  },
+  {
+    "name": "GUID",
+    "url": "/core-library/guid/",
+    "section": "Core Library",
+    "type": "function",
+    "description": "Generates a new globally unique identifier as a lowercase canonical UUID v4 string (36 characters).",
+    "returnType": "string"
+  },
+  {
+    "name": "IsEmailAddress",
+    "url": "/core-library/isemailaddress/",
+    "section": "Core Library",
+    "type": "function",
+    "description": "Checks whether a string is a valid email address format.",
+    "params": [
+      "value"
+    ],
+    "returnType": "boolean"
+  },
+  {
+    "name": "IsPhoneNumber",
+    "url": "/core-library/isphonenumber/",
+    "section": "Core Library",
+    "type": "function",
+    "description": "Evaluates whether a string is a valid phone number and returns a boolean.",
+    "params": [
+      "value"
+    ],
+    "returnType": "boolean"
   },
   {
     "name": "Write",
@@ -4668,6 +4781,76 @@
     "url": "/core-library/request/",
     "section": "Core Library",
     "type": "object",
-    "description": "Object for reading incoming request values in CloudPage context."
+    "description": "Core Library \"Request Object Utility Functions\" object for reading incoming request values."
+  },
+  {
+    "name": "Request.URL",
+    "url": "/core-library/request/#members",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns the full URL of the current page request.",
+    "returnType": "string"
+  },
+  {
+    "name": "Request.PagePath",
+    "url": "/core-library/request/#members",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns the path portion of the current page request.",
+    "returnType": "string"
+  },
+  {
+    "name": "Request.Method",
+    "url": "/core-library/request/#members",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns the HTTP method (GET, POST, etc.",
+    "returnType": "string"
+  },
+  {
+    "name": "Request.ApplicationID",
+    "url": "/core-library/request/#members",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns the application ID associated with the current request.",
+    "returnType": "string"
+  },
+  {
+    "name": "Request.PackageID",
+    "url": "/core-library/request/#members",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns the package ID associated with the current request.",
+    "returnType": "string"
+  },
+  {
+    "name": "Request.ApplicationBaseURL",
+    "url": "/core-library/request/#members",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns the base URL of the application for the current request.",
+    "returnType": "string"
+  },
+  {
+    "name": "Request.GetQueryStringParameter",
+    "url": "/core-library/request/#members",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns the value of a named URL query string parameter for the current page request, or null when the parameter is absent.",
+    "params": [
+      "name"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Request.GetFormField",
+    "url": "/core-library/request/#members",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Returns the value of a named form field submitted with the current request (including POST data), or null when the field is absent.",
+    "params": [
+      "name"
+    ],
+    "returnType": "string"
   }
 ]

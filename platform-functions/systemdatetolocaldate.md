@@ -31,7 +31,7 @@ Converts a date-time value from Marketing Cloud system time (Central Standard Ti
 
 ## Return value
 
-Returns a **`Date` object** (runtime `typeof` is `"object"`, `Object.prototype.toString` reports `[object Date]`, and `getFullYear()` / `getHours()` / `getTime()` all work). It is not a plain string — it only serializes to an ISO-like string when written or passed through `Stringify()`. The value is expressed in the account's or user's local time, so a system input converts to the opposite offset direction of [`LocalDateToSystemDate()`](/platform-functions/localdatetosystemdate/).
+Returns a **`Date` object** (runtime `typeof` is `"object"`, `Object.prototype.toString` reports `[object Date]`, `.constructor === Date`, and `getFullYear()` / `getHours()` / `getTime()` all work — identical to `new Date()`). The one anomaly is that `instanceof Date` returns `false`, due to the engine-wide `instanceof`-on-builtins bug — test with `.constructor === Date`, not `instanceof`. It is not a plain string — it only serializes to an ISO-like string when written or passed through `Stringify()`. The value is expressed in the account's or user's local time, so a system input converts to the opposite offset direction of [`LocalDateToSystemDate()`](/platform-functions/localdatetosystemdate/).
 
 {% include differs-from-docs.html note="The official docs type the return value as a string, but the runtime returns a Date object that only serializes to a string when written or stringified." %}
 

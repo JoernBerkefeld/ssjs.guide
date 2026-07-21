@@ -242,12 +242,24 @@
         url: /core-library/base64encode/
       - title: Base64Decode
         url: /core-library/base64decode/
+      - title: BeginImpressionRegion
+        url: /core-library/beginimpressionregion/
       - title: "ContentArea (deprecated)"
         url: /core-library/contentarea/
       - title: "ContentAreaByName (deprecated)"
         url: /core-library/contentareabyname/
+      - title: EndImpressionRegion
+        url: /core-library/endimpressionregion/
       - title: Format
         url: /core-library/format/
+      - title: GUID
+        url: /core-library/guid/
+      - title: IsEmailAddress
+        url: /core-library/isemailaddress/
+      - title: IsPhoneNumber
+        url: /core-library/isphonenumber/
+      - title: Now
+        url: /core-library/now/
       - title: Redirect
         url: /core-library/redirect/
       - title: Request
@@ -290,8 +302,6 @@
         url: /wsproxy/performitem/
       - title: performBatch
         url: /wsproxy/performbatch/
-      - title: setBatchSize
-        url: /wsproxy/setbatchsize/
       - title: setClientId
         url: /wsproxy/setclientid/
       - title: resetClientIds

@@ -44,3 +44,13 @@ function validateInput(input) {
     return null;
 }
 ```
+
+## See Also
+
+<div class="see-also">
+<h4>See Also</h4>
+<ul>
+  <li><a href="/core-library/isemailaddress/">IsEmailAddress — bare-name Core form (requires Platform.Load)</a></li>
+  <li><a href="/platform-functions/isphonenumber/">IsPhoneNumber</a></li>
+</ul>
+</div>

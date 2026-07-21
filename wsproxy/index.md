@@ -35,7 +35,6 @@ var items = result.Results;
 | [`new Script.Util.WSProxy()`](/wsproxy/constructor/) | Create a WSProxy instance |
 | [`<WSProxyInstance>.retrieve(...)`](/wsproxy/retrieve/) | Retrieve SFMC objects (paginate with `getNextBatch` when `HasMoreRows`) |
 | [`<WSProxyInstance>.getNextBatch(...)`](/wsproxy/getnextbatch/) | Continue a paginated retrieve |
-| [`<WSProxyInstance>.setBatchSize(...)`](/wsproxy/setbatchsize/) | Change retrieve page size |
 | [`<WSProxyInstance>.createItem(...)`](/wsproxy/createitem/) | Create a new SFMC object |
 | [`<WSProxyInstance>.updateItem(...)`](/wsproxy/updateitem/) | Update an existing object |
 | [`<WSProxyInstance>.deleteItem(...)`](/wsproxy/deleteitem/) | Delete an object |

@@ -1,15 +1,15 @@
 ---
 ---
 
-@import "variables";
-@import "layout";
-@import "typography";
-@import "header";
-@import "sidebar";
-@import "code";
-@import "callouts";
-@import "search";
-@import "cookieconsent";
+@use "variables" as *;
+@use "layout";
+@use "typography";
+@use "header";
+@use "sidebar";
+@use "code";
+@use "callouts";
+@use "search";
+@use "cookieconsent";
 
 // ── Utility classes ───────────────────────────────────────────────────────────
 

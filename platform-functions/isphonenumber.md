@@ -63,6 +63,7 @@ function normalizeContact(raw) {
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
+  <li><a href="/core-library/isphonenumber/">IsPhoneNumber — bare-name Core form (requires Platform.Load)</a></li>
   <li><a href="/platform-functions/isemailaddress/">IsEmailAddress</a></li>
   <li><a href="/platform-objects/platform-request/">Platform.Request</a></li>
 </ul>

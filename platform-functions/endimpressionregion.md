@@ -45,6 +45,7 @@ Platform.Function.EndImpressionRegion(true);
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
+  <li><a href="/core-library/endimpressionregion/">EndImpressionRegion — bare-name Core form (requires Platform.Load)</a></li>
   <li><a href="/platform-functions/beginimpressionregion/">BeginImpressionRegion</a></li>
 </ul>
 </div>

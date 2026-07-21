@@ -59,33 +59,6 @@ Write(result);
 
 ---
 
-## Bare-name Core Globals Are Scope-Sensitive {#bare-name-redirect-does-not-exist}
-
-**Severity: High** — `ReferenceError` / `undefined` inside nested scopes
-
-The bare-name Core globals ([`Write`](/core-library/write/), [`Stringify`](/core-library/stringify/), [`Redirect`](/core-library/redirect/), [`Base64Encode`](/core-library/base64encode/), [`Format`](/core-library/format/), …) are injected by `Platform.Load("core", ...)` **only into the scope where the load runs**. Inside nested helper-function bodies (or `eval()`) they are `undefined` — even though the load already happened. This makes them look "not defined at runtime" when probed from inside a function, which is a scope artifact, not a real absence.
-
-```javascript
-Platform.Load("core", "1.1.5");
-
-// ✅ Same scope as Platform.Load — works
-Redirect("https://www.example.com", false);
-Write("hello");
-
-function helper() {
-    // ❌ Nested scope — bare names are undefined here, throws ReferenceError
-    Write("hello from helper");
-}
-
-// ✅ Scope-independent alternatives work everywhere, no Platform.Load needed
-Platform.Response.Write("hello from anywhere");
-Platform.Response.Redirect("https://www.example.com", false);
-```
-
-**Works correctly:** call bare names in the same scope as `Platform.Load`, or use the `Platform.*` siblings (e.g. [`Platform.Response.Redirect`](/platform-objects/platform-response/#redirect), [`Platform.Response.Write`](/platform-objects/platform-response/#write), [`Platform.Function.Stringify`](/platform-functions/stringify/)) inside helpers.
-
----
-
 ## Bare-name Recipient Does Not Exist
 
 **Severity: High** — the alias is `undefined`
