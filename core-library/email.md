@@ -7,7 +7,7 @@ description: "Core library object for managing classic Email Studio email messag
 verification: verified
 deprecated: true
 requires_core_load: true
-differs_from_docs: "Runtime-verified on a live CloudPage: the whole Email object (Init/Add/Retrieve/Update/Remove/Validate/CheckContent) works. <EmailInstance>.Validate() returns Task.ValidationStatus as a STRING (e.g. \"Fail\"), not the boolean the official docs and this page's return-value table previously claimed."
+differs_from_docs: true
 ---
 
 {% include callout.html type="warning" content="**Deprecated.** The `Email` object manages **classic Email Studio** email messages (the legacy email type). It still works at runtime, but classic emails are legacy — prefer **Content Builder** `htmlemail` assets and the modern send methods for new development." %}

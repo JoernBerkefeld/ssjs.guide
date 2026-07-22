@@ -6,7 +6,7 @@ parent_url: /core-library/
 description: Row-level CRUD methods on a DataExtension object. Retrieve, Add, Update, and Remove rows using object-oriented syntax.
 verification: verified
 requires_core_load: true
-differs_from_docs: "Runtime-verified on a live CloudPage: Add and Update return a number (rows affected), not the string \"OK\"; Update returns 0 (does not throw) on no match. Retrieve() without a filter DOES work on CloudPages (the \"returns empty\" bug could not be reproduced) and returns every field as a string, whereas Lookup returns typed values. Retrieve returns an empty array on no match; Lookup returns null on no match. Retrieve/Lookup results are host arrays (instanceof Array is false, but .length and index access work)."
+differs_from_docs: true
 ---
 
 `DataExtension.Rows` is the primary interface for reading and writing Data Extension rows via the Core library. Access it through a `DataExtension.Init()` object.

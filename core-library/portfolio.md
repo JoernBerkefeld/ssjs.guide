@@ -7,7 +7,7 @@ description: "Core library Portfolio — file / portfolio items (init, add, retr
 verification: in-progress
 deprecated: true
 requires_core_load: true
-differs_from_docs: "Runtime-verified on a live CloudPage: Init is confirmed. Add returns the string \"Error\" (not \"OK\", and does NOT throw), Retrieve returns an `object` with no `.length` (not the documented `object[]`), and Update/Remove against a non-existent key also return \"Error\" without throwing. Add/Retrieve/Update/Remove success paths are BLOCKED (no test data could be created)."
+differs_from_docs: true
 ---
 
 {% include callout.html type="warning" content="**Deprecated.** `Portfolio` is a legacy **Classic Content** / **Classic Email Studio** feature. Salesforce retired classic content creation and editing (Classic Content reached end of life on 24 Apr 2023), and **Content Builder** is now the single cross-channel content repository. SOAP-era Portfolio integrations only operate on the old Classic tools — prefer **Content Builder** assets (Asset REST endpoints) for new development." %}

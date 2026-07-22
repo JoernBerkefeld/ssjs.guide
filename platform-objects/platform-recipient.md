@@ -5,7 +5,7 @@ parent: Platform Objects
 parent_url: /platform-objects/
 description: Read attribute values and sendable data extension field values for the current recipient during an email send.
 verification: verified
-differs_from_docs: "Runtime-verified (CloudPage): Platform.Recipient.GetAttributeValue is available WITHOUT Platform.Load and does NOT throw outside a send context — in a plain CloudPage it returns \"\" (empty string) because no recipient is bound. The bare-name Recipient alias is NOT defined at runtime (undefined before and after Platform.Load); use Platform.Recipient.GetAttributeValue(...) or Attribute.GetValue(...) after Platform.Load instead."
+differs_from_docs: true
 ---
 
 `Platform.Recipient` provides access to subscriber attributes and sendable data extension fields for the contact being processed in the current send context.

@@ -6,7 +6,7 @@ parent_url: /core-library/
 description: Core library FilterDefinition — create and manage data filter definitions for lists or Data Extensions.
 verification: in-progress
 requires_core_load: true
-differs_from_docs: "Runtime-verified on a live CloudPage: Init and Retrieve are confirmed. Retrieve always returns an array — an empty array when nothing matches, never null. Add/Update/Remove return the string \"Error\" on failure (they do NOT throw, contrary to the docs' \"returns OK or throws\"); their success path is BLOCKED — a valid FilterDefinition could not be created on the test BU (audience/DataSource configuration the account could not satisfy)."
+differs_from_docs: true
 ---
 
 `FilterDefinition` manages **filter definitions** used for audiences and queries. `DataSource.Type` must be `"SubscriberList"` or `"DataExtension"`. The `Filter` property accepts simple or compound filter structures.

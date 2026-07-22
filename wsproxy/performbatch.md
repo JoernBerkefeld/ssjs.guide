@@ -12,7 +12,7 @@ return_type: object
 min_args: 3
 max_args: 4
 verification: verified
-differs_from_docs: "Runtime-verified: the action verb is case-insensitive (\"start\" behaves identically to \"Start\"), and each Results entry carries a Task sub-object (with InteractionObjectID) plus StatusCode/StatusMessage detail the official docs do not describe."
+differs_from_docs: true
 ---
 
 Performs the same action on **multiple** rows/objects in one SOAP request. For a **single** object, use [`<WSProxyInstance>.performItem`](/wsproxy/performitem/).

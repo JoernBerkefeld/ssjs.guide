@@ -5,7 +5,7 @@ parent: Platform Objects
 parent_url: /platform-objects/
 description: Read HTTP request data including query string parameters, POST body, form data, request headers, and cookies.
 verification: verified
-differs_from_docs: "Runtime-verified (CloudPage): Platform.Request is available WITHOUT Platform.Load. The getters GetQueryStringParameter / GetFormField / GetCookieValue / GetRequestHeader return null (typeof \"object\") for an absent key, NOT an empty string. GetPostData returns \"\" (empty string) on a GET."
+differs_from_docs: true
 ---
 
 `Platform.Request` provides methods to inspect every aspect of the incoming HTTP request in CloudPage, JSON Resource, and Triggered Send contexts.

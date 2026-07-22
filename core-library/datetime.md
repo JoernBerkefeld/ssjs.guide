@@ -8,7 +8,7 @@ redirect_from:
   - /platform-objects/datetime/
   - /platform-objects/datetime-timezone/
 verification: verified
-differs_from_docs: "Runtime note: SystemDateToLocalDate / LocalDateToSystemDate return genuine Date objects (typeof \"object\", Object.prototype.toString reports [object Date], .constructor === Date, working getFullYear()/getHours()/getTime(); only instanceof Date is false due to the engine-wide instanceof-on-builtins bug). They also coerce transparently to strings via String(value), \"\" + value, or Write(value). DateTime.TimeZone.Retrieve rows are CLR objects that Stringify() cannot serialize — enumerate with for..in."
+differs_from_docs: true
 description: Date-time utilities for converting between system time and local time, and for retrieving time zone definitions. Requires the Core library.
 ---
 

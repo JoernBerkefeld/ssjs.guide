@@ -6,7 +6,7 @@ parent_url: /core-library/
 description: Core library QueryDefinition — SQL query activities (add, retrieve, update, remove, perform).
 verification: verified
 requires_core_load: true
-differs_from_docs: "Runtime-verified on a live CloudPage (full Add → Retrieve → Update → Perform → Remove lifecycle against a real target DE). One discrepancy: `Perform(\"start\")` returns the string `\"QueryDefinition perform called successfully\"`, not the documented `\"OK\"` — it queues the run asynchronously and returns immediately."
+differs_from_docs: true
 ---
 
 `QueryDefinition` manages **Query Activities**: SQL text, target Data Extension, update type, and execution via **`Perform("start")`**.

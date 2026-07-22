@@ -6,7 +6,7 @@ parent_url: /core-library/
 description: Core library SenderProfile — from-name / from-address profiles (Core library has no Retrieve here).
 verification: verified
 requires_core_load: true
-differs_from_docs: "Runtime-verified on a live CloudPage (full Add → Init → Update → Remove lifecycle). One discrepancy: `SenderProfile.Add` returns a CLR object (`ExactTarget.Integration.WSDL.SenderProfile`), not the documented `\"OK\"` string; Init/Update/Remove behave as documented."
+differs_from_docs: true
 ---
 
 `SenderProfile` manages **sender profiles** (From name, From address, etc.). **SenderProfile methods only run on CloudPages / landing pages** — they **cannot** run inside an email message at send time.

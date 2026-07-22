@@ -112,7 +112,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`DateTime.SystemDateToLocalDate(dateString)`](/core-library/datetime/#systemdatetolocaldate) | Core Library | string | System time (CST) to local account/user time |
 | [`Date.now()`](/ecmascript-builtins/date-methods/#now) | ECMAScript Builtins | object | ⚠️ Returns a **Date object** in SFMC, not a number — use `new Date().getTime()` (static) |
 | [`Date.parse(dateString)`](/ecmascript-builtins/date-methods/#parse) | ECMAScript Builtins | number | ⚠️ Invalid strings return **`0`**, not `NaN`; date-only parses as local (static) |
-| [`Date.UTC(year, month[, day, hours, minutes, seconds, milliseconds])`](/ecmascript-builtins/date-methods/#utc) | ECMAScript Builtins | number | Milliseconds since epoch for the given UTC date parts — pass ≥ 2 args (static) |
+| [`Date.UTC(year, month[, day, hours, minutes, seconds, milliseconds])`](/ecmascript-builtins/date-methods/#utc) | ECMAScript Builtins | number | ⚠️ Partial — pass ≥ 2 args; year-only form returns a nonsense value, not `NaN` (static) |
 | [`<DateInstance>.getDate()`](/ecmascript-builtins/date-methods/#getdate) | ECMAScript Builtins | number | Day of month (1–31), local time |
 | [`<DateInstance>.getDay()`](/ecmascript-builtins/date-methods/#getday) | ECMAScript Builtins | number | Day of week (0 = Sunday … 6 = Saturday), local time |
 | [`<DateInstance>.getFullYear()`](/ecmascript-builtins/date-methods/#getfullyear) | ECMAScript Builtins | number | Four-digit year, local time |
@@ -353,12 +353,12 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`NotSentEvent.Retrieve(filter)`](/core-library/events/#not-sent-event) | Core Library | object[] | Not-sent events |
 | [`Number.EPSILON`](/ecmascript-builtins/number-methods/#max_safe_integer) | ECMAScript Builtins | number | ❌ Missing (ES6) — `undefined`; use `2.220446049250313e-16` |
 | [`Number.MAX_SAFE_INTEGER`](/ecmascript-builtins/number-methods/#max_safe_integer) | ECMAScript Builtins | number | ❌ Missing (ES6) — `undefined`; use `9007199254740991` |
-| [`Number.MAX_VALUE`](/ecmascript-builtins/number-methods/#constants) | ECMAScript Builtins | number | ❌ Missing (ES3) — `undefined`; use the literal `1.7976931348623157e+308` |
+| [`Number.MAX_VALUE`](/ecmascript-builtins/number-methods/#constants) | ECMAScript Builtins | number | ✅ Defined (ES3) — correct value |
 | [`Number.MIN_SAFE_INTEGER`](/ecmascript-builtins/number-methods/#max_safe_integer) | ECMAScript Builtins | number | ❌ Missing (ES6) — `undefined`; use `-9007199254740991` |
-| [`Number.MIN_VALUE`](/ecmascript-builtins/number-methods/#constants) | ECMAScript Builtins | number | ❌ Missing (ES3) — `undefined`; use the literal `5e-324` |
-| [`Number.NaN`](/ecmascript-builtins/number-methods/#constants) | ECMAScript Builtins | number | ❌ Missing (ES3) — `undefined`; use the global `NaN` |
-| [`Number.NEGATIVE_INFINITY`](/ecmascript-builtins/number-methods/#constants) | ECMAScript Builtins | number | ❌ Missing (ES3) — `undefined` |
-| [`Number.POSITIVE_INFINITY`](/ecmascript-builtins/number-methods/#constants) | ECMAScript Builtins | number | ❌ Missing (ES3) — `undefined` |
+| [`Number.MIN_VALUE`](/ecmascript-builtins/number-methods/#constants) | ECMAScript Builtins | number | ⚠️ Partial (ES3) — defined but **wrong** (reads back large negative); use the literal `5e-324` |
+| [`Number.NaN`](/ecmascript-builtins/number-methods/#constants) | ECMAScript Builtins | number | ✅ Defined (ES3) — correct value |
+| [`Number.NEGATIVE_INFINITY`](/ecmascript-builtins/number-methods/#constants) | ECMAScript Builtins | number | ⚠️ Partial (ES3) — defined but **sign swapped**; use `-Infinity` literal |
+| [`Number.POSITIVE_INFINITY`](/ecmascript-builtins/number-methods/#constants) | ECMAScript Builtins | number | ⚠️ Partial (ES3) — defined but **sign swapped**; use `Infinity` literal |
 | [`<NumberInstance>.toExponential([fractionDigits])`](/ecmascript-builtins/number-methods/#toexponential) | ECMAScript Builtins | string | ⚠️ Partial — no-arg form pads trailing zeros; always pass `fractionDigits` |
 | [`<NumberInstance>.toFixed([fractionDigits])`](/ecmascript-builtins/number-methods/#tofixed) | ECMAScript Builtins | string | Fixed-point notation string |
 | [`<NumberInstance>.toPrecision([precision])`](/ecmascript-builtins/number-methods/#toprecision) | ECMAScript Builtins | string | Precision notation string |
@@ -380,7 +380,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`Object.entries(obj)`](/ecmascript-builtins/object-methods/#entries) | ECMAScript Builtins | array | ❌ Missing (ES6) — use `for...in` with `hasOwnProperty` (static) |
 | [`Object.freeze(obj)`](/ecmascript-builtins/object-methods/#freeze) | ECMAScript Builtins | object | ❌ Missing (ES5) — cannot enforce immutability; read-only by convention (static) |
 | [`Object.getOwnPropertyDescriptor(obj, prop)`](/ecmascript-builtins/object-methods/#getownpropertydescriptor) | ECMAScript Builtins | object | ❌ Missing (ES5) — read value directly + `hasOwnProperty` (static) |
-| [`Object.getOwnPropertyNames(obj)`](/ecmascript-builtins/object-methods/#getownpropertynames) | ECMAScript Builtins | array | Array of an object's own property names (static) |
+| [`Object.getOwnPropertyNames(obj)`](/ecmascript-builtins/object-methods/#getownpropertynames) | ECMAScript Builtins | array | ❌ Missing (ES5) — `undefined`; use `for...in` with `hasOwnProperty` (static) |
 | [`Object.getPrototypeOf(obj)`](/ecmascript-builtins/object-methods/#getprototypeof) | ECMAScript Builtins | object | Return the prototype of the given object (static) |
 | [`Object.isExtensible(obj)`](/ecmascript-builtins/object-methods/#extensibility) | ECMAScript Builtins | boolean | ❌ Missing (ES5) — no runtime extensibility control (static) |
 | [`Object.isFrozen(obj)`](/ecmascript-builtins/object-methods/#freeze) | ECMAScript Builtins | boolean | ❌ Missing (ES5) — immutability cannot be enforced (static) |
@@ -390,7 +390,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`Object.seal(obj)`](/ecmascript-builtins/object-methods/#extensibility) | ECMAScript Builtins | object | ❌ Missing (ES5) — no runtime extensibility control (static) |
 | [`Object.values(obj)`](/ecmascript-builtins/object-methods/#values) | ECMAScript Builtins | array | ❌ Missing (ES6) — use `for...in` with `hasOwnProperty` (static) |
 | [`<ObjectInstance>.hasOwnProperty(v)`](/ecmascript-builtins/object-methods/#hasownproperty) | ECMAScript Builtins | boolean | Test if object has own (non-inherited) property |
-| [`<ObjectInstance>.isPrototypeOf(obj)`](/ecmascript-builtins/object-methods/#isprototypeof) | ECMAScript Builtins | boolean | ❌ Missing — hangs the engine; never call it |
+| [`<ObjectInstance>.isPrototypeOf(obj)`](/ecmascript-builtins/object-methods/#isprototypeof) | ECMAScript Builtins | boolean | ⚠️ Partial — present but **hangs the engine** when called; never call it |
 | [`<ObjectInstance>.propertyIsEnumerable(prop)`](/ecmascript-builtins/object-methods/#propertyisenumerable) | ECMAScript Builtins | boolean | ⚠️ Partial — broken; always returns `false`; use `hasOwnProperty` |
 | [`<ObjectInstance>.toString()`](/ecmascript-builtins/object-methods/#tostring) | ECMAScript Builtins | string | Default string representation (e.g. `[object Object]`) |
 | [`<ObjectInstance>.valueOf()`](/ecmascript-builtins/object-methods/#valueof) | ECMAScript Builtins | object | Primitive value of the object |

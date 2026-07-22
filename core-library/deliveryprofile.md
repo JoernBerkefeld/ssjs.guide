@@ -6,7 +6,7 @@ parent_url: /core-library/
 description: Core library DeliveryProfile — create, update, and remove delivery profiles (no Retrieve in this namespace).
 verification: verified
 requires_core_load: true
-differs_from_docs: "Runtime-verified on a live CloudPage: DeliveryProfile.Add returns a CLR object (ExactTarget.Integration.WSDL.DeliveryProfile) whose properties are not readable from SSJS, not the string \"OK\". Init returns an instance; Update and Remove return \"OK\"; DeliveryProfile.Retrieve is undefined (as documented)."
+differs_from_docs: true
 ---
 
 `DeliveryProfile` manages **delivery profiles** (routing / delivery settings used with send classifications). The Core library exposes `Init`, `Add`, `Update`, and `Remove` — there is **no** `DeliveryProfile.Retrieve` in this namespace; query profiles with WSProxy or another API if you need read access outside an instance.

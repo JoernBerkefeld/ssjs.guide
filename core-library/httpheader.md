@@ -7,7 +7,7 @@ permalink: /core-library/httpheader/
 redirect_from:
   - /platform-objects/httpheader/
 verification: verified
-differs_from_docs: "Runtime-verified: GetValue reads INBOUND request headers (e.g. Host, User-Agent) and returns null for a header you just set with SetValue — GetValue and SetValue operate on separate (inbound vs outbound) collections. Remove returns undefined, not \"OK\"."
+differs_from_docs: true
 description: Read, set, and remove named HTTP headers via the Core library HTTPHeader helpers.
 ---
 

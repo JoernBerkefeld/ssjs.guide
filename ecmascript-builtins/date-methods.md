@@ -50,7 +50,7 @@ differs_from_docs: true
 | [`getMilliseconds()`](#getmilliseconds) | ES3 | ⚠️ Partial | Frequently off by one — do not trust exact value |
 | [`Date.now()`](#now) | ES5 | ⚠️ Partial | Returns a **`Date` object**, not a number — coerce it |
 | [`Date.parse(str)`](#parse) | ES3 | ⚠️ Partial | Invalid strings return **`0`**, not `NaN`; date-only strings parse as **local** |
-| [`Date.UTC(...)`](#utc) | ES3 | ✅ Works | Pass ≥ 2 args; year-only form misbehaves |
+| [`Date.UTC(...)`](#utc) | ES3 | ⚠️ Partial | Pass ≥ 2 args; year-only form returns nonsense {% include method-status.html status="differs-from-docs" %} |
 | [`toISOString()`](#toisostring) | ES5 | ❌ Missing | Build the ISO string manually |
 | [`toJSON()`](#tojson) | ES5 | ❌ Missing | Absent (depends on `toISOString`) |
 
@@ -189,9 +189,9 @@ Date.parse("garbage");                // 0  (spec: NaN)
 
 ## UTC {#utc}
 
-`(ES3)` — ✅ Works, with a caveat. `Date.UTC(year[, month[, day[, hours[, minutes[, seconds[, ms]]]]]])` returns ms for the given UTC components when you pass at least **year and month**.
+`(ES3)` — ⚠️ Partial. {% include method-status.html status="differs-from-docs" %} `Date.UTC(year[, month[, day[, hours[, minutes[, seconds[, ms]]]]]])` returns ms for the given UTC components when you pass at least **year and month**.
 
-{% include callout.html type="warning" title="Differs from MDN — year-only form misbehaves" content="Runtime-verified: the year-only form `Date.UTC(2026)` returns a nonsense small number (observed **-21597974**) instead of a valid timestamp — and does **not** return `NaN`. Always pass at least year and month, e.g. `Date.UTC(2026, 0, 1)`." %}
+{% include differs-from-docs.html note="With year + month (and further components) `Date.UTC()` returns the correct UTC timestamp. But the year-only form `Date.UTC(2026)` returns a nonsense small number (observed **-21597974**) instead of a valid timestamp — and does not return `NaN`. Always pass at least year and month, e.g. `Date.UTC(2026, 0, 1)`." %}
 
 ```javascript
 Date.UTC(1970, 0, 1);                    // 0

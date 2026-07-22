@@ -8,7 +8,7 @@ redirect_from:
   - /global-functions/error/
 description: Native JavaScript Error constructor for creating throwable error objects in try/catch error handling.
 verification: verified
-differs_from_docs: "Runtime-verified: a JS-constructed new Error(\"msg\") does not expose .message (reads undefined) — recover the message via String(e); engine-raised platform errors do carry .message and .description."
+differs_from_docs: true
 availability:
   email: true
   cloudpage: true
@@ -30,7 +30,7 @@ max_args: 1
 
 `Error` is the native JavaScript Error constructor. Use it with `throw` and `try/catch` for structured error handling in SSJS.
 
-> **Engine caveat (runtime-verified):** Unlike standard JavaScript, a JS-constructed `new Error("msg")` in the SFMC (Jint) engine does **not** expose the message via `.message` — `e.message` reads back `undefined`. Recover the message with `String(e)` or `("" + e)` (both return the constructor argument), or `e.toString()` (returns `"Error: undefined"`). This differs from **engine-raised** errors (thrown by the platform itself, e.g. a bad `Platform.Function` call), which **do** carry both `.message` (short text) and `.description` (fuller text).
+{% include differs-from-docs.html note="Unlike standard JavaScript, a JS-constructed `new Error(\"msg\")` in the SFMC (Jint) engine does not expose the message via `.message` — `e.message` reads back `undefined`. Recover the message with `String(e)` or `(\"\" + e)` (both return the constructor argument), or `e.toString()` (returns `\"Error: undefined\"`). This differs from engine-raised errors (thrown by the platform itself, e.g. a bad `Platform.Function` call), which do carry both `.message` (short text) and `.description` (fuller text)." %}
 
 ## Examples
 

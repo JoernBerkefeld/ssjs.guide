@@ -7,7 +7,7 @@ permalink: /wsproxy/errorutil/
 redirect_from:
   - /platform-objects/errorutil/
 verification: verified
-differs_from_docs: "Runtime-verified: ErrorUtil is only provided by Platform.Load(\"Core\", \"1\") — it is undefined under newer Core versions (1.1.1, 1.1.5), so it is effectively deprecated. A preceding Script.Util.WSProxy() instance is NOT required. On a real WSProxy error it throws a plain string (no .message/.description). Prefer checking result.Status and throwing new Error() instead."
+differs_from_docs: true
 description: Throw when a WSProxy result indicates failure so try/catch can handle SOAP-level errors. Deprecated in newer Core versions.
 ---
 

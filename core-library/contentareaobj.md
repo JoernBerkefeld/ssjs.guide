@@ -6,7 +6,7 @@ parent_url: /core-library/
 description: Legacy ContentAreaObj Core library (deprecated) — classic Content Areas; prefer Content Builder.
 requires_core_load: true
 verification: verified
-differs_from_docs: "Runtime-verified: ContentAreaObj.Add returns an initialized ContentAreaObjInstance (an object exposing Update/Remove, identical in shape to Init) — matching the docs' H1 summary (\"returns an initialized object\") but NOT the @returns {Enum(\"OK\")} annotation. Retrieve returns a host array ([object Array] with .length, but instanceof Array is false). Init/Add/Retrieve/Update/Remove all work at runtime after Platform.Load(\"core\",\"1.1.1\")."
+differs_from_docs: true
 ---
 
 {% include callout.html type="warning" content="**Deprecated.** Content Areas are a legacy Classic Content feature. Prefer Content Builder assets for new development." %}

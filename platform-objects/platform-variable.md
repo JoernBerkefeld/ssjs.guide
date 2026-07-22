@@ -5,7 +5,7 @@ parent: Platform Objects
 parent_url: /platform-objects/
 description: The AMPscript–SSJS variable bridge. Read and write AMPscript variables from within SSJS script blocks.
 verification: verified
-differs_from_docs: "Runtime-verified (CloudPage): Platform.Variable is available WITHOUT Platform.Load. GetValue returns null (typeof \"object\") when the variable was NEVER set — not an empty string; a variable explicitly set to \"\" returns \"\". The leading @ is optional (auto-added): GetValue(\"v\") and GetValue(\"@v\") are equivalent. The bare-name Variable alias only exists AFTER Platform.Load(\"core\", ...)."
+differs_from_docs: true
 ---
 
 `Platform.Variable` provides two methods for bridging between AMPscript and SSJS execution contexts. Any variable set in AMPscript can be read in SSJS, and vice versa.
