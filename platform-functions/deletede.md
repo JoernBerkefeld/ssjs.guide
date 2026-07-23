@@ -10,7 +10,7 @@ availability:
   automation: true
   triggered_send: true
 syntax: "Platform.Function.DeleteDE(deName, whereFieldNames, whereFieldValues)"
-return_type: void
+return_type: "null"
 min_args: 3
 max_args: 3
 verification: verified

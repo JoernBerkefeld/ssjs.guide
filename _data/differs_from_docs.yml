@@ -502,30 +502,24 @@
   testScript: |
     <script runat="server">
     Platform.Load("core","1.1.5");
-    // The *DE variants execute and COMMIT on a CloudPage too (docs say email-only); they return null (no row count).
-    // NEEDS REVIEW on this CloudPage GET harness: both *DE and *Data threw the generic
-    // "Unable to retrieve security descriptor for this frame" (System.InvalidOperationException) —
-    // the engine's signal for an unrecognized member / unmatched argument count — so the
-    // execute-and-commit behaviour could not be proven from this probe. Retest with argument
-    // shapes and a fixture that match a known signature.
-    // SAFE probe: DeleteDE/DeleteData against the EMPTY SSJSGUIDE_TYPES fixture with a non-matching key
-    // (would commit nothing) — used only to observe execution/return shape without mutating rows.
+    // RUNTIME-PROVEN: all four *DE and all four *Data functions execute AND COMMIT on a CloudPage
+    // (verified by reading the row back in a second request). *Data returns the affected-row count
+    // (typeof number); *DE returns null. Use the ARRAY signature — the flat/variadic (AMPscript-style)
+    // form throws "Unable to retrieve security descriptor for this frame", which is the engine's generic
+    // wrong-arity / no-matching-overload signal, NOT a security/auth/CloudPage-context error.
+    // Signatures: Insert(deName, [cols], [vals]); Delete(deName, [whereCols], [whereVals]);
+    //             Update/Upsert(deName, [whereCols], [whereVals], [cols], [vals]).
+    var de = "SSJSGUIDE_VERIFY"; // fixture: PK "Pk" (Text), data col "Txt" (Text)
     try {
-      var ret = Platform.Function.DeleteDE("SSJSGUIDE_TYPES", "Pk", "no-such-key-nonexistent");
-      // (In an authenticated context) EXPECTED: executes on CloudPage, returns null.
-      Platform.Response.Write("DeleteDE return typeof: " + (typeof ret) + " === null: " + (ret === null) + "\n");
-    } catch (e) {
-      // OBSERVED (CloudPage GET): threw the generic "Unable to retrieve security descriptor for this frame".
-      Platform.Response.Write("DeleteDE ERROR: " + Platform.Function.Stringify(e).substring(0,200) + "\n");
-    }
+      // *Data variant — array form; returns the affected-row count (a number).
+      var cnt = Platform.Function.InsertData(de, ["Pk","Txt"], ["k-demo-1","insData"]);
+      Platform.Response.Write("InsertData return typeof: " + (typeof cnt) + " val=" + cnt + "\n");
+    } catch (e) { Platform.Response.Write("InsertData ERROR: " + Platform.Function.Stringify(e).substring(0,200) + "\n"); }
     try {
-      var cnt = Platform.Function.DeleteData("SSJSGUIDE_TYPES", "Pk", "no-such-key-nonexistent");
-      // (In an authenticated context) EXPECTED: *Data variant returns the affected-row count (a number).
-      Platform.Response.Write("DeleteData return typeof: " + (typeof cnt) + " val=" + cnt + "\n");
-    } catch (e) {
-      // OBSERVED (CloudPage GET): threw the same generic "Unable to retrieve security descriptor for this frame".
-      Platform.Response.Write("DeleteData ERROR: " + Platform.Function.Stringify(e).substring(0,200) + "\n");
-    }
+      // *DE variant — array form; executes and commits, returns null (no row count).
+      var ret = Platform.Function.InsertDE(de, ["Pk","Txt"], ["k-demo-2","insDE"]);
+      Platform.Response.Write("InsertDE return typeof: " + (typeof ret) + " === null: " + (ret === null) + "\n");
+    } catch (e) { Platform.Response.Write("InsertDE ERROR: " + Platform.Function.Stringify(e).substring(0,200) + "\n"); }
     </script>
 
 - name: "Platform.Function.UpsertData"
@@ -555,15 +549,15 @@
       Platform.Response.Write("UpsertData (array form) rows: " + count + "\n");
     } catch (e) { Platform.Response.Write("array-form ERROR: " + Platform.Function.Stringify(e) + "\n"); }
     try {
-      // Flat/variadic form from the docs — EXPECTED to throw at runtime.
+      // Flat/variadic form from the docs — throws at runtime (CONFIRMED).
       Platform.Function.UpsertData("TestDE", "SomeTextField", "x", "SubscriberKey", "cp-demo-1");
       Platform.Response.Write("flat form: unexpectedly OK\n");
     } catch (e) {
-      // OBSERVED: on this CloudPage GET harness the flat form threw the generic
-      // "Unable to retrieve security descriptor for this frame" — the engine's signal for
-      // an argument count it does not accept — so it could not be distinguished
-      // from a different signature error here. NEEDS REVIEW for that half;
-      // the array-form-returns-a-count half is CONFIRMED.
+      // RUNTIME-PROVEN: the flat/variadic form is genuinely UNSUPPORTED — an arity sweep of
+      // 3, 4, 5, 6 and 7 args (plus a mixed array-where/flat-field shape) were ALL rejected with
+      // "Unable to retrieve security descriptor for this frame" and wrote no rows. Here that throw
+      // IS valid proof of rejection: it is the engine's generic unaccepted-signature (arity) signal,
+      // NOT a security/auth/CloudPage-context error. Only the array form (above) is accepted.
       Platform.Response.Write("flat-form ERROR (expected): " + Platform.Function.Stringify(e) + "\n");
     }
     </script>
@@ -585,29 +579,28 @@
   testScript: |
     <script runat="server">
     Platform.Load("core", "1.1.5");
-    // Claim 17 probe (read-only): DE functions resolve by NAME; an unknown name throws.
-    // Probe A: the real fixture Name resolves (control) — LookupRows returns without error.
+    // DE functions resolve by NAME only. Proven against a fixture whose external key deliberately
+    // DIFFERS from its Name: Name = "SSJSGUIDE_VERIFY2_NAME", CustomerKey = "SSJSGUIDE_VERIFY2_KEY".
+    // Probe A: pass the NAME -> resolves (no "does not exist" error).
     try {
-        var rows = Platform.Function.LookupRows("SSJSGUIDE_TYPES", "Pk", "no-such-key");
-        // OBSERVED: resolves; typeof rows = object (null / row set), no "does not exist" error.
-        Platform.Response.Write("A real-Name resolves: OK (typeof rows=" + (typeof rows) + ")\n");
+        var rows = Platform.Function.LookupRows("SSJSGUIDE_VERIFY2_NAME", "Pk", "x");
+        // OBSERVED: resolves; typeof rows = object. The Name is accepted.
+        Platform.Response.Write("A NAME resolves: OK (typeof rows=" + (typeof rows) + ")\n");
     } catch (e) {
-        Platform.Response.Write("A real-Name ERROR: " + Platform.Function.Stringify(e).substring(0,180) + "\n");
+        Platform.Response.Write("A NAME ERROR: " + Platform.Function.Stringify(e).substring(0,180) + "\n");
     }
-    // Probe B: an unknown DE name throws the documented error.
+    // Probe B: pass the external KEY where a Name is expected -> throws "does not exist".
     try {
-        Platform.Function.LookupRows("NoSuchDE_ExternalKeyLike_ZZZ", "Pk", "x");
-        Platform.Response.Write("B bogus-name: unexpectedly OK\n");
+        Platform.Function.LookupRows("SSJSGUIDE_VERIFY2_KEY", "Pk", "x");
+        Platform.Response.Write("B KEY: unexpectedly resolved (key accepted!)\n");
     } catch (e) {
         // OBSERVED: {"message":"The Data Extension name for a LookupRows function call is invalid.
-        //   A Data Extension of this name does not exist.  Data Extension Name: NoSuchDE_ExternalKeyLike_ZZZ ..."}
-        Platform.Response.Write("B bogus-name ERROR (expected): " + Platform.Function.Stringify(e).substring(0,180) + "\n");
+        //   A Data Extension of this name does not exist.  Data Extension Name: SSJSGUIDE_VERIFY2_KEY ..."}
+        Platform.Response.Write("B KEY ERROR (expected): " + Platform.Function.Stringify(e).substring(0,180) + "\n");
     }
-    // NOTE: the fixture SSJSGUIDE_TYPES has CustomerKey == Name, so the Name-vs-external-key
-    // DISTINCTION (external key throws while Name resolves) cannot be isolated on this harness.
-    // The documented "A Data Extension of this name does not exist." error and Name-based
-    // resolution are CONFIRMED; the strict external-key-rejection half is NEEDS REVIEW here and
-    // must be re-run against a DE whose external key deliberately differs from its Name.
+    // CONFIRMED: with key != name, the NAME resolves and the external KEY throws the documented
+    // "A Data Extension of this name does not exist." error. DE-name-taking Platform functions accept
+    // the Name ONLY — never the external key, and never both.
     </script>
 
 - name: "Platform.Function.InvokeCreate"
@@ -621,25 +614,22 @@
   discrepancy: "A1"
   anchor: "platform-function-invokecreate-returns-the-overallstatus-string-not-an-object"
   body: |
-    The official docs type the return value as an object, but at runtime the call returns the **OverallStatus message as a string** (`"OK"` / `"Error: ..."`). The request ID is written to `status[1]` and, on error, a numeric error code is written into the status array.
+    The official docs type the return value as an object, but at runtime the call returns the **OverallStatus message as a string** (`"OK"` / `"Error"`) — runtime-confirmed. The valid signature is **3 arguments**: `InvokeCreate(apiObject, status, options)`. The `status` argument is a single **array**: `status[0]` holds the OverallStatus message and `status[1]` holds the numeric request-id / error code (there are **no** separate `statusMsgVar` / `errorCodeVar` out-parameters). Calling with any other argument count throws `"Unable to retrieve security descriptor for this frame"` — the engine's generic arity / no-matching-overload signal, **not** a security, auth, or CloudPage-context error.
   testScript: |
     <script runat="server">
     Platform.Load("core","1.1.5");
-    // InvokeCreate returns the OverallStatus MESSAGE as a STRING ("OK" / "Error: ...") — not an object.
-    // On error a numeric error code is written into the status array.
-    // WRITE/API OPERATION: requires a valid API object + permissions. Illustrative only.
-    // NEEDS REVIEW: on this CloudPage GET harness the SOAP Invoke* call threw the generic
-    // "Unable to retrieve security descriptor for this frame." (System.InvalidOperationException) —
-    // the engine's signal for an unrecognized member or an argument shape it did not match —
-    // so the return-type claim could not be observed here. Re-run with a valid API object.
+    // InvokeCreate returns the OverallStatus MESSAGE as a STRING ("OK" / "Error") — not an object. CONFIRMED at runtime.
+    // Valid signature is 3 args: InvokeCreate(apiObject, status[], options). status[0]=message, status[1]=numeric code.
+    // Wrong arg counts throw "Unable to retrieve security descriptor for this frame" (Jint arity signal, NOT auth).
     try {
       var status = [];
-      var apiObject = Platform.Function.CreateObject("Subscriber");
-      var result = Platform.Function.InvokeCreate(apiObject, status);
-      // EXPECTED: typeof result === "string" (OverallStatus); status[1] holds the request ID.
+      var apiObject = Platform.Function.CreateObject("DataExtension");
+      // 3-arg form (options may be null) returns the string OverallStatus; "Error" here because the payload is intentionally invalid.
+      var result = Platform.Function.InvokeCreate(apiObject, status, null);
       Platform.Response.Write("InvokeCreate return typeof: " + (typeof result) + "\n");
       Platform.Response.Write("result: " + result + "\n");
-      Platform.Response.Write("status[1] (request id): " + status[1] + "\n");
+      Platform.Response.Write("status[0] (message): " + status[0] + "\n");
+      Platform.Response.Write("status[1] (code): " + status[1] + "\n");
     } catch (e) { Platform.Response.Write("ERROR: " + Platform.Function.Stringify(e) + "\n"); }
     </script>
 
@@ -654,25 +644,21 @@
   discrepancy: "A1"
   anchor: "platform-function-invokeupdate-returns-the-overallstatus-string-not-an-object"
   body: |
-    The official docs type the return value as an object, but at runtime the call returns the **OverallStatus message as a string** (`"OK"` / `"Error: ..."`). The request ID is written to `status[1]` and, on error, a numeric error code is written into the status array.
+    The official docs type the return value as an object, but at runtime the call returns the **OverallStatus message as a string** (`"OK"` / `"Error"`) — runtime-confirmed. The valid signature is **3 arguments**: `InvokeUpdate(apiObject, status, options)`. The `status` argument is a single **array**: `status[0]` holds the OverallStatus message and `status[1]` holds the numeric request-id / error code. The documented separate `statusMsgVar` / `errorCodeVar` out-parameters are **refuted** at runtime — supplying that 4-argument form throws. Any wrong argument count throws `"Unable to retrieve security descriptor for this frame"` — the engine's generic arity / no-matching-overload signal, **not** a security, auth, or CloudPage-context error.
   testScript: |
     <script runat="server">
     Platform.Load("core","1.1.5");
-    // InvokeUpdate returns the OverallStatus MESSAGE as a STRING ("OK" / "Error: ...") — not an object.
-    // On error a numeric error code is written into the status array.
-    // WRITE/API OPERATION: requires a valid API object + permissions. Illustrative only.
-    // NEEDS REVIEW: on this CloudPage GET harness the SOAP Invoke* call threw the generic
-    // "Unable to retrieve security descriptor for this frame." (System.InvalidOperationException) —
-    // the engine's signal for an unrecognized member or an argument shape it did not match —
-    // so the return-type claim could not be observed here. Re-run with a valid API object.
+    // InvokeUpdate returns the OverallStatus MESSAGE as a STRING ("OK" / "Error") — not an object. CONFIRMED at runtime.
+    // Valid signature is 3 args: InvokeUpdate(apiObject, status[], options). status[0]=message, status[1]=numeric code.
+    // The separate statusMsgVar/errorCodeVar 4-arg form is REFUTED (throws). Wrong arg counts throw the Jint arity signal, NOT auth.
     try {
       var status = [];
-      var apiObject = Platform.Function.CreateObject("Subscriber");
-      var result = Platform.Function.InvokeUpdate(apiObject, status);
-      // EXPECTED: typeof result === "string" (OverallStatus); status[1] holds the request ID.
+      var apiObject = Platform.Function.CreateObject("DataExtension");
+      var result = Platform.Function.InvokeUpdate(apiObject, status, null);
       Platform.Response.Write("InvokeUpdate return typeof: " + (typeof result) + "\n");
       Platform.Response.Write("result: " + result + "\n");
-      Platform.Response.Write("status[1] (request id): " + status[1] + "\n");
+      Platform.Response.Write("status[0] (message): " + status[0] + "\n");
+      Platform.Response.Write("status[1] (code): " + status[1] + "\n");
     } catch (e) { Platform.Response.Write("ERROR: " + Platform.Function.Stringify(e) + "\n"); }
     </script>
 
@@ -687,25 +673,21 @@
   discrepancy: "A1"
   anchor: "platform-function-invokedelete-returns-the-overallstatus-string-not-an-object"
   body: |
-    The official docs type the return value as an object, but at runtime the call returns the **OverallStatus message as a string** (`"OK"` / `"Error: ..."`). The request ID is written to `status[1]` and, on error, a numeric error code is written into the status array.
+    The official docs type the return value as an object, but at runtime the call returns the **OverallStatus message as a string** (`"OK"` / `"Error"`) — runtime-confirmed. The valid signature is **3 arguments**: `InvokeDelete(apiObject, status, options)`. The `status` argument is a single **array**: `status[0]` holds the OverallStatus message and `status[1]` holds the numeric request-id / error code. The documented separate `statusMsgVar` / `errorCodeVar` out-parameters are **refuted** at runtime — supplying that 4-argument form throws. Any wrong argument count throws `"Unable to retrieve security descriptor for this frame"` — the engine's generic arity / no-matching-overload signal, **not** a security, auth, or CloudPage-context error.
   testScript: |
     <script runat="server">
     Platform.Load("core","1.1.5");
-    // NEEDS REVIEW: on this CloudPage GET harness the SOAP Invoke* call threw the generic
-    // "Unable to retrieve security descriptor for this frame." (System.InvalidOperationException) —
-    // the engine's signal for an unrecognized member or an argument shape it did not match —
-    // so the return-type claim could not be observed here. Re-run with a valid API object.
-    // InvokeDelete returns the OverallStatus MESSAGE as a STRING ("OK" / "Error: ...") — not an object.
-    // On error a numeric error code is written into the status array.
-    // WRITE/API OPERATION: requires a valid API object + permissions. Illustrative only.
+    // InvokeDelete returns the OverallStatus MESSAGE as a STRING ("OK" / "Error") — not an object. CONFIRMED at runtime.
+    // Valid signature is 3 args: InvokeDelete(apiObject, status[], options). status[0]=message, status[1]=numeric code.
+    // The separate statusMsgVar/errorCodeVar 4-arg form is REFUTED (throws). Wrong arg counts throw the Jint arity signal, NOT auth.
     try {
       var status = [];
-      var apiObject = Platform.Function.CreateObject("Subscriber");
-      var result = Platform.Function.InvokeDelete(apiObject, status);
-      // EXPECTED: typeof result === "string" (OverallStatus); status[1] holds the request ID.
+      var apiObject = Platform.Function.CreateObject("DataExtension");
+      var result = Platform.Function.InvokeDelete(apiObject, status, null);
       Platform.Response.Write("InvokeDelete return typeof: " + (typeof result) + "\n");
       Platform.Response.Write("result: " + result + "\n");
-      Platform.Response.Write("status[1] (request id): " + status[1] + "\n");
+      Platform.Response.Write("status[0] (message): " + status[0] + "\n");
+      Platform.Response.Write("status[1] (code): " + status[1] + "\n");
     } catch (e) { Platform.Response.Write("ERROR: " + Platform.Function.Stringify(e) + "\n"); }
     </script>
 
@@ -720,28 +702,35 @@
   discrepancy: "A1"
   anchor: "platform-function-invokeretrieve-returns-object-or-null"
   body: |
-    The official docs type the return value as an object, but at runtime the call returns an **array of result objects — or `null`** when the retrieve errors or matches no rows. The status message is written to `status[0]` and the request ID (a GUID) to `status[1]`. (The two-argument signature matches the docs; unlike its `InvokeExecute`/`InvokeExtract` siblings, the docs do not list an `options` argument here.)
+    The official docs type the return value as an object, but at runtime the call returns an **array of result objects — or `null`** when the retrieve errors or matches no rows. Both branches are runtime-confirmed: the null-on-error branch was observed with an unauthenticated `Subscriber` retrieve, and the array-of-objects SUCCESS branch was observed by retrieving a `DataExtensionObject` from a seeded Data Extension with three rows — the call returned an array-like value of `.length` 3 whose elements are `DataExtensionObject` records (each carrying a `Properties` array of `{Name, Value}` pairs). The two-argument signature matches the docs; unlike its `InvokeExecute`/`InvokeExtract` siblings, the docs do not list an `options` argument here.
+
+    One correction to the earlier claim: the `status` array is **never populated**. Even on the SUCCESS path, `status.length` stayed `0` and both `status[0]` and `status[1]` came back `undefined` — there is **no** OverallStatus message in `status[0]` and **no** request-id GUID in `status[1]`. The status out-parameter is inert for `InvokeRetrieve`; read the returned array itself for results. (Note: SSJS has no `Array.isArray`, so `Array.isArray` reports "n/a" — the return is nonetheless array-like: it has a numeric `.length` and is index-accessible.)
   testScript: |
     <script runat="server">
     Platform.Load("core","1.1.5");
     // InvokeRetrieve returns an ARRAY of result objects — or null on error / no rows. Two-arg signature.
-    // READ-ONLY: a RetrieveRequest for Subscriber (non-mutating).
+    // SUCCESS path proven by retrieving a DataExtensionObject from a seeded DE (3 rows).
     try {
       var status = [];
       var req = Platform.Function.CreateObject("RetrieveRequest");
-      Platform.Function.SetObjectProperty(req, "ObjectType", "Subscriber");
+      Platform.Function.SetObjectProperty(req, "ObjectType", "DataExtensionObject[SSJSGUIDE_VERIFY]");
+      Platform.Function.AddObjectArrayItem(req, "Properties", "Pk");
+      Platform.Function.AddObjectArrayItem(req, "Properties", "Txt");
       var results = Platform.Function.InvokeRetrieve(req, status);
-      // OBSERVED (CloudPage GET): unlike Invoke Create/Update/Delete, Retrieve did NOT throw the
-      // generic unknown-member/wrong-arity error here. With no valid API session the retrieve errored
-      // and returned a genuine JS null: "results == null: true", typeof "object". CONFIRMS the
-      // null-on-error branch. The array-of-objects SUCCESS path and the status[0]/status[1] GUID
-      // population were NOT observed here (status[0]/status[1] came back undefined) — NEEDS REVIEW
-      // for the success branch; re-run in an authenticated/API context with real matching rows.
-      Platform.Response.Write("results == null: " + (results == null) + "\n");
-      Platform.Response.Write("typeof results: " + (typeof results) + "\n");
-      Platform.Response.Write("Array.isArray: " + (results != null && typeof Array.isArray === "function" ? Array.isArray(results) : "n/a") + "\n");
-      Platform.Response.Write("status[0] (message): " + status[0] + "\n");
-      Platform.Response.Write("status[1] (request id GUID): " + status[1] + "\n");
+      // OBSERVED (CloudPage GET), SUCCESS branch:
+      //   typeof results = "object", results.length = 3 (array-like; SSJS has no Array.isArray, so
+      //   Array.isArray reports "n/a"). Each element is a DataExtensionObject, e.g.
+      //   {"Type":"DataExtensionObject","Properties":[{"Name":"Pk","Value":"r1"},{"Name":"Txt","Value":"alpha"}], ...}.
+      //   status.length = 0, status[0] = undefined, status[1] = undefined — the status array is NEVER
+      //   populated (no message, no request-id GUID), even on success. Read the returned array for results.
+      // The null-on-error branch was separately observed with an unauthenticated Subscriber retrieve
+      //   (results == null, typeof "object").
+      Platform.Response.Write("typeof results: " + (typeof results) + " length: " + (results != null ? results.length : "n/a") + "\n");
+      if (results != null && results.length > 0) {
+        Platform.Response.Write("element[0]: " + Platform.Function.Stringify(results[0]).substring(0,220) + "\n");
+      }
+      Platform.Response.Write("status.length: " + (status != null ? status.length : "n/a") + "\n");
+      Platform.Response.Write("status[0]: " + status[0] + "  status[1]: " + status[1] + "\n");
     } catch (e) { Platform.Response.Write("ERROR: " + Platform.Function.Stringify(e) + "\n"); }
     </script>
 
@@ -756,25 +745,21 @@
   discrepancy: "A1"
   anchor: "platform-function-invokeperform-returns-the-overallstatus-string-not-an-object"
   body: |
-    The official docs type the return value as an object, but at runtime the call returns the **OverallStatus message as a string** (`"OK"` / `"Error: ..."`); the request details are written into the status array.
+    The official docs type the return value as an object, but at runtime the call returns the **OverallStatus message as a string** (`"OK"` / `"Error"`) — runtime-confirmed. The valid signature takes **3 or 4 arguments**: `InvokePerform(apiObject, method, status[, options])`, where `method` is the perform-action string. The `status` argument is a single **array**: `status[0]` holds the OverallStatus message, `status[1]` the numeric error code, and `status[2]` the serialized perform-response object. Any other argument count throws `"Unable to retrieve security descriptor for this frame"` — the engine's generic arity / no-matching-overload signal, **not** a security, auth, or CloudPage-context error.
   testScript: |
     <script runat="server">
     Platform.Load("core","1.1.5");
-    // NEEDS REVIEW: on this CloudPage GET harness the SOAP Invoke* call threw the generic
-    // "Unable to retrieve security descriptor for this frame." (System.InvalidOperationException) —
-    // the engine's signal for an unrecognized member or an argument shape it did not match —
-    // so the return-type claim could not be observed here. Re-run with a valid API object.
-    // InvokePerform returns the OverallStatus MESSAGE as a STRING ("OK" / "Error: ...") — not an object.
-    // The request details are written into the status array.
-    // WRITE/API OPERATION: requires a valid API object + permissions. Illustrative only.
+    // InvokePerform returns the OverallStatus MESSAGE as a STRING ("OK" / "Error") — not an object. CONFIRMED at runtime.
+    // Valid signature is 3 OR 4 args: InvokePerform(apiObject, method, status[, options]); method is the action string.
+    // status[0]=message, status[1]=numeric code, status[2]=serialized perform-response. Wrong arg counts throw the Jint arity signal, NOT auth.
     try {
       var status = [];
       var apiObject = Platform.Function.CreateObject("Automation");
-      var result = Platform.Function.InvokePerform(apiObject, status);
-      // EXPECTED: typeof result === "string" (OverallStatus); status[1] holds the request ID.
+      var result = Platform.Function.InvokePerform(apiObject, "start", status);
       Platform.Response.Write("InvokePerform return typeof: " + (typeof result) + "\n");
       Platform.Response.Write("result: " + result + "\n");
-      Platform.Response.Write("status[1] (request id): " + status[1] + "\n");
+      Platform.Response.Write("status[0] (message): " + status[0] + "\n");
+      Platform.Response.Write("status[1] (code): " + status[1] + "\n");
     } catch (e) { Platform.Response.Write("ERROR: " + Platform.Function.Stringify(e) + "\n"); }
     </script>
 
@@ -789,25 +774,21 @@
   discrepancy: "A1"
   anchor: "platform-function-invokeconfigure-returns-the-overallstatus-string-not-an-object"
   body: |
-    The official docs type the return value as an object, but at runtime the call returns the **OverallStatus message as a string** (`"OK"` / `"Error: ..."`); the request details are written into the status array.
+    The official docs type the return value as an object, but at runtime the call returns the **OverallStatus message as a string** (`"OK"` / `"Error"`) — runtime-confirmed. The valid signature is **4 arguments**: `InvokeConfigure(apiObject, action, status, options)`, where `action` is the configure-action string. The `status` argument is a single **array**: `status[0]` holds the OverallStatus message and `status[1]` the numeric error code. Any other argument count throws `"Unable to retrieve security descriptor for this frame"` — the engine's generic arity / no-matching-overload signal, **not** a security, auth, or CloudPage-context error.
   testScript: |
     <script runat="server">
     Platform.Load("core","1.1.5");
-    // NEEDS REVIEW: on this CloudPage GET harness the SOAP Invoke* call threw the generic
-    // "Unable to retrieve security descriptor for this frame." (System.InvalidOperationException) —
-    // the engine's signal for an unrecognized member or an argument shape it did not match —
-    // so the return-type claim could not be observed here. Re-run with a valid API object.
-    // InvokeConfigure returns the OverallStatus MESSAGE as a STRING ("OK" / "Error: ...") — not an object.
-    // The request details are written into the status array.
-    // WRITE/API OPERATION: requires a valid API object + permissions. Illustrative only.
+    // InvokeConfigure returns the OverallStatus MESSAGE as a STRING ("OK" / "Error") — not an object. CONFIRMED at runtime.
+    // Valid signature is 4 args: InvokeConfigure(apiObject, action, status[], options); action is the configure-action string.
+    // status[0]=message, status[1]=numeric code. Wrong arg counts throw the Jint arity signal, NOT auth.
     try {
       var status = [];
-      var apiObject = Platform.Function.CreateObject("PropertyDefinition");
-      var result = Platform.Function.InvokeConfigure(apiObject, status);
-      // EXPECTED: typeof result === "string" (OverallStatus); status[1] holds the request ID.
+      var apiObject = Platform.Function.CreateObject("List");
+      var result = Platform.Function.InvokeConfigure(apiObject, "configure", status, null);
       Platform.Response.Write("InvokeConfigure return typeof: " + (typeof result) + "\n");
       Platform.Response.Write("result: " + result + "\n");
-      Platform.Response.Write("status[1] (request id): " + status[1] + "\n");
+      Platform.Response.Write("status[0] (message): " + status[0] + "\n");
+      Platform.Response.Write("status[1] (code): " + status[1] + "\n");
     } catch (e) { Platform.Response.Write("ERROR: " + Platform.Function.Stringify(e) + "\n"); }
     </script>
 
@@ -823,19 +804,37 @@
   anchor: "platform-function-invokeexecute-undocumented-arity-returns-object"
   body: |
     The official docs are wrong on two counts. **Signature:** they list a **third `options` argument**, but at runtime the function accepts **only two arguments** (`apiObject`, `status`) — passing a third throws an *"Unable to retrieve security descriptor for this frame"* error. **Return:** they type the return value as an object, but at runtime the call returns an **array of result objects**.
+
+    The array-SUCCESS path is runtime-confirmed: a `LogUnsubEvent` execute request returned an array-like value of `.length` 1 whose single element is a result object of shape `{StatusCode, StatusMessage, OrdinalID, Results, ErrorCode, ...}` (observed: `StatusCode:"Error"`, `StatusMessage:"The Subscriber was not found"`, `ErrorCode:12001` for a dummy subscriber). The per-item `StatusCode:"Error"` is a **data-level** result inside the array — not a `null` return — so the call reached and returned the array-of-objects shape. The `status` out-parameter is **never populated**: `status.length` stayed `0` and both `status[0]` and `status[1]` were `undefined`. (SSJS has no `Array.isArray`, so `Array.isArray` reports "n/a"; the return is still array-like — numeric `.length`, index-accessible.)
   testScript: |
     <script runat="server">
     Platform.Load("core","1.1.5");
     // InvokeExecute accepts ONLY two args (apiObject, status); a third throws. Returns an ARRAY of result objects.
-    // API OPERATION: requires a valid API object + permissions.
+    // SUCCESS path proven with a LogUnsubEvent execute request (dummy params).
     try {
       var status = [];
-      var apiObject = Platform.Function.CreateObject("ExecuteRequest");
-      var results = Platform.Function.InvokeExecute(apiObject, status);
-      // OBSERVED (CloudPage GET): the TWO-arg call did NOT throw the unknown-member/wrong-arity error
-      // (unlike Create/Update/Delete/Perform/Configure). It returned typeof "object" == null
-      // (no valid execute results on this page), so the array-SUCCESS path is NEEDS REVIEW.
-      Platform.Response.Write("two-arg typeof: " + (typeof results) + " isArray: " + (results != null && typeof Array.isArray === "function" ? Array.isArray(results) : "n/a") + "\n");
+      var ex = Platform.Function.CreateObject("ExecuteRequest");
+      Platform.Function.SetObjectProperty(ex, "Name", "LogUnsubEvent");
+      var addProp = function(name, val) {
+        var p = Platform.Function.CreateObject("APIProperty");
+        Platform.Function.SetObjectProperty(p, "Name", name);
+        Platform.Function.SetObjectProperty(p, "Value", val);
+        Platform.Function.AddObjectArrayItem(ex, "Parameters", p);
+      };
+      addProp("SubscriberKey", "verify_test@example.com");
+      addProp("JobID", "0"); addProp("ListID", "0"); addProp("BatchID", "0");
+      var results = Platform.Function.InvokeExecute(ex, status);
+      // OBSERVED (CloudPage GET), SUCCESS branch:
+      //   typeof results = "object", results.length = 1 (array-like; SSJS has no Array.isArray).
+      //   results[0] = {"StatusCode":"Error","StatusMessage":"The Subscriber was not found",
+      //     "OrdinalID":0,"Results":null,"ErrorCode":12001, ...}. The per-item Error is a data-level
+      //     result INSIDE the array (not a null return) — the array-of-objects shape is CONFIRMED.
+      //   status.length = 0, status[0] = undefined, status[1] = undefined — status is NEVER populated.
+      Platform.Response.Write("typeof: " + (typeof results) + " length: " + (results != null ? results.length : "n/a") + "\n");
+      if (results != null && results.length > 0) {
+        Platform.Response.Write("element[0]: " + Platform.Function.Stringify(results[0]).substring(0,260) + "\n");
+      }
+      Platform.Response.Write("status.length: " + (status != null ? status.length : "n/a") + " status[0]: " + status[0] + " status[1]: " + status[1] + "\n");
     } catch (e) { Platform.Response.Write("two-arg ERROR: " + Platform.Function.Stringify(e).substring(0,180) + "\n"); }
     try {
       var status2 = [];
@@ -853,43 +852,63 @@
 - name: "Platform.Function.InvokeExtract"
   url: "/platform-functions/invokeextract/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformAPIInvokeExtract.html"
-  tagline: "undocumented arity, returns the OverallStatus string"
+  tagline: "undocumented arity, inert status array, return string unproven at runtime"
   part: "sfmc"
   category: "Platform Functions"
   object: "Platform.Function"
   severity: "high"
   discrepancy: "A3"
-  anchor: "platform-function-invokeextract-undocumented-arity-returns-the-overallstatus-string"
+  anchor: "platform-function-invokeextract-undocumented-arity-inert-status-array-return-string-unproven"
   body: |
-    The official docs are wrong on two counts. **Signature:** they list a **third `options` argument**, but at runtime the function accepts **only two arguments** (`apiObject`, `statusArray`) — passing a third throws an *"Unable to retrieve security descriptor for this frame"* error. **Return:** they type the return value as an object, but at runtime the call returns the **OverallStatus message as a string**.
+    The official docs are wrong on two counts. **Signature:** they list a **third `options` argument**, but at runtime the function accepts **only two arguments** (`apiObject`, `statusArray`) — passing a third throws an *"Unable to retrieve security descriptor for this frame"* error. **Return:** they type the return value as an object; the docs (and the `lookup_ssjs_function` catalog) describe the return as the **OverallStatus message as a string** — but that string was **never observed at runtime** from a CloudPage GET, so the string claim remains **unproven**.
+
+    An `ExtractRequest` CLR object exposes only two writable top-level properties — `Parameters` (an `ExtractParameter[]`, each item having `Name` and `Value`) and `Options` (an `ExtractOptions` object). Intuitive names such as `Name`, `CustomerKey`, `RequestID`, `Fields`, and `ExtractType` are **not** valid on `ExtractRequest` and throw *"Invalid property name"* on `SetObjectProperty`. The definition-reference has to be carried inside a `Parameters` entry, so the call was exercised against the BU's real, pre-configured Data Extract definitions (`test-ssjs`, `copado_dataExtract`, `copado-extract-gGustavo`, `copado-extract-golem`, `copado-extract`), referenced by every plausible parameter-name convention (`CustomerKey`, `Name`, `DataExtractDefinitionId`, `DataExtractDefinitionCustomerKey`, `ExtractDefinitionCustomerKey`, `DataExtractDefinition`, `DefinitionKey`, `ExtractType`), plus an empty request and an `Options`-carrying request.
+
+    **The reproducible outcome for every one of these shapes is a *catchable* `System.NullReferenceException`** thrown from `ExactTarget.Integration.Framework` — *not* the earlier-reported HTTP 422 page abort. The page renders fully, output before and after the call survives, and the surrounding `try/catch` runs. Because the SOAP `Extract` verb resolves a saved definition by its internal `ExtractType` GUID (not by a name/CustomerKey string), passing the definition's key as a `Parameters` value never binds to a real definition, and the framework NREs internally. **The `statusArray` is inert:** it stays at its initial values (`status[0]`/`status[1]` unchanged, no status message or RequestID written) exactly like the `InvokeRetrieve`/`InvokeExecute` siblings. A single early run once returned `typeof "object"` / value `null` (non-reproducible), which — if anything — contradicts the documented *string* return rather than confirming it. **Confirmed:** two-argument arity, third-arg rejection, inert status array, catchable failure (no 422). **Unproven:** the OverallStatus *string* return — never reached from a CloudPage because a genuine extract requires the Automation/activity execution context, not an inline SSJS invoke.
   testScript: |
     <script runat="server">
     Platform.Load("core","1.1.5");
-    // InvokeExtract accepts ONLY two args (apiObject, statusArray); a third throws. Returns OverallStatus STRING.
-    // API OPERATION: requires a valid extract request object + permissions.
-    try {
-      var status = [];
-      var apiObject = Platform.Function.CreateObject("ExtractRequest");
-      var result = Platform.Function.InvokeExtract(apiObject, status);
-      Platform.Response.Write("two-arg return typeof: " + (typeof result) + " result: " + result + "\n");
-    } catch (e) {
-      // OBSERVED (CloudPage GET): the TWO-arg call did NOT throw the unknown-member/wrong-arity error
-      // — it evaluated the function and threw a genuine
-      // ExactTarget.OMM.FunctionExecutionException ("An error occurred when attempting to evaluate an
-      // InvokeExtract function call.") on the empty ExtractRequest. So the two-arg signature is accepted;
-      // the return-STRING claim is NEEDS REVIEW (needs a valid extract request to reach the return path).
-      Platform.Response.Write("two-arg ERROR: " + Platform.Function.Stringify(e).substring(0,180) + "\n");
+    // InvokeExtract accepts ONLY two args (apiObject, statusArray); a third throws
+    // "Unable to retrieve security descriptor for this frame" (confirms the arity claim).
+    //
+    // ExtractRequest exposes only Parameters (ExtractParameter[] of {Name,Value}) and Options
+    // (ExtractOptions). Name / CustomerKey / RequestID / Fields / ExtractType are INVALID directly
+    // on ExtractRequest (SetObjectProperty throws "Invalid property name").
+    //
+    // Referencing a REAL saved Data Extract definition by CustomerKey via a Parameters entry does
+    // NOT 422 the page (contrary to an earlier report) — it throws a CATCHABLE
+    // System.NullReferenceException, and the statusArray stays INERT (never populated). The
+    // documented OverallStatus STRING return was never observed here: a genuine extract binds a
+    // saved definition by its internal ExtractType GUID inside the Automation/activity runtime,
+    // which cannot be reproduced from an inline CloudPage SSJS invoke.
+    function line(label, value) {
+      Platform.Response.Write(label + ": " + value + "\n");
     }
+    // (1) Arity: a third argument is rejected (catchable).
     try {
-      var status2 = [];
-      var apiObject2 = Platform.Function.CreateObject("ExtractRequest");
-      // Third argument — EXPECTED to throw "Unable to retrieve security descriptor for this frame".
-      Platform.Function.InvokeExtract(apiObject2, status2, {});
-      Platform.Response.Write("three-arg: unexpectedly OK\n");
+      var s3 = [];
+      var r3 = Platform.Function.CreateObject("ExtractRequest");
+      Platform.Function.InvokeExtract(r3, s3, {});
+      line("three-arg", "unexpectedly OK");
+    } catch (e3) {
+      line("three-arg ERROR (expected)", ("" + e3.message).substring(0, 120));
+    }
+    // (2) Reference a real definition ("test-ssjs") by CustomerKey via a Parameters entry.
+    var status = [0, 0];
+    try {
+      var req = Platform.Function.CreateObject("ExtractRequest");
+      var p = Platform.Function.CreateObject("ExtractParameter");
+      Platform.Function.SetObjectProperty(p, "Name", "CustomerKey");
+      Platform.Function.SetObjectProperty(p, "Value", "test-ssjs");
+      Platform.Function.AddObjectArrayItem(req, "Parameters", p);
+      var ret = Platform.Function.InvokeExtract(req, status);
+      // If reached: OBSERVED once as typeof "object" / null (non-reproducible), status still [0,0].
+      line("typeof/return", typeof ret + " / " + ("" + ret).substring(0, 120));
+      line("status.len/0/1", status.length + " / " + status[0] + " / " + status[1]);
     } catch (e) {
-      // OBSERVED: the THREE-arg call threw exactly "Unable to retrieve security descriptor for this
-      // frame." — CONFIRMING the arity claim (only two args accepted; a third is rejected).
-      Platform.Response.Write("three-arg ERROR (expected): " + Platform.Function.Stringify(e).substring(0,180) + "\n");
+      // REPRODUCIBLE: catchable System.NullReferenceException from ExactTarget.Integration.Framework.
+      line("invoke THREW (catchable, NOT a 422)", ("" + e.message).substring(0, 120));
+      line("status stayed inert", status.length + " / " + status[0] + " / " + status[1]);
     }
     </script>
 

@@ -10,7 +10,7 @@ availability:
   automation: true
   triggered_send: true
 syntax: "Platform.Function.InsertDE(deName, fieldNames, fieldValues)"
-return_type: void
+return_type: "null"
 min_args: 3
 max_args: 3
 verification: verified

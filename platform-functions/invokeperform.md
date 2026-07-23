@@ -9,15 +9,15 @@ availability:
   cloudpage: true
   automation: true
   triggered_send: false
-syntax: "Platform.Function.InvokePerform(apiObject, method, status, options)"
+syntax: "Platform.Function.InvokePerform(apiObject, method, status[, options])"
 return_type: string
-min_args: 4
+min_args: 3
 max_args: 4
 verification: verified
 differs_from_docs: true
 ---
 
-{% include differs-from-docs.html note="The official docs type the return value as an object, but at runtime the call returns the OverallStatus message as a string (`\"OK\"` / `\"Error: ...\"`); the request details are written into the status array." %}
+{% include differs-from-docs.html note="The official docs type the return value as an object, but at runtime the call returns the OverallStatus message as a string (`\"OK\"` / `\"Error\"`); `status[0]` receives the status message, `status[1]` a numeric error code, and `status[2]` the serialized perform-response object. The `options` argument is optional (the call accepts 3 or 4 arguments)." %}
 
 ## Parameters
 
@@ -25,8 +25,8 @@ differs_from_docs: true
 |------|------|----------|-------------|
 | `apiObject` | object | Yes | SOAP object built with `CreateObject` and configured with `SetObjectProperty` |
 | `method` | string | Yes | Method to perform on the object |
-| `status` | array | Yes | Array that receives the status, error code, and perform response of the API call (e.g. `[0, 0, 0]`) |
-| `options` | object | Yes | API configure options to include in the call. Can contain a `null` value. |
+| `status` | array | Yes | Array that receives the status message (`status[0]`), numeric error code (`status[1]`), and serialized perform-response object (`status[2]`) of the API call (e.g. `[0, 0, 0]`) |
+| `options` | object | No | API configure options to include in the call. Can be omitted or `null`. |
 
 ## Examples
 

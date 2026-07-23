@@ -28,7 +28,7 @@ verification: verified
 | `fieldNames` | string[] | Yes | Array of column names to insert or update |
 | `fieldValues` | array | Yes | Array of values aligned to `fieldNames` |
 
-> **No flat/variadic form.** A flat argument list such as `UpsertData(deName, field1, value1, filterField, filterValue)` is **not supported** — it throws at runtime (verified). Always pass the `fieldNames` / `fieldValues` and `whereFieldNames` / `whereFieldValues` pairs as arrays.
+> **No flat/variadic form.** A flat argument list such as `UpsertData(deName, field1, value1, filterField, filterValue)` is **not supported** — it throws at runtime (verified across argument counts of 3–7). Always pass the `fieldNames` / `fieldValues` and `whereFieldNames` / `whereFieldValues` pairs as arrays.
 
 ## Description
 
@@ -109,7 +109,7 @@ try {
 ## Notes
 
 - Resolves the DE by **Name**, not external key / CustomerKey
-- The flat/variadic argument form is not supported and throws — always use arrays for the where and field pairs
+- The flat/variadic argument form is not supported and throws at runtime; always use arrays for the where and field pairs
 - `UpsertDE` performs the same upsert but returns `null` instead of a row count. The official docs describe `UpsertDE` as email-only, yet it was runtime-verified to run and commit on a CloudPage too — prefer `UpsertData` outside email for the affected-row count.
 - The key columns must match the DE's primary key or sendable field to avoid creating duplicates
 - For large batch upserts, consider WSProxy's `updateBatch` for better performance

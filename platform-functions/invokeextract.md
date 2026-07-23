@@ -17,25 +17,28 @@ verification: verified
 differs_from_docs: true
 ---
 
-{% include differs-from-docs.html note="The official docs list an optional third `options` argument and type the return value as an object, but at runtime the call takes exactly two arguments and returns the OverallStatus message as a string — passing a third argument throws an \"Unable to retrieve security descriptor for this frame\" error." %}
+{% include differs-from-docs.html note="The official docs list an optional third `options` argument and type the return value as an object; at runtime the call takes exactly two arguments (a third throws). The `statusArray` is inert — it is never populated, so do not read a RequestID from it. The documented OverallStatus *string* return could not be reproduced from a CloudPage: referencing the BU's real, saved Data Extract definitions still throws a catchable `NullReferenceException`, because the SOAP Extract verb resolves a definition by its internal GUID inside the Automation runtime, not from an inline SSJS invoke. The `string` return type is therefore per-docs and unproven at runtime here." %}
 
 ## Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `apiObject` | object | Yes | SOAP API object built with `CreateObject` and configured with `SetObjectProperty` |
-| `statusArray` | array | Yes | Array that receives the status and RequestID of the API call |
+| `apiObject` | object | Yes | `ExtractRequest` built with `CreateObject`. Only `Parameters` (an `ExtractParameter[]` of `{Name, Value}`) and `Options` (an `ExtractOptions`) are writable; `Name`/`CustomerKey`/`RequestID`/`Fields`/`ExtractType` throw *"Invalid property name"* on `SetObjectProperty` |
+| `statusArray` | array | Yes | Status out-parameter required by the signature, but inert at runtime — it is never populated (stays unchanged). Pass an array (e.g. `[0, 0]`) |
 
 ## Examples
 
 ```javascript
-var extractDef = Platform.Function.CreateObject("DataExtractDefinition");
-Platform.Function.SetObjectProperty(extractDef, "CustomerKey", "MyExtractDef");
+var req = Platform.Function.CreateObject("ExtractRequest");
+var param = Platform.Function.CreateObject("ExtractParameter");
+Platform.Function.SetObjectProperty(param, "Name", "CustomerKey");
+Platform.Function.SetObjectProperty(param, "Value", "MyExtractDef");
+Platform.Function.AddObjectArrayItem(req, "Parameters", param);
 
-var statusArr = [];
-var result = Platform.Function.InvokeExtract(extractDef, statusArr);
+// Inert out-parameter; do not read a RequestID from it.
+var statusArr = [0, 0];
+var result = Platform.Function.InvokeExtract(req, statusArr);
 Write("Result: " + result);
-Write("Request ID: " + statusArr[1]);
 ```
 
 {% include callout.html type="note" content="WSProxy is the recommended approach for most SOAP API interactions. Use InvokeExtract only when the Extract SOAP verb is specifically required for your operation." %}

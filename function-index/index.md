@@ -154,7 +154,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`<DeliveryProfileInstance>.Update(properties)`](/core-library/deliveryprofile/#instance-update) | Core Library | string | Update DeliveryProfile |
 | [`<DeliveryProfileInstance>.Remove()`](/core-library/deliveryprofile/#instance-remove) | Core Library | string | Remove DeliveryProfile |
 | [`Platform.Function.DeleteData(deName, whereFieldNames, whereFieldValues)`](/platform-functions/deletedata/) | Platform Functions | number | Delete DE rows |
-| [`DeleteDE(deName, whereFieldNames, whereFieldValues)`](/platform-functions/deletede/) | Platform Functions | number | Alias for DeleteData |
+| [`DeleteDE(deName, whereFieldNames, whereFieldValues)`](/platform-functions/deletede/) | Platform Functions | null | Same delete as DeleteData, but returns null |
 
 ---
 
@@ -239,11 +239,11 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
 | [`Platform.Function.InsertData(deName, fieldNames, fieldValues)`](/platform-functions/insertdata/) | Platform Functions | number | Insert DE row |
-| [`InsertDE(deName, fieldNames, fieldValues)`](/platform-functions/insertde/) | Platform Functions | number | Alias for InsertData |
-| [`Platform.Function.InvokeConfigure(apiObject, method, status, options)`](/platform-functions/invokeconfigure/) | Platform Functions | string | SOAP Configure call (legacy) |
-| [`Platform.Function.InvokeCreate(apiObject, status, options)`](/platform-functions/invokecreate/) | Platform Functions | object | SOAP Create (legacy) |
-| [`Platform.Function.InvokeDelete(apiObject, status, options)`](/platform-functions/invokedelete/) | Platform Functions | object | SOAP Delete (legacy) |
-| [`Platform.Function.InvokeExecute(apiObject, status, options)`](/platform-functions/invokeexecute/) | Platform Functions | string | SOAP Execute call (legacy) |
+| [`InsertDE(deName, fieldNames, fieldValues)`](/platform-functions/insertde/) | Platform Functions | null | Same insert as InsertData, but returns null |
+| [`Platform.Function.InvokeConfigure(apiObject, action, status, options)`](/platform-functions/invokeconfigure/) | Platform Functions | string | SOAP Configure call (legacy) |
+| [`Platform.Function.InvokeCreate(apiObject, status, options)`](/platform-functions/invokecreate/) | Platform Functions | string | SOAP Create (legacy) |
+| [`Platform.Function.InvokeDelete(apiObject, status, options)`](/platform-functions/invokedelete/) | Platform Functions | string | SOAP Delete (legacy) |
+| [`Platform.Function.InvokeExecute(apiObject, status)`](/platform-functions/invokeexecute/) | Platform Functions | object[] | SOAP Execute call (legacy) |
 | [`Platform.Function.InvokeExtract(apiObject, statusArray[, options])`](/platform-functions/invokeextract/) | Platform Functions | string | SOAP Extract call (legacy) |
 | [`Platform.Function.InvokePerform(apiObject, method, status, options)`](/platform-functions/invokeperform/) | Platform Functions | string | SOAP Perform action (legacy) |
 | [`Platform.Function.InvokeRetrieve(apiObject, status)`](/platform-functions/invokeretrieve/) | Platform Functions | object[] | SOAP Retrieve (legacy) |
@@ -584,10 +584,10 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 |------|----------|---------|-------------|
 | [`UnsubEvent.Retrieve(filter)`](/core-library/events/#unsub-event) | Core Library | object[] | Unsubscribe events |
 | [`Platform.Function.UpdateData(deName, whereFieldNames, whereFieldValues, fieldNames, fieldValues)`](/platform-functions/updatedata/) | Platform Functions | number | Update DE rows |
-| [`UpdateDE(deName, whereFieldNames, whereFieldValues, fieldNames, fieldValues)`](/platform-functions/updatede/) | Platform Functions | number | Alias for UpdateData |
+| [`UpdateDE(deName, whereFieldNames, whereFieldValues, fieldNames, fieldValues)`](/platform-functions/updatede/) | Platform Functions | null | Same update as UpdateData, but returns null |
 | [`Platform.Function.UrlEncode(url[, encodeReservedKeywords])`](/platform-functions/urlencode/) | Platform Functions | string | Percent-encode a full URL |
 | [`Platform.Function.UpsertData(deName, whereFieldNames, whereFieldValues, fieldNames, fieldValues)`](/platform-functions/upsertdata/) | Platform Functions | number | Insert or update DE row |
-| [`UpsertDE(deName, whereFieldNames, whereFieldValues, fieldNames, fieldValues)`](/platform-functions/upsertde/) | Platform Functions | number | Alias for UpsertData |
+| [`UpsertDE(deName, whereFieldNames, whereFieldValues, fieldNames, fieldValues)`](/platform-functions/upsertde/) | Platform Functions | null | Same upsert as UpsertData, but returns null |
 
 ---
 

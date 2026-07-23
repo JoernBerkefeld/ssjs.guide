@@ -20,10 +20,10 @@ Read and write rows in SFMC Data Extensions.
   <a href="/platform-functions/updatedata/" class="function-card"><div class="fn-name">UpdateData</div><div class="fn-desc">Modify existing rows matching filter criteria.</div><div class="fn-return">→ number</div></a>
   <a href="/platform-functions/upsertdata/" class="function-card"><div class="fn-name">UpsertData</div><div class="fn-desc">Insert or update a row based on filter match.</div><div class="fn-return">→ number</div></a>
   <a href="/platform-functions/deletedata/" class="function-card"><div class="fn-name">DeleteData</div><div class="fn-desc">Remove rows matching filter criteria.</div><div class="fn-return">→ number</div></a>
-  <a href="/platform-functions/insertde/" class="function-card"><div class="fn-name">InsertDE</div><div class="fn-desc">Alias for InsertData.</div><div class="fn-return">→ number</div></a>
-  <a href="/platform-functions/updatede/" class="function-card"><div class="fn-name">UpdateDE</div><div class="fn-desc">Alias for UpdateData.</div><div class="fn-return">→ number</div></a>
-  <a href="/platform-functions/upsertde/" class="function-card"><div class="fn-name">UpsertDE</div><div class="fn-desc">Alias for UpsertData.</div><div class="fn-return">→ number</div></a>
-  <a href="/platform-functions/deletede/" class="function-card"><div class="fn-name">DeleteDE</div><div class="fn-desc">Alias for DeleteData.</div><div class="fn-return">→ number</div></a>
+  <a href="/platform-functions/insertde/" class="function-card"><div class="fn-name">InsertDE</div><div class="fn-desc">Same insert as InsertData, but returns null.</div><div class="fn-return">→ null</div></a>
+  <a href="/platform-functions/updatede/" class="function-card"><div class="fn-name">UpdateDE</div><div class="fn-desc">Same update as UpdateData, but returns null.</div><div class="fn-return">→ null</div></a>
+  <a href="/platform-functions/upsertde/" class="function-card"><div class="fn-name">UpsertDE</div><div class="fn-desc">Same upsert as UpsertData, but returns null.</div><div class="fn-return">→ null</div></a>
+  <a href="/platform-functions/deletede/" class="function-card"><div class="fn-name">DeleteDE</div><div class="fn-desc">Same delete as DeleteData, but returns null.</div><div class="fn-return">→ null</div></a>
 </div>
 
 ## Dates {#dates}

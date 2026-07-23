@@ -10,7 +10,7 @@ availability:
   automation: true
   triggered_send: true
 syntax: "Platform.Function.UpdateDE(deName, whereFieldNames, whereFieldValues, fieldNames, fieldValues)"
-return_type: void
+return_type: "null"
 min_args: 5
 max_args: 5
 verification: verified

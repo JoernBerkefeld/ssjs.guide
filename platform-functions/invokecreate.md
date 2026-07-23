@@ -17,7 +17,7 @@ verification: verified
 differs_from_docs: true
 ---
 
-{% include differs-from-docs.html note="The official docs type the return value as an object, but at runtime the call returns the OverallStatus message as a string (`\"OK\"` / `\"Error: ...\"`); the request ID is written to `status[1]` and, on error, a numeric error code is written into the status array." %}
+{% include differs-from-docs.html note="The official docs type the return value as an object, but at runtime the call returns the OverallStatus message as a string (`\"OK\"` / `\"Error\"`); `status[0]` receives the status message and `status[1]` a numeric request-id / error code (there are no separate `statusMsgVar` / `errorCodeVar` out-parameters). The valid signature is 3 arguments `(apiObject, status, options)`." %}
 
 ## Parameters
 

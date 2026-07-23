@@ -17,14 +17,14 @@ verification: verified
 differs_from_docs: true
 ---
 
-{% include differs-from-docs.html note="The official docs list an optional third `options` argument and type the return value as an object, but at runtime the call takes exactly two arguments and returns an array of result objects — passing a third argument throws an \"Unable to retrieve security descriptor for this frame\" error." %}
+{% include differs-from-docs.html note="The official docs list an optional third `options` argument and type the return value as an object, but at runtime the call takes exactly two arguments and returns an array of result objects — each element may carry its own `StatusCode` / `StatusMessage` / `ErrorCode`. The `status` array is never populated: even on the success path `status.length` stays `0` and `status[0]` / `status[1]` are `undefined`, so read the returned array itself for results rather than the status out-parameter." %}
 
 ## Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `apiObject` | object | Yes | SOAP object built with `CreateObject` and configured with `SetObjectProperty` |
-| `status` | array | Yes | Array that receives the status and request ID of the API call (e.g. `[0, 0]`) |
+| `status` | array | Yes | Status out-parameter required by the signature, but inert at runtime — it is never populated (stays empty even on success). Pass an array (e.g. `[0, 0]`); read the returned array for results, where each element may carry its own `StatusCode` / `StatusMessage` / `ErrorCode`. |
 
 ## Examples
 
@@ -34,8 +34,7 @@ Platform.Function.SetObjectProperty(execObj, "Name", "LogUnsubEvent");
 
 var StatusAndRequestID = [0, 0];
 var result = Platform.Function.InvokeExecute(execObj, StatusAndRequestID);
-var status = StatusAndRequestID[0];
-var requestID = StatusAndRequestID[1];
+var firstResult = result[0];
 ```
 
 {% include callout.html type="note" content="WSProxy is recommended over InvokeExecute for most use cases — it is simpler, uses native JS objects, and handles serialization automatically." %}
