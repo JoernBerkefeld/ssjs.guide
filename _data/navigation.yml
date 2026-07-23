@@ -336,24 +336,48 @@
         url: /ecmascript-builtins/
       - title: Array Methods
         url: /ecmascript-builtins/array-methods/
-      - title: String Methods
-        url: /ecmascript-builtins/string-methods/
+      - title: BigInt
+        url: /ecmascript-builtins/bigint/
+      - title: Boolean
+        url: /ecmascript-builtins/boolean/
+      - title: Date Methods
+        url: /ecmascript-builtins/date-methods/
       - title: Error
         url: /ecmascript-builtins/error/
+      - title: Error Types
+        url: /ecmascript-builtins/error-types/
+      - title: Function Methods
+        url: /ecmascript-builtins/function-methods/
+      - title: Global Functions
+        url: /ecmascript-builtins/global-functions/
+      - title: Global Values
+        url: /ecmascript-builtins/global-values/
+      - title: Internationalization
+        url: /ecmascript-builtins/internationalization/
+      - title: JSON
+        url: /ecmascript-builtins/json/
+      - title: Keyed Collections
+        url: /ecmascript-builtins/keyed-collections/
       - title: Math
         url: /ecmascript-builtins/math/
+      - title: Memory Management
+        url: /ecmascript-builtins/memory-management/
       - title: Number Methods
         url: /ecmascript-builtins/number-methods/
       - title: Object Methods
         url: /ecmascript-builtins/object-methods/
-      - title: Function Methods
-        url: /ecmascript-builtins/function-methods/
-      - title: Date Methods
-        url: /ecmascript-builtins/date-methods/
+      - title: Promises & Iteration
+        url: /ecmascript-builtins/promises-iteration/
+      - title: Reflection
+        url: /ecmascript-builtins/reflection/
       - title: Regular Expressions
         url: /ecmascript-builtins/regular-expressions/
-      - title: JSON
-        url: /ecmascript-builtins/json/
+      - title: String Methods
+        url: /ecmascript-builtins/string-methods/
+      - title: Symbol
+        url: /ecmascript-builtins/symbol/
+      - title: Typed Arrays
+        url: /ecmascript-builtins/typed-arrays/
 
 - title: Best Practices
   url: /best-practices/
