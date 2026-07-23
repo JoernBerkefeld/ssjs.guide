@@ -14,6 +14,7 @@ return_type: "null"
 min_args: 5
 max_args: 5
 verification: verified
+differs_from_docs: true
 ---
 
 ## Parameters
@@ -30,9 +31,9 @@ verification: verified
 
 `UpdateDE` modifies existing rows in a Data Extension. It performs the same update as [UpdateData](/platform-functions/updatedata/), but **returns `null`** (no row count).
 
-The official Salesforce docs describe `UpdateDE` as an email-context function, but it was **runtime-verified** to run and commit its update on a CloudPage as well. [UpdateData](/platform-functions/updatedata/) is still preferred outside email because it returns the number of affected rows.
+{% include differs-from-docs.html note="The docs restrict `UpdateDE` to email contexts, but at runtime it also executes and commits its update on a CloudPage, returning `null` (not the affected-row count). It also resolves the DE by **Name** only, not the external key / CustomerKey." %}
 
-The Data Extension is resolved by its **Name**, not the external key / CustomerKey.
+[UpdateData](/platform-functions/updatedata/) is still preferred outside email because it returns the number of affected rows.
 
 ## See Also
 

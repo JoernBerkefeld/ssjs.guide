@@ -26,11 +26,11 @@ differs_from_docs: true
 | [`Object.prototype.hasOwnProperty(prop)`](#hasownproperty) | ES3 | ✅ Works | |
 | [`Object.prototype.toString()`](#tostring) | ES3 | ✅ Works | |
 | [`Object.prototype.valueOf()`](#valueof) | ES3 | ✅ Works | |
-| [`Object.prototype.isPrototypeOf(obj)`](#isprototypeof) | ES3 | ⚠️ Partial | Present but **hangs the engine** when called — {% include method-status.html status="differs-from-docs" %} never call it |
-| [`Object.prototype.propertyIsEnumerable(prop)`](#propertyisenumerable) | ES3 | ⚠️ Partial | Broken — always returns `false` {% include method-status.html status="differs-from-docs" %} |
+| [`Object.prototype.isPrototypeOf(obj)`](#isprototypeof) | ES3 | ⚠️ Partial | Present but **hangs the engine** when called — never call it |
+| [`Object.prototype.propertyIsEnumerable(prop)`](#propertyisenumerable) | ES3 | ⚠️ Partial | Broken — always returns `false` |
 | [`Object.defineProperty(obj, prop, descriptor)`](#defineproperty) | ES5 | ✅ Works | |
 | [`Object.getPrototypeOf(obj)`](#getprototypeof) | ES5 | ✅ Works | |
-| [`Object.keys(obj)`](#keys) | ES5 | ❌ Missing | `for...in` with `hasOwnProperty` {% include method-status.html status="differs-from-docs" %} |
+| [`Object.keys(obj)`](#keys) | ES5 | ❌ Missing | `for...in` with `hasOwnProperty` |
 | [`Object.values(obj)`](#values) | ES6 | ❌ Missing | `for...in` with `hasOwnProperty` |
 | [`Object.entries(obj)`](#entries) | ES6 | ❌ Missing | `for...in` with `hasOwnProperty` |
 | [`Object.assign(target, ...src)`](#assign) | ES6 | ❌ Missing | Copy properties in a `for...in` loop |
@@ -76,11 +76,11 @@ Write(n.valueOf());   // 5
 
 ## isPrototypeOf {#isprototypeof}
 
-`(ES3)` — ⚠️ Partial. {% include method-status.html status="differs-from-docs" %}
+`(ES3)` — ⚠️ Partial. {% include method-status.html status="verified" differs=true %}
 
 {% include callout.html type="danger" content="`Object.prototype.isPrototypeOf` exists in SFMC SSJS but **hangs the Jint engine** when called — the CloudPage times out and never returns. Never call it. Compare prototypes directly (e.g. `obj.constructor === Ctor`) or walk the prototype chain manually." %}
 
-{% include differs-from-docs.html note="MDN specifies `isPrototypeOf` as a normal `Object.prototype` method that returns a boolean; the method is present in the SFMC Jint engine (`typeof` is `\"function\"`) but **calling it hangs the engine** — the request times out (HTTP 408) with no output. Never call it; compare `obj.constructor === Ctor` instead." %}
+{% include differs-from-mdn.html content="MDN specifies `isPrototypeOf` as a normal `Object.prototype` method that returns a boolean; the method is present in the SFMC Jint engine (`typeof` is `\"function\"`) but **calling it hangs the engine** — the request times out (HTTP 408) with no output. Never call it; compare `obj.constructor === Ctor` instead." %}
 
 ```javascript
 // HANGS the engine — never call:
@@ -92,11 +92,11 @@ var isInstance = (obj.constructor === Ctor);
 
 ## propertyIsEnumerable {#propertyisenumerable}
 
-`(ES3)` — ⚠️ Partial. {% include method-status.html status="differs-from-docs" %}
+`(ES3)` — ⚠️ Partial. {% include method-status.html status="verified" differs=true %}
 
 {% include callout.html type="warning" content="`Object.prototype.propertyIsEnumerable` exists but is **broken**: it returns `false` even for own enumerable properties. Use `hasOwnProperty` for own-property checks instead." %}
 
-{% include differs-from-docs.html note="MDN specifies `propertyIsEnumerable(prop)` returns `true` for an own enumerable property; in the SFMC Jint engine it is present (`typeof` = `function`) but **returns `false` even for own enumerable properties**. Unlike the sibling `isPrototypeOf`, calling it does not hang the engine. Use `hasOwnProperty` for own-property checks instead." %}
+{% include differs-from-mdn.html content="MDN specifies `propertyIsEnumerable(prop)` returns `true` for an own enumerable property; in the SFMC Jint engine it is present (`typeof` = `function`) but **returns `false` even for own enumerable properties**. Unlike the sibling `isPrototypeOf`, calling it does not hang the engine. Use `hasOwnProperty` for own-property checks instead." %}
 
 ```javascript
 var o = { a: 1 };
@@ -126,7 +126,7 @@ Write(typeof proto);   // object
 
 ## keys {#keys}
 
-`(ES5)` — ❌ Missing. {% include method-status.html status="differs-from-docs" %} Use a `for...in` loop with `hasOwnProperty`.
+`(ES5)` — ❌ Missing. {% include method-status.html status="verified" differs=true %} Use a `for...in` loop with `hasOwnProperty`.
 
 ```javascript
 function keys(obj) {
@@ -136,7 +136,7 @@ function keys(obj) {
 }
 ```
 
-{% include differs-from-docs.html note="MDN documents a large set of `Object` statics. In the SFMC Jint engine only `Object.defineProperty` and `Object.getPrototypeOf` are present and working — `keys`, `values`, `entries`, `assign`, `create`, `freeze`, `isFrozen`, `defineProperties`, `getOwnPropertyNames`, `getOwnPropertyDescriptor`, `seal`, `isSealed`, `preventExtensions`, and `isExtensible` are all `undefined`. Use a `for...in` loop with `hasOwnProperty` for key/value enumeration." %}
+{% include differs-from-mdn.html content="MDN documents a large set of `Object` statics. In the SFMC Jint engine only `Object.defineProperty` and `Object.getPrototypeOf` are present and working — `keys`, `values`, `entries`, `assign`, `create`, `freeze`, `isFrozen`, `defineProperties`, `getOwnPropertyNames`, `getOwnPropertyDescriptor`, `seal`, `isSealed`, `preventExtensions`, and `isExtensible` are all `undefined`. Use a `for...in` loop with `hasOwnProperty` for key/value enumeration." %}
 
 ## values {#values}
 

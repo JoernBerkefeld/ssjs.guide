@@ -14,6 +14,7 @@ return_type: "object[]"
 min_args: 3
 max_args: 3
 verification: verified
+differs_from_docs: true
 ---
 
 ## Parameters
@@ -28,9 +29,7 @@ verification: verified
 
 `LookupRows` returns an array of row objects from the specified Data Extension. Each element in the array is an object where property names are the column names and values are the cell values. Each row object also carries two **system fields**: `_CustomObjectKey` (a `number`) and `_CreatedDate` (a `string`) — runtime-verified.
 
-Returns `null` when no rows match (runtime-verified — **not** an empty array `[]`, despite what the examples elsewhere might suggest). Guard your `.length` access accordingly.
-
-The Data Extension is resolved by its **Name**; the external key / CustomerKey is not accepted.
+{% include differs-from-docs.html note="At runtime `LookupRows` returns `null` (not an empty array `[]`) when no row matches — guard before reading `.length`. Each matched row also carries undocumented system fields `_CustomObjectKey` (number) and `_CreatedDate` (string), and the DE is resolved by **Name** only, not the external key." %}
 
 `LookupRows` returns most fields as their **typed/native JS value** (Number and Decimal columns come back as `number`, Boolean columns as `boolean`), so you can use them without manual casting. **Date columns are the exception:** they are returned as an ISO-8601 `string` (e.g. `"2024-01-15T00:00:00.000"`), **not** as a `Date` object — this differs from [`Lookup`](/platform-functions/lookup/), which returns a real `Date` for Date columns (runtime-verified). Text and EmailAddress columns are `string` in both. This still contrasts with `DataExtension.Rows.Retrieve()`, which stringifies **every** field (including Number/Boolean). In return, `Retrieve` gives you an empty array (`[]`) rather than `null` on no match — see [DataExtension.Rows](/core-library/dataextension-rows/) for that trade-off.
 

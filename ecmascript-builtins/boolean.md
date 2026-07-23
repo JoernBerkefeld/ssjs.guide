@@ -23,7 +23,7 @@ The ECMAScript **`Boolean`** constructor works in SSJS. Called as a function, `B
 | Member | ES | Status | Notes |
 |--------|----|--------|-------|
 | [`Boolean(value)`](#boolean-coercion) | ES3 | ✅ Works | Truthiness coercion — returns a primitive `boolean` |
-| [`new Boolean(value)`](#boolean-boxed) | ES3 | ⚠️ Partial | Boxed object; `String()` yields capitalized `True`/`False` — {% include method-status.html status="differs-from-docs" %} |
+| [`new Boolean(value)`](#boolean-boxed) | ES3 | ⚠️ Partial | Boxed object; `String()` yields capitalized `True`/`False` |
 | [`Boolean.prototype`](#boolean-prototype) | ES3 | ✅ Works | `toString` / `valueOf` present on the prototype |
 
 ---
@@ -42,7 +42,7 @@ typeof Boolean(1);   // "boolean"
 
 ## new Boolean(value) — boxed object {#boolean-boxed}
 
-`(ES3)` — ⚠️ Partial. {% include method-status.html status="differs-from-docs" %} `new Boolean(value)` creates a boxed `Boolean` object (`typeof` is `"object"`). In the SFMC Jint engine its string form is **capitalized** — `String(new Boolean(true))` is `"True"`, not the spec's `"true"`. As in all JavaScript, a boxed boolean is always truthy in a condition (even `new Boolean(false)`), so this form is a footgun. Use `Boolean(value)` or `!!value` instead.
+`(ES3)` — ⚠️ Partial. {% include method-status.html status="verified" differs=true %} `new Boolean(value)` creates a boxed `Boolean` object (`typeof` is `"object"`). In the SFMC Jint engine its string form is **capitalized** — `String(new Boolean(true))` is `"True"`, not the spec's `"true"`. As in all JavaScript, a boxed boolean is always truthy in a condition (even `new Boolean(false)`), so this form is a footgun. Use `Boolean(value)` or `!!value` instead.
 
 ```javascript
 var b = new Boolean(true);
@@ -52,7 +52,7 @@ String(new Boolean(false));   // "False" in SFMC (spec: "false")
 // if (new Boolean(false)) { ... }  // truthy! — avoid boxed booleans
 ```
 
-{% include differs-from-docs.html note="MDN specifies a boxed Boolean stringifies to lowercase `\"true\"`/`\"false\"`; the SFMC Jint engine capitalizes the first letter (`\"True\"`/`\"False\"`). Prefer the primitive coercion form `Boolean(value)` or `!!value`." %}
+{% include differs-from-mdn.html content="MDN specifies a boxed Boolean stringifies to lowercase `\"true\"`/`\"false\"`; the SFMC Jint engine capitalizes the first letter (`\"True\"`/`\"False\"`). Prefer the primitive coercion form `Boolean(value)` or `!!value`." %}
 
 ## Boolean.prototype {#boolean-prototype}
 

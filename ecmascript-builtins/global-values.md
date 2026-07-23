@@ -23,8 +23,8 @@ The ECMAScript **global value properties** have mixed support in SSJS. `undefine
 | Member | ES | Status | Notes |
 |--------|----|--------|-------|
 | [`undefined`](#undefined) | ES3 | ✅ Works | |
-| [`NaN`](#nan) | ES3 | ⚠️ Partial | `String(NaN)` is lowercase `nan` — {% include method-status.html status="differs-from-docs" %} |
-| [`Infinity`](#infinity) | ES3 | ⚠️ Partial | **Sign inverted**: `Infinity > 0` is `false`, `String(Infinity)` is `-infinity` — {% include method-status.html status="differs-from-docs" %} |
+| [`NaN`](#nan) | ES3 | ⚠️ Partial | `String(NaN)` is lowercase `nan` |
+| [`Infinity`](#infinity) | ES3 | ⚠️ Partial | **Sign inverted**: `Infinity > 0` is `false`, `String(Infinity)` is `-infinity` |
 | [`globalThis`](#globalthis) | ES2020 | ❌ Missing | `undefined` — no global-object reference is exposed |
 
 ---
@@ -42,7 +42,7 @@ String(undefined);            // "undefined"
 
 ## NaN {#nan}
 
-`(ES3)` — ⚠️ Partial. {% include method-status.html status="differs-from-docs" %} The not-a-number value. Comparisons behave correctly — `NaN === NaN` is `false`, `isNaN(NaN)` is `true`. Only its **string coercion is lowercase** (`nan`) instead of the spec's `NaN`.
+`(ES3)` — ⚠️ Partial. {% include method-status.html status="verified" differs=true %} The not-a-number value. Comparisons behave correctly — `NaN === NaN` is `false`, `isNaN(NaN)` is `true`. Only its **string coercion is lowercase** (`nan`) instead of the spec's `NaN`.
 
 ```javascript
 (NaN === NaN);    // false
@@ -50,11 +50,11 @@ isNaN(NaN);       // true
 String(NaN);      // "nan" in SFMC (spec: "NaN")
 ```
 
-{% include differs-from-docs.html note="MDN specifies `String(NaN)` produces `\"NaN\"`; the SFMC Jint engine produces the lowercase `\"nan\"`. Comparison semantics are unaffected." %}
+{% include differs-from-mdn.html content="MDN specifies `String(NaN)` produces `\"NaN\"`; the SFMC Jint engine produces the lowercase `\"nan\"`. Comparison semantics are unaffected." %}
 
 ## Infinity {#infinity}
 
-`(ES3)` — ⚠️ Partial. {% include method-status.html status="differs-from-docs" %} **The `Infinity` global is broken in the SFMC Jint engine.** `typeof Infinity` is `"number"` and `Infinity === (1/0)` holds, but its **sign is inverted** everywhere else: `Infinity > 0` returns `false`, `Infinity < 0` returns `true`, and `String(Infinity)` yields `-infinity`. Symmetrically, `-Infinity` (and `-1/0`) compares as **positive** and stringifies to `infinity`. Even `Infinity > 1e308` returns `false`. Do **not** rely on `Infinity`/`-Infinity` for magnitude comparisons or output — compare against a concrete large numeric literal instead.
+`(ES3)` — ⚠️ Partial. {% include method-status.html status="verified" differs=true %} **The `Infinity` global is broken in the SFMC Jint engine.** `typeof Infinity` is `"number"` and `Infinity === (1/0)` holds, but its **sign is inverted** everywhere else: `Infinity > 0` returns `false`, `Infinity < 0` returns `true`, and `String(Infinity)` yields `-infinity`. Symmetrically, `-Infinity` (and `-1/0`) compares as **positive** and stringifies to `infinity`. Even `Infinity > 1e308` returns `false`. Do **not** rely on `Infinity`/`-Infinity` for magnitude comparisons or output — compare against a concrete large numeric literal instead.
 
 ```javascript
 typeof Infinity;      // "number"
@@ -65,7 +65,7 @@ String(-Infinity);    // "infinity"   (BUG)
 Infinity > 1e308;     // false  (BUG)
 ```
 
-{% include differs-from-docs.html note="MDN specifies `Infinity` is a positive value greater than any finite number and `String(Infinity)` is `\"Infinity\"`. The SFMC Jint engine inverts the sign of `Infinity`/`-Infinity` in both comparison and string coercion (`Infinity > 0` is `false`, `String(Infinity)` is `\"-infinity\"`), making the global unreliable for magnitude checks and output. Prefer comparing against a concrete numeric literal." %}
+{% include differs-from-mdn.html content="MDN specifies `Infinity` is a positive value greater than any finite number and `String(Infinity)` is `\"Infinity\"`. The SFMC Jint engine inverts the sign of `Infinity`/`-Infinity` in both comparison and string coercion (`Infinity > 0` is `false`, `String(Infinity)` is `\"-infinity\"`), making the global unreliable for magnitude checks and output. Prefer comparing against a concrete numeric literal." %}
 
 ## globalThis {#globalthis}
 

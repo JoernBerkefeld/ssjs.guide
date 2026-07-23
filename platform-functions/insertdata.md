@@ -14,6 +14,7 @@ return_type: number
 min_args: 3
 max_args: 3
 verification: verified
+differs_from_docs: true
 ---
 
 ## Parameters
@@ -27,6 +28,8 @@ verification: verified
 ## Description
 
 `InsertData` adds a new row to a Data Extension. Returns the number of affected rows (1 on success). The Data Extension is resolved by its **Name**, not the external key / CustomerKey.
+
+{% include differs-from-docs.html note="`InsertData` resolves the Data Extension by its **Name** only — passing the external key / CustomerKey throws \"A Data Extension of this name does not exist.\" (runtime-verified)." %}
 
 If the DE has a primary key and a row with the same key already exists, `InsertData` will **throw an error**. Use `UpsertData` for insert-or-update behavior.
 

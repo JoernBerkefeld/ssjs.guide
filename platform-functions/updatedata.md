@@ -14,7 +14,10 @@ return_type: number
 min_args: 5
 max_args: 5
 verification: verified
+differs_from_docs: true
 ---
+
+{% include differs-from-docs.html note="`UpdateData` resolves the Data Extension by its **Name** only — passing the external key / CustomerKey throws \"A Data Extension of this name does not exist.\" (runtime-verified)." %}
 
 ## Parameters
 

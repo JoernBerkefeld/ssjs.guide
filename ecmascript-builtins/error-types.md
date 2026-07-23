@@ -43,9 +43,9 @@ All seven present constructors (`Error`, `EvalError`, `RangeError`, `ReferenceEr
 - `.description` is `undefined`.
 - `Stringify(err)` returns `{}` (empty) for a JS-constructed subtype.
 
-{% include differs-from-docs.html note="In standard JavaScript a caught error is an instance of its constructor and of Error, but in the SFMC (Jint) engine `instanceof` returns false for both — e.g. `caught instanceof RangeError` and `caught instanceof Error` are both false even when the caught value was created with `new RangeError(...)`. Detect the type via `err.name` instead of `instanceof`." %}
+{% include differs-from-mdn.html content="In standard JavaScript a caught error is an instance of its constructor and of Error, but in the SFMC (Jint) engine `instanceof` returns false for both — e.g. `caught instanceof RangeError` and `caught instanceof Error` are both false even when the caught value was created with `new RangeError(...)`. Detect the type via `err.name` instead of `instanceof`." %}
 
-{% include differs-from-docs.html note="In standard JavaScript `new TypeError(\"msg\").message` returns `\"msg\"`, but in the SFMC engine every JS-constructed error subtype reports `.message` as `undefined`; the message is only recoverable via `String(err)` or `(\"\" + err)`." %}
+{% include differs-from-mdn.html content="In standard JavaScript `new TypeError(\"msg\").message` returns `\"msg\"`, but in the SFMC engine every JS-constructed error subtype reports `.message` as `undefined`; the message is only recoverable via `String(err)` or `(\"\" + err)`." %}
 
 ## EvalError {#evalerror}
 

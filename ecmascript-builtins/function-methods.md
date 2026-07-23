@@ -114,7 +114,7 @@ Write(addOne(41));       // 42
 
 `(ES3)` — ⚠️ Differs.
 
-{% include callout.html type="warning" title="Differs from standard JavaScript (MDN)" content="Standard `fn.toString()` returns the function **source code**. In the SFMC engine it returns the generic **`[object Function]`** object tag instead. (`String(fn)` and `\"\" + fn` yield `\"function\"`.) Do not rely on reading a function's source at runtime. See [Differs from Official Docs](/engine-limitations/differs-from-docs/#functionprototypetostring-returns-object-function-not-source)." %}
+{% include differs-from-mdn.html content="Standard `fn.toString()` returns the function **source code**. In the SFMC engine it returns the generic **`[object Function]`** object tag instead. (`String(fn)` and `\"\" + fn` yield `\"function\"`.) Do not rely on reading a function's source at runtime." link="#functionprototypetostring-returns-object-function-not-source" %}
 
 ```javascript
 function greet() {}
@@ -159,7 +159,7 @@ Write(inner());   // "undefined"
 
 `(ES3)` — ⚠️ Differs.
 
-{% include callout.html type="warning" title="Differs from standard JavaScript (MDN)" content="`fn instanceof Function` is `true` (as expected), but `fn.constructor === Function` is **`false`** in the SFMC engine — the constructor identity link is broken. Use `instanceof Function` to test whether a value is a function, not a `.constructor === Function` comparison. See [Differs from Official Docs](/engine-limitations/differs-from-docs/#functionprototypeconstructor-identity-is-broken)." %}
+{% include differs-from-mdn.html content="`fn instanceof Function` is `true` (as expected), but `fn.constructor === Function` is **`false`** in the SFMC engine — the constructor identity link is broken. Use `instanceof Function` to test whether a value is a function, not a `.constructor === Function` comparison." link="#functionprototypeconstructor-identity-is-broken" %}
 
 ```javascript
 function greet() {}

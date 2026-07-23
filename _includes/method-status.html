@@ -15,52 +15,33 @@
   Usage:
     {% include method-status.html status="verified" %}
     {% include method-status.html status="in-progress" differs=true %}
+
+  IMPORTANT: This is an INLINE (span) badge often placed on a Markdown heading
+  line. The whole badge is emitted as a SINGLE line with no internal newlines and
+  no leading indentation, using Liquid whitespace-control markers, so Kramdown
+  never sees an indented (4+ space) line and never wraps the SVG/label in an
+  indented code block (highlighter-rouge / pre).
 {% endcomment %}
-
-{% assign m_status = include.status | default: "pending" %}
-
-{% if m_status == "verified" %}
-  {% assign m_class = "status-verified" %}
-  {% assign m_label = "Verified" %}
-  {% assign m_title = "This method/property has been runtime-verified with a live SFMC test script." %}
-{% elsif m_status == "in-progress" %}
-  {% assign m_class = "status-in-progress" %}
-  {% assign m_label = "In progress" %}
-  {% assign m_title = "This method/property could not be proven in the CloudPage test environment; verification is blocked." %}
-{% else %}
-  {% assign m_class = "status-pending" %}
-  {% assign m_label = "Pending" %}
-  {% assign m_title = "This method/property has not yet been runtime-verified." %}
-{% endif %}
-
-<span class="verification-status method-status" aria-label="Method verification status">
-  <span class="verified-badge {{ m_class }}" title="{{ m_title | escape }}">
-    {% if m_status == "verified" %}
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-      <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    {% elsif m_status == "in-progress" %}
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-      <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.2"/>
-      <path d="M6 3v3l2 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    {% else %}
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-      <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.2"/>
-      <path d="M6 3.5v3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-      <path d="M6 8.3v.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-    </svg>
-    {% endif %}
-    {{ m_label }}
-  </span>
-
-  {% if include.differs %}
-  <span class="verified-badge differs-from-docs" title="This method/property behaves differently from the official Salesforce documentation. See the note in this section for details.">
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
-      <path d="M6 1.5L11 10.5H1L6 1.5z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
-      <path d="M6 4.5v3M6 8.8v.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-    </svg>
-    Differs from docs
-  </span>
-  {% endif %}
-</span>
+{%- assign m_status = include.status | default: "pending" -%}
+{%- if m_status == "verified" -%}
+{%- assign m_class = "status-verified" -%}
+{%- assign m_label = "Verified" -%}
+{%- assign m_title = "This method/property has been runtime-verified with a live SFMC test script." -%}
+{%- assign m_svg = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' -%}
+{%- elsif m_status == "in-progress" -%}
+{%- assign m_class = "status-in-progress" -%}
+{%- assign m_label = "In progress" -%}
+{%- assign m_title = "This method/property could not be proven in the CloudPage test environment; verification is blocked." -%}
+{%- assign m_svg = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.2"/><path d="M6 3v3l2 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' -%}
+{%- else -%}
+{%- assign m_class = "status-pending" -%}
+{%- assign m_label = "Pending" -%}
+{%- assign m_title = "This method/property has not yet been runtime-verified." -%}
+{%- assign m_svg = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.2"/><path d="M6 3.5v3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M6 8.3v.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>' -%}
+{%- endif -%}
+{%- if include.differs -%}
+{%- assign m_differs = '<span class="verified-badge differs-from-docs" title="This method/property behaves differently from the official Salesforce documentation. See the note in this section for details."><svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M6 1.5L11 10.5H1L6 1.5z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M6 4.5v3M6 8.8v.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>Differs from docs</span>' -%}
+{%- else -%}
+{%- assign m_differs = "" -%}
+{%- endif -%}
+<span class="verification-status method-status" aria-label="Method verification status"><span class="verified-badge {{ m_class }}" title="{{ m_title | escape }}">{{ m_svg }}{{ m_label }}</span>{{ m_differs }}</span>

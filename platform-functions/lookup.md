@@ -14,6 +14,7 @@ return_type: string|number|boolean|Date|null
 min_args: 4
 max_args: 4
 verification: verified
+differs_from_docs: true
 ---
 
 ## Parameters
@@ -27,7 +28,9 @@ verification: verified
 
 ## Description
 
-`Lookup` searches a Data Extension for the **first** row where all filter conditions match, and returns the value of the specified `returnField`. When no row matches, it returns `null` (runtime-verified — **not** an empty string `""`, despite what the official docs imply).
+`Lookup` searches a Data Extension for the **first** row where all filter conditions match, and returns the value of the specified `returnField`. When no row matches, it returns `null`.
+
+{% include differs-from-docs.html note="The docs type the return as `string`, but at runtime `Lookup` returns each column's **native type** (Number → `number`, Boolean → `boolean`, Date → a real `Date`, Text → `string`) and returns genuine `null` (not `\"\"`) on no match. An empty/NULL field yields a CLR null that is `== null` but **not** `=== null`. The DE is resolved by **Name** only, not the external key." %}
 
 The returned value keeps the column's **native runtime type**: Text/EmailAddress columns return a `string`, Number/Decimal columns return a `number`, Boolean columns return a `boolean`, and Date columns return a real `Date` object (not a formatted string — `getFullYear()`, `getMonth()`, etc. work). This contrasts with [`DataExtension.Rows.Retrieve()`](/core-library/dataextension-rows/), which returns every field as a `string`.
 

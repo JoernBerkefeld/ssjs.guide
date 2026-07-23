@@ -30,7 +30,7 @@ max_args: 1
 
 `Error` is the native JavaScript Error constructor. Use it with `throw` and `try/catch` for structured error handling in SSJS.
 
-{% include differs-from-docs.html note="Unlike standard JavaScript, a JS-constructed `new Error(\"msg\")` in the SFMC (Jint) engine does not expose the message via `.message` — `e.message` reads back `undefined`. Recover the message with `String(e)` or `(\"\" + e)` (both return the constructor argument), or `e.toString()` (returns `\"Error: undefined\"`). This differs from engine-raised errors (thrown by the platform itself, e.g. a bad `Platform.Function` call), which do carry both `.message` (short text) and `.description` (fuller text)." %}
+{% include differs-from-mdn.html content="Unlike standard JavaScript, a JS-constructed `new Error(\"msg\")` in the SFMC (Jint) engine does not expose the message via `.message` — `e.message` reads back `undefined`. Recover the message with `String(e)` or `(\"\" + e)` (both return the constructor argument), or `e.toString()` (returns `\"Error: undefined\"`). This differs from engine-raised errors (thrown by the platform itself, e.g. a bad `Platform.Function` call), which do carry both `.message` (short text) and `.description` (fuller text)." %}
 
 ## Examples
 

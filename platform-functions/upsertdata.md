@@ -14,6 +14,7 @@ return_type: number
 min_args: 5
 max_args: 5
 verification: verified
+differs_from_docs: true
 ---
 
 ## Parameters
@@ -37,6 +38,8 @@ verification: verified
 - If it **doesn't exist**: inserts a new row
 
 Returns the number of rows affected.
+
+{% include differs-from-docs.html note="The docs show a flat/variadic form (`UpsertData(deName, field1, value1, …, filterField, filterValue)`); that form is **not supported** and throws at runtime — only the array-based five-argument signature works. The DE is also resolved by **Name** only, not the external key / CustomerKey." %}
 
 This is the most robust write operation for Data Extensions — use it instead of `InsertData` when you're not sure if the row already exists.
 

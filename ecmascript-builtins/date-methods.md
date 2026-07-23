@@ -11,7 +11,7 @@ differs_from_docs: true
 
 `Date` is available in SSJS and constructible (`new Date(...)`). Every member below was **runtime-proven on a live CloudPage** against the SFMC JINT engine and cross-checked with MDN. The instance getters and string conversions behave as expected, but several statics differ from the ECMAScript spec: **`Date.now()` returns a `Date` object instead of a number**, **`Date.parse()` returns `0` (never `NaN`) for unparseable strings**, and `getMilliseconds` is frequently off by one. `toISOString` is missing. All working members are ES3 except `Date.now` (ES5).
 
-{% include callout.html type="warning" title="Differs from MDN / the ECMAScript spec" content="In the SFMC engine `Date.now()` returns a **Date object**, not a number; `Date.parse()` returns **`0`** (the epoch) instead of **`NaN`** for invalid strings; and date-only ISO strings (`\"2026-06-18\"`) parse as **local** midnight, not UTC. See the notes on each member below." %}
+{% include differs-from-mdn.html content="In the SFMC engine `Date.now()` returns a **Date object**, not a number; `Date.parse()` returns **`0`** (the epoch) instead of **`NaN`** for invalid strings; and date-only ISO strings (`\"2026-06-18\"`) parse as **local** midnight, not UTC. See the notes on each member below." %}
 
 ## Status legend
 
@@ -50,7 +50,7 @@ differs_from_docs: true
 | [`getMilliseconds()`](#getmilliseconds) | ES3 | ⚠️ Partial | Frequently off by one — do not trust exact value |
 | [`Date.now()`](#now) | ES5 | ⚠️ Partial | Returns a **`Date` object**, not a number — coerce it |
 | [`Date.parse(str)`](#parse) | ES3 | ⚠️ Partial | Invalid strings return **`0`**, not `NaN`; date-only strings parse as **local** |
-| [`Date.UTC(...)`](#utc) | ES3 | ⚠️ Partial | Pass ≥ 2 args; year-only form returns nonsense {% include method-status.html status="differs-from-docs" %} |
+| [`Date.UTC(...)`](#utc) | ES3 | ⚠️ Partial | Pass ≥ 2 args; year-only form returns nonsense |
 | [`toISOString()`](#toisostring) | ES5 | ❌ Missing | Build the ISO string manually |
 | [`toJSON()`](#tojson) | ES5 | ❌ Missing | Absent (depends on `toISOString`) |
 
@@ -160,13 +160,13 @@ new Date(0).toUTCString();   // "Thu, 01 Jan 1970 00:00:00 UTC"
 
 `(ES3)` — ⚠️ Partial. Milliseconds (0–999) in local time, but **frequently off by one** in the SFMC engine — do not rely on exact values.
 
-{% include callout.html type="warning" title="Differs from MDN — off-by-one" content="Runtime-verified: constructing a date with 123 ms reports **122**; 555 → 554, 666 → 665, 777 → 776. Some values (0, 111, 888, 999) are exact. Never compare sub-second precision; round or avoid milliseconds." %}
+{% include differs-from-mdn.html content="Runtime-verified: constructing a date with 123 ms reports **122**; 555 → 554, 666 → 665, 777 → 776. Some values (0, 111, 888, 999) are exact. Never compare sub-second precision; round or avoid milliseconds." %}
 
 ## now {#now}
 
 `(ES5)` — ⚠️ Partial. In the SFMC engine `Date.now()` returns a **`Date` object**, not a number as the spec requires.
 
-{% include callout.html type="warning" title="Differs from MDN — returns a Date object, not a number" content="Runtime-verified: `typeof Date.now()` is `\"object\"` and it stringifies to a date-time string. MDN specifies a Number (ms since epoch). Numeric coercion (`Date.now() + 0`) yields the epoch ms, but any code expecting a plain number will break. Prefer `new Date().getTime()`, which returns a clean number." %}
+{% include differs-from-mdn.html content="Runtime-verified: `typeof Date.now()` is `\"object\"` and it stringifies to a date-time string. MDN specifies a Number (ms since epoch). Numeric coercion (`Date.now() + 0`) yields the epoch ms, but any code expecting a plain number will break. Prefer `new Date().getTime()`, which returns a clean number." %}
 
 ```javascript
 // ❌ Date.now() returns a Date object in SFMC, not a number
@@ -178,7 +178,7 @@ var ms = new Date().getTime();   // current time in ms (number)
 
 `(ES3)` — ⚠️ Partial. `Date.parse(dateString)` returns milliseconds since the epoch, but **invalid strings return `0`, not `NaN`**, and **date-only strings parse as local time, not UTC**.
 
-{% include callout.html type="warning" title="Differs from MDN — no NaN, local date-only parsing" content="Runtime-verified: `Date.parse(\"garbage\")`, `Date.parse(\"\")`, and `Date.parse(\"2021-13-45\")` all return **`0`** (the epoch), not `NaN` — so `isNaN()` cannot detect a bad date and invalid input silently becomes 1970-01-01. Also, a date-only ISO string like `\"2026-06-18\"` is parsed as **local** midnight (`getUTCHours()` = 6 at GMT-06:00), whereas the ES5+ spec treats date-only forms as UTC. Validate input yourself." %}
+{% include differs-from-mdn.html content="Runtime-verified: `Date.parse(\"garbage\")`, `Date.parse(\"\")`, and `Date.parse(\"2021-13-45\")` all return **`0`** (the epoch), not `NaN` — so `isNaN()` cannot detect a bad date and invalid input silently becomes 1970-01-01. Also, a date-only ISO string like `\"2026-06-18\"` is parsed as **local** midnight (`getUTCHours()` = 6 at GMT-06:00), whereas the ES5+ spec treats date-only forms as UTC. Validate input yourself." %}
 
 ```javascript
 // ⚠️ SFMC returns 0 (epoch), not NaN — validate before trusting the result
@@ -189,9 +189,9 @@ Date.parse("garbage");                // 0  (spec: NaN)
 
 ## UTC {#utc}
 
-`(ES3)` — ⚠️ Partial. {% include method-status.html status="differs-from-docs" %} `Date.UTC(year[, month[, day[, hours[, minutes[, seconds[, ms]]]]]])` returns ms for the given UTC components when you pass at least **year and month**.
+`(ES3)` — ⚠️ Partial. {% include method-status.html status="verified" differs=true %} `Date.UTC(year[, month[, day[, hours[, minutes[, seconds[, ms]]]]]])` returns ms for the given UTC components when you pass at least **year and month**.
 
-{% include differs-from-docs.html note="With year + month (and further components) `Date.UTC()` returns the correct UTC timestamp. But the year-only form `Date.UTC(2026)` returns a nonsense small number (observed **-21597974**) instead of a valid timestamp — and does not return `NaN`. Always pass at least year and month, e.g. `Date.UTC(2026, 0, 1)`." %}
+{% include differs-from-mdn.html content="With year + month (and further components) `Date.UTC()` returns the correct UTC timestamp. But the year-only form `Date.UTC(2026)` returns a nonsense small number (observed **-21597974**) instead of a valid timestamp — and does not return `NaN`. Always pass at least year and month, e.g. `Date.UTC(2026, 0, 1)`." %}
 
 ```javascript
 Date.UTC(1970, 0, 1);                    // 0

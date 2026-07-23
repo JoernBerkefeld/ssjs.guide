@@ -14,6 +14,7 @@ return_type: "null"
 min_args: 5
 max_args: 5
 verification: verified
+differs_from_docs: true
 ---
 
 ## Parameters
@@ -30,9 +31,9 @@ verification: verified
 
 `UpsertDE` inserts a new row or updates an existing one in a Data Extension. It performs the same upsert as [UpsertData](/platform-functions/upsertdata/), but **returns `null`** (no row count).
 
-The official Salesforce docs describe `UpsertDE` as an email-context function, but it was **runtime-verified** to run and commit its upsert on a CloudPage as well. [UpsertData](/platform-functions/upsertdata/) is still preferred outside email because it returns the number of affected rows.
+{% include differs-from-docs.html note="The docs restrict `UpsertDE` to email contexts, but at runtime it also executes and commits its upsert on a CloudPage, returning `null` (not the affected-row count). It takes the where/field pairs as arrays (no flat/variadic form) and resolves the DE by **Name** only." %}
 
-The Data Extension is resolved by its **Name**, not the external key / CustomerKey. Like `UpsertData`, it takes the where and field pairs as arrays — there is no flat/variadic form.
+[UpsertData](/platform-functions/upsertdata/) is still preferred outside email because it returns the number of affected rows.
 
 ## See Also
 

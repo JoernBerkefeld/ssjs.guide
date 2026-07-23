@@ -1,0 +1,33 @@
+{% comment %}
+  Renders a "differs from standard JavaScript (MDN)" detail callout for an ECMAScript
+  built-in whose SFMC-engine behaviour diverges from the MDN / ECMAScript-spec description.
+
+  Sibling of differs-from-docs.html (which covers SFMC's own official docs). Use this one
+  when the discrepancy is against MDN / standard JavaScript, not the Salesforce SSJS docs.
+
+  The page-level "Runtime verified" and "Differs from official docs" badges are rendered
+  up top by verification-status.html (driven by front matter). This include only emits the
+  inline detail box that explains a specific discrepancy.
+
+  Usage:
+    {% include differs-from-mdn.html content="Standard fn.toString() returns the source; the SFMC engine returns [object Function]." link="#functionprototypetostring-returns-object-function-not-source" %}
+
+  Parameters:
+    content  (string)   - required. One- or two-sentence explanation of the discrepancy.
+    title    (string)   - optional. Defaults to "Differs from standard JavaScript (MDN)".
+    type     (string)   - optional. callout type; defaults to "warning".
+    link     (string)   - optional. Anchor (e.g. "#some-anchor") on the differs-from-docs
+                          page. When present, a "See [Differs from Official Docs](...)"
+                          link is appended to the callout body.
+{% endcomment %}
+
+{% if include.content %}
+{% assign mdn_title = include.title | default: "Differs from standard JavaScript (MDN)" %}
+{% assign mdn_type = include.type | default: "warning" %}
+{% if include.link %}
+{% capture mdn_content %}{{ include.content }} See [Differs from Official Docs](/engine-limitations/differs-from-docs/{{ include.link }}).{% endcapture %}
+{% else %}
+{% assign mdn_content = include.content %}
+{% endif %}
+{% include callout.html type=mdn_type title=mdn_title content=mdn_content %}
+{% endif %}

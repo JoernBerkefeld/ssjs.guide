@@ -5,6 +5,7 @@ parent: Core Library
 parent_url: /core-library/
 description: Core library object for managing All Subscribers list entries — add, retrieve, upsert, update, remove, unsubscribe, and retrieve attributes and lists.
 verification: in-progress
+differs_from_docs: true
 requires_core_load: true
 ---
 
@@ -135,7 +136,7 @@ var results = Subscriber.Retrieve({ Property: "SubscriberKey", SimpleOperator: "
 
 {% include method-status.html status="in-progress" %}
 
-{% include callout.html type="warning" title="Differs from official Salesforce docs" content="The official docs document this as a **static** `Subscriber.Upsert(properties)`, but at runtime `Subscriber.Upsert` is `undefined` — the method lives on the **instance** (`Subscriber.Init(key).Upsert(properties)`). See [Differs from Official Docs](/engine-limitations/differs-from-docs/#subscriber-upsert--statistics--instance-methods-not-static)." %}
+{% include differs-from-docs.html note="The official docs document this as a **static** `Subscriber.Upsert(properties)`, but at runtime `Subscriber.Upsert` is `undefined` — the method lives on the **instance** (`Subscriber.Init(key).Upsert(properties)`)." %}
 
 {% include callout.html type="info" content="Verification blocked by a BU-level guardrail: on the QA test BU, programmatic subscriber writes are rejected by the spam filter (SOAP `TriggeredSpamFilter`, `ErrorCode 12002`). Presence and signature are runtime-proven (`typeof Subscriber.Init(key).Upsert === \"function\"`), but the upsert path cannot complete on this BU. Verify on a BU whose spam-filter policy allows programmatic subscriber writes." %}
 
@@ -175,7 +176,7 @@ var result = subObj.Upsert({
 
 {% include method-status.html status="verified" %}
 
-{% include callout.html type="warning" title="Differs from official Salesforce docs" content="The official docs document this as a **static** `Subscriber.Statistics(subscriberKey)`, but at runtime `Subscriber.Statistics` is `undefined` — the method lives on the **instance** (`Subscriber.Init(key).Statistics()`). See [Differs from Official Docs](/engine-limitations/differs-from-docs/#subscriber-upsert--statistics--instance-methods-not-static)." %}
+{% include differs-from-docs.html note="The official docs document this as a **static** `Subscriber.Statistics(subscriberKey)`, but at runtime `Subscriber.Statistics` is `undefined` — the method lives on the **instance** (`Subscriber.Init(key).Statistics()`)." %}
 
 Retrieves statistical data for the initialized subscriber (sends, opens, clicks, bounces, unsubscribes).
 

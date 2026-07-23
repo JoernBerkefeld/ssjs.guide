@@ -14,6 +14,7 @@ return_type: "object[]"
 min_args: 5
 max_args: 5
 verification: verified
+differs_from_docs: true
 ---
 
 ## Parameters
@@ -33,7 +34,7 @@ verification: verified
 - Only the top N rows (e.g., most recent 10 orders)
 - Pagination patterns
 
-Like `LookupRows`, each returned row object also carries the system fields `_CustomObjectKey` (a `number`) and `_CreatedDate` (a `string`), and the DE is resolved by its **Name** (not the external key / CustomerKey) — both runtime-verified. It returns `null` when no rows match, so guard before reading `.length`.
+{% include differs-from-docs.html note="At runtime `LookupOrderedRows` returns `null` (not an empty array `[]`) when no row matches — guard before reading `.length`. Each matched row also carries undocumented system fields `_CustomObjectKey` (number) and `_CreatedDate` (string), and the DE is resolved by **Name** only." %}
 
 Also like `LookupRows`, most fields are returned as their **typed/native JS value** (Number and Decimal columns come back as `number`, Boolean columns as `boolean`) — useful when you need those types without manual casting. **Date columns are the exception:** they come back as an ISO-8601 `string` (e.g. `"2024-01-15T00:00:00.000"`), **not** a `Date` object — unlike [`Lookup`](/platform-functions/lookup/), which returns a real `Date` (runtime-verified). This still contrasts with `DataExtension.Rows.Retrieve()`, which stringifies **every** field, including Number/Boolean (but gives you an empty array `[]` instead of `null` on no match).
 

@@ -14,6 +14,7 @@ availability:
   automation: false
   triggered_send: true
 verification: verified
+differs_from_docs: true
 syntax: "Attribute.GetValue(name)"
 return_type: string
 min_args: 1
@@ -23,6 +24,8 @@ max_args: 1
 ## Description
 
 The global `Attribute` object provides access to subscriber attribute (profile attribute) values for the current recipient. It requires `Platform.Load("Core", ...)` before use.
+
+{% include differs-from-docs.html note="The docs imply `Attribute.GetValue` is unavailable in CloudPages, but after `Platform.Load(\"Core\", ...)` it works there too — and when no recipient is in context (e.g. a plain CloudPage GET) it returns an empty string `\"\"` instead of throwing." %}
 
 ### Attribute.GetValue {#getvalue}
 

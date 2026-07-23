@@ -5,6 +5,7 @@ parent: Core Library
 parent_url: /core-library/
 description: Core library Send — create and manage sends, cancel a send, and retrieve aggregate or per-send tracking.
 verification: verified
+differs_from_docs: true
 requires_core_load: true
 ---
 

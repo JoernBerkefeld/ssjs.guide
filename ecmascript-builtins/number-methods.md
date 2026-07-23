@@ -29,7 +29,7 @@ differs_from_docs: true
 | [`Number.prototype.valueOf()`](#valueof) | ES3 | ✅ Works | |
 | [`parseInt(str, radix)`](#parseint-global) | ES3 | ⚠️ Partial | `NaN` on trailing non-numeric chars |
 | [`parseFloat(str)`](#parsefloat-global) | ES3 | ⚠️ Partial | `NaN` on trailing non-numeric chars; 32-bit precision |
-| [Constants (`MAX_VALUE`, `NaN`, `POSITIVE_INFINITY`, …)](#constants) | ES3 | ⚠️ Partial | Defined but wrong: `MIN_VALUE` negative, `*_INFINITY` signs swapped — {% include method-status.html status="differs-from-docs" %} use global identifiers / literals |
+| [Constants (`MAX_VALUE`, `NaN`, `POSITIVE_INFINITY`, …)](#constants) | ES3 | ⚠️ Partial | Defined but wrong: `MIN_VALUE` negative, `*_INFINITY` signs swapped — use global identifiers / literals |
 | [`Number.isInteger(val)`](#isinteger) | ES6 | ❌ Missing | `typeof n === "number" && Math.floor(n) === n` |
 | [`Number.isNaN(val)`](#isnan) | ES6 | ❌ Missing | Use the global `isNaN(value)` |
 | [`Number.isFinite(val)`](#isfinite) | ES6 | ❌ Missing | Use the global `isFinite(value)` |
@@ -50,14 +50,14 @@ differs_from_docs: true
 
 ## toExponential {#toexponential}
 
-`(ES3)` — ⚠️ Partial. {% include method-status.html status="differs-from-docs" %} Formats in exponential notation. When called **without** an argument, the SFMC Jint engine pads the significand with trailing zeros instead of the minimal standard form, so always pass an explicit digit count.
+`(ES3)` — ⚠️ Partial. {% include method-status.html status="verified" differs=true %} Formats in exponential notation. When called **without** an argument, the SFMC Jint engine pads the significand with trailing zeros instead of the minimal standard form, so always pass an explicit digit count.
 
 ```javascript
 (123456).toExponential(2);   // "1.23e+5"
 (3.14159).toExponential();   // "3.1415900000000000e+0" in SFMC (spec would give "3.14159e+0")
 ```
 
-{% include differs-from-docs.html note="MDN specifies that `toExponential()` with no argument uses the minimal number of digits needed; the SFMC Jint engine instead pads the significand with trailing zeros — always pass an explicit `fractionDigits`." %}
+{% include differs-from-mdn.html content="MDN specifies that `toExponential()` with no argument uses the minimal number of digits needed; the SFMC Jint engine instead pads the significand with trailing zeros — always pass an explicit `fractionDigits`." %}
 
 ## toPrecision {#toprecision}
 
@@ -70,7 +70,7 @@ differs_from_docs: true
 
 ## toString {#tostring}
 
-`(ES3)` — ⚠️ Partial. {% include method-status.html status="differs-from-docs" %} Returns the number as a string. The optional `radix` only accepts **2, 8, 10, or 16** in the SFMC Jint engine — any other base throws `"Invalid Base."` (standard JavaScript supports 2–36). Fractional values are truncated to their integer part before non-decimal conversion.
+`(ES3)` — ⚠️ Partial. {% include method-status.html status="verified" differs=true %} Returns the number as a string. The optional `radix` only accepts **2, 8, 10, or 16** in the SFMC Jint engine — any other base throws `"Invalid Base."` (standard JavaScript supports 2–36). Fractional values are truncated to their integer part before non-decimal conversion.
 
 ```javascript
 (255).toString();     // "255"
@@ -80,7 +80,7 @@ differs_from_docs: true
 (3.5).toString(2);    // "100" in SFMC (spec would give "11.1")
 ```
 
-{% include differs-from-docs.html note="MDN specifies `toString(radix)` accepts any radix from 2 to 36; the SFMC Jint engine supports only 2, 8, 10, and 16 (others throw `\"Invalid Base.\"`) and truncates fractional values before non-decimal conversion (`(3.5).toString(2)` → `\"100\"`, not `\"11.1\"`)." %}
+{% include differs-from-mdn.html content="MDN specifies `toString(radix)` accepts any radix from 2 to 36; the SFMC Jint engine supports only 2, 8, 10, and 16 (others throw `\"Invalid Base.\"`) and truncates fractional values before non-decimal conversion (`(3.5).toString(2)` → `\"100\"`, not `\"11.1\"`)." %}
 
 ## valueOf {#valueof}
 
@@ -113,7 +113,7 @@ parseFloat("1.5kg");          // NaN in SFMC (spec would give 1.5)
 
 ## Constants {#constants}
 
-`(ES3)` — ⚠️ Partial. {% include method-status.html status="differs-from-docs" %} The classic ES3 `Number` constants **are defined** in the SFMC Jint engine (`typeof Number.MAX_VALUE === "number"`), but several **return wrong values**. This diverges from standard JavaScript, where all of these hold their spec values.
+`(ES3)` — ⚠️ Partial. {% include method-status.html status="verified" differs=true %} The classic ES3 `Number` constants **are defined** in the SFMC Jint engine (`typeof Number.MAX_VALUE === "number"`), but several **return wrong values**. This diverges from standard JavaScript, where all of these hold their spec values.
 
 ```javascript
 Number.MAX_VALUE;          // 1.79769313486232e+308 — correct
@@ -125,7 +125,7 @@ Number.NEGATIVE_INFINITY;  // stringifies "infinity", reads back > 0 — WRONG (
 
 Do not trust `Number.MIN_VALUE` or the `Number.*_INFINITY` constants. `Number.MAX_VALUE` and `Number.NaN` are safe. Prefer the global identifiers or numeric literals — but note that even the global `Infinity` is unreliable in this engine: `(Infinity > 0)` returns `false` and it stringifies with an **inverted sign** (`String(Infinity)` → `"-infinity"`). The global `NaN` behaves correctly (`NaN !== NaN` is `true`).
 
-{% include differs-from-docs.html note="Per the ECMAScript spec, `Number.MIN_VALUE` is the smallest positive value (`5e-324`) and `Number.POSITIVE_INFINITY` / `Number.NEGATIVE_INFINITY` hold `+Infinity` / `-Infinity`; in the SFMC Jint engine `Number.MIN_VALUE` reads back as a large negative number and both `*_INFINITY` constants have their signs swapped." %}
+{% include differs-from-mdn.html content="Per the ECMAScript spec, `Number.MIN_VALUE` is the smallest positive value (`5e-324`) and `Number.POSITIVE_INFINITY` / `Number.NEGATIVE_INFINITY` hold `+Infinity` / `-Infinity`; in the SFMC Jint engine `Number.MIN_VALUE` reads back as a large negative number and both `*_INFINITY` constants have their signs swapped." %}
 
 ```javascript
 var MAX_VALUE = 1.7976931348623157e308;   // literal fallback for MIN_VALUE / *_INFINITY
