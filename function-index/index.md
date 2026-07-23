@@ -244,8 +244,8 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`Platform.Function.InvokeCreate(apiObject, status, options)`](/platform-functions/invokecreate/) | Platform Functions | string | SOAP Create (legacy) |
 | [`Platform.Function.InvokeDelete(apiObject, status, options)`](/platform-functions/invokedelete/) | Platform Functions | string | SOAP Delete (legacy) |
 | [`Platform.Function.InvokeExecute(apiObject, status)`](/platform-functions/invokeexecute/) | Platform Functions | object[] | SOAP Execute call (legacy) |
-| [`Platform.Function.InvokeExtract(apiObject, statusArray[, options])`](/platform-functions/invokeextract/) | Platform Functions | string | SOAP Extract call (legacy) |
-| [`Platform.Function.InvokePerform(apiObject, method, status, options)`](/platform-functions/invokeperform/) | Platform Functions | string | SOAP Perform action (legacy) |
+| [`Platform.Function.InvokeExtract(apiObject, statusArray)`](/platform-functions/invokeextract/) | Platform Functions | string | SOAP Extract call (legacy) |
+| [`Platform.Function.InvokePerform(apiObject, method, status[, options])`](/platform-functions/invokeperform/) | Platform Functions | string | SOAP Perform action (legacy) |
 | [`Platform.Function.InvokeRetrieve(apiObject, status)`](/platform-functions/invokeretrieve/) | Platform Functions | object[] | SOAP Retrieve (legacy) |
 | [`Platform.Function.InvokeSchedule(apiObject, action, schedule[, statusArray, options])`](/platform-functions/invokeschedule/) | Platform Functions | string | SOAP Schedule call (legacy) |
 | [`Platform.Function.InvokeUpdate(apiObject, status, options)`](/platform-functions/invokeupdate/) | Platform Functions | string | SOAP Update (legacy) |

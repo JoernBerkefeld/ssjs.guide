@@ -463,7 +463,7 @@
     "url": "/platform-functions/invokeextract/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Invokes the Extract SOAP API method on the specified object and returns the OverallStatus message as a string.",
+    "description": "Invokes the Extract SOAP API method on the specified object.",
     "params": [
       "apiObject",
       "statusArray"
