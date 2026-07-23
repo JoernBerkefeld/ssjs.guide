@@ -4033,6 +4033,121 @@
     "returnType": "string"
   },
   {
+    "name": "Boolean.boolean-coercion",
+    "url": "/ecmascript-builtins/boolean/#boolean-coercion",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Called as a plain function, Boolean(value) returns a primitive boolean reflecting the value truthiness.",
+    "params": [
+      "value"
+    ],
+    "returnType": "boolean"
+  },
+  {
+    "name": "Boolean.boolean-boxed",
+    "url": "/ecmascript-builtins/boolean/#boolean-boxed",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "new Boolean(value) creates a boxed Boolean object (typeof \"object\").",
+    "params": [
+      "value"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "Boolean.boolean-prototype",
+    "url": "/ecmascript-builtins/boolean/#boolean-prototype",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "Boolean.",
+    "returnType": "object"
+  },
+  {
+    "name": "Error.Error",
+    "url": "/ecmascript-builtins/error/#error",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "The base Error constructor works in SSJS.",
+    "params": [
+      "message"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "ErrorTypes.EvalError",
+    "url": "/ecmascript-builtins/error-types/#evalerror",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "The EvalError subtype constructor is present in SSJS.",
+    "params": [
+      "message"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "ErrorTypes.RangeError",
+    "url": "/ecmascript-builtins/error-types/#rangeerror",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "The RangeError subtype constructor is present in SSJS.",
+    "params": [
+      "message"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "ErrorTypes.ReferenceError",
+    "url": "/ecmascript-builtins/error-types/#referenceerror",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "The ReferenceError subtype constructor is present in SSJS.",
+    "params": [
+      "message"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "ErrorTypes.SyntaxError",
+    "url": "/ecmascript-builtins/error-types/#syntaxerror",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "The SyntaxError subtype constructor is present in SSJS.",
+    "params": [
+      "message"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "ErrorTypes.TypeError",
+    "url": "/ecmascript-builtins/error-types/#typeerror",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "The TypeError subtype constructor is present in SSJS.",
+    "params": [
+      "message"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "ErrorTypes.URIError",
+    "url": "/ecmascript-builtins/error-types/#urierror",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "The URIError subtype constructor is present in SSJS.",
+    "params": [
+      "message"
+    ],
+    "returnType": "object"
+  },
+  {
+    "name": "GlobalValues.undefined",
+    "url": "/ecmascript-builtins/global-values/#undefined",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "The global undefined value is available in SSJS.",
+    "returnType": "undefined"
+  },
+  {
     "name": "Array.copyWithin",
     "url": "/ecmascript-builtins/array-methods/#copywithin",
     "section": "ECMAScript Builtins",
@@ -4257,8 +4372,8 @@
     "description": "The legacy unescape() function is undefined in SFMC (calling it throws \"Object expected\")."
   },
   {
-    "name": "Global.globalThis",
-    "url": "/ecmascript-builtins/global-functions/#globalthis",
+    "name": "GlobalValues.globalThis",
+    "url": "/ecmascript-builtins/global-values/#globalthis",
     "section": "ECMAScript Builtins",
     "type": "property",
     "description": "globalThis is undefined in SFMC (ES2020)."
@@ -4530,15 +4645,15 @@
     "description": "Intl is undefined in SFMC (ES2015); none of its formatters (NumberFormat, DateTimeFormat, Collator, …) exist."
   },
   {
-    "name": "Global.Infinity",
-    "url": "/ecmascript-builtins/global-functions/#infinity",
+    "name": "GlobalValues.Infinity",
+    "url": "/ecmascript-builtins/global-values/#infinity",
     "section": "ECMAScript Builtins",
     "type": "property",
     "description": "The Infinity global is broken in SFMC: its sign is inverted in comparisons and string coercion (Infinity > 0 is false, String(Infinity) is \"-infinity\")."
   },
   {
-    "name": "Global.NaN",
-    "url": "/ecmascript-builtins/global-functions/#nan",
+    "name": "GlobalValues.NaN",
+    "url": "/ecmascript-builtins/global-values/#nan",
     "section": "ECMAScript Builtins",
     "type": "property",
     "description": "The NaN global compares correctly (NaN === NaN is false; isNaN(NaN) is true) but String(NaN) is the lowercase \"nan\" instead of \"NaN\"."
