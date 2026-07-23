@@ -352,8 +352,8 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`Math.log10(x)`](/ecmascript-builtins/math/#log10) | ECMAScript Builtins | number | ❌ Missing (ES6) — use `Math.log(x) / Math.LN10` |
 | [`Math.LOG2E`](/ecmascript-builtins/math/#log2e) | ECMAScript Builtins | number | Base-2 log of e |
 | [`Math.LOG10E`](/ecmascript-builtins/math/#log10e) | ECMAScript Builtins | number | ❌ Missing — `undefined`; use `1 / Math.LN10` |
-| [`Math.max(value1[, value2, ...])`](/ecmascript-builtins/math/#max) | ECMAScript Builtins | number | Largest value |
-| [`Math.min(value1[, value2, ...])`](/ecmascript-builtins/math/#min) | ECMAScript Builtins | number | Smallest value |
+| [`Math.max(value1[, value2, ...])`](/ecmascript-builtins/math/#max) | ECMAScript Builtins | number | ⚠️ Largest value — throws with 3+ args; no-arg returns `0`, not `-Infinity` |
+| [`Math.min(value1[, value2, ...])`](/ecmascript-builtins/math/#min) | ECMAScript Builtins | number | ⚠️ Smallest value — throws with 3+ args; no-arg returns `0`, not `+Infinity` |
 | [`Math.PI`](/ecmascript-builtins/math/#pi) | ECMAScript Builtins | number | Pi (~3.14159) |
 | [`Math.pow(base, exponent)`](/ecmascript-builtins/math/#pow) | ECMAScript Builtins | number | Base to the power of exponent |
 | [`Math.random()`](/ecmascript-builtins/math/#random) | ECMAScript Builtins | number | Random number [0, 1) |

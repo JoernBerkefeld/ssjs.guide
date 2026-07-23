@@ -3,7 +3,7 @@ layout: page
 title: Unsupported Syntax
 parent: Engine Limitations
 parent_url: /engine-limitations/
-description: 24 ES6+ JavaScript features that cause runtime errors in SFMC SSJS, with safe alternatives for each.
+description: 25 ES6+ JavaScript features that cause runtime errors in SFMC SSJS, with safe alternatives for each.
 ---
 
 The SFMC SSJS engine does not support ES6+ syntax. Using any of the following features will cause a **runtime error** (often a blank white page with no diagnostic message).

@@ -142,7 +142,7 @@ The ES3 `Math` members below work natively; `Math.max` / `Math.min` have argumen
 | [`Number.prototype.toPrecision([digits])`](/ecmascript-builtins/number-methods/#toprecision) | ES3 | ✅ Works | |
 | [`Number.prototype.toString([radix])`](/ecmascript-builtins/number-methods/#tostring) | ES3 | ⚠️ Partial | `radix` only supports 2, 8, 10, 16 — others throw "Invalid Base." |
 | `Number.prototype.valueOf()` | ES3 | ✅ Works | |
-| [`Number.MAX_VALUE / MIN_VALUE / NaN / NEGATIVE_INFINITY / POSITIVE_INFINITY`](/ecmascript-builtins/number-methods/#constants) | ES3 | ❌ Missing | All `undefined` in SFMC — use global identifiers / literals |
+| [`Number.MAX_VALUE / MIN_VALUE / NaN / NEGATIVE_INFINITY / POSITIVE_INFINITY`](/ecmascript-builtins/number-methods/#constants) | ES3 | ⚠️ Partial | Defined but several wrong: `MIN_VALUE` negative, `*_INFINITY` signs swapped (`MAX_VALUE`/`NaN` correct) — use literals |
 | [`Number.isInteger(val)`](/ecmascript-builtins/number-methods/#isinteger) | ES6 | ❌ Missing | Use `typeof n === "number" && Math.floor(n) === n` |
 | [`Number.isNaN(val)`](/ecmascript-builtins/number-methods/#isnan) | ES6 | ❌ Missing | Use global `isNaN()` |
 | [`Number.isFinite(val)`](/ecmascript-builtins/number-methods/#isfinite) | ES6 | ❌ Missing | Use global `isFinite()` |
@@ -273,7 +273,7 @@ Value-confirmed `Date` members — see [Date Methods](/ecmascript-builtins/date-
 | [`Date.prototype.toJSON()`](/ecmascript-builtins/date-methods/#tojson) | ES5 | ❌ Missing | Absent (depends on `toISOString`) |
 | [`Date.now()`](/ecmascript-builtins/date-methods/#now) | ES5 | ⚠️ Partial | Static — returns a **Date object**, not a number |
 | [`Date.parse(str)`](/ecmascript-builtins/date-methods/#parse) | ES3 | ⚠️ Partial | Static — invalid strings return **`0`**, not `NaN`; date-only parses as local |
-| [`Date.UTC(year[, ...])`](/ecmascript-builtins/date-methods/#utc) | ES3 | ✅ Works | Static — pass ≥ 2 args (year-only form misbehaves) |
+| [`Date.UTC(year[, ...])`](/ecmascript-builtins/date-methods/#utc) | ES3 | ⚠️ Partial | Static — pass ≥ 2 args; year-only form returns a nonsense value, not `NaN` |
 
 ### RegExp
 

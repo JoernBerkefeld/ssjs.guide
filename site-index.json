@@ -4316,48 +4316,6 @@
     "description": "String."
   },
   {
-    "name": "Array.slice",
-    "url": "/ecmascript-builtins/array-methods/#slice",
-    "section": "ECMAScript Builtins",
-    "type": "method",
-    "description": "Array."
-  },
-  {
-    "name": "Array.sort",
-    "url": "/ecmascript-builtins/array-methods/#sort",
-    "section": "ECMAScript Builtins",
-    "type": "method",
-    "description": "Array."
-  },
-  {
-    "name": "String.search",
-    "url": "/ecmascript-builtins/string-methods/#search",
-    "section": "ECMAScript Builtins",
-    "type": "method",
-    "description": "String."
-  },
-  {
-    "name": "String.split",
-    "url": "/ecmascript-builtins/string-methods/#split",
-    "section": "ECMAScript Builtins",
-    "type": "method",
-    "description": "String."
-  },
-  {
-    "name": "Math.max",
-    "url": "/ecmascript-builtins/math/#max",
-    "section": "ECMAScript Builtins",
-    "type": "method",
-    "description": "Math."
-  },
-  {
-    "name": "Math.min",
-    "url": "/ecmascript-builtins/math/#min",
-    "section": "ECMAScript Builtins",
-    "type": "method",
-    "description": "Math."
-  },
-  {
     "name": "Global.escape",
     "url": "/ecmascript-builtins/global-functions/#escape",
     "section": "ECMAScript Builtins",
@@ -4706,13 +4664,6 @@
     "section": "ECMAScript Builtins",
     "type": "property",
     "description": "fn."
-  },
-  {
-    "name": "Date.toISOString",
-    "url": "/ecmascript-builtins/date-methods/#toisostring",
-    "section": "ECMAScript Builtins",
-    "type": "method",
-    "description": "Date."
   },
   {
     "name": "Date.toJSON",
