@@ -27,6 +27,10 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`<AccountUserInstance>.Update(properties)`](/core-library/accountuser/#instance-update) | Core Library | string | Update AccountUser |
 | [`<AccountUserInstance>.Activate()`](/core-library/accountuser/#instance-activate) | Core Library | string | Activate AccountUser |
 | [`<AccountUserInstance>.Deactivate()`](/core-library/accountuser/#instance-deactivate) | Core Library | string | Deactivate AccountUser |
+| [`AggregateError([errors[, message]])`](/ecmascript-builtins/error-types/#aggregateerror) | ECMAScript Builtins | Error | ❌ Missing (ES2021) — use the base `Error` constructor |
+| [`AsyncFunction` / `AsyncGenerator` / `AsyncIterator`](/ecmascript-builtins/promises-iteration/#async-variants) | ECMAScript Builtins | — | ❌ Missing (ES2017+) — engine is synchronous; no `async`/`await` |
+| [`ArrayBuffer(byteLength)`](/ecmascript-builtins/typed-arrays/#arraybuffer) | ECMAScript Builtins | — | ❌ Missing (ES6) — no binary buffers; use arrays or Base64 |
+| [`Atomics`](/ecmascript-builtins/typed-arrays/#atomics) | ECMAScript Builtins | — | ❌ Missing (ES2017) — no shared-memory atomics |
 | [`Array.from(arrayLike[, mapFn])`](/ecmascript-builtins/array-methods/#from) | ECMAScript Builtins | array | ❌ Missing (ES6) — needs polyfill |
 | [`Array.isArray(value)`](/ecmascript-builtins/array-methods/#isarray) | ECMAScript Builtins | boolean | ❌ Missing (ES5) — needs polyfill |
 | [`Array.of(element[, ...])`](/ecmascript-builtins/array-methods/#of) | ECMAScript Builtins | array | ❌ Missing (ES6) — needs polyfill |
@@ -76,6 +80,9 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`Platform.Function.Base64Encode(string[, charset])`](/platform-functions/base64encode/) | Platform Functions | string | Encode a string to Base64 |
 | [`BeginImpressionRegion(name)`](/core-library/beginimpressionregion/) | Core Library | void | Bare-name Core form of Platform.Function.BeginImpressionRegion — unusable from SSJS |
 | [`Platform.Function.BeginImpressionRegion(name)`](/platform-functions/beginimpressionregion/) | Platform Functions | void | Start a named impression region |
+| [`BigInt(value)`](/ecmascript-builtins/bigint/) | ECMAScript Builtins | bigint | ❌ Missing (ES2020) — no arbitrary-precision integers |
+| [`BigInt64Array` / `BigUint64Array`](/ecmascript-builtins/typed-arrays/#bigint64array) | ECMAScript Builtins | — | ❌ Missing (ES2020) — no typed arrays |
+| [`Boolean(value)`](/ecmascript-builtins/boolean/#boolean-coercion) | ECMAScript Builtins | boolean | Truthiness coercion; boxed `new Boolean()` stringifies as capitalized `True`/`False` |
 | [`BounceEvent.Retrieve(filter)`](/core-library/events/#bounce-event) | Core Library | object[] | Bounce tracking events |
 
 ---
@@ -138,6 +145,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`<DateInstance>.toTimeString()`](/ecmascript-builtins/date-methods/#totimestring) | ECMAScript Builtins | string | Time portion as a human-readable string |
 | [`<DateInstance>.toUTCString()`](/ecmascript-builtins/date-methods/#toutcstring) | ECMAScript Builtins | string | Date as a string in the UTC time zone |
 | [`<DateInstance>.valueOf()`](/ecmascript-builtins/date-methods/#valueof) | ECMAScript Builtins | number | Milliseconds since the Unix epoch |
+| [`<DateInstance>.toLocaleDateString()`](/ecmascript-builtins/internationalization/#tolocalestring-family) | ECMAScript Builtins | string | ⚠️ Differs — locale argument ignored; non-localized output |
 | [`DataExtension.Init(key)`](/core-library/dataextension/#init) | Core Library | DataExtensionInstance | Initialize DE object |
 | [`DataExtension.Add(properties)`](/core-library/dataextension/#add) | Core Library | DataExtensionInstance | Create data extension |
 | [`DataExtension.Retrieve(filter, [queryAllAccounts])`](/core-library/dataextension/#retrieve) | Core Library | object[] | Retrieve data extensions |
@@ -155,6 +163,9 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`<DeliveryProfileInstance>.Remove()`](/core-library/deliveryprofile/#instance-remove) | Core Library | string | Remove DeliveryProfile |
 | [`Platform.Function.DeleteData(deName, whereFieldNames, whereFieldValues)`](/platform-functions/deletedata/) | Platform Functions | number | Delete DE rows |
 | [`DeleteDE(deName, whereFieldNames, whereFieldValues)`](/platform-functions/deletede/) | Platform Functions | null | Same delete as DeleteData, but returns null |
+| [`DataView(buffer[, byteOffset[, byteLength]])`](/ecmascript-builtins/typed-arrays/#dataview) | ECMAScript Builtins | — | ❌ Missing (ES6) — no binary buffer views |
+| [`decodeURI(uri)`](/ecmascript-builtins/global-functions/#decodeuri) | ECMAScript Builtins | string | Decode a full URI |
+| [`decodeURIComponent(str)`](/ecmascript-builtins/global-functions/#decodeuricomponent) | ECMAScript Builtins | string | ⚠️ Partial — decodes `+` as a space (form-urlencoded) |
 
 ---
 
@@ -162,6 +173,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
+| [`EvalError([message])`](/ecmascript-builtins/error-types/#evalerror) | ECMAScript Builtins | Error | ✅ Present — legacy `Error` subtype (shares base `Error` quirks) |
 | [`Email.Init(key)`](/core-library/email/#init) | Core Library | EmailInstance | Initialize email definition |
 | [`Email.Add(properties)`](/core-library/email/#add) | Core Library | EmailInstance | Create email definition |
 | [`Email.Retrieve(filter)`](/core-library/email/#retrieve) | Core Library | object[] | Retrieve email definitions |
@@ -173,6 +185,9 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`Platform.Function.EndImpressionRegion([closeAll])`](/platform-functions/endimpressionregion/) | Platform Functions | void | End an impression region |
 | [`Error(message)`](/ecmascript-builtins/error/) | ECMAScript Builtins | Error | Create Error object (`new Error([message])`) — `.message` reads `undefined`; use `String(e)` |
 | [`ErrorUtil.ThrowWSProxyError(result)`](/wsproxy/errorutil/) | WSProxy | void | Throw when WSProxy status indicates failure |
+| [`encodeURI(uri)`](/ecmascript-builtins/global-functions/#encodeuri) | ECMAScript Builtins | string | ⚠️ Partial — space → `+` (not `%20`), lowercase hex |
+| [`encodeURIComponent(str)`](/ecmascript-builtins/global-functions/#encodeuricomponent) | ECMAScript Builtins | string | ⚠️ Partial — space → `+`, lowercase hex (`%2f`) |
+| [`escape(str)`](/ecmascript-builtins/global-functions/#escape) | ECMAScript Builtins | string | ❌ Missing — `undefined`; use `encodeURIComponent` |
 
 ---
 
@@ -180,6 +195,8 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
+| [`FinalizationRegistry(callback)`](/ecmascript-builtins/memory-management/#finalizationregistry) | ECMAScript Builtins | — | ❌ Missing (ES2021) — no GC callbacks |
+| [`Float16Array` / `Float32Array` / `Float64Array`](/ecmascript-builtins/typed-arrays/#float32array) | ECMAScript Builtins | — | ❌ Missing (ES6+) — no typed arrays |
 | [`FilterDefinition.Init(key)`](/core-library/filterdefinition/#init) | Core Library | FilterDefinitionInstance | Initialize filter definition |
 | [`FilterDefinition.Add(properties)`](/core-library/filterdefinition/#add) | Core Library | string | Create filter definition |
 | [`FilterDefinition.Retrieve(filter)`](/core-library/filterdefinition/#retrieve) | Core Library | object[] | Retrieve filter definitions |
@@ -208,6 +225,8 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
+| [`globalThis`](/ecmascript-builtins/global-values/#globalthis) | ECMAScript Builtins | object | ❌ Missing (ES2020) — `undefined`; no global-object reference |
+| [`Generator` / `GeneratorFunction`](/ecmascript-builtins/promises-iteration/#generator) | ECMAScript Builtins | — | ❌ Missing (ES6) — `function*` / `yield` are parse errors |
 | [`GUID()`](/core-library/guid/) | Core Library | string | Bare-name Core form of Platform.Function.GUID — generate UUID v4 |
 | [`Platform.Function.GUID()`](/platform-functions/guid/) | Platform Functions | string | Generate UUID v4 |
 | [`Platform.Recipient.GetAttributeValue(attributeName)`](/platform-objects/platform-recipient/) | Platform Functions | string | Returns the value of a subscriber attribute or sendable DE field for the current recipient |
@@ -238,6 +257,10 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
+| [`Iterator`](/ecmascript-builtins/promises-iteration/#iterator) | ECMAScript Builtins | — | ❌ Missing (ES6) — no iteration protocol; use index loops |
+| [`InternalError([message])`](/ecmascript-builtins/error-types/#internalerror) | ECMAScript Builtins | Error | ❌ Missing (non-standard) — use the base `Error` constructor |
+| [`Int8Array` / `Int16Array` / `Int32Array`](/ecmascript-builtins/typed-arrays/#int8array) | ECMAScript Builtins | — | ❌ Missing (ES6) — no typed arrays |
+| [`Intl`](/ecmascript-builtins/internationalization/#intl) | ECMAScript Builtins | — | ❌ Missing (ES2015) — no locale formatters; use `Platform.Function.FormatNumber` / `FormatDate` |
 | [`Platform.Function.InsertData(deName, fieldNames, fieldValues)`](/platform-functions/insertdata/) | Platform Functions | number | Insert DE row |
 | [`InsertDE(deName, fieldNames, fieldValues)`](/platform-functions/insertde/) | Platform Functions | null | Same insert as InsertData, but returns null |
 | [`Platform.Function.InvokeConfigure(apiObject, action, status, options)`](/platform-functions/invokeconfigure/) | Platform Functions | string | SOAP Configure call (legacy) |
@@ -256,6 +279,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`Platform.Function.IsCHTMLBrowser(userAgentString)`](/platform-functions/ischtmlbrowser/) | Platform Functions | boolean | Detect CHTML / feature-phone browsers |
 | [`isFinite(value)`](/ecmascript-builtins/number-methods/) | ECMAScript Builtins | boolean | Test if value is finite |
 | [`isNaN(value)`](/ecmascript-builtins/number-methods/) | ECMAScript Builtins | boolean | Test if value is NaN |
+| [`Infinity`](/ecmascript-builtins/global-values/#infinity) | ECMAScript Builtins | number | ⚠️ Partial — **sign inverted**: `Infinity > 0` is `false`, `String(Infinity)` is `-infinity` |
 | [`Number.isFinite(value)`](/ecmascript-builtins/number-methods/#isfinite) | ECMAScript Builtins | boolean | ❌ Missing (ES6) — use the global `isFinite` |
 | [`Number.isInteger(value)`](/ecmascript-builtins/number-methods/#isinteger) | ECMAScript Builtins | boolean | ❌ Missing (ES6) — needs polyfill |
 | [`Number.isNaN(value)`](/ecmascript-builtins/number-methods/#isnan) | ECMAScript Builtins | boolean | ❌ Missing (ES6) — use the global `isNaN` |
@@ -299,6 +323,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
+| [`Map()`](/ecmascript-builtins/keyed-collections/#map) | ECMAScript Builtins | — | ❌ Missing (ES6) — `new Map()` throws; use a plain object dictionary |
 | [`Math.abs(x)`](/ecmascript-builtins/math/#abs) | ECMAScript Builtins | number | Absolute value |
 | [`Math.acos(x)`](/ecmascript-builtins/math/#acos) | ECMAScript Builtins | number | Arccosine |
 | [`Math.acosh(x)`](/ecmascript-builtins/math/#acosh) | ECMAScript Builtins | number | ❌ Missing (ES6) — use `Math.log(x + Math.sqrt(x * x - 1))` |
@@ -350,6 +375,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
+| [`NaN`](/ecmascript-builtins/global-values/#nan) | ECMAScript Builtins | number | ⚠️ Partial — comparisons correct; `String(NaN)` is lowercase `nan` |
 | [`NotSentEvent.Retrieve(filter)`](/core-library/events/#not-sent-event) | Core Library | object[] | Not-sent events |
 | [`Number.EPSILON`](/ecmascript-builtins/number-methods/#max_safe_integer) | ECMAScript Builtins | number | ❌ Missing (ES6) — `undefined`; use `2.220446049250313e-16` |
 | [`Number.MAX_SAFE_INTEGER`](/ecmascript-builtins/number-methods/#max_safe_integer) | ECMAScript Builtins | number | ❌ Missing (ES6) — `undefined`; use `9007199254740991` |
@@ -361,6 +387,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`Number.POSITIVE_INFINITY`](/ecmascript-builtins/number-methods/#constants) | ECMAScript Builtins | number | ⚠️ Partial (ES3) — defined but **sign swapped**; use `Infinity` literal |
 | [`<NumberInstance>.toExponential([fractionDigits])`](/ecmascript-builtins/number-methods/#toexponential) | ECMAScript Builtins | string | ⚠️ Partial — no-arg form pads trailing zeros; always pass `fractionDigits` |
 | [`<NumberInstance>.toFixed([fractionDigits])`](/ecmascript-builtins/number-methods/#tofixed) | ECMAScript Builtins | string | Fixed-point notation string |
+| [`<NumberInstance>.toLocaleString()`](/ecmascript-builtins/internationalization/#tolocalestring-family) | ECMAScript Builtins | string | ⚠️ Differs — locale argument ignored; no grouping separators |
 | [`<NumberInstance>.toPrecision([precision])`](/ecmascript-builtins/number-methods/#toprecision) | ECMAScript Builtins | string | Precision notation string |
 | [`<NumberInstance>.toString([radix])`](/ecmascript-builtins/number-methods/#tostring) | ECMAScript Builtins | string | ⚠️ Partial — `radix` only supports 2, 8, 10, 16 |
 | [`<NumberInstance>.valueOf()`](/ecmascript-builtins/number-methods/#valueof) | ECMAScript Builtins | number | Primitive number value |
@@ -402,6 +429,8 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
+| [`Promise(executor)`](/ecmascript-builtins/promises-iteration/#promise) | ECMAScript Builtins | — | ❌ Missing (ES6) — `new Promise()` throws; engine is synchronous |
+| [`Proxy(target, handler)`](/ecmascript-builtins/reflection/#proxy) | ECMAScript Builtins | — | ❌ Missing (ES6) — `new Proxy()` throws; no trap-based interception |
 | [`parseFloat(string)`](/ecmascript-builtins/number-methods/#parsefloat-global) | ECMAScript Builtins | number | ⚠️ Partial — `NaN` on trailing non-numeric characters |
 | [`parseInt(string[, radix])`](/ecmascript-builtins/number-methods/#parseint-global) | ECMAScript Builtins | number | ⚠️ Partial — `NaN` on trailing non-numeric characters |
 | [`Platform.Function.ParseJSON(jsonString)`](/platform-functions/parsejson/) | Platform Functions | object | Parse JSON string to object |
@@ -449,6 +478,9 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
+| [`RangeError([message])`](/ecmascript-builtins/error-types/#rangeerror) | ECMAScript Builtins | Error | ✅ Present — legacy `Error` subtype (shares base `Error` quirks) |
+| [`ReferenceError([message])`](/ecmascript-builtins/error-types/#referenceerror) | ECMAScript Builtins | Error | ✅ Present — legacy `Error` subtype (shares base `Error` quirks) |
+| [`Reflect`](/ecmascript-builtins/reflection/#reflect) | ECMAScript Builtins | — | ❌ Missing (ES6) — use ES5 `Object` methods and operators |
 | [`Platform.Function.RaiseError(message[, currentRecipientOnly[, errorCode[, errorNumber]]])`](/platform-functions/raiseerror/) | Platform Functions | void | Halt execution with error |
 | [`Platform.Function.RedirectTo(url)`](/platform-functions/redirectto/) | Platform Functions | void | Email href redirect helper |
 | [`Redirect(url, movedPermanently)`](/core-library/redirect/) | Core Library | void | Redirect the browser |
@@ -473,6 +505,10 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
+| [`Set()`](/ecmascript-builtins/keyed-collections/#set) | ECMAScript Builtins | — | ❌ Missing (ES6) — `new Set()` throws; use a plain object keyed by member |
+| [`SharedArrayBuffer(byteLength)`](/ecmascript-builtins/typed-arrays/#sharedarraybuffer) | ECMAScript Builtins | — | ❌ Missing (ES2017) — no shared binary buffers |
+| [`SyntaxError([message])`](/ecmascript-builtins/error-types/#syntaxerror) | ECMAScript Builtins | Error | ✅ Present — legacy `Error` subtype (shares base `Error` quirks) |
+| [`SuppressedError([error, suppressed[, message]])`](/ecmascript-builtins/error-types/#suppressederror) | ECMAScript Builtins | Error | ❌ Missing (ES2026) — use the base `Error` constructor |
 | [`new Script.Util.HttpRequest(url)`](/http/script-util-httprequest/) | HTTP | HttpRequestInstance | Full HTTP request object |
 | [`new Script.Util.HttpGet(url)`](/http/script-util-httpget/) | HTTP | HttpRequestInstance | HTTP GET shorthand |
 | [`<HttpRequestInstance>.send()`](/http/script-util-httprequest/#send) | HTTP | object | Execute HTTP request |
@@ -484,6 +520,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`String(value)`](/ecmascript-builtins/string-methods/#string-constructor) | ECMAScript Builtins | string | Convert any value (incl. CLR objects) to JS string |
 | [`Stringify(value)`](/core-library/stringify/) | Core Library | string | Object to JSON string |
 | [`Platform.Function.Stringify(object)`](/platform-functions/stringify/) | Platform Functions | string | Object to JSON string |
+| [`Symbol([description])`](/ecmascript-builtins/symbol/) | ECMAScript Builtins | symbol | ❌ Missing (ES6) — no unique primitives or iterator protocol |
 | [`Subscriber.Init(key)`](/core-library/subscriber/#init) | Core Library | SubscriberInstance | Initialize subscriber |
 | [`Subscriber.Add(properties)`](/core-library/subscriber/#add) | Core Library | string | Create subscriber |
 | [`Subscriber.Retrieve(filter)`](/core-library/subscriber/#retrieve) | Core Library | object[] | Retrieve subscribers |
@@ -543,6 +580,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`<StringInstance>.substr(start[, length])`](/ecmascript-builtins/string-methods/#substr) | ECMAScript Builtins | string | ❌ Missing — throws at runtime; use `substring`/`slice` or polyfill |
 | [`<StringInstance>.substring(start[, end])`](/ecmascript-builtins/string-methods/#substring) | ECMAScript Builtins | string | Substring by range |
 | [`<StringInstance>.toLocaleLowerCase()`](/ecmascript-builtins/string-methods/#tolocalelowercase) | ECMAScript Builtins | string | Lower case using host locale mappings |
+| [`<StringInstance>.toLocaleUpperCase()`](/ecmascript-builtins/internationalization/#tolocalestring-family) | ECMAScript Builtins | string | Upper case; locale argument ignored (plain upper-casing) |
 | [`<StringInstance>.toLowerCase()`](/ecmascript-builtins/string-methods/#tolowercase) | ECMAScript Builtins | string | Convert to lower case |
 | [`<StringInstance>.toUpperCase()`](/ecmascript-builtins/string-methods/#touppercase) | ECMAScript Builtins | string | Convert to upper case |
 | [`<StringInstance>.trim()`](/ecmascript-builtins/string-methods/#trim) | ECMAScript Builtins | string | ❌ Missing (ES5) — use `Platform.Function.Trim` or a polyfill |
@@ -559,6 +597,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
+| [`TypeError([message])`](/ecmascript-builtins/error-types/#typeerror) | ECMAScript Builtins | Error | ✅ Present — legacy `Error` subtype (shares base `Error` quirks) |
 | [`Platform.Function.TreatAsContent(content)`](/platform-functions/treatascontent/) | Platform Functions | string | Evaluate AMPscript/HTML server-side |
 | [`Template.Init(key)`](/core-library/template/#init) | Core Library | TemplateInstance | Initialize template |
 | [`Template.Add(properties)`](/core-library/template/#add) | Core Library | string | Create template |
@@ -582,6 +621,10 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
+| [`undefined`](/ecmascript-builtins/global-values/#undefined) | ECMAScript Builtins | undefined | The primitive `undefined` value — works as expected |
+| [`URIError([message])`](/ecmascript-builtins/error-types/#urierror) | ECMAScript Builtins | Error | ✅ Present — legacy `Error` subtype (shares base `Error` quirks) |
+| [`Uint8Array` / `Uint8ClampedArray` / `Uint16Array` / `Uint32Array`](/ecmascript-builtins/typed-arrays/#uint8array) | ECMAScript Builtins | — | ❌ Missing (ES6) — no typed arrays |
+| [`unescape(str)`](/ecmascript-builtins/global-functions/#unescape) | ECMAScript Builtins | string | ❌ Missing — `undefined`; use `decodeURIComponent` |
 | [`UnsubEvent.Retrieve(filter)`](/core-library/events/#unsub-event) | Core Library | object[] | Unsubscribe events |
 | [`Platform.Function.UpdateData(deName, whereFieldNames, whereFieldValues, fieldNames, fieldValues)`](/platform-functions/updatedata/) | Platform Functions | number | Update DE rows |
 | [`UpdateDE(deName, whereFieldNames, whereFieldValues, fieldNames, fieldValues)`](/platform-functions/updatede/) | Platform Functions | null | Same update as UpdateData, but returns null |
@@ -606,6 +649,8 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
+| [`WeakMap()` / `WeakSet()`](/ecmascript-builtins/keyed-collections/#weakmap) | ECMAScript Builtins | — | ❌ Missing (ES6) — no weak-reference collections |
+| [`WeakRef(target)`](/ecmascript-builtins/memory-management/#weakref) | ECMAScript Builtins | — | ❌ Missing (ES2021) — no weak references |
 | [`Write(content)`](/core-library/write/) | Core Library | void | Output to page |
 | [`Platform.Response.Write(content)`](/platform-objects/platform-response/#write) | Platform Response | void | Write content to the HTTP response output |
 

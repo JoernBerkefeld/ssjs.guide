@@ -3153,7 +3153,15 @@
     "url": "/ecmascript-builtins/string-methods/#tolocalelowercase",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the string converted to lowercase according to host locale mappings.",
+    "description": "Returns the string converted to lowercase.",
+    "returnType": "string"
+  },
+  {
+    "name": "String.toLocaleUpperCase",
+    "url": "/ecmascript-builtins/string-methods/#tolocaleuppercase",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the string converted to uppercase.",
     "returnType": "string"
   },
   {
@@ -3500,6 +3508,58 @@
     "returnType": "number"
   },
   {
+    "name": "Number.toLocaleString",
+    "url": "/ecmascript-builtins/number-methods/#tolocalestring",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns a string representation of the number.",
+    "params": [
+      "locales",
+      "options"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Number.MAX_VALUE",
+    "url": "/ecmascript-builtins/number-methods/#max_value",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "The largest positive finite value representable by a Number.",
+    "returnType": "number"
+  },
+  {
+    "name": "Number.MIN_VALUE",
+    "url": "/ecmascript-builtins/number-methods/#min_value",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "Standard ES3 exposes the smallest positive representable Number (~5e-324).",
+    "returnType": "number"
+  },
+  {
+    "name": "Number.NaN",
+    "url": "/ecmascript-builtins/number-methods/#nan",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "The Not-a-Number value.",
+    "returnType": "number"
+  },
+  {
+    "name": "Number.POSITIVE_INFINITY",
+    "url": "/ecmascript-builtins/number-methods/#positive_infinity",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "Standard ES3 exposes positive infinity.",
+    "returnType": "number"
+  },
+  {
+    "name": "Number.NEGATIVE_INFINITY",
+    "url": "/ecmascript-builtins/number-methods/#negative_infinity",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "Standard ES3 exposes negative infinity.",
+    "returnType": "number"
+  },
+  {
     "name": "Object.hasOwnProperty",
     "url": "/ecmascript-builtins/object-methods/#hasownproperty",
     "section": "ECMAScript Builtins",
@@ -3525,6 +3585,118 @@
     "type": "method",
     "description": "Returns the primitive value of the object.",
     "returnType": "object"
+  },
+  {
+    "name": "Global.parseInt",
+    "url": "/ecmascript-builtins/global-functions/#parseint",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Parses a string and returns an integer in the specified radix (base).",
+    "params": [
+      "string",
+      "radix"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "Global.parseFloat",
+    "url": "/ecmascript-builtins/global-functions/#parsefloat",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Parses a string and returns a floating-point number.",
+    "params": [
+      "string"
+    ],
+    "returnType": "number"
+  },
+  {
+    "name": "Global.isNaN",
+    "url": "/ecmascript-builtins/global-functions/#isnan",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns true if the value is NaN (Not-a-Number) after applying ToNumber conversion.",
+    "params": [
+      "value"
+    ],
+    "returnType": "boolean"
+  },
+  {
+    "name": "Global.isFinite",
+    "url": "/ecmascript-builtins/global-functions/#isfinite",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns true if the value is a finite number (not NaN, +Infinity, or -Infinity) after applying ToNumber conversion.",
+    "params": [
+      "value"
+    ],
+    "returnType": "boolean"
+  },
+  {
+    "name": "Global.eval",
+    "url": "/ecmascript-builtins/global-functions/#eval",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Parses a string of JavaScript source and executes it as a script, returning the completion value of the last evaluated expression (or undefined when there is nothing to complete).",
+    "params": [
+      "script"
+    ],
+    "returnType": "any"
+  },
+  {
+    "name": "Global.encodeURI",
+    "url": "/ecmascript-builtins/global-functions/#encodeuri",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Encodes a complete URI, leaving reserved characters (/ ?",
+    "params": [
+      "uri"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Global.encodeURIComponent",
+    "url": "/ecmascript-builtins/global-functions/#encodeuricomponent",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Encodes a URI component, escaping reserved characters as well.",
+    "params": [
+      "str"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Global.decodeURI",
+    "url": "/ecmascript-builtins/global-functions/#decodeuri",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Decodes a URI previously encoded by encodeURI, converting percent-escapes back to their characters while leaving reserved characters intact.",
+    "params": [
+      "uri"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Global.decodeURIComponent",
+    "url": "/ecmascript-builtins/global-functions/#decodeuricomponent",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Decodes a URI component previously encoded by encodeURIComponent, converting all percent-escapes back to characters.",
+    "params": [
+      "str"
+    ],
+    "returnType": "string"
+  },
+  {
+    "name": "Global.RegExp",
+    "url": "/ecmascript-builtins/global-functions/#regexp",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Creates a regular expression object for pattern matching.",
+    "params": [
+      "pattern",
+      "flags"
+    ],
+    "returnType": "RegExp"
   },
   {
     "name": "RegExp.test",
@@ -3754,6 +3926,18 @@
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Returns the time portion of the date as a human-readable string.",
+    "returnType": "string"
+  },
+  {
+    "name": "Date.toLocaleDateString",
+    "url": "/ecmascript-builtins/date-methods/#tolocaledatestring",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the date portion as a string.",
+    "params": [
+      "locales",
+      "options"
+    ],
     "returnType": "string"
   },
   {
@@ -4057,6 +4241,307 @@
     "section": "ECMAScript Builtins",
     "type": "method",
     "description": "Math."
+  },
+  {
+    "name": "Global.escape",
+    "url": "/ecmascript-builtins/global-functions/#escape",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "The legacy escape() function is undefined in SFMC (calling it throws \"Object expected\")."
+  },
+  {
+    "name": "Global.unescape",
+    "url": "/ecmascript-builtins/global-functions/#unescape",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "The legacy unescape() function is undefined in SFMC (calling it throws \"Object expected\")."
+  },
+  {
+    "name": "Global.globalThis",
+    "url": "/ecmascript-builtins/global-functions/#globalthis",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "globalThis is undefined in SFMC (ES2020)."
+  },
+  {
+    "name": "Global.Symbol",
+    "url": "/ecmascript-builtins/global-functions/#symbol",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Symbol is undefined in SFMC (ES6)."
+  },
+  {
+    "name": "Global.BigInt",
+    "url": "/ecmascript-builtins/global-functions/#bigint",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "BigInt is undefined in SFMC (ES2020) and the 10n literal is a syntax error."
+  },
+  {
+    "name": "Global.Map",
+    "url": "/ecmascript-builtins/global-functions/#map",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Map is undefined in SFMC (ES6); new Map() throws \"Unknown type: Map\"."
+  },
+  {
+    "name": "Global.Set",
+    "url": "/ecmascript-builtins/global-functions/#set",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Set is undefined in SFMC (ES6); new Set() throws \"Unknown type: Set\"."
+  },
+  {
+    "name": "Global.WeakMap",
+    "url": "/ecmascript-builtins/global-functions/#weakmap",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "WeakMap is undefined in SFMC (ES6); new WeakMap() throws \"Unknown type: WeakMap\"."
+  },
+  {
+    "name": "Global.WeakSet",
+    "url": "/ecmascript-builtins/global-functions/#weakset",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "WeakSet is undefined in SFMC (ES6); new WeakSet() throws \"Unknown type: WeakSet\"."
+  },
+  {
+    "name": "Global.Promise",
+    "url": "/ecmascript-builtins/global-functions/#promise",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Promise is undefined in SFMC (ES6); new Promise() throws \"Unknown type: Promise\"."
+  },
+  {
+    "name": "Global.Iterator",
+    "url": "/ecmascript-builtins/global-functions/#iterator",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Iterator is undefined in SFMC (ES6)."
+  },
+  {
+    "name": "Global.Generator",
+    "url": "/ecmascript-builtins/global-functions/#generator",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Generator is undefined in SFMC (ES6); function* / yield syntax is a parse error."
+  },
+  {
+    "name": "Global.GeneratorFunction",
+    "url": "/ecmascript-builtins/global-functions/#generatorfunction",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "GeneratorFunction is undefined in SFMC (ES6)."
+  },
+  {
+    "name": "Global.AsyncFunction",
+    "url": "/ecmascript-builtins/global-functions/#asyncfunction",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "AsyncFunction is undefined in SFMC (ES2017); async/await is unsupported."
+  },
+  {
+    "name": "Global.AsyncGenerator",
+    "url": "/ecmascript-builtins/global-functions/#asyncgenerator",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "AsyncGenerator is undefined in SFMC (ES2018); async iteration is unsupported."
+  },
+  {
+    "name": "Global.AsyncGeneratorFunction",
+    "url": "/ecmascript-builtins/global-functions/#asyncgeneratorfunction",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "AsyncGeneratorFunction is undefined in SFMC (ES2018); async generator functions are unsupported."
+  },
+  {
+    "name": "Global.AsyncIterator",
+    "url": "/ecmascript-builtins/global-functions/#asynciterator",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "AsyncIterator is undefined in SFMC (ES2018); async iteration is unsupported."
+  },
+  {
+    "name": "Global.Proxy",
+    "url": "/ecmascript-builtins/global-functions/#proxy",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Proxy is undefined in SFMC (ES6); new Proxy() throws \"Unknown type: Proxy\"."
+  },
+  {
+    "name": "Global.Reflect",
+    "url": "/ecmascript-builtins/global-functions/#reflect",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "Reflect is undefined in SFMC (ES6)."
+  },
+  {
+    "name": "Global.AggregateError",
+    "url": "/ecmascript-builtins/global-functions/#aggregateerror",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "AggregateError is undefined in SFMC (ES2021); new AggregateError() throws \"Unknown type: AggregateError\"."
+  },
+  {
+    "name": "Global.SuppressedError",
+    "url": "/ecmascript-builtins/global-functions/#suppressederror",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "SuppressedError is undefined in SFMC (ES2026); it does not exist in this engine."
+  },
+  {
+    "name": "Global.InternalError",
+    "url": "/ecmascript-builtins/global-functions/#internalerror",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "InternalError is a non-standard Mozilla-only error and is undefined in SFMC."
+  },
+  {
+    "name": "Global.ArrayBuffer",
+    "url": "/ecmascript-builtins/global-functions/#arraybuffer",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "ArrayBuffer is undefined in SFMC (ES6)."
+  },
+  {
+    "name": "Global.SharedArrayBuffer",
+    "url": "/ecmascript-builtins/global-functions/#sharedarraybuffer",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "SharedArrayBuffer is undefined in SFMC (ES2017)."
+  },
+  {
+    "name": "Global.DataView",
+    "url": "/ecmascript-builtins/global-functions/#dataview",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "DataView is undefined in SFMC (ES6)."
+  },
+  {
+    "name": "Global.Atomics",
+    "url": "/ecmascript-builtins/global-functions/#atomics",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "Atomics is undefined in SFMC (ES2017)."
+  },
+  {
+    "name": "Global.Int8Array",
+    "url": "/ecmascript-builtins/global-functions/#int8array",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Int8Array is undefined in SFMC (ES6)."
+  },
+  {
+    "name": "Global.Uint8Array",
+    "url": "/ecmascript-builtins/global-functions/#uint8array",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Uint8Array is undefined in SFMC (ES6)."
+  },
+  {
+    "name": "Global.Uint8ClampedArray",
+    "url": "/ecmascript-builtins/global-functions/#uint8clampedarray",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Uint8ClampedArray is undefined in SFMC (ES6)."
+  },
+  {
+    "name": "Global.Int16Array",
+    "url": "/ecmascript-builtins/global-functions/#int16array",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Int16Array is undefined in SFMC (ES6)."
+  },
+  {
+    "name": "Global.Uint16Array",
+    "url": "/ecmascript-builtins/global-functions/#uint16array",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Uint16Array is undefined in SFMC (ES6)."
+  },
+  {
+    "name": "Global.Int32Array",
+    "url": "/ecmascript-builtins/global-functions/#int32array",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Int32Array is undefined in SFMC (ES6)."
+  },
+  {
+    "name": "Global.Uint32Array",
+    "url": "/ecmascript-builtins/global-functions/#uint32array",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Uint32Array is undefined in SFMC (ES6)."
+  },
+  {
+    "name": "Global.Float16Array",
+    "url": "/ecmascript-builtins/global-functions/#float16array",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Float16Array is undefined in SFMC (ES2025)."
+  },
+  {
+    "name": "Global.Float32Array",
+    "url": "/ecmascript-builtins/global-functions/#float32array",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Float32Array is undefined in SFMC (ES6)."
+  },
+  {
+    "name": "Global.Float64Array",
+    "url": "/ecmascript-builtins/global-functions/#float64array",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Float64Array is undefined in SFMC (ES6)."
+  },
+  {
+    "name": "Global.BigInt64Array",
+    "url": "/ecmascript-builtins/global-functions/#bigint64array",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "BigInt64Array is undefined in SFMC (ES2020)."
+  },
+  {
+    "name": "Global.BigUint64Array",
+    "url": "/ecmascript-builtins/global-functions/#biguint64array",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "BigUint64Array is undefined in SFMC (ES2020)."
+  },
+  {
+    "name": "Global.WeakRef",
+    "url": "/ecmascript-builtins/global-functions/#weakref",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "WeakRef is undefined in SFMC (ES2021)."
+  },
+  {
+    "name": "Global.FinalizationRegistry",
+    "url": "/ecmascript-builtins/global-functions/#finalizationregistry",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "FinalizationRegistry is undefined in SFMC (ES2021)."
+  },
+  {
+    "name": "Global.Intl",
+    "url": "/ecmascript-builtins/global-functions/#intl",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "Intl is undefined in SFMC (ES2015); none of its formatters (NumberFormat, DateTimeFormat, Collator, …) exist."
+  },
+  {
+    "name": "Global.Infinity",
+    "url": "/ecmascript-builtins/global-functions/#infinity",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "The Infinity global is broken in SFMC: its sign is inverted in comparisons and string coercion (Infinity > 0 is false, String(Infinity) is \"-infinity\")."
+  },
+  {
+    "name": "Global.NaN",
+    "url": "/ecmascript-builtins/global-functions/#nan",
+    "section": "ECMAScript Builtins",
+    "type": "property",
+    "description": "The NaN global compares correctly (NaN === NaN is false; isNaN(NaN) is true) but String(NaN) is the lowercase \"nan\" instead of \"NaN\"."
   },
   {
     "name": "Math.LOG10E",
@@ -4409,41 +4894,6 @@
     "description": "Number."
   },
   {
-    "name": "Number.MAX_VALUE",
-    "url": "/ecmascript-builtins/number-methods/#max_value",
-    "section": "ECMAScript Builtins",
-    "type": "property",
-    "description": "Number."
-  },
-  {
-    "name": "Number.MIN_VALUE",
-    "url": "/ecmascript-builtins/number-methods/#min_value",
-    "section": "ECMAScript Builtins",
-    "type": "property",
-    "description": "Number."
-  },
-  {
-    "name": "Number.NaN",
-    "url": "/ecmascript-builtins/number-methods/#nan",
-    "section": "ECMAScript Builtins",
-    "type": "property",
-    "description": "Number."
-  },
-  {
-    "name": "Number.POSITIVE_INFINITY",
-    "url": "/ecmascript-builtins/number-methods/#positive_infinity",
-    "section": "ECMAScript Builtins",
-    "type": "property",
-    "description": "Number."
-  },
-  {
-    "name": "Number.NEGATIVE_INFINITY",
-    "url": "/ecmascript-builtins/number-methods/#negative_infinity",
-    "section": "ECMAScript Builtins",
-    "type": "property",
-    "description": "Number."
-  },
-  {
     "name": "Math.trunc",
     "url": "/ecmascript-builtins/math/#trunc",
     "section": "ECMAScript Builtins",
@@ -4621,6 +5071,54 @@
       "script"
     ],
     "returnType": "any",
+    "external": true
+  },
+  {
+    "name": "encodeURI",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURI",
+    "section": "ECMAScript Builtins",
+    "type": "function",
+    "description": "Encodes a complete URI, leaving reserved characters (/ ?",
+    "params": [
+      "uri"
+    ],
+    "returnType": "string",
+    "external": true
+  },
+  {
+    "name": "encodeURIComponent",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent",
+    "section": "ECMAScript Builtins",
+    "type": "function",
+    "description": "Encodes a URI component, escaping reserved characters as well.",
+    "params": [
+      "str"
+    ],
+    "returnType": "string",
+    "external": true
+  },
+  {
+    "name": "decodeURI",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/decodeURI",
+    "section": "ECMAScript Builtins",
+    "type": "function",
+    "description": "Decodes a URI previously encoded by encodeURI, converting percent-escapes back to their characters while leaving reserved characters intact.",
+    "params": [
+      "uri"
+    ],
+    "returnType": "string",
+    "external": true
+  },
+  {
+    "name": "decodeURIComponent",
+    "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/decodeURIComponent",
+    "section": "ECMAScript Builtins",
+    "type": "function",
+    "description": "Decodes a URI component previously encoded by encodeURIComponent, converting all percent-escapes back to characters.",
+    "params": [
+      "str"
+    ],
+    "returnType": "string",
     "external": true
   },
   {

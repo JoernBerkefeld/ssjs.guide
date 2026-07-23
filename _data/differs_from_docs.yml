@@ -3520,3 +3520,79 @@
     try { Platform.Response.Write("bracket[99]: '" + "hello"[99] + "'\n"); } catch (e) { Platform.Response.Write("bracket[99] THREW: " + Platform.Function.Stringify(e) + "\n"); }
     Platform.Response.Write("=== DONE ===\n");
     </script>
+- name: "Number.toLocaleString"
+  url: "/ecmascript-builtins/internationalization/#tolocalestring-family"
+  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toLocaleString"
+  tagline: "locale argument ignored — no grouping separators"
+  part: "ecmascript"
+  category: "ECMAScript Builtins"
+  object: "Number"
+  severity: "medium"
+  discrepancy: "A2"
+  anchor: "number-tolocalestring-locale-ignored"
+  body: |
+    MDN specifies `Number.prototype.toLocaleString([locales[, options]])` returns a locale-aware string with grouping separators (e.g. `(123456.789).toLocaleString("de-DE")` → `"123.456,789"`). In the SFMC Jint engine the locale/options arguments are **ignored** and the method returns the plain number string with no grouping — `(123456.789).toLocaleString()` and `(123456.789).toLocaleString("de-DE")` both return `"123456.789"`. Use `Platform.Function.FormatNumber(value, format, culture)` for real locale-aware number formatting.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core", "1.1.5");
+    // OBSERVED (SFMC CloudPage, live): toLocaleString()="123456.789"; toLocaleString("de-DE")="123456.789" (locale ignored, no grouping). VERDICT: CONFIRMED.
+    Platform.Response.Write("toLocaleString(): " + (123456.789).toLocaleString() + "\n");
+    Platform.Response.Write("toLocaleString('de-DE'): " + (123456.789).toLocaleString("de-DE") + "\n");
+    </script>
+- name: "Date.toLocaleDateString"
+  url: "/ecmascript-builtins/internationalization/#tolocalestring-family"
+  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toLocaleDateString"
+  tagline: "locale argument ignored — fixed English format"
+  part: "ecmascript"
+  category: "ECMAScript Builtins"
+  object: "Date"
+  severity: "medium"
+  discrepancy: "A2"
+  anchor: "date-tolocaledatestring-locale-ignored"
+  body: |
+    MDN specifies `Date.prototype.toLocaleDateString([locales[, options]])` returns a locale-aware date string. In the SFMC Jint engine the locale/options arguments are **ignored** and a fixed English-style format is returned — `new Date(2020, 0, 15).toLocaleDateString()` returns `"Wed, 15 Jan 2020"`. Use `Platform.Function.FormatDate(date, format, ..., culture)` for real locale-aware date formatting.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core", "1.1.5");
+    // OBSERVED (SFMC CloudPage, live): new Date(2020,0,15).toLocaleDateString()="Wed, 15 Jan 2020" (locale ignored, fixed English format). VERDICT: CONFIRMED.
+    var d = new Date(2020, 0, 15);
+    Platform.Response.Write("toLocaleDateString(): " + d.toLocaleDateString() + "\n");
+    </script>
+
+- name: "String.toLocaleUpperCase"
+  url: "/ecmascript-builtins/internationalization/#tolocalestring-family"
+  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/toLocaleUpperCase"
+  tagline: "locale argument ignored — behaves like toUpperCase()"
+  part: "ecmascript"
+  category: "ECMAScript Builtins"
+  object: "String"
+  severity: "medium"
+  discrepancy: "A2"
+  anchor: "string-tolocaleuppercase-locale-ignored"
+  body: |
+    MDN specifies `String.prototype.toLocaleUpperCase([locales])` performs locale-aware uppercasing (e.g. Turkish dotted/dotless `i` handling). In the SFMC Jint engine the locale argument is **ignored** and the method behaves exactly like `toUpperCase()` — `"abc".toLocaleUpperCase()` returns `"ABC"` with no locale-specific casing.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core", "1.1.5");
+    // OBSERVED (SFMC CloudPage, live): "abc".toLocaleUpperCase()="ABC" (locale ignored, plain toUpperCase). VERDICT: CONFIRMED.
+    Platform.Response.Write("toLocaleUpperCase(): " + "abc".toLocaleUpperCase() + "\n");
+    </script>
+
+- name: "String.toLocaleLowerCase"
+  url: "/ecmascript-builtins/internationalization/#tolocalestring-family"
+  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/toLocaleLowerCase"
+  tagline: "locale argument ignored — behaves like toLowerCase()"
+  part: "ecmascript"
+  category: "ECMAScript Builtins"
+  object: "String"
+  severity: "medium"
+  discrepancy: "A2"
+  anchor: "string-tolocalelowercase-locale-ignored"
+  body: |
+    MDN specifies `String.prototype.toLocaleLowerCase([locales])` performs locale-aware lowercasing. In the SFMC Jint engine the locale argument is **ignored** and the method behaves exactly like `toLowerCase()` — `"ABC".toLocaleLowerCase()` returns `"abc"` with no locale-specific casing.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core", "1.1.5");
+    // OBSERVED (SFMC CloudPage, live): "ABC".toLocaleLowerCase()="abc" (locale ignored, plain toLowerCase). VERDICT: CONFIRMED.
+    Platform.Response.Write("toLocaleLowerCase(): " + "ABC".toLocaleLowerCase() + "\n");
+    </script>

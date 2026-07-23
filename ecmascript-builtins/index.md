@@ -160,6 +160,47 @@ Standard ECMAScript global functions (not SFMC-specific) — callable without an
 | `isNaN(val)` | ES3 | ✅ Works | |
 | `isFinite(val)` | ES3 | ✅ Works | |
 | `eval(script)` | ES3 | ✅ Works | Evaluates a JS source string; direct eval sees local scope and Platform.Load Core globals. Executes arbitrary code — use sparingly (injection risk); prefer `Platform.Function.ParseJSON` for data. |
+| [`encodeURI(uri)`](/ecmascript-builtins/global-functions/#encodeuri) | ES3 | ⚠️ Partial | Space → `+` (not `%20`), lowercase hex |
+| [`encodeURIComponent(str)`](/ecmascript-builtins/global-functions/#encodeuricomponent) | ES3 | ⚠️ Partial | Space → `+`, lowercase hex (`%2f`) |
+| [`decodeURI(uri)`](/ecmascript-builtins/global-functions/#decodeuri) | ES3 | ✅ Works | |
+| [`decodeURIComponent(str)`](/ecmascript-builtins/global-functions/#decodeuricomponent) | ES3 | ⚠️ Partial | Decodes `+` as a space (form-urlencoded) |
+| [`escape(str)`](/ecmascript-builtins/global-functions/#escape) | ES3 | ❌ Missing | `undefined`; use `encodeURIComponent` |
+| [`unescape(str)`](/ecmascript-builtins/global-functions/#unescape) | ES3 | ❌ Missing | `undefined`; use `decodeURIComponent` |
+
+### Global Values
+
+Standard ECMAScript global value properties.
+
+| Value | ES | Status | Notes |
+|-------|----|--------|-------|
+| [`undefined`](/ecmascript-builtins/global-values/#undefined) | ES3 | ✅ Works | |
+| [`NaN`](/ecmascript-builtins/global-values/#nan) | ES3 | ⚠️ Partial | `String(NaN)` is lowercase `nan` |
+| [`Infinity`](/ecmascript-builtins/global-values/#infinity) | ES3 | ⚠️ Partial | **Sign inverted**: `Infinity > 0` is `false`, `String(Infinity)` is `-infinity` |
+| [`globalThis`](/ecmascript-builtins/global-values/#globalthis) | ES2020 | ❌ Missing | `undefined` — no global-object reference |
+
+### Boolean
+
+| Member | ES | Status | Notes |
+|--------|----|--------|-------|
+| [`Boolean(value)`](/ecmascript-builtins/boolean/#boolean-coercion) | ES3 | ✅ Works | Truthiness coercion — returns a primitive `boolean` |
+| [`new Boolean(value)`](/ecmascript-builtins/boolean/#boolean-boxed) | ES3 | ⚠️ Partial | Boxed object; `String()` yields capitalized `True`/`False` |
+| [`Boolean.prototype`](/ecmascript-builtins/boolean/#boolean-prototype) | ES3 | ✅ Works | |
+
+### Missing ES6+ Objects
+
+These top-level objects/types postdate the engine's ES3/ES5 baseline and are entirely absent.
+
+| Object | ES | Status | Notes |
+|--------|----|--------|-------|
+| [`Symbol`](/ecmascript-builtins/symbol/) | ES6 | ❌ Missing | `undefined`; no iterator protocol — use string keys + index loops |
+| [`BigInt`](/ecmascript-builtins/bigint/) | ES2020 | ❌ Missing | `undefined`; `10n` literals are a syntax error — keep large integers as strings |
+| [`Map` / `Set` / `WeakMap` / `WeakSet`](/ecmascript-builtins/keyed-collections/) | ES6 | ❌ Missing | `undefined`; `new` throws `Unknown type` — use plain objects as dictionaries/sets |
+| [`Promise`](/ecmascript-builtins/promises-iteration/#promise) | ES6 | ❌ Missing | `undefined`; engine is synchronous — Platform/HTTP calls block and return directly |
+| [`Iterator` / `Generator` / async variants](/ecmascript-builtins/promises-iteration/) | ES6+ | ❌ Missing | No iteration protocol; `function*` / `async` / `await` are unsupported |
+| [`Proxy` / `Reflect`](/ecmascript-builtins/reflection/) | ES6 | ❌ Missing | `undefined`; no trap-based interception — use ES5 `Object` methods and operators |
+| [`ArrayBuffer` / `DataView` / typed arrays](/ecmascript-builtins/typed-arrays/) | ES6+ | ❌ Missing | `undefined`; no binary buffers — use plain arrays or Base64 strings |
+| [`WeakRef` / `FinalizationRegistry`](/ecmascript-builtins/memory-management/) | ES2021 | ❌ Missing | `undefined`; no weak refs or GC callbacks — hold normal references |
+| [`Intl`](/ecmascript-builtins/internationalization/) | ES2015 | ❌ Missing | `undefined`; `toLocale*` methods ignore locale — use `Platform.Function.FormatNumber` / `FormatDate` |
 
 ### Object Methods
 
@@ -203,6 +244,8 @@ Standard ECMAScript global functions (not SFMC-specific) — callable without an
 | Member | ES | Status | Notes |
 |--------|----|--------|-------|
 | [`new Error([message])`](/ecmascript-builtins/error/) | ES3 | ⚠️ Partial | Constructor works, but `.message` on a JS-constructed Error reads `undefined` — recover the message via `String(e)`; engine-raised platform errors do carry `.message` / `.description` |
+| [`EvalError` / `RangeError` / `ReferenceError` / `SyntaxError` / `TypeError` / `URIError`](/ecmascript-builtins/error-types/) | ES3 | ⚠️ Partial | All six legacy subtypes are present and constructible; they share the base `Error` quirks (`.message` undefined, `instanceof` always `false`) |
+| [`AggregateError` / `SuppressedError` / `InternalError`](/ecmascript-builtins/error-types/#missing-error-types) | ES2021+ | ❌ Missing | Newer / non-standard error types are absent — use the base `Error` constructor |
 
 ### Date Methods
 
@@ -260,9 +303,21 @@ The native `JSON` object is unavailable — see [JSON](/ecmascript-builtins/json
 
 | Page | Description |
 |------|-------------|
+| [Global Functions](/ecmascript-builtins/global-functions/) | URI encode/decode functions (form-urlencoded quirks) and the missing `escape`/`unescape` |
+| [Global Values](/ecmascript-builtins/global-values/) | `undefined`, `NaN`, the broken `Infinity`, and the missing `globalThis` |
+| [Boolean](/ecmascript-builtins/boolean/) | The `Boolean` constructor and boxed-object `True`/`False` quirk |
+| [Symbol](/ecmascript-builtins/symbol/) | Not available (ES6) — no unique primitives or iterator protocol |
+| [BigInt](/ecmascript-builtins/bigint/) | Not available (ES2020) — no arbitrary-precision integers |
 | [Array Methods](/ecmascript-builtins/array-methods/) | Safe and polyfillable array methods |
 | [String Methods](/ecmascript-builtins/string-methods/) | The `String()` constructor/conversion function and safe / polyfillable string methods |
 | [Error()](/ecmascript-builtins/error/) | The `Error` constructor and the SFMC-specific `.message` caveat |
+| [Error Types](/ecmascript-builtins/error-types/) | The six present legacy `Error` subtypes and the missing `AggregateError` / `SuppressedError` / `InternalError` |
+| [Keyed Collections](/ecmascript-builtins/keyed-collections/) | Not available (ES6) — `Map` / `Set` / `WeakMap` / `WeakSet` are absent |
+| [Promises & Iteration](/ecmascript-builtins/promises-iteration/) | Not available (ES6+) — `Promise`, iterators, generators, and `async`/`await` are absent (synchronous engine) |
+| [Reflection](/ecmascript-builtins/reflection/) | Not available (ES6) — `Proxy` and `Reflect` are absent |
+| [Typed Arrays](/ecmascript-builtins/typed-arrays/) | Not available (ES6+) — `ArrayBuffer`, `DataView`, `Atomics`, and all typed-array views are absent |
+| [Memory Management](/ecmascript-builtins/memory-management/) | Not available (ES2021) — `WeakRef` and `FinalizationRegistry` are absent |
+| [Internationalization](/ecmascript-builtins/internationalization/) | Not available (ES2015) — `Intl` is absent and `toLocale*` methods ignore locale |
 | [Math](/ecmascript-builtins/math/) | Math object reference |
 | [Number Methods](/ecmascript-builtins/number-methods/) | Number methods, constants, and global numeric functions |
 | [Object Methods](/ecmascript-builtins/object-methods/) | `hasOwnProperty`, `defineProperty`, and missing Object statics |
