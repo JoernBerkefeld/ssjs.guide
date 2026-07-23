@@ -140,6 +140,7 @@ See [Platform.Function.Stringify](/platform-functions/stringify/) for the qualif
   <li><a href="/platform-functions/stringify/">Platform.Function.Stringify — qualified form (no Platform.Load required)</a></li>
   <li><a href="/ecmascript-builtins/string-methods/#string-constructor">String()</a></li>
   <li><a href="/platform-functions/parsejson/">Platform.Function.ParseJSON</a></li>
+  <li><a href="/ecmascript-builtins/json/">JSON (built-in — unavailable in SSJS)</a></li>
   <li><a href="/core-library/write/">Write</a></li>
   <li><a href="/language/objects-and-json/">Objects & JSON</a></li>
 </ul>

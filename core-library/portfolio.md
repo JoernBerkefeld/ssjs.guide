@@ -4,7 +4,7 @@ title: Portfolio
 parent: Core Library
 parent_url: /core-library/
 description: "Core library Portfolio — file / portfolio items (init, add, retrieve, update, remove). Deprecated — operates on legacy Classic Content / Classic Email Studio; prefer Content Builder assets for new work."
-verification: in-progress
+verification: verified
 deprecated: true
 requires_core_load: true
 differs_from_docs: true
@@ -61,7 +61,7 @@ var portObj = Portfolio.Init("myPortfolioCK");
 
 ### Portfolio.Add {#add}
 
-{% include method-status.html status="in-progress" differs=true %}
+{% include method-status.html status="blocked" differs=true %}
 
 Creates a new portfolio item with the specified properties.
 
@@ -101,7 +101,7 @@ var status = Portfolio.Add(newPortfolio);
 
 ### Portfolio.Retrieve {#retrieve}
 
-{% include method-status.html status="in-progress" differs=true %}
+{% include method-status.html status="blocked" differs=true %}
 
 Queries portfolio items matching the given filter criteria.
 
@@ -138,7 +138,7 @@ var portObjArr = Portfolio.Retrieve({
 
 ### &lt;PortfolioInstance&gt;.Update {#instance-update}
 
-{% include method-status.html status="in-progress" differs=true %}
+{% include method-status.html status="blocked" differs=true %}
 
 Updates the initialized portfolio item with the given properties.
 
@@ -172,7 +172,7 @@ var status = portObj.Update({ DisplayName: "Updated SSJS Image" });
 
 ### &lt;PortfolioInstance&gt;.Remove {#instance-remove}
 
-{% include method-status.html status="in-progress" differs=true %}
+{% include method-status.html status="blocked" differs=true %}
 
 Removes the initialized portfolio item.
 

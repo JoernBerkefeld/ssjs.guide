@@ -5,9 +5,12 @@
   is needed.
 
   Parameters:
-    status  (string) - verified | in-progress | pending
+    status  (string) - verified | in-progress | blocked | pending
                        verified    → runtime-proven (green)
-                       in-progress → could not be proven in the test env / blocked (yellow)
+                       in-progress → could not be proven in the current test env yet (yellow)
+                       blocked     → can no longer be verified because the underlying
+                                     feature is deprecated / retired, so testing is
+                                     permanently impossible (red)
                        pending     → not yet checked (grey)
     differs (bool)   - optional; when true, also renders the "Differs from docs"
                        triangle badge (combine with any status).
@@ -15,6 +18,7 @@
   Usage:
     {% include method-status.html status="verified" %}
     {% include method-status.html status="in-progress" differs=true %}
+    {% include method-status.html status="blocked" differs=true %}
 
   IMPORTANT: This is an INLINE (span) badge often placed on a Markdown heading
   line. The whole badge is emitted as a SINGLE line with no internal newlines and
@@ -31,8 +35,13 @@
 {%- elsif m_status == "in-progress" -%}
 {%- assign m_class = "status-in-progress" -%}
 {%- assign m_label = "In progress" -%}
-{%- assign m_title = "This method/property could not be proven in the CloudPage test environment; verification is blocked." -%}
+{%- assign m_title = "This method/property could not be proven in the CloudPage test environment yet; verification is still in progress." -%}
 {%- assign m_svg = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.2"/><path d="M6 3v3l2 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' -%}
+{%- elsif m_status == "blocked" -%}
+{%- assign m_class = "status-blocked" -%}
+{%- assign m_label = "Blocked" -%}
+{%- assign m_title = "This method/property can no longer be runtime-verified because the underlying feature is deprecated/retired; testing is permanently impossible." -%}
+{%- assign m_svg = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.2"/><path d="M3 3l6 6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>' -%}
 {%- else -%}
 {%- assign m_class = "status-pending" -%}
 {%- assign m_label = "Pending" -%}

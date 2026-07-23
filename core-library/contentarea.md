@@ -21,6 +21,8 @@ min_args: 1
 max_args: 4
 ---
 
+{% include callout.html type="warning" content="**Deprecated.** Classic Content Areas are no longer supported on modern SFMC infrastructure. Migrate content to Content Builder and use [`Platform.Function.ContentBlockByID()`](/platform-functions/contentblockbyid/) instead." %}
+
 ## Parameters
 
 | Name | Type | Required | Description |
@@ -33,8 +35,6 @@ max_args: 4
 ## Description
 
 `ContentArea()` retrieves and renders content from a classic (legacy) SFMC Content Area identified by its numeric ID.
-
-**This function is deprecated.** Classic Content Areas are no longer supported on modern SFMC infrastructure. Migrate content to Content Builder blocks and use [`Platform.Function.ContentBlockByID()`](/platform-functions/contentblockbyid/) instead.
 
 **Requires `Platform.Load`:** This global form requires `Platform.Load("core", "1.1.5")` before use. The qualified [`Platform.Function.ContentArea()`](/platform-functions/contentarea/) form does not.
 

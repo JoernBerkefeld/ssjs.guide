@@ -244,7 +244,7 @@ var sendTracking = Send.Tracking.Retrieve({
 
 ### &lt;SendInstance&gt;.Tracking.Clicks.Retrieve {#instance-tracking-clicks-retrieve}
 
-{% include callout.html type="warning" content="Salesforce docs call this <code>&lt;SendInstance&gt;.Tracking.ClickRetrieve(filter)</code>, but that name is <code>undefined</code> at runtime. The working member is <code>&lt;SendInstance&gt;.Tracking.Clicks.Retrieve(filter)</code> — a <code>Clicks</code> sub-object with a <code>Retrieve</code> method. See <a href=\"/engine-limitations/differs-from-docs/\">Differs from docs</a>." %}
+{% include differs-from-docs.html note="Salesforce docs call this <code>&lt;SendInstance&gt;.Tracking.ClickRetrieve(filter)</code>, but that name is <code>undefined</code> at runtime. The working member is <code>&lt;SendInstance&gt;.Tracking.Clicks.Retrieve(filter)</code> — a <code>Clicks</code> sub-object with a <code>Retrieve</code> method." %}
 
 Returns click-tracking rows for the bound send that match the filter.
 
@@ -280,7 +280,7 @@ var results = singleSend.Tracking.Clicks.Retrieve({
 
 ### &lt;SendInstance&gt;.Tracking.TotalByInterval.Retrieve {#instance-tracking-totalbyinterval-retrieve}
 
-{% include callout.html type="warning" content="Salesforce docs call this <code>&lt;SendInstance&gt;.Tracking.TotalByIntervalRetrieve(...)</code>, but that name is <code>undefined</code> at runtime. The working member is <code>&lt;SendInstance&gt;.Tracking.TotalByInterval.Retrieve(...)</code> — a <code>TotalByInterval</code> sub-object with a <code>Retrieve</code> method. See <a href=\"/engine-limitations/differs-from-docs/\">Differs from docs</a>." %}
+{% include differs-from-docs.html note="Salesforce docs call this <code>&lt;SendInstance&gt;.Tracking.TotalByIntervalRetrieve(...)</code>, but that name is <code>undefined</code> at runtime. The working member is <code>&lt;SendInstance&gt;.Tracking.TotalByInterval.Retrieve(...)</code> — a <code>TotalByInterval</code> sub-object with a <code>Retrieve</code> method." %}
 
 Aggregates tracking by `type` over the date range, grouped by `groupBy` (`"day"` or `"hour"`). Dates use **MM-DD-YYYY**.
 

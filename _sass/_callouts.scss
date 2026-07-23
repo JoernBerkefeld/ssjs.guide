@@ -179,6 +179,12 @@
     border-color: rgba($color-warning, 0.3);
   }
 
+  &.status-blocked {
+    color: $color-danger;
+    background-color: rgba($color-danger, 0.08);
+    border-color: rgba($color-danger, 0.3);
+  }
+
   &.status-pending {
     color: $text-muted;
     background-color: $bg-elevated;

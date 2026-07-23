@@ -60,7 +60,7 @@ var area = ContentAreaObj.Init("myCA");
 
 Creates a new legacy Content Area with the specified properties and returns an initialized `ContentAreaObjInstance` bound to it.
 
-{% include callout.html type="info" content="**Differs from official docs.** The official reference annotates `Add` as `@returns {Enum(\"OK\")}`, but runtime returns an **initialized `ContentAreaObjInstance`** (an object exposing `Update`/`Remove`, identical in shape to `Init`) — matching the doc's own H1 summary (\"returns an initialized object\"), not the `@returns` annotation." %}
+{% include differs-from-docs.html note="The official reference annotates `Add` as `@returns {Enum(\"OK\")}`, but runtime returns an **initialized `ContentAreaObjInstance`** (an object exposing `Update`/`Remove`, identical in shape to `Init`) — matching the doc's own H1 summary (\"returns an initialized object\"), not the `@returns` annotation." %}
 
 #### Syntax
 

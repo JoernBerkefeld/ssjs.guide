@@ -149,9 +149,9 @@
         url: /platform-functions/endimpressionregion/
       - title: TreatAsContent
         url: /platform-functions/treatascontent/
-      - title: "ContentArea (deprecated)"
+      - title: "ContentArea"
         url: /platform-functions/contentarea/
-      - title: "ContentAreaByName (deprecated)"
+      - title: "ContentAreaByName"
         url: /platform-functions/contentareabyname/
       - title: '— Encoding —'
         url: /platform-functions/#encoding
@@ -244,9 +244,9 @@
         url: /core-library/base64decode/
       - title: BeginImpressionRegion
         url: /core-library/beginimpressionregion/
-      - title: "ContentArea (deprecated)"
+      - title: "ContentArea"
         url: /core-library/contentarea/
-      - title: "ContentAreaByName (deprecated)"
+      - title: "ContentAreaByName"
         url: /core-library/contentareabyname/
       - title: EndImpressionRegion
         url: /core-library/endimpressionregion/

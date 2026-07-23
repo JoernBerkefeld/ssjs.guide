@@ -145,6 +145,7 @@ Platform.Function.ParseJSON("true");   // "true" (string, not boolean true)
 <h4>See Also</h4>
 <ul>
   <li><a href="/core-library/stringify/">Stringify</a></li>
+  <li><a href="/ecmascript-builtins/json/">JSON (built-in — unavailable in SSJS)</a></li>
   <li><a href="/ecmascript-builtins/string-methods/#string-constructor">String()</a></li>
   <li><a href="/language/objects-and-json/">Objects & JSON</a></li>
 </ul>
