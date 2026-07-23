@@ -3,6 +3,7 @@ layout: page
 title: Known Bugs
 parent: Engine Limitations
 parent_url: /engine-limitations/
+verification: verified
 description: Platform-specific SFMC SSJS behaviors that differ from documented or expected behavior — the switch default bug, Rows.Retrieve, GetPostData, and more.
 ---
 

@@ -3,6 +3,7 @@ layout: page
 title: Polyfills
 parent: Engine Limitations
 parent_url: /engine-limitations/
+verification: verified
 description: Ready-to-use polyfill implementations and helpers for the missing or broken Array, String, Math, Date, and Function methods in SFMC SSJS.
 ---
 
