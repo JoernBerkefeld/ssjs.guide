@@ -5,7 +5,7 @@ parent: ECMAScript Built-ins
 parent_url: /ecmascript-builtins/
 permalink: /ecmascript-builtins/internationalization/
 description: The Intl object and all its formatters are not available in SSJS, and the toLocaleString / toLocaleUpperCase family ignore locale arguments — they behave as plain, non-localized no-ops. Use AMPscript FormatNumber / FormatDate for real locale formatting.
-verification: pending
+verification: verified
 differs_from_docs: true
 ---
 

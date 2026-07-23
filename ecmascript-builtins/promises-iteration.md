@@ -5,7 +5,7 @@ parent: ECMAScript Built-ins
 parent_url: /ecmascript-builtins/
 permalink: /ecmascript-builtins/promises-iteration/
 description: Promises, generators, async functions, and the ES6 iteration protocol are not available in SSJS. The SFMC Jint engine predates ES2015 and runs synchronously, so Promise, Iterator, Generator, and all async variants are undefined.
-verification: pending
+verification: verified
 ---
 
 **Promises, generators, async functions, and the iteration protocol are not available in SSJS.** The SFMC server-side JavaScript engine (Jint) implements an ES3/ES5-era dialect, predates ES2015, and executes **synchronously** — there is no event loop or microtask queue. `Promise`, `Iterator`, `Generator`, `GeneratorFunction`, and every async variant are `undefined`, and `new Promise(...)` throws `Unknown type: Promise`.

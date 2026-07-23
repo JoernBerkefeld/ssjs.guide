@@ -5,7 +5,7 @@ parent: ECMAScript Built-ins
 parent_url: /ecmascript-builtins/
 permalink: /ecmascript-builtins/memory-management/
 description: The ES2021 memory-management objects WeakRef and FinalizationRegistry are not available in SSJS. The SFMC Jint engine predates them, so both are undefined.
-verification: pending
+verification: verified
 ---
 
 **The ES2021 memory-management objects are not available in SSJS.** The SFMC server-side JavaScript engine (Jint) predates ES2021, so `WeakRef` and `FinalizationRegistry` are entirely absent. Each is `undefined`.

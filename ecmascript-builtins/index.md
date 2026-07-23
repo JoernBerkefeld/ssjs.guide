@@ -4,6 +4,8 @@ title: ECMAScript Built-ins
 description: Native JavaScript built-in objects and methods available in SSJS — which Array, String, Math, Number, Date, RegExp, and JSON members work, which are partial, and which are missing.
 nav_order: 9
 has_children: true
+verification: verified
+differs_from_docs: true
 redirect_from:
     - /engine-limitations/missing-methods/
 ---

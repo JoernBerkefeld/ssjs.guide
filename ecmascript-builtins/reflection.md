@@ -5,7 +5,7 @@ parent: ECMAScript Built-ins
 parent_url: /ecmascript-builtins/
 permalink: /ecmascript-builtins/reflection/
 description: The ES6 reflection objects Proxy and Reflect are not available in SSJS. The SFMC Jint engine predates ES2015, so both are undefined and cannot be used to intercept or introspect objects.
-verification: pending
+verification: verified
 ---
 
 **The ES6 reflection objects are not available in SSJS.** The SFMC server-side JavaScript engine (Jint) implements an ES3/ES5-era dialect and predates ES2015, so `Proxy` and `Reflect` are entirely absent. `Reflect` is `undefined`, and `new Proxy(target, handler)` throws `Unknown type: Proxy`.

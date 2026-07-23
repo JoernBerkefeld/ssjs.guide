@@ -4,7 +4,7 @@ title: Symbol
 parent: ECMAScript Built-ins
 parent_url: /ecmascript-builtins/
 description: The ES6 Symbol primitive type is not available in SSJS — the SFMC Jint engine predates ES2015, so Symbol, Symbol.iterator, and well-known symbols are all undefined.
-verification: pending
+verification: verified
 ---
 
 **`Symbol` is not available in SSJS.** The SFMC server-side JavaScript engine (Jint) implements an ES3/ES5-era dialect and predates ES2015, so the `Symbol` primitive type — introduced in ES6 — is entirely absent. `typeof Symbol` is `"undefined"`, and calling `Symbol("x")` throws `Object expected`.

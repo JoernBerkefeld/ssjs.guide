@@ -5,7 +5,7 @@ parent: ECMAScript Built-ins
 parent_url: /ecmascript-builtins/
 permalink: /ecmascript-builtins/typed-arrays/
 description: Typed arrays and the binary-buffer objects — ArrayBuffer, DataView, the Int/Uint/Float TypedArray views, SharedArrayBuffer, and Atomics — are not available in SSJS. The SFMC Jint engine predates ES2015, so every one is undefined.
-verification: pending
+verification: verified
 ---
 
 **Typed arrays and binary buffers are not available in SSJS.** The SFMC server-side JavaScript engine (Jint) implements an ES3/ES5-era dialect and predates ES2015, so `ArrayBuffer`, `DataView`, all the integer/float `TypedArray` views, `SharedArrayBuffer`, and `Atomics` are entirely absent. Each is `undefined`, so referencing it yields `undefined` and constructing it (`new Uint8Array()`) fails because the constructor does not exist.

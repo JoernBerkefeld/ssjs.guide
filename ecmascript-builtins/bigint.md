@@ -4,7 +4,7 @@ title: BigInt
 parent: ECMAScript Built-ins
 parent_url: /ecmascript-builtins/
 description: The ES2020 BigInt arbitrary-precision integer type is not available in SSJS — the SFMC Jint engine predates ES2020, so BigInt and bigint literals are unsupported.
-verification: pending
+verification: verified
 ---
 
 **`BigInt` is not available in SSJS.** The SFMC server-side JavaScript engine (Jint) predates ES2020, so the `BigInt` arbitrary-precision integer type is absent. `typeof BigInt` is `"undefined"`, and calling `BigInt(10)` throws `Object expected`. The `10n` literal syntax is also unsupported.

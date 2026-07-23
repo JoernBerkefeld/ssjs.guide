@@ -5,7 +5,7 @@ parent: ECMAScript Built-ins
 parent_url: /ecmascript-builtins/
 permalink: /ecmascript-builtins/keyed-collections/
 description: The ES6 keyed collections — Map, Set, WeakMap, and WeakSet — are not available in SSJS. The SFMC Jint engine predates ES2015, so all four are undefined and cannot be constructed.
-verification: pending
+verification: verified
 ---
 
 **The ES6 keyed collections are not available in SSJS.** The SFMC server-side JavaScript engine (Jint) implements an ES3/ES5-era dialect and predates ES2015, so `Map`, `Set`, `WeakMap`, and `WeakSet` are entirely absent. Each is `undefined`, and `new Map()` (etc.) throws `Unknown type: Map`.
