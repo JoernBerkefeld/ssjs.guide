@@ -1,4 +1,4 @@
-﻿---
+---
 layout: function
 title: UpsertDE
 parent: Platform Functions

@@ -1,4 +1,4 @@
-﻿---
+---
 layout: function
 title: DeleteDE
 parent: Platform Functions

@@ -1,4 +1,4 @@
-﻿---
+---
 layout: function
 title: UpdateDE
 parent: Platform Functions

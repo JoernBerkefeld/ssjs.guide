@@ -1,4 +1,4 @@
-﻿---
+---
 layout: page
 title: Date and Time
 parent: Recipes

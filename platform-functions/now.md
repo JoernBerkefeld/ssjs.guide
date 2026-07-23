@@ -1,4 +1,4 @@
-﻿---
+---
 layout: function
 title: Now
 parent: Platform Functions

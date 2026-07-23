@@ -1,4 +1,4 @@
-﻿---
+---
 layout: page
 title: Encryption
 parent: Recipes

@@ -1,4 +1,4 @@
-﻿---
+---
 layout: function
 title: InsertDE
 parent: Platform Functions
