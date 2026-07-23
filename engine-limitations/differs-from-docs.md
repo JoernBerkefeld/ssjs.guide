@@ -295,7 +295,6 @@ This page is the single, growing catalog of those discrepancies. Each row links 
 <script>
 (function () {
   "use strict";
-  var TOTAL = 84;
   var sortSel = document.getElementById("dfd-sort");
   var showSel = document.getElementById("dfd-show");
   var dtypeBox = document.getElementById("dfd-dtype-filter");
@@ -308,6 +307,7 @@ This page is the single, growing catalog of those discrepancies. Each row links 
     containers[containerNodes[i].getAttribute("data-part")] = containerNodes[i];
   }
   var cards = Array.prototype.slice.call(document.querySelectorAll(".dfd-card"));
+  var TOTAL = cards.length;
   var checkboxes = dtypeBox
     ? Array.prototype.slice.call(dtypeBox.querySelectorAll('input[type="checkbox"]'))
     : [];
