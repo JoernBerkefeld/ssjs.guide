@@ -200,6 +200,54 @@
   margin: $space-4 0;
 }
 
+// ── Type mapping (SSJS / SOAP / mcdev / GUI) ─────────────────────────────────
+
+.type-mapping {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+  margin: $space-4 0 0;
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    padding: $space-1 $space-3;
+    background-color: $bg-surface;
+    border: 1px solid $border-muted;
+    border-radius: $radius-full;
+  }
+
+  dt {
+    font-size: $text-xs;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: $text-muted;
+  }
+
+  dd {
+    margin: 0;
+    font-size: $text-sm;
+    color: $text-primary;
+
+    code {
+      font-family: $font-mono;
+      font-size: $text-xs;
+      color: $syntax-builtin;
+      background-color: $bg-overlay;
+      padding: 0.1em 0.4em;
+      border-radius: $radius-sm;
+    }
+  }
+
+  &__none {
+    font-size: $text-xs;
+    color: $text-muted;
+    font-style: italic;
+  }
+}
+
 // ── Function page header decorations ─────────────────────────────────────────
 
 .function-header {

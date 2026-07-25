@@ -19,19 +19,22 @@
 {% endcomment %}
 {% assign tm = include.mapping | default: page.type_mapping %}
 {% if tm %}
-<div class="type-mapping" aria-label="Type mapping">
-  <table>
-    <thead>
-      <tr><th>SSJS Name</th><th>SOAP Object</th><th>mcdev type</th><th>GUI name</th></tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><code>{{ tm.ssjs }}</code></td>
-        <td><code>{{ tm.soap }}</code></td>
-        <td>{% if tm.mcdev and tm.mcdev != "-" %}<code>{{ tm.mcdev }}</code>{% else %}&mdash;{% endif %}</td>
-        <td>{{ tm.gui | default: "&mdash;" }}</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
+<dl class="type-mapping" aria-label="Type mapping">
+  <div class="type-mapping__item" title="SSJS Core library class or namespace name">
+    <dt>SSJS</dt>
+    <dd><code>{{ tm.ssjs }}</code></dd>
+  </div>
+  <div class="type-mapping__item" title="SOAP web service object name">
+    <dt>SOAP</dt>
+    <dd><code>{{ tm.soap }}</code></dd>
+  </div>
+  <div class="type-mapping__item" title="SFMC DevTools (mcdev) metadata type">
+    <dt>mcdev</dt>
+    <dd>{% if tm.mcdev and tm.mcdev != "-" %}<code>{{ tm.mcdev }}</code>{% else %}<span class="type-mapping__none">not supported</span>{% endif %}</dd>
+  </div>
+  <div class="type-mapping__item" title="Name used in the Marketing Cloud user interface">
+    <dt>GUI</dt>
+    <dd>{% if tm.gui %}{{ tm.gui }}{% else %}<span class="type-mapping__none">&mdash;</span>{% endif %}</dd>
+  </div>
+</dl>
 {% endif %}
