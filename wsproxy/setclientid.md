@@ -39,7 +39,7 @@ The `options` object keys:
 ```javascript
 var proxy = new Script.Util.WSProxy();
 
-// Switch context to child BU with MID 123456
+// Switch context to child BU with MID 123456 (fake)
 proxy.setClientId({ ID: 123456 });
 
 // All subsequent operations target the child BU

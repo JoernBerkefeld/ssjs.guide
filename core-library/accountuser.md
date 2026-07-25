@@ -4,8 +4,13 @@ title: AccountUser
 parent: Core Library
 parent_url: /core-library/
 description: Core library AccountUser — manage users in the business unit (init, add, retrieve, update, activate, deactivate).
-verification: in-progress
+verification: verified
 requires_core_load: true
+type_mapping:
+  ssjs: "AccountUser"
+  soap: "AccountUser"
+  mcdev: "user"
+  gui: "User"
 ---
 
 `AccountUser` manages **Marketing Cloud users** in the account: creating users, querying them, updating profile fields, and activating or deactivating a user. User records cannot be deleted via SSJS — use **Deactivate** as the removal path.
@@ -59,9 +64,9 @@ var acctUser = AccountUser.Init("myAccountUser", 123456789);
 
 ### AccountUser.Add {#add}
 
-{% include method-status.html status="in-progress" %}
+{% include method-status.html status="blocked" differs=true %}
 
-{% include callout.html type="info" content="Verification blocked: the Core AccountUser write API requires an authenticated employee context. A CloudPage without that employee session yields `accountEmployeeID invalid`, so this destructive method could not be runtime-proven in the test environment." %}
+{% include callout.html type="warning" content="No working invocation found at runtime. Probed against a Parent BU session: a short payload returned the plain string `\"Error\"` and a full documented payload threw `\"Error adding AccountUser\"`. The equivalent WSProxy `createItem(\"AccountUser\", …)` returned SOAP fault `ErrorCode 11001`, `StatusMessage \"User 0 does not have permission to edit ACCOUNTUSERS on account &lt;Parent BU&gt;.\"`. In the same run `Subscriber.Add` returned `\"OK\"` and `DataExtension.Retrieve` succeeded, so this is specific to AccountUser writes from this session rather than a general write failure." %}
 
 Creates a new Marketing Cloud user with the specified properties.
 
@@ -79,7 +84,7 @@ AccountUser.Add(properties)
 
 #### Return value
 
-`"OK"` on success.
+`"OK"` on success. Observed returning the plain string `"Error"` (short payload) or throwing `"Error adding AccountUser"` (full payload) when the write does not succeed.
 
 #### Examples
 
@@ -136,9 +141,9 @@ var accountUser = AccountUser.Retrieve({
 
 ### &lt;AccountUserInstance&gt;.Update {#instance-update}
 
-{% include method-status.html status="in-progress" %}
+{% include method-status.html status="blocked" differs=true %}
 
-{% include callout.html type="info" content="Verification blocked: the Core AccountUser write API requires an authenticated employee context. A CloudPage without that employee session yields `accountEmployeeID invalid`, so this destructive method could not be runtime-proven in the test environment." %}
+{% include callout.html type="warning" content="No working invocation found at runtime. Probed against a Parent BU session: the Core call returned the plain string `\"Error\"`, and the equivalent WSProxy update returned SOAP fault `ErrorCode 11001`, `StatusMessage \"User 0 does not have permission to edit ACCOUNTUSERS on account &lt;Parent BU&gt;.\"`. Other writes in the same run (`Subscriber.Add`) succeeded, so this is specific to AccountUser writes from this session." %}
 
 Updates the initialized user's profile with the given properties.
 
@@ -156,7 +161,7 @@ Updates the initialized user's profile with the given properties.
 
 #### Return value
 
-`"OK"` on success.
+`"OK"` on success. Observed returning the plain string `"Error"` when the write does not succeed.
 
 #### Examples
 
@@ -170,9 +175,9 @@ var status = acctUser.Update({ Password: "XXXXX" });
 
 ### &lt;AccountUserInstance&gt;.Activate {#instance-activate}
 
-{% include method-status.html status="in-progress" %}
+{% include method-status.html status="blocked" differs=true %}
 
-{% include callout.html type="info" content="Verification blocked: the Core AccountUser write API requires an authenticated employee context. A CloudPage without that employee session yields `accountEmployeeID invalid`, so this destructive method could not be runtime-proven in the test environment." %}
+{% include callout.html type="warning" content="No working invocation found at runtime. Probed against a Parent BU session: the Core call returned the plain string `\"Error\"`, and the equivalent WSProxy write returned SOAP fault `ErrorCode 11001`, `StatusMessage \"User 0 does not have permission to edit ACCOUNTUSERS on account &lt;Parent BU&gt;.\"`. Other writes in the same run (`Subscriber.Add`) succeeded, so this is specific to AccountUser writes from this session." %}
 
 Activates the initialized user account.
 
@@ -184,7 +189,7 @@ Activates the initialized user account.
 
 #### Return value
 
-`"OK"` on success.
+`"OK"` on success. Observed returning the plain string `"Error"` when the write does not succeed.
 
 #### Examples
 
@@ -198,9 +203,9 @@ var status = acctUser.Activate();
 
 ### &lt;AccountUserInstance&gt;.Deactivate {#instance-deactivate}
 
-{% include method-status.html status="in-progress" %}
+{% include method-status.html status="blocked" differs=true %}
 
-{% include callout.html type="info" content="Verification blocked: the Core AccountUser write API requires an authenticated employee context. A CloudPage without that employee session yields `accountEmployeeID invalid`, so this destructive method could not be runtime-proven in the test environment." %}
+{% include callout.html type="warning" content="No working invocation found at runtime. Probed against a Parent BU session: the Core call returned the plain string `\"Error\"`, and the equivalent WSProxy write returned SOAP fault `ErrorCode 11001`, `StatusMessage \"User 0 does not have permission to edit ACCOUNTUSERS on account &lt;Parent BU&gt;.\"`. Other writes in the same run (`Subscriber.Add`) succeeded, so this is specific to AccountUser writes from this session." %}
 
 Deactivates the initialized user. Account users **cannot** be deleted via SSJS; deactivation is the supported "offboarding" path.
 
@@ -212,7 +217,7 @@ Deactivates the initialized user. Account users **cannot** be deleted via SSJS; 
 
 #### Return value
 
-`"OK"` on success.
+`"OK"` on success. Observed returning the plain string `"Error"` when the write does not succeed.
 
 #### Examples
 

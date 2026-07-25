@@ -7,6 +7,11 @@ description: Core library SenderProfile — from-name / from-address profiles (C
 verification: verified
 requires_core_load: true
 differs_from_docs: true
+type_mapping:
+  ssjs: "SenderProfile"
+  soap: "SenderProfile"
+  mcdev: "senderProfile"
+  gui: "Sender Profile"
 ---
 
 `SenderProfile` manages **sender profiles** (From name, From address, etc.). **SenderProfile methods only run on CloudPages / landing pages** — they **cannot** run inside an email message at send time.

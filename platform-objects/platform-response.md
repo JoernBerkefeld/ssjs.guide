@@ -20,24 +20,28 @@ Does not require `Platform.Load`.
 | [`Platform.Response.RemoveResponseHeader(headerName)`](#removeresponseheader) | void | Remove a response header |
 | [`Platform.Response.SetCookie(name, value [, expires [, secure]])`](#setcookie) | void | Set a response cookie |
 | [`Platform.Response.RemoveCookie(name)`](#removecookie) | void | Remove a cookie |
-| [`Platform.Response.Redirect(url, movedPermanently)`](#redirect) | void | Redirect the browser |
+| [`Platform.Response.Redirect(url[, movedPermanently])`](#redirect) | void | Redirect the browser |
 
 ## Properties
 
 | Property | Type | Description |
 |----------|------|-------------|
-| [`Platform.Response.ContentType`](#contenttype) | string | Gets or sets the `Content-Type` of the HTTP response |
-| [`Platform.Response.CharacterSet`](#characterset) | string | Gets or sets the character set of the HTTP response |
+| [`Platform.Response.ContentType`](#contenttype) | write-only | Sets the `Content-Type` of the HTTP response — reading it throws |
+| [`Platform.Response.CharacterSet`](#characterset) | write-only | Sets the character set of the HTTP response — reading it throws |
 
 ---
 
 ### Platform.Response.ContentType {#contenttype}
 
+{% include method-status.html status="verified" differs=true %}
+
 ```javascript
 Platform.Response.ContentType = "application/json";
 ```
 
-Gets or sets the `Content-Type` header of the HTTP response. Set this before writing any output.
+Sets the `Content-Type` header of the HTTP response. Set this before writing any output.
+
+{% include differs-from-docs.html note="The docs present `ContentType` as a readable property, but at runtime it is **write-only**. Assignment works and is reflected in the HTTP `Content-Type` header, yet *every* read throws a null-reference error — both as the very first statement of the script and after output has been written. Calling it as a function throws as well. Track the value in your own variable if you need to read it back." %}
 
 #### Examples
 
@@ -51,15 +55,28 @@ Platform.Response.ContentType = "text/plain";
 Platform.Response.Write("plain text response");
 ```
 
+```javascript
+// ❌ throws — the property cannot be read back
+var current = Platform.Response.ContentType;
+
+// ✅ keep your own copy instead
+var contentType = "application/json";
+Platform.Response.ContentType = contentType;
+```
+
 ---
 
 ### Platform.Response.CharacterSet {#characterset}
+
+{% include method-status.html status="verified" differs=true %}
 
 ```javascript
 Platform.Response.CharacterSet = "UTF-8";
 ```
 
-Gets or sets the character set of the HTTP response.
+Sets the character set of the HTTP response.
+
+{% include differs-from-docs.html note="Like [`ContentType`](#contenttype), this property is **write-only** at runtime. Assignment works and shows up as the `charset` of the HTTP `Content-Type` header, but every read throws a null-reference error, and calling it as a function throws too." %}
 
 #### Examples
 
@@ -231,8 +248,10 @@ Platform.Response.RemoveCookie("sessionToken");
 
 ### Platform.Response.Redirect {#redirect}
 
+{% include method-status.html status="verified" differs=true %}
+
 ```javascript
-Platform.Response.Redirect(url , movedPermanently)
+Platform.Response.Redirect(url[, movedPermanently])
 ```
 
 Redirects the browser to the specified URL.
@@ -242,12 +261,15 @@ Redirects the browser to the specified URL.
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `url` | string | Yes | Destination URL |
-| `movedPermanently` | boolean | Yes | `true` for 301 redirect, `false`/omitted for 302 |
+| `movedPermanently` | boolean | No | `true` for a 301 permanent redirect, `false` or omitted for a 302 temporary redirect |
+
+{% include differs-from-docs.html note="Two behaviours the official docs do not state. First, the second argument is **optional** — a single-argument call produces a 302 with the `Location` header set, exactly like passing `false`. Second, the redirect **terminates the script immediately**: statements after the call never run, not even when the call sits inside a `try`/`catch` (no catchable exception is raised). Any response body written before the call is discarded in favour of the redirect payload." %}
 
 #### Examples
 
 ```javascript
-// Temporary redirect (302)
+// Temporary redirect (302) — the flag is optional
+Platform.Response.Redirect("https://example.com/thank-you");
 Platform.Response.Redirect("https://example.com/thank-you", false);
 
 // Permanent redirect (301)
@@ -261,7 +283,7 @@ if (!isLoggedIn) {
 }
 ```
 
-{% include callout.html type="warning" content="Once `Redirect()` is called, any subsequent `Write()` calls are ignored. Execution continues but output is discarded." %}
+{% include callout.html type="warning" content="`Redirect()` ends the script on the spot — nothing after the call executes, and any output written before it is thrown away. Do not rely on cleanup code placed after a redirect, and do not expect a `try`/`catch` around it to regain control. Use a 301 only when browsers should stop re-checking the original URL." %}
 
 ## See Also
 

@@ -4,8 +4,14 @@ title: SendClassification
 parent: Core Library
 parent_url: /core-library/
 description: Core library SendClassification — ties a sender profile and delivery profile for compliant sends.
-verification: in-progress
+verification: verified
+differs_from_docs: true
 requires_core_load: true
+type_mapping:
+  ssjs: "SendClassification"
+  soap: "SendClassification"
+  mcdev: "sendClassification"
+  gui: "Send Classification"
 ---
 
 `SendClassification` groups a **sender profile** and **delivery profile** for use when creating sends and send definitions. Updates must include **both** `SenderProfileKey` and `DeliveryProfileKey` in the properties object.
@@ -17,7 +23,7 @@ requires_core_load: true
 | Method | Returns | Description |
 |--------|---------|-------------|
 | [`SendClassification.Init(key)`](#init) | SendClassificationInstance | Bind by external key |
-| [`SendClassification.Add(properties)`](#add) | string | Create a send classification |
+| [`SendClassification.Add(properties)`](#add) | object | Create a send classification |
 | [`SendClassification.Retrieve(filter)`](#retrieve) | object[] | Query classifications |
 | [`<SendClassificationInstance>.Update(properties)`](#instance-update) | string | Update (requires sender + delivery keys) |
 | [`<SendClassificationInstance>.Remove()`](#instance-remove) | string | Delete the classification |
@@ -57,10 +63,6 @@ var sc = SendClassification.Init("mySendClassification");
 
 ### SendClassification.Add {#add}
 
-{% include method-status.html status="in-progress" %}
-
-{% include callout.html type="warning" content="**Verification blocked (no test data).** New send classifications could not be created from SSJS in the test BU. `SendClassification.Add` throws `\"Error adding SendClassification.\"` (with an `undefined` `.message`) even with the account's proven-valid `Default` sender + `Default` delivery profiles. A direct WSProxy `createItem(\"SendClassification\")` returns `StatusMessage=\"SenderProfile given an invalid identifier.\"` `ErrorCode=24101` — the SOAP path needs the SenderProfile **ObjectID**, not its CustomerKey, so the `\"OK\"` success return could not be runtime-confirmed." %}
-
 Creates a new send classification with the specified properties.
 
 #### Syntax
@@ -75,9 +77,13 @@ SendClassification.Add(properties)
 |------|------|----------|-------------|
 | `properties` | object | Yes | `CustomerKey`, `Name`, `Description`, `SenderProfileKey`, `DeliveryProfileKey` |
 
+The `SenderProfileKey` and `DeliveryProfileKey` must reference existing profiles by external key; an unresolvable profile key makes the Add fail.
+
 #### Return value
 
-`"OK"` on success.
+`object` — a CLR object on success. Its properties are not readable from SSJS; treat a non-throwing return as success and read the created record back with `SendClassification.Retrieve`.
+
+{% include differs-from-docs.html note="Runtime-verified on a live CloudPage against real, owned `ssjs-senderprofile` + `ssjs-deliveryprofile` keys: `Add()` creates the record and returns a CLR object (`typeof` is `clr`; it stringifies to `ExactTarget.Integration.WSDL.SenderProfile`), not the string `\"OK\"` the docs imply. Enumerating its keys with `for..in` yields none and reading a property throws *\"Use of Common Language Runtime (CLR) is not allowed\"*. Treat any non-throwing return as success; a `SendClassification.Retrieve` immediately after Add returned the new record. This mirrors DeliveryProfile.Add and SenderProfile.Add." %}
 
 #### Examples
 
@@ -132,11 +138,9 @@ var results = SendClassification.Retrieve({
 
 ### &lt;SendClassificationInstance&gt;.Update {#instance-update}
 
-{% include method-status.html status="in-progress" %}
-
-{% include callout.html type="warning" content="**Verification blocked (no test data).** Depends on first creating a send classification, which is blocked in the test BU (see Add). Update could not be runtime-confirmed." %}
-
 Updates the initialized send classification. You must include **both** `SenderProfileKey` and `DeliveryProfileKey` for the update to succeed.
+
+{% include callout.html type="info" content="Runtime-verified on a live CloudPage against a real, owned send classification with both `SenderProfileKey` and `DeliveryProfileKey` supplied: `Update()` returned `\"OK\"` and a follow-up `SendClassification.Retrieve` confirmed the changed Description persisted. Both profile keys must resolve; calling `Update()` with no arguments or with unresolvable profile keys returns the string `\"Error\"` (not a throw)." %}
 
 #### Syntax
 
@@ -152,7 +156,7 @@ Updates the initialized send classification. You must include **both** `SenderPr
 
 #### Return value
 
-`"OK"` on success.
+`"OK"` on success; the string `"Error"` (not a throw) on failure.
 
 #### Examples
 
@@ -171,11 +175,9 @@ var status = sc.Update(updatedSC);
 
 ### &lt;SendClassificationInstance&gt;.Remove {#instance-remove}
 
-{% include method-status.html status="in-progress" %}
-
-{% include callout.html type="warning" content="**Verification blocked (no test data).** Depends on first creating a send classification, which is blocked in the test BU (see Add). Remove could not be runtime-confirmed." %}
-
 Removes the initialized send classification.
+
+{% include callout.html type="info" content="Runtime-verified on a live CloudPage: a throwaway send classification was created with `SendClassification.Add`, then `Remove()` returned `\"OK\"` and a follow-up `SendClassification.Retrieve` returned an empty array, confirming the record was deleted. Against a non-existent init'd key, `Remove()` returns the string `\"Error\"` (not a throw)." %}
 
 #### Syntax
 
@@ -185,7 +187,7 @@ Removes the initialized send classification.
 
 #### Return value
 
-`"OK"` on success.
+`"OK"` on success; the string `"Error"` (not a throw) on failure.
 
 #### Examples
 

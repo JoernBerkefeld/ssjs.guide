@@ -7,6 +7,11 @@ description: Core library QueryDefinition — SQL query activities (add, retriev
 verification: verified
 requires_core_load: true
 differs_from_docs: true
+type_mapping:
+  ssjs: "QueryDefinition"
+  soap: "QueryDefinition"
+  mcdev: "query"
+  gui: "SQL Query"
 ---
 
 `QueryDefinition` manages **Query Activities**: SQL text, target Data Extension, update type, and execution via **`Perform("start")`**.
@@ -185,7 +190,7 @@ var status = qd.Remove();
 
 ### &lt;QueryDefinitionInstance&gt;.Perform {#instance-perform}
 
-{% include method-status.html differs=true %}
+{% include method-status.html status="verified" differs=true %}
 
 Runs the SQL and writes results to the configured target Data Extension. Use **`"start"`** as the action. The run is queued **asynchronously** — `Perform` returns as soon as the run is accepted, not when the query finishes.
 

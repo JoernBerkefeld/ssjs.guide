@@ -4,7 +4,7 @@ title: Core Library
 description: The SSJS Core library provides object-oriented APIs for Data Extensions, Subscribers, Lists, Email sends, HTTP requests, and more. Load with Platform.Load("core", "1.1.5").
 nav_order: 6
 has_children: true
-verification: in-progress
+verification: verified
 differs_from_docs: true
 ---
 

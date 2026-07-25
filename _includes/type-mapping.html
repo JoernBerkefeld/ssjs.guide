@@ -1,0 +1,37 @@
+{% comment %}
+  Renders a small "Type mapping" info table linking an SSJS Core library type to
+  its SOAP object and mcdev metadata definition. Optional; only renders when
+  page.type_mapping (or an explicit `mapping=` param) is present.
+
+  Columns: SSJS Name | SOAP Object | mcdev type | GUI name
+  Sources:
+    ssjs  = SSJS Core library class/namespace name (this md page)
+    soap  = SOAP web service object name (soap_web_service_objects.md)
+    mcdev = mcdev `type` field ("-" when not managed by mcdev)
+    gui   = mcdev `typeName` (or a manual GUI label)
+
+  Front matter usage:
+    type_mapping:
+      ssjs: "DataExtension"
+      soap: "DataExtension"
+      mcdev: "dataExtension"
+      gui: "Data Extension"
+{% endcomment %}
+{% assign tm = include.mapping | default: page.type_mapping %}
+{% if tm %}
+<div class="type-mapping" aria-label="Type mapping">
+  <table>
+    <thead>
+      <tr><th>SSJS Name</th><th>SOAP Object</th><th>mcdev type</th><th>GUI name</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>{{ tm.ssjs }}</code></td>
+        <td><code>{{ tm.soap }}</code></td>
+        <td>{% if tm.mcdev and tm.mcdev != "-" %}<code>{{ tm.mcdev }}</code>{% else %}&mdash;{% endif %}</td>
+        <td>{{ tm.gui | default: "&mdash;" }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+{% endif %}

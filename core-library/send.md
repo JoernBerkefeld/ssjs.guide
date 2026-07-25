@@ -7,6 +7,11 @@ description: Core library Send — create and manage sends, cancel a send, and r
 verification: verified
 differs_from_docs: true
 requires_core_load: true
+type_mapping:
+  ssjs: "Send"
+  soap: "Send"
+  mcdev: "-"
+  gui: "User-Initiated Email"
 ---
 
 The `Send` namespace covers **user-initiated sends**: creating sends from an email and lists, retrieving send rows, listing targeted lists, canceling a send, and accessing tracking (including static `Send.Tracking.Retrieve` and instance helpers on `send.Tracking`).

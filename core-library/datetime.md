@@ -24,7 +24,7 @@ The `DateTime` namespace provides date-time conversion helpers and time zone loo
 |--------|---------|-------------|
 | [`DateTime.SystemDateToLocalDate(dateString)`](#systemdatetolocaldate) | Date | Convert system time (CST) to local account/user time |
 | [`DateTime.LocalDateToSystemDate(dateString)`](#localdatetosystemdate) | Date | Convert local account/user time to system time (CST) |
-| [`DateTime.TimeZone.Retrieve(filter)`](#timezone-retrieve) | object[] | Retrieve time zone definitions |
+| [`DateTime.TimeZone.Retrieve([filter])`](#timezone-retrieve) | object[] | Retrieve time zone definitions — omit the filter for all time zones |
 
 ---
 
@@ -74,21 +74,37 @@ Write(systemTime);
 
 ### DateTime.TimeZone.Retrieve {#timezone-retrieve}
 
-Returns an array of time zones matching the filter. If you pass no filter (or an empty object), all time zones may be returned depending on platform behavior — prefer an explicit filter in production code.
+{% include method-status.html status="verified" differs=true %}
+
+Returns the time zones matching the filter, or every time zone when no filter is given.
+
+```javascript
+DateTime.TimeZone.Retrieve([filter])
+```
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `filter` | object | Yes | WSProxy-style filter (for example `{ Property: "ID", SimpleOperator: "equals", Value: 1 }`) |
+| `filter` | object | No | WSProxy-style filter (for example `{ Property: "ID", SimpleOperator: "equals", Value: 1 }`). Omit it to retrieve the full list |
 
-**Returns:** `object[]` — matching time zone rows.
+**Returns:** `object[]` — matching time zone rows, each carrying `ID` (number) and `Name` (string).
+
+{% include differs-from-docs.html note="The `filter` argument is **optional**, contrary to the docs — calling `DateTime.TimeZone.Retrieve()` with no argument returns the full time-zone list. A filter that matches nothing returns an empty collection rather than `null`, so `.length` can be read unconditionally, but a *malformed* filter (a plain string, or an object missing the three filter properties) raises a time-zone retrieval error instead of returning an empty list. The returned value is a CLR collection, not a JavaScript array: it is indexable and has `.length`, but `instanceof Array` is `false` and array methods such as `push` are absent. `Platform.Load(\"core\", ...)` is genuinely required — before the load `DateTime` is `undefined` and the call throws." %}
 
 ```javascript
 Platform.Load("core", "1.1.5");
 
+// Full list — no filter needed
+var all = DateTime.TimeZone.Retrieve();
+Write(all.length + " time zones\n");
+
+// Filtered lookup
 var rows = DateTime.TimeZone.Retrieve({
     Property: "ID",
     SimpleOperator: "equals",
     Value: 1
 });
-Write(Stringify(rows));
+// Stringify() cannot serialize these CLR rows — read the fields directly
+for (var i = 0; i < rows.length; i++) {
+    Write(rows[i].ID + " = " + rows[i].Name + "\n");
+}
 ```

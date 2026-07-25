@@ -67,8 +67,10 @@ Control the HTTP response before output is sent:
 
 ```javascript
 Platform.Response.ContentType = "application/json";
-Platform.Response.Redirect("https://example.com", false);
+Platform.Response.Redirect("https://example.com");   // flag optional — 302 by default
 ```
+
+`ContentType` and `CharacterSet` are **write-only** at runtime: assigning them shapes the HTTP `Content-Type` header, but reading either one throws. `Redirect()` also **ends the script immediately** — nothing after the call runs, and a `try`/`catch` around it does not regain control. See [`Platform.Response`](/platform-objects/platform-response/).
 
 ---
 

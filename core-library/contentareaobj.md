@@ -7,6 +7,11 @@ description: Legacy ContentAreaObj Core library (deprecated) — classic Content
 requires_core_load: true
 verification: verified
 differs_from_docs: true
+type_mapping:
+  ssjs: "ContentAreaObj"
+  soap: "ContentArea"
+  mcdev: "contentArea"
+  gui: "Content Area (Classic)"
 ---
 
 {% include callout.html type="warning" content="**Deprecated.** Content Areas are a legacy Classic Content feature. Prefer Content Builder assets for new development." %}

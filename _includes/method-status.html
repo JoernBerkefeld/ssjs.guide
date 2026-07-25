@@ -8,9 +8,10 @@
     status  (string) - verified | in-progress | blocked | pending
                        verified    → runtime-proven (green)
                        in-progress → could not be proven in the current test env yet (yellow)
-                       blocked     → can no longer be verified because the underlying
-                                     feature is deprecated / retired, so testing is
-                                     permanently impossible (red)
+                       blocked     → cannot be used successfully at runtime — either the
+                                     underlying feature is deprecated / retired, or the
+                                     member exists but no working invocation could be
+                                     found (red)
                        pending     → not yet checked (grey)
     differs (bool)   - optional; when true, also renders the "Differs from docs"
                        triangle badge (combine with any status).
@@ -40,7 +41,7 @@
 {%- elsif m_status == "blocked" -%}
 {%- assign m_class = "status-blocked" -%}
 {%- assign m_label = "Blocked" -%}
-{%- assign m_title = "This method/property can no longer be runtime-verified because the underlying feature is deprecated/retired; testing is permanently impossible." -%}
+{%- assign m_title = "This method/property cannot be used successfully at runtime — either the underlying feature is deprecated/retired, or it exists but no working invocation was found. See the note in this section for details." -%}
 {%- assign m_svg = '<svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.2"/><path d="M3 3l6 6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>' -%}
 {%- else -%}
 {%- assign m_class = "status-pending" -%}

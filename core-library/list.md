@@ -6,6 +6,11 @@ parent_url: /core-library/
 description: Core library object for publication lists — create and query lists, remove a list instance, and work with list subscribers.
 verification: verified
 requires_core_load: true
+type_mapping:
+  ssjs: "List"
+  soap: "List"
+  mcdev: "list"
+  gui: "List"
 ---
 
 The `List` Core library object provides an object-oriented interface for SFMC publication lists: static methods create or look up lists, an initialized instance can delete itself, and the [`Subscribers`](/core-library/list-subscribers/) namespace manages membership on that instance.

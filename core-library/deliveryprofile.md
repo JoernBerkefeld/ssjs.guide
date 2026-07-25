@@ -7,6 +7,11 @@ description: Core library DeliveryProfile — create, update, and remove deliver
 verification: verified
 requires_core_load: true
 differs_from_docs: true
+type_mapping:
+  ssjs: "DeliveryProfile"
+  soap: "DeliveryProfile"
+  mcdev: "deliveryProfile"
+  gui: "Delivery Profile"
 ---
 
 `DeliveryProfile` manages **delivery profiles** (routing / delivery settings used with send classifications). The Core library exposes `Init`, `Add`, `Update`, and `Remove` — there is **no** `DeliveryProfile.Retrieve` in this namespace; query profiles with WSProxy or another API if you need read access outside an instance.

@@ -4,26 +4,35 @@ title: Send.Definition
 parent: Core Library
 parent_url: /core-library/
 description: Core library namespace Send.Definition — create, configure, query, update, remove, and execute user-initiated send definitions.
-verification: in-progress
+verification: verified
+differs_from_docs: true
 requires_core_load: true
+type_mapping:
+  ssjs: "Send.Definition"
+  soap: "EmailSendDefinition"
+  mcdev: "emailSend"
+  gui: "E-Mail Send Definition"
 ---
 
 `Send.Definition` is the Core library namespace for **Email Studio send definitions** (reusable send configurations). Call static methods without an instance, or use `Send.Definition.Init` when you need instance methods (`Update`, `Remove`, `Send`).
 
 {% include callout.html type="warning" content="Requires `Platform.Load(\"core\", \"1.1.5\")` before use." %}
 
+{% include callout.html type="warning" content="Several methods on this namespace behave differently from the official documentation. <code>AddWithDE</code> only works when the documented fifth argument is <b>omitted</b>; <code>AddWithFilterDefinition</code> always throws even when it succeeds; <code>Update</code> only accepts scalar properties; and <code>Send</code> returns error text instead of throwing. See each method for details." %}
+
 ## Methods
 
 | Method | Returns | Description |
 |--------|---------|-------------|
 | [`Send.Definition.Init(key)`](#init) | SendDefinitionInstance | Bind to a send definition by external key |
-| [`Send.Definition.Add(esdParams, sendClassificationKey, emailKey, listIds)`](#add) | string | Create send definition (lists) |
-| [`Send.Definition.AddWithDE(...)`](#addwithde) | string | Create send definition targeting a sendable DE |
-| [`Send.Definition.AddWithFilterDefinition(...)`](#addwithfilterdefinition) | string | Create send definition using a filter definition |
+| [`Send.Definition.Add(esdParams, sendClassificationKey, emailKey, listIds)`](#add) | object | Create send definition (lists) |
+| [`Send.Definition.AddWithDE(...)`](#addwithde) | object | Create send definition targeting a sendable DE |
+| [`Send.Definition.AddWithFilterDefinition(...)`](#addwithfilterdefinition) | never | Create send definition using a filter definition |
 | [`Send.Definition.Retrieve([filter])`](#retrieve) | object[] | Query send definitions |
 | [`<SendDefinitionInstance>.Update(properties)`](#instance-update) | string | Update the initialized send definition |
 | [`<SendDefinitionInstance>.Remove()`](#instance-remove) | string | Delete the send definition |
 | [`<SendDefinitionInstance>.Send()`](#instance-send) | string | Execute the send |
+| [`<SendDefinitionInstance>.TestSend([emailAddress])`](#instance-testsend) | string | Undocumented — no working invocation found |
 
 ---
 
@@ -60,9 +69,9 @@ var esd = Send.Definition.Init("myESD");
 
 ### Send.Definition.Add {#add}
 
-{% include method-status.html status="in-progress" %}
+{% include method-status.html status="verified" differs=true %}
 
-{% include callout.html type="info" content="Runtime-attempted, blocked by environment: the destructive create path was exercised on the QA BU but the underlying SOAP <code>CreateEmailSendDefinition</code> fails with <code>ErrorCode 42116</code> (the classic email is unapproved and this BU lacks the sender/delivery-profile + send-classification setup a send definition requires). Presence and signature are runtime-proven (<code>typeof Send.Definition.Add === \"function\"</code>); a successful create needs an approved email and a fully-configured send classification." %}
+{% include callout.html type="warning" content="Returns a CLR object, not the documented string <code>\"OK\"</code>: <code>typeof</code> is <code>\"clr\"</code> and the value stringifies to <code>\"ExactTarget.Integration.WSDL.EmailSendDefinition\"</code>. On failure it throws a plain <b>string</b> (<code>\"Error adding EmailSendDefinition.\"</code>), so <code>ex.message</code> is <code>undefined</code> — catch it as a string. <code>listIds</code> must contain real list IDs; an unknown ID makes the call throw and nothing is created." %}
 
 Creates a send definition. `esdParams` includes `CustomerKey`, `Name`, and `EmailSubject`.
 
@@ -79,38 +88,38 @@ Send.Definition.Add(esdParams, sendClassificationKey, emailKey, listIds)
 | `esdParams` | object | Yes | `CustomerKey`, `Name`, `EmailSubject` for the new send definition |
 | `sendClassificationKey` | string | Yes | Customer key of the send classification |
 | `emailKey` | string | Yes | Customer key of the email |
-| `listIds` | array | Yes | Target list IDs |
+| `listIds` | array | Yes | Target list IDs — must exist |
 
 #### Return value
 
-`"OK"` on success.
+A CLR `EmailSendDefinition` object. Throws the string `"Error adding EmailSendDefinition."` on failure.
 
 #### Examples
 
 ```javascript
-Platform.Load("core", "1");
+Platform.Load("core", "1.1.5");
 var esdParams = {
     CustomerKey: "example_esd",
     Name: "Example Send Definition",
     EmailSubject: "Sent By Example Send Definition"
 };
-Send.Definition.Add(esdParams, "example_sc_key", "example_email_key", [12345, 12346]);
+var esd = Send.Definition.Add(esdParams, "example_sc_key", "example_email_key", [12345]);
 ```
 
 ---
 
 ### Send.Definition.AddWithDE {#addwithde}
 
-{% include method-status.html status="in-progress" %}
+{% include method-status.html status="verified" differs=true %}
 
-{% include callout.html type="info" content="Runtime-attempted, blocked by environment: shares the same <code>CreateEmailSendDefinition</code> path as <code>Send.Definition.Add</code>, which fails on this BU with SOAP <code>ErrorCode 42116</code> (unapproved email + missing send-classification/sender-profile configuration). Presence and signature are runtime-proven (<code>typeof Send.Definition.AddWithDE === \"function\"</code>); a successful create needs an approved email and a sendable DE + configured send classification." %}
+{% include callout.html type="warning" content="The documented fifth argument <code>publicationListKey</code> must be <b>omitted</b>. Calling this method with four arguments succeeds; supplying any fifth argument throws <code>\"Error adding EmailSendDefinition.\"</code> and creates nothing — confirmed with a publication list name, a numeric list ID, and a Data Extension key. Like <code>Add</code>, a successful call returns a CLR object rather than <code>\"OK\"</code>." %}
 
 Creates a send definition that sends to a **sendable Data Extension**.
 
 #### Syntax
 
 ```javascript
-Send.Definition.AddWithDE(esdParams, sendClassificationKey, emailKey, sendableDataExtensionKey, publicationListKey)
+Send.Definition.AddWithDE(esdParams, sendClassificationKey, emailKey, sendableDataExtensionKey)
 ```
 
 #### Parameters
@@ -121,11 +130,11 @@ Send.Definition.AddWithDE(esdParams, sendClassificationKey, emailKey, sendableDa
 | `sendClassificationKey` | string | Yes | Send classification customer key |
 | `emailKey` | string | Yes | Email customer key |
 | `sendableDataExtensionKey` | string | Yes | Sendable DE customer key |
-| `publicationListKey` | string | Yes | Publication list customer key |
+| `publicationListKey` | string | No | Documented as required, but passing it makes the call fail — omit it |
 
 #### Return value
 
-`"OK"` on success.
+A CLR `EmailSendDefinition` object. Throws the string `"Error adding EmailSendDefinition."` on failure.
 
 #### Examples
 
@@ -136,16 +145,17 @@ var esdParams = {
     Name: "SSJS DE Test ESD3",
     EmailSubject: "Third send By Test DE Send Definition"
 };
-var status = Send.Definition.AddWithDE(esdParams, "scKey", "test_email", "deKey", "myPubList");
+// omit the documented publicationListKey - passing it makes the call throw
+var esd = Send.Definition.AddWithDE(esdParams, "scKey", "test_email", "deKey");
 ```
 
 ---
 
 ### Send.Definition.AddWithFilterDefinition {#addwithfilterdefinition}
 
-{% include method-status.html status="in-progress" %}
+{% include method-status.html status="blocked" differs=true %}
 
-{% include callout.html type="info" content="Runtime-attempted, blocked by environment: shares the same <code>CreateEmailSendDefinition</code> path as <code>Send.Definition.Add</code>, which fails on this BU with SOAP <code>ErrorCode 42116</code> (unapproved email + missing send-classification/sender-profile configuration). Presence and signature are runtime-proven (<code>typeof Send.Definition.AddWithFilterDefinition === \"function\"</code>); a successful create needs an approved email and a valid filter definition + configured send classification." %}
+{% include callout.html type="warning" content="This method <b>always throws</b> <code>\"Error adding EmailSendDefinition.\"</code> — but the send definition is created anyway and is immediately retrievable via <code>Send.Definition.Retrieve</code>. Because the throw happens whether or not the create succeeded, the only reliable success check is to retrieve the new key after catching. No invocation shape was found that returns normally: the list ID was tried as a number and as a single-element array, plus a publication list name, a Data Extension key, and omitting the fifth argument entirely." %}
 
 Creates a send definition whose audience comes from a **filter definition**.
 
@@ -163,11 +173,11 @@ Send.Definition.AddWithFilterDefinition(esdParams, sendClassificationKey, emailK
 | `sendClassificationKey` | string | Yes | Send classification customer key |
 | `emailKey` | string | Yes | Email customer key |
 | `filterDefinitionKey` | string | Yes | Filter definition customer key |
-| `listId` | number | Yes | List ID the filter applies to |
+| `listId` | number | No | List ID the filter applies to |
 
 #### Return value
 
-`"OK"` on success.
+Never returns normally — always throws the string `"Error adding EmailSendDefinition."`, including when the send definition was created successfully.
 
 #### Examples
 
@@ -178,7 +188,16 @@ var esdParams = {
     Name: "Example Filtered Send Definition",
     EmailSubject: "Sent By Filtered Send Definition"
 };
-var status = Send.Definition.AddWithFilterDefinition(esdParams, "scKey", "test_email", "fdKey", 144);
+try {
+    Send.Definition.AddWithFilterDefinition(esdParams, "scKey", "test_email", "fdKey", 144);
+} catch (ex) {
+    // always throws "Error adding EmailSendDefinition." - check whether it was created anyway
+}
+var created = Send.Definition.Retrieve({
+    Property: "CustomerKey",
+    SimpleOperator: "equals",
+    Value: "filterDef_esd"
+}).length > 0;
 ```
 
 ---
@@ -203,7 +222,7 @@ Send.Definition.Retrieve([filter])
 
 #### Return value
 
-`object[]`
+`object[]` — an empty array when nothing matches. It does not throw and does not return `null`.
 
 #### Examples
 
@@ -220,9 +239,9 @@ var esd = Send.Definition.Retrieve({
 
 ### &lt;SendDefinitionInstance&gt;.Update {#instance-update}
 
-{% include method-status.html status="in-progress" %}
+{% include method-status.html status="verified" differs=true %}
 
-{% include callout.html type="info" content="Runtime-attempted, blocked by environment: exercising <code>&lt;SendDefinitionInstance&gt;.Update</code> requires first creating a send definition, but <code>Send.Definition.Add</code> fails on this BU with SOAP <code>ErrorCode 42116</code> (unapproved email + missing send-classification/sender-profile configuration), so no instance could be obtained to update. Presence and signature are runtime-proven (<code>typeof sdi.Update === \"function\"</code>)." %}
+{% include callout.html type="warning" content="Only <b>scalar</b> properties can be updated. <code>Update({ Description: … })</code> and <code>Update({ TestEmailAddr: … })</code> return <code>\"OK\"</code> and persist. Nested properties throw <code>\"Error Updating ESD.\"</code> — observed for <code>Email</code> and <code>SendDefinitionList</code>. The equivalent WSProxy <code>updateItem</code> calls for those same nested properties return <code>Status: \"OK\"</code> with <code>\"EmailSendDefinition updated\"</code>, so the limit is specific to this method." %}
 
 Updates properties on the initialized send definition.
 
@@ -236,29 +255,30 @@ Updates properties on the initialized send definition.
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `properties` | object | Yes | Properties to change |
+| `properties` | object | Yes | Scalar properties to change |
 
 #### Return value
 
-`"OK"` on success.
+`"OK"` when scalar properties are updated. Throws `"Error Updating ESD."` when the payload contains nested properties such as `Email` or `SendDefinitionList`.
 
 #### Examples
 
 ```javascript
 Platform.Load("core", "1.1.5");
 var sendDef = Send.Definition.Init("MY_SEND_DEF_KEY");
-var result = sendDef.Update({ Name: "Updated Send Definition Name" });
+var result = sendDef.Update({ Description: "Updated description" });
+
+// nested properties throw - use WSProxy for those
+// sendDef.Update({ Email: { ID: 12345 } });
 ```
 
 ---
 
 ### &lt;SendDefinitionInstance&gt;.Remove {#instance-remove}
 
-{% include method-status.html status="in-progress" %}
+{% include method-status.html status="verified" %}
 
-{% include callout.html type="info" content="Runtime-attempted, blocked by environment: exercising <code>&lt;SendDefinitionInstance&gt;.Remove</code> requires first creating a send definition, but <code>Send.Definition.Add</code> fails on this BU with SOAP <code>ErrorCode 42116</code> (unapproved email + missing send-classification/sender-profile configuration), so no instance could be obtained to delete. Presence and signature are runtime-proven (<code>typeof sdi.Remove === \"function\"</code>)." %}
-
-Deletes the send definition bound to this instance.
+Deletes the send definition bound to this instance. Returns `"OK"` and the record is gone afterwards — a follow-up `Send.Definition.Retrieve` for the same key returns an empty array. Confirmed against definitions created through `Add`, through `AddWithDE`, and through a WSProxy `createItem`.
 
 #### Syntax
 
@@ -282,11 +302,11 @@ var status = esd.Remove();
 
 ### &lt;SendDefinitionInstance&gt;.Send {#instance-send}
 
-{% include method-status.html status="in-progress" %}
+{% include method-status.html status="verified" differs=true %}
 
-{% include callout.html type="info" content="Runtime-attempted, blocked by environment: exercising <code>&lt;SendDefinitionInstance&gt;.Send</code> requires first creating a send definition, but <code>Send.Definition.Add</code> fails on this BU with SOAP <code>ErrorCode 42116</code> (unapproved email + missing send-classification/sender-profile configuration), so no instance could be obtained to send. Presence and signature are runtime-proven (<code>typeof sdi.Send === \"function\"</code>)." %}
+{% include callout.html type="warning" content="This method returns an error <b>string</b> instead of throwing when the send is rejected, so a <code>try/catch</code> alone will treat a rejected send as success. Always compare the return value to <code>\"OK\"</code>. Observed returns include <code>\"An EmailSendDefinition must have an audience to be sent.\"</code> and <code>\"The following email validation errors need addressed before the email can be sent.\"</code> followed by the offending tokens." %}
 
-Sends using the lists or audience configured on this send definition.
+Sends using the lists or audience configured on this send definition. A WSProxy `performItem("EmailSendDefinition", …, "start")` control returned the identical validation text, confirming the Core method dispatches the same operation.
 
 #### Syntax
 
@@ -296,7 +316,7 @@ Sends using the lists or audience configured on this send definition.
 
 #### Return value
 
-`"OK"` on success.
+`"OK"` when the send is accepted; otherwise a descriptive error string.
 
 #### Examples
 
@@ -304,6 +324,44 @@ Sends using the lists or audience configured on this send definition.
 Platform.Load("core", "1.1.5");
 var esd = Send.Definition.Init("myESD");
 var status = esd.Send();
+if (status !== "OK") {
+    // Send() returns the error text instead of throwing
+    Write("send rejected: " + status);
+}
+```
+
+---
+
+### &lt;SendDefinitionInstance&gt;.TestSend {#instance-testsend}
+
+{% include method-status.html status="blocked" differs=true %}
+
+{% include callout.html type="warning" content="Undocumented method that exists at runtime but for which no working invocation was found. With no arguments it returns <code>\"An EmailSendDefinition cannot be used in a test send to a list or group without a test email address.\"</code> even after a test address was stored on the record — set both via this object's own <code>Update({ TestEmailAddr: … })</code> (returned <code>\"OK\"</code>) and via a WSProxy <code>updateItem</code> control (returned <code>Status: \"OK\"</code>). Passing an address as an argument clears that message but then returns the same email validation error string as <code>Send()</code>." %}
+
+Sends a test version of the initialized send definition.
+
+#### Syntax
+
+```javascript
+<SendDefinitionInstance>.TestSend([emailAddress])
+```
+
+#### Parameters
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| `emailAddress` | string | No | Address to receive the test send |
+
+#### Return value
+
+Expected to return `"OK"`. In testing it only ever returned error text.
+
+#### Examples
+
+```javascript
+Platform.Load("core", "1.1.5");
+var esd = Send.Definition.Init("myESD");
+var status = esd.TestSend("test@example.com");
 ```
 
 ## See also

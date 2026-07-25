@@ -438,3 +438,70 @@ o.hasOwnProperty("a");       // true  — use this instead
 ```
 
 See [Object Methods](/ecmascript-builtins/object-methods/#propertyisenumerable) and [Differs from Official Docs](/engine-limitations/differs-from-docs/#objectprototypepropertyisenumerable-broken).
+
+---
+
+## TriggeredSend.Add Has No Working Invocation {#triggeredsend-add-no-working-invocation}
+
+**Severity: High** — the documented way to create a triggered send definition never succeeds
+
+`TriggeredSend.Add(properties)` is officially documented and the name resolves at runtime (`typeof TriggeredSend.Add` is `"function"`), but **no working invocation was found**. Every call throws the plain string `Error adding TSD.`, and `TriggeredSend.LastMessage` afterwards is either `An error occurred when attempting to evaluate a SetObjectProperty function call.  See inner exception for details.` (whenever the payload contains a nested object such as `Email`, `List`, or `SendClassification`) or the same `Error adding TSD.` with `LastErrorCode` 17014 / 2 (flat-only payloads). A string argument or a two-argument call fails earlier with `Invalid cast from 'Char' to 'Double'.`.
+
+Payload shapes swept without a single success: the nested SOAP shape, the documented flat shape (`EmailID`, `ListID`, `SendClassificationID`), dotted keys (`"Email.ID"`), scalar-only payloads, typed Core Library objects from `Email.Init()` / `List.Init()` / `SendClassification.Init()`, and the CLR object returned by `TriggeredSend.Retrieve` with a mutated `CustomerKey`.
+
+```javascript
+// ❌ throws the STRING "Error adding TSD." for every payload shape
+var tsd = TriggeredSend.Add({
+    CustomerKey: "my_tsd", Name: "my_tsd",
+    Email: { ID: 769268 }, List: { ID: 72164 },
+    SendClassification: { CustomerKey: "Default Transactional" }
+});
+
+// ✅ the identical payload via WSProxy succeeds
+var api = new Script.Util.WSProxy();
+var res = api.createItem("TriggeredSendDefinition", {
+    CustomerKey: "my_tsd", Name: "my_tsd",
+    Email: { ID: 769268 }, List: { ID: 72164 },
+    SendClassification: { CustomerKey: "Default Transactional" },
+    TriggeredSendType: "Continuous", FromName: "Sender", FromAddress: "me@example.com",
+    EmailSubject: "Subject", IsWrapped: true
+});
+// res.Status === "OK", ErrorCode 0, StatusMessage "TriggeredSendDefinition created"
+var tsd = TriggeredSend.Init("my_tsd");
+```
+
+The definition created through WSProxy then publishes, starts, sends, pauses, and updates normally through the Core Library instance methods.
+
+**Works correctly:** [WSProxy `createItem`](/wsproxy/createitem/), then [`TriggeredSend.Init`](/core-library/triggeredsend/#init). See also [Differs from Official Docs](/engine-limitations/differs-from-docs/#triggeredsend-add).
+
+---
+
+## &lt;PortfolioInstance&gt;.Update Has No Working Invocation {#portfolioinstance-update-no-working-invocation}
+
+**Severity: Medium** — the documented way to edit a portfolio item never succeeds
+
+`<PortfolioInstance>.Update(properties)` is officially documented and resolves at runtime, but **no working invocation was found** — while `Init`, `Add`, `Retrieve` and `Remove` all succeed on the very same item. Every attempt either returned the plain string `Error` or threw `Error Updating Portfolio`, and the stored record never changed.
+
+Shapes swept without a single success: instances from `Init(CustomerKey)` and from `Init(ObjectID)`; single-field payloads (`{DisplayName}`, `{Description}`); payloads repeating the identifying fields (`{CustomerKey, DisplayName, CategoryID}`); payloads carrying the `ObjectID`; the full `Add`-shaped payload including `FileName` + `FileLocation`; an array-wrapped payload; and a no-op update writing the current `DisplayName` back onto a pre-existing (non-probe) item. There is no static `Portfolio.Update` either — that identifier is `undefined`.
+
+```javascript
+Platform.Load("core", "1.1.5");
+
+// ❌ returns "Error" (or throws "Error Updating Portfolio") for every payload shape
+var portObj = Portfolio.Init("myPortfolioCK");
+var status = portObj.Update({ DisplayName: "Updated name" });
+
+// ✅ delete and re-create instead
+Portfolio.Init("myPortfolioCK").Remove();
+Portfolio.Add({
+    DisplayName: "Updated name",
+    CustomerKey: "myPortfolioCK",
+    CategoryID: 12345,
+    FileName: "logo.png",
+    FileLocation: "https://www.example.com/logo.png"
+});
+```
+
+`Portfolio` is a retired **Classic Content** feature in any case — for new work use the Content Builder Asset REST endpoints instead.
+
+**Works correctly:** [`<PortfolioInstance>.Remove()`](/core-library/portfolio/#instance-remove) followed by [`Portfolio.Add()`](/core-library/portfolio/#add). See also [Differs from Official Docs](/engine-limitations/differs-from-docs/#portfolioinstance-update).

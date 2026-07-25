@@ -8,6 +8,11 @@ verification: verified
 deprecated: true
 requires_core_load: true
 differs_from_docs: true
+type_mapping:
+  ssjs: "Email"
+  soap: "Email"
+  mcdev: "email"
+  gui: "E-Mail (Classic)"
 ---
 
 {% include callout.html type="warning" content="**Deprecated.** The `Email` object manages **classic Email Studio** email messages (the legacy email type). It still works at runtime, but classic emails are legacy — prefer **Content Builder** `htmlemail` assets and the modern send methods for new development." %}

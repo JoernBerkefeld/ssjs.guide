@@ -974,7 +974,7 @@
     "url": "/platform-objects/platform-response/#redirect",
     "section": "Platform Objects",
     "type": "method",
-    "description": "Redirects the current page to a new URL.",
+    "description": "Redirects the current page to a new URL and stops script execution immediately.",
     "params": [
       "url",
       "movedPermanently"
@@ -1022,16 +1022,16 @@
     "url": "/platform-objects/platform-response/#contenttype",
     "section": "Platform Objects",
     "type": "property",
-    "description": "Gets or sets the Content-Type of the HTTP response.",
-    "returnType": "string"
+    "description": "Sets the Content-Type of the HTTP response.",
+    "returnType": "void"
   },
   {
     "name": "Platform.Response.CharacterSet",
     "url": "/platform-objects/platform-response/#characterset",
     "section": "Platform Objects",
     "type": "property",
-    "description": "Gets or sets the character set of the HTTP response.",
-    "returnType": "string"
+    "description": "Sets the character set of the HTTP response.",
+    "returnType": "void"
   },
   {
     "name": "Platform.Request.GetQueryStringParameter",
@@ -1101,7 +1101,7 @@
     "url": "/platform-objects/platform-request/#browser",
     "section": "Platform Objects",
     "type": "property",
-    "description": "Returns an object describing the client browser.",
+    "description": "Returns an object describing the client browser, parsed from the User-Agent request header.",
     "returnType": "object"
   },
   {
@@ -1848,7 +1848,7 @@
     "url": "/core-library/subscriber/#instance-statistics",
     "section": "Core Library",
     "type": "method",
-    "description": "Retrieves statistical data for the initialized subscriber (sends, opens, clicks, bounces, unsubscribes).",
+    "description": "Retrieves statistical data for the initialized subscriber (sends, opens, clicks).",
     "returnType": "object"
   },
   {
@@ -2040,7 +2040,7 @@
     "params": [
       "properties"
     ],
-    "returnType": "string"
+    "returnType": "object"
   },
   {
     "name": "SendClassification.Retrieve",
@@ -2231,7 +2231,7 @@
       "emailKey",
       "listIds"
     ],
-    "returnType": "string"
+    "returnType": "object"
   },
   {
     "name": "Send.Definition.AddWithDE",
@@ -2246,7 +2246,7 @@
       "sendableDataExtensionKey",
       "publicationListKey"
     ],
-    "returnType": "string"
+    "returnType": "object"
   },
   {
     "name": "Send.Definition.AddWithFilterDefinition",
@@ -2261,7 +2261,7 @@
       "filterDefinitionKey",
       "listId"
     ],
-    "returnType": "string"
+    "returnType": "never"
   },
   {
     "name": "Send.Definition.Retrieve",
@@ -2299,6 +2299,17 @@
     "section": "Core Library",
     "type": "method",
     "description": "Sends email messages to the lists associated with the previously initialized send definition.",
+    "returnType": "string"
+  },
+  {
+    "name": "Send.Definition.TestSend",
+    "url": "/core-library/senddefinition/#instance-testsend",
+    "section": "Core Library",
+    "type": "method",
+    "description": "Sends a test version of the previously initialized send definition.",
+    "params": [
+      "emailAddress"
+    ],
     "returnType": "string"
   },
   {
@@ -2377,7 +2388,8 @@
     "description": "Sends an email using the previously initialized triggered send definition.",
     "params": [
       "emailAddress",
-      "sendTimeAttributes"
+      "sendTimeAttributes",
+      "subscriberKey"
     ],
     "returnType": "string"
   },

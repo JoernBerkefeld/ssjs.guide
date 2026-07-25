@@ -20,13 +20,13 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`Account.Init(key)`](/core-library/account/#init) | Core Library | AccountInstance | Initialize Account |
 | [`Account.Retrieve(filter)`](/core-library/account/#retrieve) | Core Library | object[] | Retrieve accounts |
 | [`Account.Tracking.Retrieve(filter)`](/core-library/account/#tracking-retrieve) | Core Library | object[] | Account-level tracking |
-| [`<AccountInstance>.Update(properties)`](/core-library/account/#instance-update) | Core Library | string | Update account |
+| [`<AccountInstance>.Update(properties)`](/core-library/account/#instance-update) | Core Library | string | ❌ Update account — no working runtime invocation |
 | [`AccountUser.Init(targetUserKey, myClientID)`](/core-library/accountuser/#init) | Core Library | AccountUserInstance | Initialize AccountUser |
-| [`AccountUser.Add(properties)`](/core-library/accountuser/#add) | Core Library | string | Create AccountUser |
+| [`AccountUser.Add(properties)`](/core-library/accountuser/#add) | Core Library | string | ❌ Create AccountUser — no working runtime invocation |
 | [`AccountUser.Retrieve(filter)`](/core-library/accountuser/#retrieve) | Core Library | object[] | Retrieve AccountUsers |
-| [`<AccountUserInstance>.Update(properties)`](/core-library/accountuser/#instance-update) | Core Library | string | Update AccountUser |
-| [`<AccountUserInstance>.Activate()`](/core-library/accountuser/#instance-activate) | Core Library | string | Activate AccountUser |
-| [`<AccountUserInstance>.Deactivate()`](/core-library/accountuser/#instance-deactivate) | Core Library | string | Deactivate AccountUser |
+| [`<AccountUserInstance>.Update(properties)`](/core-library/accountuser/#instance-update) | Core Library | string | ❌ Update AccountUser — no working runtime invocation |
+| [`<AccountUserInstance>.Activate()`](/core-library/accountuser/#instance-activate) | Core Library | string | ❌ Activate AccountUser — no working runtime invocation |
+| [`<AccountUserInstance>.Deactivate()`](/core-library/accountuser/#instance-deactivate) | Core Library | string | ❌ Deactivate AccountUser — no working runtime invocation |
 | [`AggregateError([errors[, message]])`](/ecmascript-builtins/error-types/#aggregateerror) | ECMAScript Builtins | Error | ❌ Missing (ES2021) — use the base `Error` constructor |
 | [`AsyncFunction` / `AsyncGenerator` / `AsyncIterator`](/ecmascript-builtins/promises-iteration/#async-variants) | ECMAScript Builtins | — | ❌ Missing (ES2017+) — engine is synchronous; no `async`/`await` |
 | [`ArrayBuffer(byteLength)`](/ecmascript-builtins/typed-arrays/#arraybuffer) | ECMAScript Builtins | — | ❌ Missing (ES6) — no binary buffers; use arrays or Base64 |
@@ -101,6 +101,8 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`Platform.Function.ContentImageByID(id[, fallbackId])`](/platform-functions/contentimagebyid/) | Platform Functions | string | img tag for Content Builder image by ID |
 | [`Platform.Function.ContentImageByKey(key[, fallbackId])`](/platform-functions/contentimagebykey/) | Platform Functions | string | img tag for Content Builder image by key |
 | [`Platform.Function.CreateObject(objectType)`](/platform-functions/createobject/) | Platform Functions | object | Create SOAP API object (legacy) |
+| [`Platform.Response.CharacterSet`](/platform-objects/platform-response/#characterset) | Platform Response | write-only | ⚠️ Set the response charset — reading it throws |
+| [`Platform.Response.ContentType`](/platform-objects/platform-response/#contenttype) | Platform Response | write-only | ⚠️ Set the response `Content-Type` — reading it throws |
 | [`ClickEvent.Retrieve(filter)`](/core-library/events/#click-event) | Core Library | object[] | Click tracking events |
 | [`ContentAreaObj.Init(key)`](/core-library/contentareaobj/#init) | Core Library | ContentAreaObjInstance | Classic Content Area object (**deprecated**) |
 | [`ContentAreaObj.Add(properties)`](/core-library/contentareaobj/#add) | Core Library | string | Create Content Area (**deprecated**) |
@@ -114,7 +116,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`DateTime.TimeZone.Retrieve(filter)`](/core-library/datetime/#timezone-retrieve) | Core Library | object[] | Time zone definitions |
+| [`DateTime.TimeZone.Retrieve([filter])`](/core-library/datetime/#timezone-retrieve) | Core Library | object[] | Time zone definitions — omit the filter for all time zones |
 | [`DateTime.LocalDateToSystemDate(dateString)`](/core-library/datetime/#localdatetosystemdate) | Core Library | string | Local account/user time to system time (CST) |
 | [`DateTime.SystemDateToLocalDate(dateString)`](/core-library/datetime/#systemdatetolocaldate) | Core Library | string | System time (CST) to local account/user time |
 | [`Date.now()`](/ecmascript-builtins/date-methods/#now) | ECMAScript Builtins | object | ⚠️ Returns a **Date object** in SFMC, not a number — use `new Date().getTime()` (static) |
@@ -198,10 +200,10 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`FinalizationRegistry(callback)`](/ecmascript-builtins/memory-management/#finalizationregistry) | ECMAScript Builtins | — | ❌ Missing (ES2021) — no GC callbacks |
 | [`Float16Array` / `Float32Array` / `Float64Array`](/ecmascript-builtins/typed-arrays/#float32array) | ECMAScript Builtins | — | ❌ Missing (ES6+) — no typed arrays |
 | [`FilterDefinition.Init(key)`](/core-library/filterdefinition/#init) | Core Library | FilterDefinitionInstance | Initialize filter definition |
-| [`FilterDefinition.Add(properties)`](/core-library/filterdefinition/#add) | Core Library | string | Create filter definition |
+| [`FilterDefinition.Add(properties)`](/core-library/filterdefinition/#add) | Core Library | string | ⚠️ Create filter definition — works for simple filters; complex shapes throw "Error adding FilterDefinition" |
 | [`FilterDefinition.Retrieve(filter)`](/core-library/filterdefinition/#retrieve) | Core Library | object[] | Retrieve filter definitions |
-| [`<FilterDefinitionInstance>.Update(properties)`](/core-library/filterdefinition/#instance-update) | Core Library | string | Update filter definition |
-| [`<FilterDefinitionInstance>.Remove()`](/core-library/filterdefinition/#instance-remove) | Core Library | string | Remove filter definition |
+| [`<FilterDefinitionInstance>.Update(properties)`](/core-library/filterdefinition/#instance-update) | Core Library | string | ❌ Update filter definition — no working runtime invocation |
+| [`<FilterDefinitionInstance>.Remove()`](/core-library/filterdefinition/#instance-remove) | Core Library | string | ❌ Remove filter definition — no working runtime invocation |
 | [`Folder.Init([key])`](/core-library/folder/#init) | Core Library | FolderInstance | Initialize Folder |
 | [`Folder.Add(properties)`](/core-library/folder/#add) | Core Library | string | Create folder |
 | [`Folder.Retrieve(filter)`](/core-library/folder/#retrieve) | Core Library | object[] | Retrieve folders |
@@ -441,8 +443,8 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`Platform.Recipient.*`](/platform-objects/platform-recipient/) | Platform Object | various | Current-recipient attributes |
 | [`Portfolio.Init(key)`](/core-library/portfolio/#init) | Core Library | PortfolioInstance | Initialize Portfolio |
 | [`Portfolio.Add(properties)`](/core-library/portfolio/#add) | Core Library | string | Create portfolio asset |
-| [`Portfolio.Retrieve(filter)`](/core-library/portfolio/#retrieve) | Core Library | object[] | Retrieve portfolio assets |
-| [`<PortfolioInstance>.Update(properties)`](/core-library/portfolio/#instance-update) | Core Library | string | Update portfolio asset |
+| [`Portfolio.Retrieve([filter])`](/core-library/portfolio/#retrieve) | Core Library | object[] | Retrieve portfolio assets |
+| [`<PortfolioInstance>.Update(properties)`](/core-library/portfolio/#instance-update) | Core Library | string | ❌ Update portfolio asset — no working runtime invocation |
 | [`<PortfolioInstance>.Remove()`](/core-library/portfolio/#instance-remove) | Core Library | string | Remove portfolio asset |
 | [`<WSProxyInstance>.createItem(objectType, properties)`](/wsproxy/createitem/) | WSProxy | object | SOAP Create |
 | [`<WSProxyInstance>.updateItem(objectType, properties)`](/wsproxy/updateitem/) | WSProxy | object | SOAP Update |
@@ -484,7 +486,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`Platform.Function.RaiseError(message[, currentRecipientOnly[, errorCode[, errorNumber]]])`](/platform-functions/raiseerror/) | Platform Functions | void | Halt execution with error |
 | [`Platform.Function.RedirectTo(url)`](/platform-functions/redirectto/) | Platform Functions | void | Email href redirect helper |
 | [`Redirect(url, movedPermanently)`](/core-library/redirect/) | Core Library | void | Redirect the browser |
-| [`Platform.Response.Redirect(url, movedPermanently)`](/platform-objects/platform-response/#redirect) | Platform Response | void | Redirect the browser |
+| [`Platform.Response.Redirect(url[, movedPermanently])`](/platform-objects/platform-response/#redirect) | Platform Response | void | Redirect the browser — ends the script immediately |
 | [`Platform.Response.RemoveCookie(name)`](/platform-objects/platform-response/#removecookie) | Platform Response | void | Remove a cookie |
 | [`Platform.Response.RemoveResponseHeader(headerName)`](/platform-objects/platform-response/#removeresponseheader) | Platform Response | void | Remove a response header |
 | [`Request.URL() / PagePath() / Method() / ApplicationID() / PackageID() / ApplicationBaseURL()`](/core-library/request/) | Core Library | string | Read request values via the Core Library utility methods. A **distinct** object from `Platform.Request`, not an alias — smaller method-only set. |
@@ -541,13 +543,14 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`<SendClassificationInstance>.Update(properties)`](/core-library/sendclassification/#instance-update) | Core Library | string | Update send classification |
 | [`<SendClassificationInstance>.Remove()`](/core-library/sendclassification/#instance-remove) | Core Library | string | Remove send classification |
 | [`Send.Definition.Init(key)`](/core-library/senddefinition/#init) | Core Library | SendDefinitionInstance | Initialize send definition |
-| [`Send.Definition.Add(esdParams, sendClassificationKey, emailKey, listIds)`](/core-library/senddefinition/#add) | Core Library | SendDefinitionInstance | Create send definition |
-| [`Send.Definition.AddWithDE(esdParams, sendClassificationKey, emailKey, sendableDataExtensionKey, publicationListKey)`](/core-library/senddefinition/#addwithde) | Core Library | SendDefinitionInstance | Create send def with DE |
-| [`Send.Definition.AddWithFilterDefinition(esdParams, sendClassificationKey, emailKey, filterDefinitionKey, listId)`](/core-library/senddefinition/#addwithfilterdefinition) | Core Library | SendDefinitionInstance | Create send def with filter |
+| [`Send.Definition.Add(esdParams, sendClassificationKey, emailKey, listIds)`](/core-library/senddefinition/#add) | Core Library | object | ⚠️ Create send definition — returns a CLR object, not `"OK"`; throws a plain string on failure |
+| [`Send.Definition.AddWithDE(esdParams, sendClassificationKey, emailKey, sendableDataExtensionKey)`](/core-library/senddefinition/#addwithde) | Core Library | object | ⚠️ Create send def with DE — only works when the documented 5th argument is omitted |
+| [`Send.Definition.AddWithFilterDefinition(esdParams, sendClassificationKey, emailKey, filterDefinitionKey, listId)`](/core-library/senddefinition/#addwithfilterdefinition) | Core Library | never | ❌ Create send def with filter — always throws "Error adding EmailSendDefinition." even when the record is created |
 | [`Send.Definition.Retrieve([filter])`](/core-library/senddefinition/#retrieve) | Core Library | object[] | Retrieve send definitions |
-| [`<SendDefinitionInstance>.Update(properties)`](/core-library/senddefinition/#instance-update) | Core Library | string | Update send definition |
+| [`<SendDefinitionInstance>.Update(properties)`](/core-library/senddefinition/#instance-update) | Core Library | string | ⚠️ Update send definition — scalar properties only; nested properties throw "Error Updating ESD." |
 | [`<SendDefinitionInstance>.Remove()`](/core-library/senddefinition/#instance-remove) | Core Library | string | Remove send definition |
-| [`<SendDefinitionInstance>.Send()`](/core-library/senddefinition/#instance-send) | Core Library | string | Execute send definition |
+| [`<SendDefinitionInstance>.Send()`](/core-library/senddefinition/#instance-send) | Core Library | string | ⚠️ Execute send definition — returns error text instead of throwing; compare against `"OK"` |
+| [`<SendDefinitionInstance>.TestSend([emailAddress])`](/core-library/senddefinition/#instance-testsend) | Core Library | string | ❌ Test send — undocumented; no working runtime invocation |
 | [`Send.Init(id)`](/core-library/send/#init) | Core Library | SendInstance | Initialize send |
 | [`Send.Add(emailKey, listIds, [options])`](/core-library/send/#add) | Core Library | SendInstance | Create send |
 | [`Send.Retrieve(filter)`](/core-library/send/#retrieve) | Core Library | object[] | Retrieve sends |

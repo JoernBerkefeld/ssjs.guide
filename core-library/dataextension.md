@@ -7,6 +7,11 @@ description: Initialize a Data Extension object for row-level CRUD operations. T
 verification: verified
 differs_from_docs: true
 requires_core_load: true
+type_mapping:
+  ssjs: "DataExtension"
+  soap: "DataExtension"
+  mcdev: "dataExtension"
+  gui: "Data Extension"
 ---
 
 `DataExtension` is a Core library object that provides object-oriented access to Data Extensions. Initialize it with `DataExtension.Init()`, then use the `.Rows` and `.Fields` properties.
