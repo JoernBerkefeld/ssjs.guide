@@ -1903,7 +1903,8 @@
     "params": [
       "key"
     ],
-    "returnType": "TemplateInstance"
+    "returnType": "TemplateInstance",
+    "deprecated": true
   },
   {
     "name": "Template.Add",
@@ -1914,7 +1915,8 @@
     "params": [
       "properties"
     ],
-    "returnType": "string"
+    "returnType": "string",
+    "deprecated": true
   },
   {
     "name": "Template.Retrieve",
@@ -1925,7 +1927,8 @@
     "params": [
       "filter"
     ],
-    "returnType": "object[]"
+    "returnType": "object[]",
+    "deprecated": true
   },
   {
     "name": "Template.Update",
@@ -1936,7 +1939,8 @@
     "params": [
       "properties"
     ],
-    "returnType": "string"
+    "returnType": "string",
+    "deprecated": true
   },
   {
     "name": "DeliveryProfile.Init",
@@ -2144,7 +2148,8 @@
     "params": [
       "id"
     ],
-    "returnType": "SendInstance"
+    "returnType": "SendInstance",
+    "deprecated": true
   },
   {
     "name": "Send.Add",
@@ -2157,7 +2162,8 @@
       "listIds",
       "options"
     ],
-    "returnType": "string"
+    "returnType": "string",
+    "deprecated": true
   },
   {
     "name": "Send.Retrieve",
@@ -2168,7 +2174,8 @@
     "params": [
       "filter"
     ],
-    "returnType": "object[]"
+    "returnType": "object[]",
+    "deprecated": true
   },
   {
     "name": "Send.RetrieveLists",
@@ -2179,7 +2186,8 @@
     "params": [
       "filter"
     ],
-    "returnType": "object[]"
+    "returnType": "object[]",
+    "deprecated": true
   },
   {
     "name": "Send.Remove",
@@ -2187,7 +2195,8 @@
     "section": "Core Library",
     "type": "method",
     "description": "Removes the previously initialized send.",
-    "returnType": "string"
+    "returnType": "string",
+    "deprecated": true
   },
   {
     "name": "Send.CancelSend",
@@ -2195,7 +2204,8 @@
     "section": "Core Library",
     "type": "method",
     "description": "Attempts to cancel the previously initialized send.",
-    "returnType": "string"
+    "returnType": "string",
+    "deprecated": true
   },
   {
     "name": "Send.Tracking.Retrieve",
@@ -2217,7 +2227,8 @@
     "params": [
       "key"
     ],
-    "returnType": "SendDefinitionInstance"
+    "returnType": "SendDefinitionInstance",
+    "deprecated": true
   },
   {
     "name": "Send.Definition.Add",
@@ -2231,7 +2242,8 @@
       "emailKey",
       "listIds"
     ],
-    "returnType": "object"
+    "returnType": "object",
+    "deprecated": true
   },
   {
     "name": "Send.Definition.AddWithDE",
@@ -2246,7 +2258,8 @@
       "sendableDataExtensionKey",
       "publicationListKey"
     ],
-    "returnType": "object"
+    "returnType": "object",
+    "deprecated": true
   },
   {
     "name": "Send.Definition.AddWithFilterDefinition",
@@ -2261,7 +2274,8 @@
       "filterDefinitionKey",
       "listId"
     ],
-    "returnType": "never"
+    "returnType": "never",
+    "deprecated": true
   },
   {
     "name": "Send.Definition.Retrieve",
@@ -2272,7 +2286,8 @@
     "params": [
       "filter"
     ],
-    "returnType": "object[]"
+    "returnType": "object[]",
+    "deprecated": true
   },
   {
     "name": "Send.Definition.Update",
@@ -2283,7 +2298,8 @@
     "params": [
       "properties"
     ],
-    "returnType": "string"
+    "returnType": "string",
+    "deprecated": true
   },
   {
     "name": "Send.Definition.Remove",
@@ -2291,7 +2307,8 @@
     "section": "Core Library",
     "type": "method",
     "description": "Deletes the previously initialized send definition.",
-    "returnType": "string"
+    "returnType": "string",
+    "deprecated": true
   },
   {
     "name": "Send.Definition.Send",
@@ -2299,7 +2316,8 @@
     "section": "Core Library",
     "type": "method",
     "description": "Sends email messages to the lists associated with the previously initialized send definition.",
-    "returnType": "string"
+    "returnType": "string",
+    "deprecated": true
   },
   {
     "name": "Send.Definition.TestSend",
@@ -2310,7 +2328,8 @@
     "params": [
       "emailAddress"
     ],
-    "returnType": "string"
+    "returnType": "string",
+    "deprecated": true
   },
   {
     "name": "TriggeredSend.Init",
@@ -2689,7 +2708,8 @@
     "url": "/core-library/email/",
     "section": "Core Library",
     "type": "object",
-    "description": "Manages classic Email Studio email message definitions."
+    "description": "Manages classic Email Studio email message definitions.",
+    "deprecated": true
   },
   {
     "name": "TriggeredSend",
@@ -2745,7 +2765,8 @@
     "url": "/core-library/contentareaobj/",
     "section": "Core Library",
     "type": "object",
-    "description": "Manages classic content area objects."
+    "description": "Manages classic content area objects.",
+    "deprecated": true
   },
   {
     "name": "Folder",
@@ -2766,7 +2787,8 @@
     "url": "/core-library/send/",
     "section": "Core Library",
     "type": "object",
-    "description": "Manages email sends."
+    "description": "Manages email sends.",
+    "deprecated": true
   },
   {
     "name": "Send.Tracking",
@@ -2794,14 +2816,16 @@
     "url": "/core-library/senddefinition/",
     "section": "Core Library",
     "type": "object",
-    "description": "Manages reusable Send Definition configurations that define all parameters for a send including content, audience, and delivery settings."
+    "description": "Manages reusable Send Definition configurations that define all parameters for a send including content, audience, and delivery settings.",
+    "deprecated": true
   },
   {
     "name": "Template",
     "url": "/core-library/template/",
     "section": "Core Library",
     "type": "object",
-    "description": "Manages email template definitions."
+    "description": "Manages email template definitions.",
+    "deprecated": true
   },
   {
     "name": "DeliveryProfile",
@@ -2857,7 +2881,8 @@
     "url": "/core-library/portfolio/",
     "section": "Core Library",
     "type": "object",
-    "description": "Manages portfolio (file) items in the account."
+    "description": "Manages portfolio (file) items in the account.",
+    "deprecated": true
   },
   {
     "name": "BounceEvent",
