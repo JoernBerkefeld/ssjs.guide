@@ -6,15 +6,16 @@ parent_url: /core-library/
 description: Legacy ContentAreaObj Core library (deprecated) — classic Content Areas; prefer Content Builder.
 requires_core_load: true
 verification: verified
+deprecated: true
 differs_from_docs: true
 type_mapping:
   ssjs: "ContentAreaObj"
   soap: "ContentArea"
   mcdev: "contentArea"
-  gui: "Content Area (Classic)"
+  gui: "Content Area"
 ---
 
-{% include callout.html type="warning" content="**Deprecated.** Content Areas are a legacy Classic Content feature. Prefer Content Builder assets for new development." %}
+{% include callout.html type="warning" content="**Deprecated.** `ContentAreaObj` is a legacy **Classic Content** / **Classic Email Studio** feature. Salesforce retired classic content creation and editing (Classic Content reached end of life on 24 Apr 2023), and **Content Builder** is now the single cross-channel content repository. SOAP-era ContentAreaObj integrations only operate on the old Classic tools — prefer **Content Builder** assets (Asset REST endpoints) for new development." %}
 
 `ContentAreaObj` targets **legacy Content Areas** (`Init`, `Add`, `Retrieve`, `Update`, `Remove`). Use only when you must support older assets; new development should use Content Builder.
 

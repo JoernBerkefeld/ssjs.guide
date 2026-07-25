@@ -5,6 +5,7 @@ parent: Core Library
 parent_url: /core-library/
 description: Core library Send — create and manage sends, cancel a send, and retrieve aggregate or per-send tracking.
 verification: verified
+deprecated: true
 differs_from_docs: true
 requires_core_load: true
 type_mapping:
@@ -13,6 +14,8 @@ type_mapping:
   mcdev: "-"
   gui: "User-Initiated Email"
 ---
+
+{% include callout.html type="warning" content="**Deprecated.** `Send` is a legacy **Classic Content** / **Classic Email Studio** feature. Salesforce retired classic content creation and editing (Classic Content reached end of life on 24 Apr 2023), and **Content Builder** is now the single cross-channel content repository. SOAP-era Send integrations only operate on the old Classic tools — prefer **Content Builder** assets (Asset REST endpoints) for new development." %}
 
 The `Send` namespace covers **user-initiated sends**: creating sends from an email and lists, retrieving send rows, listing targeted lists, canceling a send, and accessing tracking (including static `Send.Tracking.Retrieve` and instance helpers on `send.Tracking`).
 

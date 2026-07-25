@@ -5,14 +5,17 @@ parent: Core Library
 parent_url: /core-library/
 description: Core library namespace Send.Definition — create, configure, query, update, remove, and execute user-initiated send definitions.
 verification: verified
+deprecated: true
 differs_from_docs: true
 requires_core_load: true
 type_mapping:
   ssjs: "Send.Definition"
-  soap: "EmailSendDefinition"
-  mcdev: "emailSend"
-  gui: "E-Mail Send Definition"
+  soap: "SendDefinition"
+  mcdev: "-"
+  gui: "Send Definition"
 ---
+
+{% include callout.html type="warning" content="**Deprecated.** `SendDefinition` is a legacy **Classic Content** / **Classic Email Studio** feature. Salesforce retired classic content creation and editing (Classic Content reached end of life on 24 Apr 2023), and **Content Builder** is now the single cross-channel content repository. SOAP-era SendDefinition integrations only operate on the old Classic tools — prefer **Content Builder** assets (Asset REST endpoints) for new development." %}
 
 `Send.Definition` is the Core library namespace for **Email Studio send definitions** (reusable send configurations). Call static methods without an instance, or use `Send.Definition.Init` when you need instance methods (`Update`, `Remove`, `Send`).
 

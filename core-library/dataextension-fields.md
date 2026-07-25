@@ -7,6 +7,11 @@ description: After DataExtension.Init — add fields, retrieve field definitions
 verification: verified
 requires_core_load: true
 differs_from_docs: true
+type_mapping:
+  ssjs: "DataExtension.Fields"
+  soap: "DataExtensionField"
+  mcdev: "dataExtensionField"
+  gui: "Data Extension Fields"
 ---
 
 Use **`DataExtension.Init`** first, then **`de.Fields`** to manage columns: add fields, list definitions, or change which field maps to subscribers for sendable DEs.

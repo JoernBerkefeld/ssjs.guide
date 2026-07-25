@@ -12,10 +12,10 @@ type_mapping:
   ssjs: "Email"
   soap: "Email"
   mcdev: "email"
-  gui: "E-Mail (Classic)"
+  gui: "E-Mail"
 ---
 
-{% include callout.html type="warning" content="**Deprecated.** The `Email` object manages **classic Email Studio** email messages (the legacy email type). It still works at runtime, but classic emails are legacy — prefer **Content Builder** `htmlemail` assets and the modern send methods for new development." %}
+{% include callout.html type="warning" content="**Deprecated.** `Email` is a legacy **Classic Content** / **Classic Email Studio** feature. Salesforce retired classic content creation and editing (Classic Content reached end of life on 24 Apr 2023), and **Content Builder** is now the single cross-channel content repository. SOAP-era Email integrations only operate on the old Classic tools — prefer **Content Builder** assets (Asset REST endpoints) for new development." %}
 
 The `Email` Core library object provides programmatic management of classic Email Studio email message assets. Use it to create, retrieve, update, remove, validate, and check content of classic email messages. It does **not** manage Content Builder `htmlemail` assets.
 
