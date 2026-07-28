@@ -33,7 +33,7 @@ The ECMAScript **`Boolean`** constructor works in SSJS, but the SFMC Jint engine
 
 ## Boolean(value) — coercion {#boolean-coercion}
 
-`(ES3)` — ⚠️ Partial. {% include method-status.html status="verified" differs=true %} Called as a plain function, `Boolean(value)` returns a primitive `boolean` (`typeof` is `"boolean"`). The classification is correct for the common cases, but the engine treats a number as truthy only when it is **greater than zero**, so every negative number is falsy. An empty array is also falsy, because objects are coerced through `ToPrimitive` first.
+`(ES3)` — ⚠️ Partial. Called as a plain function, `Boolean(value)` returns a primitive `boolean` (`typeof` is `"boolean"`). The classification is correct for the common cases, but the engine treats a number as truthy only when it is **greater than zero**, so every negative number is falsy. An empty array is also falsy, because objects are coerced through `ToPrimitive` first.
 
 ```javascript
 Boolean(1);        // true
@@ -66,7 +66,7 @@ true.toString();         // "true"  — a literal does work
 
 ## new Boolean(value) — boxed object {#boolean-boxed}
 
-`(ES3)` — ⚠️ Partial. {% include method-status.html status="verified" differs=true %} `new Boolean(value)` creates a boxed `Boolean` object (`typeof` is `"object"`), but almost every observable behaviour deviates from the specification: the string form is capitalized, a boxed `false` is **falsy** (in standard JavaScript every object is truthy), `.valueOf()` returns the boxed object rather than the wrapped primitive, and `instanceof Boolean` is `false`. Avoid this form entirely — use `Boolean(value)` or `!!value`.
+`(ES3)` — ⚠️ Partial. `new Boolean(value)` creates a boxed `Boolean` object (`typeof` is `"object"`), but almost every observable behaviour deviates from the specification: the string form is capitalized, a boxed `false` is **falsy** (in standard JavaScript every object is truthy), `.valueOf()` returns the boxed object rather than the wrapped primitive, and `instanceof Boolean` is `false`. Avoid this form entirely — use `Boolean(value)` or `!!value`.
 
 ```javascript
 var b = new Boolean(false);
