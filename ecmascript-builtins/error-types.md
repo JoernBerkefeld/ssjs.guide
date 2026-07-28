@@ -39,13 +39,15 @@ All seven present constructors (`Error`, `EvalError`, `RangeError`, `ReferenceEr
 
 - `new SubType("msg")` and `SubType("msg")` (without `new`) both return an `object`.
 - `.name` correctly reflects the subtype (e.g. `"TypeError"`, `"RangeError"`).
-- **`.message` reads back `undefined`** — the constructor argument is lost. Recover it with `String(err)` or `("" + err)`; `err.toString()` returns `"<name>: undefined"`.
-- `.description` is `undefined`.
-- `Stringify(err)` returns `{}` (empty) for a JS-constructed subtype.
+- **`new SubType("msg")` leaves `.message` unset** (`undefined`, not own). Recover with `String(err)` or `("" + err)`; `err.toString()` returns `"<name>: undefined"`.
+- **Call-form `SubType("msg")` does set `.message`** to the argument (same split as base `Error`).
+- `.description` is unset on JS-constructed subtypes; engine-raised errors may set it.
+- `Stringify(err)` returns `{}` for `new SubType(...)`, and `{"message":"..."}` for call-form.
+- `instanceof SubType` and `instanceof Error` are both **`false`** — detect via `err.name`.
 
 {% include differs-from-mdn.html content="In standard JavaScript a caught error is an instance of its constructor and of Error, but in the SFMC (Jint) engine `instanceof` returns false for both — e.g. `caught instanceof RangeError` and `caught instanceof Error` are both false even when the caught value was created with `new RangeError(...)`. Detect the type via `err.name` instead of `instanceof`." %}
 
-{% include differs-from-mdn.html content="In standard JavaScript `new TypeError(\"msg\").message` returns `\"msg\"`, but in the SFMC engine every JS-constructed error subtype reports `.message` as `undefined`; the message is only recoverable via `String(err)` or `(\"\" + err)`." %}
+{% include differs-from-mdn.html content="In standard JavaScript `new TypeError(\"msg\").message` returns `\"msg\"`, but in the SFMC engine `new SubType(\"msg\")` leaves `.message` undefined. Call-form `SubType(\"msg\")` does set `.message`. After `new`, recover the text with `String(err)` or `(\"\" + err)`." %}
 
 ## EvalError {#evalerror}
 
@@ -54,7 +56,7 @@ All seven present constructors (`Error`, `EvalError`, `RangeError`, `ReferenceEr
 ```javascript
 var e = new EvalError("bad eval");
 Write(e.name);       // "EvalError"
-Write(String(e));    // "bad eval"  (e.message is undefined)
+Write(String(e));    // "bad eval"  (e.message is undefined after new)
 ```
 
 ## RangeError {#rangeerror}
@@ -87,7 +89,7 @@ Write(e.name);       // "SyntaxError"
 
 ## TypeError {#typeerror}
 
-`(ES3)` — ✅ Present. Constructible; `.name` is `"TypeError"`. The most useful subtype for guarding against wrong argument types in your own helpers.
+`(ES3)` — ✅ Present. Constructible; `.name` is `"TypeError"`. The most useful subtype for guarding against wrong argument types in your own helpers. Engine-raised platform errors often report `.name === "TypeError"` with a readable `.message`.
 
 ```javascript
 function requireString(v) {
