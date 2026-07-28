@@ -1,7 +1,7 @@
 - name: "Error"
   url: "/ecmascript-builtins/error/"
   officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error"
-  tagline: "new Error(\"msg\") does not expose .message"
+  tagline: "new Error(\"msg\") leaves .message unset; call-form sets it; instanceof always false"
   part: "ecmascript"
   category: "ECMAScript Builtins"
   object: "Error"
@@ -9,23 +9,25 @@
   discrepancy: "A4"
   anchor: "error-new-error-msg-does-not-expose-message"
   body: |
-    Unlike standard JavaScript, a JS-constructed `new Error("msg")` in the SFMC Jint engine does **not** expose the message via `.message` — `err.message` reads back `undefined`, and `Stringify(err)` returns an empty `{}` (the underlying `{jintException}` / .NET stack is hidden), not the message. Recover the message with `String(err)` or `("" + err)` (both yield the constructor argument), or `err.toString()` (yields `"Error: undefined"`). This differs from **engine-raised** errors, which DO carry `.message` + `.description`. Do not rely on `new Error(...).message`.
+    Unlike standard JavaScript, `new Error("msg")` in the SFMC Jint engine does **not** populate `.message` — it reads back `undefined` (not an own property). Recover with `String(err)` or `("" + err)`; `err.toString()` yields `"Error: undefined"`. **Call-form** `Error("msg")` **does** set `.message`, and **engine-raised** errors set `.message` plus `.description`. `instanceof Error` is always `false` (even for `new Error(...)`); for JS-constructed errors use `err.constructor === Error` or `err.name`. The same `new` vs call-form split applies to every legacy subtype (`EvalError`, `RangeError`, `ReferenceError`, `SyntaxError`, `TypeError`, `URIError`).
   testScript: |
     <script runat="server">
     Platform.Load("core","1.1.5");
-    // Build a JS Error and inspect how the engine exposes its message
+    // new Error — message unset; String recovers it
     try {
       var err = new Error("boom");
-      // OBSERVED (SFMC): message: undefined (not "boom")
-      Platform.Response.Write("message: " + err.message + "\n");
-      // OBSERVED (SFMC): stringify: {} (empty object - the {jintException}/.NET stack is hidden, message not surfaced)
-      Platform.Response.Write("stringify: " + Platform.Function.Stringify(err) + "\n");
-      // OBSERVED (SFMC): String(err): boom and concat: boom (both recover the constructor argument)
-      Platform.Response.Write("String(err): " + String(err) + "\n");
-      Platform.Response.Write("concat: " + ("" + err) + "\n");
-      // OBSERVED (SFMC): toString: Error: undefined
-      Platform.Response.Write("toString: " + err.toString() + "\n");
+      Platform.Response.Write("new.message: " + err.message + "\n");
+      Platform.Response.Write("new.String: " + String(err) + "\n");
+      Platform.Response.Write("new.toString: " + err.toString() + "\n");
+      Platform.Response.Write("new instanceof Error: " + (err instanceof Error) + "\n");
+      Platform.Response.Write("new.constructor===Error: " + (err.constructor === Error) + "\n");
     } catch (e) { Platform.Response.Write("ERROR: " + Platform.Function.Stringify(e) + "\n"); }
+    // call-form — message IS set
+    try {
+      var c = Error("call-boom");
+      Platform.Response.Write("call.message: " + c.message + "\n");
+      Platform.Response.Write("call.Stringify: " + Platform.Function.Stringify(c) + "\n");
+    } catch (e2) { Platform.Response.Write("ERROR: " + Platform.Function.Stringify(e2) + "\n"); }
     </script>
 
 - name: "HTTPHeader (bare-name global)"
@@ -3665,7 +3667,7 @@
       Platform.Response.Write("global NaN=" + NaN + " | global Infinity=" + Infinity + "\n");
     } catch (e) { Platform.Response.Write("ERROR: " + Platform.Function.Stringify(e) + "\n"); }
     </script>
-- name: "Number.prototype.toString(radix)"
+- name: "Number.prototype.toString()"
   url: "/ecmascript-builtins/number-methods/#tostring"
   officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toString"
   tagline: "only 2, 8, 10, 16 supported"
@@ -3774,7 +3776,16 @@
     // OBSERVED: an isolated call Object.prototype.isPrototypeOf({}) wrote its "before" marker
     // then never returned -> HTTP 408 Request Timeout, empty body (engine hang). Presence-only
     // page (no call) rendered fully in ~20s, so the hang is caused specifically by the call.
+    // Probe 1: the method exists on Object.prototype
     Platform.Response.Write("typeof Object.prototype.isPrototypeOf = " + (typeof Object.prototype.isPrototypeOf) + "\n");
+    // Probe 2: it is also inherited by plain object instances
+    var obj = { a: 1 };
+    Platform.Response.Write("typeof obj.isPrototypeOf = " + (typeof obj.isPrototypeOf) + "\n");
+    // Probe 3: the actual defect - calling it never returns (HTTP 408, empty body).
+    // DO NOT UNCOMMENT: this line is what hangs the engine.
+    // Platform.Response.Write("before call\n");
+    // Platform.Response.Write("isPrototypeOf => " + Object.prototype.isPrototypeOf(obj) + "\n");
+    // Platform.Response.Write("after call\n"); // never reached
     Platform.Response.Write("call skipped: invoking isPrototypeOf hangs the engine\n");
     </script>
 - name: "Object.prototype.propertyIsEnumerable"
@@ -4228,49 +4239,6 @@
     P("sort() NOARG", function(){ var a=[3,1,4,1,5]; a.sort(); return a.join(","); });
     </script>
 
-- name: "Number.toExponential"
-  url: "/ecmascript-builtins/number-methods/#toexponential"
-  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toExponential"
-  tagline: "no-argument form pads the significand with trailing zeros"
-  part: "ecmascript"
-  category: "ECMAScript Builtins"
-  object: "Number"
-  severity: "low"
-  discrepancy: "A3"
-  anchor: "toexponential"
-  body: |
-    MDN specifies `Number.prototype.toExponential()` with no argument uses the **minimal** number of significand digits needed to represent the value. In the SFMC Jint engine the no-argument form **pads the significand with trailing zeros** — `(3.14159).toExponential()` returns `"3.1415900000000000e+0"` instead of the spec's `"3.14159e+0"`. Always pass an explicit `fractionDigits` count. With an argument (`toExponential(2)` → `"1.23e+5"`) it behaves per spec.
-  testScript: |
-    <script runat="server">
-    Platform.Load("core", "1.1.5");
-    // OBSERVED (SFMC CloudPage, live): toExponential(2)="1.23e+5"; toExponential()="3.1415900000000000e+0" (trailing zeros). VERDICT: CONFIRMED.
-    function P(l,f){try{Platform.Response.Write(l+" => "+f()+"\n");}catch(e){Platform.Response.Write(l+" => ERR: "+e+"\n");}}
-    P("toExponential(2)", function(){ return (123456).toExponential(2); });
-    P("toExponential() NOARG", function(){ return (3.14159).toExponential(); });
-    </script>
-
-- name: "Number.toString"
-  url: "/ecmascript-builtins/number-methods/#tostring"
-  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toString"
-  tagline: "radix limited to 2/8/10/16; fractions truncated before non-decimal conversion"
-  part: "ecmascript"
-  category: "ECMAScript Builtins"
-  object: "Number"
-  severity: "medium"
-  discrepancy: "A3"
-  anchor: "tostring"
-  body: |
-    MDN specifies `Number.prototype.toString(radix)` accepts any radix from **2 to 36**. In the SFMC Jint engine only radixes **2, 8, 10, and 16** work; any other base throws `"Invalid Base."` (e.g. `(35).toString(36)`). Fractional values are also **truncated to their integer part** before non-decimal conversion — `(3.5).toString(2)` returns `"100"`, not the spec's `"11.1"`. Radixes 2/8/10/16 on integers are correct (`(255).toString(16)` → `"ff"`).
-  testScript: |
-    <script runat="server">
-    Platform.Load("core", "1.1.5");
-    // OBSERVED (SFMC CloudPage, live): (255).toString(16)="ff"; (255).toString(2)="11111111"; (35).toString(36) THROWS "Invalid Base."; (3.5).toString(2)="100" (truncated). VERDICT: CONFIRMED.
-    function P(l,f){try{Platform.Response.Write(l+" => "+f()+"\n");}catch(e){Platform.Response.Write(l+" => ERR: "+e+"\n");}}
-    P("toString(16)", function(){ return (255).toString(16); });
-    P("toString(36)", function(){ return (35).toString(36); });
-    P("toString(2) frac 3.5", function(){ return (3.5).toString(2); });
-    </script>
-
 - name: "parseInt"
   url: "/ecmascript-builtins/number-methods/#parseint-global"
   officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/parseInt"
@@ -4334,131 +4302,6 @@
     P("Number.MIN_VALUE", function(){ return Number.MIN_VALUE; });
     P("Number.POSITIVE_INFINITY <0?", function(){ return (Number.POSITIVE_INFINITY < 0); });
     P("Number.NEGATIVE_INFINITY >0?", function(){ return (Number.NEGATIVE_INFINITY > 0); });
-    </script>
-
-- name: "Object.isPrototypeOf"
-  url: "/ecmascript-builtins/object-methods/#isprototypeof"
-  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/isPrototypeOf"
-  tagline: "present but HANGS the engine when called"
-  part: "ecmascript"
-  category: "ECMAScript Builtins"
-  object: "Object"
-  severity: "high"
-  discrepancy: "B3"
-  anchor: "isprototypeof"
-  body: |
-    MDN specifies `Object.prototype.isPrototypeOf(obj)` returns a boolean indicating whether the object appears in another object's prototype chain. In the SFMC Jint engine the method is **present** (`typeof obj.isPrototypeOf` is `"function"`) but **calling it hangs the engine** — the CloudPage times out (HTTP 408) with no output. Never call it; compare `obj.constructor === Ctor` or walk the prototype chain manually instead.
-  testScript: |
-    <script runat="server">
-    Platform.Load("core", "1.1.5");
-    // OBSERVED (SFMC CloudPage, live): typeof obj.isPrototypeOf = "function" (present). Calling it HANGS the engine (times out) — probed via typeof only, never invoked. VERDICT: CONFIRMED.
-    var obj = { a: 1 };
-    Platform.Response.Write("typeof isPrototypeOf => " + (typeof obj.isPrototypeOf) + "\n");
-    // DO NOT CALL obj.isPrototypeOf(...) — it hangs the engine.
-    </script>
-
-- name: "Object.propertyIsEnumerable"
-  url: "/ecmascript-builtins/object-methods/#propertyisenumerable"
-  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/propertyIsEnumerable"
-  tagline: "returns false even for own enumerable properties"
-  part: "ecmascript"
-  category: "ECMAScript Builtins"
-  object: "Object"
-  severity: "medium"
-  discrepancy: "B3"
-  anchor: "propertyisenumerable"
-  body: |
-    MDN specifies `Object.prototype.propertyIsEnumerable(prop)` returns `true` for an own enumerable property. In the SFMC Jint engine the method is **present** (`typeof` is `"function"`) but **returns `false` even for own enumerable properties** — `({ a: 1 }).propertyIsEnumerable("a")` returns `false` (should be `true`). Unlike its sibling `isPrototypeOf`, calling it does not hang the engine. Use `hasOwnProperty` for own-property checks instead.
-  testScript: |
-    <script runat="server">
-    Platform.Load("core", "1.1.5");
-    // OBSERVED (SFMC CloudPage, live): ({a:1}).propertyIsEnumerable("a") => false (WRONG; should be true). VERDICT: CONFIRMED.
-    var obj = { name: "Jane", age: 30 };
-    Platform.Response.Write("propertyIsEnumerable('name') => " + obj.propertyIsEnumerable("name") + "\n");
-    Platform.Response.Write("hasOwnProperty('name') => " + obj.hasOwnProperty("name") + "\n");
-    </script>
-
-- name: "Date.getMilliseconds"
-  url: "/ecmascript-builtins/date-methods/#getmilliseconds"
-  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/getMilliseconds"
-  tagline: "frequently off by one"
-  part: "ecmascript"
-  category: "ECMAScript Builtins"
-  object: "Date"
-  severity: "medium"
-  discrepancy: "B3"
-  anchor: "getmilliseconds"
-  body: |
-    MDN specifies `Date.prototype.getMilliseconds()` returns the exact milliseconds (0–999) of the date in local time. In the SFMC Jint engine it is **frequently off by one**: constructing a date with `123` ms reports `122`, `555` → `554`, `666` → `665`, `777` → `776`. Some values (`0`, `111`, `888`, `999`) are exact. Never rely on sub-second precision; round or avoid milliseconds entirely.
-  testScript: |
-    <script runat="server">
-    Platform.Load("core", "1.1.5");
-    // OBSERVED (SFMC CloudPage, live): new Date(2021,0,1,0,0,0,123).getMilliseconds()=122; ...,555)=554 (off by one). VERDICT: CONFIRMED.
-    function P(l,f){try{Platform.Response.Write(l+" => "+f()+"\n");}catch(e){Platform.Response.Write(l+" => ERR: "+e+"\n");}}
-    P("getMilliseconds(123)", function(){ return (new Date(2021,0,1,0,0,0,123)).getMilliseconds(); });
-    P("getMilliseconds(555)", function(){ return (new Date(2021,0,1,0,0,0,555)).getMilliseconds(); });
-    </script>
-
-- name: "Date.now"
-  url: "/ecmascript-builtins/date-methods/#now"
-  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/now"
-  tagline: "returns a Date object, not a number"
-  part: "ecmascript"
-  category: "ECMAScript Builtins"
-  object: "Date"
-  severity: "high"
-  discrepancy: "B3"
-  anchor: "now"
-  body: |
-    MDN specifies `Date.now()` returns a **Number** — milliseconds since the Unix epoch. In the SFMC Jint engine it returns a **`Date` object** instead (`typeof Date.now()` is `"object"`). Numeric coercion (`Date.now() + 0`) recovers the epoch ms, but any code that expects a plain number (comparisons, arithmetic, JSON) will misbehave. Prefer `new Date().getTime()`, which returns a clean number.
-  testScript: |
-    <script runat="server">
-    Platform.Load("core", "1.1.5");
-    // OBSERVED (SFMC CloudPage, live): typeof Date.now() => "object" (a Date, not a number). VERDICT: CONFIRMED.
-    Platform.Response.Write("typeof Date.now() => " + (typeof Date.now()) + "\n");
-    Platform.Response.Write("new Date().getTime() typeof => " + (typeof new Date().getTime()) + "\n");
-    </script>
-
-- name: "Date.parse"
-  url: "/ecmascript-builtins/date-methods/#parse"
-  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/parse"
-  tagline: "invalid strings return 0 (never NaN); date-only parses as local"
-  part: "ecmascript"
-  category: "ECMAScript Builtins"
-  object: "Date"
-  severity: "high"
-  discrepancy: "B3"
-  anchor: "parse"
-  body: |
-    MDN specifies `Date.parse(str)` returns `NaN` for unparseable strings and treats date-only ISO forms (`"2026-06-18"`) as UTC. In the SFMC Jint engine invalid strings return **`0`** (the epoch), **never `NaN`** — so `isNaN()` cannot detect a bad date and invalid input silently becomes 1970-01-01. Date-only strings also parse as **local** midnight, not UTC. Validate input yourself before trusting the result.
-  testScript: |
-    <script runat="server">
-    Platform.Load("core", "1.1.5");
-    // OBSERVED (SFMC CloudPage, live): Date.parse("2021-01-01T00:00:00Z")=1609459200000; Date.parse("garbage")=0; Date.parse("")=0 (never NaN). VERDICT: CONFIRMED.
-    function P(l,f){try{Platform.Response.Write(l+" => "+f()+"\n");}catch(e){Platform.Response.Write(l+" => ERR: "+e+"\n");}}
-    P("Date.parse valid", function(){ return Date.parse("2021-01-01T00:00:00Z"); });
-    P("Date.parse garbage", function(){ return Date.parse("garbage"); });
-    </script>
-
-- name: "Date.UTC"
-  url: "/ecmascript-builtins/date-methods/#utc"
-  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/UTC"
-  tagline: "year-only form returns a nonsense small number"
-  part: "ecmascript"
-  category: "ECMAScript Builtins"
-  object: "Date"
-  severity: "medium"
-  discrepancy: "A3"
-  anchor: "utc"
-  body: |
-    MDN specifies `Date.UTC(year[, month[, ...]])` accepts a year-only call (`Date.UTC(2026)`). In the SFMC Jint engine the **year-only form returns a nonsense small number** (observed `-21597974`) rather than a valid timestamp or `NaN`. Always pass at least year **and** month, e.g. `Date.UTC(2026, 0, 1)`; with two or more components it returns the correct UTC timestamp (`Date.UTC(1970, 0, 1)` → `0`).
-  testScript: |
-    <script runat="server">
-    Platform.Load("core", "1.1.5");
-    // OBSERVED (SFMC CloudPage, live): Date.UTC(1970,0,1)=0; Date.UTC(2026,0,1)=1767225600000; Date.UTC(2026)=-21597974 (nonsense). VERDICT: CONFIRMED.
-    function P(l,f){try{Platform.Response.Write(l+" => "+f()+"\n");}catch(e){Platform.Response.Write(l+" => ERR: "+e+"\n");}}
-    P("Date.UTC(2026,0,1)", function(){ return Date.UTC(2026,0,1); });
-    P("Date.UTC(2026) yearonly", function(){ return Date.UTC(2026); });
     </script>
 
 - name: "Math.max"
