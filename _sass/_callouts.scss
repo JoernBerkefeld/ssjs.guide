@@ -190,6 +190,13 @@
     background-color: $bg-elevated;
     border-color: $border-muted;
   }
+
+  // ── Every chapter ships a runnable "Show test script" block ─────────────
+  &.test-scripts-complete {
+    color: $color-info;
+    background-color: rgba($color-info, 0.08);
+    border-color: rgba($color-info, 0.3);
+  }
 }
 
 .verification-status {

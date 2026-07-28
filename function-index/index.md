@@ -82,7 +82,9 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`Platform.Function.BeginImpressionRegion(name)`](/platform-functions/beginimpressionregion/) | Platform Functions | void | Start a named impression region |
 | [`BigInt(value)`](/ecmascript-builtins/bigint/) | ECMAScript Builtins | bigint | ❌ Missing (ES2020) — no arbitrary-precision integers |
 | [`BigInt64Array` / `BigUint64Array`](/ecmascript-builtins/typed-arrays/#bigint64array) | ECMAScript Builtins | — | ❌ Missing (ES2020) — no typed arrays |
-| [`Boolean(value)`](/ecmascript-builtins/boolean/#boolean-coercion) | ECMAScript Builtins | boolean | Truthiness coercion; boxed `new Boolean()` stringifies as capitalized `True`/`False` |
+| [`Boolean(value)`](/ecmascript-builtins/boolean/#boolean-coercion) | ECMAScript Builtins | boolean | ⚠️ Partial — returns a primitive, but `Boolean(-1)` and `Boolean([])` are `false`; result has no methods |
+| [`new Boolean(value)`](/ecmascript-builtins/boolean/#boolean-boxed) | ECMAScript Builtins | object | ⚠️ Partial — capitalized `True`/`False`; boxed `false` is falsy; `valueOf()` does not unwrap |
+| [`Boolean.prototype`](/ecmascript-builtins/boolean/#boolean-prototype) | ECMAScript Builtins | object | `toString.call(primitive)` returns the correct lowercase form |
 | [`BounceEvent.Retrieve(filter)`](/core-library/events/#bounce-event) | Core Library | object[] | Bounce tracking events |
 
 ---

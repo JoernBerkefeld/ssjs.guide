@@ -1,0 +1,253 @@
+# Test scripts for /ecmascript-builtins/boolean/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the ECMAScript spec.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+coercion: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Boolean(value) — coercion
+   *
+   * Proves:
+   *   1. Boolean(value) returns a PRIMITIVE boolean (typeof "boolean").
+   *   2. The truthy / falsy classification for each documented input.
+   *   3. Boolean(v), !!v and `if (v)` agree with each other.
+   *   4. DEVIATIONS from the ECMAScript spec, each marked "DEV":
+   *        - negative numbers are FALSY (engine rule is `n > 0`, not `n !== 0`)
+   *        - an empty array [] is FALSY (spec: every object is truthy)
+   *        - the primitive result carries no methods: .toString() / .valueOf()
+   *          throw "Object expected" instead of auto-boxing
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function branch(v) { if (v) { return "truthy"; } return "falsy"; }
+
+  /* 1. The result is a primitive boolean, never an object. */
+  var a = Boolean(1);
+  assert("typeof Boolean(1) is boolean", typeof a, "boolean");
+  assert("Boolean(1) === true", Boolean(1) === true, "true");
+  assert("Boolean(0) === false", Boolean(0) === false, "true");
+
+  /* 2. Truthy inputs. */
+  assert("Boolean(true)", Boolean(true), "true");
+  assert("Boolean(2.5)", Boolean(2.5), "true");
+  assert("Boolean('x')", Boolean("x"), "true");
+  assert("Boolean('0')", Boolean("0"), "true");
+  assert("Boolean('false')", Boolean("false"), "true");
+  var obj = {};
+  assert("Boolean({})", Boolean(obj), "true");
+
+  /* 3. Falsy inputs that match the spec. */
+  assert("Boolean(false)", Boolean(false), "false");
+  assert("Boolean(0)", Boolean(0), "false");
+  assert("Boolean('')", Boolean(""), "false");
+  assert("Boolean(null)", Boolean(null), "false");
+  var undef;
+  assert("Boolean(undefined)", Boolean(undef), "false");
+  assert("Boolean(NaN)", Boolean(NaN), "false");
+
+  /* 4. DEVIATION — negative numbers are falsy. The engine rule is (n > 0). */
+  var neg1 = -1;
+  assert("DEV Boolean(-1) is false (spec: true)", Boolean(neg1), "false");
+  var neg2 = -0.5;
+  assert("DEV Boolean(-0.5) is false (spec: true)", Boolean(neg2), "false");
+  var neg3 = 0 - 3;
+  assert("DEV Boolean(0-3) is false (spec: true)", Boolean(neg3), "false");
+  assert("DEV if(-1) is falsy (spec: truthy)", branch(neg1), "falsy");
+  assert("rule check: -1 > 0", neg1 > 0, "false");
+  assert("rule check: 1 > 0", 1 > 0, "true");
+
+  /* 5. DEVIATION — an empty array is falsy; objects are coerced via ToPrimitive. */
+  var arr0 = [];
+  assert("DEV Boolean([]) is false (spec: true)", Boolean(arr0), "false");
+  assert("DEV if([]) is falsy (spec: truthy)", branch(arr0), "falsy");
+  var arr1 = [0];
+  assert("Boolean([0]) is true", Boolean(arr1), "true");
+  assert("String([]) is the empty string", String(arr0), "");
+
+  /* 6. Boolean(v), !!v and if(v) agree. */
+  assert("!!1 matches Boolean(1)", !!1, String(Boolean(1)));
+  assert("!!0 matches Boolean(0)", !!0, String(Boolean(0)));
+  assert("!!'' matches Boolean('')", !!"", String(Boolean("")));
+  assert("if(1) truthy", branch(1), "truthy");
+  assert("if(0) falsy", branch(0), "falsy");
+  assert("if('') falsy", branch(""), "falsy");
+  assert("if('x') truthy", branch("x"), "truthy");
+
+  /* 7. DEVIATION — no auto-boxing: the primitive result has no methods. */
+  assertThrows("DEV Boolean(1).toString() throws (spec: 'true')", function () { var t = Boolean(1); return t.toString(); });
+  assertThrows("DEV Boolean(1).valueOf() throws (spec: true)", function () { var t = Boolean(1); return t.valueOf(); });
+  var lit = true;
+  assert("literal true.toString() works and is lowercase", lit.toString(), "true");
+  assert("String(Boolean(true)) is 'true'", String(Boolean(true)), "true");
+  assert("String(Boolean(false)) is 'false'", String(Boolean(false)), "false");
+  </script>
+
+boxed: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: new Boolean(value) — boxed object
+   *
+   * Proves:
+   *   1. new Boolean(value) produces an object (typeof "object").
+   *   2. DEVIATIONS from the ECMAScript spec, each marked "DEV":
+   *        - stringification is CAPITALIZED: "True" / "False" (spec: lowercase)
+   *        - a boxed false is FALSY (spec: every object is truthy)
+   *        - .valueOf() does NOT unwrap — it returns the boxed object itself
+   *        - `instanceof Boolean` is false even though .constructor matches
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function branch(v) { if (v) { return "truthy"; } return "falsy"; }
+
+  /* 1. It really is an object. */
+  var t = new Boolean(true);
+  assert("typeof new Boolean(true) is object", typeof t, "object");
+  var f = new Boolean(false);
+  assert("typeof new Boolean(false) is object", typeof f, "object");
+
+  /* 2. DEVIATION — capitalized string form. */
+  assert("DEV String(new Boolean(true)) is 'True' (spec: 'true')", String(t), "True");
+  assert("DEV String(new Boolean(false)) is 'False' (spec: 'false')", String(f), "False");
+  assert("DEV new Boolean(true).toString() is 'True' (spec: 'true')", t.toString(), "True");
+  assert("DEV new Boolean(false).toString() is 'False' (spec: 'false')", f.toString(), "False");
+
+  /* 3. DEVIATION — a boxed false is falsy here; in the spec every object is truthy. */
+  assert("DEV if(new Boolean(false)) is falsy (spec: truthy)", branch(f), "falsy");
+  assert("if(new Boolean(true)) is truthy", branch(t), "truthy");
+  assert("DEV !!new Boolean(false) is false (spec: true)", !!f, "false");
+  assert("DEV Boolean(new Boolean(false)) is false (spec: true)", Boolean(f), "false");
+
+  /* 4. DEVIATION — valueOf() does not unwrap to a primitive. */
+  var v = f.valueOf();
+  assert("DEV typeof boxed.valueOf() is object (spec: boolean)", typeof v, "object");
+  assert("DEV boxed.valueOf() === boxed (spec: false)", v === f, "true");
+  assert("DEV boxed.valueOf() === false is false (spec: true)", v === false, "false");
+  assert("boxed.valueOf() == false is true (loose compare)", v == false, "true");
+
+  /* 5. DEVIATION — instanceof fails although the constructor matches. */
+  assert("DEV new Boolean(true) instanceof Boolean is false (spec: true)", t instanceof Boolean, "false");
+  assert("new Boolean(true).constructor === Boolean", t.constructor === Boolean, "true");
+
+  /* 6. No-argument form. */
+  var n = new Boolean();
+  assert("typeof new Boolean() is object", typeof n, "object");
+  assert("String(new Boolean()) is 'False'", String(n), "False");
+  </script>
+
+prototype: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Boolean.prototype
+   *
+   * Proves:
+   *   1. Boolean is a function and Boolean.prototype is an object.
+   *   2. toString / valueOf / constructor exist on the prototype.
+   *   3. Calling them with .call() on a PRIMITIVE works and returns the correct
+   *      lowercase spec form — this is the reliable escape hatch, because a
+   *      primitive boolean has no methods of its own (see the coercion chapter).
+   *   4. DEVIATION marked "DEV": .call() on a BOXED instance returns the
+   *      capitalized "True" / "False" instead of the spec's lowercase.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  /* 1 + 2. Shape of the prototype. */
+  assert("typeof Boolean is function", typeof Boolean, "function");
+  assert("typeof Boolean.prototype is object", typeof Boolean.prototype, "object");
+  assert("typeof Boolean.prototype.toString is function", typeof Boolean.prototype.toString, "function");
+  assert("typeof Boolean.prototype.valueOf is function", typeof Boolean.prototype.valueOf, "function");
+  assert("typeof Boolean.prototype.constructor is function", typeof Boolean.prototype.constructor, "function");
+
+  /* 3. .call() on primitives returns the lowercase spec form. */
+  assert("toString.call(true) is 'true'", Boolean.prototype.toString.call(true), "true");
+  assert("toString.call(false) is 'false'", Boolean.prototype.toString.call(false), "false");
+  var c = Boolean(1);
+  assert("toString.call(Boolean(1)) is 'true'", Boolean.prototype.toString.call(c), "true");
+  assert("valueOf.call(true) is true", Boolean.prototype.valueOf.call(true), "true");
+
+  /* 4. DEVIATION — the boxed instance still capitalizes. */
+  var box = new Boolean(true);
+  assert("DEV toString.call(new Boolean(true)) is 'True' (spec: 'true')", Boolean.prototype.toString.call(box), "True");
+  </script>
+
+capitalized-boxed-string: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs claim: a boxed Boolean stringifies with a CAPITALIZED
+   * first letter in the SFMC Jint engine.
+   *
+   * MDN / ECMAScript: String(new Boolean(true)) === "true"
+   * SFMC Jint:        String(new Boolean(true)) === "True"
+   *
+   * Proves both halves of the claim:
+   *   1. Every stringification path of a boxed Boolean capitalizes — String(),
+   *      implicit "" + x concatenation, and an explicit .toString() call.
+   *   2. The recommended workarounds — Boolean(value), !!value, and a primitive
+   *      literal — all produce the correct lowercase spec form.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  /* 1. Every boxed stringification path capitalizes. */
+  var t = new Boolean(true);
+  var f = new Boolean(false);
+  assert("DEV String(new Boolean(true)) is 'True' not 'true'", String(t), "True");
+  assert("DEV String(new Boolean(false)) is 'False' not 'false'", String(f), "False");
+  assert("DEV '' + new Boolean(true) is 'True'", "" + t, "True");
+  assert("DEV new Boolean(true).toString() is 'True'", t.toString(), "True");
+
+  /* 2. The workarounds produce the correct lowercase form. */
+  assert("workaround String(Boolean(true)) is 'true'", String(Boolean(true)), "true");
+  assert("workaround String(!!1) is 'true'", String(!!1), "true");
+  assert("workaround String(Boolean(false)) is 'false'", String(Boolean(false)), "false");
+  var lit = true;
+  assert("primitive literal true.toString() is 'true'", lit.toString(), "true");
+  </script>

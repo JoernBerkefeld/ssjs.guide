@@ -18,6 +18,12 @@
   back to aggregating URL-prefix children (legacy behaviour), skipping
   jekyll-redirect-from stubs (which carry a `redirect` object and no
   `verification` field).
+
+  A third, independent badge is driven by front matter `test_scripts: complete`.
+  It signals that EVERY chapter on the page carries a "Show test script"
+  details block whose assertions prove all documented claims (positive,
+  negative, and deviation). It is never aggregated from children — the
+  verify-ssjs-guide-docs skill sets it per page only after a fully green run.
 {% endcomment %}
 
 {% assign status = "pending" %}
@@ -121,6 +127,16 @@
       <path d="M6 4.5v3M6 8.8v.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
     </svg>
     Differs from official docs
+  </span>
+  {% endif %}
+
+  {% if page.test_scripts == "complete" %}
+  <span class="verified-badge test-scripts-complete" title="Every chapter on this page ships a runnable SSJS test script that asserts each documented claim — including the deviations from the spec. Expand “Show test script” in any chapter to see it.">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <path d="M4 2.5v2.2L1.8 8.6A1 1 0 0 0 2.7 10h6.6a1 1 0 0 0 .9-1.4L8 4.7V2.5" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+      <path d="M3.2 2.5h5.6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+    </svg>
+    Test scripts included
   </span>
   {% endif %}
 </div>

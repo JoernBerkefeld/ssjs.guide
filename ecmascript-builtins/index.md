@@ -184,9 +184,9 @@ Standard ECMAScript global value properties.
 
 | Member | ES | Status | Notes |
 |--------|----|--------|-------|
-| [`Boolean(value)`](/ecmascript-builtins/boolean/#boolean-coercion) | ES3 | ✅ Works | Truthiness coercion — returns a primitive `boolean` |
-| [`new Boolean(value)`](/ecmascript-builtins/boolean/#boolean-boxed) | ES3 | ⚠️ Partial | Boxed object; `String()` yields capitalized `True`/`False` |
-| [`Boolean.prototype`](/ecmascript-builtins/boolean/#boolean-prototype) | ES3 | ✅ Works | |
+| [`Boolean(value)`](/ecmascript-builtins/boolean/#boolean-coercion) | ES3 | ⚠️ Partial | Returns a primitive, but `Boolean(-1)` and `Boolean([])` are `false`; result has no methods |
+| [`new Boolean(value)`](/ecmascript-builtins/boolean/#boolean-boxed) | ES3 | ⚠️ Partial | Capitalized `True`/`False`; boxed `false` is falsy; `valueOf()` does not unwrap |
+| [`Boolean.prototype`](/ecmascript-builtins/boolean/#boolean-prototype) | ES3 | ✅ Works | `toString.call(primitive)` gives the correct lowercase form |
 
 ### Missing ES6+ Objects
 
@@ -307,7 +307,7 @@ The native `JSON` object is unavailable — see [JSON](/ecmascript-builtins/json
 |------|-------------|
 | [Global Functions](/ecmascript-builtins/global-functions/) | URI encode/decode functions (form-urlencoded quirks) and the missing `escape`/`unescape` |
 | [Global Values](/ecmascript-builtins/global-values/) | `undefined`, `NaN`, the broken `Infinity`, and the missing `globalThis` |
-| [Boolean](/ecmascript-builtins/boolean/) | The `Boolean` constructor and boxed-object `True`/`False` quirk |
+| [Boolean](/ecmascript-builtins/boolean/) | The `Boolean` constructor — falsy negative numbers, falsy `[]`, and the boxed-object `True`/`False` quirk |
 | [Symbol](/ecmascript-builtins/symbol/) | Not available (ES6) — no unique primitives or iterator protocol |
 | [BigInt](/ecmascript-builtins/bigint/) | Not available (ES2020) — no arbitrary-precision integers |
 | [Array Methods](/ecmascript-builtins/array-methods/) | Safe and polyfillable array methods |

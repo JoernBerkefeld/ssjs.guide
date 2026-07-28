@@ -4100,6 +4100,22 @@
     "returnType": "object"
   },
   {
+    "name": "Boolean.valueOf",
+    "url": "/ecmascript-builtins/boolean/#valueof",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Defined on Boolean.",
+    "returnType": "boolean"
+  },
+  {
+    "name": "Boolean.toString",
+    "url": "/ecmascript-builtins/boolean/#tostring",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Returns the string form of a boolean.",
+    "returnType": "string"
+  },
+  {
     "name": "Error.Error",
     "url": "/ecmascript-builtins/error/#error",
     "section": "ECMAScript Builtins",

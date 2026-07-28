@@ -1,0 +1,43 @@
+{% comment %}
+  Renders a collapsed "Show test script" block at the bottom of a chapter.
+
+  The script is a runnable SSJS CloudPage snippet that ASSERTS every claim the
+  chapter makes — positive, negative, and each documented deviation from the
+  spec / official docs. Its purpose is auditability: when a claim is questioned
+  later, re-run the script and compare against the recorded expectations rather
+  than re-deriving the finding from scratch.
+
+  Scripts live in _data/test_scripts/<bundle>.yml, one YAML file per guide page:
+
+    _data/test_scripts/ecmascript-builtins--boolean.yml
+      coercion: |
+        <script runat="server">
+        ...
+        </script>
+      boxed: |
+        ...
+
+  Jekyll exposes that as site.data.test_scripts["ecmascript-builtins--boolean"].
+
+  Parameters:
+    bundle  (string) - required. YAML file name without extension.
+    chapter (string) - required. Key inside the YAML file.
+    label   (string) - optional. Summary text; defaults to "Show test script".
+
+  Usage:
+    {% include test-script.html bundle="ecmascript-builtins--boolean" chapter="coercion" %}
+
+  Renders nothing when the bundle or key is missing, so a partially-populated
+  page still builds.
+{% endcomment %}
+
+{%- assign ts_bundle = site.data.test_scripts[include.bundle] -%}
+{%- if ts_bundle -%}
+{%- assign ts_script = ts_bundle[include.chapter] -%}
+{%- if ts_script -%}
+{%- assign ts_label = include.label | default: "Show test script" -%}
+<details class="dfd-card__testscript"><summary>{{ ts_label }}</summary>{{ '```html' | append: '
+' | append: ts_script | append: '
+```' | markdownify }}</details>
+{%- endif -%}
+{%- endif -%}
