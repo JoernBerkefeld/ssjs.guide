@@ -6,6 +6,7 @@ parent_url: /ecmascript-builtins/
 permalink: /ecmascript-builtins/memory-management/
 description: The ES2021 memory-management objects WeakRef and FinalizationRegistry are not available in SSJS. The SFMC Jint engine predates them, so both are undefined.
 verification: verified
+test_scripts: complete
 ---
 
 **The ES2021 memory-management objects are not available in SSJS.** The SFMC server-side JavaScript engine (Jint) predates ES2021, so `WeakRef` and `FinalizationRegistry` are entirely absent. Each is `undefined`.
@@ -31,9 +32,13 @@ These objects only matter for long-lived programs that hold references to large 
 
 `(ES2021)` — ❌ Missing. `WeakRef` is **not defined** — `typeof WeakRef === "undefined"`. There is no weak-reference mechanism. Hold a normal variable reference; it is released automatically when the request-scoped script finishes.
 
+{% include test-script.html bundle="ecmascript-builtins--memory-management" chapter="weakref" %}
+
 ## FinalizationRegistry {#finalizationregistry}
 
 `(ES2021)` — ❌ Missing. `FinalizationRegistry` is **not defined** — `typeof FinalizationRegistry === "undefined"`. You cannot register a callback to run when an object is garbage-collected. Perform any needed cleanup explicitly at the end of your script instead.
+
+{% include test-script.html bundle="ecmascript-builtins--memory-management" chapter="finalizationregistry" %}
 
 ## See Also
 

@@ -1,0 +1,495 @@
+# Test scripts for /ecmascript-builtins/function-methods/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the ECMAScript spec / MDN.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+call: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Function.prototype.call — (ES3) works
+   *
+   * Proves:
+   *   1. typeof fn.call is "function" — the member exists.
+   *   2. The page example: greet.call({ name: "Sam" }, "Hi") returns "Hi, Sam".
+   *   3. call() supplies `this` and arguments individually.
+   *   4. call(null) leaves no usable `this` binding from the caller object.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var res = (actual === expected) ? "PASS " : "FAIL ";
+      Platform.Response.Write(res + id + " -> [" + actual + "]\n");
+  }
+
+  function greet(greeting) {
+      return greeting + ", " + this.name;
+  }
+  function addThree(a, b, c) { return a + b + c; }
+
+  /* 1. The member exists. */
+  assert("typeof greet.call is function", String(typeof greet.call), "function");
+  assert("typeof Function.prototype.call is function", String(typeof Function.prototype.call), "function");
+
+  /* 2. Page example. */
+  var r = greet.call({ name: "Sam" }, "Hi");
+  assert("greet.call({name:'Sam'},'Hi') is 'Hi, Sam'", String(r), "Hi, Sam");
+
+  /* 3. Arguments are supplied individually. */
+  assert("addThree.call(null, 1, 2, 3) is 6", String(addThree.call(null, 1, 2, 3)), "6");
+  assert("call rebinds this", String(greet.call({ name: "Ada" }, "Yo")), "Yo, Ada");
+
+  /* 4. Missing trailing args become undefined -> arithmetic yields NaN. */
+  assert("addThree.call(null, 1, 2) is NaN", String(isNaN(addThree.call(null, 1, 2))), "true");
+  </script>
+
+apply: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Function.prototype.apply — (ES3) works
+   *
+   * Proves:
+   *   1. typeof fn.apply is "function" — the member exists.
+   *   2. The page example: sum.apply(null, [2, 3]) returns 5.
+   *   3. apply() supplies arguments as an array and rebinds `this`.
+   *   4. apply() with an empty array passes no arguments.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var res = (actual === expected) ? "PASS " : "FAIL ";
+      Platform.Response.Write(res + id + " -> [" + actual + "]\n");
+  }
+
+  function sum(a, b) { return a + b; }
+  function label(prefix) { return prefix + ":" + this.tag; }
+  function countArgs() { return arguments.length; }
+
+  /* 1. The member exists. */
+  assert("typeof sum.apply is function", String(typeof sum.apply), "function");
+  assert("typeof Function.prototype.apply is function", String(typeof Function.prototype.apply), "function");
+
+  /* 2. Page example. */
+  var r = sum.apply(null, [2, 3]);
+  assert("sum.apply(null, [2, 3]) is 5", String(r), "5");
+
+  /* 3. apply rebinds this and spreads the array. */
+  assert("apply rebinds this", String(label.apply({ tag: "T" }, ["p"])), "p:T");
+  assert("apply spreads 3 array items", String(countArgs.apply(null, [1, 2, 3])), "3");
+
+  /* 4. Empty array passes no arguments. */
+  assert("apply with [] passes 0 args", String(countArgs.apply(null, [])), "0");
+  </script>
+
+bind: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Function.prototype.bind — (ES5) MISSING
+   *
+   * MDN / ECMAScript: fn.bind(thisArg, ...preArgs) returns a bound function.
+   * SFMC Jint:        the member does not exist at all.
+   *
+   * Proves:
+   *   1. DEV typeof fn.bind is "undefined" (spec: "function").
+   *   2. DEV Function.prototype.bind is undefined (spec: a function).
+   *   3. DEV calling fn.bind(...) THROWS "Object expected" (spec: returns fn).
+   *   4. DEV Function.prototype is SEALED — assigning
+   *      Function.prototype.bind = ... silently has no effect: the property is
+   *      never actually installed (hasOwnProperty stays false) and no function,
+   *      existing or newly created, ever sees a .bind member
+   *      (spec: the assignment sticks and every function inherits it).
+   *   5. The recommended workaround — the standalone bindFn helper built on the
+   *      native apply — produces the documented result "Hi, Ada!", including
+   *      pre-bound leading arguments and a pre-bound `this`.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var res = (actual === expected) ? "PASS " : "FAIL ";
+      Platform.Response.Write(res + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  function probe(x) { return "probe:" + x; }
+
+  /* 1 + 2. DEVIATION — bind does not exist. */
+  assert("DEV typeof probe.bind is undefined (spec: function)", String(typeof probe.bind), "undefined");
+  assert("DEV typeof Function.prototype.bind is undefined (spec: function)", String(typeof Function.prototype.bind), "undefined");
+
+  /* 3. DEVIATION — calling it throws. */
+  assertThrows("DEV probe.bind(null) throws (spec: returns bound fn)", function () { return probe.bind(null); });
+
+  /* 5. The recommended workaround works. */
+  function bindFn(fn, thisArg) {
+      var preArgs = [];
+      for (var i = 2; i < arguments.length; i++) { preArgs.push(arguments[i]); }
+      return function () {
+          var callArgs = [];
+          for (var a = 0; a < preArgs.length; a++) { callArgs.push(preArgs[a]); }
+          for (var b = 0; b < arguments.length; b++) { callArgs.push(arguments[b]); }
+          return fn.apply(thisArg, callArgs);
+      };
+  }
+
+  var greet = function (greeting, name) { return greeting + ", " + name + "!"; };
+  var sayHi = bindFn(greet, null, "Hi");
+  var sayHiOut = sayHi("Ada");
+  assert("workaround bindFn pre-binds leading arg", String(sayHiOut), "Hi, Ada!");
+  assert("workaround typeof bindFn(...) is function", String(typeof sayHi), "function");
+
+  var whoAmI = function () { return this.name; };
+  var boundThis = bindFn(whoAmI, { name: "Sam" });
+  var boundThisOut = boundThis();
+  assert("workaround bindFn pre-binds this", String(boundThisOut), "Sam");
+
+  var join3 = function (a, b, c) { return a + "-" + b + "-" + c; };
+  var partial = bindFn(join3, null, "x", "y");
+  var partialOut = partial("z");
+  assert("workaround bindFn pre-binds two args", String(partialOut), "x-y-z");
+
+  /*
+   * 4. DEVIATION — Function.prototype is sealed; the assignment is ignored.
+   * Kept LAST on purpose: the write to Function.prototype perturbs later
+   * function-call evaluation in this engine, so all other assertions run first.
+   */
+  try { Function.prototype.bind = function () { return "installed"; }; } catch (ex) { /* sealed */ }
+  var ownAfter = Function.prototype.hasOwnProperty("bind");
+  assert("DEV Function.prototype.hasOwnProperty('bind') is false after assignment (sealed)", String(ownAfter), "false");
+  var probeBindAfter = typeof probe.bind;
+  assert("DEV typeof probe.bind still undefined after assignment (sealed)", String(probeBindAfter), "undefined");
+  var madeAfter = function (x) { return x; };
+  var madeAfterBind = typeof madeAfter.bind;
+  assert("DEV a function created AFTER the assignment still has no .bind", String(madeAfterBind), "undefined");
+  assertThrows("DEV probe.bind(null) still throws after the assignment", function () { return probe.bind(null); });
+  </script>
+
+arguments: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: arguments — (ES3) works
+   *
+   * Proves:
+   *   1. The array-like `arguments` object exists inside every function.
+   *   2. arguments.length reports the number of passed arguments.
+   *   3. Index access arguments[0], arguments[1], ... works.
+   *   4. The page example: total(10, 20, 30) returns 60.
+   *   5. arguments.length reflects the CALL, not the declared parameter list.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var res = (actual === expected) ? "PASS " : "FAIL ";
+      Platform.Response.Write(res + id + " -> [" + actual + "]\n");
+  }
+
+  function total() {
+      var t = 0;
+      for (var i = 0; i < arguments.length; i++) { t += arguments[i]; }
+      return t;
+  }
+  function argType() { return typeof arguments; }
+  function argCount() { return arguments.length; }
+  function firstArg() { return arguments[0]; }
+  function secondArg() { return arguments[1]; }
+  function declaredTwo(a, b) { return arguments.length; }
+
+  /* 1. The object exists. */
+  assert("typeof arguments inside a function is object", String(argType(1, 2)), "object");
+
+  /* 2 + 3. length and index access. */
+  assert("arguments.length with 3 args is 3", String(argCount(1, 2, 3)), "3");
+  assert("arguments.length with 0 args is 0", String(argCount()), "0");
+  assert("arguments[0] is the first arg", String(firstArg("a", "b")), "a");
+  assert("arguments[1] is the second arg", String(secondArg("a", "b")), "b");
+
+  /* 4. Page example. */
+  assert("total(10, 20, 30) is 60", String(total(10, 20, 30)), "60");
+
+  /* 5. length follows the call site, not the declaration. */
+  assert("declared 2 params, called with 4 -> arguments.length is 4", String(declaredTwo(1, 2, 3, 4)), "4");
+  assert("declared 2 params, called with 1 -> arguments.length is 1", String(declaredTwo(1)), "1");
+  </script>
+
+function-constructor: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Function() constructor — (ES3) works
+   *
+   * Proves:
+   *   1. typeof Function is "function".
+   *   2. The page example: new Function("a", "b", "return a * b;") -> 42 for (6, 7).
+   *   3. The no-"new" form also works: Function("x", "return x + 1;") -> 42 for 41.
+   *   4. A body-only form (no parameters) works.
+   *   5. The produced value is a callable function.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var res = (actual === expected) ? "PASS " : "FAIL ";
+      Platform.Response.Write(res + id + " -> [" + actual + "]\n");
+  }
+
+  /* 1. The constructor exists. */
+  assert("typeof Function is function", String(typeof Function), "function");
+
+  /* 2. Page example with new. */
+  var multiply = new Function("a", "b", "return a * b;");
+  assert("typeof new Function(...) is function", String(typeof multiply), "function");
+  assert("new Function('a','b','return a*b;')(6, 7) is 42", String(multiply(6, 7)), "42");
+
+  /* 3. Page example without new. */
+  var addOne = Function("x", "return x + 1;");
+  assert("typeof Function(...) without new is function", String(typeof addOne), "function");
+  assert("Function('x','return x + 1;')(41) is 42", String(addOne(41)), "42");
+
+  /* 4. Body-only form. */
+  var const7 = new Function("return 7;");
+  assert("new Function('return 7;')() is 7", String(const7()), "7");
+
+  /* 5. The result is callable and behaves like a normal function. */
+  assert("built function is instanceof Function", String(const7 instanceof Function), "true");
+  </script>
+
+tostring: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Function.prototype.toString — (ES3) DIFFERS
+   *
+   * MDN / ECMAScript: fn.toString() returns the function SOURCE CODE.
+   * SFMC Jint:        it returns the generic object tag "[object Function]".
+   *
+   * Proves:
+   *   1. DEV greet.toString() is "[object Function]" (spec: the source text).
+   *   2. DEV the returned tag contains no source markers ("function greet").
+   *   3. String(fn) and "" + fn yield "function" (documented on the page).
+   *   4. The member itself exists and is callable.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var res = (actual === expected) ? "PASS " : "FAIL ";
+      Platform.Response.Write(res + id + " -> [" + actual + "]\n");
+  }
+
+  function greet() {}
+  function sum(a, b) { return a + b; }
+
+  /* 4. The member exists. */
+  assert("typeof greet.toString is function", String(typeof greet.toString), "function");
+
+  /* 1. DEVIATION — the object tag, not the source. */
+  assert("DEV greet.toString() is '[object Function]' (spec: source text)", String(greet.toString()), "[object Function]");
+  assert("DEV sum.toString() is '[object Function]' (spec: source text)", String(sum.toString()), "[object Function]");
+
+  /* 2. DEVIATION — no source is recoverable. */
+  var s = sum.toString();
+  assert("DEV toString() contains no 'function sum' source", String(s.indexOf("function sum") >= 0), "false");
+  assert("DEV toString() contains no 'return' source", String(s.indexOf("return") >= 0), "false");
+
+  /* 3. String(fn) and concatenation yield "function". */
+  assert("String(greet) is 'function'", String(greet), "function");
+  assert("'' + greet is 'function'", String("" + greet), "function");
+  </script>
+
+length: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Function.prototype.length — (ES3) BROKEN
+   *
+   * MDN / ECMAScript: fn.length returns the declared parameter count.
+   * SFMC Jint:        reading fn.length THROWS
+   *                   "Object reference not set to an instance of an object."
+   *
+   * Proves:
+   *   1. DEV reading sum.length THROWS (spec: returns 2).
+   *   2. DEV reading a zero-parameter function's .length also throws (spec: 0).
+   *   3. DEV fn.hasOwnProperty("length") is false (spec: true).
+   *   4. The recommended workaround — tracking arity yourself in a variable —
+   *      gives the correct value and does not throw.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var res = (actual === expected) ? "PASS " : "FAIL ";
+      Platform.Response.Write(res + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  function sum(a, b) { return a + b; }
+  function noArgs() { return 1; }
+
+  /* 1 + 2. DEVIATION — reading .length throws. */
+  assertThrows("DEV reading sum.length throws (spec: 2)", function () { var n = sum.length; return n; });
+  assertThrows("DEV reading noArgs.length throws (spec: 0)", function () { var n = noArgs.length; return n; });
+
+  /* 3. DEVIATION — the own property is not reported. */
+  assert("DEV sum.hasOwnProperty('length') is false (spec: true)", String(sum.hasOwnProperty("length")), "false");
+
+  /* 4. The recommended workaround: track arity yourself. */
+  var expectedArgs = 2;
+  assert("workaround: tracked arity is 2", String(expectedArgs), "2");
+  assert("workaround: sum(1, 2) still callable", String(sum(1, 2)), "3");
+  </script>
+
+name: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Function.prototype.name — (ES3) MISSING
+   *
+   * MDN / ECMAScript: fn.name returns the function's declared name.
+   * SFMC Jint:        fn.name is undefined.
+   *
+   * Proves:
+   *   1. DEV typeof greet.name is "undefined" (spec: "string").
+   *   2. DEV greet.name is undefined, not "greet" (spec: "greet").
+   *   3. DEV the same holds for a function-expression assigned to a variable.
+   *   4. The recommended workaround — passing an explicit name string —
+   *      gives a usable name.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var res = (actual === expected) ? "PASS " : "FAIL ";
+      Platform.Response.Write(res + id + " -> [" + actual + "]\n");
+  }
+
+  function greet() {}
+  var expr = function () {};
+
+  /* 1 + 2. DEVIATION — no name. */
+  assert("DEV typeof greet.name is undefined (spec: string)", String(typeof greet.name), "undefined");
+  assert("DEV greet.name is not 'greet' (spec: 'greet')", String(greet.name === "greet"), "false");
+
+  /* 3. Same for a function expression. */
+  assert("DEV typeof expr.name is undefined (spec: string)", String(typeof expr.name), "undefined");
+
+  /* 4. The recommended workaround: carry the name explicitly. */
+  function describe(fn, fnName) { return fnName + "/" + typeof fn; }
+  assert("workaround: explicit name string is usable", String(describe(greet, "greet")), "greet/function");
+  </script>
+
+caller: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Function.prototype.caller — (ES3, deprecated) MISSING
+   *
+   * MDN / ECMAScript (non-strict legacy): fn.caller references the calling
+   * function while fn is executing.
+   * SFMC Jint:        fn.caller is undefined — no caller-chain introspection.
+   *
+   * Proves:
+   *   1. DEV typeof inner.caller inside the call is "undefined"
+   *      (spec/legacy: "function" when called from another function).
+   *   2. DEV inner.caller read from outside is undefined too (spec: null).
+   *   3. DEV the caller identity link is not recoverable
+   *      (inner.caller === outer is false).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var res = (actual === expected) ? "PASS " : "FAIL ";
+      Platform.Response.Write(res + id + " -> [" + actual + "]\n");
+  }
+
+  function inner() { return typeof inner.caller; }
+  function outer() { return inner(); }
+  function innerIdentity() { return inner.caller === outer; }
+  function outerIdentity() { return innerIdentity(); }
+
+  /* 1. DEVIATION — undefined while executing, even when called from a function. */
+  assert("DEV typeof inner.caller inside a direct call is undefined", String(inner()), "undefined");
+  assert("DEV typeof inner.caller when called from outer() is undefined (legacy: function)", String(outer()), "undefined");
+
+  /* 2. DEVIATION — undefined from outside as well. */
+  assert("DEV typeof inner.caller from top level is undefined (spec: object/null)", String(typeof inner.caller), "undefined");
+
+  /* 3. DEVIATION — the caller identity is not recoverable. */
+  assert("DEV inner.caller === outer is false (legacy: true)", String(outerIdentity()), "false");
+  </script>
+
+constructor: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: fn.constructor — (ES3) DIFFERS
+   *
+   * MDN / ECMAScript: fn.constructor === Function is true.
+   * SFMC Jint:        it is FALSE — the constructor identity link is broken,
+   *                   although `fn instanceof Function` still works.
+   *
+   * Proves:
+   *   1. greet instanceof Function is true (as expected).
+   *   2. DEV greet.constructor === Function is false (spec: true).
+   *   3. DEV the same holds for a function expression.
+   *   4. The recommended workaround — use instanceof Function (or typeof) —
+   *      correctly identifies functions and rejects non-functions.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var res = (actual === expected) ? "PASS " : "FAIL ";
+      Platform.Response.Write(res + id + " -> [" + actual + "]\n");
+  }
+
+  function greet() {}
+  var expr = function () { return 1; };
+
+  /* 1. instanceof works. */
+  assert("greet instanceof Function is true", String(greet instanceof Function), "true");
+  assert("expr instanceof Function is true", String(expr instanceof Function), "true");
+
+  /* 2 + 3. DEVIATION — the constructor identity is broken. */
+  assert("DEV greet.constructor === Function is false (spec: true)", String(greet.constructor === Function), "false");
+  assert("DEV expr.constructor === Function is false (spec: true)", String(expr.constructor === Function), "false");
+
+  /* 4. The recommended workaround: instanceof / typeof. */
+  var notAFunction = {};
+  assert("workaround: {} instanceof Function is false", String(notAFunction instanceof Function), "false");
+  assert("workaround: typeof greet is function", String(typeof greet), "function");
+  assert("workaround: typeof {} is object", String(typeof notAFunction), "object");
+  </script>

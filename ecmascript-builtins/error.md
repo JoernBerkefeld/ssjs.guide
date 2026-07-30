@@ -8,6 +8,7 @@ redirect_from:
   - /global-functions/error/
 description: Native JavaScript Error constructor for creating throwable error objects in try/catch error handling.
 verification: verified
+test_scripts: complete
 differs_from_docs: true
 availability:
   email: true
@@ -26,11 +27,15 @@ max_args: 1
 |------|------|----------|-------------|
 | `message` | string | No | Human-readable description of the error. After `new Error(msg)` it is **not** readable via `.message` (use `String(e)`). After call-form `Error(msg)` or on engine-raised errors, `.message` is set. |
 
+{% include test-script.html bundle="ecmascript-builtins--error" chapter="parameters" %}
+
 ## Description
 
 `Error` is the native JavaScript Error constructor. Use it with `throw` and `try/catch` for structured error handling in SSJS.
 
 {% include differs-from-mdn.html content="Unlike standard JavaScript, `new Error(\"msg\")` in the SFMC (Jint) engine does **not** populate `.message` — it reads back `undefined` (not an own property). Recover the text with `String(e)` or `(\"\" + e)`. Call-form `Error(\"msg\")` **does** set `.message`, and engine-raised errors set both `.message` and `.description`. `e.toString()` after `new Error(\"msg\")` returns `\"Error: undefined\"`. `instanceof Error` is always `false`; for JS-constructed errors use `e.constructor === Error` or `e.name`." %}
+
+{% include test-script.html bundle="ecmascript-builtins--error" chapter="description" label="Show test script — message shape, toString and instanceof deviations" %}
 
 ## Examples
 
@@ -126,6 +131,8 @@ try {
 }
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--error" chapter="examples" %}
+
 ## Notes
 
 The error object in SSJS is similar to but **not** identical to the standard ECMAScript `Error` object, and its shape depends on origin:
@@ -146,6 +153,8 @@ try {
     Write("Platform error: " + e.message);
 }
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--error" chapter="notes" %}
 
 ## See Also
 

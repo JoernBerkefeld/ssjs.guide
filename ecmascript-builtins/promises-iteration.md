@@ -6,6 +6,7 @@ parent_url: /ecmascript-builtins/
 permalink: /ecmascript-builtins/promises-iteration/
 description: Promises, generators, async functions, and the ES6 iteration protocol are not available in SSJS. The SFMC Jint engine predates ES2015 and runs synchronously, so Promise, Iterator, Generator, and all async variants are undefined.
 verification: verified
+test_scripts: complete
 ---
 
 **Promises, generators, async functions, and the iteration protocol are not available in SSJS.** The SFMC server-side JavaScript engine (Jint) implements an ES3/ES5-era dialect, predates ES2015, and executes **synchronously** — there is no event loop or microtask queue. `Promise`, `Iterator`, `Generator`, `GeneratorFunction`, and every async variant are `undefined`, and `new Promise(...)` throws `Unknown type: Promise`.
@@ -40,8 +41,10 @@ The SSJS engine runs synchronously, so asynchronous flow control is neither need
 ```javascript
 // No Promise/await — HTTP calls return synchronously.
 var resp = HTTP.Get("https://postman-echo.com/get");
-Write(resp.StatusCode);   // available immediately
+Write(resp.Status);   // available immediately
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--promises-iteration" chapter="promise" %}
 
 ## Iterator {#iterator}
 
@@ -53,17 +56,25 @@ for (var i = 0; i < arr.length; i++) {
 }
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--promises-iteration" chapter="iterator" %}
+
 ## Generator {#generator}
 
 `(ES6)` — ❌ Missing. `Generator` is **not defined**, and the `function*` / `yield` generator syntax is not supported by the engine's parser. Return a fully-materialised array instead of yielding lazily.
+
+{% include test-script.html bundle="ecmascript-builtins--promises-iteration" chapter="generator" %}
 
 ## GeneratorFunction {#generatorfunction}
 
 `(ES6)` — ❌ Missing. `GeneratorFunction` (the hidden constructor of generator functions) is **not defined**.
 
+{% include test-script.html bundle="ecmascript-builtins--promises-iteration" chapter="generatorfunction" %}
+
 ## Async variants {#async-variants}
 
 `(ES2017+)` — ❌ Missing. `AsyncFunction`, `AsyncGenerator`, `AsyncGeneratorFunction`, and `AsyncIterator` are all **not defined**. The `async` / `await` keywords are not supported. Since the engine is synchronous, model any "async" work as ordinary blocking calls.
+
+{% include test-script.html bundle="ecmascript-builtins--promises-iteration" chapter="async-variants" %}
 
 ## See Also
 

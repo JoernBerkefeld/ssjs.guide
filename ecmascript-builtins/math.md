@@ -6,6 +6,7 @@ parent_url: /ecmascript-builtins/
 description: The Math built-in object in SSJS — which methods and constants work, which are partial, and which ES6 members are missing, with fallbacks.
 verification: verified
 differs_from_docs: true
+test_scripts: complete
 ---
 
 Almost every `Math` member is **ES3** and works in SSJS. Two members are partial (`Math.max` / `Math.min`), one ES3 constant is missing (`Math.LOG10E`), and **all** ES6 `Math` methods are unavailable. Members that need a fallback are flagged below.
@@ -68,6 +69,9 @@ Almost every `Math` member is **ES3** and works in SSJS. Two members are partial
 | `Math.SQRT2` | `1.4142135623730951` |
 | `Math.SQRT1_2` | `0.7071067811865476` |
 
+
+{% include test-script.html bundle="ecmascript-builtins--math" chapter="constants" %}
+
 ## abs {#abs}
 
 `(ES3)` — ✅ Works. Absolute value.
@@ -75,6 +79,9 @@ Almost every `Math` member is **ES3** and works in SSJS. Two members are partial
 ```javascript
 Math.abs(-5);   // 5
 ```
+
+
+{% include test-script.html bundle="ecmascript-builtins--math" chapter="abs" %}
 
 ## ceil {#ceil}
 
@@ -84,6 +91,9 @@ Math.abs(-5);   // 5
 Math.ceil(4.1);   // 5
 ```
 
+
+{% include test-script.html bundle="ecmascript-builtins--math" chapter="ceil" %}
+
 ## floor {#floor}
 
 `(ES3)` — ✅ Works. Rounds down to the nearest integer.
@@ -91,6 +101,9 @@ Math.ceil(4.1);   // 5
 ```javascript
 Math.floor(4.9);   // 4
 ```
+
+
+{% include test-script.html bundle="ecmascript-builtins--math" chapter="floor" %}
 
 ## round {#round}
 
@@ -105,6 +118,9 @@ function roundTo(n, decimals) {
 roundTo(3.14159, 2);   // 3.14
 ```
 
+
+{% include test-script.html bundle="ecmascript-builtins--math" chapter="round" %}
+
 ## pow {#pow}
 
 `(ES3)` — ✅ Works. `x` raised to the power `y`.
@@ -114,6 +130,9 @@ Math.pow(2, 10);   // 1024
 Math.pow(9, 0.5);  // 3
 ```
 
+
+{% include test-script.html bundle="ecmascript-builtins--math" chapter="pow" %}
+
 ## sqrt {#sqrt}
 
 `(ES3)` — ✅ Works. Square root.
@@ -121,6 +140,9 @@ Math.pow(9, 0.5);  // 3
 ```javascript
 Math.sqrt(16);   // 4
 ```
+
+
+{% include test-script.html bundle="ecmascript-builtins--math" chapter="sqrt" %}
 
 ## random {#random}
 
@@ -133,6 +155,9 @@ function randomInt(min, max) {
 randomInt(1, 6);   // dice roll
 ```
 
+
+{% include test-script.html bundle="ecmascript-builtins--math" chapter="random" %}
+
 ## log {#log}
 
 `(ES3)` — ✅ Works. Natural logarithm.
@@ -141,6 +166,9 @@ randomInt(1, 6);   // dice roll
 Math.log(Math.E);   // 1
 ```
 
+
+{% include test-script.html bundle="ecmascript-builtins--math" chapter="log" %}
+
 ## exp {#exp}
 
 `(ES3)` — ✅ Works. `e` raised to the power `x`.
@@ -148,6 +176,9 @@ Math.log(Math.E);   // 1
 ```javascript
 Math.exp(1);   // 2.718281828459045
 ```
+
+
+{% include test-script.html bundle="ecmascript-builtins--math" chapter="exp" %}
 
 ## Trigonometry {#trigonometry}
 
@@ -160,6 +191,9 @@ Math.sin(Math.PI / 2);   // 1
 Math.cos(0);             // 1
 Math.atan2(1, 1);        // π/4
 ```
+
+
+{% include test-script.html bundle="ecmascript-builtins--math" chapter="trigonometry" %}
 
 ## max {#max}
 
@@ -176,6 +210,9 @@ var max = arr[0];
 for (var i = 1; i < arr.length; i++) { if (arr[i] > max) { max = arr[i]; } }
 ```
 
+
+{% include test-script.html bundle="ecmascript-builtins--math" chapter="max" %}
+
 ## min {#min}
 
 `(ES3)` — ⚠️ Partial. Same caveat as [`Math.max`](#max): throws with 3+ args, no-arg returns `0` instead of `+Infinity`. See the [polyfill](/engine-limitations/polyfills/#math-max-min).
@@ -184,6 +221,9 @@ for (var i = 1; i < arr.length; i++) { if (arr[i] > max) { max = arr[i]; } }
 Math.min(1, 5);   // 1  — two-argument form is safe
 ```
 
+
+{% include test-script.html bundle="ecmascript-builtins--math" chapter="min" %}
+
 ## LOG10E {#log10e}
 
 `(ES3)` — ❌ Missing. `Math.LOG10E` is `undefined` in SFMC. Use the literal `0.4342944819032518`.
@@ -191,6 +231,9 @@ Math.min(1, 5);   // 1  — two-argument form is safe
 ```javascript
 var LOG10E = 0.4342944819032518;
 ```
+
+
+{% include test-script.html bundle="ecmascript-builtins--math" chapter="log10e" %}
 
 ## trunc {#trunc}
 
@@ -202,6 +245,9 @@ trunc(4.7);    // 4
 trunc(-4.7);   // -4
 ```
 
+
+{% include test-script.html bundle="ecmascript-builtins--math" chapter="trunc" %}
+
 ## sign {#sign}
 
 `(ES6)` — ❌ Missing. Use `x > 0 ? 1 : x < 0 ? -1 : 0`.
@@ -209,6 +255,9 @@ trunc(-4.7);   // -4
 ```javascript
 function sign(n) { return n > 0 ? 1 : n < 0 ? -1 : 0; }
 ```
+
+
+{% include test-script.html bundle="ecmascript-builtins--math" chapter="sign" %}
 
 ## cbrt {#cbrt}
 
@@ -220,6 +269,9 @@ cbrt(27);    // 3
 cbrt(-27);   // -3
 ```
 
+
+{% include test-script.html bundle="ecmascript-builtins--math" chapter="cbrt" %}
+
 ## log2 {#log2}
 
 `(ES6)` — ❌ Missing. Use `Math.log(x) / Math.LN2`.
@@ -228,6 +280,9 @@ cbrt(-27);   // -3
 Math.log(8) / Math.LN2;   // 3
 ```
 
+
+{% include test-script.html bundle="ecmascript-builtins--math" chapter="log2" %}
+
 ## log10 {#log10}
 
 `(ES6)` — ❌ Missing. Use `Math.log(x) / Math.LN10`.
@@ -235,6 +290,9 @@ Math.log(8) / Math.LN2;   // 3
 ```javascript
 Math.log(100) / Math.LN10;   // 2
 ```
+
+
+{% include test-script.html bundle="ecmascript-builtins--math" chapter="log10" %}
 
 ## hypot {#hypot}
 
@@ -245,6 +303,9 @@ function hypot(a, b) { return Math.sqrt(a * a + b * b); }
 hypot(3, 4);   // 5
 ```
 
+
+{% include test-script.html bundle="ecmascript-builtins--math" chapter="hypot" %}
+
 ## expm1 {#expm1}
 
 `(ES6)` — ❌ Missing. Use `Math.exp(x) - 1`.
@@ -253,6 +314,9 @@ hypot(3, 4);   // 5
 function expm1(x) { return Math.exp(x) - 1; }
 ```
 
+
+{% include test-script.html bundle="ecmascript-builtins--math" chapter="expm1" %}
+
 ## log1p {#log1p}
 
 `(ES6)` — ❌ Missing. Use `Math.log(1 + x)`.
@@ -260,6 +324,9 @@ function expm1(x) { return Math.exp(x) - 1; }
 ```javascript
 function log1p(x) { return Math.log(1 + x); }
 ```
+
+
+{% include test-script.html bundle="ecmascript-builtins--math" chapter="log1p" %}
 
 ## Hyperbolic {#hyperbolic}
 
@@ -273,6 +340,9 @@ function cosh(x) { return (Math.exp(x) + Math.exp(-x)) / 2; }
 function tanh(x) { var e = Math.exp(2 * x); return (e - 1) / (e + 1); }
 ```
 
+
+{% include test-script.html bundle="ecmascript-builtins--math" chapter="hyperbolic" %}
+
 ## Inverse hyperbolic {#inverse-hyperbolic}
 
 <a id="asinh"></a><a id="acosh"></a><a id="atanh"></a>
@@ -284,6 +354,9 @@ function asinh(x) { return Math.log(x + Math.sqrt(x * x + 1)); }
 function acosh(x) { return Math.log(x + Math.sqrt(x * x - 1)); }
 function atanh(x) { return Math.log((1 + x) / (1 - x)) / 2; }
 ```
+
+
+{% include test-script.html bundle="ecmascript-builtins--math" chapter="inverse-hyperbolic" %}
 
 ## clz32 {#clz32}
 
@@ -299,9 +372,15 @@ function clz32(x) {
 }
 ```
 
+
+{% include test-script.html bundle="ecmascript-builtins--math" chapter="clz32" %}
+
 ## fround {#fround}
 
 `(ES6)` — ❌ Missing. There is no ES3-safe equivalent (no typed arrays); keep values as doubles.
+
+
+{% include test-script.html bundle="ecmascript-builtins--math" chapter="fround" %}
 
 ## imul {#imul}
 
@@ -314,6 +393,9 @@ function imul(a, b) {
     return ((aLo * bLo) + (((aHi * bLo + aLo * bHi) << 16) >>> 0)) | 0;
 }
 ```
+
+
+{% include test-script.html bundle="ecmascript-builtins--math" chapter="imul" %}
 
 ## See Also
 

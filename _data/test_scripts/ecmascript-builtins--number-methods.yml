@@ -1,0 +1,789 @@
+# Test scripts for /ecmascript-builtins/number-methods/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the ECMAScript spec.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values. The assert() helper compares with a plain === and never
+# coerces its arguments — stringify at the CALL SITE instead.
+#
+# ENGINE NOTE: default number stringification truncates to 15 significant
+# digits (String(Math.PI) -> "3.14159265358979"), so numeric claims are
+# asserted with === against a literal wherever possible.
+
+tofixed: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Number.prototype.toFixed(digits)
+   *
+   * Proves:
+   *   1. toFixed(digits) returns a STRING with exactly `digits` decimals.
+   *   2. The three commented examples on the page:
+   *        (3.14159).toFixed(2)  -> "3.14"
+   *        (9.99).toFixed()      -> "10"     (no-arg form = 0 decimals, rounded)
+   *        (-3.14159).toFixed(2) -> "-3.14"
+   *   3. Rounding happens at the requested precision, and padding with zeros
+   *      works for values that have fewer decimals than requested.
+   *   4. The member exists and is a function.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+
+  /* 1. Shape of the member. */
+  var n = 3.14159;
+  assert("typeof (3.14159).toFixed is function", String(typeof n.toFixed), "function");
+  assert("typeof (3.14159).toFixed(2) is string", String(typeof n.toFixed(2)), "string");
+
+  /* 2. The documented examples. */
+  assert("(3.14159).toFixed(2) is '3.14'", String(n.toFixed(2)), "3.14");
+  var m = 9.99;
+  assert("(9.99).toFixed() is '10'", String(m.toFixed()), "10");
+  var neg = -3.14159;
+  assert("(-3.14159).toFixed(2) is '-3.14'", String(neg.toFixed(2)), "-3.14");
+
+  /* 3. Rounding and zero padding at the requested precision. */
+  assert("(3.14159).toFixed(0) is '3'", String(n.toFixed(0)), "3");
+  assert("(3.14159).toFixed(4) is '3.1416'", String(n.toFixed(4)), "3.1416");
+  var one = 1;
+  assert("(1).toFixed(2) pads zeros -> '1.00'", String(one.toFixed(2)), "1.00");
+  var zero = 0;
+  assert("(0).toFixed(2) is '0.00'", String(zero.toFixed(2)), "0.00");
+  </script>
+
+toexponential: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Number.prototype.toExponential(digits) — Partial
+   *
+   * Proves:
+   *   1. toExponential(digits) works and returns a string.
+   *   2. The documented example (123456).toExponential(2) -> "1.23e+5".
+   *   3. DEVIATION marked "DEV": the NO-ARGUMENT form pads the significand with
+   *      trailing zeros — (3.14159).toExponential() -> "3.1415900000000000e+0".
+   *      MDN/ECMAScript specify the minimal number of digits needed, i.e.
+   *      "3.14159e+0". Always pass an explicit fractionDigits.
+   *   4. The recommended workaround (passing digits explicitly) produces the
+   *      minimal documented form.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+
+  /* 1. Shape of the member. */
+  var v = 123456;
+  assert("typeof (123456).toExponential is function", String(typeof v.toExponential), "function");
+  assert("typeof (123456).toExponential(2) is string", String(typeof v.toExponential(2)), "string");
+
+  /* 2. The documented example. */
+  assert("(123456).toExponential(2) is '1.23e+5'", String(v.toExponential(2)), "1.23e+5");
+
+  /* 3. DEVIATION — the no-arg form pads trailing zeros. */
+  var p = 3.14159;
+  assert("DEV (3.14159).toExponential() pads zeros (spec: '3.14159e+0')", String(p.toExponential()), "3.1415900000000000e+0");
+
+  /* 4. The workaround — pass digits explicitly. */
+  assert("workaround (3.14159).toExponential(5) is '3.14159e+0'", String(p.toExponential(5)), "3.14159e+0");
+  assert("workaround (3.14159).toExponential(2) is '3.14e+0'", String(p.toExponential(2)), "3.14e+0");
+  assert("workaround (123456).toExponential(0) is '1e+5'", String(v.toExponential(0)), "1e+5");
+  </script>
+
+toprecision: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Number.prototype.toPrecision(digits) — Partial
+   *
+   * Proves:
+   *   1. toPrecision(digits) works and returns a string.
+   *   2. DEVIATION marked "DEV": digits selects DECIMAL PLACES, not significant
+   *      digits. The result carries max(1, digits - 1) decimals, making it
+   *      identical to toFixed(digits - 1):
+   *        (123.456).toPrecision(5) -> "123.4560"   (spec: "123.46")
+   *        (123.456).toPrecision(2) -> "123.5"      (spec: "1.2e+2")
+   *        (1234567).toPrecision(3) -> "1234567.00" (spec: "1.23e+6")
+   *      (3.14159).toPrecision(4) -> "3.142" coincides with the spec result
+   *      only because the value has exactly one integer digit.
+   *   3. DEVIATION: it NEVER switches to exponential notation, at any precision.
+   *   4. DEVIATION: the argument is MANDATORY — the no-argument form throws
+   *      "precision missing" (spec: behaves like toString()).
+   *   5. The range check: 1..21 is accepted, 0 and 22 throw
+   *      "precision must be between 1 and 21".
+   *   6. The recommended workaround: toFixed(digits - 1) produces the identical
+   *      string, so use toFixed directly.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+  function assertThrows(id, fn, expectedMsg) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw && msg === expectedMsg ? "PASS " : "FAIL ") + id + " => " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. Shape of the member. */
+  var a = 3.14159;
+  assert("typeof (3.14159).toPrecision is function", String(typeof a.toPrecision), "function");
+  assert("typeof (3.14159).toPrecision(4) is string", String(typeof a.toPrecision(4)), "string");
+  assert("(3.14159).toPrecision(4) is '3.142' (matches spec here)", String(a.toPrecision(4)), "3.142");
+
+  /* 2. DEVIATION — the argument is decimal places, not significant digits. */
+  var b = 123.456;
+  assert("DEV (123.456).toPrecision(5) is '123.4560' (spec: '123.46')", String(b.toPrecision(5)), "123.4560");
+  assert("DEV (123.456).toPrecision(2) is '123.5' (spec: '1.2e+2')", String(b.toPrecision(2)), "123.5");
+  assert("DEV (123.456).toPrecision(1) is '123.5' (spec: '1e+2')", String(b.toPrecision(1)), "123.5");
+  assert("DEV (123.456).toPrecision(3) is '123.46' (spec: '123')", String(b.toPrecision(3)), "123.46");
+  var d = 1234567;
+  assert("DEV (1234567).toPrecision(3) is '1234567.00' (spec: '1.23e+6')", String(d.toPrecision(3)), "1234567.00");
+  assert("DEV (1234567).toPrecision(2) is '1234567.0' (spec: '1.2e+6')", String(d.toPrecision(2)), "1234567.0");
+  var c = 0.000123;
+  assert("DEV (0.000123).toPrecision(2) is '0.0' (spec: '0.000123')", String(c.toPrecision(2)), "0.0");
+
+  /* 3. DEVIATION — never switches to exponential notation. */
+  assert("DEV (123.456).toPrecision(21) has no 'e'", String(b.toPrecision(21)).indexOf("e") === -1, true);
+  assert("DEV (1234567).toPrecision(1) has no 'e' (spec: '1e+6')", String(d.toPrecision(1)).indexOf("e") === -1, true);
+  assert("DEV (0.000123).toPrecision(2) has no 'e' (spec: '0.000123')", String(c.toPrecision(2)).indexOf("e") === -1, true);
+
+  /* 4. DEVIATION — the argument is mandatory. */
+  assertThrows("DEV (123.456).toPrecision() throws 'precision missing' (spec: '123.456')", function () { return b.toPrecision(); }, "precision missing");
+
+  /* 5. Range check 1..21. */
+  assertThrows("(123.456).toPrecision(0) throws", function () { return b.toPrecision(0); }, "precision must be between 1 and 21");
+  assertThrows("(123.456).toPrecision(22) throws", function () { return b.toPrecision(22); }, "precision must be between 1 and 21");
+
+  /* 6. Workaround — toFixed(digits - 1) gives the identical string. */
+  assert("workaround (123.456).toFixed(4) === toPrecision(5)", String(b.toFixed(4)) === String(b.toPrecision(5)), true);
+  assert("workaround (123.456).toFixed(1) === toPrecision(2)", String(b.toFixed(1)) === String(b.toPrecision(2)), true);
+  assert("workaround (1.5).toFixed(3) === (1.5).toPrecision(4)", String((1.5).toFixed(3)) === String((1.5).toPrecision(4)), true);
+  assert("workaround (123.456).toFixed(4) is '123.4560'", String(b.toFixed(4)), "123.4560");
+  </script>
+
+valueof: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Number.prototype.valueOf()
+   *
+   * Proves:
+   *   1. The documented example (42).valueOf() -> 42.
+   *   2. valueOf() returns a primitive number, not an object.
+   *   3. It round-trips for negative and fractional values too.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+
+  /* 1 + 2. The documented example and the primitive result. */
+  var n = 42;
+  assert("typeof (42).valueOf is function", String(typeof n.valueOf), "function");
+  assert("(42).valueOf() === 42", n.valueOf() === 42, true);
+  assert("typeof (42).valueOf() is number", String(typeof n.valueOf()), "number");
+
+  /* 3. Other values round-trip. */
+  var neg = -7;
+  assert("(-7).valueOf() === -7", neg.valueOf() === -7, true);
+  var frac = 1.25;
+  assert("(1.25).valueOf() === 1.25", frac.valueOf() === 1.25, true);
+  var zero = 0;
+  assert("(0).valueOf() === 0", zero.valueOf() === 0, true);
+  </script>
+
+tostring: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Number.prototype.toString(radix) — Partial
+   *
+   * Proves:
+   *   1. The no-arg and supported-radix examples on the page:
+   *        (255).toString()   -> "255"
+   *        (255).toString(16) -> "ff"
+   *        (255).toString(2)  -> "11111111"
+   *   2. Radix 8 and 10 also work (the four supported bases are 2, 8, 10, 16).
+   *   3. DEVIATION marked "DEV": any other radix throws "Invalid Base."
+   *      MDN specifies radixes 2 through 36 are all valid.
+   *   4. DEVIATION marked "DEV": fractional values are TRUNCATED to their
+   *      integer part before non-decimal conversion —
+   *        (3.5).toString(2) -> "100"  (spec: "11.1")
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+  function assertThrows(id, fn, expectedMsg) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw && msg === expectedMsg ? "PASS " : "FAIL ") + id + " => " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. The documented examples. */
+  var n = 255;
+  assert("typeof (255).toString is function", String(typeof n.toString), "function");
+  assert("(255).toString() is '255'", String(n.toString()), "255");
+  assert("(255).toString(16) is 'ff'", String(n.toString(16)), "ff");
+  assert("(255).toString(2) is '11111111'", String(n.toString(2)), "11111111");
+
+  /* 2. The other two supported bases. */
+  assert("(255).toString(8) is '377'", String(n.toString(8)), "377");
+  assert("(255).toString(10) is '255'", String(n.toString(10)), "255");
+
+  /* 3. DEVIATION — unsupported radixes throw. */
+  var m = 35;
+  assertThrows("DEV (35).toString(36) throws 'Invalid Base.' (spec: 'z')", function () { return m.toString(36); }, "Invalid Base.");
+  assertThrows("DEV (255).toString(3) throws 'Invalid Base.' (spec: '100110')", function () { return n.toString(3); }, "Invalid Base.");
+  assertThrows("DEV (255).toString(4) throws 'Invalid Base.' (spec: '3333')", function () { return n.toString(4); }, "Invalid Base.");
+  assertThrows("DEV (255).toString(32) throws 'Invalid Base.' (spec: '7v')", function () { return n.toString(32); }, "Invalid Base.");
+
+  /* 4. DEVIATION — fractional values are truncated before conversion. */
+  var f = 3.5;
+  assert("DEV (3.5).toString(2) is '100' (spec: '11.1')", String(f.toString(2)), "100");
+  assert("(3.5).toString() keeps the fraction", String(f.toString()), "3.5");
+  </script>
+
+parseint-global: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: parseInt (global) — Partial
+   *
+   * Proves:
+   *   1. The commented examples on the page:
+   *        parseInt("42", 10)   -> 42
+   *        parseInt("255", 16)  -> 597   (standard base-16 parse: 2*256+5*16+5)
+   *        parseInt("0x1F")     -> 31    (auto-detects the hex prefix)
+   *   2. DEVIATION marked "DEV": trailing non-numeric characters yield NaN —
+   *        parseInt("10px", 10) -> NaN   (spec: 10)
+   *   3. The recommended workaround: strip non-digits before parsing.
+   *   4. NaN is detected via the global isNaN, since 0/0 does not produce NaN
+   *      in this engine.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+
+  /* 1. The documented examples. */
+  assert("typeof parseInt is function", String(typeof parseInt), "function");
+  assert("parseInt('42', 10) === 42", parseInt("42", 10) === 42, true);
+  assert("parseInt('255', 16) === 597", parseInt("255", 16) === 597, true);
+  assert("parseInt('0x1F') === 31", parseInt("0x1F") === 31, true);
+  assert("typeof parseInt('42', 10) is number", String(typeof parseInt("42", 10)), "number");
+
+  /* 2. DEVIATION — trailing non-numeric characters yield NaN. */
+  assert("DEV parseInt('10px', 10) is NaN (spec: 10)", isNaN(parseInt("10px", 10)), true);
+  assert("DEV parseInt('1.5kg') is NaN (spec: 1)", isNaN(parseInt("1.5kg")), true);
+  assert("DEV parseInt('12abc', 10) is NaN (spec: 12)", isNaN(parseInt("12abc", 10)), true);
+  assert("parseInt('abc', 10) is NaN (spec agrees)", isNaN(parseInt("abc", 10)), true);
+
+  /* 3. The workaround — strip non-digits first. */
+  var raw = "10px";
+  var digits = raw.replace(/[^0-9-]/g, "");
+  assert("workaround stripped '10px' is '10'", String(digits), "10");
+  assert("workaround parseInt(stripped, 10) === 10", parseInt(digits, 10) === 10, true);
+
+  /* 4. Sanity: a genuine NaN and a genuine number are distinguishable. */
+  assert("isNaN(parseInt('42', 10)) is false", isNaN(parseInt("42", 10)), false);
+  assert("Number('abc') is NaN (genuine NaN source)", isNaN(Number("abc")), true);
+  </script>
+
+parsefloat-global: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: parseFloat (global) — Partial
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": parseFloat uses 32-bit precision, so
+   *        parseFloat("3.14")          -> 3.14000010490417  (spec: 3.14)
+   *        parseFloat("3.14") === 3.14 -> false             (spec: true)
+   *   2. DEVIATION marked "DEV": trailing non-numeric characters yield NaN —
+   *        parseFloat("1.5kg") -> NaN  (spec: 1.5)
+   *   3. The recommended workaround: compare with a tolerance, never with ===.
+   *   4. Integral values still round-trip exactly.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+
+  /* 1. DEVIATION — 32-bit precision. */
+  assert("typeof parseFloat is function", String(typeof parseFloat), "function");
+  var v = parseFloat("3.14");
+  assert("typeof parseFloat('3.14') is number", String(typeof v), "number");
+  assert("DEV String(parseFloat('3.14')) is '3.14000010490417' (spec: '3.14')", String(v), "3.14000010490417");
+  assert("DEV parseFloat('3.14') === 3.14 is false (spec: true)", v === 3.14, false);
+  assert("DEV parseFloat('3.14') !== 3.14 is true", v !== 3.14, true);
+
+  /* 2. DEVIATION — trailing non-numeric characters yield NaN. */
+  assert("DEV parseFloat('1.5kg') is NaN (spec: 1.5)", isNaN(parseFloat("1.5kg")), true);
+  assert("DEV parseFloat('3.14abc') is NaN (spec: 3.14)", isNaN(parseFloat("3.14abc")), true);
+  assert("parseFloat('abc') is NaN (spec agrees)", isNaN(parseFloat("abc")), true);
+
+  /* 3. The workaround — compare with a tolerance. */
+  var diff = v - 3.14;
+  if (diff < 0) { diff = -diff; }
+  assert("workaround |parseFloat('3.14') - 3.14| < 0.0001", diff < 0.0001, true);
+  assert("workaround the same difference is NOT zero", diff > 0, true);
+
+  /* 4. Integral values round-trip exactly. */
+  assert("parseFloat('42') === 42", parseFloat("42") === 42, true);
+  assert("parseFloat('0') === 0", parseFloat("0") === 0, true);
+  assert("parseFloat('-7') === -7", parseFloat("-7") === -7, true);
+  </script>
+
+constants-es3: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Constants (ES3) — Partial
+   *
+   * Proves:
+   *   1. All five classic constants ARE defined (typeof "number").
+   *   2. Number.MAX_VALUE is correct: 1.7976931348623157e308.
+   *   3. Number.NaN is correct: it is NaN and Number.NaN === Number.NaN is false.
+   *   4. DEVIATION marked "DEV": Number.MIN_VALUE is a LARGE NEGATIVE number
+   *      (-1.7976931348623157e308). Per the spec it is the smallest POSITIVE
+   *      value, 5e-324.
+   *   5. DEVIATION marked "DEV": Number.POSITIVE_INFINITY and
+   *      Number.NEGATIVE_INFINITY have their SIGNS SWAPPED — POSITIVE_INFINITY
+   *      stringifies "-infinity" and reads back < 0, NEGATIVE_INFINITY
+   *      stringifies "infinity" and reads back > 0. Spec: +Infinity / -Infinity.
+   *   6. DEVIATION marked "DEV": the GLOBAL Infinity is unreliable too —
+   *      (Infinity > 0) is false and String(Infinity) is "-infinity"
+   *      (spec: true / "Infinity").
+   *   7. The global NaN behaves correctly: NaN !== NaN is true.
+   *   8. The documented fallbacks work: the numeric literal for MAX_VALUE, and
+   *      (value !== value) as a reliable NaN test.
+   *
+   * NOTE ON STRINGIFICATION: this engine truncates default number
+   * stringification to 15 significant digits, so String(Number.MAX_VALUE) is
+   * "1.79769313486232e+308" rather than the full 17-digit form. Value claims
+   * are therefore asserted with === against the literal.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+
+  /* 1. All five constants are defined. */
+  assert("typeof Number.MAX_VALUE is number", String(typeof Number.MAX_VALUE), "number");
+  assert("typeof Number.MIN_VALUE is number", String(typeof Number.MIN_VALUE), "number");
+  assert("typeof Number.NaN is number", String(typeof Number.NaN), "number");
+  assert("typeof Number.POSITIVE_INFINITY is number", String(typeof Number.POSITIVE_INFINITY), "number");
+  assert("typeof Number.NEGATIVE_INFINITY is number", String(typeof Number.NEGATIVE_INFINITY), "number");
+
+  /* 2. MAX_VALUE is correct. */
+  assert("Number.MAX_VALUE === 1.7976931348623157e308", Number.MAX_VALUE === 1.7976931348623157e308, true);
+  assert("String(Number.MAX_VALUE) truncates to 15 sig digits", String(Number.MAX_VALUE), "1.79769313486232e+308");
+
+  /* 3. Number.NaN is correct. */
+  assert("isNaN(Number.NaN) is true", isNaN(Number.NaN), true);
+  assert("Number.NaN === Number.NaN is false", Number.NaN === Number.NaN, false);
+
+  /* 4. DEVIATION — MIN_VALUE is a large negative number. */
+  assert("DEV Number.MIN_VALUE < 0 (spec: 5e-324, positive)", Number.MIN_VALUE < 0, true);
+  assert("DEV Number.MIN_VALUE === -1.7976931348623157e308 (spec: 5e-324)", Number.MIN_VALUE === -1.7976931348623157e308, true);
+  assert("DEV String(Number.MIN_VALUE) is '-1.79769313486232e+308' (spec: '5e-324')", String(Number.MIN_VALUE), "-1.79769313486232e+308");
+
+  /* 5. DEVIATION — the *_INFINITY constants have swapped signs. */
+  assert("DEV String(Number.POSITIVE_INFINITY) is '-infinity' (spec: 'Infinity')", String(Number.POSITIVE_INFINITY), "-infinity");
+  assert("DEV Number.POSITIVE_INFINITY < 0 is true (spec: false)", Number.POSITIVE_INFINITY < 0, true);
+  assert("DEV Number.POSITIVE_INFINITY > 0 is false (spec: true)", Number.POSITIVE_INFINITY > 0, false);
+  assert("DEV String(Number.NEGATIVE_INFINITY) is 'infinity' (spec: '-Infinity')", String(Number.NEGATIVE_INFINITY), "infinity");
+  assert("DEV Number.NEGATIVE_INFINITY > 0 is true (spec: false)", Number.NEGATIVE_INFINITY > 0, true);
+
+  /* 6. DEVIATION — the global Infinity is unreliable in the same way. */
+  assert("DEV String(Infinity) is '-infinity' (spec: 'Infinity')", String(Infinity), "-infinity");
+  assert("DEV (Infinity > 0) is false (spec: true)", Infinity > 0, false);
+  assert("isFinite(Infinity) is false (spec agrees)", isFinite(Infinity), false);
+
+  /* 7. The global NaN behaves correctly. */
+  assert("NaN !== NaN is true", NaN !== NaN, true);
+  assert("isNaN(NaN) is true", isNaN(NaN), true);
+
+  /* 8. The documented fallbacks. */
+  var MAX_VALUE = 1.7976931348623157e308;
+  assert("fallback literal matches Number.MAX_VALUE", MAX_VALUE === Number.MAX_VALUE, true);
+  var value = Number("abc");
+  var isNotANumber = (value !== value);
+  assert("fallback (value !== value) detects NaN", isNotANumber, true);
+  var ok = 42;
+  assert("fallback (value !== value) is false for a real number", ok !== ok, false);
+  </script>
+
+constants-es6: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Constants (ES6) — Missing
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER
+   *      and Number.EPSILON are all typeof "undefined" (spec: number). Reading
+   *      them does not throw — only invocation of a missing member does.
+   *   2. The documented literal fallbacks are usable numbers and behave as the
+   *      safe-integer bounds and the machine epsilon.
+   *
+   * NOTE ON STRINGIFICATION: this engine truncates default number
+   * stringification to 15 significant digits, so String(9007199254740991) is
+   * "9.00719925474099e+15". Value claims use === against the literal instead.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+
+  /* 1. DEVIATION — the ES6 constants are undefined. */
+  assert("DEV typeof Number.MAX_SAFE_INTEGER is undefined (spec: number)", String(typeof Number.MAX_SAFE_INTEGER), "undefined");
+  assert("DEV typeof Number.MIN_SAFE_INTEGER is undefined (spec: number)", String(typeof Number.MIN_SAFE_INTEGER), "undefined");
+  assert("DEV typeof Number.EPSILON is undefined (spec: number)", String(typeof Number.EPSILON), "undefined");
+
+  /* Reading a missing member does not throw. */
+  var read = "no-throw";
+  try { var tmp = Number.MAX_SAFE_INTEGER; } catch (ex) { read = "THREW: " + ex.message; }
+  assert("reading Number.MAX_SAFE_INTEGER does not throw", read, "no-throw");
+
+  /* 2. The documented literal fallbacks. */
+  var MAX_SAFE_INTEGER = 9007199254740991;
+  var MIN_SAFE_INTEGER = -9007199254740991;
+  var EPSILON = 2.220446049250313e-16;
+  assert("fallback typeof MAX_SAFE_INTEGER is number", String(typeof MAX_SAFE_INTEGER), "number");
+  assert("fallback MAX_SAFE_INTEGER === 9007199254740991", MAX_SAFE_INTEGER === 9007199254740991, true);
+  assert("fallback MIN_SAFE_INTEGER === -MAX_SAFE_INTEGER", MIN_SAFE_INTEGER === -MAX_SAFE_INTEGER, true);
+  assert("fallback EPSILON > 0", EPSILON > 0, true);
+  assert("fallback EPSILON < 0.000001", EPSILON < 0.000001, true);
+  assert("fallback 1 + EPSILON > 1", (1 + EPSILON) > 1, true);
+  </script>
+
+isinteger: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Number.isInteger(val) — Missing
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": Number.isInteger is typeof "undefined"
+   *      (spec: a function). Reading the missing member does NOT throw.
+   *   2. Calling the missing member DOES throw — asserted for both the plain
+   *      call form and the `new` form.
+   *   3. The documented workaround
+   *        typeof n === "number" && Math.floor(n) === n
+   *      classifies integers, negatives and zero as true, and fractions and
+   *      non-numbers as false.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " => " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEVIATION — the member is undefined, and reading it does not throw. */
+  assert("DEV typeof Number.isInteger is undefined (spec: function)", String(typeof Number.isInteger), "undefined");
+  var read = "no-throw";
+  try { var tmp = Number.isInteger; } catch (ex) { read = "THREW: " + ex.message; }
+  assert("reading Number.isInteger does not throw", read, "no-throw");
+
+  /* 2. Calling the missing member throws. */
+  assertThrows("Number.isInteger(1) throws", function () { return Number.isInteger(1); });
+  assertThrows("new Number.isInteger(1) throws", function () { return new Number.isInteger(1); });
+
+  /* 3. The documented workaround. */
+  function isInteger(n) { return typeof n === "number" && Math.floor(n) === n; }
+  assert("workaround isInteger(42) is true", isInteger(42), true);
+  assert("workaround isInteger(0) is true", isInteger(0), true);
+  assert("workaround isInteger(-7) is true", isInteger(-7), true);
+  assert("workaround isInteger(3.5) is false", isInteger(3.5), false);
+  assert("workaround isInteger(-0.5) is false", isInteger(-0.5), false);
+  assert("workaround isInteger('42') is false (string, not number)", isInteger("42"), false);
+  assert("workaround isInteger(true) is false", isInteger(true), false);
+  </script>
+
+isnan: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Number.isNaN(val) — Missing
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": Number.isNaN is typeof "undefined"
+   *      (spec: a function). Reading it does not throw; calling it does.
+   *   2. The documented workaround — the global isNaN(value):
+   *        isNaN(NaN) -> true
+   *      plus the documented note that the global COERCES non-numbers, unlike
+   *      the ES6 Number.isNaN: isNaN("abc") is true even though "abc" is not
+   *      the NaN value.
+   *   3. The documented inline check (value !== value) detects NaN and is
+   *      false for real numbers.
+   *
+   * ENGINE NOTE: 0/0 does NOT produce NaN in this engine, so Number("abc") is
+   * used wherever a genuine NaN value is required.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " => " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEVIATION — the member is undefined. */
+  assert("DEV typeof Number.isNaN is undefined (spec: function)", String(typeof Number.isNaN), "undefined");
+  var read = "no-throw";
+  try { var tmp = Number.isNaN; } catch (ex) { read = "THREW: " + ex.message; }
+  assert("reading Number.isNaN does not throw", read, "no-throw");
+  assertThrows("Number.isNaN(1) throws", function () { return Number.isNaN(1); });
+  assertThrows("new Number.isNaN(1) throws", function () { return new Number.isNaN(1); });
+
+  /* 2. The documented workaround — the global isNaN. */
+  assert("typeof isNaN is function", String(typeof isNaN), "function");
+  assert("workaround isNaN(NaN) is true", isNaN(NaN), true);
+  assert("workaround isNaN(42) is false", isNaN(42), false);
+  assert("workaround isNaN(Number('abc')) is true", isNaN(Number("abc")), true);
+  assert("global isNaN COERCES non-numbers: isNaN('abc') is true", isNaN("abc"), true);
+  assert("global isNaN COERCES numeric strings: isNaN('42') is false", isNaN("42"), false);
+
+  /* 3. The documented inline check. */
+  var nanValue = Number("abc");
+  assert("workaround (value !== value) is true for NaN", nanValue !== nanValue, true);
+  var real = 42;
+  assert("workaround (value !== value) is false for a number", real !== real, false);
+  assert("NaN !== NaN is true", NaN !== NaN, true);
+  </script>
+
+isfinite: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Number.isFinite(val) — Missing
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": Number.isFinite is typeof "undefined"
+   *      (spec: a function). Reading it does not throw; calling it does.
+   *   2. The documented workaround — the global isFinite(value):
+   *        isFinite(42)       -> true
+   *        isFinite(Infinity) -> false
+   *   3. isFinite is true for ordinary finite values and (like the global
+   *      isNaN) coerces its argument.
+   *
+   * NOT ASSERTED: isFinite(NaN). The chapter makes no claim about it, and this
+   * engine returns true for it (the spec requires false) — an undocumented
+   * deviation that belongs to the global isFinite, not to this chapter.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " => " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEVIATION — the member is undefined. */
+  assert("DEV typeof Number.isFinite is undefined (spec: function)", String(typeof Number.isFinite), "undefined");
+  var read = "no-throw";
+  try { var tmp = Number.isFinite; } catch (ex) { read = "THREW: " + ex.message; }
+  assert("reading Number.isFinite does not throw", read, "no-throw");
+  assertThrows("Number.isFinite(1) throws", function () { return Number.isFinite(1); });
+  assertThrows("new Number.isFinite(1) throws", function () { return new Number.isFinite(1); });
+
+  /* 2. The documented workaround — the global isFinite. */
+  assert("typeof isFinite is function", String(typeof isFinite), "function");
+  assert("workaround isFinite(42) is true", isFinite(42), true);
+  assert("workaround isFinite(Infinity) is false", isFinite(Infinity), false);
+
+  /* 3. Further cases. */
+  assert("isFinite(0) is true", isFinite(0), true);
+  assert("isFinite(-7.5) is true", isFinite(-7.5), true);
+  assert("isFinite('42') is true (argument is coerced)", isFinite("42"), true);
+  </script>
+
+parseint: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Number.parseInt(str) — Missing
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": Number.parseInt is typeof "undefined"
+   *      (spec: a function, the same object as the global parseInt). Reading
+   *      it does not throw; calling it does.
+   *   2. The documented workaround — the global parseInt(string, 10):
+   *        parseInt("42", 10) -> 42
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " => " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEVIATION — the member is undefined. */
+  assert("DEV typeof Number.parseInt is undefined (spec: function)", String(typeof Number.parseInt), "undefined");
+  var read = "no-throw";
+  try { var tmp = Number.parseInt; } catch (ex) { read = "THREW: " + ex.message; }
+  assert("reading Number.parseInt does not throw", read, "no-throw");
+  assertThrows("Number.parseInt('42') throws", function () { return Number.parseInt("42"); });
+  assertThrows("new Number.parseInt('42') throws", function () { return new Number.parseInt("42"); });
+
+  /* 2. The documented workaround — the global parseInt. */
+  assert("typeof parseInt is function", String(typeof parseInt), "function");
+  assert("workaround parseInt('42', 10) === 42", parseInt("42", 10) === 42, true);
+  assert("workaround typeof parseInt('42', 10) is number", String(typeof parseInt("42", 10)), "number");
+  assert("workaround parseInt('-7', 10) === -7", parseInt("-7", 10) === -7, true);
+  </script>
+
+parsefloat: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Number.parseFloat(str) — Missing
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": Number.parseFloat is typeof "undefined"
+   *      (spec: a function, the same object as the global parseFloat).
+   *      Reading it does not throw; calling it does.
+   *   2. The documented workaround — the global parseFloat(string), including
+   *      the two caveats the chapter points at:
+   *        parseFloat("3.14")  -> 3.14000010490417  (32-bit precision)
+   *        parseFloat("1.5kg") -> NaN               (trailing characters)
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " => " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEVIATION — the member is undefined. */
+  assert("DEV typeof Number.parseFloat is undefined (spec: function)", String(typeof Number.parseFloat), "undefined");
+  var read = "no-throw";
+  try { var tmp = Number.parseFloat; } catch (ex) { read = "THREW: " + ex.message; }
+  assert("reading Number.parseFloat does not throw", read, "no-throw");
+  assertThrows("Number.parseFloat('3.14') throws", function () { return Number.parseFloat("3.14"); });
+  assertThrows("new Number.parseFloat('3.14') throws", function () { return new Number.parseFloat("3.14"); });
+
+  /* 2. The documented workaround — the global parseFloat, with its caveats. */
+  assert("typeof parseFloat is function", String(typeof parseFloat), "function");
+  assert("workaround String(parseFloat('3.14')) is '3.14000010490417'", String(parseFloat("3.14")), "3.14000010490417");
+  assert("caveat parseFloat('1.5kg') is NaN", isNaN(parseFloat("1.5kg")), true);
+  assert("workaround parseFloat('42') === 42", parseFloat("42") === 42, true);
+  </script>
+
+issafeinteger: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Number.isSafeInteger(val) — Missing
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": Number.isSafeInteger is typeof "undefined"
+   *      (spec: a function). Reading it does not throw; calling it does.
+   *   2. The documented workaround, which compares against the literal
+   *      safe-integer bound 9007199254740991 because Number.MAX_SAFE_INTEGER
+   *      is also undefined here:
+   *        typeof n === "number" && Math.floor(n) === n
+   *          && Math.abs(n) <= 9007199254740991
+   *      It accepts integers inside the bound and rejects fractions,
+   *      non-numbers and values beyond the bound.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " => " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEVIATION — the member is undefined. */
+  assert("DEV typeof Number.isSafeInteger is undefined (spec: function)", String(typeof Number.isSafeInteger), "undefined");
+  var read = "no-throw";
+  try { var tmp = Number.isSafeInteger; } catch (ex) { read = "THREW: " + ex.message; }
+  assert("reading Number.isSafeInteger does not throw", read, "no-throw");
+  assertThrows("Number.isSafeInteger(1) throws", function () { return Number.isSafeInteger(1); });
+  assertThrows("new Number.isSafeInteger(1) throws", function () { return new Number.isSafeInteger(1); });
+
+  /* 2. The documented workaround. */
+  function isSafeInteger(n) {
+      return typeof n === "number" && Math.floor(n) === n && Math.abs(n) <= 9007199254740991;
+  }
+  assert("workaround isSafeInteger(42) is true", isSafeInteger(42), true);
+  assert("workaround isSafeInteger(0) is true", isSafeInteger(0), true);
+  assert("workaround isSafeInteger(-42) is true", isSafeInteger(-42), true);
+  assert("workaround isSafeInteger(9007199254740991) is true (the bound)", isSafeInteger(9007199254740991), true);
+  assert("workaround isSafeInteger(3.5) is false", isSafeInteger(3.5), false);
+  assert("workaround isSafeInteger('42') is false (string, not number)", isSafeInteger("42"), false);
+  assert("workaround isSafeInteger(1e300) is false (beyond the bound)", isSafeInteger(1e300), false);
+  </script>

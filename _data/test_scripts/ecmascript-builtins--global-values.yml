@@ -1,0 +1,212 @@
+# Test scripts for /ecmascript-builtins/global-values/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the ECMAScript spec.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# HELPER RULE: assert() compares with a plain === and never coerces its
+# arguments. Stringify at the CALL SITE instead — the Jint engine mis-evaluates
+# String(x) applied inside the helper to a `typeof x` argument.
+
+undefined: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: undefined
+   *
+   * Proves:
+   *   1. typeof undefined is "undefined".
+   *   2. A declared but unassigned variable holds undefined.
+   *   3. undefined === undefined is true; it is not equal to null under ===.
+   *   4. String(undefined) is "undefined".
+   *   5. undefined is falsy and Boolean(undefined) is false.
+   *
+   * No deviations from the ECMAScript spec are documented for this global.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function branch(v) { if (v) { return "truthy"; } return "falsy"; }
+
+  /* 1. typeof of the global itself. */
+  assert("typeof undefined is 'undefined'", String(typeof undefined), "undefined");
+
+  /* 2. An unassigned declared variable is undefined. */
+  var x;
+  assert("typeof unassigned var is 'undefined'", String(typeof x), "undefined");
+  assert("unassigned var === undefined", x === undefined, true);
+
+  /* 3. Identity and non-equality with null under strict compare. */
+  assert("undefined === undefined", undefined === undefined, true);
+  assert("undefined === null is false", undefined === null, false);
+  assert("undefined == null is true (loose compare)", undefined == null, true);
+
+  /* 4. String coercion. */
+  assert("String(undefined) is 'undefined'", String(undefined), "undefined");
+  assert("'' + undefined is 'undefined'", "" + undefined, "undefined");
+
+  /* 5. Falsiness. */
+  assert("Boolean(undefined) is false", Boolean(undefined), false);
+  assert("if(undefined) is falsy", branch(undefined), "falsy");
+  </script>
+
+nan: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: NaN
+   *
+   * Proves:
+   *   1. typeof NaN is "number".
+   *   2. NaN === NaN is false (and NaN == NaN is false) — the documented
+   *      self-inequality.
+   *   3. isNaN(NaN) is true; isNaN of a real number is false.
+   *   4. NaN is falsy.
+   *   5. DEVIATION marked "DEV": String(NaN) yields the lowercase "nan"
+   *      (MDN / ECMAScript specify "NaN").
+   *   6. The recommended workaround — test with isNaN(), never with a string
+   *      comparison against "NaN".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function branch(v) { if (v) { return "truthy"; } return "falsy"; }
+
+  /* 1. NaN is a number. */
+  assert("typeof NaN is 'number'", String(typeof NaN), "number");
+
+  /* 2. NaN is not equal to itself. */
+  assert("NaN === NaN is false", NaN === NaN, false);
+  assert("NaN == NaN is false", NaN == NaN, false);
+  var n = NaN;
+  assert("var holding NaN !== itself", n !== n, true);
+
+  /* 3. isNaN detects it. */
+  assert("isNaN(NaN) is true", isNaN(NaN), true);
+  assert("isNaN(1) is false", isNaN(1), false);
+  assert("isNaN('abc') is true", isNaN("abc"), true);
+
+  /* 4. Falsiness. */
+  assert("Boolean(NaN) is false", Boolean(NaN), false);
+  assert("if(NaN) is falsy", branch(NaN), "falsy");
+
+  /* 5. DEVIATION — lowercase string form. */
+  assert("DEV String(NaN) is 'nan' (spec: 'NaN')", String(NaN), "nan");
+  assert("DEV '' + NaN is 'nan' (spec: 'NaN')", "" + NaN, "nan");
+  assert("DEV String(NaN) !== 'NaN'", String(NaN) === "NaN", false);
+
+  /* 6. Workaround — detect with isNaN(), not with a string comparison. */
+  assert("workaround isNaN(String -> Number('abc')) is true", isNaN(Number("abc")), true);
+  assert("workaround isNaN(parseInt('abc')) is true", isNaN(parseInt("abc", 10)), true);
+  </script>
+
+infinity: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Infinity
+   *
+   * Proves:
+   *   1. typeof Infinity is "number" and Infinity === (1/0).
+   *   2. DEVIATIONS from the ECMAScript spec, each marked "DEV" — the SFMC Jint
+   *      engine INVERTS the sign of Infinity / -Infinity:
+   *        - Infinity > 0 is false   (spec: true)
+   *        - Infinity < 0 is true    (spec: false)
+   *        - Infinity > 1e308 is false (spec: true)
+   *        - -Infinity < 0 is false / -Infinity > 0 is true (spec: the reverse)
+   *        - String(Infinity) is "-infinity"  (spec: "Infinity")
+   *        - String(-Infinity) is "infinity"  (spec: "-Infinity")
+   *   3. The same inversion applies to the computed forms 1/0 and -1/0.
+   *   4. The recommended workaround: compare against a concrete large numeric
+   *      literal instead of Infinity — that comparison behaves correctly.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* 1. Basic identity — these DO match the spec. */
+  assert("typeof Infinity is 'number'", String(typeof Infinity), "number");
+  assert("Infinity === (1/0)", Infinity === 1 / 0, true);
+  assert("-Infinity === (-1/0)", -Infinity === -1 / 0, true);
+  assert("Infinity === -Infinity is false", Infinity === -Infinity, false);
+  assert("isNaN(Infinity) is false", isNaN(Infinity), false);
+
+  /* 2. DEVIATION — sign inverted in numeric comparisons. */
+  assert("DEV Infinity > 0 is false (spec: true)", Infinity > 0, false);
+  assert("DEV Infinity < 0 is true (spec: false)", Infinity < 0, true);
+  assert("DEV Infinity > 1e308 is false (spec: true)", Infinity > 1e308, false);
+  assert("DEV -Infinity > 0 is true (spec: false)", -Infinity > 0, true);
+  assert("DEV -Infinity < 0 is false (spec: true)", -Infinity < 0, false);
+
+  /* 3. Same inversion for the computed forms. */
+  assert("DEV (1/0) > 0 is false (spec: true)", 1 / 0 > 0, false);
+  assert("DEV (-1/0) > 0 is true (spec: false)", -1 / 0 > 0, true);
+
+  /* 4. DEVIATION — sign inverted (and lowercase) in string coercion. */
+  assert("DEV String(Infinity) is '-infinity' (spec: 'Infinity')", String(Infinity), "-infinity");
+  assert("DEV String(-Infinity) is 'infinity' (spec: '-Infinity')", String(-Infinity), "infinity");
+  assert("DEV '' + Infinity is '-infinity'", "" + Infinity, "-infinity");
+  assert("DEV String(1/0) is '-infinity'", String(1 / 0), "-infinity");
+
+  /* 5. Workaround — compare against a concrete numeric literal. */
+  assert("workaround 1e308 > 0 is true", 1e308 > 0, true);
+  assert("workaround 5 > 1e-300 is true", 5 > 1e-300, true);
+  assert("workaround String(1e308) is not lowercase infinity", String(1e308) === "-infinity", false);
+  </script>
+
+globalthis: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: globalThis  (ES2020)
+   *
+   * Proves:
+   *   1. globalThis is NOT defined in the SFMC engine —
+   *      typeof globalThis === "undefined". MDN specifies globalThis is the
+   *      standard reference to the global object in every conforming runtime.
+   *   2. Referencing it directly does not yield an object.
+   *   3. The recommended alternative works: reference the specific globals you
+   *      need (Platform, Variable, ...) directly — they ARE defined.
+   *
+   * NOTE: top-level `this` is deliberately NOT probed here — referencing it at
+   * top scope crashes the CloudPage, so it cannot be asserted.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* 1 + 2. DEVIATION — the ES2020 global is missing. */
+  assert("DEV typeof globalThis is 'undefined' (spec: 'object')", String(typeof globalThis), "undefined");
+  assert("DEV typeof globalThis is not 'object'", String(typeof globalThis) === "object", false);
+
+  /* 3. Workaround — the concrete globals are available. Platform is a hosted
+   *    .NET object, so its typeof is the Jint-specific "clr", not "object". */
+  assert("workaround Platform is defined (typeof 'clr')", String(typeof Platform), "clr");
+  assert("workaround typeof Platform is not 'undefined'", String(typeof Platform) === "undefined", false);
+  assert("workaround typeof Variable is 'object'", String(typeof Variable), "object");
+  </script>

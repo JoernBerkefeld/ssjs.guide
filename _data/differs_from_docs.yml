@@ -4129,7 +4129,7 @@
   discrepancy: "A2"
   anchor: "number-tolocalestring-locale-ignored"
   body: |
-    MDN specifies `Number.prototype.toLocaleString([locales[, options]])` returns a locale-aware string with grouping separators (e.g. `(123456.789).toLocaleString("de-DE")` → `"123.456,789"`). In the SFMC Jint engine the locale/options arguments are **ignored** and the method returns the plain number string with no grouping — `(123456.789).toLocaleString()` and `(123456.789).toLocaleString("de-DE")` both return `"123456.789"`. Use `Platform.Function.FormatNumber(value, format, culture)` for real locale-aware number formatting.
+    MDN specifies `Number.prototype.toLocaleString([locales[, options]])` returns a locale-aware string with grouping separators (e.g. `(123456.789).toLocaleString("de-DE")` → `"123.456,789"`). In the SFMC Jint engine the locale/options arguments are **ignored** and the method returns the plain number string with no grouping — `(123456.789).toLocaleString()` and `(123456.789).toLocaleString("de-DE")` both return `"123456.789"`. Use AMPscript's `FormatNumber(value, format, culture)` via `Platform.Function.TreatAsContent` for real locale-aware number formatting.
   testScript: |
     <script runat="server">
     Platform.Load("core", "1.1.5");
@@ -4148,7 +4148,7 @@
   discrepancy: "A2"
   anchor: "date-tolocaledatestring-locale-ignored"
   body: |
-    MDN specifies `Date.prototype.toLocaleDateString([locales[, options]])` returns a locale-aware date string. In the SFMC Jint engine the locale/options arguments are **ignored** and a fixed English-style format is returned — `new Date(2020, 0, 15).toLocaleDateString()` returns `"Wed, 15 Jan 2020"`. Use `Platform.Function.FormatDate(date, format, ..., culture)` for real locale-aware date formatting.
+    MDN specifies `Date.prototype.toLocaleDateString([locales[, options]])` returns a locale-aware date string. In the SFMC Jint engine the locale/options arguments are **ignored** and a fixed English-style format is returned — `new Date(2020, 0, 15).toLocaleDateString()` returns `"Wed, 15 Jan 2020"`. Use AMPscript's `FormatDate(date, format, ..., culture)` via `Platform.Function.TreatAsContent` for real locale-aware date formatting.
   testScript: |
     <script runat="server">
     Platform.Load("core", "1.1.5");
@@ -4676,4 +4676,70 @@
     var n = new Boolean();
     assert("typeof new Boolean() is object", typeof n, "object");
     assert("String(new Boolean()) is 'False'", String(n), "False");
+    </script>
+- name: "encodeURI / encodeURIComponent"
+  url: "/ecmascript-builtins/global-functions/#encodeuri"
+  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURI"
+  tagline: "space becomes + and hex escapes are lowercase (form-urlencoded, not RFC 3986)"
+  part: "ecmascript"
+  category: "ECMAScript Builtins"
+  object: "Global"
+  severity: "medium"
+  discrepancy: "B3"
+  anchor: "encodeuri-form-urlencoded"
+  body: |
+    MDN specifies both functions encode a space as `%20` and emit **uppercase** hex digits. The SFMC Jint engine encodes as `application/x-www-form-urlencoded` instead: a space becomes **`+`** and every escape uses **lowercase** hex (`encodeURIComponent("/")` is `"%2f"`, not `"%2F"`). The reserved sets are otherwise correct — `encodeURI` leaves `; / ? : @ & = + $ , #` intact while `encodeURIComponent` escapes them. Round-tripping through the matching decode function still recovers the original string, so the quirk only matters when the encoded text is compared literally or consumed by an RFC-3986 strict parser.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core", "1.1.5");
+    // space and hex casing
+    Platform.Response.Write("encodeURI('a b/c?d=1'): " + encodeURI("a b/c?d=1") + "\n");        // a+b/c?d=1
+    Platform.Response.Write("encodeURIComponent('a b/c?d=1'): " + encodeURIComponent("a b/c?d=1") + "\n"); // a+b%2fc%3fd%3d1
+    Platform.Response.Write("encodeURIComponent('/'): " + encodeURIComponent("/") + "\n");      // %2f (spec: %2F)
+    // reserved set of encodeURI is left intact
+    Platform.Response.Write("encodeURI('/?:@&=+$,#'): " + encodeURI("/?:@&=+$,#") + "\n");
+    </script>
+- name: "decodeURI"
+  url: "/ecmascript-builtins/global-functions/#decodeuri"
+  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/decodeURI"
+  tagline: "decodes reserved escapes and + → space; behaves like decodeURIComponent"
+  part: "ecmascript"
+  category: "ECMAScript Builtins"
+  object: "Global"
+  severity: "medium"
+  discrepancy: "B3"
+  anchor: "decodeuri-decodes-reserved"
+  body: |
+    MDN specifies `decodeURI` **preserves** the escape sequences for the URI-syntax characters `; / ? : @ & = + $ , #`, leaves a literal `+` unchanged, and throws a `URIError` on a malformed escape. The SFMC Jint engine does none of that: `decodeURI("%2F")` returns `"/"`, `decodeURI("a+b")` returns `"a b"`, and a truncated escape such as `"%E0%A4%A"` is returned unchanged instead of throwing. The result is that `decodeURI` and `decodeURIComponent` are indistinguishable — never rely on `decodeURI` to keep a URI's structure intact.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core", "1.1.5");
+    // reserved escapes are decoded (spec: preserved)
+    Platform.Response.Write("decodeURI('%2F'): " + decodeURI("%2F") + "\n");   // /
+    Platform.Response.Write("decodeURI('%3A'): " + decodeURI("%3A") + "\n");   // :
+    // + becomes a space (spec: stays "+")
+    Platform.Response.Write("decodeURI('a+b'): " + decodeURI("a+b") + "\n");   // a b
+    // malformed escape does not throw (spec: URIError)
+    try { Platform.Response.Write("decodeURI('%E0%A4%A'): " + decodeURI("%E0%A4%A") + "\n"); }
+    catch (e) { Platform.Response.Write("threw: " + e.message + "\n"); }
+    </script>
+- name: "decodeURIComponent"
+  url: "/ecmascript-builtins/global-functions/#decodeuricomponent"
+  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/decodeURIComponent"
+  tagline: "a literal + is decoded to a space"
+  part: "ecmascript"
+  category: "ECMAScript Builtins"
+  object: "Global"
+  severity: "medium"
+  discrepancy: "B3"
+  anchor: "decodeuricomponent-plus-is-space"
+  body: |
+    MDN specifies `decodeURIComponent` only converts `%XX` escapes and leaves a literal `+` as a `+`. The SFMC Jint engine decodes `+` to a space, matching `application/x-www-form-urlencoded`. That makes it the exact inverse of the engine's own `encodeURIComponent` (which emits `+` for a space), but it silently corrupts any value that legitimately contains a plus sign — for example a phone number or a base64 payload. Escape such input as `%2B` before decoding.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core", "1.1.5");
+    Platform.Response.Write("decodeURIComponent('+'): [" + decodeURIComponent("+") + "]\n");     // a single space
+    Platform.Response.Write("decodeURIComponent('a+b'): " + decodeURIComponent("a+b") + "\n");   // a b
+    Platform.Response.Write("decodeURIComponent('%2B'): " + decodeURIComponent("%2B") + "\n");   // + (workaround)
+    Platform.Response.Write("roundtrip: " + decodeURIComponent(encodeURIComponent("a b/c?d=1")) + "\n");
     </script>

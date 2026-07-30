@@ -1,0 +1,149 @@
+# Test scripts for /ecmascript-builtins/internationalization/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the ECMAScript spec.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+intl: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Intl
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": the entire ECMAScript Internationalization API
+   *      is MISSING. typeof Intl is "undefined" (spec/ES2015: "object").
+   *   2. Every formatter constructor the chapter lists reads back as undefined
+   *      rather than a constructor — Intl.NumberFormat, Intl.DateTimeFormat,
+   *      Intl.Collator, Intl.PluralRules, Intl.RelativeTimeFormat,
+   *      Intl.ListFormat, Intl.Locale, Intl.Segmenter, Intl.DisplayNames.
+   *      NOTE: reading Intl.X does NOT throw in this engine (Jint resolves the
+   *      whole member path to undefined); only `new Intl.X()` throws.
+   *   3. The documented workaround works: AMPscript FormatNumber / FormatDate
+   *      invoked through Platform.Function.TreatAsContent performs real
+   *      locale-aware formatting.
+   *   4. The workaround the page explicitly rules out: there is no
+   *      Platform.Function.FormatNumber / FormatDate member (every arity
+   *      throws), and Core Format() accepts but IGNORES its culture argument.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEVIATION — Intl is not defined at all. */
+  assert("DEV typeof Intl is undefined (spec: object)", String(typeof Intl), "undefined");
+
+  /* 2. Every listed formatter constructor is absent. */
+  assert("DEV typeof Intl.NumberFormat is undefined (spec: function)", String(typeof Intl.NumberFormat), "undefined");
+  assert("DEV typeof Intl.DateTimeFormat is undefined (spec: function)", String(typeof Intl.DateTimeFormat), "undefined");
+  assert("DEV typeof Intl.Collator is undefined (spec: function)", String(typeof Intl.Collator), "undefined");
+  assert("DEV typeof Intl.PluralRules is undefined (spec: function)", String(typeof Intl.PluralRules), "undefined");
+  assert("DEV typeof Intl.RelativeTimeFormat is undefined (spec: function)", String(typeof Intl.RelativeTimeFormat), "undefined");
+  assert("DEV typeof Intl.ListFormat is undefined (spec: function)", String(typeof Intl.ListFormat), "undefined");
+  assert("DEV typeof Intl.Locale is undefined (spec: function)", String(typeof Intl.Locale), "undefined");
+  assert("DEV typeof Intl.Segmenter is undefined (spec: function)", String(typeof Intl.Segmenter), "undefined");
+  assert("DEV typeof Intl.DisplayNames is undefined (spec: function)", String(typeof Intl.DisplayNames), "undefined");
+  assertThrows("DEV new Intl.NumberFormat('de-DE') throws (spec: builds a formatter)", function () { return new Intl.NumberFormat("de-DE"); });
+  assertThrows("DEV new Intl.DateTimeFormat('de-DE') throws (spec: builds a formatter)", function () { return new Intl.DateTimeFormat("de-DE"); });
+
+  /* 3. Workaround — AMPscript through TreatAsContent really does localize. */
+  var deNum = Platform.Function.TreatAsContent('%%=FormatNumber(1234567.89, "N", "de-DE")=%%');
+  assert("workaround TreatAsContent FormatNumber de-DE", String(deNum), "1.234.567,89");
+  var usNum = Platform.Function.TreatAsContent('%%=FormatNumber(1234567.89, "N", "en-US")=%%');
+  assert("workaround TreatAsContent FormatNumber en-US", String(usNum), "1,234,567.89");
+  var deDate = Platform.Function.TreatAsContent('%%=FormatDate("2020-01-15", "D", "", "de-DE")=%%');
+  assert("workaround TreatAsContent FormatDate de-DE", String(deDate), "15.01.2020");
+
+  /* 4. The non-workarounds the page rules out. */
+  assertThrows("DEV Platform.Function.FormatNumber(n) does not exist", function () { return Platform.Function.FormatNumber(1234567.89); });
+  assertThrows("DEV Platform.Function.FormatNumber(n,f,c) does not exist", function () { return Platform.Function.FormatNumber(1234567.89, "N", "de-DE"); });
+  assertThrows("DEV Platform.Function.FormatDate(d,f,'',c) does not exist", function () { return Platform.Function.FormatDate(new Date(2020, 0, 15), "D", "", "de-DE"); });
+  assert("typeof bare FormatNumber is undefined", String(typeof FormatNumber), "undefined");
+  assert("typeof bare FormatDate is undefined", String(typeof FormatDate), "undefined");
+  assert("Core Format exists", String(typeof Format), "function");
+  assert("DEV Format(n,'N','Number','de-DE') ignores culture (AMPscript: '1.234.567,89')", String(Format(1234567.89, "N", "Number", "de-DE")), "1,234,567.89");
+  assert("DEV Format(date,'D','Date','de-DE') ignores culture (AMPscript: '15.01.2020')", String(Format(new Date(2020, 0, 15), "D", "Date", "de-DE")), "Wednesday, January 15, 2020");
+  </script>
+
+tolocalestring-family: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: toLocaleString family
+   *
+   * Proves, each marked "DEV" because the locale argument is silently ignored
+   * (spec: the argument selects a locale and changes the output):
+   *   1. Number.prototype.toLocaleString() returns the plain number string with
+   *      no grouping separators — "123456.789".
+   *   2. Number.prototype.toLocaleString("de-DE") returns the SAME string; the
+   *      locale is ignored (spec: "123.456,789").
+   *   3. String.prototype.toLocaleUpperCase() behaves like toUpperCase().
+   *   4. String.prototype.toLocaleLowerCase() behaves like toLowerCase().
+   *   5. Date.prototype.toLocaleDateString() returns a fixed English-format
+   *      string "Wed, 15 Jan 2020" and ignores the locale argument.
+   *   6. All four members exist (typeof "function") — they are no-ops, not
+   *      missing.
+   *   7. The documented workaround works: AMPscript FormatNumber / FormatDate
+   *      with an explicit culture code, invoked through
+   *      Platform.Function.TreatAsContent, DO localize.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* 6. The members exist — the chapter documents no-ops, not missing members. */
+  assert("typeof Number.prototype.toLocaleString is function", String(typeof Number.prototype.toLocaleString), "function");
+  assert("typeof String.prototype.toLocaleUpperCase is function", String(typeof String.prototype.toLocaleUpperCase), "function");
+  assert("typeof String.prototype.toLocaleLowerCase is function", String(typeof String.prototype.toLocaleLowerCase), "function");
+  assert("typeof Date.prototype.toLocaleDateString is function", String(typeof Date.prototype.toLocaleDateString), "function");
+
+  /* 1 + 2. Number.prototype.toLocaleString ignores the locale. */
+  var n = 123456.789;
+  assert("DEV (123456.789).toLocaleString() has no grouping (spec: '123,456.789')", String(n.toLocaleString()), "123456.789");
+  assert("DEV (123456.789).toLocaleString('de-DE') ignores locale (spec: '123.456,789')", String(n.toLocaleString("de-DE")), "123456.789");
+  assert("DEV toLocaleString('de-DE') equals toLocaleString() (spec: they differ)", String(n.toLocaleString("de-DE")) === String(n.toLocaleString()), true);
+
+  /* 3 + 4. The String locale-case methods are plain case conversions. */
+  var s = "abc";
+  assert("'abc'.toLocaleUpperCase() is 'ABC'", String(s.toLocaleUpperCase()), "ABC");
+  assert("toLocaleUpperCase() equals toUpperCase()", String(s.toLocaleUpperCase()) === String(s.toUpperCase()), true);
+  var su = "ABC";
+  assert("'ABC'.toLocaleLowerCase() is 'abc'", String(su.toLocaleLowerCase()), "abc");
+  assert("toLocaleLowerCase() equals toLowerCase()", String(su.toLocaleLowerCase()) === String(su.toLowerCase()), true);
+
+  /* 5. Date.prototype.toLocaleDateString is a fixed English format. */
+  var d = new Date(2020, 0, 15);
+  assert("DEV toLocaleDateString() is fixed English format (spec: locale default)", String(d.toLocaleDateString()), "Wed, 15 Jan 2020");
+  assert("DEV toLocaleDateString('de-DE') ignores locale (spec: '15.1.2020')", String(d.toLocaleDateString("de-DE")), "Wed, 15 Jan 2020");
+
+  /* 7. Workaround — AMPscript via TreatAsContent really does localize. */
+  var deNum = Platform.Function.TreatAsContent('%%=FormatNumber(123456.789, "N", "de-DE")=%%');
+  assert("workaround TreatAsContent FormatNumber de-DE groups German-style ('N' rounds to 2 decimals)", String(deNum), "123.456,79");
+  assert("workaround output differs from toLocaleString('de-DE')", String(deNum) === String(n.toLocaleString("de-DE")), false);
+  var deDate = Platform.Function.TreatAsContent('%%=FormatDate("2020-01-15", "D", "", "de-DE")=%%');
+  assert("workaround TreatAsContent FormatDate de-DE", String(deDate), "15.01.2020");
+  assert("workaround date output differs from toLocaleDateString('de-DE')", String(deDate) === String(d.toLocaleDateString("de-DE")), false);
+  </script>

@@ -6,6 +6,7 @@ parent_url: /ecmascript-builtins/
 permalink: /ecmascript-builtins/json/
 description: The JSON built-in is unavailable in SFMC SSJS — use Platform.Function.ParseJSON and Platform.Function.Stringify (or the Stringify global) instead.
 verification: verified
+test_scripts: complete
 ---
 
 The native `JSON` object is **not available** in SFMC SSJS — `JSON.parse` and `JSON.stringify` both throw. Use the SFMC-proprietary `Platform.Function.ParseJSON` and `Platform.Function.Stringify` (or the `Stringify` global) instead.
@@ -43,6 +44,8 @@ Write(obj.name);   // "Jane"
 
 See [`Platform.Function.ParseJSON`](/platform-functions/parsejson/) for full details.
 
+{% include test-script.html bundle="ecmascript-builtins--json" chapter="parse" %}
+
 ---
 
 ## stringify {#stringify}
@@ -63,6 +66,8 @@ var text2 = Stringify(obj);
 ```
 
 See [`Platform.Function.Stringify`](/platform-functions/stringify/) and [`Stringify`](/core-library/stringify/) for full details.
+
+{% include test-script.html bundle="ecmascript-builtins--json" chapter="stringify" %}
 
 ## See Also
 

@@ -6,6 +6,7 @@ parent_url: /ecmascript-builtins/
 description: The ECMAScript global value properties in SSJS — undefined works, NaN mostly works (lowercase string), but Infinity is severely broken (sign inverted in comparisons and string coercion), and the ES2020 globalThis is missing.
 verification: verified
 differs_from_docs: true
+test_scripts: complete
 ---
 
 The ECMAScript **global value properties** have mixed support in SSJS. `undefined` works exactly as expected and `NaN` behaves correctly for comparisons (only its string form is lowercase). **`Infinity` is severely broken** in the SFMC Jint engine: its sign is inverted in both numeric comparisons and string coercion (`Infinity > 0` returns `false`, `String(Infinity)` yields `-infinity`). The ES2020 `globalThis` is **not defined**.
@@ -40,6 +41,8 @@ var x;
 String(undefined);            // "undefined"
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--global-values" chapter="undefined" %}
+
 ## NaN {#nan}
 
 `(ES3)` — ⚠️ Partial. {% include method-status.html status="verified" differs=true %} The not-a-number value. Comparisons behave correctly — `NaN === NaN` is `false`, `isNaN(NaN)` is `true`. Only its **string coercion is lowercase** (`nan`) instead of the spec's `NaN`.
@@ -51,6 +54,8 @@ String(NaN);      // "nan" in SFMC (spec: "NaN")
 ```
 
 {% include differs-from-mdn.html content="MDN specifies `String(NaN)` produces `\"NaN\"`; the SFMC Jint engine produces the lowercase `\"nan\"`. Comparison semantics are unaffected." %}
+
+{% include test-script.html bundle="ecmascript-builtins--global-values" chapter="nan" %}
 
 ## Infinity {#infinity}
 
@@ -67,6 +72,8 @@ Infinity > 1e308;     // false  (BUG)
 
 {% include differs-from-mdn.html content="MDN specifies `Infinity` is a positive value greater than any finite number and `String(Infinity)` is `\"Infinity\"`. The SFMC Jint engine inverts the sign of `Infinity`/`-Infinity` in both comparison and string coercion (`Infinity > 0` is `false`, `String(Infinity)` is `\"-infinity\"`), making the global unreliable for magnitude checks and output. Prefer comparing against a concrete numeric literal." %}
 
+{% include test-script.html bundle="ecmascript-builtins--global-values" chapter="infinity" %}
+
 ## globalThis {#globalthis}
 
 `(ES2020)` — ❌ Missing. `globalThis` is **not defined** in the SFMC engine (`typeof globalThis === "undefined"`). There is no standard reference to the global object; top-level `this` is also unusable (referencing `this` at top scope crashes the CloudPage). Reference the specific globals (`Platform`, `Variable`, …) you need directly.
@@ -74,6 +81,8 @@ Infinity > 1e308;     // false  (BUG)
 ```javascript
 (typeof globalThis === "undefined");   // true — not available
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--global-values" chapter="globalthis" %}
 
 ## See Also
 

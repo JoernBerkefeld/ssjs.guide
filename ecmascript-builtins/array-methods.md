@@ -6,6 +6,7 @@ parent_url: /ecmascript-builtins/
 description: Array prototype methods and statics in SSJS — which work natively, which are partial, and which are missing, with safe ES3/ES5 alternatives and polyfill links.
 verification: verified
 differs_from_docs: true
+test_scripts: complete
 ---
 
 Each member below is tagged with the ECMAScript edition that standardized it: `(ES3)`, `(ES5)`, or `(ES6)`. Methods that need a polyfill link to [Polyfills](/engine-limitations/polyfills/).
@@ -70,6 +71,8 @@ var arr = [1, 2, 3];
 arr.push(4);   // [1, 2, 3, 4]
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="push" %}
+
 ## pop {#pop}
 
 `(ES3)` — ✅ Works. Removes and returns the last item.
@@ -78,6 +81,8 @@ arr.push(4);   // [1, 2, 3, 4]
 var arr = [1, 2, 3];
 var last = arr.pop();   // 3, arr = [1, 2]
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="pop" %}
 
 ## shift {#shift}
 
@@ -88,6 +93,8 @@ var arr = [1, 2, 3];
 var first = arr.shift();   // 1, arr = [2, 3]
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="shift" %}
+
 ## unshift {#unshift}
 
 `(ES3)` — ✅ Works. Prepends one or more items and returns the new length.
@@ -97,6 +104,8 @@ var arr = [1, 2, 3];
 arr.unshift(0);   // arr = [0, 1, 2, 3]
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="unshift" %}
+
 ## concat {#concat}
 
 `(ES3)` — ✅ Works. Returns a new array combining the array with the given arrays/values.
@@ -105,6 +114,8 @@ arr.unshift(0);   // arr = [0, 1, 2, 3]
 var combined = [1, 2].concat([3, 4]);   // [1, 2, 3, 4]
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="concat" %}
+
 ## join {#join}
 
 `(ES3)` — ✅ Works. Joins all elements into a string using the given separator.
@@ -112,6 +123,8 @@ var combined = [1, 2].concat([3, 4]);   // [1, 2, 3, 4]
 ```javascript
 ["Hello", "World"].join(", ");   // "Hello, World"
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="join" %}
 
 ## reverse {#reverse}
 
@@ -122,6 +135,8 @@ var arr = [1, 2, 3];
 arr.reverse();   // [3, 2, 1]
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="reverse" %}
+
 ## length {#length}
 
 `(ES3)` — ✅ Works. The number of elements in the array.
@@ -130,6 +145,8 @@ arr.reverse();   // [3, 2, 1]
 [1, 2, 3].length;   // 3
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="length" %}
+
 ## toLocaleString {#tolocalestring}
 
 `(ES3)` — ✅ Works. Returns a locale-specific string representation.
@@ -137,6 +154,8 @@ arr.reverse();   // [3, 2, 1]
 ```javascript
 [1, 2, 3].toLocaleString();   // "1,2,3"
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="tolocalestring" %}
 
 ## slice {#slice}
 
@@ -151,6 +170,8 @@ arr.slice(0);      // copy of arr — use this instead of arr.slice()
 // arr.slice() — no-arg form THROWS; use arr.slice(0) or the polyfill
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="slice" %}
+
 ## sort {#sort}
 
 `(ES3)` — ⚠️ Partial. Sorts in place. A supplied compare function works correctly (numeric and string comparators both sort as expected). The one bug is the **no-argument** form `sort()`, which throws `Failed to compare two elements in the array.` — always pass an explicit compare function, or apply the [polyfill](/engine-limitations/polyfills/#array-prototype-sort) if you need the default lexicographic order.
@@ -161,11 +182,15 @@ arr.sort(function (a, b) { return a - b; });   // ascending — works
 // arr.sort() — no-arg form THROWS; pass a compare function or use the polyfill
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="sort" %}
+
 ## splice {#splice}
 
 `(ES3)` — ⚠️ Partial. Signature: `splice(start[, deleteCount[, item1[, ...itemN]]])`.
 
 {% include callout.html type="warning" content="Only the **two-argument** delete form `splice(start, deleteCount)` works correctly (an over-large `deleteCount` is clamped to the remaining length). The **one-argument** form `splice(start)` throws `Index was outside the bounds of the array.` The **insert** form is also broken: as soon as a third argument is passed, the engine ignores `start` and `deleteCount` and overwrites from the left. Apply the polyfill from [Polyfills](/engine-limitations/polyfills/#array-prototype-splice) for the one-argument delete form or any insert." %}
+
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="splice" label="Show test script — proves splice(start) throws, the two-arg delete works with clamping, and the insert form overwrites from the left" %}
 
 ```javascript
 // Two-argument delete form works natively:
@@ -195,6 +220,8 @@ function indexOf(arr, value) {
 }
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="indexof" %}
+
 ## lastIndexOf {#lastindexof}
 
 `(ES5)` — ⚠️ Partial. Present but broken — always returns `-1`. Apply the [polyfill](/engine-limitations/polyfills/#array-prototype-lastindexof), or scan from the end with a `for` loop.
@@ -208,6 +235,8 @@ function lastIndexOf(arr, value) {
 }
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="lastindexof" %}
+
 ## forEach {#foreach}
 
 `(ES5)` — ❌ Missing. Use a `for` loop or the [polyfill](/engine-limitations/polyfills/#array-prototype-foreach).
@@ -218,6 +247,8 @@ for (var i = 0; i < arr.length; i++) {
     // process item
 }
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="foreach" %}
 
 ## map {#map}
 
@@ -230,6 +261,8 @@ for (var i = 0; i < arr.length; i++) {
 }
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="map" %}
+
 ## filter {#filter}
 
 `(ES5)` — ❌ Missing. Use a `for` loop or the [polyfill](/engine-limitations/polyfills/#array-prototype-filter).
@@ -240,6 +273,8 @@ for (var i = 0; i < arr.length; i++) {
     if (arr[i] % 2 === 0) { evens.push(arr[i]); }
 }
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="filter" %}
 
 ## reduce {#reduce}
 
@@ -252,6 +287,8 @@ for (var i = 0; i < arr.length; i++) {
 }
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="reduce" %}
+
 ## reduceRight {#reduceright}
 
 `(ES5)` — ❌ Missing. Use a reverse `for` loop or the [polyfill](/engine-limitations/polyfills/#array-prototype-reduceright).
@@ -262,6 +299,8 @@ for (var i = arr.length - 1; i >= 0; i--) {
     sum += arr[i];
 }
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="reduceright" %}
 
 ## some {#some}
 
@@ -274,6 +313,8 @@ for (var i = 0; i < arr.length; i++) {
 }
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="some" %}
+
 ## every {#every}
 
 `(ES5)` — ❌ Missing. Use a `for` loop or the [polyfill](/engine-limitations/polyfills/#array-prototype-every).
@@ -284,6 +325,8 @@ for (var i = 0; i < arr.length; i++) {
     if (arr[i] <= 10) { allLarge = false; break; }
 }
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="every" %}
 
 ## find {#find}
 
@@ -296,6 +339,8 @@ for (var i = 0; i < arr.length; i++) {
 }
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="find" %}
+
 ## findIndex {#findindex}
 
 `(ES6)` — ❌ Missing. Use a `for` loop or the [polyfill](/engine-limitations/polyfills/#array-prototype-findindex).
@@ -306,6 +351,8 @@ for (var i = 0; i < arr.length; i++) {
     if (arr[i].id === targetId) { idx = i; break; }
 }
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="findindex" %}
 
 ## includes {#includes}
 
@@ -320,6 +367,8 @@ function includes(arr, value) {
 }
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="includes" %}
+
 ## fill {#fill}
 
 `(ES6)` — ❌ Missing. Apply the [polyfill](/engine-limitations/polyfills/#array-prototype-fill), or assign in a loop.
@@ -329,21 +378,31 @@ var arr = [];
 for (var i = 0; i < 5; i++) { arr.push(0); }   // [0,0,0,0,0]
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="fill" %}
+
 ## copyWithin {#copywithin}
 
 `(ES6)` — ❌ Missing. Apply the [polyfill](/engine-limitations/polyfills/#array-prototype-copywithin).
+
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="copywithin" %}
 
 ## entries {#entries}
 
 `(ES6)` — ❌ Missing. Apply the [polyfill](/engine-limitations/polyfills/#array-prototype-entries), or iterate with an index `for` loop reading `i` and `arr[i]`.
 
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="entries" %}
+
 ## keys {#keys}
 
 `(ES6)` — ❌ Missing. Use a standard index `for` loop (`for (var i = 0; i < arr.length; i++)`).
 
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="keys" %}
+
 ## values {#values}
 
 `(ES6)` — ❌ Missing. Use a standard index `for` loop reading `arr[i]`.
+
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="values" %}
 
 ## at {#at}
 
@@ -354,6 +413,8 @@ var arr = [10, 20, 30];
 arr[0];                   // 10  (arr.at(0))
 arr[arr.length - 1];      // 30  (arr.at(-1))
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="at" %}
 
 ## flat {#flat}
 
@@ -373,6 +434,8 @@ function flatten(arr) {
 }
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="flat" %}
+
 ## flatMap {#flatmap}
 
 `(ES6)` — ❌ Missing. Build the result with a `for` loop and `push`.
@@ -385,6 +448,8 @@ for (var i = 0; i < arr.length; i++) {
 }
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="flatmap" %}
+
 ## findLast {#findlast}
 
 `(ES6)` — ❌ Missing. Iterate from the end with a `for` loop.
@@ -396,6 +461,8 @@ for (var i = arr.length - 1; i >= 0; i--) {
 }
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="findlast" %}
+
 ## Array.isArray {#isarray}
 
 `(ES5)` — ❌ Missing. Apply the [polyfill](/engine-limitations/polyfills/#array-isarray).
@@ -406,9 +473,13 @@ function isArray(value) {
 }
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="isarray" %}
+
 ## Array.of {#of}
 
 `(ES6)` — ❌ Missing. Apply the [polyfill](/engine-limitations/polyfills/#array-of), or build an array literal directly.
+
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="of" %}
 
 ## Array.from {#from}
 
@@ -418,6 +489,8 @@ function isArray(value) {
 var arr = [];
 for (var i = 0; i < source.length; i++) { arr.push(source[i]); }
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="from" %}
 
 ## See Also
 

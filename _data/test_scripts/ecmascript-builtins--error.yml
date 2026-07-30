@@ -1,0 +1,368 @@
+# Test scripts for /ecmascript-builtins/error/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the ECMAScript spec / MDN.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters — the optional `message` argument
+   *
+   * Proves:
+   *   1. Error accepts 0 or 1 arguments; both forms return an object.
+   *   2. After new Error(msg) the text is NOT readable via .message —
+   *      it is undefined and not an own property (MDN: .message === msg).
+   *   3. The documented recovery: String(e) and ("" + e) return the text.
+   *   4. After call-form Error(msg) the .message IS set, and it is an own
+   *      property.
+   *   5. Engine-raised errors also carry .message.
+   *   6. With no argument: new Error() leaves .message undefined, while
+   *      call-form Error() still sets it — to the empty string.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW"; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  /* 1. Arity — 0 and 1 argument both produce an object. */
+  var noArg = new Error();
+  assert("typeof new Error() is object", typeof noArg, "object");
+  var oneArg = new Error("boom");
+  assert("typeof new Error('boom') is object", typeof oneArg, "object");
+  var callNoArg = Error();
+  assert("typeof Error() call-form is object", typeof callNoArg, "object");
+
+  /* 2. DEVIATION — new Error(msg) does not populate .message. */
+  assert("DEV typeof new Error('boom').message is undefined (MDN: 'boom')", typeof oneArg.message, "undefined");
+  assert("DEV new Error('boom').hasOwnProperty('message') is false (MDN: true)", oneArg.hasOwnProperty("message"), "false");
+
+  /* 3. Documented recovery of the text. */
+  assert("workaround String(new Error('boom')) is 'boom'", String(oneArg), "boom");
+  assert("workaround ('' + new Error('boom')) is 'boom'", "" + oneArg, "boom");
+
+  /* 4. Call-form DOES set .message. */
+  var callForm = Error("via-call");
+  assert("Error('via-call').message is 'via-call'", callForm.message, "via-call");
+  assert("Error('via-call').hasOwnProperty('message') is true", callForm.hasOwnProperty("message"), "true");
+  assert("String(Error('via-call')) is 'via-call'", String(callForm), "via-call");
+
+  /* 5. Engine-raised errors carry .message. */
+  var engineMsgType = "not-thrown";
+  try {
+      Platform.Function.Lookup("NonExistentDE_ForTest", "Field", "Key", "value");
+  } catch (ex) {
+      engineMsgType = typeof ex.message;
+  }
+  assert("engine-raised error exposes a string .message", engineMsgType, "string");
+
+  /* 6. No-argument forms leave .message undefined. */
+  assert("typeof new Error().message is undefined", typeof noArg.message, "undefined");
+  /* Call-form always sets .message; with no argument it is the empty string. */
+  assert("Error() call-form sets .message to the empty string", callNoArg.message, "");
+  assert("Error() call-form .message is a string", typeof callNoArg.message, "string");
+  </script>
+
+description: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Description + differs-from-MDN callout
+   *
+   * MDN / ECMAScript says:
+   *   - new Error("msg").message === "msg"
+   *   - new Error("msg").toString() === "Error: msg"
+   *   - (new Error()) instanceof Error === true
+   *
+   * SFMC (Jint) actually does:
+   *   1. new Error("msg") leaves .message undefined — recover with String(e)
+   *      or ("" + e).
+   *   2. Call-form Error("msg") DOES set .message.
+   *   3. Engine-raised errors set BOTH .message and .description.
+   *   4. e.toString() after new Error("msg") returns "Error: undefined".
+   *   5. instanceof Error is always false — use e.constructor === Error
+   *      or e.name instead.
+   *
+   * Also proves the base shape: Error is a function, .name is "Error",
+   * and the object is throwable/catchable.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW"; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  /* 0. Base shape. */
+  assert("typeof Error is function", typeof Error, "function");
+  var e = new Error("msg");
+  assert("new Error('msg').name is 'Error'", e.name, "Error");
+
+  /* 1. DEVIATION — .message is not populated by the new-form. */
+  assert("DEV typeof new Error('msg').message is undefined (MDN: 'msg')", typeof e.message, "undefined");
+  assert("DEV new Error('msg').hasOwnProperty('message') is false (MDN: true)", e.hasOwnProperty("message"), "false");
+  assert("workaround String(e) is 'msg'", String(e), "msg");
+  assert("workaround ('' + e) is 'msg'", "" + e, "msg");
+
+  /* 2. Call-form does set .message. */
+  var c = Error("msg2");
+  assert("Error('msg2').message is 'msg2'", c.message, "msg2");
+
+  /* 3. Engine-raised errors carry .message AND .description. */
+  var engMsg = "none", engDesc = "none";
+  try {
+      Platform.Function.Lookup("NonExistentDE_ForTest", "Field", "Key", "value");
+  } catch (ex) {
+      engMsg = typeof ex.message;
+      engDesc = typeof ex.description;
+  }
+  assert("engine-raised error .message is a string", engMsg, "string");
+  assert("engine-raised error .description is a string", engDesc, "string");
+
+  /* 4. DEVIATION — toString() after new loses the message. */
+  assert("DEV new Error('msg').toString() is 'Error: undefined' (MDN: 'Error: msg')", e.toString(), "Error: undefined");
+  assert("Error('msg2').toString() is 'Error: msg2'", c.toString(), "Error: msg2");
+
+  /* 5. DEVIATION — instanceof Error is always false. */
+  assert("DEV new Error('msg') instanceof Error is false (MDN: true)", e instanceof Error, "false");
+  assert("DEV Error('msg2') instanceof Error is false (MDN: true)", c instanceof Error, "false");
+  assert("workaround e.constructor === Error is true", e.constructor === Error, "true");
+  assert("workaround e.name is 'Error'", e.name, "Error");
+
+  /* 6. instanceof stays false even after throw/catch. */
+  var caughtInstance = "not-run", caughtName = "not-run";
+  try {
+      throw new Error("thrown");
+  } catch (ex) {
+      caughtInstance = ex instanceof Error;
+      caughtName = ex.name;
+  }
+  assert("DEV caught new Error instanceof Error is false (MDN: true)", caughtInstance, "false");
+  assert("caught new Error .name is 'Error'", caughtName, "Error");
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples
+   *
+   * Proves every commented result in the chapter's example blocks:
+   *   1. Basic throw/catch — String(e) is "Something went wrong".
+   *   2. Call-form vs new:
+   *        new Error("via-new").message  -> undefined
+   *        String(new Error("via-new"))  -> "via-new"
+   *        Error("via-call").message     -> "via-call"
+   *        String(Error("via-call"))     -> "via-call"
+   *   3. Conditional error — a guard clause throws and the catch recovers the
+   *      message text via String(e).
+   *   4. Error in serialization:
+   *        Stringify(new Error(...)) not thrown  -> "{}" (NOT the message)
+   *        Stringify(Error("msg"))               -> {"message":"msg"}
+   *        Stringify(engine-raised)              -> contains message + description
+   *        Stringify of a CAUGHT new Error       -> does not contain the message
+   *
+   * The HTTP example is illustrative only (live HTTP calls time a CloudPage
+   * out); its throw/catch shape is covered by points 1 and 3.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW"; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false;
+      try { fn(); } catch (ex) { threw = true; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw" : "did NOT throw") + "\n");
+  }
+
+  /* 1. Basic throw and catch. */
+  var basic = "not-run";
+  try {
+      throw new Error("Something went wrong");
+  } catch (ex) {
+      basic = String(ex);
+  }
+  assert("String(e) after throw new Error is 'Something went wrong'", basic, "Something went wrong");
+
+  /* 2. Call-form vs new. */
+  var withNew = new Error("via-new");
+  assert("new Error('via-new').message is undefined", typeof withNew.message, "undefined");
+  assert("String(new Error('via-new')) is 'via-new'", String(withNew), "via-new");
+  var callForm = Error("via-call");
+  assert("Error('via-call').message is 'via-call'", callForm.message, "via-call");
+  assert("String(Error('via-call')) is 'via-call'", String(callForm), "via-call");
+
+  /* 3. Conditional error — guard clause. */
+  function getValue(sk) {
+      if (!sk) {
+          throw new Error("SubscriberKey is required");
+      }
+      return sk;
+  }
+  assertThrows("guard clause throws when the argument is missing", function () { return getValue(""); });
+  var guardText = "not-run";
+  try {
+      getValue("");
+  } catch (ex) {
+      guardText = String(ex);
+  }
+  assert("caught guard message is 'SubscriberKey is required'", guardText, "SubscriberKey is required");
+  assert("guard returns the value when present", getValue("abc"), "abc");
+
+  /* 4. Error in serialization. */
+  var notThrown = new Error("serialize-me");
+  assert("Stringify(new Error(...)) not thrown is '{}'", Stringify(notThrown), "{}");
+  var callErr = Error("msg");
+  assert("Stringify(Error('msg')) is the message object", Stringify(callErr), '{"message":"msg"}');
+
+  var caughtDump = "not-run";
+  try {
+      throw new Error("hidden-text");
+  } catch (ex) {
+      caughtDump = Stringify(ex);
+  }
+  assert("Stringify of a caught new Error does NOT contain the message", caughtDump.indexOf("hidden-text") === -1, "true");
+
+  var engDump = "not-run";
+  try {
+      Platform.Function.Lookup("NonExistentDE_ForTest", "Field", "Key", "value");
+  } catch (ex) {
+      engDump = Stringify(ex);
+  }
+  assert("Stringify(engine-raised) contains 'message'", engDump.indexOf("message") > -1, "true");
+  assert("Stringify(engine-raised) contains 'description'", engDump.indexOf("description") > -1, "true");
+  </script>
+
+notes: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Notes — the error object's shape depends on its origin
+   *
+   * Proves, per origin:
+   *   1. new Error("msg"): .message undefined (not own), recover via String(e)
+   *      / ("" + e); .name is "Error"; .stack unavailable;
+   *      instanceof Error is false; e.constructor === Error is true.
+   *   2. Call-form Error("msg"): .message set, hasOwnProperty("message") true,
+   *      toString() is "Error: msg".
+   *   3. Engine-raised: .message (short) + .description (fuller); .stack
+   *      unavailable; instanceof Error and instanceof TypeError both false.
+   *   4. Thrown primitives / plain objects are valid — catch receives a string
+   *      or a plain object; on a thrown plain object prefer Stringify(e) /
+   *      e.toString() over String(e).
+   *   5. for (var k in e) enumerates the message CHARACTERS, not property
+   *      names, for engine errors / JS Error instances / thrown strings.
+   *   6. SFMC platform errors are catchable and DO carry .message.
+   *
+   * All "DEV" lines name the MDN/spec expectation inline.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW"; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  /* 1. new Error("msg"). */
+  var e = new Error("msg");
+  assert("DEV new Error('msg').message is undefined (MDN: 'msg')", typeof e.message, "undefined");
+  assert("DEV new Error('msg') has no own 'message' (MDN: own property)", e.hasOwnProperty("message"), "false");
+  assert("String(new Error('msg')) recovers the text", String(e), "msg");
+  assert("('' + new Error('msg')) recovers the text", "" + e, "msg");
+  assert("new Error('msg').name is 'Error'", e.name, "Error");
+  assert("DEV new Error('msg').stack is unavailable (MDN: a string)", typeof e.stack, "undefined");
+  assert("DEV new Error('msg') instanceof Error is false (MDN: true)", e instanceof Error, "false");
+  assert("new Error('msg').constructor === Error is true", e.constructor === Error, "true");
+
+  /* 2. Call-form Error("msg"). */
+  var c = Error("msg");
+  assert("Error('msg').message is 'msg'", c.message, "msg");
+  assert("Error('msg').hasOwnProperty('message') is true", c.hasOwnProperty("message"), "true");
+  assert("Error('msg').toString() is 'Error: msg'", c.toString(), "Error: msg");
+
+  /* 3. Engine-raised error. */
+  var engMsgType = "none", engDescType = "none", engStack = "none";
+  var engIsError = "none", engIsTypeError = "none";
+  try {
+      Platform.Function.Lookup("NonExistentDE_ForTest", "Field", "Key", "value");
+  } catch (ex) {
+      engMsgType = typeof ex.message;
+      engDescType = typeof ex.description;
+      engStack = typeof ex.stack;
+      engIsError = ex instanceof Error;
+      engIsTypeError = ex instanceof TypeError;
+  }
+  assert("engine-raised .message is a string", engMsgType, "string");
+  assert("engine-raised .description is a string", engDescType, "string");
+  assert("DEV engine-raised .stack is unavailable (MDN: a string)", engStack, "undefined");
+  assert("DEV engine-raised instanceof Error is false (MDN: true)", engIsError, "false");
+  assert("DEV engine-raised instanceof TypeError is false", engIsTypeError, "false");
+
+  /* 4. Thrown primitives and plain objects. */
+  var thrownStr = "not-run", thrownStrType = "not-run";
+  try {
+      throw "plain text";
+  } catch (ex) {
+      thrownStrType = typeof ex;
+      thrownStr = String(ex);
+  }
+  assert("throw 'text' is catchable and typeof e is string", thrownStrType, "string");
+  assert("caught thrown string equals the thrown text", thrownStr, "plain text");
+
+  var objType = "not-run", objMsg = "not-run", objDump = "not-run";
+  try {
+      throw { message: "obj-msg", description: "obj-desc" };
+  } catch (ex) {
+      objType = typeof ex;
+      objMsg = ex.message;
+      objDump = Stringify(ex);
+  }
+  assert("throw {plain object} is catchable and typeof e is object", objType, "object");
+  assert("caught plain object keeps .message", objMsg, "obj-msg");
+  assert("Stringify(thrown plain object) contains the description", objDump.indexOf("obj-desc") > -1, "true");
+
+  /* 5. for..in enumerates the message CHARACTERS, not property names. */
+  var keys = [];
+  for (var k in e) { keys.push(k); }
+  assert("DEV for..in over a JS Error yields characters, not property names", keys.join(""), "msg");
+  assert("DEV for..in key count equals the message length, not 1", keys.length, 3);
+
+  var strKeys = [];
+  var thrownText = "";
+  try { throw "abcd"; } catch (ex) { thrownText = ex; for (var k2 in ex) { strKeys.push(k2); } }
+  assert("DEV for..in over a thrown string yields its characters", strKeys.join(""), "abcd");
+
+  /* 6. SFMC platform errors are catchable and expose .message. */
+  var platMsg = "not-run";
+  try {
+      Platform.Function.Lookup("NonExistentDE_ForTest", "Field", "Key", "value");
+  } catch (ex) {
+      platMsg = ex.message;
+  }
+  assert("platform error .message is a non-empty string", platMsg.length > 0, "true");
+  </script>

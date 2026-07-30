@@ -1,0 +1,145 @@
+# Test scripts for /ecmascript-builtins/memory-management/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every provable claim the chapter makes —
+# here that is the negative claim (the ES2021 memory-management objects are
+# entirely absent) plus the fallback the page recommends.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# HELPER RULE: assert() compares with a plain === and never coerces its
+# arguments. Because a missing ES2021 constructor throws on invocation, every
+# probe is passed as a THUNK so the try/catch actually surrounds it — an
+# uncaught top-level throw makes the whole CloudPage return HTTP 422.
+
+weakref: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: WeakRef
+   *
+   * Proves:
+   *   1. DEVIATION from ECMAScript 2021 marked "DEV": WeakRef does not exist in
+   *      the SFMC Jint engine — typeof WeakRef is "undefined" (spec: "function").
+   *      Merely READING the name does not throw; only calling it does.
+   *   2. Constructing it throws (spec: returns a WeakRef wrapper).
+   *   3. No weak-reference API leaks in by another route: WeakRef.prototype and
+   *      a .deref() method are equally absent.
+   *   4. The documented replacement — a normal (strong) variable reference —
+   *      keeps the target readable for the whole script, which is exactly the
+   *      behaviour the page recommends relying on.
+   *
+   * NOT ASSERTED (not deterministically observable from script):
+   *   - "it is released automatically when the request-scoped script finishes".
+   *     Reclamation happens after the script has ended, so no statement inside
+   *     the script can observe it. There is no gc() hook, no heap-size reading
+   *     and no finalization callback in this engine (see the FinalizationRegistry
+   *     chapter), so GC timing is unobservable by construction. The absence of
+   *     any such hook IS asserted below; the timing itself is not.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEVIATION — WeakRef is absent. Reading the name is safe; it is undefined. */
+  assert("DEV typeof WeakRef is 'undefined' (spec: 'function')", function () { return String(typeof WeakRef); }, "undefined");
+
+  /* 2. Constructing it throws. */
+  assertThrows("DEV new WeakRef({}) throws (spec: returns a WeakRef)", function () { var target = {}; return new WeakRef(target); });
+  assert("new WeakRef({}) message is 'Unknown type: WeakRef'", function () { try { var t = {}; return new WeakRef(t); } catch (ex) { return ex.message; } }, "Unknown type: WeakRef");
+  assertThrows("DEV WeakRef({}) called without new throws too", function () { var target = {}; return WeakRef(target); });
+
+  /* 3. No part of the WeakRef API exists by another route. Reading a member of
+   *    the missing global does not throw — it simply yields undefined. */
+  assert("WeakRef.prototype is undefined", function () { return String(typeof WeakRef.prototype); }, "undefined");
+  assert("a plain object has no .deref()", function () { var o = {}; return String(typeof o.deref); }, "undefined");
+
+  /* 4. The documented replacement — a normal strong reference stays readable. */
+  assert("strong reference keeps the target readable", function () { var target = { id: "kept" }; var ref = target; return ref.id; }, "kept");
+  assert("strong reference is identity-equal to the target", function () { var target = { id: "kept" }; var ref = target; return ref === target; }, true);
+  assert("strong reference sees later mutations of the target", function () { var target = { id: "kept" }; var ref = target; target.id = "changed"; return ref.id; }, "changed");
+  assert("explicit release makes the local handle undefined", function () { var target = { id: "kept" }; var ref = target; ref = undefined; return String(typeof ref); }, "undefined");
+  </script>
+
+finalizationregistry: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: FinalizationRegistry
+   *
+   * Proves:
+   *   1. DEVIATION from ECMAScript 2021 marked "DEV": FinalizationRegistry does
+   *      not exist in the SFMC Jint engine — typeof FinalizationRegistry is
+   *      "undefined" (spec: "function"). Reading the name is safe; calling it
+   *      is what throws.
+   *   2. Constructing it throws (spec: returns a registry), so no callback can
+   *      be registered to run when an object is garbage-collected.
+   *   3. No registry API leaks in by another route: .prototype is unreachable
+   *      and a plain object carries no register/unregister methods. There is
+   *      also no gc() hook to force collection.
+   *   4. The documented replacement — performing cleanup explicitly at the end
+   *      of the script — works: an ordinary function call runs deterministically
+   *      and can release the references it owns.
+   *
+   * NOT ASSERTED (not deterministically observable from script):
+   *   - "you cannot register a callback to run when an object is
+   *     garbage-collected". The negative half IS asserted (no registry exists,
+   *     construction throws), but the underlying GC event itself is unobservable:
+   *     the engine exposes no gc() trigger, no heap statistics and no
+   *     finalization hook, so no script can detect when — or whether — a given
+   *     object is collected. Anything claiming to assert GC timing would be
+   *     fabricated.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEVIATION — FinalizationRegistry is absent. */
+  assert("DEV typeof FinalizationRegistry is 'undefined' (spec: 'function')", function () { return String(typeof FinalizationRegistry); }, "undefined");
+
+  /* 2. Constructing it throws, so no finalization callback can be registered. */
+  assertThrows("DEV new FinalizationRegistry(fn) throws (spec: returns a registry)", function () { return new FinalizationRegistry(function () { return 1; }); });
+  assert("new FinalizationRegistry() message is 'Unknown type: FinalizationRegistry'", function () { try { return new FinalizationRegistry(function () { return 1; }); } catch (ex) { return ex.message; } }, "Unknown type: FinalizationRegistry");
+  assertThrows("DEV FinalizationRegistry(fn) without new throws too", function () { return FinalizationRegistry(function () { return 1; }); });
+
+  /* 3. No part of the registry API — nor any GC hook — exists by another route.
+   *    Reading a member of the missing global yields undefined rather than throwing. */
+  assert("FinalizationRegistry.prototype is undefined", function () { return String(typeof FinalizationRegistry.prototype); }, "undefined");
+  assert("a plain object has no .register()", function () { var o = {}; return String(typeof o.register); }, "undefined");
+  assert("a plain object has no .unregister()", function () { var o = {}; return String(typeof o.unregister); }, "undefined");
+  assert("there is no gc() hook to force collection", function () { return String(typeof gc); }, "undefined");
+  assert("WeakRef is absent as well, so no weak-reference API at all", function () { return String(typeof WeakRef); }, "undefined");
+
+  /* 4. The documented replacement — explicit cleanup at the end of the script. */
+  assert("explicit cleanup function runs deterministically", function () { var state = { open: true }; function cleanup(s) { s.open = false; return "cleaned"; } var r = cleanup(state); return r + ":" + state.open; }, "cleaned:false");
+  assert("explicit cleanup can drop the reference it owns", function () { var holder = { data: { big: "payload" } }; holder.data = null; return String(holder.data); }, "null");
+  </script>

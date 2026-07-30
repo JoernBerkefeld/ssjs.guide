@@ -1,0 +1,996 @@
+# Test scripts for /ecmascript-builtins/string-methods/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the ECMAScript spec.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+string-constructor: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: The String() constructor
+   *
+   * Proves:
+   *   1. String(value) converts primitives to their string representation:
+   *      String(42) -> "42", String(true) -> "true".
+   *   2. String() with no argument returns "".
+   *   3. Stringify(value) produces JSON, unlike String(value).
+   *
+   * NOT ASSERTABLE (documented on the page, deliberately not asserted here):
+   *   - String({}) -> "[object Object]". Passing a plain object to String()
+   *     can raise an uncatchable .NET error that aborts the whole CloudPage
+   *     with HTTP 422, so no line would ever print. The page documents this
+   *     hazard itself ("do not call String(e) on a thrown plain object").
+   *   - String(resp.content) converting CLR HTTP response content. That needs
+   *     a live outbound HTTP call, which is non-deterministic and risks the
+   *     CloudPage timeout; it is covered on the Script.Util.HttpRequest page.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  /* 1. Primitive conversion. */
+  assert("String(42) is '42'", function () { return String(42); }, "42");
+  assert("String(true) is 'true'", function () { return String(true); }, "true");
+
+  /* 2. No argument returns the empty string. */
+  assert("String() is ''", function () { return String(); }, "");
+
+  /* 3. Stringify() serializes to JSON instead. */
+  var obj = { a: 1, b: 2 };
+  assert("Stringify({a:1,b:2}) is JSON", function () { return String(Stringify(obj)); }, '{"a":1,"b":2}');
+  </script>
+
+length: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: length
+   *
+   * Proves:
+   *   1. "Hello".length is 5 — the number of UTF-16 code units.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  assert("'Hello'.length is 5", function () { return String("Hello".length); }, "5");
+  </script>
+
+charat: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: charAt
+   *
+   * Proves:
+   *   1. In-range charAt() returns the character at that index.
+   *   2. Bracket access works for an in-range index.
+   *   3. DEVIATION marked "DEV": an out-of-range index returns the LAST
+   *      character of the string (spec: the empty string ""), both for an
+   *      index far past the end and for index === length.
+   *   4. Bracket access with an out-of-range index throws instead.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. + 2. In-range access. */
+  assert("'Hello'.charAt(0) is 'H'", function () { return String("Hello".charAt(0)); }, "H");
+  assert("'Hello'[0] is 'H'", function () { return String("Hello"[0]); }, "H");
+
+  /* 3. DEVIATION — out of range returns the last character. */
+  assert("DEV 'Hello'.charAt(99) is 'o' (spec: '')", function () { return String("Hello".charAt(99)); }, "o");
+  assert("DEV 'Hello'.charAt(5) is 'o' (spec: '')", function () { return String("Hello".charAt(5)); }, "o");
+
+  /* 4. Bracket access is not forgiving. */
+  assertThrows("'Hello'[99] throws", function () { return "Hello"[99]; });
+  </script>
+
+charcodeat: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: charCodeAt
+   *
+   * Proves:
+   *   1. "Hello".charCodeAt(0) is 72 — the UTF-16 code unit at that index.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  assert("'Hello'.charCodeAt(0) is 72", function () { return String("Hello".charCodeAt(0)); }, "72");
+  </script>
+
+indexof: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: indexOf
+   *
+   * Proves:
+   *   1. indexOf(search) returns the index of the first occurrence.
+   *   2. indexOf(search, fromIndex) starts searching at fromIndex.
+   *   3. A missing needle returns -1.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  assert("'Hello World'.indexOf('World') is 6", function () { return String("Hello World".indexOf("World")); }, "6");
+  assert("'Hello World'.indexOf('o', 5) is 7", function () { return String("Hello World".indexOf("o", 5)); }, "7");
+  assert("no match returns -1", function () { return String("Hello World".indexOf("zzz")); }, "-1");
+  </script>
+
+lastindexof: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: lastIndexOf
+   *
+   * Proves:
+   *   1. lastIndexOf(search) returns the index of the LAST occurrence.
+   *   2. A missing needle returns -1.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  assert("'Hello World Hello'.lastIndexOf('Hello') is 12", function () { return String("Hello World Hello".lastIndexOf("Hello")); }, "12");
+  assert("no match returns -1", function () { return String("Hello World Hello".lastIndexOf("zzz")); }, "-1");
+  </script>
+
+touppercase: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: toUpperCase
+   *
+   * Proves:
+   *   1. "Hello".toUpperCase() is "HELLO".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  assert("'Hello'.toUpperCase() is 'HELLO'", function () { return String("Hello".toUpperCase()); }, "HELLO");
+  </script>
+
+tolowercase: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: toLowerCase
+   *
+   * Proves:
+   *   1. "Hello".toLowerCase() is "hello".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  assert("'Hello'.toLowerCase() is 'hello'", function () { return String("Hello".toLowerCase()); }, "hello");
+  </script>
+
+tolocalelowercase: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: toLocaleLowerCase
+   *
+   * Proves:
+   *   1. "Hello".toLocaleLowerCase() is "hello" — the locale-aware lowercase
+   *      method exists and works.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  assert("'Hello'.toLocaleLowerCase() is 'hello'", function () { return String("Hello".toLocaleLowerCase()); }, "hello");
+  </script>
+
+substring: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: substring
+   *
+   * Proves:
+   *   1. "Hello World".substring(6, 11) is "World" — the part between the two
+   *      indices.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  assert("'Hello World'.substring(6, 11) is 'World'", function () { return String("Hello World".substring(6, 11)); }, "World");
+  </script>
+
+slice: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: slice
+   *
+   * Proves:
+   *   1. slice(start, end) behaves like substring.
+   *   2. slice() supports NEGATIVE indices, which is what distinguishes it
+   *      from substring: "Hello World".slice(-5) is "World".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  assert("'Hello World'.slice(0, 5) is 'Hello'", function () { return String("Hello World".slice(0, 5)); }, "Hello");
+  assert("'Hello World'.slice(-5) is 'World'", function () { return String("Hello World".slice(-5)); }, "World");
+  </script>
+
+concat: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: concat
+   *
+   * Proves:
+   *   1. concat() joins several strings: "Hello".concat(" ", "World").
+   *   2. The + operator produces the same result, which is why the chapter
+   *      recommends it.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  assert("'Hello'.concat(' ', 'World') is 'Hello World'", function () { return String("Hello".concat(" ", "World")); }, "Hello World");
+  assert("+ produces the same result", function () { return String("Hello" + " " + "World"); }, "Hello World");
+  </script>
+
+replace: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: replace
+   *
+   * Proves:
+   *   1. A string pattern replaces only the FIRST occurrence:
+   *      "aabbcc".replace("b", "X") -> "aaXbcc".
+   *   2. A RegExp with the /g flag replaces ALL occurrences:
+   *      "aabbcc".replace(/b/g, "X") -> "aaXXcc".
+   *   3. A function replacement receives the match and its return value is
+   *      substituted: "hello world".replace(/\b\w/g, upper) -> "Hello World".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  /* 1. String pattern — first match only. */
+  assert("'aabbcc'.replace('b', 'X') is 'aaXbcc'", function () { return String("aabbcc".replace("b", "X")); }, "aaXbcc");
+
+  /* 2. RegExp with /g — all matches. */
+  assert("'aabbcc'.replace(/b/g, 'X') is 'aaXXcc'", function () { return String("aabbcc".replace(/b/g, "X")); }, "aaXXcc");
+
+  /* 3. Function replacement. */
+  assert("function replacement capitalizes each word", function () {
+      return String("hello world".replace(/\b\w/g, function (c) { return c.toUpperCase(); }));
+  }, "Hello World");
+  </script>
+
+localecompare: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: localeCompare
+   *
+   * Proves:
+   *   1. "apple".localeCompare("banana") is NEGATIVE (asserted as a sign test,
+   *      because the spec only fixes the sign, not the magnitude).
+   *   2. "apple".localeCompare("apple") is 0.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  assert("'apple'.localeCompare('banana') is negative", function () {
+      return "apple".localeCompare("banana") < 0 ? "negative" : "not-negative";
+  }, "negative");
+  assert("'apple'.localeCompare('apple') is 0", function () { return String("apple".localeCompare("apple")); }, "0");
+  </script>
+
+match: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: match
+   *
+   * Proves:
+   *   1. A /g match returns every match: "Call 555-1234 or 555-5678"
+   *      matched with /\d{3}-\d{4}/g yields ["555-1234", "555-5678"].
+   *   2. DEVIATION marked "DEV": a no-match returns an EMPTY ARRAY (spec:
+   *      null) — asserted via its length, and by proving the result is not
+   *      null.
+   *   3. DEVIATION marked "DEV": the result carries NO .index property
+   *      (spec: a non-global match result has .index).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var str = "Call 555-1234 or 555-5678";
+
+  /* 1. Global match returns all matches. */
+  assert("match(/\\d{3}-\\d{4}/g) finds 2 matches", function () { return String(str.match(/\d{3}-\d{4}/g).length); }, "2");
+  assert("match(/\\d{3}-\\d{4}/g) joined", function () { return String(str.match(/\d{3}-\d{4}/g).join("|")); }, "555-1234|555-5678");
+
+  /* 2. DEVIATION — no match yields [] rather than null. */
+  assert("DEV no-match result is not null (spec: null)", function () { return str.match(/zzz/) === null ? "null" : "not-null"; }, "not-null");
+  assert("DEV no-match result is an empty array (spec: null)", function () { return String(str.match(/zzz/).length); }, "0");
+
+  /* 3. DEVIATION — no .index on the result. */
+  assert("DEV match result has no .index (spec: number)", function () { return String(typeof str.match(/555-1234/).index); }, "undefined");
+  </script>
+
+search: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: search
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": a no-match returns 0 (spec: -1).
+   *   2. The documented workarounds detect a match reliably where search()
+   *      cannot: String.match() and RegExp.test().
+   *
+   * NOT ASSERTABLE (documented on the page, deliberately not asserted here):
+   *   - "some real matches return the wrong index". The page states the
+   *     returned index is unreliable without pinning it to a specific wrong
+   *     value, so there is no deterministic expected value to assert. The
+   *     actionable part — do not trust the index, use match()/test() instead —
+   *     IS asserted, in point 2.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  /* 1. DEVIATION — no match reports 0, which is indistinguishable from a
+     match at index 0, so search() cannot be used to detect a match. */
+  assert("DEV 'abc'.search(/\\d/) is 0 for a NO match (spec: -1)", function () { return String("abc".search(/\d/)); }, "0");
+
+  /* 2. The recommended replacements. */
+  assert("workaround: match() finds the digit", function () { return String("abc123".match(/\d/).length > 0 ? "found" : "not-found"); }, "found");
+  assert("workaround: match() reports no digit", function () { return String("abc".match(/\d/).length > 0 ? "found" : "not-found"); }, "not-found");
+  assert("workaround: RegExp.test() finds the digit", function () { return /\d/.test("abc123") ? "true" : "false"; }, "true");
+  assert("workaround: RegExp.test() reports no digit", function () { return /\d/.test("abc") ? "true" : "false"; }, "false");
+  </script>
+
+split: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: split
+   *
+   * Proves:
+   *   1. A string separator splits normally: "a,b,c".split(",").
+   *   2. A RegExp separator splits normally: "a  b  c".split(/\s+/).
+   *   3. DEVIATION marked "DEV": the empty-separator form "hello".split("")
+   *      does NOT split into characters (spec: one element per character) —
+   *      it returns the whole string as a single element.
+   *   4. The documented workaround: a charAt() loop does produce one element
+   *      per character.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  /* 1. String separator. */
+  assert("'a,b,c'.split(',') has 3 parts", function () { return String("a,b,c".split(",").length); }, "3");
+  assert("'a,b,c'.split(',') joined", function () { return String("a,b,c".split(",").join("|")); }, "a|b|c");
+
+  /* 2. RegExp separator. */
+  assert("'a  b  c'.split(/\\s+/) has 3 parts", function () { return String("a  b  c".split(/\s+/).length); }, "3");
+  assert("'a  b  c'.split(/\\s+/) joined", function () { return String("a  b  c".split(/\s+/).join("|")); }, "a|b|c");
+
+  /* 3. DEVIATION — empty separator does not split into characters. */
+  assert("DEV 'hello'.split('') has 1 element (spec: 5)", function () { return String("hello".split("").length); }, "1");
+  assert("DEV 'hello'.split('')[0] is the whole string (spec: 'h')", function () { return String("hello".split("")[0]); }, "hello");
+
+  /* 4. The documented charAt() loop workaround. */
+  assert("workaround: charAt loop yields 5 chars", function () {
+      var chars = [], s = "hello";
+      for (var i = 0; i < s.length; i++) { chars.push(s.charAt(i)); }
+      return String(chars.length);
+  }, "5");
+  assert("workaround: charAt loop joined", function () {
+      var chars = [], s = "hello";
+      for (var i = 0; i < s.length; i++) { chars.push(s.charAt(i)); }
+      return String(chars.join("|"));
+  }, "h|e|l|l|o");
+  </script>
+
+trim: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: trim
+   *
+   * Proves:
+   *   1. String.prototype.trim is MISSING: reading it yields undefined and
+   *      calling it throws.
+   *   2. The documented polyfill (two replace() calls) strips leading and
+   *      trailing whitespace.
+   *   3. There is NO Platform.Function.Trim: reading it reports the phantom
+   *      "clrmethodinfo" type, but calling it throws.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. The member does not exist. */
+  assert("typeof '  x  '.trim is undefined", function () { return String(typeof "  x  ".trim); }, "undefined");
+  assertThrows("'  x  '.trim() throws", function () { return "  x  ".trim(); });
+
+  /* 2. The documented polyfill. */
+  function trim(str) {
+      return String(str).replace(/^\s+/, "").replace(/\s+$/, "");
+  }
+  assert("polyfill trim('  hi  ') is 'hi'", function () { return String(trim("  hi  ")); }, "hi");
+  assert("polyfill trim leaves inner spaces", function () { return String(trim("  a b  ")); }, "a b");
+
+  /* 3. Platform.Function.Trim does not exist. "clrmethodinfo" is reported for
+     any member name under Platform.Function, existing or not — it is not
+     evidence that the member is real. */
+  assert("typeof Platform.Function.Trim is the phantom clrmethodinfo", function () { return String(typeof Platform.Function.Trim); }, "clrmethodinfo");
+  assertThrows("Platform.Function.Trim('  hi  ') throws", function () { return Platform.Function.Trim("  hi  "); });
+  </script>
+
+substr: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: substr
+   *
+   * Proves:
+   *   1. String.prototype.substr is MISSING: calling it throws at runtime.
+   *   2. The documented replacement substring(6, 11) produces "World", the
+   *      value substr(6, 5) would have produced.
+   *   3. slice(6, 11) produces the same replacement value.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. Calling substr throws. */
+  assertThrows("'Hello World'.substr(6, 5) throws", function () { return "Hello World".substr(6, 5); });
+
+  /* 2. + 3. The documented replacements. */
+  assert("substring(6, 11) is 'World'", function () { return String("Hello World".substring(6, 11)); }, "World");
+  assert("slice(6, 11) is 'World'", function () { return String("Hello World".slice(6, 11)); }, "World");
+  </script>
+
+startswith: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: startsWith
+   *
+   * Proves:
+   *   1. String.prototype.startsWith is MISSING: reading it yields undefined
+   *      and calling it throws.
+   *   2. The documented workaround indexOf(prefix) === 0 returns true for a
+   *      real prefix and false for a non-prefix (including a substring that
+   *      occurs later in the string).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. The member does not exist. */
+  assert("typeof 'Hello'.startsWith is undefined", function () { return String(typeof "Hello".startsWith); }, "undefined");
+  assertThrows("'Hello'.startsWith('He') throws", function () { return "Hello".startsWith("He"); });
+
+  /* 2. The documented workaround. */
+  function startsWith(str, prefix) {
+      return str.indexOf(prefix) === 0;
+  }
+  assert("workaround startsWith('Hello','He') is true", function () { return startsWith("Hello", "He") ? "true" : "false"; }, "true");
+  assert("workaround startsWith('Hello','llo') is false", function () { return startsWith("Hello", "llo") ? "true" : "false"; }, "false");
+  assert("workaround startsWith('Hello','zzz') is false", function () { return startsWith("Hello", "zzz") ? "true" : "false"; }, "false");
+  </script>
+
+endswith: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: endsWith
+   *
+   * Proves:
+   *   1. String.prototype.endsWith is MISSING: reading it yields undefined
+   *      and calling it throws.
+   *   2. The documented lastIndexOf workaround returns true for a real suffix
+   *      and false for a non-suffix.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. The member does not exist. */
+  assert("typeof 'Hello'.endsWith is undefined", function () { return String(typeof "Hello".endsWith); }, "undefined");
+  assertThrows("'Hello'.endsWith('llo') throws", function () { return "Hello".endsWith("llo"); });
+
+  /* 2. The documented workaround. */
+  function endsWith(str, suffix) {
+      return str.lastIndexOf(suffix) === str.length - suffix.length;
+  }
+  assert("workaround endsWith('Hello','llo') is true", function () { return endsWith("Hello", "llo") ? "true" : "false"; }, "true");
+  assert("workaround endsWith('Hello','He') is false", function () { return endsWith("Hello", "He") ? "true" : "false"; }, "false");
+  </script>
+
+includes: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: includes
+   *
+   * Proves:
+   *   1. String.prototype.includes is MISSING: reading it yields undefined
+   *      and calling it throws.
+   *   2. The documented workaround indexOf(sub) !== -1 is true for a present
+   *      substring and false for an absent one.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. The member does not exist. */
+  assert("typeof 'Hello'.includes is undefined", function () { return String(typeof "Hello".includes); }, "undefined");
+  assertThrows("'Hello'.includes('ell') throws", function () { return "Hello".includes("ell"); });
+
+  /* 2. The documented workaround. */
+  function includes(str, sub) {
+      return str.indexOf(sub) !== -1;
+  }
+  assert("workaround includes('Hello','ell') is true", function () { return includes("Hello", "ell") ? "true" : "false"; }, "true");
+  assert("workaround includes('Hello','zzz') is false", function () { return includes("Hello", "zzz") ? "true" : "false"; }, "false");
+  </script>
+
+trimstart: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: trimStart
+   *
+   * Proves:
+   *   1. String.prototype.trimStart is MISSING: reading it yields undefined
+   *      and calling it throws.
+   *   2. The documented /^\s+/ replace workaround removes only LEADING
+   *      whitespace and leaves trailing whitespace intact.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. The member does not exist. */
+  assert("typeof '  x  '.trimStart is undefined", function () { return String(typeof "  x  ".trimStart); }, "undefined");
+  assertThrows("'  x  '.trimStart() throws", function () { return "  x  ".trimStart(); });
+
+  /* 2. The documented workaround. */
+  function trimStart(str) {
+      return String(str).replace(/^\s+/, "");
+  }
+  assert("workaround trimStart('  hi  ') keeps trailing spaces", function () { return String(trimStart("  hi  ")); }, "hi  ");
+  assert("workaround trimStart('  hi  ').length is 4", function () { return String(trimStart("  hi  ").length); }, "4");
+  </script>
+
+trimend: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: trimEnd
+   *
+   * Proves:
+   *   1. String.prototype.trimEnd is MISSING: reading it yields undefined and
+   *      calling it throws.
+   *   2. The documented /\s+$/ replace workaround removes only TRAILING
+   *      whitespace and leaves leading whitespace intact.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. The member does not exist. */
+  assert("typeof '  x  '.trimEnd is undefined", function () { return String(typeof "  x  ".trimEnd); }, "undefined");
+  assertThrows("'  x  '.trimEnd() throws", function () { return "  x  ".trimEnd(); });
+
+  /* 2. The documented workaround. */
+  function trimEnd(str) {
+      return String(str).replace(/\s+$/, "");
+  }
+  assert("workaround trimEnd('  hi  ') keeps leading spaces", function () { return String(trimEnd("  hi  ")); }, "  hi");
+  assert("workaround trimEnd('  hi  ').length is 4", function () { return String(trimEnd("  hi  ").length); }, "4");
+  </script>
+
+padstart: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: padStart
+   *
+   * Proves:
+   *   1. String.prototype.padStart is MISSING: reading it yields undefined
+   *      and calling it throws.
+   *   2. The documented loop workaround pads on the LEFT:
+   *      padStart("7", 3, "0") -> "007".
+   *   3. The workaround leaves an already-long-enough string untouched.
+   *   4. Its padChar defaults to a space.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. The member does not exist. */
+  assert("typeof '7'.padStart is undefined", function () { return String(typeof "7".padStart); }, "undefined");
+  assertThrows("'7'.padStart(3, '0') throws", function () { return "7".padStart(3, "0"); });
+
+  /* 2. - 4. The documented workaround. */
+  function padStart(str, targetLen, padChar) {
+      str = String(str);
+      padChar = padChar || " ";
+      while (str.length < targetLen) { str = padChar + str; }
+      return str;
+  }
+  assert("workaround padStart('7', 3, '0') is '007'", function () { return String(padStart("7", 3, "0")); }, "007");
+  assert("workaround padStart('1234', 3, '0') is unchanged", function () { return String(padStart("1234", 3, "0")); }, "1234");
+  assert("workaround padStart('7', 3) pads with spaces", function () { return String(padStart("7", 3)); }, "  7");
+  </script>
+
+padend: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: padEnd
+   *
+   * Proves:
+   *   1. String.prototype.padEnd is MISSING: reading it yields undefined and
+   *      calling it throws.
+   *   2. The documented loop workaround pads on the RIGHT.
+   *   3. The workaround leaves an already-long-enough string untouched.
+   *   4. Its padChar defaults to a space.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. The member does not exist. */
+  assert("typeof '7'.padEnd is undefined", function () { return String(typeof "7".padEnd); }, "undefined");
+  assertThrows("'7'.padEnd(3, '0') throws", function () { return "7".padEnd(3, "0"); });
+
+  /* 2. - 4. The documented workaround. */
+  function padEnd(str, targetLen, padChar) {
+      str = String(str);
+      padChar = padChar || " ";
+      while (str.length < targetLen) { str = str + padChar; }
+      return str;
+  }
+  assert("workaround padEnd('7', 3, '0') is '700'", function () { return String(padEnd("7", 3, "0")); }, "700");
+  assert("workaround padEnd('1234', 3, '0') is unchanged", function () { return String(padEnd("1234", 3, "0")); }, "1234");
+  assert("workaround padEnd('7', 3) pads with spaces", function () { return String(padEnd("7", 3)); }, "7  ");
+  </script>
+
+repeat: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: repeat
+   *
+   * Proves:
+   *   1. String.prototype.repeat is MISSING: reading it yields undefined and
+   *      calling it throws.
+   *   2. The documented loop workaround produces the repeated string:
+   *      repeat("ab", 3) -> "ababab".
+   *   3. A count of 0 yields the empty string.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. The member does not exist. */
+  assert("typeof 'ab'.repeat is undefined", function () { return String(typeof "ab".repeat); }, "undefined");
+  assertThrows("'ab'.repeat(3) throws", function () { return "ab".repeat(3); });
+
+  /* 2. + 3. The documented workaround. */
+  function repeat(str, n) {
+      var result = "";
+      for (var i = 0; i < n; i++) { result += str; }
+      return result;
+  }
+  assert("workaround repeat('ab', 3) is 'ababab'", function () { return String(repeat("ab", 3)); }, "ababab");
+  assert("workaround repeat('ab', 0) is ''", function () { return String(repeat("ab", 0)); }, "");
+  </script>
+
+codepointat: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: codePointAt
+   *
+   * Proves:
+   *   1. String.prototype.codePointAt is MISSING: reading it yields undefined
+   *      and calling it throws.
+   *   2. The documented replacement charCodeAt() returns 65 for "A", the
+   *      value codePointAt(0) would return for a Basic Multilingual Plane
+   *      character.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. The member does not exist. */
+  assert("typeof 'A'.codePointAt is undefined", function () { return String(typeof "A".codePointAt); }, "undefined");
+  assertThrows("'A'.codePointAt(0) throws", function () { return "A".codePointAt(0); });
+
+  /* 2. The documented replacement. */
+  assert("'A'.charCodeAt(0) is 65", function () { return String("A".charCodeAt(0)); }, "65");
+  </script>

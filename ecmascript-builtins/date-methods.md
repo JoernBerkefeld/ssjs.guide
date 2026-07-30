@@ -6,6 +6,7 @@ parent_url: /ecmascript-builtins/
 permalink: /ecmascript-builtins/date-methods/
 description: Date prototype methods and statics in SSJS — value-confirmed getters and string conversions (ES3), the getMilliseconds off-by-one bug, Date.now returning a Date object, Date.parse never returning NaN, and the missing toISOString.
 verification: verified
+test_scripts: complete
 differs_from_docs: true
 ---
 
@@ -64,29 +65,43 @@ differs_from_docs: true
 new Date().getFullYear();   // e.g. 2026
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--date-methods" chapter="getfullyear" %}
+
 ## getMonth {#getmonth}
 
 `(ES3)` — ✅ Works. Month (`0` = January … `11` = December) in local time.
+
+{% include test-script.html bundle="ecmascript-builtins--date-methods" chapter="getmonth" %}
 
 ## getDate {#getdate}
 
 `(ES3)` — ✅ Works. Day of the month (1–31) in local time.
 
+{% include test-script.html bundle="ecmascript-builtins--date-methods" chapter="getdate" %}
+
 ## getDay {#getday}
 
 `(ES3)` — ✅ Works. Day of week (`0` = Sunday … `6` = Saturday) in local time.
+
+{% include test-script.html bundle="ecmascript-builtins--date-methods" chapter="getday" %}
 
 ## getHours {#gethours}
 
 `(ES3)` — ✅ Works. Hours (0–23) in local time.
 
+{% include test-script.html bundle="ecmascript-builtins--date-methods" chapter="gethours" %}
+
 ## getMinutes {#getminutes}
 
 `(ES3)` — ✅ Works. Minutes (0–59) in local time.
 
+{% include test-script.html bundle="ecmascript-builtins--date-methods" chapter="getminutes" %}
+
 ## getSeconds {#getseconds}
 
 `(ES3)` — ✅ Works. Seconds (0–59) in local time.
+
+{% include test-script.html bundle="ecmascript-builtins--date-methods" chapter="getseconds" %}
 
 ## getTime {#gettime}
 
@@ -96,57 +111,85 @@ new Date().getFullYear();   // e.g. 2026
 new Date().getTime();   // ms since 1970-01-01T00:00:00Z
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--date-methods" chapter="gettime" %}
+
 ## getTimezoneOffset {#gettimezoneoffset}
 
 `(ES3)` — ✅ Works. Difference, in minutes, between local time and UTC.
+
+{% include test-script.html bundle="ecmascript-builtins--date-methods" chapter="gettimezoneoffset" %}
 
 ## valueOf {#valueof}
 
 `(ES3)` — ✅ Works. Milliseconds since the Unix epoch (same as `getTime`).
 
+{% include test-script.html bundle="ecmascript-builtins--date-methods" chapter="valueof" %}
+
 ## getUTCFullYear {#getutcfullyear}
 
 `(ES3)` — ✅ Works. Four-digit year in UTC.
+
+{% include test-script.html bundle="ecmascript-builtins--date-methods" chapter="getutcfullyear" %}
 
 ## getUTCMonth {#getutcmonth}
 
 `(ES3)` — ✅ Works. Month (`0` = January … `11` = December) in UTC.
 
+{% include test-script.html bundle="ecmascript-builtins--date-methods" chapter="getutcmonth" %}
+
 ## getUTCDate {#getutcdate}
 
 `(ES3)` — ✅ Works. Day of the month (1–31) in UTC.
+
+{% include test-script.html bundle="ecmascript-builtins--date-methods" chapter="getutcdate" %}
 
 ## getUTCDay {#getutcday}
 
 `(ES3)` — ✅ Works. Day of week (`0` = Sunday … `6` = Saturday) in UTC.
 
+{% include test-script.html bundle="ecmascript-builtins--date-methods" chapter="getutcday" %}
+
 ## getUTCHours {#getutchours}
 
 `(ES3)` — ✅ Works. Hours (0–23) in UTC.
+
+{% include test-script.html bundle="ecmascript-builtins--date-methods" chapter="getutchours" %}
 
 ## getUTCMinutes {#getutcminutes}
 
 `(ES3)` — ✅ Works. Minutes (0–59) in UTC.
 
+{% include test-script.html bundle="ecmascript-builtins--date-methods" chapter="getutcminutes" %}
+
 ## getUTCSeconds {#getutcseconds}
 
 `(ES3)` — ✅ Works. Seconds (0–59) in UTC.
+
+{% include test-script.html bundle="ecmascript-builtins--date-methods" chapter="getutcseconds" %}
 
 ## getUTCMilliseconds {#getutcmilliseconds}
 
 `(ES3)` — ✅ Works. Milliseconds (0–999) in UTC. Unlike the local [`getMilliseconds`](#getmilliseconds), the UTC variant was accurate at the epoch in testing.
 
+{% include test-script.html bundle="ecmascript-builtins--date-methods" chapter="getutcmilliseconds" %}
+
 ## toString {#tostring}
 
 `(ES3)` — ✅ Works. Human-readable date string (e.g. `Wed, 31 Dec 1969 18:00:00 GMT-06:00`), in the account time zone.
+
+{% include test-script.html bundle="ecmascript-builtins--date-methods" chapter="tostring" %}
 
 ## toDateString {#todatestring}
 
 `(ES3)` — ✅ Works. Date portion as a human-readable string.
 
+{% include test-script.html bundle="ecmascript-builtins--date-methods" chapter="todatestring" %}
+
 ## toTimeString {#totimestring}
 
 `(ES3)` — ✅ Works. Time portion as a human-readable string.
+
+{% include test-script.html bundle="ecmascript-builtins--date-methods" chapter="totimestring" %}
 
 ## toUTCString {#toutcstring}
 
@@ -156,11 +199,15 @@ new Date().getTime();   // ms since 1970-01-01T00:00:00Z
 new Date(0).toUTCString();   // "Thu, 01 Jan 1970 00:00:00 UTC"
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--date-methods" chapter="toutcstring" %}
+
 ## getMilliseconds {#getmilliseconds}
 
 `(ES3)` — ⚠️ Partial. Milliseconds (0–999) in local time, but **frequently off by one** in the SFMC engine — do not rely on exact values.
 
 {% include differs-from-mdn.html content="Runtime-verified: constructing a date with 123 ms reports **122**; 555 → 554, 666 → 665, 777 → 776. Some values (0, 111, 888, 999) are exact. Never compare sub-second precision; round or avoid milliseconds." %}
+
+{% include test-script.html bundle="ecmascript-builtins--date-methods" chapter="getmilliseconds" label="Show test script — the off-by-one milliseconds bug" %}
 
 ## now {#now}
 
@@ -173,6 +220,8 @@ new Date(0).toUTCString();   // "Thu, 01 Jan 1970 00:00:00 UTC"
 // ✅ use getTime() for clean epoch milliseconds
 var ms = new Date().getTime();   // current time in ms (number)
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--date-methods" chapter="now" label="Show test script — Date.now() returns a Date object" %}
 
 ## parse {#parse}
 
@@ -187,6 +236,8 @@ Date.parse("2026-06-18");             // parses as LOCAL midnight, not UTC
 Date.parse("garbage");                // 0  (spec: NaN)
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--date-methods" chapter="parse" label="Show test script — invalid strings return 0 and date-only parses as local" %}
+
 ## UTC {#utc}
 
 `(ES3)` — ⚠️ Partial. {% include method-status.html status="verified" differs=true %} `Date.UTC(year[, month[, day[, hours[, minutes[, seconds[, ms]]]]]])` returns ms for the given UTC components when you pass at least **year and month**.
@@ -198,6 +249,8 @@ Date.UTC(1970, 0, 1);                    // 0
 Date.UTC(2026, 0, 1);                    // 1767225600000
 var d = new Date(Date.UTC(2026, 0, 1));  // build a UTC-based Date
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--date-methods" chapter="utc" label="Show test script — the year-only form returns nonsense" %}
 
 ## toISOString {#toisostring}
 
@@ -211,9 +264,13 @@ function toISOString(d) {
 }
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--date-methods" chapter="toisostring" %}
+
 ## toJSON {#tojson}
 
 `(ES5)` — ❌ Missing. `Date.prototype.toJSON` is unavailable (`typeof d.toJSON` is `undefined`) because it depends on the absent [`toISOString`](#toisostring). Serialize dates with the manual `toISOString` polyfill above.
+
+{% include test-script.html bundle="ecmascript-builtins--date-methods" chapter="tojson" %}
 
 ## See Also
 

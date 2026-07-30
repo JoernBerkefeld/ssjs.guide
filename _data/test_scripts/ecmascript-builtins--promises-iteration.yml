@@ -1,0 +1,320 @@
+# Test scripts for /ecmascript-builtins/promises-iteration/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every provable claim the chapter makes —
+# here that is mostly the negative claim (Promise, the iteration protocol,
+# generators and the async family are entirely absent) plus the fallbacks
+# the page recommends.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# HELPER RULE: assert() compares with a plain === and never coerces its
+# arguments. Because a missing ES6 constructor throws on invocation, every
+# probe is passed as a THUNK so the try/catch actually surrounds it — an
+# uncaught top-level throw makes the whole CloudPage return HTTP 422.
+#
+# SYNTAX-LEVEL ABSENCES ARE NOT ASSERTABLE: `function*`, `yield`,
+# `for (x of y)`, spread and `async`/`await` are rejected by the parser, so
+# a script containing them never executes a single line and can never print
+# PASS. Those claims are documented as explicit non-assertions in the
+# affected script headers.
+
+promise: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Promise
+   *
+   * Proves:
+   *   1. DEVIATION from ECMAScript 2015 marked "DEV": Promise does not exist in
+   *      the SFMC Jint engine — typeof Promise is "undefined" (spec: "function").
+   *      Merely READING the name does not throw; only calling it does.
+   *   2. new Promise(function(resolve){ resolve(1); }) throws
+   *      "Unknown type: Promise" (spec: returns a pending promise).
+   *   3. Calling Promise(...) without new throws too, reporting the bare name
+   *      ("Object expected: Promise").
+   *   4. No promise API leaks in by another route: Promise.prototype is
+   *      unreachable and a plain object carries no .then().
+   *   5. The documented replacement — the engine is synchronous, so an HTTP call
+   *      blocks and its return value (resp.Status) is readable on the very next
+   *      statement, with no .then/await involved.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEVIATION — Promise is absent. Reading the name is safe; it is undefined. */
+  assert("DEV typeof Promise is 'undefined' (spec: 'function')", function () { return String(typeof Promise); }, "undefined");
+
+  /* 2. Constructing it throws, with the documented message. */
+  assertThrows("DEV new Promise(fn) throws (spec: returns a pending promise)", function () { return new Promise(function (resolve) { resolve(1); }); });
+  assert("new Promise(fn) message is 'Unknown type: Promise'", function () { try { return new Promise(function (resolve) { resolve(1); }); } catch (ex) { return ex.message; } }, "Unknown type: Promise");
+
+  /* 3. Calling it without new throws too — bare-name form. */
+  assertThrows("DEV Promise(fn) without new throws too", function () { return Promise(function (resolve) { resolve(1); }); });
+  assert("Promise(fn) message is 'Object expected: Promise'", function () { try { return Promise(function (resolve) { resolve(1); }); } catch (ex) { return ex.message; } }, "Object expected: Promise");
+
+  /* 4. No promise API exists by another route. Reading a member of the missing
+   *    global does not throw — it simply yields undefined. */
+  assert("Promise.prototype is undefined", function () { return String(typeof Promise.prototype); }, "undefined");
+  assert("a plain object has no .then()", function () { var o = {}; return String(typeof o.then); }, "undefined");
+
+  /* 5. Documented replacement — calls are blocking, so the result is available
+   *    on the next line without any asynchronous plumbing. */
+  var resp = HTTP.Get("https://postman-echo.com/get");
+  assert("HTTP.Get returns synchronously — resp.Status readable immediately", function () { return String(typeof resp.Status); }, "number");
+  assert("the response body is available on the very next statement", function () { return String(typeof resp.Content); }, "string");
+  assert("the returned object needs no .then() to be read", function () { return String(typeof resp.then); }, "undefined");
+  </script>
+
+iterator: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Iterator
+   *
+   * Proves:
+   *   1. DEVIATION from ECMAScript 2015 marked "DEV": Iterator does not exist —
+   *      typeof Iterator is "undefined" (spec: an iterator-protocol intrinsic).
+   *      Reading the name is safe; only calling it throws.
+   *   2. Both invocation forms throw: new Iterator() -> "Unknown type: Iterator",
+   *      Iterator() -> "Object expected: Iterator".
+   *   3. Symbol is absent too, so there are NO well-known symbols: typeof Symbol
+   *      is "undefined" and Symbol.iterator is unreachable (undefined), which is
+   *      exactly why no object can advertise itself as iterable.
+   *   4. The documented replacement — a classic index loop over arr.length —
+   *      visits every element in order.
+   *
+   * NOT ASSERTED (syntax-level absence, not observable at runtime):
+   *   - "for…of, spread, and destructuring over iterables are unavailable."
+   *     `for (var x of arr)`, `[...arr]` and `var [a, b] = arr` are rejected by
+   *     the engine's PARSER, so a script containing any of them fails before a
+   *     single statement runs and can never print PASS. The runtime-reachable
+   *     half of the claim — that the iteration protocol has no entry point
+   *     (no Iterator, no Symbol, no Symbol.iterator) — IS asserted above.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEVIATION — Iterator is absent. */
+  assert("DEV typeof Iterator is 'undefined' (spec: iteration-protocol intrinsic)", function () { return String(typeof Iterator); }, "undefined");
+
+  /* 2. Both invocation forms throw. */
+  assertThrows("DEV new Iterator() throws", function () { return new Iterator(); });
+  assert("new Iterator() message is 'Unknown type: Iterator'", function () { try { return new Iterator(); } catch (ex) { return ex.message; } }, "Unknown type: Iterator");
+  assertThrows("DEV Iterator() without new throws too", function () { return Iterator(); });
+  assert("Iterator() message is 'Object expected: Iterator'", function () { try { return Iterator(); } catch (ex) { return ex.message; } }, "Object expected: Iterator");
+
+  /* 3. Symbol is absent, so there are no well-known symbols at all. */
+  assert("DEV typeof Symbol is 'undefined' (spec: 'function')", function () { return String(typeof Symbol); }, "undefined");
+  assert("Symbol.iterator is undefined — no well-known symbols exist", function () { return String(typeof Symbol.iterator); }, "undefined");
+
+  /* 4. Documented replacement — the classic index loop. */
+  var arr = ["a", "b", "c"];
+  assert("index loop visits every element in order", function () { var out = ""; for (var i = 0; i < arr.length; i++) { out += arr[i]; } return out; }, "abc");
+  assert("index loop count matches arr.length", function () { var n = 0; for (var i = 0; i < arr.length; i++) { n++; } return n; }, 3);
+  </script>
+
+generator: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Generator
+   *
+   * Proves:
+   *   1. DEVIATION from ECMAScript 2015 marked "DEV": Generator does not exist —
+   *      typeof Generator is "undefined" (spec: the generator-object intrinsic).
+   *      Reading the name is safe; only calling it throws.
+   *   2. Both invocation forms throw: new Generator() -> "Unknown type: Generator",
+   *      Generator() -> "Object expected: Generator".
+   *   3. The documented replacement — returning a fully-materialised array from an
+   *      ordinary function — works and yields every element eagerly.
+   *
+   * NOT ASSERTED (syntax-level absence, not observable at runtime):
+   *   - "the function* / yield generator syntax is not supported by the engine's
+   *     parser." A parse error aborts the whole CloudPage before any statement
+   *     executes, so a script containing `function*` or `yield` can never print a
+   *     PASS line. Only the runtime-reachable half — the absence of the Generator
+   *     intrinsic and of the generator protocol on ordinary functions — is
+   *     asserted above.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEVIATION — Generator is absent. */
+  assert("DEV typeof Generator is 'undefined' (spec: generator-object intrinsic)", function () { return String(typeof Generator); }, "undefined");
+
+  /* 2. Both invocation forms throw. */
+  assertThrows("DEV new Generator() throws", function () { return new Generator(); });
+  assert("new Generator() message is 'Unknown type: Generator'", function () { try { return new Generator(); } catch (ex) { return ex.message; } }, "Unknown type: Generator");
+  assertThrows("DEV Generator() without new throws too", function () { return Generator(); });
+  assert("Generator() message is 'Object expected: Generator'", function () { try { return Generator(); } catch (ex) { return ex.message; } }, "Object expected: Generator");
+
+  /* 3. Documented replacement — return a fully-materialised array. */
+  function materialise(n) { var out = []; for (var i = 0; i < n; i++) { out[i] = i; } return out; }
+  assert("materialised array has all elements up front", function () { return materialise(3).length; }, 3);
+  assert("materialised array contents are eager", function () { return materialise(3).join(","); }, "0,1,2");
+  </script>
+
+generatorfunction: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: GeneratorFunction
+   *
+   * Proves:
+   *   1. DEVIATION from ECMAScript 2015 marked "DEV": GeneratorFunction (the
+   *      hidden constructor of generator functions) does not exist —
+   *      typeof GeneratorFunction is "undefined". Reading the name is safe;
+   *      only calling it throws.
+   *   2. Both invocation forms throw, and report the name differently:
+   *      new GeneratorFunction() -> "Unknown type: GeneratorFunction",
+   *      GeneratorFunction()     -> "Object expected: GeneratorFunction".
+   *   3. GeneratorFunction.prototype is unreachable (undefined) — reading a
+   *      member of the missing global does not throw.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEVIATION — GeneratorFunction is absent. */
+  assert("DEV typeof GeneratorFunction is 'undefined' (spec: hidden constructor)", function () { return String(typeof GeneratorFunction); }, "undefined");
+
+  /* 2. Both invocation forms throw. */
+  assertThrows("DEV new GeneratorFunction() throws", function () { return new GeneratorFunction(); });
+  assert("new GeneratorFunction() message is 'Unknown type: GeneratorFunction'", function () { try { return new GeneratorFunction(); } catch (ex) { return ex.message; } }, "Unknown type: GeneratorFunction");
+  assertThrows("DEV GeneratorFunction() without new throws too", function () { return GeneratorFunction(); });
+  assert("GeneratorFunction() message is 'Object expected: GeneratorFunction'", function () { try { return GeneratorFunction(); } catch (ex) { return ex.message; } }, "Object expected: GeneratorFunction");
+
+  /* 3. Reading a member of the missing global yields undefined. */
+  assert("GeneratorFunction.prototype is undefined", function () { return String(typeof GeneratorFunction.prototype); }, "undefined");
+  </script>
+
+async-variants: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Async variants
+   *
+   * Proves:
+   *   1. DEVIATION from ECMAScript 2017/2018 marked "DEV": AsyncFunction,
+   *      AsyncGenerator, AsyncGeneratorFunction and AsyncIterator are all
+   *      undefined. Reading the names is safe; only calling them throws.
+   *   2. For each of the four, both invocation forms throw with the documented
+   *      shapes: new X() -> "Unknown type: X", X() -> "Object expected: X".
+   *   3. Promise is absent as well, so no part of the asynchronous machinery
+   *      exists — consistent with the page's opening claim that the engine is
+   *      synchronous.
+   *   4. The documented replacement — modelling "async" work as an ordinary
+   *      blocking call — returns its value directly, in order, with no
+   *      asynchronous plumbing.
+   *
+   * NOT ASSERTED (syntax-level absence, not observable at runtime):
+   *   - "The async / await keywords are not supported." `async function f(){}`
+   *     and `await x` are rejected by the engine's PARSER, so a script containing
+   *     either aborts the whole CloudPage before any statement executes and can
+   *     never print PASS. Only the runtime-reachable half — the absence of the
+   *     four async intrinsics — is asserted above.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEVIATION — all four async intrinsics are absent. */
+  assert("DEV typeof AsyncFunction is 'undefined' (spec: hidden constructor)", function () { return String(typeof AsyncFunction); }, "undefined");
+  assert("DEV typeof AsyncGenerator is 'undefined'", function () { return String(typeof AsyncGenerator); }, "undefined");
+  assert("DEV typeof AsyncGeneratorFunction is 'undefined'", function () { return String(typeof AsyncGeneratorFunction); }, "undefined");
+  assert("DEV typeof AsyncIterator is 'undefined'", function () { return String(typeof AsyncIterator); }, "undefined");
+
+  /* 2. Both invocation forms throw, for each of the four. */
+  assertThrows("DEV new AsyncFunction() throws", function () { return new AsyncFunction(); });
+  assert("new AsyncFunction() message is 'Unknown type: AsyncFunction'", function () { try { return new AsyncFunction(); } catch (ex) { return ex.message; } }, "Unknown type: AsyncFunction");
+  assertThrows("DEV AsyncFunction() without new throws too", function () { return AsyncFunction(); });
+  assert("AsyncFunction() message is 'Object expected: AsyncFunction'", function () { try { return AsyncFunction(); } catch (ex) { return ex.message; } }, "Object expected: AsyncFunction");
+
+  assertThrows("DEV new AsyncGenerator() throws", function () { return new AsyncGenerator(); });
+  assert("new AsyncGenerator() message is 'Unknown type: AsyncGenerator'", function () { try { return new AsyncGenerator(); } catch (ex) { return ex.message; } }, "Unknown type: AsyncGenerator");
+  assertThrows("DEV AsyncGenerator() without new throws too", function () { return AsyncGenerator(); });
+  assert("AsyncGenerator() message is 'Object expected: AsyncGenerator'", function () { try { return AsyncGenerator(); } catch (ex) { return ex.message; } }, "Object expected: AsyncGenerator");
+
+  assertThrows("DEV new AsyncGeneratorFunction() throws", function () { return new AsyncGeneratorFunction(); });
+  assert("new AsyncGeneratorFunction() message is 'Unknown type: AsyncGeneratorFunction'", function () { try { return new AsyncGeneratorFunction(); } catch (ex) { return ex.message; } }, "Unknown type: AsyncGeneratorFunction");
+  assertThrows("DEV AsyncGeneratorFunction() without new throws too", function () { return AsyncGeneratorFunction(); });
+  assert("AsyncGeneratorFunction() message is 'Object expected: AsyncGeneratorFunction'", function () { try { return AsyncGeneratorFunction(); } catch (ex) { return ex.message; } }, "Object expected: AsyncGeneratorFunction");
+
+  assertThrows("DEV new AsyncIterator() throws", function () { return new AsyncIterator(); });
+  assert("new AsyncIterator() message is 'Unknown type: AsyncIterator'", function () { try { return new AsyncIterator(); } catch (ex) { return ex.message; } }, "Unknown type: AsyncIterator");
+  assertThrows("DEV AsyncIterator() without new throws too", function () { return AsyncIterator(); });
+  assert("AsyncIterator() message is 'Object expected: AsyncIterator'", function () { try { return AsyncIterator(); } catch (ex) { return ex.message; } }, "Object expected: AsyncIterator");
+
+  /* 3. Promise is absent too — the engine has no asynchronous machinery at all. */
+  assert("typeof Promise is 'undefined' as well", function () { return String(typeof Promise); }, "undefined");
+
+  /* 4. Documented replacement — ordinary blocking calls, executed in order. */
+  assert("a blocking call returns its value directly", function () { function work(n) { return n * 2; } return work(21); }, 42);
+  assert("statements execute strictly in source order", function () { var log = ""; function step(s) { log += s; } step("a"); step("b"); step("c"); return log; }, "abc");
+  </script>

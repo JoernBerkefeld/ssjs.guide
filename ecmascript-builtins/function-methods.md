@@ -7,6 +7,7 @@ permalink: /ecmascript-builtins/function-methods/
 description: Function prototype members in SSJS — call and apply work natively (ES3), bind is missing (sealed prototype), .length throws, .name/.caller are undefined, and toString returns a tag not source. The arguments object and Function() constructor work.
 verification: verified
 differs_from_docs: true
+test_scripts: complete
 ---
 
 `Function.prototype.call` and `Function.prototype.apply` are ES3 and work natively in SSJS. `Function.prototype.bind` (ES5) is **not** available, and `Function.prototype` is **sealed**, so `bind` cannot be installed on the prototype — use a standalone helper. The `arguments` object and the `Function()` constructor both work, but several introspection members behave unlike standard JavaScript: `.length` **throws**, `.name` and `.caller` are `undefined`, `toString()` returns `[object Function]` (not the source), and `fn.constructor === Function` is `false`.
@@ -50,6 +51,8 @@ var r = greet.call({ name: "Sam" }, "Hi");
 Write(r);   // Hi, Sam
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--function-methods" chapter="call" %}
+
 ## apply {#apply}
 
 `(ES3)` — ✅ Works. Calls the function with a given `this` value and arguments supplied as an array.
@@ -59,6 +62,8 @@ function sum(a, b) { return a + b; }
 var r = sum.apply(null, [2, 3]);
 Write(r);   // 5
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--function-methods" chapter="apply" %}
 
 ## bind {#bind}
 
@@ -85,6 +90,8 @@ var sayHi = bindFn(greet, null, "Hi");
 Write(sayHi("Ada"));   // Hi, Ada!
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--function-methods" chapter="bind" label="Show test script — bind is absent, prototype is sealed, bindFn workaround works" %}
+
 ## arguments {#arguments}
 
 `(ES3)` — ✅ Works. The array-like `arguments` object is available inside every function: `arguments.length` and index access (`arguments[0]`, `arguments[1]`, …) both work, so you can accept a variable number of parameters.
@@ -98,6 +105,8 @@ function total() {
 Write(total(10, 20, 30));   // 60
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--function-methods" chapter="arguments" %}
+
 ## Function() constructor {#function-constructor}
 
 `(ES3)` — ✅ Works. The `Function` constructor builds a function from string arguments and a body, both with and without `new`.
@@ -110,6 +119,8 @@ var addOne = Function("x", "return x + 1;");   // no "new" also works
 Write(addOne(41));       // 42
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--function-methods" chapter="function-constructor" %}
+
 ## toString {#tostring}
 
 `(ES3)` — ⚠️ Differs.
@@ -120,6 +131,8 @@ Write(addOne(41));       // 42
 function greet() {}
 Write(greet.toString());   // "[object Function]" in SFMC (not the source)
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--function-methods" chapter="tostring" label="Show test script — toString returns the object tag, not source" %}
 
 ## length {#length}
 
@@ -133,6 +146,8 @@ function sum(a, b) { return a + b; }
 var expectedArgs = 2;    // ✅ track arity yourself
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--function-methods" chapter="length" label="Show test script — fn.length throws, arity must be tracked manually" %}
+
 ## name {#name}
 
 `(ES3)` — ❌ Missing.
@@ -143,6 +158,8 @@ var expectedArgs = 2;    // ✅ track arity yourself
 function greet() {}
 Write(typeof greet.name);   // "undefined"
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--function-methods" chapter="name" label="Show test script — fn.name is undefined, explicit name workaround" %}
 
 ## caller {#caller}
 
@@ -155,6 +172,8 @@ function inner() { return typeof inner.caller; }
 Write(inner());   // "undefined"
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--function-methods" chapter="caller" label="Show test script — fn.caller is undefined in every position" %}
+
 ## constructor {#constructor}
 
 `(ES3)` — ⚠️ Differs.
@@ -166,6 +185,8 @@ function greet() {}
 Write(greet instanceof Function);        // true
 Write(greet.constructor === Function);   // false in SFMC (true in standard JS)
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--function-methods" chapter="constructor" label="Show test script — constructor identity is broken, instanceof works" %}
 
 ## See Also
 

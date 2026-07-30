@@ -264,7 +264,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`Iterator`](/ecmascript-builtins/promises-iteration/#iterator) | ECMAScript Builtins | — | ❌ Missing (ES6) — no iteration protocol; use index loops |
 | [`InternalError([message])`](/ecmascript-builtins/error-types/#internalerror) | ECMAScript Builtins | Error | ❌ Missing (non-standard) — use the base `Error` constructor |
 | [`Int8Array` / `Int16Array` / `Int32Array`](/ecmascript-builtins/typed-arrays/#int8array) | ECMAScript Builtins | — | ❌ Missing (ES6) — no typed arrays |
-| [`Intl`](/ecmascript-builtins/internationalization/#intl) | ECMAScript Builtins | — | ❌ Missing (ES2015) — no locale formatters; use `Platform.Function.FormatNumber` / `FormatDate` |
+| [`Intl`](/ecmascript-builtins/internationalization/#intl) | ECMAScript Builtins | — | ❌ Missing (ES2015) — no locale formatters; use AMPscript `FormatNumber` / `FormatDate` via `TreatAsContent` |
 | [`Platform.Function.InsertData(deName, fieldNames, fieldValues)`](/platform-functions/insertdata/) | Platform Functions | number | Insert DE row |
 | [`InsertDE(deName, fieldNames, fieldValues)`](/platform-functions/insertde/) | Platform Functions | null | Same insert as InsertData, but returns null |
 | [`Platform.Function.InvokeConfigure(apiObject, action, status, options)`](/platform-functions/invokeconfigure/) | Platform Functions | string | SOAP Configure call (legacy) |
@@ -287,8 +287,8 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`Number.isFinite(value)`](/ecmascript-builtins/number-methods/#isfinite) | ECMAScript Builtins | boolean | ❌ Missing (ES6) — use the global `isFinite` |
 | [`Number.isInteger(value)`](/ecmascript-builtins/number-methods/#isinteger) | ECMAScript Builtins | boolean | ❌ Missing (ES6) — needs polyfill |
 | [`Number.isNaN(value)`](/ecmascript-builtins/number-methods/#isnan) | ECMAScript Builtins | boolean | ❌ Missing (ES6) — use the global `isNaN` |
-| [`Number.isSafeInteger(value)`](/ecmascript-builtins/number-methods/#max_safe_integer) | ECMAScript Builtins | boolean | ❌ Missing (ES6) — check against `9007199254740991` yourself |
-| [`Number.parseFloat(string)`](/ecmascript-builtins/number-methods/#max_safe_integer) | ECMAScript Builtins | number | ❌ Missing (ES6) — use the global `parseFloat` |
+| [`Number.isSafeInteger(value)`](/ecmascript-builtins/number-methods/#issafeinteger) | ECMAScript Builtins | boolean | ❌ Missing (ES6) — check against `9007199254740991` yourself |
+| [`Number.parseFloat(string)`](/ecmascript-builtins/number-methods/#parsefloat) | ECMAScript Builtins | number | ❌ Missing (ES6) — use the global `parseFloat` |
 | [`Number.parseInt(string[, radix])`](/ecmascript-builtins/number-methods/#parseint) | ECMAScript Builtins | number | ❌ Missing (ES6) — use the global `parseInt` |
 
 ---
@@ -381,14 +381,14 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 |------|----------|---------|-------------|
 | [`NaN`](/ecmascript-builtins/global-values/#nan) | ECMAScript Builtins | number | ⚠️ Partial — comparisons correct; `String(NaN)` is lowercase `nan` |
 | [`NotSentEvent.Retrieve(filter)`](/core-library/events/#not-sent-event) | Core Library | object[] | Not-sent events |
-| [`Number.EPSILON`](/ecmascript-builtins/number-methods/#max_safe_integer) | ECMAScript Builtins | number | ❌ Missing (ES6) — `undefined`; use `2.220446049250313e-16` |
-| [`Number.MAX_SAFE_INTEGER`](/ecmascript-builtins/number-methods/#max_safe_integer) | ECMAScript Builtins | number | ❌ Missing (ES6) — `undefined`; use `9007199254740991` |
-| [`Number.MAX_VALUE`](/ecmascript-builtins/number-methods/#constants) | ECMAScript Builtins | number | ✅ Defined (ES3) — correct value |
-| [`Number.MIN_SAFE_INTEGER`](/ecmascript-builtins/number-methods/#max_safe_integer) | ECMAScript Builtins | number | ❌ Missing (ES6) — `undefined`; use `-9007199254740991` |
-| [`Number.MIN_VALUE`](/ecmascript-builtins/number-methods/#constants) | ECMAScript Builtins | number | ⚠️ Partial (ES3) — defined but **wrong** (reads back large negative); use the literal `5e-324` |
-| [`Number.NaN`](/ecmascript-builtins/number-methods/#constants) | ECMAScript Builtins | number | ✅ Defined (ES3) — correct value |
-| [`Number.NEGATIVE_INFINITY`](/ecmascript-builtins/number-methods/#constants) | ECMAScript Builtins | number | ⚠️ Partial (ES3) — defined but **sign swapped**; use `-Infinity` literal |
-| [`Number.POSITIVE_INFINITY`](/ecmascript-builtins/number-methods/#constants) | ECMAScript Builtins | number | ⚠️ Partial (ES3) — defined but **sign swapped**; use `Infinity` literal |
+| [`Number.EPSILON`](/ecmascript-builtins/number-methods/#constants-es6) | ECMAScript Builtins | number | ❌ Missing (ES6) — `undefined`; use `2.220446049250313e-16` |
+| [`Number.MAX_SAFE_INTEGER`](/ecmascript-builtins/number-methods/#constants-es6) | ECMAScript Builtins | number | ❌ Missing (ES6) — `undefined`; use `9007199254740991` |
+| [`Number.MAX_VALUE`](/ecmascript-builtins/number-methods/#constants-es3) | ECMAScript Builtins | number | ✅ Defined (ES3) — correct value |
+| [`Number.MIN_SAFE_INTEGER`](/ecmascript-builtins/number-methods/#constants-es6) | ECMAScript Builtins | number | ❌ Missing (ES6) — `undefined`; use `-9007199254740991` |
+| [`Number.MIN_VALUE`](/ecmascript-builtins/number-methods/#constants-es3) | ECMAScript Builtins | number | ⚠️ Partial (ES3) — defined but **wrong** (reads back large negative); use the literal `5e-324` |
+| [`Number.NaN`](/ecmascript-builtins/number-methods/#constants-es3) | ECMAScript Builtins | number | ✅ Defined (ES3) — correct value |
+| [`Number.NEGATIVE_INFINITY`](/ecmascript-builtins/number-methods/#constants-es3) | ECMAScript Builtins | number | ⚠️ Partial (ES3) — defined but **sign swapped**; use `-Infinity` literal |
+| [`Number.POSITIVE_INFINITY`](/ecmascript-builtins/number-methods/#constants-es3) | ECMAScript Builtins | number | ⚠️ Partial (ES3) — defined but **sign swapped**; use `Infinity` literal |
 | [`<NumberInstance>.toExponential([fractionDigits])`](/ecmascript-builtins/number-methods/#toexponential) | ECMAScript Builtins | string | ⚠️ Partial — no-arg form pads trailing zeros; always pass `fractionDigits` |
 | [`<NumberInstance>.toFixed([fractionDigits])`](/ecmascript-builtins/number-methods/#tofixed) | ECMAScript Builtins | string | Fixed-point notation string |
 | [`<NumberInstance>.toLocaleString()`](/ecmascript-builtins/internationalization/#tolocalestring-family) | ECMAScript Builtins | string | ⚠️ Differs — locale argument ignored; no grouping separators |
@@ -588,7 +588,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`<StringInstance>.toLocaleUpperCase()`](/ecmascript-builtins/internationalization/#tolocalestring-family) | ECMAScript Builtins | string | Upper case; locale argument ignored (plain upper-casing) |
 | [`<StringInstance>.toLowerCase()`](/ecmascript-builtins/string-methods/#tolowercase) | ECMAScript Builtins | string | Convert to lower case |
 | [`<StringInstance>.toUpperCase()`](/ecmascript-builtins/string-methods/#touppercase) | ECMAScript Builtins | string | Convert to upper case |
-| [`<StringInstance>.trim()`](/ecmascript-builtins/string-methods/#trim) | ECMAScript Builtins | string | ❌ Missing (ES5) — use `Platform.Function.Trim` or a polyfill |
+| [`<StringInstance>.trim()`](/ecmascript-builtins/string-methods/#trim) | ECMAScript Builtins | string | ❌ Missing (ES5) — use a polyfill |
 | [`<StringInstance>.trimEnd()`](/ecmascript-builtins/string-methods/#trimend) | ECMAScript Builtins | string | ❌ Missing (ES2019) — needs polyfill |
 | [`<StringInstance>.trimStart()`](/ecmascript-builtins/string-methods/#trimstart) | ECMAScript Builtins | string | ❌ Missing (ES2019) — needs polyfill |
 | [`SurveyEvent.Retrieve(filter)`](/core-library/events/#survey-event) | Core Library | object[] | Survey events |

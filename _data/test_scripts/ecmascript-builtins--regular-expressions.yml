@@ -1,0 +1,601 @@
+# Test scripts for /ecmascript-builtins/regular-expressions/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the ECMAScript spec.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values. Boolean results are reported with an explicit ternary,
+# never String(expr), which the engine mis-evaluates.
+
+creating-regexp: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Creating RegExp
+   *
+   * Proves:
+   *   1. Literal syntax produces a working RegExp — the chapter's three
+   *      literals (email, digits-only, whitespace-global) each carry the
+   *      documented pattern text and match as intended.
+   *   2. Constructor syntax with a dynamically assembled pattern string and a
+   *      flag argument produces an equivalent working RegExp.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  /* 1. Literal syntax. */
+  var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  var digitsOnly   = /^\d+$/;
+  var noSpaces     = /\s/g;
+
+  assert("literal emailPattern.source", function () { return String(emailPattern.source); }, "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
+  assert("literal emailPattern matches a valid address", function () { return emailPattern.test("jane@example.com") ? "true" : "false"; }, "true");
+  assert("literal digitsOnly.source", function () { return String(digitsOnly.source); }, "^\\d+$");
+  assert("literal digitsOnly matches digits", function () { return digitsOnly.test("12345") ? "true" : "false"; }, "true");
+  assert("literal noSpaces.source", function () { return String(noSpaces.source); }, "\\s");
+  assert("literal noSpaces carries the g flag", function () { return noSpaces.global ? "true" : "false"; }, "true");
+
+  /* 2. Constructor syntax with a dynamic pattern. */
+  var fieldName = "email";
+  var dynamicPattern = new RegExp(fieldName + "=([^&]+)", "i");
+
+  assert("constructor builds the dynamic source", function () { return String(dynamicPattern.source); }, "email=([^&]+)");
+  assert("constructor pattern matches", function () { return dynamicPattern.test("?email=jane%40x.com") ? "true" : "false"; }, "true");
+  assert("constructor pattern does not match unrelated text", function () { return dynamicPattern.test("?name=jane") ? "true" : "false"; }, "false");
+  </script>
+
+flags: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Flags
+   *
+   * Proves, for the chapter's flag table and its worked example:
+   *   1. g — String.match with the g flag returns ALL matches, not just the
+   *      first; without g it returns only the first match.
+   *   2. i — /hello/i.test("Hello World hello") is true (case-insensitive),
+   *      while /hello/ without the flag does not match "Hello".
+   *   3. m — ^ and $ match line boundaries when the m flag is set, and do not
+   *      when it is absent.
+   *   4. The chapter's example: text.match(/hello/gi) yields
+   *      ["Hello", "hello"] — length 2, elements in source order.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var text = "Hello World hello";
+
+  /* 2. i — case-insensitive. */
+  assert("/hello/i.test(text) is true", function () { return /hello/i.test(text) ? "true" : "false"; }, "true");
+  assert("/hello/ (no i) does not match 'Hello' alone", function () { return /hello/.test("Hello") ? "true" : "false"; }, "false");
+  assert("/hello/i matches 'Hello'", function () { return /hello/i.test("Hello") ? "true" : "false"; }, "true");
+
+  /* 1. + 4. g — all matches; the chapter's example. */
+  assert("text.match(/hello/gi).length is 2", function () { return String(text.match(/hello/gi).length); }, "2");
+  assert("text.match(/hello/gi)[0] is 'Hello'", function () { return String(text.match(/hello/gi)[0]); }, "Hello");
+  assert("text.match(/hello/gi)[1] is 'hello'", function () { return String(text.match(/hello/gi)[1]); }, "hello");
+  assert("without g, match returns only the first match", function () { return String(text.match(/hello/i)[0]); }, "Hello");
+
+  /* 3. m — ^ and $ match line boundaries. */
+  var lines = "alpha\nbeta";
+  assert("/^beta/m matches a later line", function () { return /^beta/m.test(lines) ? "true" : "false"; }, "true");
+  assert("/^beta/ without m does not match a later line", function () { return /^beta/.test(lines) ? "true" : "false"; }, "false");
+  assert("/alpha$/m matches an earlier line end", function () { return /alpha$/m.test(lines) ? "true" : "false"; }, "true");
+  assert("/alpha$/ without m does not match an earlier line end", function () { return /alpha$/.test(lines) ? "true" : "false"; }, "false");
+  </script>
+
+test: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: test
+   *
+   * Proves:
+   *   1. RegExp.prototype.test returns a PRIMITIVE boolean (typeof "boolean").
+   *   2. It returns true when the pattern matches and false when it does not —
+   *      the chapter's email example, both branches.
+   *   3. The result drives an if/else exactly as the chapter's example shows.
+   *   4. The chapter's note that Platform.Function.IsEmailAddress() is the
+   *      more reliable SFMC email check: it agrees with the regex on a valid
+   *      address and rejects the invalid one.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  var email = "jane@example.com";
+  var badEmail = "not an email";
+
+  /* 1. The result is a primitive boolean. */
+  assert("typeof test() result is boolean", function () { return String(typeof emailRe.test(email)); }, "boolean");
+  assert("test() === true on a match", function () { return (emailRe.test(email) === true) ? "true" : "false"; }, "true");
+  assert("test() === false on a non-match", function () { return (emailRe.test(badEmail) === false) ? "true" : "false"; }, "true");
+
+  /* 2. Positive and negative results. */
+  assert("emailRe.test('jane@example.com') is true", function () { return emailRe.test(email) ? "true" : "false"; }, "true");
+  assert("emailRe.test('not an email') is false", function () { return emailRe.test(badEmail) ? "true" : "false"; }, "false");
+  assert("emailRe.test('jane@example') is false (no TLD dot)", function () { return emailRe.test("jane@example") ? "true" : "false"; }, "false");
+
+  /* 3. The chapter's if/else example. */
+  function classify(value) {
+      if (emailRe.test(value)) { return "Valid email"; }
+      return "Invalid email";
+  }
+  assert("example writes 'Valid email' for a valid address", function () { return classify(email); }, "Valid email");
+  assert("example writes 'Invalid email' for an invalid address", function () { return classify(badEmail); }, "Invalid email");
+
+  /* 4. The recommended Platform.Function.IsEmailAddress alternative. */
+  assert("Platform.Function.IsEmailAddress accepts the valid address", function () { return Platform.Function.IsEmailAddress(email) ? "true" : "false"; }, "true");
+  assert("Platform.Function.IsEmailAddress rejects the invalid address", function () { return Platform.Function.IsEmailAddress(badEmail) ? "true" : "false"; }, "false");
+  </script>
+
+exec: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: exec
+   *
+   * Proves:
+   *   1. exec returns an array-like result whose result[0] (full match),
+   *      result.index and result.input are all correct.
+   *   2. DEVIATION marked "DEV": capture groups result[1] and beyond are
+   *      undefined (spec: the captured substrings).
+   *   3. DEVIATION marked "DEV": result.length is always 3, regardless of how
+   *      many groups the pattern declares (spec: 1 + number of groups), so it
+   *      cannot be used to count captures.
+   *   4. DEVIATION marked "DEV": lastIndex does not advance after exec() with
+   *      the g flag (spec: it advances past the match), which is why the usual
+   *      while ((m = re.exec(s)) !== null) loop never terminates.
+   *   5. The documented workarounds really work:
+   *        - String.match(/.../g) collects every match
+   *        - String.match with a non-global pattern exposes capture groups
+   *          (the chapter's "2026-06-18" date example)
+   *        - reading result[0] from a single exec is reliable
+   *
+   * NOT ASSERTED:
+   *   - The non-terminating while-loop itself. A hanging CloudPage returns no
+   *     response at all, so the hang can never surface as a PASS line; the
+   *     non-advancing lastIndex that causes it is asserted instead (point 4).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var text = "foo123 bar456 baz789";
+
+  /* 1. result[0], result.index and result.input are correct. */
+  var first = /[a-z]+\d+/.exec(text);
+  assert("exec result[0] is the full match", function () { return String(first[0]); }, "foo123");
+  assert("exec result.index is 0", function () { return String(first.index); }, "0");
+  assert("exec result.input is the subject string", function () { return String(first.input); }, "foo123 bar456 baz789");
+
+  var second = /bar\d+/.exec(text);
+  assert("exec result.index reports a later offset", function () { return String(second.index); }, "7");
+  assert("exec result[0] for the later match", function () { return String(second[0]); }, "bar456");
+
+  /* 2. DEVIATION — capture groups are undefined. */
+  var grouped = /[a-z]+(\d+)/.exec(text);
+  assert("DEV exec result[0] still correct with a group", function () { return String(grouped[0]); }, "foo123");
+  assert("DEV exec result[1] is undefined (spec: '123')", function () { return String(typeof grouped[1]); }, "undefined");
+
+  var twoGroups = /([a-z]+)(\d+)/.exec(text);
+  assert("DEV exec result[1] undefined with two groups (spec: 'foo')", function () { return String(typeof twoGroups[1]); }, "undefined");
+  assert("DEV exec result[2] undefined with two groups (spec: '123')", function () { return String(typeof twoGroups[2]); }, "undefined");
+
+  /* 3. DEVIATION — result.length is always 3. */
+  var noGroup = /[a-z]+\d+/.exec(text);
+  assert("DEV exec result.length is 3 with no groups (spec: 1)", function () { return String(noGroup.length); }, "3");
+  assert("DEV exec result.length is 3 with one group (spec: 2)", function () { return String(grouped.length); }, "3");
+  assert("DEV exec result.length is 3 with two groups (spec: 3)", function () { return String(twoGroups.length); }, "3");
+
+  /* 4. DEVIATION — lastIndex does not advance. */
+  var re = /[a-z]+\d+/g;
+  assert("lastIndex starts at 0", function () { return String(re.lastIndex); }, "0");
+  re.exec(text);
+  assert("DEV lastIndex still 0 after exec with g (spec: 6)", function () { return String(re.lastIndex); }, "0");
+  assert("DEV a second exec returns the SAME match (spec: 'bar456')", function () { return String(re.exec(text)[0]); }, "foo123");
+
+  /* 5. Workarounds. */
+  var matches = text.match(/[a-z]+\d+/g);
+  assert("workaround String.match(g) length is 3", function () { return String(matches.length); }, "3");
+  assert("workaround String.match(g)[0]", function () { return String(matches[0]); }, "foo123");
+  assert("workaround String.match(g)[1]", function () { return String(matches[1]); }, "bar456");
+  assert("workaround String.match(g)[2]", function () { return String(matches[2]); }, "baz789");
+
+  var dateMatch = "2026-06-18".match(/(\d{4})-(\d{2})-(\d{2})/);
+  assert("workaround match capture group 1 is the year", function () { return String(dateMatch[1]); }, "2026");
+  assert("workaround match capture group 2 is the month", function () { return String(dateMatch[2]); }, "06");
+  assert("workaround match capture group 3 is the day", function () { return String(dateMatch[3]); }, "18");
+  </script>
+
+source: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: source
+   *
+   * Proves:
+   *   1. RegExp.prototype.source returns the pattern text, excluding the
+   *      surrounding slashes and any flags — the chapter's date example
+   *      yields "\d{4}-\d{2}-\d{2}".
+   *   2. The value is a primitive string (typeof "string").
+   *   3. The flags are genuinely excluded: the same pattern with and without
+   *      the g flag reports an identical source.
+   *   4. A constructor-built RegExp reports the pattern string it was given.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var re = /\d{4}-\d{2}-\d{2}/g;
+
+  /* 1. + 2. The documented value and its type. */
+  assert("re.source excludes slashes and flags", function () { return String(re.source); }, "\\d{4}-\\d{2}-\\d{2}");
+  assert("typeof re.source is string", function () { return String(typeof re.source); }, "string");
+
+  /* 3. The flags are not part of source. */
+  var reNoFlag = /\d{4}-\d{2}-\d{2}/;
+  assert("source is identical with and without the g flag", function () { return (re.source === reNoFlag.source) ? "true" : "false"; }, "true");
+
+  /* 4. Constructor form. */
+  var built = new RegExp("a+b");
+  assert("constructor RegExp reports its pattern string", function () { return String(built.source); }, "a+b");
+  </script>
+
+global: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: global
+   *
+   * Proves:
+   *   1. RegExp.prototype.global is true when the g flag was set —
+   *      /abc/g.global is true.
+   *   2. It is false when the g flag was not set — /abc/.global is false.
+   *   3. The value is a primitive boolean (typeof "boolean"), not undefined,
+   *      which is what distinguishes it from the missing ignoreCase and
+   *      multiline accessors documented further down the page.
+   *   4. The flag is still reported when combined with other flags.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  /* 1. + 2. The two documented results. */
+  assert("/abc/g.global is true", function () { return /abc/g.global ? "true" : "false"; }, "true");
+  assert("/abc/.global is false", function () { return /abc/.global ? "true" : "false"; }, "false");
+
+  /* 3. It is a real boolean, not undefined. */
+  assert("typeof /abc/g.global is boolean", function () { return String(typeof /abc/g.global); }, "boolean");
+  assert("typeof /abc/.global is boolean", function () { return String(typeof /abc/.global); }, "boolean");
+  assert("/abc/g.global === true", function () { return (/abc/g.global === true) ? "true" : "false"; }, "true");
+  assert("/abc/.global === false", function () { return (/abc/.global === false) ? "true" : "false"; }, "true");
+
+  /* 4. Combined with another flag. */
+  assert("/abc/gi.global is true", function () { return /abc/gi.global ? "true" : "false"; }, "true");
+  </script>
+
+lastindex: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: lastIndex
+   *
+   * Proves:
+   *   1. The property exists and starts at 0.
+   *   2. DEVIATION marked "DEV": it does NOT advance after exec() with the g
+   *      flag (spec: it advances to the index just past the match), so it
+   *      cannot drive stateful iteration.
+   *   3. DEVIATION marked "DEV": it does NOT advance after test() with the g
+   *      flag either (spec: same advance as exec).
+   *   4. DEVIATION marked "DEV": setting lastIndex manually is ignored — the
+   *      next exec still matches from the start of the string (spec: matching
+   *      resumes at the assigned offset).
+   *   5. The documented workaround: String.match(/.../g) returns every match
+   *      in one call — the chapter's "a1 b2 c3" example yields ["1","2","3"].
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var subject = "a1 b2 c3";
+
+  /* 1. The property exists and starts at 0. */
+  var re = /\d+/g;
+  assert("lastIndex exists and is a number", function () { return String(typeof re.lastIndex); }, "number");
+  assert("lastIndex starts at 0", function () { return String(re.lastIndex); }, "0");
+
+  /* 2. DEVIATION — exec does not advance it. */
+  re.exec(subject);
+  assert("DEV lastIndex stays 0 after exec with g (spec: 2)", function () { return String(re.lastIndex); }, "0");
+
+  /* 3. DEVIATION — test does not advance it either. */
+  var reTest = /\d+/g;
+  reTest.test(subject);
+  assert("DEV lastIndex stays 0 after test with g (spec: 2)", function () { return String(reTest.lastIndex); }, "0");
+
+  /* 4. DEVIATION — assigning lastIndex is ignored. */
+  var reSet = /\d+/g;
+  reSet.lastIndex = 3;
+  assert("DEV exec after lastIndex=3 still matches '1' (spec: '2')", function () { return String(reSet.exec(subject)[0]); }, "1");
+  assert("DEV exec after lastIndex=3 still reports index 1 (spec: 4)", function () { return String(reSet.exec(subject).index); }, "1");
+
+  /* 5. Workaround — String.match with the g flag. */
+  var all = subject.match(/\d+/g);
+  assert("workaround match(/\\d+/g).length is 3", function () { return String(all.length); }, "3");
+  assert("workaround match(/\\d+/g)[0]", function () { return String(all[0]); }, "1");
+  assert("workaround match(/\\d+/g)[1]", function () { return String(all[1]); }, "2");
+  assert("workaround match(/\\d+/g)[2]", function () { return String(all[2]); }, "3");
+  </script>
+
+instanceof: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: instanceof
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": re instanceof RegExp is ALWAYS false in the
+   *      SFMC engine (spec / standard JS: true), including for objects built
+   *      with new RegExp(...) and for literal RegExps.
+   *   2. The documented workaround works: re.constructor === RegExp is
+   *      correctly true — for both the constructor form and the literal form.
+   *      This is the opposite of Function, where .constructor is broken but
+   *      instanceof works.
+   *   3. The constructor comparison also discriminates: a plain object's
+   *      constructor is not RegExp.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var re = new RegExp("\\d+");
+  var reLiteral = /\d+/;
+
+  /* 1. DEVIATION — instanceof is always false. */
+  assert("DEV new RegExp() instanceof RegExp is false (spec: true)", function () { return (re instanceof RegExp) ? "true" : "false"; }, "false");
+  assert("DEV literal instanceof RegExp is false (spec: true)", function () { return (reLiteral instanceof RegExp) ? "true" : "false"; }, "false");
+
+  /* 2. Workaround — the constructor comparison is correct. */
+  assert("workaround new RegExp().constructor === RegExp is true", function () { return (re.constructor === RegExp) ? "true" : "false"; }, "true");
+  assert("workaround literal .constructor === RegExp is true", function () { return (reLiteral.constructor === RegExp) ? "true" : "false"; }, "true");
+
+  /* 3. The workaround still discriminates. */
+  var notRe = {};
+  assert("plain object .constructor === RegExp is false", function () { return (notRe.constructor === RegExp) ? "true" : "false"; }, "false");
+  </script>
+
+ignorecase: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: ignoreCase
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": RegExp.prototype.ignoreCase is undefined in
+   *      SFMC (spec: true when the i flag is set, false otherwise) — for both
+   *      a pattern WITH the i flag and one without it.
+   *   2. Reading the missing accessor does not throw.
+   *   3. The i flag itself still works even though it cannot be read back,
+   *      which is why the chapter's advice is to track the flag yourself
+   *      rather than to avoid the flag.
+   *   4. The documented workaround: keep a separate variable and pick the
+   *      RegExp from it — both branches produce the intended matcher.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  /* 1. + 2. DEVIATION — the accessor is undefined and safe to read. */
+  assert("DEV /hello/i.ignoreCase is undefined (spec: true)", function () { return String(typeof /hello/i.ignoreCase); }, "undefined");
+  assert("DEV /hello/.ignoreCase is undefined (spec: false)", function () { return String(typeof /hello/.ignoreCase); }, "undefined");
+  assert("DEV new RegExp('h','i').ignoreCase is undefined (spec: true)", function () { return String(typeof new RegExp("h", "i").ignoreCase); }, "undefined");
+
+  /* 3. The flag still works at match time. */
+  assert("the i flag still matches case-insensitively", function () { return /hello/i.test("HELLO") ? "true" : "false"; }, "true");
+  assert("without the i flag the match is case-sensitive", function () { return /hello/.test("HELLO") ? "true" : "false"; }, "false");
+
+  /* 4. Workaround — track the flag in your own variable. */
+  var caseInsensitive = true;
+  var re = caseInsensitive ? /hello/i : /hello/;
+  assert("workaround flag=true yields a case-insensitive matcher", function () { return re.test("Hello") ? "true" : "false"; }, "true");
+  var caseSensitive = false;
+  var re2 = caseSensitive ? /hello/i : /hello/;
+  assert("workaround flag=false yields a case-sensitive matcher", function () { return re2.test("Hello") ? "true" : "false"; }, "false");
+  assert("workaround variable itself is readable", function () { return caseInsensitive ? "true" : "false"; }, "true");
+  </script>
+
+multiline: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: multiline
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": RegExp.prototype.multiline is undefined in
+   *      SFMC (spec: true when the m flag is set, false otherwise) — for both
+   *      a pattern WITH the m flag and one without it.
+   *   2. Reading the missing accessor does not throw.
+   *   3. The m flag itself still works even though it cannot be read back.
+   *   4. The documented workaround: keep a separate variable and pick the
+   *      RegExp from it — both branches produce the intended matcher.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var lines = "alpha\nline two";
+
+  /* 1. + 2. DEVIATION — the accessor is undefined and safe to read. */
+  assert("DEV /^line/m.multiline is undefined (spec: true)", function () { return String(typeof /^line/m.multiline); }, "undefined");
+  assert("DEV /^line/.multiline is undefined (spec: false)", function () { return String(typeof /^line/.multiline); }, "undefined");
+  assert("DEV new RegExp('^line','m').multiline is undefined (spec: true)", function () { return String(typeof new RegExp("^line", "m").multiline); }, "undefined");
+
+  /* 3. The flag still works at match time. */
+  assert("the m flag still matches a later line start", function () { return /^line/m.test(lines) ? "true" : "false"; }, "true");
+  assert("without the m flag the later line start does not match", function () { return /^line/.test(lines) ? "true" : "false"; }, "false");
+
+  /* 4. Workaround — track the flag in your own variable. */
+  var isMultiline = true;
+  var re = isMultiline ? /^line/m : /^line/;
+  assert("workaround flag=true yields a multiline matcher", function () { return re.test(lines) ? "true" : "false"; }, "true");
+  var notMultiline = false;
+  var re2 = notMultiline ? /^line/m : /^line/;
+  assert("workaround flag=false yields a single-line matcher", function () { return re2.test(lines) ? "true" : "false"; }, "false");
+  assert("workaround variable itself is readable", function () { return isMultiline ? "true" : "false"; }, "true");
+  </script>
+
+common-patterns: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Common Patterns
+   *
+   * Proves that each ready-made snippet in the chapter really behaves as
+   * advertised:
+   *   1. The basic email test accepts a valid address and rejects an invalid
+   *      one.
+   *   2. The digits-only test accepts digits and rejects mixed input.
+   *   3. The alphanumeric test accepts letters+digits and rejects punctuation.
+   *   4. The UUID / GUID test accepts a well-formed GUID in either case (the
+   *      i flag) and rejects a malformed one.
+   *   5. getQueryParam() extracts and URI-decodes a named parameter, and
+   *      returns null when the parameter is absent — note it relies on
+   *      String.match capture groups, which work (unlike exec's).
+   *   6. escapeHtml() replaces all five special characters, including repeat
+   *      occurrences via the g flag.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  /* 1. Email validation (basic). */
+  assert("isEmail accepts a valid address", function () { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test("jane@example.com") ? "true" : "false"; }, "true");
+  assert("isEmail rejects a string without @", function () { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test("jane.example.com") ? "true" : "false"; }, "false");
+
+  /* 2. Digits only. */
+  assert("isNumeric accepts digits", function () { return /^\d+$/.test("12345") ? "true" : "false"; }, "true");
+  assert("isNumeric rejects mixed input", function () { return /^\d+$/.test("12a45") ? "true" : "false"; }, "false");
+
+  /* 3. Alphanumeric. */
+  assert("isAlphanumeric accepts letters and digits", function () { return /^[a-zA-Z0-9]+$/.test("abc123XYZ") ? "true" : "false"; }, "true");
+  assert("isAlphanumeric rejects punctuation", function () { return /^[a-zA-Z0-9]+$/.test("abc-123") ? "true" : "false"; }, "false");
+
+  /* 4. UUID / GUID. */
+  var guidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  assert("isGuid accepts a lowercase GUID", function () { return guidRe.test("3f2504e0-4f89-11d3-9a0c-0305e82c3301") ? "true" : "false"; }, "true");
+  assert("isGuid accepts an uppercase GUID (i flag)", function () { return guidRe.test("3F2504E0-4F89-11D3-9A0C-0305E82C3301") ? "true" : "false"; }, "true");
+  assert("isGuid rejects a malformed GUID", function () { return guidRe.test("3f2504e0-4f89-11d3-9a0c") ? "true" : "false"; }, "false");
+
+  /* 5. URL query parameter extraction. */
+  function getQueryParam(url, name) {
+      var re = new RegExp("[?&]" + name + "=([^&]*)");
+      var match = url.match(re);
+      return match ? decodeURIComponent(match[1]) : null;
+  }
+  assert("getQueryParam reads the first parameter", function () { return String(getQueryParam("https://x.test/p?id=42&mode=edit", "id")); }, "42");
+  assert("getQueryParam reads a later parameter", function () { return String(getQueryParam("https://x.test/p?id=42&mode=edit", "mode")); }, "edit");
+  assert("getQueryParam URI-decodes the value", function () { return String(getQueryParam("https://x.test/p?email=jane%40example.com", "email")); }, "jane@example.com");
+  assert("getQueryParam returns null for a missing parameter", function () { return String(getQueryParam("https://x.test/p?id=42", "nope")); }, "null");
+
+  /* 6. Escape HTML special characters. */
+  function escapeHtml(str) {
+      return str.replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+  }
+  assert("escapeHtml escapes an ampersand", function () { return String(escapeHtml("a & b")); }, "a &amp; b");
+  assert("escapeHtml escapes angle brackets", function () { return String(escapeHtml("<b>")); }, "&lt;b&gt;");
+  assert("escapeHtml escapes a double quote", function () { return String(escapeHtml("say \"hi\"")); }, "say &quot;hi&quot;");
+  assert("escapeHtml escapes a single quote", function () { return String(escapeHtml("it's")); }, "it&#39;s");
+  assert("escapeHtml escapes every occurrence (g flag)", function () { return String(escapeHtml("a<b<c")); }, "a&lt;b&lt;c");
+  assert("escapeHtml escapes ampersands before the entities it inserts", function () { return String(escapeHtml("&<")); }, "&amp;&lt;");
+  </script>

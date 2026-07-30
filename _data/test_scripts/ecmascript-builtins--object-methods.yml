@@ -1,0 +1,895 @@
+# Test scripts for /ecmascript-builtins/object-methods/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the ECMAScript spec.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values. The assert() helper compares with a plain === and never
+# coerces its arguments — stringify inside the thunk instead.
+#
+# THUNK RULE: because most Object statics are MISSING in this engine, every
+# assert() here takes a FUNCTION. Calling a missing member throws, and an
+# already-evaluated argument would throw before assert() is entered, taking
+# the whole CloudPage down with HTTP 422 instead of printing FAIL.
+#
+# ENGINE NOTE: never stringify a plain object in a probe — String({}) aborts
+# the entire page with HTTP 422 and is not catchable. Every thunk below
+# returns a primitive.
+#
+# NOT ASSERTABLE anywhere in this bundle: property ENUMERATION ORDER of
+# for...in. It is implementation-defined, so key/value collections are
+# asserted by count and membership, never by position.
+
+hasownproperty: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Object.prototype.hasOwnProperty(prop) — Works
+   *
+   * Proves:
+   *   1. hasOwnProperty is present on a plain object and is a function.
+   *   2. It returns true for an OWN property and false for an absent one.
+   *   3. It returns false for an INHERITED member (toString), which is what
+   *      makes it usable to skip inherited members inside for...in.
+   *   4. The documented example — a for...in loop guarded by hasOwnProperty
+   *      visits exactly the object's own properties and reads their values.
+   *
+   * NOT ASSERTED: the ORDER in which for...in yields the keys. Property
+   * enumeration order is implementation-defined, so the loop result is
+   * asserted by count and membership only.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " => " + got + "\n");
+  }
+
+  var obj = { name: "Jane", age: 30 };
+
+  /* 1. Shape of the member. */
+  assert("typeof obj.hasOwnProperty is function", function () { return String(typeof obj.hasOwnProperty); }, "function");
+
+  /* 2. Own properties are reported, absent ones are not. */
+  assert("obj.hasOwnProperty('name') is true", function () { return obj.hasOwnProperty("name"); }, true);
+  assert("obj.hasOwnProperty('age') is true", function () { return obj.hasOwnProperty("age"); }, true);
+  assert("obj.hasOwnProperty('missing') is false", function () { return obj.hasOwnProperty("missing"); }, false);
+
+  /* 3. Inherited members are NOT own properties. */
+  assert("obj.hasOwnProperty('toString') is false (inherited)", function () { return obj.hasOwnProperty("toString"); }, false);
+
+  /* 4. The documented for...in example, guarded by hasOwnProperty. */
+  var ownKeys = [];
+  for (var key in obj) {
+      if (obj.hasOwnProperty(key)) { ownKeys.push(key); }
+  }
+  function hasKey(list, wanted) {
+      for (var i = 0; i < list.length; i++) { if (list[i] === wanted) { return true; } }
+      return false;
+  }
+  assert("guarded for...in visits exactly 2 own keys", function () { return ownKeys.length; }, 2);
+  assert("guarded for...in visits 'name'", function () { return hasKey(ownKeys, "name"); }, true);
+  assert("guarded for...in visits 'age'", function () { return hasKey(ownKeys, "age"); }, true);
+  assert("obj['name'] reads 'Jane'", function () { return String(obj["name"]); }, "Jane");
+  assert("obj['age'] reads 30", function () { return obj["age"]; }, 30);
+  </script>
+
+tostring: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Object.prototype.toString() — Works
+   *
+   * Proves:
+   *   1. toString is present on a plain object and is a function.
+   *   2. The documented example — ({ a: 1 }).toString() returns the default
+   *      string representation "[object Object]".
+   *
+   * NOTE: only the EXPLICIT .toString() call is probed. String({}) on a plain
+   * object aborts the whole CloudPage with HTTP 422 and is not catchable, so
+   * implicit stringification is deliberately never exercised.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " => " + got + "\n");
+  }
+
+  var o = { a: 1 };
+
+  /* 1. Shape of the member. */
+  assert("typeof o.toString is function", function () { return String(typeof o.toString); }, "function");
+
+  /* 2. The documented example. */
+  assert("o.toString() is '[object Object]'", function () { return o.toString(); }, "[object Object]");
+  assert("typeof o.toString() is string", function () { return String(typeof o.toString()); }, "string");
+  </script>
+
+valueof: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Object.prototype.valueOf() — Works
+   *
+   * Proves:
+   *   1. valueOf is present and is a function.
+   *   2. The documented example — new Number(5).valueOf() prints 5.
+   *   3. For a PLAIN object valueOf returns the object itself, so the result
+   *      is strictly equal to the receiver (asserted via === so no plain
+   *      object is ever stringified).
+   *   4. DEVIATION marked "DEV": on a BOXED Number, valueOf does NOT unwrap to
+   *      a primitive — it returns the box itself (typeof "object"), the same
+   *      non-unwrapping behaviour already documented for boxed Booleans. The
+   *      value still stringifies to "5", which is why the documented example
+   *      prints 5.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " => " + got + "\n");
+  }
+
+  /* 1. Shape of the member. */
+  var o = { a: 1 };
+  assert("typeof o.valueOf is function", function () { return String(typeof o.valueOf); }, "function");
+
+  /* 2. The documented example — new Number(5).valueOf() prints 5. */
+  var n = new Number(5);
+  assert("new Number(5).valueOf() prints 5", function () { return String(n.valueOf()); }, "5");
+
+  /* 4. DEVIATION — the boxed Number's valueOf does not unwrap. */
+  assert("DEV typeof new Number(5).valueOf() is object (spec: number)", function () { return String(typeof n.valueOf()); }, "object");
+  assert("DEV new Number(5).valueOf() === the box (spec: primitive 5)", function () { return n.valueOf() === n; }, true);
+  assert("DEV new Number(5).valueOf() === 5 is false (spec: true)", function () { return n.valueOf() === 5; }, false);
+  assert("new Number(5).valueOf() == 5 is true (loose compare)", function () { return n.valueOf() == 5; }, true);
+
+  /* 3. A plain object's valueOf returns the object itself. */
+  assert("o.valueOf() === o", function () { return o.valueOf() === o; }, true);
+  assert("typeof o.valueOf() is object", function () { return String(typeof o.valueOf()); }, "object");
+  </script>
+
+isprototypeof: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Object.prototype.isPrototypeOf(obj) — Partial (NEVER CALL)
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": the member is PRESENT (typeof "function")
+   *      but calling it HANGS the Jint engine — the request times out with
+   *      no output. MDN specifies a normal method returning a boolean.
+   *   2. The documented safe alternative — obj.constructor === Ctor — gives
+   *      the right answer for both a matching and a non-matching constructor.
+   *
+   * NOT ASSERTED: the actual return value of isPrototypeOf. Calling it hangs
+   * the engine (HTTP 408, no output), so the hang itself is not observable as
+   * a PASS/FAIL line — it can only be demonstrated by a page that never
+   * returns. This script therefore asserts PRESENCE only and never invokes it.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " => " + got + "\n");
+  }
+
+  /* 1. DEVIATION — present but unusable. The member is only READ, never called. */
+  assert("DEV isPrototypeOf is present, typeof function (calling it hangs the engine)", function () { return String(typeof Object.prototype.isPrototypeOf); }, "function");
+  var o = { a: 1 };
+  assert("DEV o.isPrototypeOf is inherited and typeof function (never call it)", function () { return String(typeof o.isPrototypeOf); }, "function");
+
+  /* 2. The documented safe alternative. */
+  function Ctor() {}
+  function Other() {}
+  var inst = new Ctor();
+  assert("safe alternative: inst.constructor === Ctor is true", function () { return inst.constructor === Ctor; }, true);
+  assert("safe alternative: inst.constructor === Other is false", function () { return inst.constructor === Other; }, false);
+  </script>
+
+propertyisenumerable: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Object.prototype.propertyIsEnumerable(prop) — Partial (broken)
+   *
+   * Proves:
+   *   1. The member is PRESENT (typeof "function").
+   *   2. Unlike its sibling isPrototypeOf, calling it does NOT hang — it
+   *      returns normally.
+   *   3. DEVIATION marked "DEV": it returns FALSE even for an own enumerable
+   *      property. MDN specifies true for an own enumerable property.
+   *   4. The documented workaround — hasOwnProperty("a") returns true.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " => " + got + "\n");
+  }
+
+  var o = { a: 1 };
+
+  /* 1 + 2. Present, and calling it returns instead of hanging. */
+  assert("typeof o.propertyIsEnumerable is function", function () { return String(typeof o.propertyIsEnumerable); }, "function");
+  assert("calling it returns a boolean (does not hang)", function () { return String(typeof o.propertyIsEnumerable("a")); }, "boolean");
+
+  /* 3. DEVIATION — false for an own enumerable property. */
+  assert("DEV o.propertyIsEnumerable('a') is false (spec: true)", function () { return o.propertyIsEnumerable("a"); }, false);
+  assert("DEV it is false for absent props too, so it is uninformative", function () { return o.propertyIsEnumerable("nope"); }, false);
+
+  /* 4. The documented workaround. */
+  assert("workaround o.hasOwnProperty('a') is true", function () { return o.hasOwnProperty("a"); }, true);
+  assert("workaround o.hasOwnProperty('nope') is false", function () { return o.hasOwnProperty("nope"); }, false);
+  </script>
+
+defineproperty: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Object.defineProperty(obj, prop, descriptor) — Works
+   *
+   * Proves:
+   *   1. Object.defineProperty is present and is a function.
+   *   2. The documented example — defining "x" with { value: 42,
+   *      enumerable: true } makes o.x read back as 42.
+   *   3. The defined property is an OWN property (hasOwnProperty is true).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " => " + got + "\n");
+  }
+
+  /* 1. Shape of the member. */
+  assert("typeof Object.defineProperty is function", function () { return String(typeof Object.defineProperty); }, "function");
+
+  /* 2. The documented example. */
+  var o = {};
+  Object.defineProperty(o, "x", { value: 42, enumerable: true });
+  assert("o.x is 42 after defineProperty", function () { return o.x; }, 42);
+
+  /* 3. It becomes an own property. */
+  assert("o.hasOwnProperty('x') is true", function () { return o.hasOwnProperty("x"); }, true);
+  </script>
+
+getprototypeof: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Object.getPrototypeOf(obj) — Works
+   *
+   * Proves:
+   *   1. Object.getPrototypeOf is present and is a function.
+   *   2. The documented example — typeof Object.getPrototypeOf({ a: 1 })
+   *      is "object".
+   *   3. For an instance of a constructor function it returns that
+   *      constructor's prototype object (asserted by identity, so no plain
+   *      object is ever stringified).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " => " + got + "\n");
+  }
+
+  /* 1. Shape of the member. */
+  assert("typeof Object.getPrototypeOf is function", function () { return String(typeof Object.getPrototypeOf); }, "function");
+
+  /* 2. The documented example. */
+  var o = { a: 1 };
+  assert("typeof Object.getPrototypeOf({a:1}) is object", function () { return String(typeof Object.getPrototypeOf(o)); }, "object");
+
+  /* 3. It returns the constructor's prototype for an instance. */
+  function Ctor() {}
+  var inst = new Ctor();
+  assert("Object.getPrototypeOf(inst) === Ctor.prototype", function () { return Object.getPrototypeOf(inst) === Ctor.prototype; }, true);
+  </script>
+
+keys: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Object.keys(obj) — Missing
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": Object.keys is typeof "undefined"
+   *      (spec: a function). Reading the missing member does NOT throw.
+   *   2. Calling it DOES throw, in both forms and with different messages:
+   *        Object.keys({})     -> "Object expected: keys"
+   *        new Object.keys({}) -> "Unknown type: Object.keys"
+   *   3. The documented workaround — a for...in loop guarded by
+   *      hasOwnProperty — collects the object's own keys.
+   *
+   * NOT ASSERTED: the ORDER of the collected keys. for...in enumeration order
+   * is implementation-defined, so the result is asserted by count and
+   * membership only.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " => " + got + "\n");
+  }
+  function assertThrows(id, fn, expectedMsg) {
+      var msg = "did NOT throw";
+      try { fn(); } catch (ex) { msg = ex.message; }
+      Platform.Response.Write((msg === expectedMsg ? "PASS " : "FAIL ") + id + " => " + msg + "\n");
+  }
+  function hasKey(list, wanted) {
+      for (var i = 0; i < list.length; i++) { if (list[i] === wanted) { return true; } }
+      return false;
+  }
+
+  /* 1. DEVIATION — undefined, and reading it does not throw. */
+  assert("DEV typeof Object.keys is undefined (spec: function)", function () { return String(typeof Object.keys); }, "undefined");
+  var read = "no-throw";
+  try { var tmp = Object.keys; } catch (ex) { read = "THREW: " + ex.message; }
+  assert("reading Object.keys does not throw", function () { return read; }, "no-throw");
+
+  /* 2. Calling it throws — both forms, different messages. */
+  var probe = { a: 1 };
+  assertThrows("Object.keys({}) throws 'Object expected: keys'", function () { return Object.keys(probe); }, "Object expected: keys");
+  assertThrows("new Object.keys({}) throws 'Unknown type: Object.keys'", function () { return new Object.keys(probe); }, "Unknown type: Object.keys");
+
+  /* 3. The documented workaround. */
+  function keys(obj) {
+      var result = [];
+      for (var k in obj) { if (obj.hasOwnProperty(k)) { result.push(k); } }
+      return result;
+  }
+  var o = { name: "Jane", age: 30 };
+  assert("workaround keys(o) has 2 entries", function () { return keys(o).length; }, 2);
+  assert("workaround keys(o) contains 'name'", function () { return hasKey(keys(o), "name"); }, true);
+  assert("workaround keys(o) contains 'age'", function () { return hasKey(keys(o), "age"); }, true);
+  assert("workaround keys({}) is empty", function () { return keys({}).length; }, 0);
+  </script>
+
+values: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Object.values(obj) — Missing
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": Object.values is typeof "undefined"
+   *      (spec: a function). Reading it does not throw.
+   *   2. Calling it throws, in both forms:
+   *        Object.values({})     -> "Object expected: values"
+   *        new Object.values({}) -> "Unknown type: Object.values"
+   *   3. The documented workaround — a for...in loop guarded by
+   *      hasOwnProperty — collects the object's own values.
+   *
+   * NOT ASSERTED: the ORDER of the collected values (implementation-defined
+   * enumeration order). Asserted by count and membership only.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " => " + got + "\n");
+  }
+  function assertThrows(id, fn, expectedMsg) {
+      var msg = "did NOT throw";
+      try { fn(); } catch (ex) { msg = ex.message; }
+      Platform.Response.Write((msg === expectedMsg ? "PASS " : "FAIL ") + id + " => " + msg + "\n");
+  }
+  function hasKey(list, wanted) {
+      for (var i = 0; i < list.length; i++) { if (list[i] === wanted) { return true; } }
+      return false;
+  }
+
+  /* 1. DEVIATION — undefined, and reading it does not throw. */
+  assert("DEV typeof Object.values is undefined (spec: function)", function () { return String(typeof Object.values); }, "undefined");
+  var read = "no-throw";
+  try { var tmp = Object.values; } catch (ex) { read = "THREW: " + ex.message; }
+  assert("reading Object.values does not throw", function () { return read; }, "no-throw");
+
+  /* 2. Calling it throws — both forms. */
+  var probe = { a: 1 };
+  assertThrows("Object.values({}) throws 'Object expected: values'", function () { return Object.values(probe); }, "Object expected: values");
+  assertThrows("new Object.values({}) throws 'Unknown type: Object.values'", function () { return new Object.values(probe); }, "Unknown type: Object.values");
+
+  /* 3. The documented workaround. */
+  function values(obj) {
+      var result = [];
+      for (var k in obj) { if (obj.hasOwnProperty(k)) { result.push(obj[k]); } }
+      return result;
+  }
+  var o = { name: "Jane", age: 30 };
+  assert("workaround values(o) has 2 entries", function () { return values(o).length; }, 2);
+  assert("workaround values(o) contains 'Jane'", function () { return hasKey(values(o), "Jane"); }, true);
+  assert("workaround values(o) contains 30", function () { return hasKey(values(o), 30); }, true);
+  assert("workaround values({}) is empty", function () { return values({}).length; }, 0);
+  </script>
+
+entries: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Object.entries(obj) — Missing
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": Object.entries is typeof "undefined"
+   *      (spec: a function). Reading it does not throw.
+   *   2. Calling it throws, in both forms:
+   *        Object.entries({})     -> "Object expected: entries"
+   *        new Object.entries({}) -> "Unknown type: Object.entries"
+   *   3. The documented workaround — a for...in loop guarded by
+   *      hasOwnProperty — builds [key, value] pairs.
+   *
+   * NOT ASSERTED: the ORDER of the pairs (implementation-defined enumeration
+   * order). Asserted by count and by looking up a pair by its key.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " => " + got + "\n");
+  }
+  function assertThrows(id, fn, expectedMsg) {
+      var msg = "did NOT throw";
+      try { fn(); } catch (ex) { msg = ex.message; }
+      Platform.Response.Write((msg === expectedMsg ? "PASS " : "FAIL ") + id + " => " + msg + "\n");
+  }
+
+  /* 1. DEVIATION — undefined, and reading it does not throw. */
+  assert("DEV typeof Object.entries is undefined (spec: function)", function () { return String(typeof Object.entries); }, "undefined");
+  var read = "no-throw";
+  try { var tmp = Object.entries; } catch (ex) { read = "THREW: " + ex.message; }
+  assert("reading Object.entries does not throw", function () { return read; }, "no-throw");
+
+  /* 2. Calling it throws — both forms. */
+  var probe = { a: 1 };
+  assertThrows("Object.entries({}) throws 'Object expected: entries'", function () { return Object.entries(probe); }, "Object expected: entries");
+  assertThrows("new Object.entries({}) throws 'Unknown type: Object.entries'", function () { return new Object.entries(probe); }, "Unknown type: Object.entries");
+
+  /* 3. The documented workaround. */
+  function entries(obj) {
+      var result = [];
+      for (var k in obj) { if (obj.hasOwnProperty(k)) { result.push([k, obj[k]]); } }
+      return result;
+  }
+  function lookup(pairs, wantedKey) {
+      for (var i = 0; i < pairs.length; i++) { if (pairs[i][0] === wantedKey) { return pairs[i][1]; } }
+      return "not-found";
+  }
+  var o = { name: "Jane", age: 30 };
+  assert("workaround entries(o) has 2 pairs", function () { return entries(o).length; }, 2);
+  assert("workaround entries(o) pair for 'name' carries 'Jane'", function () { return String(lookup(entries(o), "name")); }, "Jane");
+  assert("workaround entries(o) pair for 'age' carries 30", function () { return lookup(entries(o), "age"); }, 30);
+  assert("workaround entries({}) is empty", function () { return entries({}).length; }, 0);
+  </script>
+
+assign: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Object.assign(target, ...src) — Missing
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": Object.assign is typeof "undefined"
+   *      (spec: a function). Reading it does not throw.
+   *   2. Calling it throws, in both forms:
+   *        Object.assign({}, {})     -> "Object expected: assign"
+   *        new Object.assign({}, {}) -> "Unknown type: Object.assign"
+   *   3. The documented workaround — a for...in copy loop guarded by
+   *      hasOwnProperty — copies the source's own properties onto the target,
+   *      overwrites collisions, keeps the target's other properties, and
+   *      returns the target itself.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " => " + got + "\n");
+  }
+  function assertThrows(id, fn, expectedMsg) {
+      var msg = "did NOT throw";
+      try { fn(); } catch (ex) { msg = ex.message; }
+      Platform.Response.Write((msg === expectedMsg ? "PASS " : "FAIL ") + id + " => " + msg + "\n");
+  }
+
+  /* 1. DEVIATION — undefined, and reading it does not throw. */
+  assert("DEV typeof Object.assign is undefined (spec: function)", function () { return String(typeof Object.assign); }, "undefined");
+  var read = "no-throw";
+  try { var tmp = Object.assign; } catch (ex) { read = "THREW: " + ex.message; }
+  assert("reading Object.assign does not throw", function () { return read; }, "no-throw");
+
+  /* 2. Calling it throws — both forms. */
+  var t0 = {}, s0 = { a: 1 };
+  assertThrows("Object.assign(t, s) throws 'Object expected: assign'", function () { return Object.assign(t0, s0); }, "Object expected: assign");
+  assertThrows("new Object.assign(t, s) throws 'Unknown type: Object.assign'", function () { return new Object.assign(t0, s0); }, "Unknown type: Object.assign");
+
+  /* 3. The documented workaround. */
+  function assign(target, source) {
+      for (var k in source) { if (source.hasOwnProperty(k)) { target[k] = source[k]; } }
+      return target;
+  }
+  var target = { a: 1, b: 2 };
+  var source = { b: 99, c: 3 };
+  var out = assign(target, source);
+  assert("workaround returns the target itself", function () { return out === target; }, true);
+  assert("workaround keeps the target's own property a=1", function () { return target.a; }, 1);
+  assert("workaround overwrites the collision b -> 99", function () { return target.b; }, 99);
+  assert("workaround copies the new property c=3", function () { return target.c; }, 3);
+  assert("workaround leaves the source untouched (b stays 99)", function () { return source.b; }, 99);
+  </script>
+
+create: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Object.create(proto) — Missing
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": Object.create is typeof "undefined"
+   *      (spec: a function). Reading it does not throw.
+   *   2. Calling it throws, in both forms:
+   *        Object.create({})     -> "Object expected: create"
+   *        new Object.create({}) -> "Unknown type: Object.create"
+   *   3. The documented workaround — a constructor function whose prototype
+   *      is set to the desired proto — produces an object that inherits the
+   *      proto's members without owning them, and whose getPrototypeOf is the
+   *      supplied proto.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " => " + got + "\n");
+  }
+  function assertThrows(id, fn, expectedMsg) {
+      var msg = "did NOT throw";
+      try { fn(); } catch (ex) { msg = ex.message; }
+      Platform.Response.Write((msg === expectedMsg ? "PASS " : "FAIL ") + id + " => " + msg + "\n");
+  }
+
+  /* 1. DEVIATION — undefined, and reading it does not throw. */
+  assert("DEV typeof Object.create is undefined (spec: function)", function () { return String(typeof Object.create); }, "undefined");
+  var read = "no-throw";
+  try { var tmp = Object.create; } catch (ex) { read = "THREW: " + ex.message; }
+  assert("reading Object.create does not throw", function () { return read; }, "no-throw");
+
+  /* 2. Calling it throws — both forms. */
+  var base = { greet: "hi" };
+  assertThrows("Object.create(proto) throws 'Object expected: create'", function () { return Object.create(base); }, "Object expected: create");
+  assertThrows("new Object.create(proto) throws 'Unknown type: Object.create'", function () { return new Object.create(base); }, "Unknown type: Object.create");
+
+  /* 3. The documented workaround. */
+  function makeWithProto(proto) {
+      function F() {}
+      F.prototype = proto;
+      return new F();
+  }
+  var child = makeWithProto(base);
+  assert("workaround result is an object", function () { return String(typeof child); }, "object");
+  assert("workaround result inherits proto.greet", function () { return String(child.greet); }, "hi");
+  assert("workaround result does NOT own 'greet'", function () { return child.hasOwnProperty("greet"); }, false);
+  assert("workaround Object.getPrototypeOf(child) === proto", function () { return Object.getPrototypeOf(child) === base; }, true);
+  </script>
+
+freeze: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Object.freeze / Object.isFrozen — Missing
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": both Object.freeze and Object.isFrozen are
+   *      typeof "undefined" (spec: functions). Reading them does not throw.
+   *   2. Calling either one throws, in both forms:
+   *        Object.freeze({})       -> "Object expected: freeze"
+   *        new Object.freeze({})   -> "Unknown type: Object.freeze"
+   *        Object.isFrozen({})     -> "Object expected: isFrozen"
+   *        new Object.isFrozen({}) -> "Unknown type: Object.isFrozen"
+   *   3. Immutability cannot be enforced — an object stays writable, so the
+   *      chapter's "read-only by convention" guidance is the only option.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " => " + got + "\n");
+  }
+  function assertThrows(id, fn, expectedMsg) {
+      var msg = "did NOT throw";
+      try { fn(); } catch (ex) { msg = ex.message; }
+      Platform.Response.Write((msg === expectedMsg ? "PASS " : "FAIL ") + id + " => " + msg + "\n");
+  }
+
+  /* 1. DEVIATION — both members are undefined; reading them does not throw. */
+  assert("DEV typeof Object.freeze is undefined (spec: function)", function () { return String(typeof Object.freeze); }, "undefined");
+  assert("DEV typeof Object.isFrozen is undefined (spec: function)", function () { return String(typeof Object.isFrozen); }, "undefined");
+  var read = "no-throw";
+  try { var t1 = Object.freeze; var t2 = Object.isFrozen; } catch (ex) { read = "THREW: " + ex.message; }
+  assert("reading both members does not throw", function () { return read; }, "no-throw");
+
+  /* 2. Calling either one throws — both forms. */
+  var probe = { a: 1 };
+  assertThrows("Object.freeze({}) throws 'Object expected: freeze'", function () { return Object.freeze(probe); }, "Object expected: freeze");
+  assertThrows("new Object.freeze({}) throws 'Unknown type: Object.freeze'", function () { return new Object.freeze(probe); }, "Unknown type: Object.freeze");
+  assertThrows("Object.isFrozen({}) throws 'Object expected: isFrozen'", function () { return Object.isFrozen(probe); }, "Object expected: isFrozen");
+  assertThrows("new Object.isFrozen({}) throws 'Unknown type: Object.isFrozen'", function () { return new Object.isFrozen(probe); }, "Unknown type: Object.isFrozen");
+
+  /* 3. Immutability cannot be enforced — the object stays writable. */
+  probe.a = 2;
+  assert("no freeze available: the property is still writable", function () { return probe.a; }, 2);
+  probe.added = "new";
+  assert("no freeze available: new properties can still be added", function () { return String(probe.added); }, "new");
+  </script>
+
+getownpropertynames: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Object.getOwnPropertyNames(obj) — Missing
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": Object.getOwnPropertyNames is typeof
+   *      "undefined" (spec: a function). Reading it does not throw.
+   *   2. Calling it throws, in both forms:
+   *        Object.getOwnPropertyNames({})     -> "Object expected: getOwnPropertyNames"
+   *        new Object.getOwnPropertyNames({}) -> "Unknown type: Object.getOwnPropertyNames"
+   *   3. The documented workaround — a for...in loop guarded by
+   *      hasOwnProperty — returns the ENUMERABLE own keys only, which is the
+   *      caveat the chapter states.
+   *
+   * NOT ASSERTED: the ORDER of the returned names (implementation-defined
+   * enumeration order). Asserted by count and membership only.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " => " + got + "\n");
+  }
+  function assertThrows(id, fn, expectedMsg) {
+      var msg = "did NOT throw";
+      try { fn(); } catch (ex) { msg = ex.message; }
+      Platform.Response.Write((msg === expectedMsg ? "PASS " : "FAIL ") + id + " => " + msg + "\n");
+  }
+  function hasKey(list, wanted) {
+      for (var i = 0; i < list.length; i++) { if (list[i] === wanted) { return true; } }
+      return false;
+  }
+
+  /* 1. DEVIATION — undefined, and reading it does not throw. */
+  assert("DEV typeof Object.getOwnPropertyNames is undefined (spec: function)", function () { return String(typeof Object.getOwnPropertyNames); }, "undefined");
+  var read = "no-throw";
+  try { var tmp = Object.getOwnPropertyNames; } catch (ex) { read = "THREW: " + ex.message; }
+  assert("reading Object.getOwnPropertyNames does not throw", function () { return read; }, "no-throw");
+
+  /* 2. Calling it throws — both forms. */
+  var probe = { a: 1 };
+  assertThrows("Object.getOwnPropertyNames({}) throws 'Object expected: getOwnPropertyNames'", function () { return Object.getOwnPropertyNames(probe); }, "Object expected: getOwnPropertyNames");
+  assertThrows("new Object.getOwnPropertyNames({}) throws 'Unknown type: Object.getOwnPropertyNames'", function () { return new Object.getOwnPropertyNames(probe); }, "Unknown type: Object.getOwnPropertyNames");
+
+  /* 3. The documented workaround — enumerable own keys only. */
+  function ownNames(obj) {
+      var result = [];
+      for (var k in obj) { if (obj.hasOwnProperty(k)) { result.push(k); } }
+      return result;
+  }
+  var o = { name: "Jane", age: 30 };
+  assert("workaround ownNames(o) has 2 entries", function () { return ownNames(o).length; }, 2);
+  assert("workaround ownNames(o) contains 'name'", function () { return hasKey(ownNames(o), "name"); }, true);
+  assert("workaround ownNames(o) contains 'age'", function () { return hasKey(ownNames(o), "age"); }, true);
+  assert("workaround ownNames(o) excludes the inherited 'toString'", function () { return hasKey(ownNames(o), "toString"); }, false);
+  </script>
+
+getownpropertydescriptor: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Object.getOwnPropertyDescriptor(obj, prop) — Missing
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": Object.getOwnPropertyDescriptor is typeof
+   *      "undefined" (spec: a function). Reading it does not throw.
+   *   2. Calling it throws, in both forms:
+   *        Object.getOwnPropertyDescriptor(o, "x")     -> "Object expected: getOwnPropertyDescriptor"
+   *        new Object.getOwnPropertyDescriptor(o, "x") -> "Unknown type: Object.getOwnPropertyDescriptor"
+   *   3. The documented workaround — hasOwnProperty to test ownership plus a
+   *      direct property read for the value — works for a present property
+   *      and yields undefined for an absent one.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " => " + got + "\n");
+  }
+  function assertThrows(id, fn, expectedMsg) {
+      var msg = "did NOT throw";
+      try { fn(); } catch (ex) { msg = ex.message; }
+      Platform.Response.Write((msg === expectedMsg ? "PASS " : "FAIL ") + id + " => " + msg + "\n");
+  }
+
+  /* 1. DEVIATION — undefined, and reading it does not throw. */
+  assert("DEV typeof Object.getOwnPropertyDescriptor is undefined (spec: function)", function () { return String(typeof Object.getOwnPropertyDescriptor); }, "undefined");
+  var read = "no-throw";
+  try { var tmp = Object.getOwnPropertyDescriptor; } catch (ex) { read = "THREW: " + ex.message; }
+  assert("reading Object.getOwnPropertyDescriptor does not throw", function () { return read; }, "no-throw");
+
+  /* 2. Calling it throws — both forms. */
+  var obj = { x: 7 };
+  assertThrows("Object.getOwnPropertyDescriptor(o,'x') throws 'Object expected: getOwnPropertyDescriptor'", function () { return Object.getOwnPropertyDescriptor(obj, "x"); }, "Object expected: getOwnPropertyDescriptor");
+  assertThrows("new Object.getOwnPropertyDescriptor(o,'x') throws 'Unknown type: Object.getOwnPropertyDescriptor'", function () { return new Object.getOwnPropertyDescriptor(obj, "x"); }, "Unknown type: Object.getOwnPropertyDescriptor");
+
+  /* 3. The documented workaround. */
+  var hasIt = obj.hasOwnProperty("x");
+  var value = hasIt ? obj.x : undefined;
+  assert("workaround hasOwnProperty('x') is true", function () { return hasIt; }, true);
+  assert("workaround reads the value 7", function () { return value; }, 7);
+  var hasMissing = obj.hasOwnProperty("nope");
+  var missingValue = hasMissing ? obj.nope : undefined;
+  assert("workaround hasOwnProperty('nope') is false", function () { return hasMissing; }, false);
+  assert("workaround value for an absent property is undefined", function () { return String(typeof missingValue); }, "undefined");
+  </script>
+
+defineproperties: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Object.defineProperties(obj, descriptors) — Missing
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": the PLURAL Object.defineProperties is typeof
+   *      "undefined" (spec: a function), while the SINGULAR
+   *      Object.defineProperty is a working function.
+   *   2. Calling the plural form throws, in both forms:
+   *        Object.defineProperties(o, d)     -> "Object expected: defineProperties"
+   *        new Object.defineProperties(o, d) -> "Unknown type: Object.defineProperties"
+   *   3. The documented workaround — calling the singular
+   *      Object.defineProperty once per property — defines both properties.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " => " + got + "\n");
+  }
+  function assertThrows(id, fn, expectedMsg) {
+      var msg = "did NOT throw";
+      try { fn(); } catch (ex) { msg = ex.message; }
+      Platform.Response.Write((msg === expectedMsg ? "PASS " : "FAIL ") + id + " => " + msg + "\n");
+  }
+
+  /* 1. DEVIATION — the plural is missing, the singular works. */
+  assert("DEV typeof Object.defineProperties is undefined (spec: function)", function () { return String(typeof Object.defineProperties); }, "undefined");
+  assert("typeof Object.defineProperty (singular) is function", function () { return String(typeof Object.defineProperty); }, "function");
+  var read = "no-throw";
+  try { var tmp = Object.defineProperties; } catch (ex) { read = "THREW: " + ex.message; }
+  assert("reading Object.defineProperties does not throw", function () { return read; }, "no-throw");
+
+  /* 2. Calling the plural form throws — both forms. */
+  var probe = {};
+  var descriptors = { a: { value: 1, enumerable: true } };
+  assertThrows("Object.defineProperties(o,d) throws 'Object expected: defineProperties'", function () { return Object.defineProperties(probe, descriptors); }, "Object expected: defineProperties");
+  assertThrows("new Object.defineProperties(o,d) throws 'Unknown type: Object.defineProperties'", function () { return new Object.defineProperties(probe, descriptors); }, "Unknown type: Object.defineProperties");
+
+  /* 3. The documented workaround — one call per property. */
+  var o = {};
+  Object.defineProperty(o, "a", { value: 1, enumerable: true });
+  Object.defineProperty(o, "b", { value: 2, enumerable: true });
+  assert("workaround defines o.a = 1", function () { return o.a; }, 1);
+  assert("workaround defines o.b = 2", function () { return o.b; }, 2);
+  assert("workaround o.hasOwnProperty('a') is true", function () { return o.hasOwnProperty("a"); }, true);
+  assert("workaround o.hasOwnProperty('b') is true", function () { return o.hasOwnProperty("b"); }, true);
+  </script>
+
+extensibility: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Object.seal / isSealed / preventExtensions / isExtensible — Missing
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": all four extensibility controls are typeof
+   *      "undefined" (spec: functions). Reading them does not throw.
+   *   2. Calling each one throws, in both forms — "Object expected: <member>"
+   *      for the plain call and "Unknown type: Object.<member>" for the `new`
+   *      form.
+   *   3. The chapter's consequence — objects always remain extensible at
+   *      runtime: new properties can be added and existing ones deleted.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " => " + got + "\n");
+  }
+  function assertThrows(id, fn, expectedMsg) {
+      var msg = "did NOT throw";
+      try { fn(); } catch (ex) { msg = ex.message; }
+      Platform.Response.Write((msg === expectedMsg ? "PASS " : "FAIL ") + id + " => " + msg + "\n");
+  }
+
+  /* 1. DEVIATION — all four are undefined. */
+  assert("DEV typeof Object.seal is undefined (spec: function)", function () { return String(typeof Object.seal); }, "undefined");
+  assert("DEV typeof Object.isSealed is undefined (spec: function)", function () { return String(typeof Object.isSealed); }, "undefined");
+  assert("DEV typeof Object.preventExtensions is undefined (spec: function)", function () { return String(typeof Object.preventExtensions); }, "undefined");
+  assert("DEV typeof Object.isExtensible is undefined (spec: function)", function () { return String(typeof Object.isExtensible); }, "undefined");
+  var read = "no-throw";
+  try { var a = Object.seal; var b = Object.isSealed; var c = Object.preventExtensions; var d = Object.isExtensible; } catch (ex) { read = "THREW: " + ex.message; }
+  assert("reading all four members does not throw", function () { return read; }, "no-throw");
+
+  /* 2. Calling each one throws — both forms. */
+  var probe = { a: 1 };
+  assertThrows("Object.seal(o) throws 'Object expected: seal'", function () { return Object.seal(probe); }, "Object expected: seal");
+  assertThrows("new Object.seal(o) throws 'Unknown type: Object.seal'", function () { return new Object.seal(probe); }, "Unknown type: Object.seal");
+  assertThrows("Object.isSealed(o) throws 'Object expected: isSealed'", function () { return Object.isSealed(probe); }, "Object expected: isSealed");
+  assertThrows("new Object.isSealed(o) throws 'Unknown type: Object.isSealed'", function () { return new Object.isSealed(probe); }, "Unknown type: Object.isSealed");
+  assertThrows("Object.preventExtensions(o) throws 'Object expected: preventExtensions'", function () { return Object.preventExtensions(probe); }, "Object expected: preventExtensions");
+  assertThrows("new Object.preventExtensions(o) throws 'Unknown type: Object.preventExtensions'", function () { return new Object.preventExtensions(probe); }, "Unknown type: Object.preventExtensions");
+  assertThrows("Object.isExtensible(o) throws 'Object expected: isExtensible'", function () { return Object.isExtensible(probe); }, "Object expected: isExtensible");
+  assertThrows("new Object.isExtensible(o) throws 'Unknown type: Object.isExtensible'", function () { return new Object.isExtensible(probe); }, "Unknown type: Object.isExtensible");
+
+  /* 3. Objects always remain extensible. */
+  probe.added = "yes";
+  assert("objects stay extensible: a new property can be added", function () { return String(probe.added); }, "yes");
+  delete probe.added;
+  assert("objects stay extensible: the property can be deleted again", function () { return probe.hasOwnProperty("added"); }, false);
+  </script>

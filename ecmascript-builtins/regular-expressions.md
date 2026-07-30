@@ -9,6 +9,7 @@ redirect_from:
 description: RegExp in SSJS — creation, flags, test, exec, and the source/global/lastIndex accessors, with the SFMC engine quirks for capture groups, lastIndex, ignoreCase, multiline, and instanceof.
 verification: verified
 differs_from_docs: true
+test_scripts: complete
 ---
 
 Regular expressions work in SSJS using the ES3/ES5 `RegExp` API. Literal and constructor syntax both work, and `test`, `String.match`, `String.replace` (including `$1` back-references and function replacers), and `String.split` behave as expected. A few accessors, `exec`'s capture-group / `lastIndex` behavior, `instanceof RegExp`, and `String.search`'s return index differ from the spec — those are flagged below. Every fact on this page has been proven against live SFMC CloudPage runtime output.
@@ -49,6 +50,8 @@ var fieldName = "email";
 var dynamicPattern = new RegExp(fieldName + "=([^&]+)", "i");
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--regular-expressions" chapter="creating-regexp" %}
+
 ## Flags
 
 | Flag | Meaning |
@@ -63,6 +66,8 @@ var text = "Hello World hello";
 /hello/i.test(text);   // true (case-insensitive)
 text.match(/hello/gi); // ["Hello", "hello"] (global + case-insensitive)
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--regular-expressions" chapter="flags" %}
 
 ---
 
@@ -82,6 +87,8 @@ if (emailRe.test(email)) {
 ```
 
 > `Platform.Function.IsEmailAddress()` is usually more reliable than a custom regex for SFMC email validation.
+
+{% include test-script.html bundle="ecmascript-builtins--regular-expressions" chapter="test" %}
 
 ---
 
@@ -114,6 +121,8 @@ var dateMatch = "2026-06-18".match(/(\d{4})-(\d{2})-(\d{2})/);
 // dateMatch[1] = "2026", dateMatch[2] = "06", dateMatch[3] = "18"
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--regular-expressions" chapter="exec" %}
+
 ---
 
 ## source {#source}
@@ -125,6 +134,8 @@ var re = /\d{4}-\d{2}-\d{2}/g;
 re.source;   // "\\d{4}-\\d{2}-\\d{2}"
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--regular-expressions" chapter="source" %}
+
 ---
 
 ## global {#global}
@@ -135,6 +146,8 @@ re.source;   // "\\d{4}-\\d{2}-\\d{2}"
 /abc/g.global;   // true
 /abc/.global;    // false
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--regular-expressions" chapter="global" %}
 
 ---
 
@@ -156,6 +169,8 @@ re.exec("a1 b2 c3");   // still matches "1" at index 1, not from position 3
 "a1 b2 c3".match(/\d+/g);   // ["1", "2", "3"]
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--regular-expressions" chapter="lastindex" %}
+
 ---
 
 ## instanceof {#instanceof}
@@ -167,6 +182,8 @@ var re = new RegExp("\\d+");
 re instanceof RegExp;        // false in SFMC (true in standard JS)
 re.constructor === RegExp;   // true — use this instead
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--regular-expressions" chapter="instanceof" %}
 
 ---
 
@@ -180,6 +197,8 @@ var caseInsensitive = true;
 var re = caseInsensitive ? /hello/i : /hello/;
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--regular-expressions" chapter="ignorecase" %}
+
 ---
 
 ## multiline {#multiline}
@@ -191,6 +210,8 @@ var re = caseInsensitive ? /hello/i : /hello/;
 var isMultiline = true;
 var re = isMultiline ? /^line/m : /^line/;
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--regular-expressions" chapter="multiline" %}
 
 ---
 
@@ -225,6 +246,8 @@ function escapeHtml(str) {
               .replace(/'/g, "&#39;");
 }
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--regular-expressions" chapter="common-patterns" %}
 
 ## See Also
 

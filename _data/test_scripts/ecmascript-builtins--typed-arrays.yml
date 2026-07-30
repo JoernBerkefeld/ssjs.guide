@@ -1,0 +1,313 @@
+# Test scripts for /ecmascript-builtins/typed-arrays/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every provable claim the chapter makes —
+# here that is almost entirely the negative claim that the ES6+ binary-buffer
+# and typed-array constructors are absent from the SFMC Jint engine.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# HELPER RULE: assert() compares with a plain === and never coerces its
+# arguments. Because a missing constructor throws on invocation, every probe
+# is passed as a THUNK so the try/catch actually surrounds it — an uncaught
+# top-level throw makes the whole CloudPage return HTTP 422.
+
+arraybuffer: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: ArrayBuffer
+   *
+   * Proves:
+   *   1. DEVIATION from ECMAScript 2015 marked "DEV": ArrayBuffer does not exist
+   *      in the SFMC Jint engine — typeof ArrayBuffer is "undefined"
+   *      (spec: "function"). Merely READING the name does not throw.
+   *   2. Constructing it throws (spec: returns a fixed-length byte buffer), which
+   *      is the page's claim that there is no raw byte buffer in this engine.
+   *      Both invocation forms are asserted, with their distinct messages.
+   *   3. No part of the ArrayBuffer API leaks in by another route — .prototype
+   *      and .isView are equally unreachable.
+   *   4. The documented replacements work: a regular Array of numbers serves as
+   *      an in-memory list, and Base64 strings carry binary payloads
+   *      (Platform.Function.Base64Encode / Base64Decode round-trip).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEVIATION — ArrayBuffer is absent. Reading the name is safe. */
+  assert("DEV typeof ArrayBuffer is 'undefined' (spec: 'function')", function () { return String(typeof ArrayBuffer); }, "undefined");
+
+  /* 2. Constructing it throws — there is no raw byte buffer type. */
+  assertThrows("DEV new ArrayBuffer(8) throws (spec: returns an 8-byte buffer)", function () { return new ArrayBuffer(8); });
+  assert("new ArrayBuffer(8) message is 'Unknown type: ArrayBuffer'", function () { try { return new ArrayBuffer(8); } catch (ex) { return ex.message; } }, "Unknown type: ArrayBuffer");
+  assertThrows("ArrayBuffer(8) called without new throws too", function () { return ArrayBuffer(8); });
+  assert("ArrayBuffer(8) message is 'Object expected: ArrayBuffer'", function () { try { return ArrayBuffer(8); } catch (ex) { return ex.message; } }, "Object expected: ArrayBuffer");
+
+  /* 3. No part of the API exists by another route — reading a member of the
+   *    missing global yields undefined rather than throwing. */
+  assert("ArrayBuffer.prototype is undefined", function () { return String(typeof ArrayBuffer.prototype); }, "undefined");
+  assert("ArrayBuffer.isView is undefined", function () { return String(typeof ArrayBuffer.isView); }, "undefined");
+
+  /* 4a. Documented replacement — a regular Array of numbers as an in-memory list. */
+  assert("a plain Array holds the numbers instead", function () { var buf = [0, 0, 0, 0]; buf[2] = 42; return String(buf[2]); }, "42");
+  assert("a plain Array reports its length", function () { var buf = [0, 0, 0, 0]; return String(buf.length); }, "4");
+
+  /* 4b. Documented replacement — Base64 strings for binary payloads. */
+  assert("Base64Encode/Base64Decode round-trips an opaque payload", function () { var enc = Platform.Function.Base64Encode("binary-payload"); return String(Platform.Function.Base64Decode(enc)); }, "binary-payload");
+  assert("Base64Encode produces a string", function () { return String(typeof Platform.Function.Base64Encode("binary-payload")); }, "string");
+  </script>
+
+sharedarraybuffer: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: SharedArrayBuffer
+   *
+   * Proves:
+   *   1. DEVIATION from ECMAScript 2017 marked "DEV": SharedArrayBuffer does not
+   *      exist in the SFMC Jint engine — typeof SharedArrayBuffer is "undefined"
+   *      (spec: "function"). Reading the name is safe; calling it throws.
+   *   2. Both invocation forms throw, with their distinct messages.
+   *   3. No part of the API leaks in by another route — .prototype is unreachable.
+   *   4. The engine is single-threaded, so there is no shared-memory concept to
+   *      build on: the companion Atomics object is absent too, and there is no
+   *      Worker / SharedWorker constructor to share memory with.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEVIATION — SharedArrayBuffer is absent. */
+  assert("DEV typeof SharedArrayBuffer is 'undefined' (spec: 'function')", function () { return String(typeof SharedArrayBuffer); }, "undefined");
+
+  /* 2. Both invocation forms throw. */
+  assertThrows("DEV new SharedArrayBuffer(8) throws (spec: returns a shared buffer)", function () { return new SharedArrayBuffer(8); });
+  assert("new SharedArrayBuffer(8) message is 'Unknown type: SharedArrayBuffer'", function () { try { return new SharedArrayBuffer(8); } catch (ex) { return ex.message; } }, "Unknown type: SharedArrayBuffer");
+  assertThrows("SharedArrayBuffer(8) called without new throws too", function () { return SharedArrayBuffer(8); });
+  assert("SharedArrayBuffer(8) message is 'Object expected: SharedArrayBuffer'", function () { try { return SharedArrayBuffer(8); } catch (ex) { return ex.message; } }, "Object expected: SharedArrayBuffer");
+
+  /* 3. No part of the API exists by another route. */
+  assert("SharedArrayBuffer.prototype is undefined", function () { return String(typeof SharedArrayBuffer.prototype); }, "undefined");
+
+  /* 4. Single-threaded engine: no shared-memory concept at all. */
+  assert("Atomics is absent too, so no shared-memory operations", function () { return String(typeof Atomics); }, "undefined");
+  assert("there is no Worker constructor to share memory with", function () { return String(typeof Worker); }, "undefined");
+  assert("there is no SharedWorker constructor either", function () { return String(typeof SharedWorker); }, "undefined");
+  </script>
+
+dataview: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: DataView
+   *
+   * Proves:
+   *   1. DEVIATION from ECMAScript 2015 marked "DEV": DataView does not exist in
+   *      the SFMC Jint engine — typeof DataView is "undefined"
+   *      (spec: "function"). Reading the name is safe; calling it throws.
+   *   2. Both invocation forms throw, with their distinct messages.
+   *   3. No structured buffer access leaks in by another route — .prototype and
+   *      the accessor methods (getUint8 / setUint8) are equally unreachable.
+   *   4. The page's stated reason holds: with no ArrayBuffer there is nothing for
+   *      a DataView to read or write — ArrayBuffer is absent as well.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEVIATION — DataView is absent. */
+  assert("DEV typeof DataView is 'undefined' (spec: 'function')", function () { return String(typeof DataView); }, "undefined");
+
+  /* 2. Both invocation forms throw. */
+  assertThrows("DEV new DataView() throws (spec: returns a buffer view)", function () { return new DataView(); });
+  assert("new DataView() message is 'Unknown type: DataView'", function () { try { return new DataView(); } catch (ex) { return ex.message; } }, "Unknown type: DataView");
+  assertThrows("DataView() called without new throws too", function () { return DataView(); });
+  assert("DataView() message is 'Object expected: DataView'", function () { try { return DataView(); } catch (ex) { return ex.message; } }, "Object expected: DataView");
+
+  /* 3. No structured buffer access by another route. */
+  assert("DataView.prototype is undefined", function () { return String(typeof DataView.prototype); }, "undefined");
+  assert("DataView.getUint8 is undefined", function () { return String(typeof DataView.getUint8); }, "undefined");
+  assert("DataView.setUint8 is undefined", function () { return String(typeof DataView.setUint8); }, "undefined");
+
+  /* 4. Nothing for a DataView to read: ArrayBuffer is absent as well. */
+  assert("ArrayBuffer is absent, so there is no buffer to view", function () { return String(typeof ArrayBuffer); }, "undefined");
+  </script>
+
+atomics: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Atomics
+   *
+   * Proves:
+   *   1. DEVIATION from ECMAScript 2017 marked "DEV": Atomics does not exist in
+   *      the SFMC Jint engine — typeof Atomics is "undefined"
+   *      (spec: "object"). Reading the name is safe; calling it throws.
+   *   2. Both invocation forms on the namespace itself throw, with their
+   *      distinct messages.
+   *   3. No atomic operation leaks in by another route: reading Atomics.add /
+   *      Atomics.load / Atomics.store yields undefined, and calling them throws
+   *      in both the bare-member and the dotted-path shape.
+   *   4. The page's stated reason holds: atomic operations only apply to shared
+   *      memory, and SharedArrayBuffer is absent too.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEVIATION — Atomics is absent. */
+  assert("DEV typeof Atomics is 'undefined' (spec: 'object')", function () { return String(typeof Atomics); }, "undefined");
+
+  /* 2. Both invocation forms on the namespace throw. */
+  assertThrows("new Atomics() throws", function () { return new Atomics(); });
+  assert("new Atomics() message is 'Unknown type: Atomics'", function () { try { return new Atomics(); } catch (ex) { return ex.message; } }, "Unknown type: Atomics");
+  assertThrows("Atomics() called without new throws too", function () { return Atomics(); });
+  assert("Atomics() message is 'Object expected: Atomics'", function () { try { return Atomics(); } catch (ex) { return ex.message; } }, "Object expected: Atomics");
+
+  /* 3. No atomic operation exists by another route. Reading is safe; the two
+   *    call forms report the member name differently. */
+  assert("Atomics.add is undefined", function () { return String(typeof Atomics.add); }, "undefined");
+  assert("Atomics.load is undefined", function () { return String(typeof Atomics.load); }, "undefined");
+  assert("Atomics.store is undefined", function () { return String(typeof Atomics.store); }, "undefined");
+  assert("DEV Atomics.add(...) throws 'Object expected: add' (spec: adds atomically)", function () { try { return Atomics.add([], 0, 1); } catch (ex) { return ex.message; } }, "Object expected: add");
+  assert("new Atomics.add(...) throws 'Unknown type: Atomics.add'", function () { try { return new Atomics.add([], 0, 1); } catch (ex) { return ex.message; } }, "Unknown type: Atomics.add");
+
+  /* 4. Atomics needs shared memory, which does not exist here. */
+  assert("SharedArrayBuffer is absent, so there is no shared memory", function () { return String(typeof SharedArrayBuffer); }, "undefined");
+  </script>
+
+typedarray-views: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: TypedArray views
+   *
+   * Proves:
+   *   1. DEVIATION from ECMAScript 2015/2020/2025 marked "DEV": every concrete
+   *      typed-array view constructor is absent — typeof is "undefined" for
+   *      Int8Array, Uint8Array, Uint8ClampedArray, Int16Array, Uint16Array,
+   *      Int32Array, Uint32Array, Float16Array, Float32Array, Float64Array,
+   *      BigInt64Array and BigUint64Array (spec: "function" for each).
+   *      Reading the names is safe; only calling throws.
+   *   2. Both invocation forms throw, with their distinct messages, and a static
+   *      member call reports the bare member name while the dotted new-form
+   *      reports the full path.
+   *   3. There is no typed view over binary memory because ArrayBuffer is
+   *      missing too.
+   *   4. The documented replacement works: a plain Array of JavaScript numbers
+   *      holds a numeric sequence — matching the chapter's example, where
+   *      bytes[0] = 255 reads back as 255.
+   *   5. A plain array does NOT enforce element types or byte widths: an
+   *      out-of-range value is stored verbatim (no 0-255 clamping), a
+   *      fractional value is not truncated, and a non-number can be stored.
+   *   6. BigInt64Array / BigUint64Array additionally require BigInt, which is
+   *      also unavailable.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEVIATION — every view constructor is absent. */
+  assert("DEV typeof Int8Array is 'undefined' (spec: 'function')", function () { return String(typeof Int8Array); }, "undefined");
+  assert("DEV typeof Uint8Array is 'undefined' (spec: 'function')", function () { return String(typeof Uint8Array); }, "undefined");
+  assert("DEV typeof Uint8ClampedArray is 'undefined' (spec: 'function')", function () { return String(typeof Uint8ClampedArray); }, "undefined");
+  assert("DEV typeof Int16Array is 'undefined' (spec: 'function')", function () { return String(typeof Int16Array); }, "undefined");
+  assert("DEV typeof Uint16Array is 'undefined' (spec: 'function')", function () { return String(typeof Uint16Array); }, "undefined");
+  assert("DEV typeof Int32Array is 'undefined' (spec: 'function')", function () { return String(typeof Int32Array); }, "undefined");
+  assert("DEV typeof Uint32Array is 'undefined' (spec: 'function')", function () { return String(typeof Uint32Array); }, "undefined");
+  assert("DEV typeof Float16Array is 'undefined' (spec: 'function')", function () { return String(typeof Float16Array); }, "undefined");
+  assert("DEV typeof Float32Array is 'undefined' (spec: 'function')", function () { return String(typeof Float32Array); }, "undefined");
+  assert("DEV typeof Float64Array is 'undefined' (spec: 'function')", function () { return String(typeof Float64Array); }, "undefined");
+  assert("DEV typeof BigInt64Array is 'undefined' (spec: 'function')", function () { return String(typeof BigInt64Array); }, "undefined");
+  assert("DEV typeof BigUint64Array is 'undefined' (spec: 'function')", function () { return String(typeof BigUint64Array); }, "undefined");
+
+  /* 2. Calling a view constructor throws, in both forms. */
+  assertThrows("DEV new Uint8Array(4) throws (spec: returns a 4-byte view)", function () { return new Uint8Array(4); });
+  assert("new Uint8Array(4) message is 'Unknown type: Uint8Array'", function () { try { return new Uint8Array(4); } catch (ex) { return ex.message; } }, "Unknown type: Uint8Array");
+  assertThrows("Uint8Array(4) called without new throws too", function () { return Uint8Array(4); });
+  assert("Uint8Array(4) message is 'Object expected: Uint8Array'", function () { try { return Uint8Array(4); } catch (ex) { return ex.message; } }, "Object expected: Uint8Array");
+  assert("Uint8Array.prototype is undefined", function () { return String(typeof Uint8Array.prototype); }, "undefined");
+  assert("Uint8Array.from([1]) throws 'Object expected: from'", function () { try { return Uint8Array.from([1]); } catch (ex) { return ex.message; } }, "Object expected: from");
+  assert("new Uint8Array.from([1]) throws 'Unknown type: Uint8Array.from'", function () { try { return new Uint8Array.from([1]); } catch (ex) { return ex.message; } }, "Unknown type: Uint8Array.from");
+  assert("new Float64Array(2) message is 'Unknown type: Float64Array'", function () { try { return new Float64Array(2); } catch (ex) { return ex.message; } }, "Unknown type: Float64Array");
+
+  /* 3. No binary memory to view: ArrayBuffer is missing as well. */
+  assert("ArrayBuffer is absent, so no view can be backed by a buffer", function () { return String(typeof ArrayBuffer); }, "undefined");
+
+  /* 4. Documented replacement — a plain Array of numbers (chapter example). */
+  assert("var bytes = [0,0,0,0]; bytes[0] = 255 reads back as 255", function () { var bytes = [0, 0, 0, 0]; bytes[0] = 255; return String(bytes[0]); }, "255");
+  assert("the replacement array has length 4", function () { var bytes = [0, 0, 0, 0]; return String(bytes.length); }, "4");
+
+  /* 5. A plain array enforces neither element type nor byte width. */
+  assert("no 0-255 clamping: 300 is stored verbatim", function () { var bytes = [0, 0, 0, 0]; bytes[0] = 300; return String(bytes[0]); }, "300");
+  assert("no clamping at the low end either: -5 is stored verbatim", function () { var bytes = [0, 0, 0, 0]; bytes[0] = -5; return String(bytes[0]); }, "-5");
+  assert("no integer truncation: 1.5 stays 1.5", function () { var bytes = [0, 0, 0, 0]; bytes[0] = 1.5; return String(bytes[0]); }, "1.5");
+  assert("no element-type enforcement: a string can be stored", function () { var bytes = [0, 0, 0, 0]; bytes[0] = "abc"; return String(bytes[0]); }, "abc");
+
+  /* 6. The 64-bit views would also need BigInt, which is unavailable. */
+  assert("DEV typeof BigInt is 'undefined' (spec: 'function')", function () { return String(typeof BigInt); }, "undefined");
+  assert("BigInt(1) throws 'Object expected: BigInt'", function () { try { return BigInt(1); } catch (ex) { return ex.message; } }, "Object expected: BigInt");
+  </script>

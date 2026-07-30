@@ -37,7 +37,9 @@ try {
 }
 ```
 
-## Legacy: ErrorUtil.ThrowWSProxyError
+## ThrowWSProxyError {#throwwsproxyerror}
+
+Legacy — only under `Platform.Load("Core", "1")`.
 
 ```javascript
 ErrorUtil.ThrowWSProxyError(result);

@@ -5,6 +5,7 @@ parent: ECMAScript Built-ins
 parent_url: /ecmascript-builtins/
 description: The ES6 Symbol primitive type is not available in SSJS — the SFMC Jint engine predates ES2015, so Symbol, Symbol.iterator, and well-known symbols are all undefined.
 verification: verified
+test_scripts: complete
 ---
 
 **`Symbol` is not available in SSJS.** The SFMC server-side JavaScript engine (Jint) implements an ES3/ES5-era dialect and predates ES2015, so the `Symbol` primitive type — introduced in ES6 — is entirely absent. `typeof Symbol` is `"undefined"`, and calling `Symbol("x")` throws `Object expected`.
@@ -35,6 +36,8 @@ verification: verified
 
 There is no equivalent for the unique-primitive use case. For "unique key" needs, use a plain string key with a namespace prefix. There is no way to create a truly collision-proof key.
 
+{% include test-script.html bundle="ecmascript-builtins--symbol" chapter="symbol" %}
+
 ## Symbol.iterator {#symbol-iterator}
 
 `(ES6)` — ❌ Missing. Because `Symbol` itself is absent, there are no **well-known symbols** (`Symbol.iterator`, `Symbol.asyncIterator`, `Symbol.hasInstance`, …) and therefore **no iterator protocol**. `for…of`, spread, and destructuring over iterables are unavailable. Use classic `for (var i = 0; i < arr.length; i++)` loops over arrays instead.
@@ -44,6 +47,8 @@ There is no equivalent for the unique-primitive use case. For "unique key" needs
 // iterate arrays with a classic index loop:
 for (var i = 0; i < arr.length; i++) { /* … */ }
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--symbol" chapter="symbol-iterator" %}
 
 ## See Also
 

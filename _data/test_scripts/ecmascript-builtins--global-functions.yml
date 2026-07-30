@@ -1,0 +1,376 @@
+# Test scripts for /ecmascript-builtins/global-functions/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the ECMAScript spec.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# HELPER RULE: assert() compares with a plain === and never coerces its
+# arguments. Stringify at the CALL SITE instead.
+
+encodeuri: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: encodeURI(uri) — (ES3) PARTIAL
+   *
+   * Proves:
+   *   1. encodeURI exists as a global function without loading Core.
+   *   2. It leaves the reserved URI-syntax characters intact:
+   *        ; / ? : @ & = + $ , #
+   *   3. It leaves the unreserved characters intact and encodes non-ASCII
+   *      as lowercase UTF-8 percent escapes.
+   *   4. DEVIATIONS from the ECMAScript spec, each marked "DEV":
+   *        - a space is encoded as "+" (spec: "%20")
+   *        - percent escapes use LOWERCASE hex (spec: uppercase)
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* 1. The global exists and is callable. */
+  assert("typeof encodeURI is function", String(typeof encodeURI), "function");
+
+  /* 4. DEVIATION — space becomes "+", hex is lowercase. */
+  assert("DEV encodeURI('a b/c?d=1') is 'a+b/c?d=1' (spec: 'a%20b/c?d=1')", String(encodeURI("a b/c?d=1")), "a+b/c?d=1");
+  assert("DEV encodeURI(' ') is '+' (spec: '%20')", String(encodeURI(" ")), "+");
+  assert("DEV encodeURI('%') is lowercase-safe '%25'", String(encodeURI("%")), "%25");
+  var ae = "\u00e4";
+  assert("DEV encodeURI('a-umlaut') is lowercase '%c3%a4' (spec: '%C3%A4')", String(encodeURI(ae)), "%c3%a4");
+  assert("DEV encodeURI hex is lowercase, not uppercase", String(encodeURI(ae) === "%C3%A4"), "false");
+
+  /* 2. The reserved set survives untouched. */
+  assert("encodeURI('/') is '/'", String(encodeURI("/")), "/");
+  assert("encodeURI('?') is '?'", String(encodeURI("?")), "?");
+  assert("encodeURI(':') is ':'", String(encodeURI(":")), ":");
+  assert("encodeURI('@') is '@'", String(encodeURI("@")), "@");
+  assert("encodeURI('&') is '&'", String(encodeURI("&")), "&");
+  assert("encodeURI('=') is '='", String(encodeURI("=")), "=");
+  assert("encodeURI('+') is '+'", String(encodeURI("+")), "+");
+  assert("encodeURI('$') is '$'", String(encodeURI("$")), "$");
+  assert("encodeURI('#') is '#'", String(encodeURI("#")), "#");
+  assert("encodeURI(',') is ','", String(encodeURI(",")), ",");
+  assert("encodeURI(';') is ';'", String(encodeURI(";")), ";");
+
+  /* 3. Unreserved characters are never escaped. */
+  assert("encodeURI('abcABC019') is unchanged", String(encodeURI("abcABC019")), "abcABC019");
+  assert("encodeURI('-_.') is unchanged", String(encodeURI("-_.")), "-_.");
+  assert("encodeURI('~') is unchanged", String(encodeURI("~")), "~");
+  assert("encodeURI(\"'\") is unchanged", String(encodeURI("'")), "'");
+  assert("encodeURI('!') is unchanged", String(encodeURI("!")), "!");
+  assert("encodeURI('(') is unchanged", String(encodeURI("(")), "(");
+  assert("encodeURI('*') is unchanged", String(encodeURI("*")), "*");
+
+  /* Double-encoding: an existing escape's "%" is itself escaped. */
+  assert("encodeURI('a%20b') double-encodes to 'a%2520b'", String(encodeURI("a%20b")), "a%2520b");
+  </script>
+
+encodeuricomponent: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: encodeURIComponent(str) — (ES3) PARTIAL
+   *
+   * Proves:
+   *   1. encodeURIComponent exists as a global function.
+   *   2. Unlike encodeURI it ESCAPES the reserved URI-syntax characters
+   *        ; / ? : @ & = + $ , #
+   *   3. It leaves the unreserved characters intact.
+   *   4. DEVIATIONS from the ECMAScript spec, each marked "DEV":
+   *        - a space is encoded as "+" (spec: "%20")
+   *        - percent escapes use LOWERCASE hex, e.g. "/" -> "%2f" (spec: "%2F")
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* 1. The global exists and is callable. */
+  assert("typeof encodeURIComponent is function", String(typeof encodeURIComponent), "function");
+
+  /* 4. DEVIATION — space becomes "+", hex is lowercase. */
+  assert("DEV encodeURIComponent('a b/c?d=1') is 'a+b%2fc%3fd%3d1' (spec: 'a%20b%2Fc%3Fd%3D1')", String(encodeURIComponent("a b/c?d=1")), "a+b%2fc%3fd%3d1");
+  assert("DEV encodeURIComponent(' ') is '+' (spec: '%20')", String(encodeURIComponent(" ")), "+");
+  assert("DEV encodeURIComponent('/') is '%2f' (spec: '%2F')", String(encodeURIComponent("/")), "%2f");
+  assert("DEV encodeURIComponent('/') is not uppercase '%2F'", String(encodeURIComponent("/") === "%2F"), "false");
+  var ae = "\u00e4";
+  assert("DEV encodeURIComponent('a-umlaut') is lowercase '%c3%a4' (spec: '%C3%A4')", String(encodeURIComponent(ae)), "%c3%a4");
+
+  /* 2. The reserved set IS escaped (this is what differs from encodeURI). */
+  assert("encodeURIComponent('?') is '%3f'", String(encodeURIComponent("?")), "%3f");
+  assert("encodeURIComponent('=') is '%3d'", String(encodeURIComponent("=")), "%3d");
+  assert("encodeURIComponent('&') is '%26'", String(encodeURIComponent("&")), "%26");
+  assert("encodeURIComponent(':') is '%3a'", String(encodeURIComponent(":")), "%3a");
+  assert("encodeURIComponent('@') is '%40'", String(encodeURIComponent("@")), "%40");
+  assert("encodeURIComponent('+') is '%2b'", String(encodeURIComponent("+")), "%2b");
+  assert("encodeURIComponent('$') is '%24'", String(encodeURIComponent("$")), "%24");
+  assert("encodeURIComponent('#') is '%23'", String(encodeURIComponent("#")), "%23");
+  assert("encodeURIComponent(',') is '%2c'", String(encodeURIComponent(",")), "%2c");
+  assert("encodeURIComponent(';') is '%3b'", String(encodeURIComponent(";")), "%3b");
+
+  /* 3. Unreserved characters are never escaped. */
+  assert("encodeURIComponent('-_.') is unchanged", String(encodeURIComponent("-_.")), "-_.");
+  assert("encodeURIComponent('~') is unchanged", String(encodeURIComponent("~")), "~");
+  assert("encodeURIComponent(\"'\") is unchanged", String(encodeURIComponent("'")), "'");
+  assert("encodeURIComponent('!') is unchanged", String(encodeURIComponent("!")), "!");
+  assert("encodeURIComponent('(') is unchanged", String(encodeURIComponent("(")), "(");
+  assert("encodeURIComponent('*') is unchanged", String(encodeURIComponent("*")), "*");
+
+  /* encodeURI vs encodeURIComponent differ exactly on the reserved set. */
+  assert("encodeURI('/') and encodeURIComponent('/') differ", String(encodeURI("/") === encodeURIComponent("/")), "false");
+  </script>
+
+decodeuri: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: decodeURI(uri) — (ES3) PARTIAL
+   *
+   * Proves:
+   *   1. decodeURI exists as a global function and decodes ordinary escapes.
+   *   2. It round-trips the engine's own encodeURI output.
+   *   3. DEVIATIONS from the ECMAScript spec, each marked "DEV":
+   *        - escapes for the URI-syntax set ; / ? : @ & = + $ , # are DECODED
+   *          (spec: preserved, because they are part of the URI syntax)
+   *        - a literal "+" becomes a space (spec: "+" stays "+")
+   *        - a malformed escape is returned unchanged (spec: throws URIError)
+   *        - consequently decodeURI is indistinguishable from
+   *          decodeURIComponent
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* 1. The global exists and decodes ordinary escapes. */
+  assert("typeof decodeURI is function", String(typeof decodeURI), "function");
+  assert("decodeURI('a%20b/c') is 'a b/c'", String(decodeURI("a%20b/c")), "a b/c");
+  assert("decodeURI('abc') is unchanged", String(decodeURI("abc")), "abc");
+  assert("decodeURI('%25') is '%'", String(decodeURI("%25")), "%");
+
+  /* 3. DEVIATION — the reserved escapes are decoded, not preserved. */
+  assert("DEV decodeURI('%2F') is '/' (spec: '%2F')", String(decodeURI("%2F")), "/");
+  assert("DEV decodeURI('%2f') is '/' (spec: '%2f')", String(decodeURI("%2f")), "/");
+  assert("DEV decodeURI('%3B') is ';' (spec: '%3B')", String(decodeURI("%3B")), ";");
+  assert("DEV decodeURI('%3F') is '?' (spec: '%3F')", String(decodeURI("%3F")), "?");
+  assert("DEV decodeURI('%3A') is ':' (spec: '%3A')", String(decodeURI("%3A")), ":");
+  assert("DEV decodeURI('%40') is '@' (spec: '%40')", String(decodeURI("%40")), "@");
+  assert("DEV decodeURI('%26') is '&' (spec: '%26')", String(decodeURI("%26")), "&");
+  assert("DEV decodeURI('%3D') is '=' (spec: '%3D')", String(decodeURI("%3D")), "=");
+  assert("DEV decodeURI('%2B') is '+' (spec: '%2B')", String(decodeURI("%2B")), "+");
+  assert("DEV decodeURI('%24') is '$' (spec: '%24')", String(decodeURI("%24")), "$");
+  assert("DEV decodeURI('%2C') is ',' (spec: '%2C')", String(decodeURI("%2C")), ",");
+  assert("DEV decodeURI('%23') is '#' (spec: '%23')", String(decodeURI("%23")), "#");
+
+  /* 3. DEVIATION — a literal "+" is decoded to a space. */
+  assert("DEV decodeURI('a+b') is 'a b' (spec: 'a+b')", String(decodeURI("a+b")), "a b");
+
+  /* 3. DEVIATION — decodeURI behaves exactly like decodeURIComponent. */
+  assert("DEV decodeURI('%3A') equals decodeURIComponent('%3A') (spec: differ)", String(decodeURI("%3A") === decodeURIComponent("%3A")), "true");
+  assert("DEV decodeURI('https://x.org/a%3A%20b') decodes the colon (spec: keeps '%3A')", String(decodeURI("https://x.org/a%3A%20b")), "https://x.org/a: b");
+
+  /* 3. DEVIATION — a malformed escape does not throw. */
+  var malformed = "no-throw";
+  try { malformed = decodeURI("%E0%A4%A"); } catch (ex) { malformed = "THREW"; }
+  assert("DEV decodeURI('%E0%A4%A') does not throw (spec: URIError)", String(malformed === "THREW"), "false");
+
+  /* 2. Round-trip with the engine's own encodeURI. */
+  assert("decodeURI(encodeURI('a b')) is 'a b'", String(decodeURI(encodeURI("a b"))), "a b");
+  assert("decodeURI(encodeURI('a b/c?d=1')) round-trips", String(decodeURI(encodeURI("a b/c?d=1"))), "a b/c?d=1");
+  var ae = "\u00e4";
+  assert("decodeURI('%C3%A4') decodes UTF-8", String(decodeURI("%C3%A4")), ae);
+  assert("decodeURI('%c3%a4') accepts lowercase hex", String(decodeURI("%c3%a4")), ae);
+  </script>
+
+decodeuricomponent: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: decodeURIComponent(str) — (ES3) PARTIAL
+   *
+   * Proves:
+   *   1. decodeURIComponent exists and decodes every percent escape,
+   *      including the reserved URI-syntax characters.
+   *   2. It round-trips the engine's own encodeURIComponent output.
+   *   3. DEVIATION marked "DEV": a literal "+" is decoded to a SPACE
+   *      (spec: "+" is left unchanged) — form-urlencoded, not RFC 3986.
+   *   4. The workaround for a real plus sign: escape it as "%2B" first.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* 1. The global exists and decodes all escapes. */
+  assert("typeof decodeURIComponent is function", String(typeof decodeURIComponent), "function");
+  assert("decodeURIComponent('a%20b%2Fc') is 'a b/c'", String(decodeURIComponent("a%20b%2Fc")), "a b/c");
+  assert("decodeURIComponent('%2f') is '/'", String(decodeURIComponent("%2f")), "/");
+  assert("decodeURIComponent('%3D') is '='", String(decodeURIComponent("%3D")), "=");
+  assert("decodeURIComponent('%26') is '&'", String(decodeURIComponent("%26")), "&");
+  assert("decodeURIComponent('%23') is '#'", String(decodeURIComponent("%23")), "#");
+  var ae = "\u00e4";
+  assert("decodeURIComponent('%C3%A4') decodes UTF-8", String(decodeURIComponent("%C3%A4")), ae);
+
+  /* 3. DEVIATION — a literal "+" becomes a space. */
+  assert("DEV decodeURIComponent('+') is a space (spec: '+')", String(decodeURIComponent("+")), " ");
+  assert("DEV decodeURIComponent('a+b') is 'a b' (spec: 'a+b')", String(decodeURIComponent("a+b")), "a b");
+
+  /* 4. The workaround: escape a real plus as %2B. */
+  assert("workaround decodeURIComponent('%2B') is '+'", String(decodeURIComponent("%2B")), "+");
+  assert("workaround decodeURIComponent('a%2Bb') is 'a+b'", String(decodeURIComponent("a%2Bb")), "a+b");
+
+  /* 2. Round-trip with the engine's own encodeURIComponent. */
+  assert("round-trip 'a b/c?d=1'", String(decodeURIComponent(encodeURIComponent("a b/c?d=1"))), "a b/c?d=1");
+  assert("round-trip a plus sign survives", String(decodeURIComponent(encodeURIComponent("a+b"))), "a+b");
+  </script>
+
+escape: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: escape(str) — (ES3, Annex B) MISSING
+   *
+   * Proves:
+   *   1. DEV typeof escape is "undefined" (spec/Annex B: "function").
+   *   2. DEV calling escape() THROWS "Object expected: escape"
+   *      (spec/Annex B: returns the escaped string).
+   *   3. The recommended workaround — encodeURIComponent — is available and
+   *      produces a usable encoded string.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEVIATION — the global is not defined. */
+  assert("DEV typeof escape is undefined (Annex B: function)", String(typeof escape), "undefined");
+
+  /* 2. DEVIATION — calling it throws. */
+  assertThrows("DEV escape('a b') throws 'Object expected' (Annex B: 'a%20b')", function () { return escape("a b"); });
+
+  /* 3. The recommended workaround. */
+  assert("workaround typeof encodeURIComponent is function", String(typeof encodeURIComponent), "function");
+  assert("workaround encodeURIComponent('a b') is 'a+b'", String(encodeURIComponent("a b")), "a+b");
+  </script>
+
+unescape: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: unescape(str) — (ES3, Annex B) MISSING
+   *
+   * Proves:
+   *   1. DEV typeof unescape is "undefined" (spec/Annex B: "function").
+   *   2. DEV calling unescape() THROWS "Object expected: unescape"
+   *      (spec/Annex B: returns the unescaped string).
+   *   3. The recommended workaround — decodeURIComponent — is available and
+   *      decodes the same input correctly.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEVIATION — the global is not defined. */
+  assert("DEV typeof unescape is undefined (Annex B: function)", String(typeof unescape), "undefined");
+
+  /* 2. DEVIATION — calling it throws. */
+  assertThrows("DEV unescape('a%20b') throws 'Object expected' (Annex B: 'a b')", function () { return unescape("a%20b"); });
+
+  /* 3. The recommended workaround. */
+  assert("workaround typeof decodeURIComponent is function", String(typeof decodeURIComponent), "function");
+  assert("workaround decodeURIComponent('a%20b') is 'a b'", String(decodeURIComponent("a%20b")), "a b");
+  </script>
+
+eval: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: eval(script) — (ES3) WORKS
+   *
+   * Proves:
+   *   1. eval exists as a callable global function.
+   *   2. It parses a string of JavaScript source and executes it, returning
+   *      the completion value of the LAST evaluated expression.
+   *   3. A NON-STRING argument is returned unchanged (not parsed).
+   *   4. Direct eval sees the surrounding local scope — it can read a
+   *      variable declared outside the evaluated string.
+   *   5. Bare-name Core globals loaded via Platform.Load (e.g. Stringify)
+   *      are visible inside the evaluated string.
+   *
+   * NOT ASSERTED: the chapter's advisory that eval "runs arbitrary code and
+   * is a common injection risk" and that Platform.Function.ParseJSON is the
+   * preferred alternative for parsing data. That is a security
+   * recommendation, not a runtime-observable behaviour, so there is nothing
+   * deterministic to assert.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* 1. The global exists and is callable. */
+  assert("typeof eval is function", String(typeof eval), "function");
+
+  /* 2. A source string is parsed and executed; the last expression is returned. */
+  assert("eval('1 + 1') is 2", String(eval("1 + 1")), "2");
+  assert("eval returns the LAST evaluated expression", String(eval("1 + 1; 2 + 3")), "5");
+  assert("eval('\"a\" + \"b\"') is 'ab'", String(eval("'a' + 'b'")), "ab");
+
+  /* 3. A non-string argument is returned unchanged, not parsed. */
+  assert("eval(42) returns 42 unchanged", String(eval(42)), "42");
+  assert("eval(42) stays a number", String(typeof eval(42)), "number");
+
+  /* 4. Direct eval sees the surrounding local scope. */
+  var x = 5;
+  assert("eval('x + 10') sees the outer var x = 5", String(eval("x + 10")), "15");
+
+  function localScope() {
+      var inner = 7;
+      return eval("inner * 2");
+  }
+  assert("direct eval inside a function sees that function's locals", String(localScope()), "14");
+
+  /* 5. Bare-name Core globals loaded via Platform.Load are visible inside eval. */
+  assert("eval('Stringify({a:1})') uses the Core global", String(eval("Stringify({a:1})")), "{\"a\":1}");
+  </script>

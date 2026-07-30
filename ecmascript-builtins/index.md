@@ -90,7 +90,7 @@ The **ES** column shows the ECMAScript edition that standardized each member (ES
 | [`String.prototype.toLocaleLowerCase()`](/ecmascript-builtins/string-methods/#tolocalelowercase) | ES3 | ✅ Works | |
 | [`String.prototype.toUpperCase()`](/ecmascript-builtins/string-methods/#touppercase) | ES3 | ✅ Works | |
 | `String.fromCharCode(code)` | ES3 | ✅ Works | Static method |
-| [`String.prototype.trim()`](/ecmascript-builtins/string-methods/#trim) | ES5 | ❌ Missing | See [Polyfills](/engine-limitations/polyfills/#string-prototype-trim) or `Platform.Function.Trim` |
+| [`String.prototype.trim()`](/ecmascript-builtins/string-methods/#trim) | ES5 | ❌ Missing | See [Polyfills](/engine-limitations/polyfills/#string-prototype-trim) |
 | [`String.prototype.startsWith(sub)`](/ecmascript-builtins/string-methods/#startswith) | ES6 | ❌ Missing | Use `indexOf === 0` or [polyfill](/engine-limitations/polyfills/#string-prototype-startswith) |
 | [`String.prototype.endsWith(sub)`](/ecmascript-builtins/string-methods/#endswith) | ES6 | ❌ Missing | Use `lastIndexOf` or [polyfill](/engine-limitations/polyfills/#string-prototype-endswith) |
 | [`String.prototype.includes(sub)`](/ecmascript-builtins/string-methods/#includes) | ES6 | ❌ Missing | Use `indexOf !== -1` |
@@ -144,12 +144,14 @@ The ES3 `Math` members below work natively; `Math.max` / `Math.min` have argumen
 | [`Number.prototype.toPrecision([digits])`](/ecmascript-builtins/number-methods/#toprecision) | ES3 | ✅ Works | |
 | [`Number.prototype.toString([radix])`](/ecmascript-builtins/number-methods/#tostring) | ES3 | ⚠️ Partial | `radix` only supports 2, 8, 10, 16 — others throw "Invalid Base." |
 | `Number.prototype.valueOf()` | ES3 | ✅ Works | |
-| [`Number.MAX_VALUE / MIN_VALUE / NaN / NEGATIVE_INFINITY / POSITIVE_INFINITY`](/ecmascript-builtins/number-methods/#constants) | ES3 | ⚠️ Partial | Defined but several wrong: `MIN_VALUE` negative, `*_INFINITY` signs swapped (`MAX_VALUE`/`NaN` correct) — use literals |
+| [`Number.MAX_VALUE / MIN_VALUE / NaN / NEGATIVE_INFINITY / POSITIVE_INFINITY`](/ecmascript-builtins/number-methods/#constants-es3) | ES3 | ⚠️ Partial | Defined but several wrong: `MIN_VALUE` negative, `*_INFINITY` signs swapped (`MAX_VALUE`/`NaN` correct) — use literals |
 | [`Number.isInteger(val)`](/ecmascript-builtins/number-methods/#isinteger) | ES6 | ❌ Missing | Use `typeof n === "number" && Math.floor(n) === n` |
 | [`Number.isNaN(val)`](/ecmascript-builtins/number-methods/#isnan) | ES6 | ❌ Missing | Use global `isNaN()` |
 | [`Number.isFinite(val)`](/ecmascript-builtins/number-methods/#isfinite) | ES6 | ❌ Missing | Use global `isFinite()` |
 | [`Number.parseInt(str)`](/ecmascript-builtins/number-methods/#parseint) | ES6 | ❌ Missing | Use global `parseInt()` |
-| [`Number.MAX_SAFE_INTEGER`](/ecmascript-builtins/number-methods/#max_safe_integer) | ES6 | ❌ Missing | `undefined` — use the literal `9007199254740991` |
+| [`Number.parseFloat(str)`](/ecmascript-builtins/number-methods/#parsefloat) | ES6 | ❌ Missing | Use global `parseFloat()` |
+| [`Number.isSafeInteger(val)`](/ecmascript-builtins/number-methods/#issafeinteger) | ES6 | ❌ Missing | Compare against the literal `9007199254740991` |
+| [`Number.MAX_SAFE_INTEGER / MIN_SAFE_INTEGER / EPSILON`](/ecmascript-builtins/number-methods/#constants-es6) | ES6 | ❌ Missing | `undefined` — use literals (`9007199254740991`, `-9007199254740991`, `2.220446049250313e-16`) |
 
 ### Global Functions
 
@@ -202,7 +204,7 @@ These top-level objects/types postdate the engine's ES3/ES5 baseline and are ent
 | [`Proxy` / `Reflect`](/ecmascript-builtins/reflection/) | ES6 | ❌ Missing | `undefined`; no trap-based interception — use ES5 `Object` methods and operators |
 | [`ArrayBuffer` / `DataView` / typed arrays](/ecmascript-builtins/typed-arrays/) | ES6+ | ❌ Missing | `undefined`; no binary buffers — use plain arrays or Base64 strings |
 | [`WeakRef` / `FinalizationRegistry`](/ecmascript-builtins/memory-management/) | ES2021 | ❌ Missing | `undefined`; no weak refs or GC callbacks — hold normal references |
-| [`Intl`](/ecmascript-builtins/internationalization/) | ES2015 | ❌ Missing | `undefined`; `toLocale*` methods ignore locale — use `Platform.Function.FormatNumber` / `FormatDate` |
+| [`Intl`](/ecmascript-builtins/internationalization/) | ES2015 | ❌ Missing | `undefined`; `toLocale*` methods ignore locale — use AMPscript `FormatNumber` / `FormatDate` via `TreatAsContent` |
 
 ### Object Methods
 

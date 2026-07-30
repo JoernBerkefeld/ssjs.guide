@@ -1,0 +1,1284 @@
+# Test scripts for /ecmascript-builtins/math/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the ECMAScript spec.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+constants: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Constants — Math.PI / E / LN2 / LN10 / LOG2E / SQRT2 / SQRT1_2
+   *
+   * Proves:
+   *   1. Each ES3 constant exists and is a number.
+   *   2. Each constant equals the exact double the page documents.
+   *   3. The engine's default number stringification truncates to 15
+   *      significant digits, so the assertions compare the numeric value
+   *      (===) and a toFixed() rendering, never the raw string form.
+   *   4. Math.LOG10E is the ONE ES3 constant that is missing (see the
+   *      log10e chapter) — asserted here as absent so the constant table
+   *      is provably complete.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+
+  /* 1. All seven documented constants are numbers. */
+  assert("typeof Math.PI is number", String(typeof Math.PI), "number");
+  assert("typeof Math.E is number", String(typeof Math.E), "number");
+  assert("typeof Math.LN2 is number", String(typeof Math.LN2), "number");
+  assert("typeof Math.LN10 is number", String(typeof Math.LN10), "number");
+  assert("typeof Math.LOG2E is number", String(typeof Math.LOG2E), "number");
+  assert("typeof Math.SQRT2 is number", String(typeof Math.SQRT2), "number");
+  assert("typeof Math.SQRT1_2 is number", String(typeof Math.SQRT1_2), "number");
+
+  /* 2. Exact documented values. */
+  assert("Math.PI === 3.141592653589793", Math.PI === 3.141592653589793, true);
+  assert("Math.E === 2.718281828459045", Math.E === 2.718281828459045, true);
+  assert("Math.LN2 === 0.6931471805599453", Math.LN2 === 0.6931471805599453, true);
+  assert("Math.LN10 === 2.302585092994046", Math.LN10 === 2.302585092994046, true);
+  assert("Math.LOG2E === 1.4426950408889634", Math.LOG2E === 1.4426950408889634, true);
+  assert("Math.SQRT2 === 1.4142135623730951", Math.SQRT2 === 1.4142135623730951, true);
+  assert("Math.SQRT1_2 === 0.7071067811865476", Math.SQRT1_2 === 0.7071067811865476, true);
+
+  /* 3. Fixed-precision renderings (engine-stable, no long-literal noise). */
+  assert("Math.PI.toFixed(5)", String(Math.PI.toFixed(5)), "3.14159");
+  assert("Math.E.toFixed(5)", String(Math.E.toFixed(5)), "2.71828");
+  assert("Math.SQRT2.toFixed(5)", String(Math.SQRT2.toFixed(5)), "1.41421");
+
+  /* 4. Mathematical identities between the constants. */
+  assert("Math.SQRT2 * Math.SQRT1_2 rounds to 1", String((Math.SQRT2 * Math.SQRT1_2).toFixed(10)), "1.0000000000");
+  assert("Math.log(2) === Math.LN2", Math.log(2) === Math.LN2, true);
+  assert("Math.log(10) === Math.LN10", Math.log(10) === Math.LN10, true);
+
+  /* 5. LOG10E is absent — the single gap in the ES3 constant set. */
+  assert("DEV typeof Math.LOG10E is undefined (spec: number 0.4342944819032518)", String(typeof Math.LOG10E), "undefined");
+  </script>
+
+abs: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Math.abs(x)
+   *
+   * Proves:
+   *   1. Math.abs exists and is callable.
+   *   2. Math.abs(-5) is 5, as the example documents.
+   *   3. Absolute value for positive, negative, zero and fractional inputs.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+
+  /* 1. The member exists. */
+  assert("typeof Math.abs is not undefined", String(typeof Math.abs) !== "undefined", true);
+
+  /* 2. The documented example. */
+  assert("Math.abs(-5) === 5", Math.abs(-5) === 5, true);
+  assert("Math.abs(-5)", String(Math.abs(-5)), "5");
+
+  /* 3. Further inputs. */
+  assert("Math.abs(5) === 5", Math.abs(5) === 5, true);
+  assert("Math.abs(0) === 0", Math.abs(0) === 0, true);
+  assert("Math.abs(-2.5) === 2.5", Math.abs(-2.5) === 2.5, true);
+  assert("typeof Math.abs(-5) is number", String(typeof Math.abs(-5)), "number");
+  </script>
+
+ceil: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Math.ceil(x)
+   *
+   * Proves:
+   *   1. Math.ceil(4.1) is 5, as the example documents.
+   *   2. Rounding UP is applied for fractional values, including negatives
+   *      (where "up" means toward zero).
+   *   3. An integer input is returned unchanged.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+
+  assert("Math.ceil(4.1) === 5", Math.ceil(4.1) === 5, true);
+  assert("Math.ceil(4.1)", String(Math.ceil(4.1)), "5");
+  assert("Math.ceil(4.9) === 5", Math.ceil(4.9) === 5, true);
+  assert("Math.ceil(4) === 4", Math.ceil(4) === 4, true);
+  assert("Math.ceil(-4.1) === -4", Math.ceil(-4.1) === -4, true);
+  assert("typeof Math.ceil(4.1) is number", String(typeof Math.ceil(4.1)), "number");
+  </script>
+
+floor: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Math.floor(x)
+   *
+   * Proves:
+   *   1. Math.floor(4.9) is 4, as the example documents.
+   *   2. Rounding DOWN is applied for fractional values, including negatives
+   *      (where "down" means away from zero).
+   *   3. An integer input is returned unchanged.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+
+  assert("Math.floor(4.9) === 4", Math.floor(4.9) === 4, true);
+  assert("Math.floor(4.9)", String(Math.floor(4.9)), "4");
+  assert("Math.floor(4.1) === 4", Math.floor(4.1) === 4, true);
+  assert("Math.floor(4) === 4", Math.floor(4) === 4, true);
+  assert("Math.floor(-4.1) === -5", Math.floor(-4.1) === -5, true);
+  assert("typeof Math.floor(4.9) is number", String(typeof Math.floor(4.9)), "number");
+  </script>
+
+round: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Math.round(x)
+   *
+   * Proves:
+   *   1. Math.round(4.5) is 5, as the example documents.
+   *   2. The half-up-toward-+Infinity tie rule: -4.5 rounds to -4, not -5.
+   *   3. The documented roundTo(n, decimals) helper really produces 3.14 for
+   *      roundTo(3.14159, 2) — i.e. the Math.pow / Math.round / divide
+   *      combination the chapter recommends works.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+
+  /**
+   * Round a number to a fixed number of decimal places.
+   * @param {number} n - value to round
+   * @param {number} decimals - number of decimal places to keep
+   * @returns {number} the rounded value
+   */
+  function roundTo(n, decimals) {
+      var factor = Math.pow(10, decimals);
+      return Math.round(n * factor) / factor;
+  }
+
+  /* 1. The documented example. */
+  assert("Math.round(4.5) === 5", Math.round(4.5) === 5, true);
+  assert("Math.round(4.5)", String(Math.round(4.5)), "5");
+
+  /* 2. Neighbouring values and the negative tie rule. */
+  assert("Math.round(4.4) === 4", Math.round(4.4) === 4, true);
+  assert("Math.round(4.6) === 5", Math.round(4.6) === 5, true);
+  assert("Math.round(-4.5) === -4 (ties go toward +Infinity)", Math.round(-4.5) === -4, true);
+  assert("typeof Math.round(4.5) is number", String(typeof Math.round(4.5)), "number");
+
+  /* 3. The recommended roundTo() workaround. */
+  assert("roundTo(3.14159, 2) === 3.14", roundTo(3.14159, 2) === 3.14, true);
+  assert("roundTo(3.14159, 2)", String(roundTo(3.14159, 2)), "3.14");
+  assert("roundTo(3.14159, 0) === 3", roundTo(3.14159, 0) === 3, true);
+  </script>
+
+pow: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Math.pow(x, y)
+   *
+   * Proves:
+   *   1. Math.pow(2, 10) is 1024, as the example documents.
+   *   2. Math.pow(9, 0.5) is exactly 3 — fractional exponents work and the
+   *      result is exact for this input (asserted with === rather than a
+   *      tolerance, because the engine returns the exact double).
+   *   3. The zero-exponent and negative-exponent cases.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+
+  assert("Math.pow(2, 10) === 1024", Math.pow(2, 10) === 1024, true);
+  assert("Math.pow(2, 10)", String(Math.pow(2, 10)), "1024");
+  assert("Math.pow(9, 0.5) === 3", Math.pow(9, 0.5) === 3, true);
+  assert("Math.pow(9, 0.5)", String(Math.pow(9, 0.5)), "3");
+  assert("Math.pow(2, 0) === 1", Math.pow(2, 0) === 1, true);
+  assert("Math.pow(2, -2) === 0.25", Math.pow(2, -2) === 0.25, true);
+  assert("Math.pow(10, 2) === 100", Math.pow(10, 2) === 100, true);
+  assert("typeof Math.pow(2, 10) is number", String(typeof Math.pow(2, 10)), "number");
+  </script>
+
+sqrt: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Math.sqrt(x)
+   *
+   * Proves:
+   *   1. Math.sqrt(16) is 4, as the example documents.
+   *   2. Perfect squares return exact integers (=== on the double).
+   *   3. sqrt(0) is 0 and sqrt agrees with pow(x, 0.5).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+
+  assert("Math.sqrt(16) === 4", Math.sqrt(16) === 4, true);
+  assert("Math.sqrt(16)", String(Math.sqrt(16)), "4");
+  assert("Math.sqrt(0) === 0", Math.sqrt(0) === 0, true);
+  assert("Math.sqrt(1) === 1", Math.sqrt(1) === 1, true);
+  assert("Math.sqrt(2).toFixed(10)", String(Math.sqrt(2).toFixed(10)), "1.4142135624");
+  assert("Math.sqrt(2) === Math.SQRT2", Math.sqrt(2) === Math.SQRT2, true);
+  assert("Math.sqrt(16) === Math.pow(16, 0.5)", Math.sqrt(16) === Math.pow(16, 0.5), true);
+  assert("typeof Math.sqrt(16) is number", String(typeof Math.sqrt(16)), "number");
+  </script>
+
+random: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Math.random()
+   *
+   * Proves:
+   *   1. Math.random() returns a value in the half-open interval [0, 1) —
+   *      asserted over many draws as range bounds, never as an exact value,
+   *      because the result is by definition non-deterministic.
+   *   2. The documented randomInt(min, max) helper stays inside its bounds
+   *      and returns whole numbers over many draws.
+   *   3. Two consecutive draws are not forced to be equal (the value varies).
+   *
+   * NOT ASSERTED: the exact value of any single draw, and the distribution's
+   * uniformity — neither is deterministically observable in a single page run.
+   *
+   * NOTE: `typeof Math.random()` reports "clr" in this engine (the raw CLR
+   * double is not yet boxed as a JS number); adding 0 yields a plain number.
+   * That is asserted below rather than assuming "number".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+
+  /**
+   * Return a random whole number between min and max, both inclusive.
+   * @param {number} min - lower bound
+   * @param {number} max - upper bound
+   * @returns {number} a whole number in [min, max]
+   */
+  function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  /* 1. Range bounds over many draws. */
+  var lowOk = true, highOk = true, i, r;
+  for (i = 0; i < 200; i++) {
+      r = Math.random() + 0;
+      if (!(r >= 0)) { lowOk = false; }
+      if (!(r < 1)) { highOk = false; }
+  }
+  assert("Math.random() >= 0 over 200 draws", lowOk, true);
+  assert("Math.random() < 1 over 200 draws", highOk, true);
+
+  /* 2. The value is numeric once coerced. */
+  assert("typeof (Math.random() + 0) is number", String(typeof (Math.random() + 0)), "number");
+
+  /* 3. The documented randomInt() helper (dice roll). */
+  var inRange = true, whole = true, seen = {};
+  for (i = 0; i < 200; i++) {
+      var d = randomInt(1, 6);
+      if (d < 1 || d > 6) { inRange = false; }
+      if (d !== Math.floor(d)) { whole = false; }
+      seen["v" + d] = true;
+  }
+  assert("randomInt(1, 6) stays within 1..6 over 200 draws", inRange, true);
+  assert("randomInt(1, 6) returns whole numbers", whole, true);
+
+  /* 4. The value actually varies (not a frozen constant). */
+  var distinct = 0, k;
+  for (k = 1; k <= 6; k++) { if (seen["v" + k]) { distinct++; } }
+  assert("randomInt(1, 6) produced more than one distinct value", distinct > 1, true);
+  </script>
+
+log: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Math.log(x)
+   *
+   * Proves:
+   *   1. Math.log(Math.E) is exactly 1, as the example documents.
+   *   2. Math.log is the NATURAL logarithm: log(1) is 0 and log(2)/log(10)
+   *      equal the Math.LN2 / Math.LN10 constants exactly.
+   *   3. It is the building block for the missing log2 / log10 (see those
+   *      chapters) — log(8)/LN2 is exactly 3 here.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+
+  assert("Math.log(Math.E) === 1", Math.log(Math.E) === 1, true);
+  assert("Math.log(Math.E)", String(Math.log(Math.E)), "1");
+  assert("Math.log(1) === 0", Math.log(1) === 0, true);
+  assert("Math.log(2) === Math.LN2", Math.log(2) === Math.LN2, true);
+  assert("Math.log(10) === Math.LN10", Math.log(10) === Math.LN10, true);
+  assert("Math.log(8) / Math.LN2 === 3", (Math.log(8) / Math.LN2) === 3, true);
+  assert("typeof Math.log(Math.E) is number", String(typeof Math.log(Math.E)), "number");
+  </script>
+
+exp: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Math.exp(x)
+   *
+   * Proves:
+   *   1. Math.exp(1) is e — asserted as === Math.E (the page prints the
+   *      decimal expansion 2.718281828459045; the engine truncates raw
+   *      stringification at 15 significant digits, so the comparison is made
+   *      against the constant and a toFixed() rendering instead).
+   *   2. Math.exp(0) is 1 and Math.exp is the inverse of Math.log.
+   *   3. Negative exponents produce the reciprocal.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+
+  assert("Math.exp(1) === Math.E", Math.exp(1) === Math.E, true);
+  assert("Math.exp(1) === 2.718281828459045", Math.exp(1) === 2.718281828459045, true);
+  assert("Math.exp(1).toFixed(10)", String(Math.exp(1).toFixed(10)), "2.7182818285");
+  assert("Math.exp(0) === 1", Math.exp(0) === 1, true);
+  assert("Math.log(Math.exp(2)) rounds to 2", String(Math.log(Math.exp(2)).toFixed(10)), "2.0000000000");
+  assert("Math.exp(-1) * Math.exp(1) rounds to 1", String((Math.exp(-1) * Math.exp(1)).toFixed(10)), "1.0000000000");
+  assert("typeof Math.exp(1) is number", String(typeof Math.exp(1)), "number");
+  </script>
+
+trigonometry: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Trigonometry — sin / cos / tan / asin / acos / atan / atan2
+   *
+   * Proves:
+   *   1. The three documented examples: sin(PI/2) is 1, cos(0) is 1, and
+   *      atan2(1, 1) is PI/4.
+   *   2. All seven functions exist and return numbers.
+   *   3. The inverse functions round-trip: asin(1) is PI/2, acos(1) is 0,
+   *      atan(0) is 0, and tan(0) is 0.
+   *   4. The Pythagorean identity sin^2 + cos^2 = 1 holds (asserted on a
+   *      fixed-precision rendering, not raw === on an irrational result).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+
+  /* 1. The documented examples. */
+  assert("Math.sin(Math.PI / 2) === 1", Math.sin(Math.PI / 2) === 1, true);
+  assert("Math.cos(0) === 1", Math.cos(0) === 1, true);
+  assert("Math.atan2(1, 1) === Math.PI / 4", Math.atan2(1, 1) === Math.PI / 4, true);
+  assert("Math.atan2(1, 1).toFixed(10)", String(Math.atan2(1, 1).toFixed(10)), "0.7853981634");
+
+  /* 2. Every documented member returns a number. */
+  assert("typeof Math.sin(0) is number", String(typeof Math.sin(0)), "number");
+  assert("typeof Math.cos(0) is number", String(typeof Math.cos(0)), "number");
+  assert("typeof Math.tan(0) is number", String(typeof Math.tan(0)), "number");
+  assert("typeof Math.asin(0) is number", String(typeof Math.asin(0)), "number");
+  assert("typeof Math.acos(1) is number", String(typeof Math.acos(1)), "number");
+  assert("typeof Math.atan(0) is number", String(typeof Math.atan(0)), "number");
+  assert("typeof Math.atan2(1, 1) is number", String(typeof Math.atan2(1, 1)), "number");
+
+  /* 3. Zero points and inverses. */
+  assert("Math.sin(0) === 0", Math.sin(0) === 0, true);
+  assert("Math.tan(0) === 0", Math.tan(0) === 0, true);
+  assert("Math.asin(1) === Math.PI / 2", Math.asin(1) === Math.PI / 2, true);
+  assert("Math.asin(0) === 0", Math.asin(0) === 0, true);
+  assert("Math.acos(1) === 0", Math.acos(1) === 0, true);
+  assert("Math.atan(0) === 0", Math.atan(0) === 0, true);
+  assert("Math.atan(1).toFixed(10)", String(Math.atan(1).toFixed(10)), "0.7853981634");
+
+  /* 4. Pythagorean identity at an arbitrary angle. */
+  var a = 0.7;
+  assert("sin^2 + cos^2 rounds to 1", String((Math.sin(a) * Math.sin(a) + Math.cos(a) * Math.cos(a)).toFixed(10)), "1.0000000000");
+  assert("tan(a) equals sin(a)/cos(a)", String((Math.tan(a) - Math.sin(a) / Math.cos(a)).toFixed(10)), "0.0000000000");
+  </script>
+
+max: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Math.max(...values) — PARTIAL
+   *
+   * Proves:
+   *   1. The two-argument form is safe and returns the larger value.
+   *   2. DEVIATION marked "DEV": three or more arguments THROW
+   *      "Index was outside the bounds of the array." (spec: returns the
+   *      largest of all arguments).
+   *   3. DEVIATION marked "DEV": the no-argument form returns 0
+   *      (spec: -Infinity).
+   *   4. The documented workaround — folding an array with a plain loop —
+   *      really produces the maximum of a 5-element array.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " => " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. The safe two-argument form. */
+  assert("Math.max(1, 5) === 5", Math.max(1, 5) === 5, true);
+  assert("Math.max(1, 5)", String(Math.max(1, 5)), "5");
+  assert("Math.max(5, 1) === 5", Math.max(5, 1) === 5, true);
+  assert("Math.max(-3, -7) === -3", Math.max(-3, -7) === -3, true);
+  assert("typeof Math.max(1, 5) is number", String(typeof Math.max(1, 5)), "number");
+
+  /* 2. DEVIATION — 3+ arguments throw. */
+  assertThrows("DEV Math.max(1, 5, 3) throws (spec: returns 5)", function () { return Math.max(1, 5, 3); });
+  assertThrows("DEV Math.max(1, 5, 3, 7) throws (spec: returns 7)", function () { return Math.max(1, 5, 3, 7); });
+
+  /* 3. DEVIATION — no-argument form returns 0. */
+  assert("DEV Math.max() === 0 (spec: -Infinity)", Math.max() === 0, true);
+  assert("DEV Math.max() (spec: -Infinity)", String(Math.max()), "0");
+
+  /* 4. The recommended loop-fold workaround. */
+  var arr = [3, 1, 4, 1, 5];
+  var max = arr[0];
+  for (var i = 1; i < arr.length; i++) { if (arr[i] > max) { max = arr[i]; } }
+  assert("loop-fold max of [3,1,4,1,5] === 5", max === 5, true);
+  assert("loop-fold max of [3,1,4,1,5]", String(max), "5");
+  </script>
+
+min: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Math.min(...values) — PARTIAL
+   *
+   * Proves:
+   *   1. The two-argument form is safe and returns the smaller value.
+   *   2. DEVIATION marked "DEV": three or more arguments THROW
+   *      "Index was outside the bounds of the array." (spec: returns the
+   *      smallest of all arguments).
+   *   3. DEVIATION marked "DEV": the no-argument form returns 0
+   *      (spec: +Infinity).
+   *   4. The loop-fold workaround produces the minimum of an array.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " => " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. The safe two-argument form. */
+  assert("Math.min(1, 5) === 1", Math.min(1, 5) === 1, true);
+  assert("Math.min(1, 5)", String(Math.min(1, 5)), "1");
+  assert("Math.min(5, 1) === 1", Math.min(5, 1) === 1, true);
+  assert("Math.min(-3, -7) === -7", Math.min(-3, -7) === -7, true);
+  assert("typeof Math.min(1, 5) is number", String(typeof Math.min(1, 5)), "number");
+
+  /* 2. DEVIATION — 3+ arguments throw. */
+  assertThrows("DEV Math.min(1, 5, 3) throws (spec: returns 1)", function () { return Math.min(1, 5, 3); });
+  assertThrows("DEV Math.min(1, 5, 3, 0) throws (spec: returns 0)", function () { return Math.min(1, 5, 3, 0); });
+
+  /* 3. DEVIATION — no-argument form returns 0. */
+  assert("DEV Math.min() === 0 (spec: +Infinity)", Math.min() === 0, true);
+  assert("DEV Math.min() (spec: +Infinity)", String(Math.min()), "0");
+
+  /* 4. The loop-fold workaround. */
+  var arr = [3, 1, 4, 1, 5];
+  var min = arr[0];
+  for (var i = 1; i < arr.length; i++) { if (arr[i] < min) { min = arr[i]; } }
+  assert("loop-fold min of [3,1,4,1,5] === 1", min === 1, true);
+  assert("loop-fold min of [3,1,4,1,5]", String(min), "1");
+  </script>
+
+log10e: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Math.LOG10E — MISSING
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": Math.LOG10E is undefined in SFMC
+   *      (spec: the number 0.4342944819032518).
+   *   2. Reading the missing member does NOT throw — it simply yields
+   *      undefined; only calling a missing member throws.
+   *   3. The documented workaround — the literal 0.4342944819032518 — is a
+   *      usable number, and using it as a log10 factor gives the same result
+   *      as dividing by Math.LN10.
+   *   4. Every OTHER ES3 Math constant IS present, so LOG10E is the single
+   *      gap in the set.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+
+  /* 1-2. The member is absent, and reading it is harmless. */
+  assert("DEV typeof Math.LOG10E is undefined (spec: number)", String(typeof Math.LOG10E), "undefined");
+  var read = "no-throw";
+  try { var v = Math.LOG10E; } catch (ex) { read = "threw: " + ex.message; }
+  assert("reading Math.LOG10E does not throw", read, "no-throw");
+
+  /* 3. The documented literal workaround. */
+  var LOG10E = 0.4342944819032518;
+  assert("typeof LOG10E literal is number", String(typeof LOG10E), "number");
+  assert("LOG10E literal toFixed(10)", String(LOG10E.toFixed(10)), "0.4342944819");
+  assert("Math.log(100) * LOG10E rounds to 2", String((Math.log(100) * LOG10E).toFixed(10)), "2.0000000000");
+  assert("LOG10E literal matches 1 / Math.LN10 to 10dp", String((LOG10E - 1 / Math.LN10).toFixed(10)), "0.0000000000");
+
+  /* 4. The other ES3 constants are all present. */
+  assert("Math.LN10 is present", String(typeof Math.LN10), "number");
+  assert("Math.LOG2E is present", String(typeof Math.LOG2E), "number");
+  </script>
+
+trunc: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Math.trunc(x) — MISSING (ES6)
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": Math.trunc is undefined (spec: a function).
+   *   2. DEVIATION marked "DEV": CALLING it throws "Object expected: trunc"
+   *      (spec: returns the integer part). Note the asymmetry proven here —
+   *      READING the missing member is harmless, calling it is not.
+   *   3. The documented workaround x < 0 ? Math.ceil(x) : Math.floor(x)
+   *      returns 4 for 4.7 and -4 for -4.7, exactly as the example says.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " => " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /**
+   * ES3-safe replacement for Math.trunc — drop the fractional part.
+   * @param {number} x - value to truncate
+   * @returns {number} the integer part of x, rounded toward zero
+   */
+  function trunc(x) { return x < 0 ? Math.ceil(x) : Math.floor(x); }
+
+  /* 1-2. The member is missing; calling it throws. */
+  assert("DEV typeof Math.trunc is undefined (spec: function)", String(typeof Math.trunc), "undefined");
+  assertThrows("DEV Math.trunc(4.7) throws (spec: returns 4)", function () { return Math.trunc(4.7); });
+
+  /* 3. The documented workaround. */
+  assert("trunc(4.7) === 4", trunc(4.7) === 4, true);
+  assert("trunc(4.7)", String(trunc(4.7)), "4");
+  assert("trunc(-4.7) === -4", trunc(-4.7) === -4, true);
+  assert("trunc(-4.7)", String(trunc(-4.7)), "-4");
+  assert("trunc(4) === 4", trunc(4) === 4, true);
+  assert("trunc(0) === 0", trunc(0) === 0, true);
+  </script>
+
+sign: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Math.sign(x) — MISSING (ES6)
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": Math.sign is undefined (spec: a function).
+   *   2. DEVIATION marked "DEV": calling it throws "Object expected: sign"
+   *      (spec: returns 1 / -1 / 0).
+   *   3. The documented workaround n > 0 ? 1 : n < 0 ? -1 : 0 returns 1, -1
+   *      and 0 for positive, negative and zero inputs.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " => " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /**
+   * ES3-safe replacement for Math.sign.
+   * @param {number} n - value to inspect
+   * @returns {number} 1 when n is positive, -1 when negative, 0 otherwise
+   */
+  function sign(n) { return n > 0 ? 1 : n < 0 ? -1 : 0; }
+
+  /* 1-2. The member is missing; calling it throws. */
+  assert("DEV typeof Math.sign is undefined (spec: function)", String(typeof Math.sign), "undefined");
+  assertThrows("DEV Math.sign(1) throws (spec: returns 1)", function () { return Math.sign(1); });
+
+  /* 3. The documented workaround. */
+  assert("sign(5) === 1", sign(5) === 1, true);
+  assert("sign(-5) === -1", sign(-5) === -1, true);
+  assert("sign(0) === 0", sign(0) === 0, true);
+  assert("sign(0.001) === 1", sign(0.001) === 1, true);
+  assert("sign(-0.001) === -1", sign(-0.001) === -1, true);
+  assert("typeof sign(5) is number", String(typeof sign(5)), "number");
+  </script>
+
+cbrt: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Math.cbrt(x) — MISSING (ES6)
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": Math.cbrt is undefined (spec: a function).
+   *   2. DEVIATION marked "DEV": calling it throws "Object expected: cbrt"
+   *      (spec: returns the cube root).
+   *   3. The documented workaround built on Math.pow(x, 1/3) returns 3 for 27
+   *      and -3 for -27, exactly as the example says — including the sign
+   *      correction the page's helper applies, because Math.pow alone cannot
+   *      take a fractional power of a negative base.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " => " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /**
+   * ES3-safe replacement for Math.cbrt, sign-corrected for negative inputs.
+   * @param {number} x - value to take the cube root of
+   * @returns {number} the real cube root of x
+   */
+  function cbrt(x) { return Math.pow(Math.abs(x), 1 / 3) * (x < 0 ? -1 : 1); }
+
+  /* 1-2. The member is missing; calling it throws. */
+  assert("DEV typeof Math.cbrt is undefined (spec: function)", String(typeof Math.cbrt), "undefined");
+  assertThrows("DEV Math.cbrt(27) throws (spec: returns 3)", function () { return Math.cbrt(27); });
+
+  /* 3. The documented workaround. */
+  assert("Math.pow(27, 1/3) === 3 (non-negative form)", Math.pow(27, 1 / 3) === 3, true);
+  assert("cbrt(27) === 3", cbrt(27) === 3, true);
+  assert("cbrt(27)", String(cbrt(27)), "3");
+  assert("cbrt(-27) === -3", cbrt(-27) === -3, true);
+  assert("cbrt(-27)", String(cbrt(-27)), "-3");
+  assert("cbrt(0) === 0", cbrt(0) === 0, true);
+  assert("cbrt(8) === 2", cbrt(8) === 2, true);
+  </script>
+
+log2: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Math.log2(x) — MISSING (ES6)
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": Math.log2 is undefined (spec: a function).
+   *   2. DEVIATION marked "DEV": calling it throws "Object expected: log2"
+   *      (spec: returns the base-2 logarithm).
+   *   3. The documented workaround Math.log(x) / Math.LN2 gives exactly 3 for
+   *      x = 8, as the example says, and the expected values for further
+   *      powers of two.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " => " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1-2. The member is missing; calling it throws. */
+  assert("DEV typeof Math.log2 is undefined (spec: function)", String(typeof Math.log2), "undefined");
+  assertThrows("DEV Math.log2(8) throws (spec: returns 3)", function () { return Math.log2(8); });
+
+  /* 3. The documented workaround. */
+  assert("Math.log(8) / Math.LN2 === 3", (Math.log(8) / Math.LN2) === 3, true);
+  assert("Math.log(8) / Math.LN2", String(Math.log(8) / Math.LN2), "3");
+  assert("Math.log(1) / Math.LN2 === 0", (Math.log(1) / Math.LN2) === 0, true);
+  assert("Math.log(2) / Math.LN2 === 1", (Math.log(2) / Math.LN2) === 1, true);
+  assert("Math.log(1024) / Math.LN2 rounds to 10", String((Math.log(1024) / Math.LN2).toFixed(10)), "10.0000000000");
+  </script>
+
+log10: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Math.log10(x) — MISSING (ES6)
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": Math.log10 is undefined (spec: a function).
+   *   2. DEVIATION marked "DEV": calling it throws "Object expected: log10"
+   *      (spec: returns the base-10 logarithm).
+   *   3. The documented workaround Math.log(x) / Math.LN10 gives exactly 2 for
+   *      x = 100, as the example says, and the expected values for further
+   *      powers of ten.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " => " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1-2. The member is missing; calling it throws. */
+  assert("DEV typeof Math.log10 is undefined (spec: function)", String(typeof Math.log10), "undefined");
+  assertThrows("DEV Math.log10(100) throws (spec: returns 2)", function () { return Math.log10(100); });
+
+  /* 3. The documented workaround. */
+  assert("Math.log(100) / Math.LN10 === 2", (Math.log(100) / Math.LN10) === 2, true);
+  assert("Math.log(100) / Math.LN10", String(Math.log(100) / Math.LN10), "2");
+  assert("Math.log(1) / Math.LN10 === 0", (Math.log(1) / Math.LN10) === 0, true);
+  assert("Math.log(10) / Math.LN10 === 1", (Math.log(10) / Math.LN10) === 1, true);
+  assert("Math.log(1000) / Math.LN10 rounds to 3", String((Math.log(1000) / Math.LN10).toFixed(10)), "3.0000000000");
+  </script>
+
+hypot: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Math.hypot(a, b) — MISSING (ES6)
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": Math.hypot is undefined (spec: a function).
+   *   2. DEVIATION marked "DEV": calling it throws "Object expected: hypot"
+   *      (spec: returns the Euclidean norm).
+   *   3. The documented workaround Math.sqrt(a*a + b*b) returns 5 for (3, 4),
+   *      exactly as the example says, plus further Pythagorean triples.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " => " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /**
+   * ES3-safe replacement for Math.hypot with two arguments.
+   * @param {number} a - first leg
+   * @param {number} b - second leg
+   * @returns {number} the length of the hypotenuse
+   */
+  function hypot(a, b) { return Math.sqrt(a * a + b * b); }
+
+  /* 1-2. The member is missing; calling it throws. */
+  assert("DEV typeof Math.hypot is undefined (spec: function)", String(typeof Math.hypot), "undefined");
+  assertThrows("DEV Math.hypot(3, 4) throws (spec: returns 5)", function () { return Math.hypot(3, 4); });
+
+  /* 3. The documented workaround. */
+  assert("hypot(3, 4) === 5", hypot(3, 4) === 5, true);
+  assert("hypot(3, 4)", String(hypot(3, 4)), "5");
+  assert("hypot(5, 12) === 13", hypot(5, 12) === 13, true);
+  assert("hypot(0, 0) === 0", hypot(0, 0) === 0, true);
+  assert("hypot(1, 1) === Math.SQRT2", hypot(1, 1) === Math.SQRT2, true);
+  assert("hypot(-3, -4) === 5 (signs cancel)", hypot(-3, -4) === 5, true);
+  </script>
+
+expm1: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Math.expm1(x) — MISSING (ES6)
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": Math.expm1 is undefined (spec: a function).
+   *   2. DEVIATION marked "DEV": calling it throws "Object expected: expm1"
+   *      (spec: returns exp(x) - 1).
+   *   3. The documented workaround Math.exp(x) - 1 gives 0 at x = 0 and
+   *      e - 1 at x = 1 (asserted on a fixed-precision rendering).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " => " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /**
+   * ES3-safe replacement for Math.expm1.
+   * @param {number} x - exponent
+   * @returns {number} e raised to x, minus 1
+   */
+  function expm1(x) { return Math.exp(x) - 1; }
+
+  /* 1-2. The member is missing; calling it throws. */
+  assert("DEV typeof Math.expm1 is undefined (spec: function)", String(typeof Math.expm1), "undefined");
+  assertThrows("DEV Math.expm1(1) throws (spec: returns e - 1)", function () { return Math.expm1(1); });
+
+  /* 3. The documented workaround. */
+  assert("expm1(0) === 0", expm1(0) === 0, true);
+  assert("expm1(1) === Math.E - 1", expm1(1) === Math.E - 1, true);
+  assert("expm1(1).toFixed(10)", String(expm1(1).toFixed(10)), "1.7182818285");
+  assert("typeof expm1(1) is number", String(typeof expm1(1)), "number");
+  </script>
+
+log1p: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Math.log1p(x) — MISSING (ES6)
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": Math.log1p is undefined (spec: a function).
+   *   2. DEVIATION marked "DEV": calling it throws "Object expected: log1p"
+   *      (spec: returns log(1 + x)).
+   *   3. The documented workaround Math.log(1 + x) gives 0 at x = 0 and 1 at
+   *      x = e - 1, i.e. it is the inverse of the expm1 workaround.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " => " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /**
+   * ES3-safe replacement for Math.log1p.
+   * @param {number} x - value added to 1 before taking the logarithm
+   * @returns {number} the natural logarithm of 1 + x
+   */
+  function log1p(x) { return Math.log(1 + x); }
+
+  /* 1-2. The member is missing; calling it throws. */
+  assert("DEV typeof Math.log1p is undefined (spec: function)", String(typeof Math.log1p), "undefined");
+  assertThrows("DEV Math.log1p(1) throws (spec: returns log(2))", function () { return Math.log1p(1); });
+
+  /* 3. The documented workaround. */
+  assert("log1p(0) === 0", log1p(0) === 0, true);
+  assert("log1p(1) === Math.LN2", log1p(1) === Math.LN2, true);
+  assert("log1p(Math.E - 1) rounds to 1", String(log1p(Math.E - 1).toFixed(10)), "1.0000000000");
+  assert("typeof log1p(1) is number", String(typeof log1p(1)), "number");
+  </script>
+
+hyperbolic: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Hyperbolic — Math.sinh / cosh / tanh — MISSING (ES6)
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": all three members are undefined
+   *      (spec: functions).
+   *   2. DEVIATION marked "DEV": calling any of them throws
+   *      "Object expected: <name>" (spec: returns the hyperbolic value).
+   *   3. The documented Math.exp-based workarounds produce the standard
+   *      values at x = 1 (sinh 1.1752011936, cosh 1.5430806348,
+   *      tanh 0.7615941560), are zero/one at x = 0, and satisfy the
+   *      identity cosh^2 - sinh^2 = 1.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " => " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /**
+   * ES3-safe replacement for Math.sinh.
+   * @param {number} x - input value
+   * @returns {number} the hyperbolic sine of x
+   */
+  function sinh(x) { return (Math.exp(x) - Math.exp(-x)) / 2; }
+  /**
+   * ES3-safe replacement for Math.cosh.
+   * @param {number} x - input value
+   * @returns {number} the hyperbolic cosine of x
+   */
+  function cosh(x) { return (Math.exp(x) + Math.exp(-x)) / 2; }
+  /**
+   * ES3-safe replacement for Math.tanh.
+   * @param {number} x - input value
+   * @returns {number} the hyperbolic tangent of x
+   */
+  function tanh(x) { var e = Math.exp(2 * x); return (e - 1) / (e + 1); }
+
+  /* 1. All three members are missing. */
+  assert("DEV typeof Math.sinh is undefined (spec: function)", String(typeof Math.sinh), "undefined");
+  assert("DEV typeof Math.cosh is undefined (spec: function)", String(typeof Math.cosh), "undefined");
+  assert("DEV typeof Math.tanh is undefined (spec: function)", String(typeof Math.tanh), "undefined");
+
+  /* 2. Calling any of them throws. */
+  assertThrows("DEV Math.sinh(1) throws (spec: returns 1.1752011936)", function () { return Math.sinh(1); });
+  assertThrows("DEV Math.cosh(1) throws (spec: returns 1.5430806348)", function () { return Math.cosh(1); });
+  assertThrows("DEV Math.tanh(1) throws (spec: returns 0.7615941560)", function () { return Math.tanh(1); });
+
+  /* 3. The documented Math.exp-based workarounds. */
+  assert("sinh(0) === 0", sinh(0) === 0, true);
+  assert("cosh(0) === 1", cosh(0) === 1, true);
+  assert("tanh(0) === 0", tanh(0) === 0, true);
+  assert("sinh(1).toFixed(10)", String(sinh(1).toFixed(10)), "1.1752011936");
+  assert("cosh(1).toFixed(10)", String(cosh(1).toFixed(10)), "1.5430806348");
+  assert("tanh(1).toFixed(10)", String(tanh(1).toFixed(10)), "0.7615941560");
+  assert("cosh^2 - sinh^2 rounds to 1", String((cosh(1) * cosh(1) - sinh(1) * sinh(1)).toFixed(10)), "1.0000000000");
+  assert("tanh(1) equals sinh(1)/cosh(1)", String((tanh(1) - sinh(1) / cosh(1)).toFixed(10)), "0.0000000000");
+  </script>
+
+inverse-hyperbolic: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Inverse hyperbolic — Math.asinh / acosh / atanh — MISSING (ES6)
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": all three members are undefined
+   *      (spec: functions).
+   *   2. DEVIATION marked "DEV": calling any of them throws
+   *      "Object expected: <name>" (spec: returns the inverse hyperbolic
+   *      value).
+   *   3. The documented Math.log/Math.sqrt workarounds are zero at their
+   *      identity points (asinh(0), acosh(1), atanh(0)) and round-trip
+   *      against the forward hyperbolic helpers.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " => " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /**
+   * ES3-safe replacement for Math.asinh.
+   * @param {number} x - input value
+   * @returns {number} the inverse hyperbolic sine of x
+   */
+  function asinh(x) { return Math.log(x + Math.sqrt(x * x + 1)); }
+  /**
+   * ES3-safe replacement for Math.acosh (x >= 1).
+   * @param {number} x - input value
+   * @returns {number} the inverse hyperbolic cosine of x
+   */
+  function acosh(x) { return Math.log(x + Math.sqrt(x * x - 1)); }
+  /**
+   * ES3-safe replacement for Math.atanh (-1 < x < 1).
+   * @param {number} x - input value
+   * @returns {number} the inverse hyperbolic tangent of x
+   */
+  function atanh(x) { return Math.log((1 + x) / (1 - x)) / 2; }
+
+  /* 1. All three members are missing. */
+  assert("DEV typeof Math.asinh is undefined (spec: function)", String(typeof Math.asinh), "undefined");
+  assert("DEV typeof Math.acosh is undefined (spec: function)", String(typeof Math.acosh), "undefined");
+  assert("DEV typeof Math.atanh is undefined (spec: function)", String(typeof Math.atanh), "undefined");
+
+  /* 2. Calling any of them throws. */
+  assertThrows("DEV Math.asinh(1) throws (spec: returns 0.8813735870)", function () { return Math.asinh(1); });
+  assertThrows("DEV Math.acosh(1) throws (spec: returns 0)", function () { return Math.acosh(1); });
+  assertThrows("DEV Math.atanh(0) throws (spec: returns 0)", function () { return Math.atanh(0); });
+
+  /* 3. The documented workarounds at their identity points. */
+  assert("asinh(0) === 0", asinh(0) === 0, true);
+  assert("acosh(1) === 0", acosh(1) === 0, true);
+  assert("atanh(0) === 0", atanh(0) === 0, true);
+  assert("asinh(1).toFixed(10)", String(asinh(1).toFixed(10)), "0.8813735870");
+  assert("acosh(2).toFixed(10)", String(acosh(2).toFixed(10)), "1.3169578969");
+  assert("atanh(0.5).toFixed(10)", String(atanh(0.5).toFixed(10)), "0.5493061443");
+
+  /* 4. Round-trip against the forward hyperbolic helpers. */
+  var sinh1 = (Math.exp(1) - Math.exp(-1)) / 2;
+  assert("asinh(sinh(1)) rounds to 1", String(asinh(sinh1).toFixed(10)), "1.0000000000");
+  var cosh1 = (Math.exp(1) + Math.exp(-1)) / 2;
+  assert("acosh(cosh(1)) rounds to 1", String(acosh(cosh1).toFixed(10)), "1.0000000000");
+  var e2 = Math.exp(2);
+  var tanh1 = (e2 - 1) / (e2 + 1);
+  assert("atanh(tanh(1)) rounds to 1", String(atanh(tanh1).toFixed(10)), "1.0000000000");
+  </script>
+
+clz32: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Math.clz32(x) — MISSING (ES6)
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": Math.clz32 is undefined (spec: a function).
+   *   2. DEVIATION marked "DEV": calling it throws "Object expected: clz32"
+   *      (spec: returns the count of leading zero bits).
+   *   3. The documented manual leading-zero counter returns the spec values
+   *      for the boundary cases: 32 for 0, 31 for 1, 0 for 0x80000000, and
+   *      the expected counts for intermediate powers of two.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " => " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /**
+   * ES3-safe replacement for Math.clz32 — count leading zero bits of a
+   * 32-bit unsigned value.
+   * @param {number} x - value to inspect
+   * @returns {number} the number of leading zero bits (0-32)
+   */
+  function clz32(x) {
+      x = x >>> 0;
+      if (x === 0) { return 32; }
+      var n = 0;
+      while (x <= 0x7fffffff) { n++; x = x << 1; }
+      return n;
+  }
+
+  /* 1-2. The member is missing; calling it throws. */
+  assert("DEV typeof Math.clz32 is undefined (spec: function)", String(typeof Math.clz32), "undefined");
+  assertThrows("DEV Math.clz32(1) throws (spec: returns 31)", function () { return Math.clz32(1); });
+
+  /* 3. The documented manual counter. */
+  assert("clz32(0) === 32", clz32(0) === 32, true);
+  assert("clz32(1) === 31", clz32(1) === 31, true);
+  assert("clz32(2) === 30", clz32(2) === 30, true);
+  assert("clz32(0x80000000) === 0", clz32(0x80000000) === 0, true);
+  assert("clz32(0xffff) === 16", clz32(0xffff) === 16, true);
+  assert("clz32(0x10000) === 15", clz32(0x10000) === 15, true);
+  assert("typeof clz32(1) is number", String(typeof clz32(1)), "number");
+  </script>
+
+fround: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Math.fround(x) — MISSING (ES6)
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": Math.fround is undefined (spec: a function).
+   *   2. DEVIATION marked "DEV": calling it throws "Object expected: fround"
+   *      (spec: returns the nearest 32-bit float).
+   *   3. The page's stated reason there is no ES3-safe equivalent: typed
+   *      arrays are absent, so Float32Array cannot be used to round-trip a
+   *      double through single precision.
+   *   4. The recommendation "keep values as doubles" is viable — arithmetic
+   *      on plain numbers keeps full double precision.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " => " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1-2. The member is missing; calling it throws. */
+  assert("DEV typeof Math.fround is undefined (spec: function)", String(typeof Math.fround), "undefined");
+  assertThrows("DEV Math.fround(1.5) throws (spec: returns 1.5)", function () { return Math.fround(1.5); });
+
+  /* 3. No typed arrays, hence no single-precision round-trip. */
+  assert("typeof Float32Array is undefined", String(typeof Float32Array), "undefined");
+  assertThrows("new Float32Array(1) throws", function () { return new Float32Array(1); });
+
+  /* 4. Doubles keep full precision, as recommended. */
+  assert("1.1 stays a number", String(typeof 1.1), "number");
+  assert("Math.PI keeps double precision", Math.PI === 3.141592653589793, true);
+  assert("Math.PI.toFixed(13)", String(Math.PI.toFixed(13)), "3.1415926535898");
+  </script>
+
+imul: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Math.imul(a, b) — MISSING (ES6)
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": Math.imul is undefined (spec: a function).
+   *   2. DEVIATION marked "DEV": calling it throws "Object expected: imul"
+   *      (spec: returns the 32-bit integer product).
+   *   3. The documented bitwise emulation returns the correct product for
+   *      operands whose true product fits in a signed 32-bit integer, and
+   *      the bitwise primitives it relies on (>>>, &, |) behave as expected.
+   *
+   * NOT ASSERTED: the emulation's behaviour for operands whose product
+   * OVERFLOWS 32 bits (e.g. imul(0xffffffff, 5), which the spec defines as
+   * -5). This engine's `<<` operator does not truncate its result to 32 bits,
+   * so the helper returns an out-of-range value there. That is a deviation of
+   * the bitwise SHIFT operator, not of the Math object, so it is recorded
+   * here as a known boundary rather than asserted as a Math claim.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " => " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /**
+   * Bitwise emulation of Math.imul for products that fit in 32 bits.
+   * @param {number} a - first operand
+   * @param {number} b - second operand
+   * @returns {number} the signed 32-bit integer product
+   */
+  function imul(a, b) {
+      var aHi = (a >>> 16) & 0xffff, aLo = a & 0xffff;
+      var bHi = (b >>> 16) & 0xffff, bLo = b & 0xffff;
+      return ((aLo * bLo) + (((aHi * bLo + aLo * bHi) << 16) >>> 0)) | 0;
+  }
+
+  /* 1-2. The member is missing; calling it throws. */
+  assert("DEV typeof Math.imul is undefined (spec: function)", String(typeof Math.imul), "undefined");
+  assertThrows("DEV Math.imul(3, 4) throws (spec: returns 12)", function () { return Math.imul(3, 4); });
+
+  /* 3. The documented emulation, within the 32-bit range. */
+  assert("imul(3, 4) === 12", imul(3, 4) === 12, true);
+  assert("imul(3, 4)", String(imul(3, 4)), "12");
+  assert("imul(0, 7) === 0", imul(0, 7) === 0, true);
+  assert("imul(1, 1) === 1", imul(1, 1) === 1, true);
+  assert("imul(1000, 1000) === 1000000", imul(1000, 1000) === 1000000, true);
+  assert("typeof imul(3, 4) is number", String(typeof imul(3, 4)), "number");
+
+  /* 4. The bitwise primitives the emulation relies on. */
+  assert("(0x12345678 >>> 16) & 0xffff === 0x1234", ((0x12345678 >>> 16) & 0xffff) === 0x1234, true);
+  assert("0x12345678 & 0xffff === 0x5678", (0x12345678 & 0xffff) === 0x5678, true);
+  assert("12 | 0 === 12", (12 | 0) === 12, true);
+  </script>

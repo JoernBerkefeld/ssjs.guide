@@ -4,14 +4,15 @@ title: Internationalization
 parent: ECMAScript Built-ins
 parent_url: /ecmascript-builtins/
 permalink: /ecmascript-builtins/internationalization/
-description: The Intl object and all its formatters are not available in SSJS, and the toLocaleString / toLocaleUpperCase family ignore locale arguments — they behave as plain, non-localized no-ops. Use AMPscript FormatNumber / FormatDate for real locale formatting.
+description: The Intl object and all its formatters are not available in SSJS, and the toLocaleString / toLocaleUpperCase family ignore locale arguments — they behave as plain, non-localized no-ops. Use AMPscript FormatNumber / FormatDate via TreatAsContent for real locale formatting.
 verification: verified
+test_scripts: complete
 differs_from_docs: true
 ---
 
 **The `Intl` object is not available in SSJS, and the `toLocale*` methods do not actually localize.** The SFMC server-side JavaScript engine (Jint) does not expose the ECMAScript Internationalization API: `Intl` is `undefined`, so none of its formatters (`Intl.NumberFormat`, `Intl.DateTimeFormat`, `Intl.Collator`, …) exist. The `toLocaleString`, `toLocaleUpperCase`, `toLocaleLowerCase`, `toLocaleDateString`, and related methods **do** exist, but they **ignore any locale argument** and fall back to a fixed, non-localized representation.
 
-For real locale-aware number and date formatting, use AMPscript's `FormatNumber` and `FormatDate` (callable from SSJS via `Platform.Function.FormatNumber` / `Platform.Function.FormatDate`).
+For real locale-aware number and date formatting, use AMPscript's `FormatNumber` and `FormatDate` through `Platform.Function.TreatAsContent`. The Core `Format(value, format, dataType, culture)` function does exist, but it **ignores the culture argument** and always formats with the invariant/US pattern.
 
 ## Status legend
 
@@ -40,9 +41,21 @@ For locale-aware formatting, use AMPscript from SSJS:
 
 ```javascript
 // Locale-aware number formatting (instead of Intl.NumberFormat)
-var formatted = Platform.Function.FormatNumber(1234567.89, "N", "de-DE");
+var formatted = Platform.Function.TreatAsContent('%%=FormatNumber(1234567.89, "N", "de-DE")=%%');
 Write(formatted); // "1.234.567,89"
+
+// Locale-aware date formatting (instead of Intl.DateTimeFormat)
+var dateStr = Platform.Function.TreatAsContent('%%=FormatDate("2020-01-15", "D", "", "de-DE")=%%');
+Write(dateStr); // "15.01.2020"
 ```
+
+The Core `Format` function is **not** a substitute — it accepts a culture argument but ignores it:
+
+```javascript
+Write(Format(1234567.89, "N", "Number", "de-DE")); // "1,234,567.89" — culture ignored
+```
+
+{% include test-script.html bundle="ecmascript-builtins--internationalization" chapter="intl" %}
 
 ## toLocaleString family {#tolocalestring-family}
 
@@ -61,7 +74,9 @@ var d = new Date(2020, 0, 15);
 Write(d.toLocaleDateString());                // "Wed, 15 Jan 2020"
 ```
 
-Because the locale argument is silently ignored, do **not** rely on `toLocaleString(locale)` to produce grouped numbers, localized month names, or locale-specific date order. Use `Platform.Function.FormatNumber` / `Platform.Function.FormatDate` with an explicit culture code instead.
+Because the locale argument is silently ignored, do **not** rely on `toLocaleString(locale)` to produce grouped numbers, localized month names, or locale-specific date order. Use AMPscript's `FormatNumber` / `FormatDate` with an explicit culture code via `Platform.Function.TreatAsContent` instead.
+
+{% include test-script.html bundle="ecmascript-builtins--internationalization" chapter="tolocalestring-family" %}
 
 ## See Also
 

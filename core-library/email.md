@@ -243,6 +243,5 @@ Write(results.Task.ResultMessage);
 <h4>See Also</h4>
 <ul>
   <li><a href="/core-library/triggeredsend/">TriggeredSend</a></li>
-  <li><a href="/platform-functions/triggeredsend/">Platform.Function.TriggeredSend</a></li>
 </ul>
 </div>

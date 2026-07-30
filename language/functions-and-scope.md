@@ -137,7 +137,8 @@ function DEHelper(deName) {
     }
 
     function count() {
-        return Platform.Function.DataExtensionRowCount(deName);
+        // no Platform function returns a row count — retrieve and measure instead
+        return DataExtension.Init(deName).Rows.Retrieve().length;
     }
 }
 

@@ -59,7 +59,7 @@ var person = {
 };
 
 var json = Platform.Function.Stringify(person);
-Platform.Function.Write(json);
+Platform.Response.Write(json);
 // {"name":"Jane Smith","email":"jane@example.com","score":95}
 ```
 
@@ -84,7 +84,7 @@ Platform.Function.InsertData(
 
 ```javascript
 var rows = Platform.Function.LookupRows("MyDE", "Status", "active");
-Platform.Function.Write("<pre>" + Platform.Function.Stringify(rows) + "</pre>");
+Platform.Response.Write("<pre>" + Platform.Function.Stringify(rows) + "</pre>");
 ```
 
 ## See Also
@@ -95,6 +95,7 @@ Platform.Function.Write("<pre>" + Platform.Function.Stringify(rows) + "</pre>");
   <li><a href="/core-library/stringify/">Stringify() — bare-name Core form (requires Platform.Load)</a></li>
   <li><a href="/ecmascript-builtins/string-methods/#string-constructor">String()</a></li>
   <li><a href="/platform-functions/parsejson/">Platform.Function.ParseJSON</a></li>
-  <li><a href="/platform-functions/write/">Platform.Function.Write</a></li>
+  <li><a href="/core-library/write/">Write() — Core output function</a></li>
+  <li><a href="/platform-objects/platform-response/#write">Platform.Response.Write()</a></li>
 </ul>
 </div>

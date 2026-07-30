@@ -1,0 +1,145 @@
+# Test scripts for /ecmascript-builtins/bigint/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — here the
+# claims are all ABSENCE claims: BigInt is an ES2020 feature and the SFMC
+# Jint engine predates it.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+bigint: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: BigInt(value) — ❌ Missing (ES2020)
+   *
+   * Proves:
+   *   1. BigInt is NOT defined: typeof BigInt === "undefined".
+   *   2. Calling BigInt(10) throws ("Object expected: BigInt").
+   *   3. BigInt is absent from the global object (no property lookup).
+   *   4. Consequence documented by the chapter: all numbers are IEEE-754
+   *      doubles, so integers beyond 2^53-1 (9007199254740991) lose
+   *      precision.
+   *   5. The recommended workaround works: keeping the value as a STRING
+   *      preserves every digit exactly, and digit-by-digit arithmetic on
+   *      that string produces an exact result.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. BigInt is not defined. */
+  assert("typeof BigInt is undefined", typeof BigInt, "undefined");
+  assert("typeof BigInt === 'undefined' is true", (typeof BigInt === "undefined"), "true");
+
+  /* 2. Calling it throws. */
+  assertThrows("BigInt(10) throws", function () { return BigInt(10); });
+
+  /* 3. Not reachable as a global property either. */
+  var g = this;
+  assert("global BigInt property is undefined", typeof g["BigInt"], "undefined");
+
+  /* 4. Numbers are IEEE-754 doubles -> precision loss past 2^53-1. */
+  /* NOTE: String() renders large numbers in exponential form in this engine,
+   * so precision is compared numerically rather than by stringifying. */
+  var maxSafe = 9007199254740991;
+  assert("2^53-1 is exact", (maxSafe - 9007199254740990), 1);
+  assert("2^53-1 + 2 rounds down to 2^53", ((maxSafe + 2) === 9007199254740992), "true");
+  assert("(2^53-1 + 1) === (2^53-1 + 2)", ((maxSafe + 1) === (maxSafe + 2)), "true");
+
+  /* 5. Workaround — keep the value as a STRING; every digit survives. */
+  var big = "9007199254740993";
+  assert("string keeps all digits", big, "9007199254740993");
+  assert("string length preserved", big.length, 16);
+  assert("DEV Number(big) loses the last digit (BigInt would keep it)", (Number(big) === 9007199254740992), "true");
+  assert("DEV two distinct integers collapse to one double (BigInt would keep them apart)", (Number("9007199254740993") === Number("9007199254740992")), "true");
+
+  /* 5b. Digit-by-digit string addition is exact where doubles are not. */
+  function addStrings(a, b) {
+      var res = "", carry = 0, i = a.length - 1, j = b.length - 1;
+      while (i >= 0 || j >= 0 || carry > 0) {
+          var da = i >= 0 ? parseInt(a.charAt(i), 10) : 0;
+          var db = j >= 0 ? parseInt(b.charAt(j), 10) : 0;
+          var sum = da + db + carry;
+          res = String(sum % 10) + res;
+          carry = (sum - (sum % 10)) / 10;
+          i = i - 1;
+          j = j - 1;
+      }
+      return res;
+  }
+  assert("string addition is exact", addStrings("9007199254740993", "1"), "9007199254740994");
+  assert("string addition carries", addStrings("999", "1"), "1000");
+  </script>
+
+bigint-literal: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: 10n literal — ❌ Missing (ES2020)
+   *
+   * The BigInt numeric literal suffix cannot appear in a script that is
+   * parsed at all — writing `10n` inline would make THIS script a syntax
+   * error. The claim is therefore proved by handing the source text to the
+   * engine's own parser via eval() and observing that it refuses to parse.
+   *
+   * Proves:
+   *   1. eval() itself works, so a parse failure is about the input, not eval.
+   *   2. `10n` is a SYNTAX ERROR — the parser rejects the `n` suffix.
+   *   3. The same holds for other BigInt literal forms (0n, 9007199254740993n).
+   *   4. Dropping the suffix parses fine, isolating `n` as the cause.
+   *   5. There is no literal form for large exact integers: the plain numeric
+   *      literal silently loses precision past 2^53-1.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. eval() is available, so parse failures below are about the source. */
+  assert("typeof eval is function", typeof eval, "function");
+  assert("eval('1+1') works", eval("1+1"), 2);
+
+  /* 2. The BigInt literal suffix is not part of the grammar. */
+  assertThrows("DEV eval('10n') is a syntax error (ES2020: BigInt 10n)", function () { return eval("10n"); });
+
+  /* 3. Same for every other BigInt literal form. */
+  assertThrows("DEV eval('0n') is a syntax error (ES2020: BigInt 0n)", function () { return eval("0n"); });
+  assertThrows("DEV eval('9007199254740993n') is a syntax error (ES2020: exact BigInt)", function () { return eval("9007199254740993n"); });
+
+  /* 4. Without the suffix the very same text parses — the `n` is the cause. */
+  assert("eval('10') parses fine", eval("10"), 10);
+  assert("eval('9007199254740993') parses fine", (typeof eval("9007199254740993")), "number");
+
+  /* 5. No literal form keeps large integers exact. */
+  assert("DEV literal 9007199254740993 collapses to 2^53 (BigInt would keep it)", (eval("9007199254740993") === 9007199254740992), "true");
+  </script>

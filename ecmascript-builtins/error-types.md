@@ -6,6 +6,7 @@ parent_url: /ecmascript-builtins/
 permalink: /ecmascript-builtins/error-types/
 description: Which JavaScript error constructors exist in the SFMC engine — the seven legacy Error subtypes (Error, EvalError, RangeError, ReferenceError, SyntaxError, TypeError, URIError) are present, while the ES2021+ AggregateError, SuppressedError, and the non-standard InternalError are missing.
 verification: verified
+test_scripts: complete
 differs_from_docs: true
 ---
 
@@ -49,6 +50,8 @@ All seven present constructors (`Error`, `EvalError`, `RangeError`, `ReferenceEr
 
 {% include differs-from-mdn.html content="In standard JavaScript `new TypeError(\"msg\").message` returns `\"msg\"`, but in the SFMC engine `new SubType(\"msg\")` leaves `.message` undefined. Call-form `SubType(\"msg\")` does set `.message`. After `new`, recover the text with `String(err)` or `(\"\" + err)`." %}
 
+{% include test-script.html bundle="ecmascript-builtins--error-types" chapter="shared-behaviour" label="Show test script — shared subtype behaviour, message split and instanceof" %}
+
 ## EvalError {#evalerror}
 
 `(ES3)` — ✅ Present. Constructible; shares the [common subtype behaviour](#shared-behaviour-of-the-present-subtypes). `.name` is `"EvalError"`.
@@ -58,6 +61,8 @@ var e = new EvalError("bad eval");
 Write(e.name);       // "EvalError"
 Write(String(e));    // "bad eval"  (e.message is undefined after new)
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--error-types" chapter="evalerror" %}
 
 ## RangeError {#rangeerror}
 
@@ -69,6 +74,8 @@ Write(e.name);       // "RangeError"
 Write(String(e));    // "out of range"
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--error-types" chapter="rangeerror" %}
+
 ## ReferenceError {#referenceerror}
 
 `(ES3)` — ✅ Present. Constructible; `.name` is `"ReferenceError"`.
@@ -78,6 +85,8 @@ var e = new ReferenceError("missing var");
 Write(e.name);       // "ReferenceError"
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--error-types" chapter="referenceerror" %}
+
 ## SyntaxError {#syntaxerror}
 
 `(ES3)` — ✅ Present. Constructible; `.name` is `"SyntaxError"`.
@@ -86,6 +95,8 @@ Write(e.name);       // "ReferenceError"
 var e = new SyntaxError("bad token");
 Write(e.name);       // "SyntaxError"
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--error-types" chapter="syntaxerror" %}
 
 ## TypeError {#typeerror}
 
@@ -105,6 +116,8 @@ try {
 }
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--error-types" chapter="typeerror" %}
+
 ## URIError {#urierror}
 
 `(ES3)` — ✅ Present. Constructible; `.name` is `"URIError"`. Note that the URI functions themselves (`decodeURI` etc.) do not throw `URIError` on malformed input in this engine — see [Global Functions](/ecmascript-builtins/global-functions/).
@@ -113,6 +126,8 @@ try {
 var e = new URIError("bad uri");
 Write(e.name);       // "URIError"
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--error-types" chapter="urierror" %}
 
 ## Missing error types {#missing-error-types}
 
@@ -129,6 +144,8 @@ The following newer or non-standard error constructors are **not defined** in th
 ### InternalError {#internalerror}
 
 `(Non-standard)` — ❌ Missing. `InternalError` is a Firefox-only, non-standard error type and is **not defined** in the SFMC engine — `typeof InternalError === "undefined"`.
+
+{% include test-script.html bundle="ecmascript-builtins--error-types" chapter="missing-error-types" %}
 
 ## See Also
 

@@ -6,11 +6,12 @@ parent_url: /ecmascript-builtins/
 permalink: /ecmascript-builtins/typed-arrays/
 description: Typed arrays and the binary-buffer objects — ArrayBuffer, DataView, the Int/Uint/Float TypedArray views, SharedArrayBuffer, and Atomics — are not available in SSJS. The SFMC Jint engine predates ES2015, so every one is undefined.
 verification: verified
+test_scripts: complete
 ---
 
 **Typed arrays and binary buffers are not available in SSJS.** The SFMC server-side JavaScript engine (Jint) implements an ES3/ES5-era dialect and predates ES2015, so `ArrayBuffer`, `DataView`, all the integer/float `TypedArray` views, `SharedArrayBuffer`, and `Atomics` are entirely absent. Each is `undefined`, so referencing it yields `undefined` and constructing it (`new Uint8Array()`) fails because the constructor does not exist.
 
-There is no way to work with raw binary data as a byte buffer in SSJS. When you need byte-level handling, either move the work into an external service reached over `Platform.Function.HTTPRequest` / the `Script.Util.HttpRequest` API, or use `Platform.Function.Base64Encode` / `Base64Decode` to move opaque binary payloads around as strings.
+There is no way to work with raw binary data as a byte buffer in SSJS. When you need byte-level handling, either move the work into an external service reached over `HTTP.Get` / `HTTP.Post` or the `Script.Util.HttpRequest` API, or use `Platform.Function.Base64Encode` / `Base64Decode` to move opaque binary payloads around as strings.
 
 ## Status legend
 
@@ -45,17 +46,25 @@ There is no way to work with raw binary data as a byte buffer in SSJS. When you 
 
 `(ES6)` — ❌ Missing. `ArrayBuffer` is **not defined** — `typeof ArrayBuffer === "undefined"`. There is no fixed-length raw byte buffer in this engine. Use a regular `Array` of numbers if you only need an in-memory list, or Base64 strings for binary payloads.
 
+{% include test-script.html bundle="ecmascript-builtins--typed-arrays" chapter="arraybuffer" %}
+
 ## SharedArrayBuffer {#sharedarraybuffer}
 
 `(ES2017)` — ❌ Missing. `SharedArrayBuffer` is **not defined** — `typeof SharedArrayBuffer === "undefined"`. The SSJS engine runs synchronously in a single thread, so there is no shared-memory concept to build on.
+
+{% include test-script.html bundle="ecmascript-builtins--typed-arrays" chapter="sharedarraybuffer" %}
 
 ## DataView {#dataview}
 
 `(ES6)` — ❌ Missing. `DataView` is **not defined** — `typeof DataView === "undefined"`. With no `ArrayBuffer`, there is nothing for a `DataView` to read or write.
 
+{% include test-script.html bundle="ecmascript-builtins--typed-arrays" chapter="dataview" %}
+
 ## Atomics {#atomics}
 
 `(ES2017)` — ❌ Missing. `Atomics` is **not defined** — `typeof Atomics === "undefined"`. Atomic operations only apply to shared memory, which does not exist here.
+
+{% include test-script.html bundle="ecmascript-builtins--typed-arrays" chapter="atomics" %}
 
 ## TypedArray views {#typedarray-views}
 
@@ -73,6 +82,8 @@ Write(bytes[0]); // 255 (no 0–255 clamping — you must enforce ranges yoursel
 ```
 
 A plain array does **not** enforce element types or byte widths, and `BigInt64Array` / `BigUint64Array` additionally require `BigInt`, which is also unavailable.
+
+{% include test-script.html bundle="ecmascript-builtins--typed-arrays" chapter="typedarray-views" %}
 
 ## See Also
 

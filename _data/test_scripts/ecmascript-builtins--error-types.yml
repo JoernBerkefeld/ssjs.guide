@@ -1,0 +1,425 @@
+# Test scripts for /ecmascript-builtins/error-types/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the ECMAScript spec / MDN.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+shared-behaviour: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Shared behaviour of the present subtypes
+   *
+   * Proves:
+   *   1. All seven legacy Error constructors exist (typeof "function").
+   *   2. new SubType("msg") and SubType("msg") both return an object.
+   *   3. .name correctly reflects the subtype for each constructor.
+   *   4. DEVIATION "DEV": new SubType("msg") leaves .message undefined
+   *      (MDN: new TypeError("msg").message === "msg").
+   *   5. The documented workarounds after new: String(err) and ("" + err)
+   *      recover the text; err.toString() returns "<name>: undefined".
+   *   6. Call-form SubType("msg") DOES set .message.
+   *   7. .description is unset on JS-constructed subtypes.
+   *   8. Stringify(err) is "{}" after new, and {"message":"..."} for call-form.
+   *   9. DEVIATION "DEV": instanceof SubType and instanceof Error are BOTH
+   *      false (MDN: a caught error is an instance of its constructor and of
+   *      Error). Detect the type via err.name instead.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  /* 1. All seven legacy constructors are present. */
+  assert("typeof Error is function", typeof Error, "function");
+  assert("typeof EvalError is function", typeof EvalError, "function");
+  assert("typeof RangeError is function", typeof RangeError, "function");
+  assert("typeof ReferenceError is function", typeof ReferenceError, "function");
+  assert("typeof SyntaxError is function", typeof SyntaxError, "function");
+  assert("typeof TypeError is function", typeof TypeError, "function");
+  assert("typeof URIError is function", typeof URIError, "function");
+
+  /* 2. Both construction forms return an object. */
+  var ne = new TypeError("msg");
+  assert("typeof new TypeError('msg') is object", typeof ne, "object");
+  var ce = TypeError("msg");
+  assert("typeof TypeError('msg') (no new) is object", typeof ce, "object");
+
+  /* 3. .name reflects the subtype. */
+  var e1 = new Error("m");
+  assert("new Error().name is Error", e1.name, "Error");
+  var e2 = new EvalError("m");
+  assert("new EvalError().name is EvalError", e2.name, "EvalError");
+  var e3 = new RangeError("m");
+  assert("new RangeError().name is RangeError", e3.name, "RangeError");
+  var e4 = new ReferenceError("m");
+  assert("new ReferenceError().name is ReferenceError", e4.name, "ReferenceError");
+  var e5 = new SyntaxError("m");
+  assert("new SyntaxError().name is SyntaxError", e5.name, "SyntaxError");
+  var e6 = new TypeError("m");
+  assert("new TypeError().name is TypeError", e6.name, "TypeError");
+  var e7 = new URIError("m");
+  assert("new URIError().name is URIError", e7.name, "URIError");
+
+  /* 4. DEVIATION — new SubType("msg") leaves .message undefined. */
+  assert("DEV typeof new TypeError('msg').message is undefined (MDN: 'msg')", typeof ne.message, "undefined");
+  assert("DEV typeof new RangeError('msg').message is undefined (MDN: 'msg')", typeof e3.message, "undefined");
+
+  /* 5. Documented recovery paths after new. */
+  assert("String(new TypeError('msg')) recovers the text", String(ne), "msg");
+  assert("('' + new TypeError('msg')) recovers the text", "" + ne, "msg");
+  assert("new TypeError('msg').toString() is '<name>: undefined'", ne.toString(), "TypeError: undefined");
+  assert("new RangeError('msg').toString() is '<name>: undefined'", e3.toString(), "RangeError: undefined");
+
+  /* 6. Call-form DOES set .message. */
+  assert("TypeError('msg').message is 'msg'", ce.message, "msg");
+  var ce2 = RangeError("boom");
+  assert("RangeError('boom').message is 'boom'", ce2.message, "boom");
+
+  /* 7. .description is unset on JS-constructed subtypes. */
+  assert("typeof new TypeError('msg').description is undefined", typeof ne.description, "undefined");
+  assert("typeof TypeError('msg').description is undefined", typeof ce.description, "undefined");
+
+  /* 8. Stringify shape differs by construction form. */
+  assert("Stringify(new TypeError('msg')) is {}", Stringify(ne), "{}");
+  assert("Stringify(TypeError('msg')) carries the message", Stringify(ce), '{"message":"msg"}');
+
+  /* 9. DEVIATION — instanceof is false for both the subtype and Error. */
+  var caught = null;
+  try { throw new RangeError("thrown"); } catch (ex) { caught = ex; }
+  assert("caught error name survives the throw", caught.name, "RangeError");
+  assert("DEV caught instanceof RangeError is false (MDN: true)", caught instanceof RangeError, "false");
+  assert("DEV caught instanceof Error is false (MDN: true)", caught instanceof Error, "false");
+  assert("DEV new TypeError() instanceof TypeError is false (MDN: true)", ne instanceof TypeError, "false");
+  assert("DEV new TypeError() instanceof Error is false (MDN: true)", ne instanceof Error, "false");
+  assert("workaround: detect via err.name", caught.name === "RangeError", "true");
+  </script>
+
+evalerror: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: EvalError
+   *
+   * Proves:
+   *   1. EvalError is present and constructible (typeof "function").
+   *   2. new EvalError("bad eval").name is "EvalError".
+   *   3. String(e) is "bad eval" — the page's documented recovery, because
+   *      e.message is undefined after new.
+   *   4. The chapter's cross-reference to the shared behaviour holds for this
+   *      subtype: call-form sets .message, instanceof is false (DEV — MDN
+   *      says a new EvalError IS an instance of EvalError and Error).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  assert("typeof EvalError is function", typeof EvalError, "function");
+  var e = new EvalError("bad eval");
+  assert("typeof new EvalError(...) is object", typeof e, "object");
+  assert("e.name is 'EvalError'", e.name, "EvalError");
+  assert("String(e) is 'bad eval'", String(e), "bad eval");
+  assert("DEV e.message is undefined after new (MDN: 'bad eval')", typeof e.message, "undefined");
+  assert("e.toString() is 'EvalError: undefined'", e.toString(), "EvalError: undefined");
+  var c = EvalError("bad eval");
+  assert("call-form EvalError('bad eval').message is set", c.message, "bad eval");
+  assert("call-form name is still 'EvalError'", c.name, "EvalError");
+  assert("DEV e instanceof EvalError is false (MDN: true)", e instanceof EvalError, "false");
+  assert("DEV e instanceof Error is false (MDN: true)", e instanceof Error, "false");
+  </script>
+
+rangeerror: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: RangeError
+   *
+   * Proves:
+   *   1. RangeError is present and constructible (typeof "function").
+   *   2. new RangeError("out of range").name is "RangeError".
+   *   3. String(e) is "out of range".
+   *   4. Shared behaviour holds: .message undefined after new (DEV — MDN says
+   *      "out of range"), call-form sets .message, instanceof false (DEV).
+   *   5. A thrown RangeError is catchable and keeps its .name.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  assert("typeof RangeError is function", typeof RangeError, "function");
+  var e = new RangeError("out of range");
+  assert("typeof new RangeError(...) is object", typeof e, "object");
+  assert("e.name is 'RangeError'", e.name, "RangeError");
+  assert("String(e) is 'out of range'", String(e), "out of range");
+  assert("DEV e.message is undefined after new (MDN: 'out of range')", typeof e.message, "undefined");
+  assert("e.toString() is 'RangeError: undefined'", e.toString(), "RangeError: undefined");
+  var c = RangeError("out of range");
+  assert("call-form RangeError(...).message is set", c.message, "out of range");
+  assert("DEV e instanceof RangeError is false (MDN: true)", e instanceof RangeError, "false");
+  assert("DEV e instanceof Error is false (MDN: true)", e instanceof Error, "false");
+  assertThrows("a new RangeError is throwable", function () { throw new RangeError("boom"); });
+  var caught = null;
+  try { throw new RangeError("boom"); } catch (ex) { caught = ex; }
+  assert("caught.name is 'RangeError'", caught.name, "RangeError");
+  </script>
+
+referenceerror: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: ReferenceError
+   *
+   * Proves:
+   *   1. ReferenceError is present and constructible (typeof "function").
+   *   2. new ReferenceError("missing var").name is "ReferenceError".
+   *   3. Shared behaviour holds: String(e) recovers the text, .message is
+   *      undefined after new (DEV — MDN: "missing var"), call-form sets
+   *      .message, instanceof is false (DEV).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  assert("typeof ReferenceError is function", typeof ReferenceError, "function");
+  var e = new ReferenceError("missing var");
+  assert("typeof new ReferenceError(...) is object", typeof e, "object");
+  assert("e.name is 'ReferenceError'", e.name, "ReferenceError");
+  assert("String(e) is 'missing var'", String(e), "missing var");
+  assert("DEV e.message is undefined after new (MDN: 'missing var')", typeof e.message, "undefined");
+  assert("e.toString() is 'ReferenceError: undefined'", e.toString(), "ReferenceError: undefined");
+  var c = ReferenceError("missing var");
+  assert("call-form ReferenceError(...).message is set", c.message, "missing var");
+  assert("DEV e instanceof ReferenceError is false (MDN: true)", e instanceof ReferenceError, "false");
+  assert("DEV e instanceof Error is false (MDN: true)", e instanceof Error, "false");
+  </script>
+
+syntaxerror: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: SyntaxError
+   *
+   * Proves:
+   *   1. SyntaxError is present and constructible (typeof "function").
+   *   2. new SyntaxError("bad token").name is "SyntaxError".
+   *   3. Shared behaviour holds: String(e) recovers the text, .message is
+   *      undefined after new (DEV — MDN: "bad token"), call-form sets
+   *      .message, instanceof is false (DEV).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  assert("typeof SyntaxError is function", typeof SyntaxError, "function");
+  var e = new SyntaxError("bad token");
+  assert("typeof new SyntaxError(...) is object", typeof e, "object");
+  assert("e.name is 'SyntaxError'", e.name, "SyntaxError");
+  assert("String(e) is 'bad token'", String(e), "bad token");
+  assert("DEV e.message is undefined after new (MDN: 'bad token')", typeof e.message, "undefined");
+  assert("e.toString() is 'SyntaxError: undefined'", e.toString(), "SyntaxError: undefined");
+  var c = SyntaxError("bad token");
+  assert("call-form SyntaxError(...).message is set", c.message, "bad token");
+  assert("DEV e instanceof SyntaxError is false (MDN: true)", e instanceof SyntaxError, "false");
+  assert("DEV e instanceof Error is false (MDN: true)", e instanceof Error, "false");
+  </script>
+
+typeerror: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: TypeError
+   *
+   * Proves:
+   *   1. TypeError is present and constructible (typeof "function").
+   *   2. .name is "TypeError".
+   *   3. The chapter's guard-clause example: throwing new TypeError from a
+   *      helper is catchable and prints "TypeError: expected a string"
+   *      via e.name + ": " + String(e).
+   *   4. The valid-input path returns the value unchanged.
+   *   5. Shared behaviour holds: .message undefined after new (DEV — MDN:
+   *      "expected a string"), call-form sets .message, instanceof false (DEV).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function requireString(v) {
+      if (typeof v != "string") {
+          throw new TypeError("expected a string");
+      }
+      return v;
+  }
+
+  assert("typeof TypeError is function", typeof TypeError, "function");
+  var e = new TypeError("expected a string");
+  assert("typeof new TypeError(...) is object", typeof e, "object");
+  assert("e.name is 'TypeError'", e.name, "TypeError");
+  assert("String(e) is 'expected a string'", String(e), "expected a string");
+  assert("DEV e.message is undefined after new (MDN: 'expected a string')", typeof e.message, "undefined");
+  assert("e.toString() is 'TypeError: undefined'", e.toString(), "TypeError: undefined");
+  var c = TypeError("expected a string");
+  assert("call-form TypeError(...).message is set", c.message, "expected a string");
+  assert("DEV e instanceof TypeError is false (MDN: true)", e instanceof TypeError, "false");
+  assert("DEV e instanceof Error is false (MDN: true)", e instanceof Error, "false");
+
+  /* The chapter's guard-clause example. */
+  assertThrows("requireString(42) throws", function () { return requireString(42); });
+  var out = null;
+  try { requireString(42); } catch (ex) { out = ex.name + ": " + String(ex); }
+  assert("caught text is 'TypeError: expected a string'", out, "TypeError: expected a string");
+  assert("requireString('ok') returns the value", requireString("ok"), "ok");
+  </script>
+
+urierror: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: URIError
+   *
+   * Proves:
+   *   1. URIError is present and constructible (typeof "function").
+   *   2. new URIError("bad uri").name is "URIError".
+   *   3. Shared behaviour holds: String(e) recovers the text, .message is
+   *      undefined after new (DEV — MDN: "bad uri"), call-form sets .message,
+   *      instanceof is false (DEV).
+   *   4. The chapter's note that the URI functions do NOT throw URIError on
+   *      malformed input in this engine: decodeURI("%") does not throw.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  assert("typeof URIError is function", typeof URIError, "function");
+  var e = new URIError("bad uri");
+  assert("typeof new URIError(...) is object", typeof e, "object");
+  assert("e.name is 'URIError'", e.name, "URIError");
+  assert("String(e) is 'bad uri'", String(e), "bad uri");
+  assert("DEV e.message is undefined after new (MDN: 'bad uri')", typeof e.message, "undefined");
+  assert("e.toString() is 'URIError: undefined'", e.toString(), "URIError: undefined");
+  var c = URIError("bad uri");
+  assert("call-form URIError(...).message is set", c.message, "bad uri");
+  assert("DEV e instanceof URIError is false (MDN: true)", e instanceof URIError, "false");
+  assert("DEV e instanceof Error is false (MDN: true)", e instanceof Error, "false");
+
+  /* The URI functions do not raise URIError on malformed input here. */
+  var threw = false;
+  try { decodeURI("%"); } catch (ex) { threw = true; }
+  assert("DEV decodeURI('%') does not throw URIError (MDN: throws)", threw, "false");
+  </script>
+
+missing-error-types: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Missing error types (AggregateError, SuppressedError, InternalError)
+   *
+   * Proves, for each of the three constructors the page marks "Missing":
+   *   1. typeof <Ctor> === "undefined".
+   *   2. new <Ctor>(...) throws, with the documented "Unknown type: <Ctor>"
+   *      message for AggregateError.
+   *   3. Promise is also absent, which is why no AggregateError can arise.
+   *   4. The documented workaround — use the base Error constructor instead —
+   *      works: new Error("...") produces a usable, throwable error object.
+   *
+   * All three are DEV rows relative to the spec: MDN defines AggregateError
+   * (ES2021) and SuppressedError (ES2026) as standard globals; InternalError is
+   * a non-standard Firefox global that is simply absent here.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. All three are undefined. */
+  assert("DEV typeof AggregateError is undefined (MDN: function, ES2021)", typeof AggregateError, "undefined");
+  assert("DEV typeof SuppressedError is undefined (MDN: function, ES2026)", typeof SuppressedError, "undefined");
+  assert("typeof InternalError is undefined (non-standard, Firefox-only)", typeof InternalError, "undefined");
+
+  /* 2. Constructing them throws. */
+  assertThrows("new AggregateError(...) throws", function () { return new AggregateError([], "x"); });
+  assertThrows("new SuppressedError(...) throws", function () { return new SuppressedError(1, 2, "x"); });
+  assertThrows("new InternalError(...) throws", function () { return new InternalError("x"); });
+
+  /* The AggregateError message is documented verbatim on the page. */
+  var aggMsg = "";
+  try { var bad = new AggregateError([], "x"); } catch (ex) { aggMsg = ex.message; }
+  assert("new AggregateError throws 'Unknown type: AggregateError'", aggMsg, "Unknown type: AggregateError");
+
+  /* 3. Promise is absent too, so no AggregateError can ever arise. */
+  assert("typeof Promise is undefined", typeof Promise, "undefined");
+
+  /* 4. The documented workaround: use the base Error constructor. */
+  assert("typeof Error is function", typeof Error, "function");
+  var fallback = new Error("aggregate substitute");
+  assert("fallback.name is 'Error'", fallback.name, "Error");
+  assert("String(fallback) recovers the text", String(fallback), "aggregate substitute");
+  assertThrows("the fallback Error is throwable", function () { throw new Error("aggregate substitute"); });
+  </script>

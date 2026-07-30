@@ -1,0 +1,1024 @@
+# Test scripts for /ecmascript-builtins/date-methods/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the ECMAScript spec / MDN.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# DETERMINISM RULE: never assert anything that depends on the current clock,
+# the account time zone, or locale-formatted output. Every assertion is built
+# on FIXED inputs — new Date(2020, 0, 15, 10, 30, 45), new Date(0) or an
+# explicit epoch millisecond value — and asserts stable derived values.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+getfullyear: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: getFullYear() — ES3, works
+   *
+   * Proves:
+   *   1. getFullYear() returns the four-digit LOCAL year of a date built from
+   *      local components, so the result is time-zone independent.
+   *   2. typeof the result is "number".
+   *   3. It round-trips for a second, unrelated year.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var d = new Date(2020, 0, 15, 10, 30, 45);
+  assert("new Date(2020,0,15).getFullYear() is 2020", d.getFullYear(), "2020");
+  assert("typeof getFullYear() is number", typeof d.getFullYear(), "number");
+  var d2 = new Date(1999, 11, 31);
+  assert("new Date(1999,11,31).getFullYear() is 1999", d2.getFullYear(), "1999");
+  assert("typeof Date.prototype.getFullYear is function", typeof Date.prototype.getFullYear, "function");
+  </script>
+
+getmonth: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: getMonth() — ES3, works
+   *
+   * Proves:
+   *   1. getMonth() is ZERO-BASED: 0 = January, 11 = December.
+   *   2. typeof the result is "number".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var jan = new Date(2020, 0, 15, 10, 30, 45);
+  assert("January is month 0", jan.getMonth(), "0");
+  var dec = new Date(2020, 11, 31, 10, 0, 0);
+  assert("December is month 11", dec.getMonth(), "11");
+  var jun = new Date(2020, 5, 18, 12, 0, 0);
+  assert("June is month 5", jun.getMonth(), "5");
+  assert("typeof getMonth() is number", typeof jan.getMonth(), "number");
+  </script>
+
+getdate: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: getDate() — ES3, works
+   *
+   * Proves:
+   *   1. getDate() returns the ONE-BASED day of the month (1-31) in local time.
+   *   2. typeof the result is "number".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var d = new Date(2020, 0, 15, 10, 30, 45);
+  assert("day of month is 15", d.getDate(), "15");
+  var first = new Date(2020, 0, 1, 10, 0, 0);
+  assert("first of the month is 1 (not 0)", first.getDate(), "1");
+  var last = new Date(2020, 0, 31, 10, 0, 0);
+  assert("last of January is 31", last.getDate(), "31");
+  assert("typeof getDate() is number", typeof d.getDate(), "number");
+  </script>
+
+getday: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: getDay() — ES3, works
+   *
+   * Proves:
+   *   1. getDay() returns the day of week with 0 = Sunday .. 6 = Saturday.
+   *      2020-01-15 was a Wednesday, so the value must be 3.
+   *   2. Sunday really is 0 (2020-01-19) and Saturday really is 6 (2020-01-18).
+   *   3. typeof the result is "number".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var wed = new Date(2020, 0, 15, 10, 30, 45);
+  assert("2020-01-15 is Wednesday (3)", wed.getDay(), "3");
+  var sun = new Date(2020, 0, 19, 10, 0, 0);
+  assert("2020-01-19 is Sunday (0)", sun.getDay(), "0");
+  var sat = new Date(2020, 0, 18, 10, 0, 0);
+  assert("2020-01-18 is Saturday (6)", sat.getDay(), "6");
+  assert("typeof getDay() is number", typeof wed.getDay(), "number");
+  </script>
+
+gethours: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: getHours() — ES3, works
+   *
+   * Proves:
+   *   1. getHours() returns the LOCAL hour 0-23 of a date built from local
+   *      components (so the assertion is time-zone independent).
+   *   2. Midnight is 0 and 23:00 is 23 — no 12-hour wrapping.
+   *   3. typeof the result is "number".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var d = new Date(2020, 0, 15, 10, 30, 45);
+  assert("10:30:45 -> hours 10", d.getHours(), "10");
+  var midnight = new Date(2020, 0, 15, 0, 0, 0);
+  assert("midnight -> hours 0", midnight.getHours(), "0");
+  var late = new Date(2020, 0, 15, 23, 0, 0);
+  assert("23:00 -> hours 23 (24h clock)", late.getHours(), "23");
+  assert("typeof getHours() is number", typeof d.getHours(), "number");
+  </script>
+
+getminutes: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: getMinutes() — ES3, works
+   *
+   * Proves:
+   *   1. getMinutes() returns the LOCAL minutes 0-59.
+   *   2. typeof the result is "number".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var d = new Date(2020, 0, 15, 10, 30, 45);
+  assert("10:30:45 -> minutes 30", d.getMinutes(), "30");
+  var zero = new Date(2020, 0, 15, 10, 0, 0);
+  assert("10:00 -> minutes 0", zero.getMinutes(), "0");
+  var fiftynine = new Date(2020, 0, 15, 10, 59, 0);
+  assert("10:59 -> minutes 59", fiftynine.getMinutes(), "59");
+  assert("typeof getMinutes() is number", typeof d.getMinutes(), "number");
+  </script>
+
+getseconds: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: getSeconds() — ES3, works
+   *
+   * Proves:
+   *   1. getSeconds() returns the LOCAL seconds 0-59.
+   *   2. typeof the result is "number".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var d = new Date(2020, 0, 15, 10, 30, 45);
+  assert("10:30:45 -> seconds 45", d.getSeconds(), "45");
+  var zero = new Date(2020, 0, 15, 10, 30, 0);
+  assert("10:30:00 -> seconds 0", zero.getSeconds(), "0");
+  var fiftynine = new Date(2020, 0, 15, 10, 30, 59);
+  assert("10:30:59 -> seconds 59", fiftynine.getSeconds(), "59");
+  assert("typeof getSeconds() is number", typeof d.getSeconds(), "number");
+  </script>
+
+gettime: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: getTime() — ES3, works
+   *
+   * Proves:
+   *   1. getTime() returns milliseconds since the Unix epoch as a NUMBER.
+   *   2. new Date(0).getTime() is exactly 0 (the epoch itself).
+   *   3. A date built from an explicit epoch value round-trips exactly.
+   *   4. Adding a day of milliseconds shifts getTime() by exactly 86400000.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var epoch = new Date(0);
+  assert("new Date(0).getTime() is 0", epoch.getTime(), "0");
+  assert("typeof getTime() is number", typeof epoch.getTime(), "number");
+  var fixed = new Date(1609459200000);
+  assert("epoch ms round-trips exactly", fixed.getTime(), "1609459200000");
+  var plusDay = new Date(1609459200000 + 86400000);
+  assert("adding 86400000 ms adds exactly one day", plusDay.getTime(), "1609545600000");
+  assert("difference of the two dates is 86400000", plusDay.getTime() - fixed.getTime(), "86400000");
+  </script>
+
+gettimezoneoffset: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: getTimezoneOffset() — ES3, works
+   *
+   * Proves:
+   *   1. getTimezoneOffset() returns a NUMBER of minutes.
+   *   2. The value is a whole number of minutes within the legal +/- 14 h range,
+   *      so it is a real offset and not a random value.
+   *   3. It is self-consistent with the local/UTC split: the difference between
+   *      the local-component date and the same components read as UTC equals the
+   *      offset. This is asserted WITHOUT hard-coding the account time zone.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var d = new Date(2020, 0, 15, 10, 30, 45);
+  var off = d.getTimezoneOffset();
+  assert("typeof getTimezoneOffset() is number", typeof off, "number");
+  assert("offset is a whole number of minutes", off === Math.floor(off), "true");
+  assert("offset is within +/- 840 minutes", (off >= -840 && off <= 840), "true");
+
+  /* Self-consistency: local components + offset == the same components in UTC. */
+  var utcMs = Date.UTC(2020, 0, 15, 10, 30, 45);
+  var deltaMin = (d.getTime() - utcMs) / 60000;
+  assert("local date - UTC(components) == offset minutes", deltaMin, String(off));
+  </script>
+
+valueof: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: valueOf() — ES3, works
+   *
+   * Proves:
+   *   1. valueOf() returns milliseconds since the epoch, identical to getTime().
+   *   2. typeof the result is "number".
+   *   3. new Date(0).valueOf() is exactly 0.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var epoch = new Date(0);
+  assert("new Date(0).valueOf() is 0", epoch.valueOf(), "0");
+  assert("typeof valueOf() is number", typeof epoch.valueOf(), "number");
+  var fixed = new Date(1609459200000);
+  assert("valueOf() round-trips the epoch ms", fixed.valueOf(), "1609459200000");
+  assert("valueOf() equals getTime()", fixed.valueOf() === fixed.getTime(), "true");
+  var local = new Date(2020, 0, 15, 10, 30, 45);
+  assert("valueOf() equals getTime() for a local-component date", local.valueOf() === local.getTime(), "true");
+  </script>
+
+getutcfullyear: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: getUTCFullYear() — ES3, works
+   *
+   * Proves:
+   *   1. getUTCFullYear() returns the four-digit UTC year. Asserted on FIXED
+   *      epoch millisecond values, so the result is independent of the account
+   *      time zone.
+   *        new Date(0)             -> 1970
+   *        new Date(1609459200000) -> 2021 (2021-01-01T00:00:00Z)
+   *   2. typeof the result is "number".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var epoch = new Date(0);
+  assert("new Date(0).getUTCFullYear() is 1970", epoch.getUTCFullYear(), "1970");
+  var y2021 = new Date(1609459200000);
+  assert("2021-01-01T00:00:00Z -> UTC year 2021", y2021.getUTCFullYear(), "2021");
+  assert("typeof getUTCFullYear() is number", typeof epoch.getUTCFullYear(), "number");
+  </script>
+
+getutcmonth: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: getUTCMonth() — ES3, works
+   *
+   * Proves:
+   *   1. getUTCMonth() is ZERO-BASED (0 = January), read in UTC.
+   *      Asserted on fixed epoch ms values:
+   *        new Date(0)             -> 0  (January 1970)
+   *        new Date(1234567890123) -> 1  (February 2009)
+   *   2. typeof the result is "number".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var epoch = new Date(0);
+  assert("new Date(0).getUTCMonth() is 0 (January)", epoch.getUTCMonth(), "0");
+  var feb = new Date(1234567890123);
+  assert("2009-02-13T23:31:30Z -> UTC month 1 (February)", feb.getUTCMonth(), "1");
+  assert("typeof getUTCMonth() is number", typeof epoch.getUTCMonth(), "number");
+  </script>
+
+getutcdate: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: getUTCDate() — ES3, works
+   *
+   * Proves:
+   *   1. getUTCDate() returns the ONE-BASED UTC day of month.
+   *        new Date(0)             -> 1  (1970-01-01)
+   *        new Date(1234567890123) -> 13 (2009-02-13)
+   *   2. typeof the result is "number".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var epoch = new Date(0);
+  assert("new Date(0).getUTCDate() is 1", epoch.getUTCDate(), "1");
+  var feb13 = new Date(1234567890123);
+  assert("2009-02-13T23:31:30Z -> UTC date 13", feb13.getUTCDate(), "13");
+  assert("typeof getUTCDate() is number", typeof epoch.getUTCDate(), "number");
+  </script>
+
+getutcday: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: getUTCDay() — ES3, works
+   *
+   * Proves:
+   *   1. getUTCDay() returns 0 = Sunday .. 6 = Saturday, read in UTC.
+   *        new Date(0)             -> 4 (1970-01-01 was a Thursday)
+   *        new Date(1609459200000) -> 5 (2021-01-01 was a Friday)
+   *   2. typeof the result is "number".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var epoch = new Date(0);
+  assert("1970-01-01 UTC was a Thursday (4)", epoch.getUTCDay(), "4");
+  var fri = new Date(1609459200000);
+  assert("2021-01-01 UTC was a Friday (5)", fri.getUTCDay(), "5");
+  assert("typeof getUTCDay() is number", typeof epoch.getUTCDay(), "number");
+  </script>
+
+getutchours: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: getUTCHours() — ES3, works
+   *
+   * Proves:
+   *   1. getUTCHours() returns 0-23 in UTC, on FIXED epoch ms input:
+   *        new Date(0)             -> 0  (midnight UTC)
+   *        new Date(1234567890123) -> 23 (2009-02-13T23:31:30Z)
+   *   2. typeof the result is "number".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var epoch = new Date(0);
+  assert("new Date(0).getUTCHours() is 0", epoch.getUTCHours(), "0");
+  var late = new Date(1234567890123);
+  assert("2009-02-13T23:31:30Z -> UTC hours 23", late.getUTCHours(), "23");
+  assert("typeof getUTCHours() is number", typeof epoch.getUTCHours(), "number");
+  </script>
+
+getutcminutes: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: getUTCMinutes() — ES3, works
+   *
+   * Proves:
+   *   1. getUTCMinutes() returns 0-59 in UTC, on FIXED epoch ms input:
+   *        new Date(0)             -> 0
+   *        new Date(1234567890123) -> 31 (2009-02-13T23:31:30Z)
+   *   2. typeof the result is "number".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var epoch = new Date(0);
+  assert("new Date(0).getUTCMinutes() is 0", epoch.getUTCMinutes(), "0");
+  var m31 = new Date(1234567890123);
+  assert("2009-02-13T23:31:30Z -> UTC minutes 31", m31.getUTCMinutes(), "31");
+  assert("typeof getUTCMinutes() is number", typeof epoch.getUTCMinutes(), "number");
+  </script>
+
+getutcseconds: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: getUTCSeconds() — ES3, works
+   *
+   * Proves:
+   *   1. getUTCSeconds() returns 0-59 in UTC, on FIXED epoch ms input:
+   *        new Date(0)             -> 0
+   *        new Date(1234567890123) -> 30 (2009-02-13T23:31:30Z)
+   *   2. typeof the result is "number".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var epoch = new Date(0);
+  assert("new Date(0).getUTCSeconds() is 0", epoch.getUTCSeconds(), "0");
+  var s30 = new Date(1234567890123);
+  assert("2009-02-13T23:31:30Z -> UTC seconds 30", s30.getUTCSeconds(), "30");
+  assert("typeof getUTCSeconds() is number", typeof epoch.getUTCSeconds(), "number");
+  </script>
+
+getutcmilliseconds: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: getUTCMilliseconds() — ES3, works
+   *
+   * Proves:
+   *   1. getUTCMilliseconds() returns 0-999 in UTC.
+   *   2. Unlike the LOCAL getMilliseconds (which is frequently off by one — see
+   *      the getMilliseconds chapter), the UTC variant was accurate at the epoch:
+   *        new Date(0).getUTCMilliseconds() === 0
+   *   3. typeof the result is "number", and the value is always in range.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var epoch = new Date(0);
+  assert("new Date(0).getUTCMilliseconds() is exactly 0", epoch.getUTCMilliseconds(), "0");
+  assert("typeof getUTCMilliseconds() is number", typeof epoch.getUTCMilliseconds(), "number");
+  var ms = new Date(1234567890123).getUTCMilliseconds();
+  assert("value is within 0..999", (ms >= 0 && ms <= 999), "true");
+  </script>
+
+tostring: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: toString() — ES3, works
+   *
+   * Proves:
+   *   1. toString() exists and returns a non-empty STRING.
+   *   2. It is a human-readable date string rendered in the ACCOUNT time zone,
+   *      so the exact text is host-dependent — the assertions therefore check
+   *      the documented SHAPE, not a hard-coded formatted value:
+   *        - it names the weekday and month of the represented instant
+   *        - it carries a time portion with two colons
+   *   3. Implicit stringification ("" + d) matches d.toString().
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var d = new Date(2020, 0, 15, 10, 30, 45);
+  var s = d.toString();
+  assert("typeof toString() is string", typeof s, "string");
+  assert("toString() is not empty", s.length > 0, "true");
+  assert("toString() names the month Jan", s.indexOf("Jan") >= 0, "true");
+  assert("toString() contains the year 2020", s.indexOf("2020") >= 0, "true");
+  assert("toString() contains a time portion 10:30:45", s.indexOf("10:30:45") >= 0, "true");
+  assert("implicit '' + d equals d.toString()", ("" + d) === s, "true");
+  assert("typeof Date.prototype.toString is function", typeof Date.prototype.toString, "function");
+  </script>
+
+todatestring: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: toDateString() — ES3, works
+   *
+   * Proves:
+   *   1. toDateString() exists and returns a non-empty STRING.
+   *   2. It renders the DATE portion only — for a fixed local date it names the
+   *      month and year but carries no "hh:mm:ss" time portion.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var d = new Date(2020, 0, 15, 10, 30, 45);
+  var s = d.toDateString();
+  assert("typeof toDateString() is string", typeof s, "string");
+  assert("toDateString() is not empty", s.length > 0, "true");
+  assert("toDateString() names the month Jan", s.indexOf("Jan") >= 0, "true");
+  assert("toDateString() contains the year 2020", s.indexOf("2020") >= 0, "true");
+  assert("toDateString() has no time portion", s.indexOf("10:30:45") < 0, "true");
+  assert("typeof Date.prototype.toDateString is function", typeof Date.prototype.toDateString, "function");
+  </script>
+
+totimestring: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: toTimeString() — ES3, works
+   *
+   * Proves:
+   *   1. toTimeString() exists and returns a non-empty STRING.
+   *   2. It renders the TIME portion of the local date (10:30:45 for the fixed
+   *      input) and does not carry the year.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var d = new Date(2020, 0, 15, 10, 30, 45);
+  var s = d.toTimeString();
+  assert("typeof toTimeString() is string", typeof s, "string");
+  assert("toTimeString() is not empty", s.length > 0, "true");
+  assert("toTimeString() contains 10:30:45", s.indexOf("10:30:45") >= 0, "true");
+  assert("toTimeString() has no year", s.indexOf("2020") < 0, "true");
+  assert("typeof Date.prototype.toTimeString is function", typeof Date.prototype.toTimeString, "function");
+  </script>
+
+toutcstring: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: toUTCString() — ES3, works
+   *
+   * Proves:
+   *   1. toUTCString() renders the instant in the UTC time zone, so the result
+   *      for a FIXED epoch value is host-independent:
+   *        new Date(0).toUTCString() === "Thu, 01 Jan 1970 00:00:00 UTC"
+   *      (this is the exact value documented on the page).
+   *   2. typeof the result is "string".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var epoch = new Date(0);
+  assert("new Date(0).toUTCString()", epoch.toUTCString(), "Thu, 01 Jan 1970 00:00:00 UTC");
+  assert("typeof toUTCString() is string", typeof epoch.toUTCString(), "string");
+  assert("typeof Date.prototype.toUTCString is function", typeof Date.prototype.toUTCString, "function");
+  </script>
+
+getmilliseconds: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: getMilliseconds() — ES3, PARTIAL (off-by-one bug)
+   *
+   * MDN / ECMAScript: getMilliseconds() returns exactly the milliseconds the
+   * date was constructed with (0-999).
+   * SFMC Jint:        the value is FREQUENTLY OFF BY ONE.
+   *
+   * Proves the documented deviation on FIXED constructed inputs:
+   *   1. DEV 123 ms reports 122 (spec: 123)
+   *   2. DEV 555 ms reports 554 (spec: 555)
+   *   3. DEV 666 ms reports 665 (spec: 666)
+   *   4. DEV 777 ms reports 776 (spec: 777)
+   *   5. Some values ARE exact: 0, 111, 888, 999.
+   *   6. The value always stays in 0..999 and typeof is "number".
+   *   7. The recommended workaround — never compare sub-second precision, round
+   *      instead — is proven: rounding to the nearest 10 ms makes 123 and 122
+   *      compare equal.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  /* 1-4. DEVIATION — off by one for these values. */
+  var d123 = new Date(2020, 0, 15, 10, 30, 45, 123);
+  assert("DEV 123 ms reports 122 (spec: 123)", d123.getMilliseconds(), "122");
+  var d555 = new Date(2020, 0, 15, 10, 30, 45, 555);
+  assert("DEV 555 ms reports 554 (spec: 555)", d555.getMilliseconds(), "554");
+  var d666 = new Date(2020, 0, 15, 10, 30, 45, 666);
+  assert("DEV 666 ms reports 665 (spec: 666)", d666.getMilliseconds(), "665");
+  var d777 = new Date(2020, 0, 15, 10, 30, 45, 777);
+  assert("DEV 777 ms reports 776 (spec: 777)", d777.getMilliseconds(), "776");
+
+  /* 5. Values that ARE exact. */
+  var d0 = new Date(2020, 0, 15, 10, 30, 45, 0);
+  assert("0 ms is exact", d0.getMilliseconds(), "0");
+  var d111 = new Date(2020, 0, 15, 10, 30, 45, 111);
+  assert("111 ms is exact", d111.getMilliseconds(), "111");
+  var d888 = new Date(2020, 0, 15, 10, 30, 45, 888);
+  assert("888 ms is exact", d888.getMilliseconds(), "888");
+  var d999 = new Date(2020, 0, 15, 10, 30, 45, 999);
+  assert("999 ms is exact", d999.getMilliseconds(), "999");
+
+  /* 6. Shape of the result. */
+  assert("typeof getMilliseconds() is number", typeof d123.getMilliseconds(), "number");
+  var v = d555.getMilliseconds();
+  assert("value stays within 0..999", (v >= 0 && v <= 999), "true");
+
+  /* 7. Workaround — round instead of comparing exact milliseconds. */
+  var rounded = Math.round(d123.getMilliseconds() / 10) * 10;
+  assert("workaround: rounding 122 to nearest 10 gives 120", rounded, "120");
+  var expectRounded = Math.round(123 / 10) * 10;
+  assert("workaround: rounding 123 to nearest 10 also gives 120", expectRounded, "120");
+  assert("workaround: rounded values compare equal", rounded === expectRounded, "true");
+  </script>
+
+now: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Date.now() — ES5, PARTIAL (returns a Date object)
+   *
+   * MDN / ECMAScript: Date.now() returns a NUMBER (ms since epoch).
+   * SFMC Jint:        Date.now() returns a DATE OBJECT.
+   *
+   * Proves:
+   *   1. DEV typeof Date.now() is "object" (spec: "number").
+   *   2. DEV it stringifies to a date-time string, not to a digit string.
+   *   3. Numeric coercion (Date.now() + 0) still yields epoch milliseconds — a
+   *      large positive number.
+   *   4. The recommended workaround, new Date().getTime(), returns a clean
+   *      NUMBER.
+   *
+   * Nothing here is compared against the wall clock: only typeof, shape and
+   * ordering relations that hold for any instant after the year 2000.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  /* 1. DEVIATION — it is an object, not a number. */
+  var n = Date.now();
+  assert("DEV typeof Date.now() is object (spec: number)", typeof n, "object");
+  assert("typeof Date.now is function", typeof Date.now, "function");
+
+  /* 2. DEVIATION — it stringifies as a date-time string, not as digits. */
+  var s = String(n);
+  assert("DEV String(Date.now()) is not a plain digit string (spec: digits)", /^[0-9]+$/.test(s), "false");
+  assert("DEV String(Date.now()) is a non-empty string", s.length > 0, "true");
+
+  /* 3. Numeric coercion still yields epoch milliseconds. */
+  var coerced = n + 0;
+  assert("Date.now() + 0 is a number", typeof coerced, "number");
+  assert("Date.now() + 0 is after the year 2000", coerced > 946684800000, "true");
+
+  /* 4. Workaround — getTime() returns a clean number. */
+  var ms = new Date().getTime();
+  assert("workaround typeof new Date().getTime() is number", typeof ms, "number");
+  assert("workaround getTime() is after the year 2000", ms > 946684800000, "true");
+  assert("workaround getTime() is a plain digit string", /^[0-9]+$/.test(String(ms)), "true");
+  </script>
+
+parse: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Date.parse(str) — ES3, PARTIAL
+   *
+   * MDN / ECMAScript: Date.parse() returns NaN for an unparseable string, and
+   * treats a DATE-ONLY ISO form ("2026-06-18") as UTC.
+   * SFMC Jint:        unparseable strings return 0 (the epoch), never NaN, and
+   *                   date-only forms parse as LOCAL midnight.
+   *
+   * Proves:
+   *   1. A full ISO string with an explicit Z parses correctly:
+   *        Date.parse("2021-01-01T00:00:00Z") === 1609459200000
+   *   2. DEV Date.parse("garbage") is 0 (spec: NaN)
+   *   3. DEV Date.parse("") is 0 (spec: NaN)
+   *   4. DEV Date.parse("2021-13-45") is 0 (spec: NaN)
+   *   5. DEV isNaN() therefore CANNOT detect a bad date.
+   *   6. DEV a date-only string parses as LOCAL midnight: its local hours are 0
+   *      while the UTC hours equal the time-zone offset — asserted WITHOUT
+   *      hard-coding the account time zone.
+   *   7. Workaround — validate the input yourself: a guard that rejects a 0
+   *      result (or checks the string shape) catches every bad input above.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  /* 1. Valid, fully-qualified UTC string. */
+  assert("typeof Date.parse is function", typeof Date.parse, "function");
+  assert("Date.parse('2021-01-01T00:00:00Z') is 1609459200000", Date.parse("2021-01-01T00:00:00Z"), "1609459200000");
+  assert("typeof Date.parse(valid) is number", typeof Date.parse("2021-01-01T00:00:00Z"), "number");
+
+  /* 2-4. DEVIATION — invalid strings return 0 instead of NaN. */
+  assert("DEV Date.parse('garbage') is 0 (spec: NaN)", Date.parse("garbage"), "0");
+  assert("DEV Date.parse('') is 0 (spec: NaN)", Date.parse(""), "0");
+  assert("DEV Date.parse('2021-13-45') is 0 (spec: NaN)", Date.parse("2021-13-45"), "0");
+
+  /* 5. DEVIATION — isNaN() cannot be used to detect a bad date. */
+  assert("DEV isNaN(Date.parse('garbage')) is false (spec: true)", isNaN(Date.parse("garbage")), "false");
+  assert("DEV invalid input silently becomes the epoch 1970-01-01", new Date(Date.parse("garbage")).getUTCFullYear(), "1970");
+
+  /* 6. DEVIATION — a date-only string parses as LOCAL midnight, not UTC. */
+  var dOnly = new Date(Date.parse("2026-06-18"));
+  assert("DEV date-only string has local hours 0 (parsed as LOCAL midnight)", dOnly.getHours(), "0");
+  assert("DEV date-only local date is the 18th", dOnly.getDate(), "18");
+  var offsetHours = dOnly.getTimezoneOffset() / 60;
+  assert("DEV date-only UTC hours equal the tz offset (spec: 0, UTC midnight)", dOnly.getUTCHours(), String(offsetHours));
+
+  /* 7. Workaround — validate the input yourself. */
+  function safeParse(s) {
+      var ms = Date.parse(s);
+      if (ms === 0 && s !== "1970-01-01T00:00:00Z") { return null; }
+      return ms;
+  }
+  assert("workaround safeParse('garbage') is null", safeParse("garbage"), "null");
+  assert("workaround safeParse('') is null", safeParse(""), "null");
+  assert("workaround safeParse('2021-13-45') is null", safeParse("2021-13-45"), "null");
+  assert("workaround safeParse(valid) returns the ms", safeParse("2021-01-01T00:00:00Z"), "1609459200000");
+  </script>
+
+utc: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Date.UTC(...) — ES3, PARTIAL
+   *
+   * MDN / ECMAScript: Date.UTC(year) treats a missing month as 0 and returns a
+   * valid timestamp for January 1 of that year.
+   * SFMC Jint:        the YEAR-ONLY form returns a nonsense small number
+   *                   (observed -21597974) and does NOT return NaN.
+   *
+   * Proves:
+   *   1. With year + month (and further components) the result is correct:
+   *        Date.UTC(1970, 0, 1) === 0
+   *        Date.UTC(2026, 0, 1) === 1767225600000
+   *   2. typeof the result is "number".
+   *   3. new Date(Date.UTC(...)) builds a UTC-based Date whose getUTC* getters
+   *      return exactly the components passed in.
+   *   4. DEV the year-only form Date.UTC(2026) returns -21597974, not a valid
+   *      timestamp and not NaN (spec: 1767225600000).
+   *   5. Workaround — always pass at least year and month.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  /* 1-2. Correct results with at least year + month. */
+  assert("typeof Date.UTC is function", typeof Date.UTC, "function");
+  assert("Date.UTC(1970, 0, 1) is 0", Date.UTC(1970, 0, 1), "0");
+  assert("Date.UTC(2026, 0, 1) is 1767225600000", Date.UTC(2026, 0, 1), "1767225600000");
+  assert("typeof Date.UTC(2026, 0, 1) is number", typeof Date.UTC(2026, 0, 1), "number");
+
+  /* 3. Building a UTC-based Date round-trips the components. */
+  var d = new Date(Date.UTC(2026, 0, 1));
+  assert("UTC-based Date has UTC year 2026", d.getUTCFullYear(), "2026");
+  assert("UTC-based Date has UTC month 0", d.getUTCMonth(), "0");
+  assert("UTC-based Date has UTC date 1", d.getUTCDate(), "1");
+  assert("UTC-based Date has UTC hours 0", d.getUTCHours(), "0");
+
+  /* 4. DEVIATION — the year-only form returns nonsense, not NaN. */
+  assert("DEV Date.UTC(2026) is -21597974 (spec: 1767225600000)", Date.UTC(2026), "-21597974");
+  assert("DEV Date.UTC(2026) is NOT NaN (spec would still be a valid number)", isNaN(Date.UTC(2026)), "false");
+  assert("DEV Date.UTC(2026) differs from Date.UTC(2026, 0, 1)", Date.UTC(2026) === Date.UTC(2026, 0, 1), "false");
+
+  /* 5. Workaround — pass year and month. */
+  assert("workaround Date.UTC(2026, 0, 1) is a valid timestamp", Date.UTC(2026, 0, 1) > 0, "true");
+  assert("workaround Date.UTC(2026, 0) is a valid timestamp", Date.UTC(2026, 0) > 0, "true");
+  </script>
+
+toisostring: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: toISOString() — ES5, MISSING
+   *
+   * MDN / ECMAScript: Date.prototype.toISOString() returns "1970-01-01T00:00:00.000Z".
+   * SFMC Jint:        the member does not exist.
+   *
+   * Proves:
+   *   1. typeof d.toISOString is "undefined".
+   *   2. typeof Date.prototype.toISOString is "undefined".
+   *   3. Calling it THROWS ("Object expected: toISOString").
+   *   4. The documented manual polyfill built from the getUTC* methods produces
+   *      the correct ISO string for FIXED epoch inputs.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1-3. The member is absent and calling it throws. */
+  var d = new Date(0);
+  assert("typeof d.toISOString is undefined", typeof d.toISOString, "undefined");
+  assert("typeof Date.prototype.toISOString is undefined", typeof Date.prototype.toISOString, "undefined");
+  assertThrows("calling d.toISOString() throws (spec: returns ISO string)", function () { var x = new Date(0); return x.toISOString(); });
+
+  /* 4. The documented manual polyfill. */
+  function toISOString(d) {
+      function pad(n) { return n < 10 ? "0" + n : "" + n; }
+      return d.getUTCFullYear() + "-" + pad(d.getUTCMonth() + 1) + "-" + pad(d.getUTCDate()) +
+          "T" + pad(d.getUTCHours()) + ":" + pad(d.getUTCMinutes()) + ":" + pad(d.getUTCSeconds()) + "Z";
+  }
+  assert("workaround polyfill on the epoch", toISOString(new Date(0)), "1970-01-01T00:00:00Z");
+  assert("workaround polyfill on 2021-01-01T00:00:00Z", toISOString(new Date(1609459200000)), "2021-01-01T00:00:00Z");
+  assert("workaround polyfill on 2009-02-13T23:31:30Z", toISOString(new Date(1234567890123)), "2009-02-13T23:31:30Z");
+  assert("workaround polyfill returns a string", typeof toISOString(new Date(0)), "string");
+  </script>
+
+tojson: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: toJSON() — ES5, MISSING
+   *
+   * MDN / ECMAScript: Date.prototype.toJSON() returns the ISO string.
+   * SFMC Jint:        the member does not exist, because it depends on the
+   *                   equally-absent toISOString.
+   *
+   * Proves:
+   *   1. typeof d.toJSON is "undefined".
+   *   2. typeof Date.prototype.toJSON is "undefined".
+   *   3. Calling it THROWS.
+   *   4. toISOString — the member toJSON depends on — is also absent.
+   *   5. The documented workaround (serialize with the manual toISOString
+   *      polyfill) produces the expected string.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1-4. The member is absent, and so is its dependency. */
+  var d = new Date(0);
+  assert("typeof d.toJSON is undefined", typeof d.toJSON, "undefined");
+  assert("typeof Date.prototype.toJSON is undefined", typeof Date.prototype.toJSON, "undefined");
+  assertThrows("calling d.toJSON() throws (spec: returns ISO string)", function () { var x = new Date(0); return x.toJSON(); });
+  assert("its dependency toISOString is also undefined", typeof d.toISOString, "undefined");
+
+  /* 5. Workaround — serialize with the manual polyfill. */
+  function toISOString(d) {
+      function pad(n) { return n < 10 ? "0" + n : "" + n; }
+      return d.getUTCFullYear() + "-" + pad(d.getUTCMonth() + 1) + "-" + pad(d.getUTCDate()) +
+          "T" + pad(d.getUTCHours()) + ":" + pad(d.getUTCMinutes()) + ":" + pad(d.getUTCSeconds()) + "Z";
+  }
+  assert("workaround serializes the epoch", toISOString(new Date(0)), "1970-01-01T00:00:00Z");
+  assert("workaround serializes a fixed instant", toISOString(new Date(1609459200000)), "2021-01-01T00:00:00Z");
+  </script>

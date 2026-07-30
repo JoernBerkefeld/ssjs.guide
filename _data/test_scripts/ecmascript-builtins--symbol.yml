@@ -1,0 +1,151 @@
+# Test scripts for /ecmascript-builtins/symbol/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every provable claim the chapter makes --
+# here that is the negative claim (the ES6 Symbol primitive type is entirely
+# absent) plus the fallbacks the page recommends.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# HELPER RULE: assert() compares with a plain === and never coerces its
+# arguments. Because a missing ES6 global throws on invocation, every probe is
+# passed as a THUNK so the try/catch actually surrounds it -- an uncaught
+# top-level throw makes the whole CloudPage return HTTP 422.
+
+symbol: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Symbol
+   *
+   * Proves:
+   *   1. DEVIATION from ECMAScript 2015 marked "DEV": Symbol does not exist in
+   *      the SFMC Jint engine -- typeof Symbol is "undefined" (spec: "function").
+   *      Merely READING the name does not throw; only calling it does.
+   *   2. Calling Symbol("x") throws "Object expected: Symbol"
+   *      (spec: returns a unique symbol primitive).
+   *   3. The constructor form throws too, with the other documented message
+   *      shape: new Symbol("x") throws "Unknown type: Symbol".
+   *   4. No part of the Symbol API leaks in by another route -- Symbol.prototype
+   *      is equally absent.
+   *   5. The documented replacement for the "unique key" use case -- a plain
+   *      string key with a namespace prefix -- works as an ordinary property.
+   *
+   * NOT ASSERTED (not deterministically observable from script):
+   *   - "There is no way to create a truly collision-proof key." This is a
+   *     universal negative over every possible key-generation strategy, so no
+   *     finite set of statements can prove it. What IS asserted below is the
+   *     observable half: two identical string keys collide, i.e. the second
+   *     write overwrites the first, which is why the guarantee cannot be had.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEVIATION -- Symbol is absent. Reading the name is safe; it is undefined. */
+  assert("DEV typeof Symbol is 'undefined' (spec: 'function')", function () { return String(typeof Symbol); }, "undefined");
+  assert("(typeof Symbol === 'undefined') is true", function () { var r = (typeof Symbol === "undefined"); return r ? "true" : "false"; }, "true");
+
+  /* 2. Calling it throws with the documented message. */
+  assertThrows("DEV Symbol('x') throws (spec: returns a unique symbol)", function () { return Symbol("x"); });
+  assert("Symbol('x') message is 'Object expected: Symbol'", function () { try { return Symbol("x"); } catch (ex) { return ex.message; } }, "Object expected: Symbol");
+
+  /* 3. The constructor form throws with the other documented shape. */
+  assertThrows("DEV new Symbol('x') throws too", function () { return new Symbol("x"); });
+  assert("new Symbol('x') message is 'Unknown type: Symbol'", function () { try { return new Symbol("x"); } catch (ex) { return ex.message; } }, "Unknown type: Symbol");
+
+  /* 4. No Symbol API exists by another route. Reading a member of the missing
+   *    global does not throw -- it simply yields undefined. */
+  assert("Symbol.prototype is undefined", function () { return String(typeof Symbol.prototype); }, "undefined");
+
+  /* 5. The documented replacement -- a namespace-prefixed string key. */
+  assert("namespaced string key stores a value", function () { var o = {}; o["myapp:token"] = "kept"; return o["myapp:token"]; }, "kept");
+  assert("a differently-namespaced key does not collide", function () { var o = {}; o["myapp:token"] = "a"; o["other:token"] = "b"; return o["myapp:token"]; }, "a");
+  assert("an identical string key DOES collide (why it is not collision-proof)", function () { var o = {}; o["myapp:token"] = "first"; o["myapp:token"] = "second"; return o["myapp:token"]; }, "second");
+  </script>
+
+symbol-iterator: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Symbol.iterator
+   *
+   * Proves:
+   *   1. DEVIATION from ECMAScript 2015 marked "DEV": because Symbol itself is
+   *      absent (typeof Symbol is "undefined"), Symbol.iterator cannot exist.
+   *   2. None of the well-known symbols the chapter names exist either --
+   *      Symbol.iterator, Symbol.asyncIterator and Symbol.hasInstance all read
+   *      as undefined (spec: each is a unique symbol). Reading them does not
+   *      throw; only invoking them does, with the two documented message shapes.
+   *   3. There is no iterator protocol: an ordinary array carries no .next()
+   *      method and no iterator factory of any kind.
+   *   4. The documented replacement -- a classic index loop over an array --
+   *      visits every element in order.
+   *
+   * NOT ASSERTED (not observable from a running script):
+   *   - "for...of, spread and destructuring are unavailable." These are SYNTAX
+   *     features: the engine rejects them while PARSING, before a single line of
+   *     the script executes, so the whole CloudPage would return HTTP 422 and no
+   *     PASS line could ever be printed. A syntax-level absence cannot be
+   *     expressed as a runtime assertion; it is proved only by the fact that no
+   *     such construct can be written here at all.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. The root cause -- Symbol is undefined, so no well-known symbol can exist. */
+  assert("DEV typeof Symbol is 'undefined' (spec: 'function')", function () { return String(typeof Symbol); }, "undefined");
+  assert("(typeof Symbol === 'undefined') is true", function () { var r = (typeof Symbol === "undefined"); return r ? "true" : "false"; }, "true");
+
+  /* 2. The well-known symbols named by the chapter are all absent. Reading a
+   *    member of the missing global yields undefined without throwing. */
+  assert("DEV typeof Symbol.iterator is 'undefined' (spec: 'symbol')", function () { return String(typeof Symbol.iterator); }, "undefined");
+  assert("DEV typeof Symbol.asyncIterator is 'undefined' (spec: 'symbol')", function () { return String(typeof Symbol.asyncIterator); }, "undefined");
+  assert("DEV typeof Symbol.hasInstance is 'undefined' (spec: 'symbol')", function () { return String(typeof Symbol.hasInstance); }, "undefined");
+
+  /* 2b. Invoking the missing dotted member throws, in both documented shapes. */
+  assertThrows("Symbol.iterator() throws", function () { return Symbol.iterator(); });
+  assert("Symbol.iterator() message is 'Object expected: iterator'", function () { try { return Symbol.iterator(); } catch (ex) { return ex.message; } }, "Object expected: iterator");
+  assertThrows("new Symbol.iterator() throws", function () { return new Symbol.iterator(); });
+  assert("new Symbol.iterator() message is 'Unknown type: Symbol.iterator'", function () { try { return new Symbol.iterator(); } catch (ex) { return ex.message; } }, "Unknown type: Symbol.iterator");
+
+  /* 3. No iterator protocol reaches arrays by any other route. */
+  assert("an array has no .next() method", function () { var arr = [1, 2, 3]; return String(typeof arr.next); }, "undefined");
+  assert("an array has no .entries() iterator factory", function () { var arr = [1, 2, 3]; return String(typeof arr.entries); }, "undefined");
+  assert("a plain object has no .next() method", function () { var o = {}; return String(typeof o.next); }, "undefined");
+
+  /* 4. The documented replacement -- a classic index loop. */
+  assert("classic index loop visits every element in order", function () { var arr = ["a", "b", "c"]; var out = ""; for (var i = 0; i < arr.length; i++) { out += arr[i]; } return out; }, "abc");
+  assert("classic index loop reads the right length", function () { var arr = ["a", "b", "c"]; var n = 0; for (var i = 0; i < arr.length; i++) { n++; } return String(n); }, "3");
+  </script>

@@ -396,7 +396,7 @@ Compare two values at a time — `Math.max(Math.max(a, b), c)` — fold with a l
 
 **Severity: Medium** — silent wrong results in numeric edge cases
 
-The global `Infinity` identifier exists (`typeof Infinity` is `"number"`), but the SFMC Jint engine mishandles it. When stringified it shows the **wrong sign**: `String(Infinity)` and `(1/0)` render as `"-infinity"`, while `-Infinity` and `(-1/0)` render as `"infinity"`. Worse, comparisons are also broken — `(Infinity > 0)` and `(1/0 > 0)` both return **`false`** instead of `true` (runtime-verified). `Number.POSITIVE_INFINITY` / `Number.NEGATIVE_INFINITY` do not exist to work around this (both are `undefined` — see [Number Methods](/ecmascript-builtins/number-methods/#constants)).
+The global `Infinity` identifier exists (`typeof Infinity` is `"number"`), but the SFMC Jint engine mishandles it. When stringified it shows the **wrong sign**: `String(Infinity)` and `(1/0)` render as `"-infinity"`, while `-Infinity` and `(-1/0)` render as `"infinity"`. Worse, comparisons are also broken — `(Infinity > 0)` and `(1/0 > 0)` both return **`false`** instead of `true` (runtime-verified). `Number.POSITIVE_INFINITY` / `Number.NEGATIVE_INFINITY` do not exist to work around this (both are `undefined` — see [Number Methods](/ecmascript-builtins/number-methods/#constants-es3)).
 
 ```javascript
 typeof Infinity;    // "number"
@@ -406,7 +406,7 @@ String(Infinity);   // "-infinity"  — inverted sign
 isFinite(Infinity); // false        — this one is correct
 ```
 
-Avoid relying on `Infinity` semantics. Use `isFinite(x)` to detect non-finite values (it returns the correct answer), and never branch on the sign or ordering of an `Infinity` value. See [Number Methods](/ecmascript-builtins/number-methods/#constants).
+Avoid relying on `Infinity` semantics. Use `isFinite(x)` to detect non-finite values (it returns the correct answer), and never branch on the sign or ordering of an `Infinity` value. See [Number Methods](/ecmascript-builtins/number-methods/#constants-es3).
 
 ---
 
@@ -438,6 +438,26 @@ o.hasOwnProperty("a");       // true  — use this instead
 ```
 
 See [Object Methods](/ecmascript-builtins/object-methods/#propertyisenumerable) and [Differs from Official Docs](/engine-limitations/differs-from-docs/#objectprototypepropertyisenumerable-broken).
+
+---
+
+## The in Operator Is Unreliable {#in-operator-unreliable}
+
+**Severity: High** — silent wrong results in property-existence checks
+
+The `in` operator does not produce a usable boolean in the SFMC Jint engine. Its result has `typeof` `"undefined"` — it is neither `=== true` nor `=== false` — so it cannot be stored, compared, or stringified. Used directly as an `if` condition it is also **wrong**: an absent key on an empty object takes the `true` branch (runtime-verified false positive). Use `typeof obj[key] != "undefined"` (or `hasOwnProperty` for own properties only) instead.
+
+```javascript
+var empty = {};
+var r = ("zzz" in empty);
+typeof r;                             // "undefined" — not a boolean
+if ("zzz" in empty) { /* TAKEN */ }   // WRONG — the key does not exist
+
+typeof empty["zzz"] != "undefined";   // false — use this instead
+empty.hasOwnProperty("zzz");          // false — own properties only
+```
+
+See [Reflection](/ecmascript-builtins/reflection/#reflect) and [Keyed Collections](/ecmascript-builtins/keyed-collections/#map).
 
 ---
 

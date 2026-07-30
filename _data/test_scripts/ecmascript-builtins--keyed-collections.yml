@@ -1,0 +1,225 @@
+# Test scripts for /ecmascript-builtins/keyed-collections/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — including
+# the negative claims (the ES6 keyed collections are entirely absent) and
+# the plain-object workarounds the page recommends.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# HELPER RULE: assert() compares with a plain === and never coerces its
+# arguments. Because a missing ES6 constructor throws on invocation, every
+# probe is passed as a THUNK so the try/catch actually surrounds it — an
+# uncaught top-level throw makes the whole CloudPage return HTTP 422.
+
+map: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Map
+   *
+   * Proves:
+   *   1. DEVIATION from ECMAScript 2015 marked "DEV": Map does not exist in the
+   *      SFMC Jint engine — typeof Map is "undefined" (spec: "function").
+   *   2. Constructing it throws "Unknown type: Map" (spec: returns a Map).
+   *   3. The recommended workaround — a plain object used as a string-keyed
+   *      dictionary — really does store and retrieve values.
+   *   4. The documented pitfalls of that workaround: object keys are always
+   *      coerced to strings, so a number key and its string form are one and
+   *      the same key; and a plain object cannot key by object identity the way
+   *      a real Map can — using an object as a key throws outright.
+   *   5. A plain object carries none of the Map API (get/set/has/size).
+   *
+   * NOTE: insertion-order preservation is not asserted — property enumeration
+   * order is implementation-defined, so there is no deterministic check for it.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEVIATION — Map is absent. Reading the name does not throw; it is undefined. */
+  assert("DEV typeof Map is 'undefined' (spec: 'function')", function () { return String(typeof Map); }, "undefined");
+
+  /* 2. Constructing it throws the documented message. */
+  assertThrows("DEV new Map() throws (spec: returns a Map)", function () { return new Map(); });
+  assert("new Map() message is 'Unknown type: Map'", function () { try { return new Map(); } catch (ex) { return ex.message; } }, "Unknown type: Map");
+
+  /* 3. Workaround — a plain object as a string-keyed dictionary. */
+  assert("workaround m['a'] returns 1", function () { var m = {}; m["a"] = 1; return m["a"]; }, 1);
+  assert("workaround presence test via typeof", function () { var m = {}; m["a"] = 1; return typeof m["a"] != "undefined" ? "has" : "no"; }, "has");
+  assert("workaround absence test via typeof", function () { var m = {}; m["a"] = 1; return typeof m["zzz"] != "undefined" ? "has" : "no"; }, "no");
+  assert("workaround overwrite replaces the value", function () { var m = {}; m["a"] = 1; m["a"] = 2; return m["a"]; }, 2);
+
+  /* 4a. Pitfall — keys are coerced to strings, so 1 and "1" are the same key. */
+  assert("pitfall number key is readable as a string key", function () { var n = {}; n[1] = "numeric"; return n["1"]; }, "numeric");
+  assert("pitfall string key overwrites the number key", function () { var n = {}; n[1] = "numeric"; n["1"] = "stringy"; return n[1]; }, "stringy");
+
+  /* 4b. Pitfall — a plain object cannot key by object identity: using an object
+   *     as a key does not even reach the string-coercion step, it throws. */
+  assertThrows("cannot key by object identity: obj[objKey] = v throws", function () { var k1 = {}; var byObj = {}; byObj[k1] = "first"; return byObj; });
+  assert("object-key write message", function () { try { var k1 = {}; var byObj = {}; byObj[k1] = "first"; return "did not throw"; } catch (ex) { return ex.message; } }, "Object reference not set to an instance of an object.");
+
+  /* 5. A plain object is not a Map — it has none of the Map API. */
+  assert("plain object has no .get", function () { var m = {}; return String(typeof m.get); }, "undefined");
+  assert("plain object has no .set", function () { var m = {}; return String(typeof m.set); }, "undefined");
+  assert("plain object has no .has", function () { var m = {}; return String(typeof m.has); }, "undefined");
+  assert("plain object has no .size", function () { var m = {}; return String(typeof m.size); }, "undefined");
+  </script>
+
+set: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Set
+   *
+   * Proves:
+   *   1. DEVIATION from ECMAScript 2015 marked "DEV": Set does not exist in the
+   *      SFMC Jint engine — typeof Set is "undefined" (spec: "function").
+   *   2. Constructing it throws "Unknown type: Set" (spec: returns a Set).
+   *   3. The recommended workaround — a plain object whose keys are the members —
+   *      reports membership and non-membership correctly.
+   *   4. The workaround delivers the defining Set semantics: adding the same
+   *      member twice does not duplicate it, so the key count equals the number
+   *      of distinct members.
+   *   5. A plain object carries none of the Set API (add/has/size).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function countKeys(o) {
+      var c = 0;
+      for (var k in o) { c = c + 1; }
+      return c;
+  }
+
+  /* 1. DEVIATION — Set is absent. */
+  assert("DEV typeof Set is 'undefined' (spec: 'function')", function () { return String(typeof Set); }, "undefined");
+
+  /* 2. Constructing it throws the documented message. */
+  assertThrows("DEV new Set() throws (spec: returns a Set)", function () { return new Set(); });
+  assert("new Set() message is 'Unknown type: Set'", function () { try { return new Set(); } catch (ex) { return ex.message; } }, "Unknown type: Set");
+
+  /* 3. Workaround — a plain object whose keys are the members. */
+  assert("workaround membership test", function () { var s = {}; s["x"] = true; return typeof s["x"] != "undefined" ? "member" : "absent"; }, "member");
+  assert("workaround non-membership test", function () { var s = {}; s["x"] = true; return typeof s["y"] != "undefined" ? "member" : "absent"; }, "absent");
+
+  /* 4. Duplicate adds do not duplicate the member. */
+  assert("workaround eliminates duplicates: 2 distinct members", function () { var s = {}; s["x"] = true; s["x"] = true; s["y"] = true; return countKeys(s); }, 2);
+  assert("workaround still reports x as a member after re-add", function () { var s = {}; s["x"] = true; s["x"] = true; return typeof s["x"] != "undefined" ? "member" : "absent"; }, "member");
+
+  /* 5. A plain object is not a Set. */
+  assert("plain object has no .add", function () { var s = {}; return String(typeof s.add); }, "undefined");
+  assert("plain object has no .has", function () { var s = {}; return String(typeof s.has); }, "undefined");
+  assert("plain object has no .size", function () { var s = {}; return String(typeof s.size); }, "undefined");
+  </script>
+
+weakmap: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: WeakMap
+   *
+   * Proves:
+   *   1. DEVIATION from ECMAScript 2015 marked "DEV": WeakMap does not exist in
+   *      the SFMC Jint engine — typeof WeakMap is "undefined" (spec: "function").
+   *   2. Constructing it throws "Unknown type: WeakMap" (spec: returns a WeakMap).
+   *   3. The recommended fallback — a plain object dictionary with manual key
+   *      deletion — stores a value and releases it again on delete. It holds a
+   *      STRONG reference; there is no weak-reference mechanism to assert.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEVIATION — WeakMap is absent. */
+  assert("DEV typeof WeakMap is 'undefined' (spec: 'function')", function () { return String(typeof WeakMap); }, "undefined");
+
+  /* 2. Constructing it throws the documented message. */
+  assertThrows("DEV new WeakMap() throws (spec: returns a WeakMap)", function () { return new WeakMap(); });
+  assert("new WeakMap() message is 'Unknown type: WeakMap'", function () { try { return new WeakMap(); } catch (ex) { return ex.message; } }, "Unknown type: WeakMap");
+
+  /* 3. Fallback — plain object dictionary with manual cleanup. */
+  assert("fallback stores a value", function () { var cache = {}; cache["k"] = "value"; return cache["k"]; }, "value");
+  assert("fallback releases the key on manual delete", function () { var cache = {}; cache["k"] = "value"; delete cache["k"]; return String(typeof cache["k"]); }, "undefined");
+  </script>
+
+weakset: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: WeakSet
+   *
+   * Proves:
+   *   1. DEVIATION from ECMAScript 2015 marked "DEV": WeakSet does not exist in
+   *      the SFMC Jint engine — typeof WeakSet is "undefined" (spec: "function").
+   *   2. Constructing it throws "Unknown type: WeakSet" (spec: returns a WeakSet).
+   *   3. As stated for WeakMap, no weak-reference collection is available at all:
+   *      none of the four ES6 keyed collection constructors exists.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEVIATION — WeakSet is absent. */
+  assert("DEV typeof WeakSet is 'undefined' (spec: 'function')", function () { return String(typeof WeakSet); }, "undefined");
+
+  /* 2. Constructing it throws the documented message. */
+  assertThrows("DEV new WeakSet() throws (spec: returns a WeakSet)", function () { return new WeakSet(); });
+  assert("new WeakSet() message is 'Unknown type: WeakSet'", function () { try { return new WeakSet(); } catch (ex) { return ex.message; } }, "Unknown type: WeakSet");
+
+  /* 3. No keyed collection of any kind exists. */
+  assert("typeof Map is 'undefined' too", function () { return String(typeof Map); }, "undefined");
+  assert("typeof Set is 'undefined' too", function () { return String(typeof Set); }, "undefined");
+  assert("typeof WeakMap is 'undefined' too", function () { return String(typeof WeakMap); }, "undefined");
+  </script>

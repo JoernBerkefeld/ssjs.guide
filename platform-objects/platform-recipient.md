@@ -54,7 +54,7 @@ var email = Attribute.GetValue("EmailAddress");
 <div class="see-also">
 <h4>See Also</h4>
 <ul>
-  <li><a href="/platform-functions/attributevalue/">Platform.Function.AttributeValue</a></li>
+  <li><a href="/core-library/attribute/">Attribute.GetValue()</a></li>
   <li><a href="/platform-objects/platform-request/">Platform.Request</a></li>
 </ul>
 </div>

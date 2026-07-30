@@ -7,6 +7,7 @@ permalink: /ecmascript-builtins/object-methods/
 description: Object methods in SSJS — hasOwnProperty, toString, valueOf, defineProperty and getPrototypeOf work; isPrototypeOf hangs the engine, propertyIsEnumerable is broken, and the ES5/ES6 Object statics are missing with for...in alternatives.
 verification: verified
 differs_from_docs: true
+test_scripts: complete
 ---
 
 `hasOwnProperty`, `toString`, `valueOf` (ES3), `Object.defineProperty` and `Object.getPrototypeOf` (ES5) work in SSJS. `Object.prototype.isPrototypeOf` **hangs the engine** and `propertyIsEnumerable` is **broken**. Every other ES5/ES6 `Object` static (`keys`, `values`, `entries`, `assign`, `create`, `freeze`, `getOwnPropertyNames`, …) is **missing** — use `for...in` with `hasOwnProperty`.
@@ -35,7 +36,7 @@ differs_from_docs: true
 | [`Object.entries(obj)`](#entries) | ES6 | ❌ Missing | `for...in` with `hasOwnProperty` |
 | [`Object.assign(target, ...src)`](#assign) | ES6 | ❌ Missing | Copy properties in a `for...in` loop |
 | [`Object.create(proto)`](#create) | ES5 | ❌ Missing | Use a constructor function with a prototype |
-| [`Object.freeze(obj)`](#freeze) | ES5 | ❌ Missing | Cannot enforce immutability — read-only by convention |
+| [`Object.freeze / isFrozen(obj)`](#freeze) | ES5 | ❌ Missing | Cannot enforce immutability — read-only by convention |
 | [`Object.getOwnPropertyNames(obj)`](#getownpropertynames) | ES5 | ❌ Missing | `for...in` with `hasOwnProperty` (enumerable own keys) |
 | [`Object.getOwnPropertyDescriptor(obj, prop)`](#getownpropertydescriptor) | ES5 | ❌ Missing | Read the value directly + `hasOwnProperty` |
 | [`Object.defineProperties(obj, descriptors)`](#defineproperties) | ES5 | ❌ Missing | Call `Object.defineProperty` once per property |
@@ -56,6 +57,8 @@ for (var key in obj) {
 }
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--object-methods" chapter="hasownproperty" %}
+
 ## toString {#tostring}
 
 `(ES3)` — ✅ Works. Returns the default string representation of the object (e.g. `[object Object]`).
@@ -65,6 +68,8 @@ var o = { a: 1 };
 Write(o.toString());   // [object Object]
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--object-methods" chapter="tostring" %}
+
 ## valueOf {#valueof}
 
 `(ES3)` — ✅ Works. Returns the primitive value of the object (the object itself for plain objects).
@@ -73,6 +78,8 @@ Write(o.toString());   // [object Object]
 var n = new Number(5);
 Write(n.valueOf());   // 5
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--object-methods" chapter="valueof" %}
 
 ## isPrototypeOf {#isprototypeof}
 
@@ -90,6 +97,8 @@ Write(n.valueOf());   // 5
 var isInstance = (obj.constructor === Ctor);
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--object-methods" chapter="isprototypeof" %}
+
 ## propertyIsEnumerable {#propertyisenumerable}
 
 `(ES3)` — ⚠️ Partial. {% include method-status.html status="verified" differs=true %}
@@ -104,6 +113,8 @@ var o = { a: 1 };
 Write(o.hasOwnProperty("a"));   // true — use this instead
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--object-methods" chapter="propertyisenumerable" %}
+
 ## defineProperty {#defineproperty}
 
 `(ES5)` — ✅ Works. Defines or modifies a single property using a descriptor.
@@ -114,6 +125,8 @@ Object.defineProperty(o, "x", { value: 42, enumerable: true });
 Write(o.x);   // 42
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--object-methods" chapter="defineproperty" %}
+
 ## getPrototypeOf {#getprototypeof}
 
 `(ES5)` — ✅ Works. Returns the prototype of the given object.
@@ -123,6 +136,8 @@ var o = { a: 1 };
 var proto = Object.getPrototypeOf(o);
 Write(typeof proto);   // object
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--object-methods" chapter="getprototypeof" %}
 
 ## keys {#keys}
 
@@ -138,6 +153,8 @@ function keys(obj) {
 
 {% include differs-from-mdn.html content="MDN documents a large set of `Object` statics. In the SFMC Jint engine only `Object.defineProperty` and `Object.getPrototypeOf` are present and working — `keys`, `values`, `entries`, `assign`, `create`, `freeze`, `isFrozen`, `defineProperties`, `getOwnPropertyNames`, `getOwnPropertyDescriptor`, `seal`, `isSealed`, `preventExtensions`, and `isExtensible` are all `undefined`. Use a `for...in` loop with `hasOwnProperty` for key/value enumeration." %}
 
+{% include test-script.html bundle="ecmascript-builtins--object-methods" chapter="keys" %}
+
 ## values {#values}
 
 `(ES6)` — ❌ Missing. Collect values with a `for...in` loop and `hasOwnProperty`.
@@ -149,6 +166,8 @@ function values(obj) {
     return result;
 }
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--object-methods" chapter="values" %}
 
 ## entries {#entries}
 
@@ -162,6 +181,8 @@ function entries(obj) {
 }
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--object-methods" chapter="entries" %}
+
 ## assign {#assign}
 
 `(ES6)` — ❌ Missing. Copy properties with a `for...in` loop and `hasOwnProperty`.
@@ -172,6 +193,8 @@ function assign(target, source) {
     return target;
 }
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--object-methods" chapter="assign" %}
 
 ## create {#create}
 
@@ -185,9 +208,13 @@ function makeWithProto(proto) {
 }
 ```
 
-## freeze {#freeze}
+{% include test-script.html bundle="ecmascript-builtins--object-methods" chapter="create" %}
 
-`(ES5)` — ❌ Missing. `Object.freeze` (and `isFrozen`) are unavailable and immutability cannot be enforced; treat the object as read-only by convention.
+## freeze / isFrozen {#freeze}
+
+`(ES5)` — ❌ Missing. `Object.freeze` and `Object.isFrozen` are unavailable and immutability cannot be enforced; treat the object as read-only by convention.
+
+{% include test-script.html bundle="ecmascript-builtins--object-methods" chapter="freeze" %}
 
 ## getOwnPropertyNames {#getownpropertynames}
 
@@ -201,6 +228,8 @@ function ownNames(obj) {
 }
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--object-methods" chapter="getownpropertynames" %}
+
 ## getOwnPropertyDescriptor {#getownpropertydescriptor}
 
 `(ES5)` — ❌ Missing. Read the property value directly and use `hasOwnProperty` to test ownership.
@@ -210,6 +239,8 @@ function ownNames(obj) {
 var hasIt = obj.hasOwnProperty("x");
 var value = hasIt ? obj.x : undefined;
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--object-methods" chapter="getownpropertydescriptor" %}
 
 ## defineProperties {#defineproperties}
 
@@ -221,9 +252,13 @@ Object.defineProperty(o, "a", { value: 1, enumerable: true });
 Object.defineProperty(o, "b", { value: 2, enumerable: true });
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--object-methods" chapter="defineproperties" %}
+
 ## seal / isSealed / preventExtensions / isExtensible {#extensibility}
 
 `(ES5)` — ❌ Missing. None of the extensibility controls are available; objects always remain extensible at runtime and there is nothing to test.
+
+{% include test-script.html bundle="ecmascript-builtins--object-methods" chapter="extensibility" %}
 
 ## See Also
 

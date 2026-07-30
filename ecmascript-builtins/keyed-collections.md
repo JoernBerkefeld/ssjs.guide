@@ -6,6 +6,7 @@ parent_url: /ecmascript-builtins/
 permalink: /ecmascript-builtins/keyed-collections/
 description: The ES6 keyed collections — Map, Set, WeakMap, and WeakSet — are not available in SSJS. The SFMC Jint engine predates ES2015, so all four are undefined and cannot be constructed.
 verification: verified
+test_scripts: complete
 ---
 
 **The ES6 keyed collections are not available in SSJS.** The SFMC server-side JavaScript engine (Jint) implements an ES3/ES5-era dialect and predates ES2015, so `Map`, `Set`, `WeakMap`, and `WeakSet` are entirely absent. Each is `undefined`, and `new Map()` (etc.) throws `Unknown type: Map`.
@@ -42,7 +43,9 @@ Write("a" in m ? "has" : "no"); // note: the `in` operator is unsafe in CloudPag
 // prefer: (typeof m["a"] != "undefined")
 ```
 
-Object keys are always coerced to strings, so a plain object cannot key by object identity or preserve insertion order the way a real `Map` does.
+Object keys are always coerced to strings, so a plain object cannot key by object identity or preserve insertion order the way a real `Map` does. In this engine, using an object as a key does not even reach the string-coercion step — `obj[objectKey] = value` throws `Object reference not set to an instance of an object.`
+
+{% include test-script.html bundle="ecmascript-builtins--keyed-collections" chapter="map" %}
 
 ## Set {#set}
 
@@ -57,13 +60,19 @@ s["x"] = true;
 Write(typeof s["x"] != "undefined" ? "member" : "absent"); // "member"
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--keyed-collections" chapter="set" %}
+
 ## WeakMap {#weakmap}
 
 `(ES6)` — ❌ Missing. `WeakMap` is **not defined** — `typeof WeakMap === "undefined"` and `new WeakMap()` throws `Unknown type: WeakMap`. There is no weak-reference mechanism in this engine; use a plain object dictionary (which holds strong references) and delete keys manually when done.
 
+{% include test-script.html bundle="ecmascript-builtins--keyed-collections" chapter="weakmap" %}
+
 ## WeakSet {#weakset}
 
 `(ES6)` — ❌ Missing. `WeakSet` is **not defined** — `typeof WeakSet === "undefined"` and `new WeakSet()` throws `Unknown type: WeakSet`. As with `WeakMap`, no weak-reference collection is available.
+
+{% include test-script.html bundle="ecmascript-builtins--keyed-collections" chapter="weakset" %}
 
 ## See Also
 

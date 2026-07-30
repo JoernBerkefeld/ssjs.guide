@@ -4,6 +4,7 @@ title: String Methods
 parent: ECMAScript Built-ins
 parent_url: /ecmascript-builtins/
 verification: verified
+test_scripts: complete
 differs_from_docs: true
 redirect_from:
   - /global-functions/string/
@@ -49,6 +50,8 @@ Stringify(obj);   // '{"a":1,"b":2}'     — JSON serialization
 
 Do not call `String(e)` on a thrown plain object (it can raise a .NET null-reference error) — see [Error()](/ecmascript-builtins/error/).
 
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="string-constructor" %}
+
 ## Status legend
 
 | Icon | Meaning |
@@ -77,7 +80,7 @@ Do not call `String(e)` on a thrown plain object (it can raise a .NET null-refer
 | [`match(regexp)`](#match) | ES3 | ⚠️ Partial | Returns `[]` (not `null`) on no match; no `.index` |
 | [`search(regexp)`](#search) | ES3 | ⚠️ Partial | Returns `0` (not `-1`) on no match; unreliable — see Polyfills |
 | [`split(separator, limit)`](#split) | ES3 | ⚠️ Partial | Empty-separator form does not split into chars — see Polyfills |
-| [`trim()`](#trim) | ES5 | ❌ Missing | See Polyfills, or `Platform.Function.Trim` |
+| [`trim()`](#trim) | ES5 | ❌ Missing | See Polyfills |
 | [`substr(start, length)`](#substr) | ES3 | ❌ Missing | Throws at runtime — use `substring`/`slice` or polyfill |
 | [`startsWith(prefix)`](#startswith) | ES6 | ❌ Missing | Use `indexOf(prefix) === 0` or polyfill |
 | [`endsWith(suffix)`](#endswith) | ES6 | ❌ Missing | Use `lastIndexOf` check or polyfill |
@@ -99,6 +102,8 @@ Do not call `String(e)` on a thrown plain object (it can raise a .NET null-refer
 "Hello".length;   // 5
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="length" %}
+
 ## charAt {#charat}
 
 `(ES3)` — ⚠️ Partial. Returns the character at the given index. In-range indices behave normally, but **out-of-range indices are broken**: instead of the spec-mandated empty string `""`, SFMC returns the **last character** of the string. Guard the index against `.length` before calling.
@@ -112,6 +117,8 @@ Do not call `String(e)` on a thrown plain object (it can raise a .NET null-refer
 "Hello"[99];          // throws "Index was outside the bounds of the array"
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="charat" %}
+
 ## charCodeAt {#charcodeat}
 
 `(ES3)` — ✅ Works. Returns the UTF-16 code unit at the given index.
@@ -119,6 +126,8 @@ Do not call `String(e)` on a thrown plain object (it can raise a .NET null-refer
 ```javascript
 "Hello".charCodeAt(0);   // 72
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="charcodeat" %}
 
 ## indexOf {#indexof}
 
@@ -129,6 +138,8 @@ Do not call `String(e)` on a thrown plain object (it can raise a .NET null-refer
 "Hello World".indexOf("o", 5);    // 7
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="indexof" %}
+
 ## lastIndexOf {#lastindexof}
 
 `(ES3)` — ✅ Works. Returns the index of the last occurrence, or `-1`.
@@ -136,6 +147,8 @@ Do not call `String(e)` on a thrown plain object (it can raise a .NET null-refer
 ```javascript
 "Hello World Hello".lastIndexOf("Hello");   // 12
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="lastindexof" %}
 
 ## toUpperCase {#touppercase}
 
@@ -145,6 +158,8 @@ Do not call `String(e)` on a thrown plain object (it can raise a .NET null-refer
 "Hello".toUpperCase();   // "HELLO"
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="touppercase" %}
+
 ## toLowerCase {#tolowercase}
 
 `(ES3)` — ✅ Works.
@@ -152,6 +167,8 @@ Do not call `String(e)` on a thrown plain object (it can raise a .NET null-refer
 ```javascript
 "Hello".toLowerCase();   // "hello"
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="tolowercase" %}
 
 ## toLocaleLowerCase {#tolocalelowercase}
 
@@ -161,6 +178,8 @@ Do not call `String(e)` on a thrown plain object (it can raise a .NET null-refer
 "Hello".toLocaleLowerCase();   // "hello"
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="tolocalelowercase" %}
+
 ## substring {#substring}
 
 `(ES3)` — ✅ Works. Returns the part of the string between two indices.
@@ -168,6 +187,8 @@ Do not call `String(e)` on a thrown plain object (it can raise a .NET null-refer
 ```javascript
 "Hello World".substring(6, 11);   // "World"
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="substring" %}
 
 ## slice {#slice}
 
@@ -178,6 +199,8 @@ Do not call `String(e)` on a thrown plain object (it can raise a .NET null-refer
 "Hello World".slice(-5);     // "World"
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="slice" %}
+
 ## concat {#concat}
 
 `(ES3)` — ✅ Works. Concatenates strings. `+` is usually preferred.
@@ -185,6 +208,8 @@ Do not call `String(e)` on a thrown plain object (it can raise a .NET null-refer
 ```javascript
 "Hello".concat(" ", "World");   // "Hello World"
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="concat" %}
 
 ## replace {#replace}
 
@@ -196,6 +221,8 @@ Do not call `String(e)` on a thrown plain object (it can raise a .NET null-refer
 "hello world".replace(/\b\w/g, function (c) { return c.toUpperCase(); });   // "Hello World"
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="replace" %}
+
 ## localeCompare {#localecompare}
 
 `(ES3)` — ✅ Works. Compares two strings in the current locale.
@@ -204,6 +231,8 @@ Do not call `String(e)` on a thrown plain object (it can raise a .NET null-refer
 "apple".localeCompare("banana");   // negative
 "apple".localeCompare("apple");    // 0
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="localecompare" %}
 
 ## match {#match}
 
@@ -215,6 +244,8 @@ str.match(/\d{3}-\d{4}/g);   // ["555-1234", "555-5678"]
 str.match(/zzz/);            // [] (empty array in SFMC, not null)
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="match" %}
+
 ## search {#search}
 
 `(ES3)` — ⚠️ Partial. Unreliable in SFMC: returns `0` instead of `-1` for a no-match, and some real matches return the wrong index. Use [`match`](#match) or [`RegExp.test`](/ecmascript-builtins/regular-expressions/#test) to detect a match, or apply the [polyfill](/engine-limitations/polyfills/#string-prototype-search).
@@ -222,6 +253,8 @@ str.match(/zzz/);            // [] (empty array in SFMC, not null)
 ```javascript
 "abc123".search(/\d/);   // unreliable — prefer match() or RegExp.test()
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="search" %}
 
 ## split {#split}
 
@@ -237,15 +270,19 @@ var s = "hello";
 for (var i = 0; i < s.length; i++) { chars.push(s.charAt(i)); }
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="split" %}
+
 ## trim {#trim}
 
-`(ES5)` — ❌ Missing. Apply the [polyfill](/engine-limitations/polyfills/#string-prototype-trim), or use `Platform.Function.Trim`.
+`(ES5)` — ❌ Missing. Apply the [polyfill](/engine-limitations/polyfills/#string-prototype-trim). There is no `Platform.Function.Trim` in SSJS — reading it reports `clrmethodinfo` (a [phantom member](/engine-limitations/known-bugs/)), but calling it throws `Unable to retrieve security descriptor for this frame.`
 
 ```javascript
 function trim(str) {
     return String(str).replace(/^\s+/, "").replace(/\s+$/, "");
 }
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="trim" %}
 
 ## substr {#substr}
 
@@ -254,6 +291,8 @@ function trim(str) {
 ```javascript
 "Hello World".substring(6, 11);   // "World"  (instead of substr(6, 5))
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="substr" %}
 
 ## startsWith {#startswith}
 
@@ -265,6 +304,8 @@ function startsWith(str, prefix) {
 }
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="startswith" %}
+
 ## endsWith {#endswith}
 
 `(ES6)` — ❌ Missing. Use a `lastIndexOf` check or the [polyfill](/engine-limitations/polyfills/#string-prototype-endswith).
@@ -274,6 +315,8 @@ function endsWith(str, suffix) {
     return str.lastIndexOf(suffix) === str.length - suffix.length;
 }
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="endswith" %}
 
 ## includes {#includes}
 
@@ -285,6 +328,8 @@ function includes(str, sub) {
 }
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="includes" %}
+
 ## trimStart {#trimstart}
 
 `(ES6)` — ❌ Missing. Use a `/^\s+/` replace.
@@ -295,6 +340,8 @@ function trimStart(str) {
 }
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="trimstart" %}
+
 ## trimEnd {#trimend}
 
 `(ES6)` — ❌ Missing. Use a `/\s+$/` replace.
@@ -304,6 +351,8 @@ function trimEnd(str) {
     return String(str).replace(/\s+$/, "");
 }
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="trimend" %}
 
 ## padStart {#padstart}
 
@@ -319,6 +368,8 @@ function padStart(str, targetLen, padChar) {
 padStart("7", 3, "0");   // "007"
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="padstart" %}
+
 ## padEnd {#padend}
 
 `(ES6)` — ❌ Missing. Append pad characters in a loop.
@@ -331,6 +382,8 @@ function padEnd(str, targetLen, padChar) {
     return str;
 }
 ```
+
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="padend" %}
 
 ## repeat {#repeat}
 
@@ -345,6 +398,8 @@ function repeat(str, n) {
 repeat("ab", 3);   // "ababab"
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="repeat" %}
+
 ## codePointAt {#codepointat}
 
 `(ES6)` — ❌ Missing. Use `charCodeAt` for Basic Multilingual Plane characters.
@@ -353,6 +408,8 @@ repeat("ab", 3);   // "ababab"
 "A".charCodeAt(0);   // 65  (codePointAt(0) for BMP chars)
 ```
 
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="codepointat" %}
+
 ## See Also
 
 <div class="see-also">
@@ -360,6 +417,5 @@ repeat("ab", 3);   // "ababab"
 <ul>
   <li><a href="/engine-limitations/polyfills/">Polyfills</a></li>
   <li><a href="/ecmascript-builtins/regular-expressions/">Regular Expressions</a></li>
-  <li><a href="/platform-functions/trim/">Platform.Function.Trim</a></li>
 </ul>
 </div>

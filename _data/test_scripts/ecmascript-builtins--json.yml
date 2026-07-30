@@ -1,0 +1,192 @@
+# Test scripts for /ecmascript-builtins/json/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the ECMAScript spec.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+parse: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: parse — JSON.parse is missing; use Platform.Function.ParseJSON
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": the native JSON object is MISSING.
+   *      typeof JSON is "undefined" (spec/ES5: "object"), and JSON.parse
+   *      throws "Object expected: parse" when invoked.
+   *      NOTE: merely READING JSON.parse does not throw — Jint resolves the
+   *      whole member path to undefined; only the CALL throws.
+   *   2. The documented workaround works: Platform.Function.ParseJSON(str + "")
+   *      parses a JSON string into an SSJS object, and obj.name is "Jane".
+   *   3. Round-trips with deterministic fixtures: nested objects, arrays,
+   *      null, booleans, numbers, escaped quotes and non-ASCII characters all
+   *      survive Stringify -> ParseJSON unchanged.
+   *   4. Documented edge cases of ParseJSON: a top-level JSON array yields an
+   *      indexable array; a SCALAR JSON value comes back as a STRING, not a
+   *      number/boolean/null; and invalid, empty, null or undefined input
+   *      returns null WITHOUT throwing.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEVIATION — the native JSON object does not exist. */
+  try {
+      assert("DEV typeof JSON is undefined (spec: object)", String(typeof JSON), "undefined");
+  } catch (e1) { Platform.Response.Write("FAIL typeof JSON -> THREW: " + e1.message + "\n"); }
+  try {
+      assert("DEV reading JSON.parse yields undefined (spec: function)", String(typeof JSON.parse), "undefined");
+  } catch (e2) { Platform.Response.Write("FAIL read JSON.parse -> THREW: " + e2.message + "\n"); }
+  assertThrows("DEV JSON.parse('{\"a\":1}') throws (spec: returns an object)", function () { return JSON.parse('{"a":1}'); });
+
+  /* 2. Workaround from the page: Platform.Function.ParseJSON with a coerced string. */
+  try {
+      var jsonString = '{"name":"Jane","age":30}';
+      var obj = Platform.Function.ParseJSON(jsonString + "");
+      assert("ParseJSON result is an object", String(typeof obj), "object");
+      assert("ParseJSON(...).name is 'Jane'", String(obj.name), "Jane");
+      assert("ParseJSON(...).age is 30", String(obj.age), "30");
+  } catch (e3) { Platform.Response.Write("FAIL ParseJSON basic -> THREW: " + e3.message + "\n"); }
+
+  /* 3. Round-trip with a deterministic mixed fixture. */
+  try {
+      var fixture = { n: 1.5, s: "x\"y", b: true, z: null, arr: [10, 20, 30], nested: { deep: "ok" }, uni: "caf\u00e9" };
+      var round = Platform.Function.ParseJSON(Platform.Function.Stringify(fixture) + "");
+      assert("round-trip number survives", String(round.n), "1.5");
+      assert("round-trip escaped quote survives", String(round.s), 'x"y');
+      assert("round-trip boolean survives", String(round.b), "true");
+      assert("round-trip null survives", String(round.z), "null");
+      assert("round-trip array element survives", String(round.arr[2]), "30");
+      assert("round-trip nested object survives", String(round.nested.deep), "ok");
+      assert("round-trip non-ASCII character survives", String(round.uni), "caf\u00e9");
+      assert("round-trip non-ASCII length is 4", String(round.uni.length), "4");
+  } catch (e4) { Platform.Response.Write("FAIL round-trip -> THREW: " + e4.message + "\n"); }
+
+  /* 4. Documented ParseJSON edge cases. */
+  try {
+      var list = Platform.Function.ParseJSON('[10,20,30]');
+      assert("ParseJSON of a top-level array is indexable", String(list[1]), "20");
+  } catch (e5) { Platform.Response.Write("FAIL ParseJSON array -> THREW: " + e5.message + "\n"); }
+  try {
+      var scalar = Platform.Function.ParseJSON('42');
+      assert("ParseJSON('42') returns a STRING, not a number", String(typeof scalar), "string");
+      assert("ParseJSON('42') value is '42'", String(scalar), "42");
+  } catch (e6) { Platform.Response.Write("FAIL ParseJSON scalar -> THREW: " + e6.message + "\n"); }
+  try {
+      assert("ParseJSON of malformed input returns null (it does NOT throw)", Platform.Function.ParseJSON("{not json") === null, true);
+  } catch (e7) { Platform.Response.Write("FAIL ParseJSON malformed -> THREW: " + e7.message + "\n"); }
+  </script>
+
+stringify: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: stringify — JSON.stringify is missing; use
+   * Platform.Function.Stringify or the bare-name Stringify Core global
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": the native JSON object is MISSING, so
+   *      JSON.stringify throws "Object expected: stringify" when invoked
+   *      (spec/ES5: returns a JSON string).
+   *   2. The documented workaround works without Platform.Load:
+   *      Platform.Function.Stringify({name:"Jane",age:30}) returns exactly
+   *      '{"name":"Jane","age":30}' — key order follows insertion order.
+   *   3. The bare-name Stringify Core global (available after
+   *      Platform.Load("core","1")) produces the identical string.
+   *   4. Scalars and structures serialize as documented: strings are quoted,
+   *      numbers and booleans are bare, null becomes "null", nested objects
+   *      and arrays are emitted inline, and an embedded double quote is
+   *      backslash-escaped.
+   *   5. DEVIATION marked "DEV": there is no replacer / reviver / space
+   *      argument. Platform.Function.Stringify takes exactly ONE argument
+   *      (spec: JSON.stringify(value, replacer, space)); a second argument
+   *      throws, so pretty-printing and custom replacers are unavailable.
+   *   6. DEVIATION marked "DEV": Stringify is a hosted CLR method, so
+   *      typeof Platform.Function.Stringify is "clrmethodinfo", not
+   *      "function" — the bare-name Core global IS a real "function".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEVIATION — no native JSON.stringify. */
+  try {
+      assert("DEV typeof JSON is undefined (spec: object)", String(typeof JSON), "undefined");
+  } catch (s1) { Platform.Response.Write("FAIL typeof JSON -> THREW: " + s1.message + "\n"); }
+  try {
+      assert("DEV reading JSON.stringify yields undefined (spec: function)", String(typeof JSON.stringify), "undefined");
+  } catch (s2) { Platform.Response.Write("FAIL read JSON.stringify -> THREW: " + s2.message + "\n"); }
+  assertThrows("DEV JSON.stringify({a:1}) throws (spec: returns '{\"a\":1}')", function () { return JSON.stringify({ a: 1 }); });
+
+  /* 2. Workaround from the page — Platform.Function.Stringify, no Platform.Load needed. */
+  try {
+      var obj = { name: "Jane", age: 30 };
+      assert("Platform.Function.Stringify(obj) matches the documented output", String(Platform.Function.Stringify(obj)), '{"name":"Jane","age":30}');
+  } catch (s3) { Platform.Response.Write("FAIL Platform.Function.Stringify -> THREW: " + s3.message + "\n"); }
+
+  /* 3. The bare-name Core global produces the identical string. */
+  try {
+      var obj2 = { name: "Jane", age: 30 };
+      assert("Stringify global matches Platform.Function.Stringify", String(Stringify(obj2)), '{"name":"Jane","age":30}');
+  } catch (s4) { Platform.Response.Write("FAIL Stringify global -> THREW: " + s4.message + "\n"); }
+
+  /* 4. Scalars and structures. */
+  try {
+      assert("Stringify('hi') quotes the string", String(Platform.Function.Stringify("hi")), '"hi"');
+  } catch (s5) { Platform.Response.Write("FAIL Stringify string -> THREW: " + s5.message + "\n"); }
+  try {
+      assert("Stringify(42) emits a bare number", String(Platform.Function.Stringify(42)), "42");
+  } catch (s6) { Platform.Response.Write("FAIL Stringify number -> THREW: " + s6.message + "\n"); }
+  try {
+      assert("Stringify(true) emits a bare boolean", String(Platform.Function.Stringify(true)), "true");
+  } catch (s7) { Platform.Response.Write("FAIL Stringify boolean -> THREW: " + s7.message + "\n"); }
+  try {
+      assert("Stringify(null) emits the literal null", String(Platform.Function.Stringify(null)), "null");
+  } catch (s8) { Platform.Response.Write("FAIL Stringify null -> THREW: " + s8.message + "\n"); }
+  try {
+      assert("Stringify escapes an embedded double quote", String(Platform.Function.Stringify({ s: 'x"y' })), '{"s":"x\\"y"}');
+  } catch (s9) { Platform.Response.Write("FAIL Stringify escape -> THREW: " + s9.message + "\n"); }
+  try {
+      assert("Stringify of a nested object is inline", String(Platform.Function.Stringify({ a: { b: 1 } })), '{"a":{"b":1}}');
+  } catch (s10) { Platform.Response.Write("FAIL Stringify nested -> THREW: " + s10.message + "\n"); }
+
+  /* 5. DEVIATION — one argument only: no replacer, reviver or space. */
+  assertThrows("DEV Stringify(value, space) throws — no space arg (spec: pretty-prints)", function () { return Platform.Function.Stringify({ a: 1 }, 2); });
+  assertThrows("DEV Stringify(value, replacer) throws — no replacer arg (spec: filters keys)", function () { return Platform.Function.Stringify({ a: 1 }, ["a"]); });
+
+  /* 6. DEVIATION — hosted CLR method vs. real JS function. */
+  try {
+      assert("DEV typeof Platform.Function.Stringify is clrmethodinfo (spec-style: function)", String(typeof Platform.Function.Stringify), "clrmethodinfo");
+  } catch (s11) { Platform.Response.Write("FAIL typeof PF.Stringify -> THREW: " + s11.message + "\n"); }
+  try {
+      assert("typeof the bare-name Stringify global is function", String(typeof Stringify), "function");
+  } catch (s12) { Platform.Response.Write("FAIL typeof Stringify -> THREW: " + s12.message + "\n"); }
+  </script>

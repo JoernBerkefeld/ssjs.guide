@@ -1,0 +1,1412 @@
+# Test scripts for /ecmascript-builtins/array-methods/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the ECMAScript spec.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+push: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: push(...items)
+   *
+   * Proves:
+   *   1. push is available (typeof "function").
+   *   2. Appending a single item mutates the array in place: [1,2,3] -> [1,2,3,4].
+   *   3. push returns the NEW length of the array.
+   *   4. Multiple items can be appended in one call.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var pushArr = [1, 2, 3];
+  assert("typeof [].push is function", typeof pushArr.push, "function");
+  var pushRet = pushArr.push(4);
+  assert("[1,2,3].push(4) makes [1,2,3,4]", pushArr.join(","), "1,2,3,4");
+  assert("push returns the new length 4", pushRet, "4");
+  var pushArr2 = [1];
+  var pushRet2 = pushArr2.push(2, 3);
+  assert("push(2,3) appends both items", pushArr2.join(","), "1,2,3");
+  assert("push(2,3) returns the new length 3", pushRet2, "3");
+  </script>
+
+pop: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: pop()
+   *
+   * Proves:
+   *   1. pop is available (typeof "function").
+   *   2. pop RETURNS the last item: [1,2,3].pop() === 3.
+   *   3. pop MUTATES the array in place, leaving [1,2].
+   *   4. pop on an empty array returns undefined.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var popArr = [1, 2, 3];
+  assert("typeof [].pop is function", typeof popArr.pop, "function");
+  var popLast = popArr.pop();
+  assert("[1,2,3].pop() returns 3", popLast, "3");
+  assert("after pop the array is [1,2]", popArr.join(","), "1,2");
+  assert("after pop the length is 2", popArr.length, "2");
+  var popEmpty = [];
+  assert("[].pop() is undefined", typeof popEmpty.pop(), "undefined");
+  </script>
+
+shift: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: shift()
+   *
+   * Proves:
+   *   1. shift is available (typeof "function").
+   *   2. shift RETURNS the first item: [1,2,3].shift() === 1.
+   *   3. shift MUTATES the array in place, leaving [2,3].
+   *   4. shift on an empty array returns undefined.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var shiftArr = [1, 2, 3];
+  assert("typeof [].shift is function", typeof shiftArr.shift, "function");
+  var shiftFirst = shiftArr.shift();
+  assert("[1,2,3].shift() returns 1", shiftFirst, "1");
+  assert("after shift the array is [2,3]", shiftArr.join(","), "2,3");
+  assert("after shift the length is 2", shiftArr.length, "2");
+  var shiftEmpty = [];
+  assert("[].shift() is undefined", typeof shiftEmpty.shift(), "undefined");
+  </script>
+
+unshift: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: unshift(...items)
+   *
+   * Proves:
+   *   1. unshift is available (typeof "function").
+   *   2. Prepending mutates the array in place: [1,2,3] -> [0,1,2,3].
+   *   3. unshift returns the NEW length.
+   *   4. Several items can be prepended in one call, keeping their order.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var unshiftArr = [1, 2, 3];
+  assert("typeof [].unshift is function", typeof unshiftArr.unshift, "function");
+  var unshiftRet = unshiftArr.unshift(0);
+  assert("[1,2,3].unshift(0) makes [0,1,2,3]", unshiftArr.join(","), "0,1,2,3");
+  assert("unshift returns the new length 4", unshiftRet, "4");
+  var unshiftArr2 = [3];
+  var unshiftRet2 = unshiftArr2.unshift(1, 2);
+  assert("unshift(1,2) prepends in order", unshiftArr2.join(","), "1,2,3");
+  assert("unshift(1,2) returns the new length 3", unshiftRet2, "3");
+  </script>
+
+concat: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: concat(...arrays)
+   *
+   * Proves:
+   *   1. concat is available (typeof "function").
+   *   2. [1,2].concat([3,4]) returns a new [1,2,3,4].
+   *   3. concat does NOT mutate the receiver.
+   *   4. Plain values and several arrays can be concatenated in one call.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var concatBase = [1, 2];
+  assert("typeof [].concat is function", typeof concatBase.concat, "function");
+  var concatOut = concatBase.concat([3, 4]);
+  assert("[1,2].concat([3,4]) is [1,2,3,4]", concatOut.join(","), "1,2,3,4");
+  assert("concat leaves the receiver unchanged", concatBase.join(","), "1,2");
+  assert("concat returns a new array (not the receiver)", concatOut === concatBase, "false");
+  assert("concat accepts plain values", [1].concat(2, 3).join(","), "1,2,3");
+  assert("concat accepts several arrays", [1].concat([2], [3, 4]).join(","), "1,2,3,4");
+  </script>
+
+join: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: join(separator)
+   *
+   * Proves:
+   *   1. join is available (typeof "function").
+   *   2. ["Hello","World"].join(", ") returns "Hello, World".
+   *   3. join returns a string.
+   *   4. The no-argument form uses the default "," separator.
+   *   5. An empty array joins to the empty string.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var joinArr = ["Hello", "World"];
+  assert("typeof [].join is function", typeof joinArr.join, "function");
+  assert("['Hello','World'].join(', ') is 'Hello, World'", joinArr.join(", "), "Hello, World");
+  assert("join returns a string", typeof joinArr.join(", "), "string");
+  assert("join() defaults to a comma separator", [1, 2, 3].join(), "1,2,3");
+  assert("join('') concatenates without a separator", [1, 2, 3].join(""), "123");
+  assert("[].join(',') is the empty string", [].join(","), "");
+  </script>
+
+reverse: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: reverse()
+   *
+   * Proves:
+   *   1. reverse is available (typeof "function").
+   *   2. [1,2,3].reverse() reverses IN PLACE, giving [3,2,1].
+   *   3. reverse returns the same array object it mutated.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var revArr = [1, 2, 3];
+  assert("typeof [].reverse is function", typeof revArr.reverse, "function");
+  var revRet = revArr.reverse();
+  assert("[1,2,3].reverse() gives [3,2,1]", revArr.join(","), "3,2,1");
+  assert("reverse mutates in place (same object returned)", revRet === revArr, "true");
+  assert("reverse of a 2-item array", ["a", "b"].reverse().join(","), "b,a");
+  </script>
+
+length: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: length
+   *
+   * Proves:
+   *   1. [1,2,3].length is 3 and is a number.
+   *   2. An empty array has length 0.
+   *   3. length tracks mutations made through push and pop.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var lenArr = [1, 2, 3];
+  assert("[1,2,3].length is 3", lenArr.length, "3");
+  assert("typeof length is number", typeof lenArr.length, "number");
+  assert("[].length is 0", [].length, "0");
+  lenArr.push(4);
+  assert("length is 4 after push", lenArr.length, "4");
+  lenArr.pop();
+  assert("length is 3 again after pop", lenArr.length, "3");
+  </script>
+
+tolocalestring: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: toLocaleString()
+   *
+   * Proves:
+   *   1. toLocaleString is available (typeof "function").
+   *   2. [1,2,3].toLocaleString() returns "1,2,3".
+   *   3. The result is a string.
+   *   4. An empty array yields the empty string.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var tlsArr = [1, 2, 3];
+  assert("typeof [].toLocaleString is function", typeof tlsArr.toLocaleString, "function");
+  assert("[1,2,3].toLocaleString() is '1,2,3'", tlsArr.toLocaleString(), "1,2,3");
+  assert("toLocaleString returns a string", typeof tlsArr.toLocaleString(), "string");
+  assert("[].toLocaleString() is the empty string", [].toLocaleString(), "");
+  </script>
+
+slice: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: slice(start, end) - PARTIAL
+   *
+   * Proves:
+   *   1. slice is available (typeof "function").
+   *   2. slice(1, 3) returns [1, 2] from [0,1,2,3,4].
+   *   3. NEGATIVE indices work correctly: slice(-2) -> [3,4], slice(1,-1) -> [1,2,3].
+   *   4. slice(0) copies the whole array and does not mutate the receiver.
+   *   5. DEVIATION: the no-argument form slice() THROWS
+   *      "Index was outside the bounds of the array."
+   *      (spec: slice() returns a shallow copy of the whole array).
+   *   6. The documented workaround slice(0) produces exactly that copy.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var sliceArr = [0, 1, 2, 3, 4];
+  assert("typeof [].slice is function", typeof sliceArr.slice, "function");
+  assert("slice(1,3) is [1,2]", sliceArr.slice(1, 3).join(","), "1,2");
+  assert("slice(-2) is [3,4] - negative start works", sliceArr.slice(-2).join(","), "3,4");
+  assert("slice(1,-1) is [1,2,3] - negative end works", sliceArr.slice(1, -1).join(","), "1,2,3");
+  assert("slice(0) copies the whole array", sliceArr.slice(0).join(","), "0,1,2,3,4");
+  assert("slice(0) returns a NEW array", sliceArr.slice(0) === sliceArr, "false");
+  assert("slice does not mutate the receiver", sliceArr.join(","), "0,1,2,3,4");
+  assertThrows("DEV slice() no-arg form throws (spec: full copy)", function () { var a = [0, 1, 2]; return a.slice(); });
+  assert("workaround slice(0) equals the original content", [7, 8, 9].slice(0).join(","), "7,8,9");
+  </script>
+
+sort: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: sort(compareFn) - PARTIAL
+   *
+   * Proves:
+   *   1. sort is available (typeof "function").
+   *   2. A numeric compare function sorts ascending, in place.
+   *   3. A string compare function sorts as expected.
+   *   4. sort returns the same array object it mutated.
+   *   5. DEVIATION: the no-argument form sort() THROWS
+   *      "Failed to compare two elements in the array."
+   *      (spec: sort() sorts lexicographically by default).
+   *   6. The documented workaround - always pass a compare function - works.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var sortArr = [3, 1, 4, 1, 5];
+  assert("typeof [].sort is function", typeof sortArr.sort, "function");
+  var sortRet = sortArr.sort(function (a, b) { return a - b; });
+  assert("numeric comparator sorts ascending", sortArr.join(","), "1,1,3,4,5");
+  assert("sort returns the same array object", sortRet === sortArr, "true");
+  var sortDesc = [3, 1, 4].sort(function (a, b) { return b - a; });
+  assert("numeric comparator sorts descending", sortDesc.join(","), "4,3,1");
+  var sortStr = ["pear", "apple", "fig"].sort(function (a, b) { if (a < b) { return -1; } if (a > b) { return 1; } return 0; });
+  assert("string comparator sorts alphabetically", sortStr.join(","), "apple,fig,pear");
+  assertThrows("DEV sort() no-arg form throws (spec: lexicographic sort)", function () { var a = [3, 1, 2]; return a.sort(); });
+  assert("workaround: always pass a comparator", [10, 9].sort(function (a, b) { return a - b; }).join(","), "9,10");
+  </script>
+
+splice: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: splice(start, deleteCount, ...items) - PARTIAL
+   *
+   * Proves:
+   *   1. splice is available (typeof "function").
+   *   2. The two-argument DELETE form works: ["a","b","c","d"].splice(1,1)
+   *      leaves ["a","c","d"].
+   *   3. An over-large deleteCount is clamped to the remaining length.
+   *   4. DEVIATION: the one-argument form splice(start) THROWS
+   *      "Index was outside the bounds of the array."
+   *      (spec: removes everything from start to the end).
+   *   5. DEVIATION: the INSERT form is broken - as soon as a third argument is
+   *      passed the engine ignores start/deleteCount and overwrites from the left:
+   *        ["a","b","c","d"].splice(1,1,"X")      -> ["X","b","c","d"]
+   *          (spec: ["a","X","c","d"])
+   *        ["a","b","c","d"].splice(1,0,"B","C")  -> ["B","C","c","d"]
+   *          (spec: ["a","B","C","b","c","d"])
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var spArr = ["a", "b", "c", "d"];
+  assert("typeof [].splice is function", typeof spArr.splice, "function");
+  spArr.splice(1, 1);
+  assert("splice(1,1) deletes one item -> a,c,d", spArr.join(","), "a,c,d");
+  var spClamp = ["a", "b", "c", "d"];
+  spClamp.splice(1, 10);
+  assert("over-large deleteCount is clamped -> a", spClamp.join(","), "a");
+  assertThrows("DEV splice(start) one-arg form throws (spec: delete to end)", function () { var a = ["a", "b", "c", "d"]; return a.splice(2); });
+  var spIns = ["a", "b", "c", "d"];
+  spIns.splice(1, 1, "X");
+  assert("DEV splice(1,1,'X') overwrites from the left -> X,b,c,d (spec: a,X,c,d)", spIns.join(","), "X,b,c,d");
+  var spIns2 = ["a", "b", "c", "d"];
+  spIns2.splice(1, 0, "B", "C");
+  assert("DEV splice(1,0,'B','C') overwrites from the left -> B,C,c,d (spec: a,B,C,b,c,d)", spIns2.join(","), "B,C,c,d");
+  </script>
+
+indexof: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: indexOf(searchValue, fromIndex) - MISSING
+   *
+   * Proves:
+   *   1. Array.prototype.indexOf is NOT available in SFMC
+   *      (typeof [].indexOf is "undefined"; spec (ES5): a function).
+   *   2. Calling it throws instead of returning an index.
+   *   3. The documented for-loop workaround returns the index of a match
+   *      and -1 when the value is absent.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var ioArr = ["a", "b", "c"];
+  assert("DEV typeof [].indexOf is undefined (spec ES5: function)", typeof ioArr.indexOf, "undefined");
+  assertThrows("DEV [].indexOf('b') throws (spec: returns 1)", function () { var a = ["a", "b"]; return a.indexOf("b"); });
+
+  function indexOfPoly(arr, value) {
+      for (var i = 0; i < arr.length; i++) {
+          if (arr[i] === value) { return i; }
+      }
+      return -1;
+  }
+  assert("workaround indexOf finds 'b' at 1", indexOfPoly(ioArr, "b"), "1");
+  assert("workaround indexOf finds 'a' at 0", indexOfPoly(ioArr, "a"), "0");
+  assert("workaround indexOf returns -1 when absent", indexOfPoly(ioArr, "z"), "-1");
+  </script>
+
+lastindexof: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: lastIndexOf(searchValue, fromIndex) - PARTIAL (broken)
+   *
+   * Proves:
+   *   1. lastIndexOf IS present (typeof "function") - unlike indexOf.
+   *   2. DEVIATION: it is broken and ALWAYS returns -1, even for a value that
+   *      is clearly in the array (spec: the last matching index).
+   *   3. The documented reverse for-loop workaround returns the correct last
+   *      index and -1 when the value is absent.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var liArr = ["a", "b", "a", "c"];
+  assert("typeof [].lastIndexOf is function", typeof liArr.lastIndexOf, "function");
+  assert("DEV lastIndexOf('a') returns -1 (spec: 2)", liArr.lastIndexOf("a"), "-1");
+  assert("DEV lastIndexOf('c') returns -1 (spec: 3)", liArr.lastIndexOf("c"), "-1");
+  assert("lastIndexOf('z') returns -1 (absent value)", liArr.lastIndexOf("z"), "-1");
+
+  function lastIndexOfPoly(arr, value) {
+      for (var i = arr.length - 1; i >= 0; i--) {
+          if (arr[i] === value) { return i; }
+      }
+      return -1;
+  }
+  assert("workaround lastIndexOf('a') is 2", lastIndexOfPoly(liArr, "a"), "2");
+  assert("workaround lastIndexOf('c') is 3", lastIndexOfPoly(liArr, "c"), "3");
+  assert("workaround lastIndexOf('z') is -1", lastIndexOfPoly(liArr, "z"), "-1");
+  </script>
+
+foreach: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: forEach(fn) - MISSING
+   *
+   * Proves:
+   *   1. Array.prototype.forEach is NOT available
+   *      (typeof [].forEach is "undefined"; spec (ES5): a function).
+   *   2. Calling it throws.
+   *   3. The documented index for-loop visits every element in order.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var feArr = [1, 2, 3];
+  assert("DEV typeof [].forEach is undefined (spec ES5: function)", typeof feArr.forEach, "undefined");
+  assertThrows("DEV [].forEach(fn) throws (spec: visits each item)", function () { var a = [1]; return a.forEach(function () { return 1; }); });
+
+  var seen = [];
+  for (var i = 0; i < feArr.length; i++) {
+      seen.push(feArr[i]);
+  }
+  assert("workaround for-loop visits every item in order", seen.join(","), "1,2,3");
+  assert("workaround visited exactly length items", seen.length, "3");
+  </script>
+
+map: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: map(fn) - MISSING
+   *
+   * Proves:
+   *   1. Array.prototype.map is NOT available
+   *      (typeof [].map is "undefined"; spec (ES5): a function).
+   *   2. Calling it throws.
+   *   3. The documented for-loop + push workaround produces the mapped array
+   *      and leaves the source untouched.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var mapArr = [1, 2, 3];
+  assert("DEV typeof [].map is undefined (spec ES5: function)", typeof mapArr.map, "undefined");
+  assertThrows("DEV [].map(fn) throws (spec: returns a mapped array)", function () { var a = [1]; return a.map(function (x) { return x; }); });
+
+  var doubled = [];
+  for (var i = 0; i < mapArr.length; i++) {
+      doubled.push(mapArr[i] * 2);
+  }
+  assert("workaround for-loop map gives 2,4,6", doubled.join(","), "2,4,6");
+  assert("workaround leaves the source array unchanged", mapArr.join(","), "1,2,3");
+  </script>
+
+filter: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: filter(fn) - MISSING
+   *
+   * Proves:
+   *   1. Array.prototype.filter is NOT available
+   *      (typeof [].filter is "undefined"; spec (ES5): a function).
+   *   2. Calling it throws.
+   *   3. The documented for-loop workaround collects only matching items,
+   *      and yields an empty array when nothing matches.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var filArr = [1, 2, 3, 4];
+  assert("DEV typeof [].filter is undefined (spec ES5: function)", typeof filArr.filter, "undefined");
+  assertThrows("DEV [].filter(fn) throws (spec: returns matching items)", function () { var a = [1]; return a.filter(function (x) { return true; }); });
+
+  var evens = [];
+  for (var i = 0; i < filArr.length; i++) {
+      if (filArr[i] % 2 === 0) { evens.push(filArr[i]); }
+  }
+  assert("workaround for-loop filter gives 2,4", evens.join(","), "2,4");
+
+  var none = [];
+  for (var j = 0; j < filArr.length; j++) {
+      if (filArr[j] > 99) { none.push(filArr[j]); }
+  }
+  assert("workaround yields an empty array when nothing matches", none.length, "0");
+  </script>
+
+reduce: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: reduce(fn, initial) - MISSING
+   *
+   * Proves:
+   *   1. Array.prototype.reduce is NOT available
+   *      (typeof [].reduce is "undefined"; spec (ES5): a function).
+   *   2. Calling it throws.
+   *   3. The documented accumulator for-loop sums the array, and an empty
+   *      array leaves the initial value untouched.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var redArr = [1, 2, 3, 4];
+  assert("DEV typeof [].reduce is undefined (spec ES5: function)", typeof redArr.reduce, "undefined");
+  assertThrows("DEV [].reduce(fn,0) throws (spec: folds to a single value)", function () { var a = [1]; return a.reduce(function (acc, x) { return acc + x; }, 0); });
+
+  var sum = 0;
+  for (var i = 0; i < redArr.length; i++) {
+      sum += redArr[i];
+  }
+  assert("workaround accumulator loop sums to 10", sum, "10");
+
+  var emptySum = 7;
+  var emptyArr = [];
+  for (var j = 0; j < emptyArr.length; j++) {
+      emptySum += emptyArr[j];
+  }
+  assert("workaround keeps the initial value for an empty array", emptySum, "7");
+  </script>
+
+reduceright: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: reduceRight(fn, initial) - MISSING
+   *
+   * Proves:
+   *   1. Array.prototype.reduceRight is NOT available
+   *      (typeof [].reduceRight is "undefined"; spec (ES5): a function).
+   *   2. Calling it throws.
+   *   3. The documented reverse for-loop folds right-to-left: summing gives the
+   *      same total, and string concatenation proves the right-to-left order.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var rrArr = [1, 2, 3, 4];
+  assert("DEV typeof [].reduceRight is undefined (spec ES5: function)", typeof rrArr.reduceRight, "undefined");
+  assertThrows("DEV [].reduceRight(fn,0) throws (spec: folds right-to-left)", function () { var a = [1]; return a.reduceRight(function (acc, x) { return acc + x; }, 0); });
+
+  var sum = 0;
+  for (var i = rrArr.length - 1; i >= 0; i--) {
+      sum += rrArr[i];
+  }
+  assert("workaround reverse loop sums to 10", sum, "10");
+
+  var concatRight = "";
+  var letters = ["a", "b", "c"];
+  for (var j = letters.length - 1; j >= 0; j--) {
+      concatRight += letters[j];
+  }
+  assert("workaround folds right-to-left -> cba", concatRight, "cba");
+  </script>
+
+some: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: some(fn) - MISSING
+   *
+   * Proves:
+   *   1. Array.prototype.some is NOT available
+   *      (typeof [].some is "undefined"; spec (ES5): a function).
+   *   2. Calling it throws.
+   *   3. The documented early-break for-loop is true when at least one item
+   *      matches and false when none do.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var someArr = [1, 20, 3];
+  assert("DEV typeof [].some is undefined (spec ES5: function)", typeof someArr.some, "undefined");
+  assertThrows("DEV [].some(fn) throws (spec: returns a boolean)", function () { var a = [1]; return a.some(function (x) { return true; }); });
+
+  var hasLarge = false;
+  for (var i = 0; i < someArr.length; i++) {
+      if (someArr[i] > 10) { hasLarge = true; break; }
+  }
+  assert("workaround some(>10) is true for [1,20,3]", hasLarge, "true");
+
+  var smallArr = [1, 2, 3];
+  var hasLarge2 = false;
+  for (var j = 0; j < smallArr.length; j++) {
+      if (smallArr[j] > 10) { hasLarge2 = true; break; }
+  }
+  assert("workaround some(>10) is false for [1,2,3]", hasLarge2, "false");
+  </script>
+
+every: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: every(fn) - MISSING
+   *
+   * Proves:
+   *   1. Array.prototype.every is NOT available
+   *      (typeof [].every is "undefined"; spec (ES5): a function).
+   *   2. Calling it throws.
+   *   3. The documented early-break for-loop is true only when every item
+   *      matches, and false as soon as one does not.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var everyArr = [20, 30, 40];
+  assert("DEV typeof [].every is undefined (spec ES5: function)", typeof everyArr.every, "undefined");
+  assertThrows("DEV [].every(fn) throws (spec: returns a boolean)", function () { var a = [1]; return a.every(function (x) { return true; }); });
+
+  var allLarge = true;
+  for (var i = 0; i < everyArr.length; i++) {
+      if (everyArr[i] <= 10) { allLarge = false; break; }
+  }
+  assert("workaround every(>10) is true for [20,30,40]", allLarge, "true");
+
+  var mixedArr = [20, 5, 40];
+  var allLarge2 = true;
+  for (var j = 0; j < mixedArr.length; j++) {
+      if (mixedArr[j] <= 10) { allLarge2 = false; break; }
+  }
+  assert("workaround every(>10) is false for [20,5,40]", allLarge2, "false");
+  </script>
+
+find: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: find(fn) - MISSING
+   *
+   * Proves:
+   *   1. Array.prototype.find is NOT available
+   *      (typeof [].find is "undefined"; spec (ES6): a function).
+   *   2. Calling it throws.
+   *   3. The documented early-break for-loop returns the matching item, and
+   *      leaves the result null when nothing matches.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var fArr = [{ id: 1 }, { id: 7 }, { id: 9 }];
+  assert("DEV typeof [].find is undefined (spec ES6: function)", typeof fArr.find, "undefined");
+  assertThrows("DEV [].find(fn) throws (spec: returns the first match)", function () { return fArr.find(function (x) { return true; }); });
+
+  var found = null;
+  for (var i = 0; i < fArr.length; i++) {
+      if (fArr[i].id === 7) { found = fArr[i]; break; }
+  }
+  assert("workaround for-loop finds the matching item", found.id, "7");
+
+  var missing = null;
+  for (var j = 0; j < fArr.length; j++) {
+      if (fArr[j].id === 99) { missing = fArr[j]; break; }
+  }
+  assert("workaround leaves null when nothing matches", missing === null, "true");
+  </script>
+
+findindex: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: findIndex(fn) - MISSING
+   *
+   * Proves:
+   *   1. Array.prototype.findIndex is NOT available
+   *      (typeof [].findIndex is "undefined"; spec (ES6): a function).
+   *   2. Calling it throws.
+   *   3. The documented early-break for-loop yields the index of the match,
+   *      and stays at -1 when nothing matches.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var fiArr = [{ id: 1 }, { id: 7 }, { id: 9 }];
+  assert("DEV typeof [].findIndex is undefined (spec ES6: function)", typeof fiArr.findIndex, "undefined");
+  assertThrows("DEV [].findIndex(fn) throws (spec: returns an index)", function () { return fiArr.findIndex(function (x) { return true; }); });
+
+  var idx = -1;
+  for (var i = 0; i < fiArr.length; i++) {
+      if (fiArr[i].id === 9) { idx = i; break; }
+  }
+  assert("workaround for-loop yields index 2", idx, "2");
+
+  var missIdx = -1;
+  for (var j = 0; j < fiArr.length; j++) {
+      if (fiArr[j].id === 99) { missIdx = j; break; }
+  }
+  assert("workaround stays -1 when nothing matches", missIdx, "-1");
+  </script>
+
+includes: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: includes(value) - MISSING
+   *
+   * Proves:
+   *   1. Array.prototype.includes is NOT available
+   *      (typeof [].includes is "undefined"; spec (ES6): a function).
+   *   2. Calling it throws.
+   *   3. The documented helper returns true for a present value and false for
+   *      an absent one.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var incArr = [10, 20, 30];
+  assert("DEV typeof [].includes is undefined (spec ES6: function)", typeof incArr.includes, "undefined");
+  assertThrows("DEV [].includes(v) throws (spec: returns a boolean)", function () { return incArr.includes(10); });
+
+  function includes(a, value) {
+      for (var k = 0; k < a.length; k++) {
+          if (a[k] === value) { return true; }
+      }
+      return false;
+  }
+  assert("workaround helper is true for a present value", includes(incArr, 20), "true");
+  assert("workaround helper is false for an absent value", includes(incArr, 99), "false");
+  </script>
+
+fill: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: fill(value) - MISSING
+   *
+   * Proves:
+   *   1. Array.prototype.fill is NOT available
+   *      (typeof [].fill is "undefined"; spec (ES6): a function).
+   *   2. Calling it throws.
+   *   3. The documented push loop builds [0,0,0,0,0].
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var fillArr = [];
+  assert("DEV typeof [].fill is undefined (spec ES6: function)", typeof fillArr.fill, "undefined");
+  assertThrows("DEV [].fill(0) throws (spec: fills the array in place)", function () { var a = [1, 2]; return a.fill(0); });
+
+  for (var i = 0; i < 5; i++) { fillArr.push(0); }
+  assert("workaround push loop yields 0,0,0,0,0", fillArr.join(","), "0,0,0,0,0");
+  assert("workaround push loop yields length 5", fillArr.length, "5");
+  </script>
+
+copywithin: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: copyWithin(target, start) - MISSING
+   *
+   * Proves:
+   *   1. Array.prototype.copyWithin is NOT available
+   *      (typeof [].copyWithin is "undefined"; spec (ES6): a function).
+   *   2. Calling it throws, so the polyfill is required.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var cwArr = [10, 20, 30];
+  assert("DEV typeof [].copyWithin is undefined (spec ES6: function)", typeof cwArr.copyWithin, "undefined");
+  assertThrows("DEV [].copyWithin(0,1) throws (spec: shifts elements in place)", function () { var a = [1, 2, 3]; return a.copyWithin(0, 1); });
+  </script>
+
+entries: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: entries() - MISSING
+   *
+   * Proves:
+   *   1. Array.prototype.entries is NOT available
+   *      (typeof [].entries is "undefined"; spec (ES6): a function).
+   *   2. Calling it throws.
+   *   3. The documented index for-loop reproduces index/value pairs.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var enArr = [10, 20, 30];
+  assert("DEV typeof [].entries is undefined (spec ES6: function)", typeof enArr.entries, "undefined");
+  assertThrows("DEV [].entries() throws (spec: returns an iterator)", function () { return enArr.entries(); });
+
+  var pairs = "";
+  for (var i = 0; i < enArr.length; i++) {
+      pairs += i + ":" + enArr[i] + ";";
+  }
+  assert("workaround index loop yields index/value pairs", pairs, "0:10;1:20;2:30;");
+  </script>
+
+keys: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: keys() - MISSING
+   *
+   * Proves:
+   *   1. Array.prototype.keys is NOT available
+   *      (typeof [].keys is "undefined"; spec (ES6): a function).
+   *   2. Calling it throws.
+   *   3. The documented index for-loop enumerates the indices.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var kArr = [10, 20, 30];
+  assert("DEV typeof [].keys is undefined (spec ES6: function)", typeof kArr.keys, "undefined");
+  assertThrows("DEV [].keys() throws (spec: returns an index iterator)", function () { return kArr.keys(); });
+
+  var ks = "";
+  for (var i = 0; i < kArr.length; i++) { ks += i; }
+  assert("workaround index loop enumerates 0,1,2", ks, "012");
+  </script>
+
+values: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: values() - MISSING
+   *
+   * Proves:
+   *   1. Array.prototype.values is NOT available
+   *      (typeof [].values is "undefined"; spec (ES6): a function).
+   *   2. Calling it throws.
+   *   3. The documented index for-loop reads every value via arr[i].
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var vArr = [10, 20, 30];
+  assert("DEV typeof [].values is undefined (spec ES6: function)", typeof vArr.values, "undefined");
+  assertThrows("DEV [].values() throws (spec: returns a value iterator)", function () { return vArr.values(); });
+
+  var vs = "";
+  for (var i = 0; i < vArr.length; i++) { vs += vArr[i] + ","; }
+  assert("workaround index loop reads every value", vs, "10,20,30,");
+  </script>
+
+at: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: at(index) - MISSING
+   *
+   * Proves:
+   *   1. Array.prototype.at is NOT available
+   *      (typeof [].at is "undefined"; spec (ES6+): a function).
+   *   2. Calling it throws.
+   *   3. The documented substitutes arr[0] and arr[arr.length - 1] return the
+   *      values at(0) and at(-1) would.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var atArr = [10, 20, 30];
+  assert("DEV typeof [].at is undefined (spec: function)", typeof atArr.at, "undefined");
+  assertThrows("DEV [].at(0) throws (spec: returns the item at an index)", function () { return atArr.at(0); });
+
+  assert("workaround arr[0] equals at(0)", atArr[0], "10");
+  assert("workaround arr[arr.length - 1] equals at(-1)", atArr[atArr.length - 1], "30");
+  </script>
+
+flat: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: flat() - MISSING
+   *
+   * Proves:
+   *   1. Array.prototype.flat is NOT available
+   *      (typeof [].flat is "undefined"; spec (ES6+): a function).
+   *   2. Calling it throws.
+   *   3. The documented flatten() helper turns [1,[2,3],4] into [1,2,3,4].
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var nested = [1, [2, 3], 4];
+  assert("DEV typeof [].flat is undefined (spec: function)", typeof nested.flat, "undefined");
+  assertThrows("DEV [].flat() throws (spec: flattens nested arrays)", function () { return nested.flat(); });
+
+  function flatten(a) {
+      var result = [];
+      for (var i = 0; i < a.length; i++) {
+          if (typeof a[i] === "object" && a[i].length !== undefined) {
+              for (var j = 0; j < a[i].length; j++) { result.push(a[i][j]); }
+          } else {
+              result.push(a[i]);
+          }
+      }
+      return result;
+  }
+  assert("workaround flatten() yields 1,2,3,4", flatten(nested).join(","), "1,2,3,4");
+  assert("workaround flatten() yields length 4", flatten(nested).length, "4");
+  </script>
+
+flatmap: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: flatMap(fn) - MISSING
+   *
+   * Proves:
+   *   1. Array.prototype.flatMap is NOT available
+   *      (typeof [].flatMap is "undefined"; spec (ES6+): a function).
+   *   2. Calling it throws.
+   *   3. The documented nested for-loop with push flattens the mapped arrays.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var fmArr = [10, 20, 30];
+  assert("DEV typeof [].flatMap is undefined (spec: function)", typeof fmArr.flatMap, "undefined");
+  assertThrows("DEV [].flatMap(fn) throws (spec: maps then flattens)", function () { return fmArr.flatMap(function (x) { return [x]; }); });
+
+  function transform(x) { return [x, x * 2]; }
+  var fmResult = [];
+  for (var i = 0; i < fmArr.length; i++) {
+      var mapped = transform(fmArr[i]);
+      for (var j = 0; j < mapped.length; j++) { fmResult.push(mapped[j]); }
+  }
+  assert("workaround nested loop flattens the mapped arrays", fmResult.join(","), "10,20,20,40,30,60");
+  </script>
+
+findlast: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: findLast(fn) - MISSING
+   *
+   * Proves:
+   *   1. Array.prototype.findLast is NOT available
+   *      (typeof [].findLast is "undefined"; spec (ES6+): a function).
+   *   2. Calling it throws.
+   *   3. The documented reverse for-loop returns the LAST match, and leaves
+   *      the result null when nothing matches.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var flArr = [10, 20, 30];
+  assert("DEV typeof [].findLast is undefined (spec: function)", typeof flArr.findLast, "undefined");
+  assertThrows("DEV [].findLast(fn) throws (spec: returns the last match)", function () { return flArr.findLast(function (x) { return true; }); });
+
+  var lastFound = null;
+  for (var i = flArr.length - 1; i >= 0; i--) {
+      if (flArr[i] >= 20) { lastFound = flArr[i]; break; }
+  }
+  assert("workaround reverse loop returns the LAST match", lastFound, "30");
+
+  var lastMiss = null;
+  for (var j = flArr.length - 1; j >= 0; j--) {
+      if (flArr[j] > 999) { lastMiss = flArr[j]; break; }
+  }
+  assert("workaround leaves null when nothing matches", lastMiss === null, "true");
+  </script>
+
+isarray: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Array.isArray(value) - MISSING
+   *
+   * Proves:
+   *   1. Array.isArray is NOT available
+   *      (typeof Array.isArray is "undefined"; spec (ES5): a function).
+   *   2. Calling it throws.
+   *   3. The documented Object.prototype.toString helper is true for arrays and
+   *      false for plain objects and strings.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  assert("DEV typeof Array.isArray is undefined (spec ES5: function)", typeof Array.isArray, "undefined");
+  assertThrows("DEV Array.isArray([]) throws (spec: returns a boolean)", function () { return Array.isArray([]); });
+
+  function isArray(value) {
+      return Object.prototype.toString.call(value) === "[object Array]";
+  }
+  assert("workaround is true for an array", isArray([1, 2]), "true");
+  assert("workaround is false for a plain object", isArray({ a: 1 }), "false");
+  assert("workaround is false for a string", isArray("x"), "false");
+  </script>
+
+of: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Array.of(...) - MISSING
+   *
+   * Proves:
+   *   1. Array.of is NOT available
+   *      (typeof Array.of is "undefined"; spec (ES6): a function).
+   *   2. Calling it throws.
+   *   3. The documented array literal builds the same array.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  assert("DEV typeof Array.of is undefined (spec ES6: function)", typeof Array.of, "undefined");
+  assertThrows("DEV Array.of(1,2,3) throws (spec: builds an array of the args)", function () { return Array.of(1, 2, 3); });
+
+  var literal = [1, 2, 3];
+  assert("workaround array literal builds the same array", literal.join(","), "1,2,3");
+  </script>
+
+from: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Array.from(source) - MISSING
+   *
+   * Proves:
+   *   1. Array.from is NOT available
+   *      (typeof Array.from is "undefined"; spec (ES6): a function).
+   *   2. Calling it throws.
+   *   3. The documented push loop copies the source into a NEW array.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  assert("DEV typeof Array.from is undefined (spec ES6: function)", typeof Array.from, "undefined");
+  assertThrows("DEV Array.from([1,2]) throws (spec: builds an array from a source)", function () { return Array.from([1, 2]); });
+
+  var source = [7, 8, 9];
+  var copy = [];
+  for (var i = 0; i < source.length; i++) { copy.push(source[i]); }
+  assert("workaround push loop copies the source", copy.join(","), "7,8,9");
+  assert("workaround yields a NEW array, not the source", copy === source, "false");
+  </script>

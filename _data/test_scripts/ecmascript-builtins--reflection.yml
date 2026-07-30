@@ -1,0 +1,170 @@
+# Test scripts for /ecmascript-builtins/reflection/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the ECMAScript spec.
+#
+# Both subjects on this page are MISSING globals, so every assert() takes a
+# THUNK and evaluates it inside the helper's own try/catch — passing an
+# already-evaluated expression would throw before assert() is entered and
+# abort the whole CloudPage with HTTP 422.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+proxy: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Proxy
+   *
+   * Proves:
+   *   1. DEVIATION from ECMAScript 2015 marked "DEV": Proxy is not defined —
+   *      typeof Proxy is "undefined" (spec: "function").
+   *   2. Reading a member of the missing global is safe and yields undefined;
+   *      only INVOCATION throws.
+   *   3. Both invocation forms throw with the documented shapes:
+   *        new Proxy({}, {}) -> "Unknown type: Proxy"
+   *        Proxy({}, {})     -> "Object expected: Proxy"
+   *   4. The documented replacement — wrapping the object in explicit accessor
+   *      functions — really does mediate reads and writes.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn, expectedMsg) {
+      var msg;
+      try { fn(); msg = "did NOT throw"; } catch (ex) { msg = ex.message; }
+      Platform.Response.Write((msg === expectedMsg ? "PASS " : "FAIL ") + id + " -> [" + msg + "]\n");
+  }
+
+  /* 1. DEVIATION — the global is absent. */
+  assert("DEV typeof Proxy is undefined (spec: function)", function () { return String(typeof Proxy); }, "undefined");
+
+  /* 2. Reading a member of the missing global does not throw. */
+  assert("reading Proxy.prototype is safe and undefined", function () { return String(typeof Proxy.prototype); }, "undefined");
+  assert("reading Proxy.revocable is safe and undefined", function () { return String(typeof Proxy.revocable); }, "undefined");
+
+  /* 3. Only invocation throws — two distinct message shapes. */
+  assertThrows("new Proxy({}, {}) throws Unknown type: Proxy", function () { return new Proxy({}, {}); }, "Unknown type: Proxy");
+  assertThrows("Proxy({}, {}) throws Object expected: Proxy", function () { return Proxy({}, {}); }, "Object expected: Proxy");
+
+  /* 4. Workaround — explicit accessor functions instead of traps. */
+  var target = { id: 42 };
+  var reads = 0;
+  function getProp(o, k) { reads = reads + 1; return o[k]; }
+  function setProp(o, k, v) { o[k] = v; return o[k]; }
+  assert("workaround accessor reads the property", function () { return String(getProp(target, "id")); }, "42");
+  assert("workaround accessor counted the read", function () { return String(reads); }, "1");
+  assert("workaround accessor writes the property", function () { return String(setProp(target, "id", 7)); }, "7");
+  assert("the write is visible on the target", function () { return String(target.id); }, "7");
+  </script>
+
+reflect: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Reflect
+   *
+   * Proves:
+   *   1. DEVIATION from ECMAScript 2015 marked "DEV": Reflect is not defined —
+   *      typeof Reflect is "undefined" (spec: "object").
+   *   2. Reading a member of the missing global is safe and yields undefined;
+   *      only INVOCATION throws.
+   *   3. Both invocation forms throw, and they report the name differently:
+   *        Reflect.get(o, k)     -> "Object expected: get"    (bare member name)
+   *        new Reflect.get(o, k) -> "Unknown type: Reflect.get" (full dotted path)
+   *   4. Every ES5 / operator equivalent listed in the chapter's table really
+   *      produces the documented result:
+   *        Reflect.has            -> typeof o[k] != "undefined"
+   *        Reflect.get            -> o[k]
+   *        Reflect.set            -> o[k] = v
+   *        Reflect.deleteProperty -> delete o[k]
+   *        Reflect.getPrototypeOf -> Object.getPrototypeOf(o)
+   *   5. The chapter's worked example prints "has id".
+   *   6. The chapter's warning that the `in` operator must NOT be substituted
+   *      for Reflect.has: its result has typeof "undefined" (neither === true
+   *      nor === false), and as an `if` condition it reports an absent key on
+   *      an empty object as PRESENT.
+   *
+   * NOT ASSERTED:
+   *   - The table's `Reflect.ownKeys(o)` -> `Object.keys(o)` row. Object.keys is
+   *     itself absent in this engine (documented on the Object Methods page,
+   *     typeof "undefined"), so the mapping cannot be demonstrated as a working
+   *     runtime substitution here. Asserting it would probe another page's
+   *     subject rather than this chapter's claim.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn, expectedMsg) {
+      var msg;
+      try { fn(); msg = "did NOT throw"; } catch (ex) { msg = ex.message; }
+      Platform.Response.Write((msg === expectedMsg ? "PASS " : "FAIL ") + id + " -> [" + msg + "]\n");
+  }
+
+  /* 1. DEVIATION — the global is absent. */
+  assert("DEV typeof Reflect is undefined (spec: object)", function () { return String(typeof Reflect); }, "undefined");
+
+  /* 2. Reading members of the missing global is safe. */
+  assert("reading Reflect.has is safe and undefined", function () { return String(typeof Reflect.has); }, "undefined");
+  assert("reading Reflect.get is safe and undefined", function () { return String(typeof Reflect.get); }, "undefined");
+  assert("reading Reflect.set is safe and undefined", function () { return String(typeof Reflect.set); }, "undefined");
+  assert("reading Reflect.deleteProperty is safe and undefined", function () { return String(typeof Reflect.deleteProperty); }, "undefined");
+  assert("reading Reflect.ownKeys is safe and undefined", function () { return String(typeof Reflect.ownKeys); }, "undefined");
+  assert("reading Reflect.getPrototypeOf is safe and undefined", function () { return String(typeof Reflect.getPrototypeOf); }, "undefined");
+
+  /* 3. Only invocation throws — the two forms name the member differently. */
+  var probe = { id: 42 };
+  assertThrows("Reflect.get(o, k) throws Object expected: get", function () { return Reflect.get(probe, "id"); }, "Object expected: get");
+  assertThrows("new Reflect.get(o, k) throws Unknown type: Reflect.get", function () { return new Reflect.get(probe, "id"); }, "Unknown type: Reflect.get");
+  assertThrows("Reflect.has(o, k) throws Object expected: has", function () { return Reflect.has(probe, "id"); }, "Object expected: has");
+  assertThrows("new Reflect.has(o, k) throws Unknown type: Reflect.has", function () { return new Reflect.has(probe, "id"); }, "Unknown type: Reflect.has");
+  assertThrows("Reflect.ownKeys(o) throws Object expected: ownKeys", function () { return Reflect.ownKeys(probe); }, "Object expected: ownKeys");
+  assertThrows("new Reflect.ownKeys(o) throws Unknown type: Reflect.ownKeys", function () { return new Reflect.ownKeys(probe); }, "Unknown type: Reflect.ownKeys");
+
+  /* 4. The documented ES5 / operator equivalents. */
+  var o = { id: 42 };
+  assert("Reflect.has -> typeof o['id'] != 'undefined' is true", function () { var r = (typeof o["id"] != "undefined"); return r ? "true" : "false"; }, "true");
+  assert("Reflect.has -> typeof o['nope'] != 'undefined' is false", function () { var r = (typeof o["nope"] != "undefined"); return r ? "true" : "false"; }, "false");
+  assert("Reflect.get -> o['id'] is 42", function () { return String(o["id"]); }, "42");
+  assert("Reflect.set -> o['id'] = 7 stores the value", function () { o["id"] = 7; return String(o["id"]); }, "7");
+  assert("Reflect.deleteProperty -> delete o['id'] removes it", function () { delete o["id"]; var r = (typeof o["id"] != "undefined"); return r ? "true" : "false"; }, "false");
+  assert("after delete, reading o['id'] is undefined", function () { return String(typeof o["id"]); }, "undefined");
+
+  /* Reflect.getPrototypeOf -> Object.getPrototypeOf(o). */
+  function Ctor() { this.a = 1; }
+  var inst = new Ctor();
+  assert("Reflect.getPrototypeOf -> typeof Object.getPrototypeOf(inst) is object", function () { return String(typeof Object.getPrototypeOf(inst)); }, "object");
+  assert("Reflect.getPrototypeOf -> Object.getPrototypeOf(inst) === Ctor.prototype", function () { return String(Object.getPrototypeOf(inst) === Ctor.prototype); }, "true");
+
+  /* 5. The chapter's worked example. */
+  var obj = { id: 42 };
+  assert("example prints 'has id'", function () { return typeof obj["id"] != "undefined" ? "has id" : "no id"; }, "has id");
+
+  /* 6. The `in` operator must NOT be used as the Reflect.has substitute. */
+  var empty = {};
+  var kAbsent = "zzz";
+  assert("BUG typeof (k in o) is undefined (spec: boolean)", function () { var r = (kAbsent in empty); return String(typeof r); }, "undefined");
+  assert("BUG (k in o) is neither === true nor === false", function () { var r = (kAbsent in empty); return (r === true || r === false) ? "boolean" : "not-a-boolean"; }, "not-a-boolean");
+  assert("BUG if (absentKey in {}) takes the TRUE branch (spec: false)", function () { if (kAbsent in empty) { return "taken"; } return "not-taken"; }, "taken");
+  assert("workaround typeof empty['zzz'] != 'undefined' is correctly false", function () { var r = (typeof empty[kAbsent] != "undefined"); return r ? "true" : "false"; }, "false");
+  </script>

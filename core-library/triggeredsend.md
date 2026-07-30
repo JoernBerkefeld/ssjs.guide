@@ -499,6 +499,5 @@ var results = tsd.Tracking.TotalByInterval.Retrieve("Click", "07-01-2010", "07-3
 <h4>See Also</h4>
 <ul>
   <li><a href="/core-library/email/">Email</a></li>
-  <li><a href="/platform-functions/triggeredsend/">Platform.Function.TriggeredSend</a></li>
 </ul>
 </div>
