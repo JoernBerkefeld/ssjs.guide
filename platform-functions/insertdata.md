@@ -15,6 +15,7 @@ min_args: 3
 max_args: 3
 verification: verified
 differs_from_docs: true
+test_scripts: complete
 ---
 
 ## Parameters
@@ -25,13 +26,19 @@ differs_from_docs: true
 | `fieldNames` | string[] | Yes | Array of column names to populate |
 | `fieldValues` | array | Yes | Array of values aligned to `fieldNames` |
 
+{% include test-script.html bundle="platform-functions--insertdata" chapter="parameters" %}
+
 ## Description
 
 `InsertData` adds a new row to a Data Extension. Returns the number of affected rows (1 on success). The Data Extension is resolved by its **Name**, not the external key / CustomerKey.
 
 {% include differs-from-docs.html note="`InsertData` resolves the Data Extension by its **Name** only — passing the external key / CustomerKey throws \"A Data Extension of this name does not exist.\" (runtime-verified)." %}
 
+{% include test-script.html bundle="platform-functions--insertdata" chapter="resolved-by-name-only" label="Show test script — the Data Extension is resolved by Name, not by external key" %}
+
 If the DE has a primary key and a row with the same key already exists, `InsertData` will **throw an error**. Use `UpsertData` for insert-or-update behavior.
+
+{% include test-script.html bundle="platform-functions--insertdata" chapter="description" %}
 
 ## Examples
 
@@ -83,11 +90,15 @@ if (Platform.Request.Method === "POST") {
 }
 ```
 
+{% include test-script.html bundle="platform-functions--insertdata" chapter="examples" %}
+
 ## Notes
 
 - `InsertData` always creates a new row — use `UpsertData` to avoid duplicate errors
 - The `InsertDE` function performs the same insert, but it returns `null` instead of a row count. The official docs describe `InsertDE` as email-only, yet it was runtime-verified to run and commit on a CloudPage too — `InsertData` is still preferred outside email because it returns the affected-row count.
 - Returns `1` on success, throws on failure
+
+{% include test-script.html bundle="platform-functions--insertdata" chapter="notes" %}
 
 ## See Also
 

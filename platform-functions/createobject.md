@@ -14,6 +14,7 @@ return_type: object
 min_args: 1
 max_args: 1
 verification: verified
+test_scripts: complete
 ---
 
 ## Parameters
@@ -22,24 +23,35 @@ verification: verified
 |------|------|----------|-------------|
 | `objectType` | string | Yes | SFMC SOAP API type name (e.g., `"DataExtensionObject"`, `"Subscriber"`) |
 
+The type name must match a real SOAP API type.
+
+The returned value is a .NET **CLR host object** (`typeof` is `"clr"`), not a plain
+JavaScript object. Its properties cannot be read back from SSJS — see
+[SetObjectProperty](/platform-functions/setobjectproperty/). Every call returns a new,
+independent instance.
+
+{% include test-script.html bundle="platform-functions--createobject" chapter="parameters" %}
+
 ## Examples
 
 ```javascript
-// Create a DataExtensionObject for upsert
+// Create a DataExtensionObject and add a row to a data extension
 var deObject = Platform.Function.CreateObject("DataExtensionObject");
 Platform.Function.SetObjectProperty(deObject, "CustomerKey", "MyDE_Key");
 
 var fieldProps = Platform.Function.CreateObject("APIProperty");
 Platform.Function.SetObjectProperty(fieldProps, "Name", "Email");
 Platform.Function.SetObjectProperty(fieldProps, "Value", "test@example.com");
+Platform.Function.AddObjectArrayItem(deObject, "Properties", fieldProps);
 
-var status = "";
-var code = "";
-var message = "";
-var result = Platform.Function.InvokeCreate(deObject, status, code, message);
+var StatusAndRequestID = [0, 0];
+var result = Platform.Function.InvokeCreate(deObject, StatusAndRequestID, null);
+// result === "OK", StatusAndRequestID[0] === "Created DataExtensionObject"
 ```
 
 {% include callout.html type="note" content="For most SOAP-based operations, WSProxy is significantly simpler to use. Prefer WSProxy over CreateObject/Invoke patterns for new code." %}
+
+{% include test-script.html bundle="platform-functions--createobject" chapter="examples" %}
 
 ## See Also
 

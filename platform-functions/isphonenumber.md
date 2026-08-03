@@ -3,7 +3,7 @@ layout: function
 title: IsPhoneNumber
 parent: Platform Functions
 parent_url: /platform-functions/
-description: Evaluates whether a string contains a valid phone number. Returns a boolean suitable for form validation on CloudPages.
+description: Evaluates whether a string is a valid North American Numbering Plan (NANP) phone number. Returns a boolean suitable for form validation on CloudPages.
 availability:
   email: true
   cloudpage: true
@@ -15,27 +15,40 @@ min_args: 1
 max_args: 1
 verification: verified
 differs_from_docs: true
+test_scripts: complete
 ---
 
 ## Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `value` | string | Yes | String to evaluate as a phone number |
+| `value` | string \| number | Yes | Value to evaluate as a phone number |
+
+{% include test-script.html bundle="platform-functions--isphonenumber" chapter="parameters" %}
 
 ## Return value
 
-Returns a `boolean`. The accepted format is **digits `0`–`9` only, no spaces, and no
-leading `0`**. To present any country's country code (including the US), **omit** the
-leading `00`/`+` — the country code is written as its bare digits with no leading zero.
-This is the **same** digits-only, no-leading-zero format that SFMC phone-number fields
-and the SMS (MobileConnect) service expect, so a value that passes `IsPhoneNumber` is
-already in the shape those services accept.
+Returns a `boolean`. The check is **North American Numbering Plan (NANP) only** — it is
+**not** a general international phone-number validator. A value passes only when its
+digits form a NANP number:
 
-Strings containing spaces, a leading `0`, a `+`/`00` international prefix, letters, mixed
-text, or that are empty all return `false`.
+- **10 digits**, optionally preceded by the country code `1` (11 digits in total).
+- The **area code** must start with `2`–`9`.
+- The **exchange (central-office) code** must start with `2`–`9`.
 
-{% include differs-from-docs.html note="The official docs describe generic \"valid phone number\" validation, but the runtime enforces a stricter format: digits 0-9 only, no spaces, and no leading 0 — country codes must be written without the leading 00/+ (this is the same format SFMC phone fields and the SMS service expect)." %}
+**Spaces, dots, hyphens and parentheses are ignored**, so `"647 555 0123"`,
+`"425.555.0185"`, `"(829) 555-0142"` and `"1-212-555-1234"` all return `true`. Leading
+and trailing whitespace is tolerated as well.
+
+Any other character makes the value `false` — including a `+` prefix, a `/` or `_`
+separator, letters, and a trailing extension such as `"2125551234x99"`. Numbers outside
+the NANP (`"0161 496 0009"`, `"82 517 460 123"`, `"4917612345678"`) return `false`
+because their digits do not fit the NANP shape, as do empty strings, `null` and
+`undefined`.
+
+{% include differs-from-docs.html note="The SSJS reference page describes generic \"valid phone number\" validation and never mentions the North American Numbering Plan. The runtime validates NANP numbers only — 10 digits with an optional leading 1, area and exchange codes starting 2-9 — and rejects every non-NANP international number. Punctuation (spaces, dots, hyphens, parentheses) is ignored rather than rejected. The AMPscript reference for the same function documents the NANP behaviour correctly." %}
+
+{% include test-script.html bundle="platform-functions--isphonenumber" chapter="return-value" label="Show test script — NANP format and punctuation handling" %}
 
 ## Examples
 
@@ -57,6 +70,8 @@ function normalizeContact(raw) {
     return { ok: true };
 }
 ```
+
+{% include test-script.html bundle="platform-functions--isphonenumber" chapter="examples" %}
 
 ## See Also
 

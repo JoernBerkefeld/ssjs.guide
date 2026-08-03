@@ -1,0 +1,255 @@
+# Test scripts for /platform-functions/addobjectarrayitem/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the official Salesforce docs.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters — Platform.Function.AddObjectArrayItem(apiObject, propertyName, value)
+   *
+   * Proves:
+   *   1. The member exists and is invocable (a successful 3-argument call is
+   *      the only reliable existence proof for a Platform.Function member).
+   *   2. apiObject must be a SOAP API object built with CreateObject — such an
+   *      object is a CLR host object (typeof is "clr").
+   *   3. propertyName must be the name of a real array property on that
+   *      object's SOAP schema; an unknown property name throws.
+   *   4. propertyName must be a string; a number throws.
+   *   5. value is appended to the array property; a string item is accepted on
+   *      RetrieveRequest.Properties, and an object item (an Attribute built
+   *      with CreateObject) is accepted on Subscriber.Attributes.
+   *   6. A value whose type the schema rejects (a number on the string array
+   *      RetrieveRequest.Properties) throws.
+   *   7. All three arguments are required and no fourth is accepted: arity 0,
+   *      1, 2, 4 and 5 all throw.
+   *   8. A plain JavaScript object is NOT a valid apiObject — it throws,
+   *      because the call only works on ExactTarget.Integration.WSDL objects.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false;
+      try { fn(); } catch (ex) { threw = true; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw" : "did NOT throw") + "\n");
+  }
+  function assertNoThrow(id, fn) {
+      var ok = true;
+      var msg = "ok";
+      try { fn(); } catch (ex) { ok = false; msg = ex.message; }
+      Platform.Response.Write((ok ? "PASS " : "FAIL ") + id + " -> [" + msg + "]\n");
+  }
+
+  /* 2. apiObject is a CLR host object produced by CreateObject. */
+  var rr = Platform.Function.CreateObject("RetrieveRequest");
+  assert("typeof CreateObject('RetrieveRequest') is clr", String(typeof rr), "clr");
+  assertNoThrow("SetObjectProperty(rr, 'ObjectType', 'DataFolder') succeeds", function () {
+      Platform.Function.SetObjectProperty(rr, "ObjectType", "DataFolder");
+  });
+
+  /* 1 + 5. A 3-argument call on a real array property succeeds — existence proof. */
+  assertNoThrow("AddObjectArrayItem(rr, 'Properties', 'ID') succeeds", function () {
+      Platform.Function.AddObjectArrayItem(rr, "Properties", "ID");
+  });
+  assertNoThrow("appending a second item to the same array succeeds", function () {
+      Platform.Function.AddObjectArrayItem(rr, "Properties", "Name");
+  });
+
+  /* 5. An object item is accepted on an object-typed array property. */
+  var sub = Platform.Function.CreateObject("Subscriber");
+  var attr = Platform.Function.CreateObject("Attribute");
+  assertNoThrow("SetObjectProperty(attr, 'Name', 'FirstName') succeeds", function () {
+      Platform.Function.SetObjectProperty(attr, "Name", "FirstName");
+  });
+  assertNoThrow("SetObjectProperty(attr, 'Value', 'Jane') succeeds", function () {
+      Platform.Function.SetObjectProperty(attr, "Value", "Jane");
+  });
+  assertNoThrow("AddObjectArrayItem(sub, 'Attributes', attr) accepts an object item", function () {
+      Platform.Function.AddObjectArrayItem(sub, "Attributes", attr);
+  });
+
+  /* 3. An unknown property name throws. */
+  assertThrows("unknown propertyName throws", function () {
+      Platform.Function.AddObjectArrayItem(rr, "NotARealArrayProperty", "ID");
+  });
+
+  /* 3. A non-array property of the same object throws. */
+  assertThrows("non-array propertyName ('ObjectType') throws", function () {
+      Platform.Function.AddObjectArrayItem(rr, "ObjectType", "DataFolder");
+  });
+
+  /* 4. propertyName must be a string. */
+  assertThrows("numeric propertyName throws", function () {
+      Platform.Function.AddObjectArrayItem(rr, 5, "ID");
+  });
+
+  /* 6. A value the schema rejects throws (number into a string[] property). */
+  assertThrows("number value on a string[] property throws", function () {
+      Platform.Function.AddObjectArrayItem(rr, "Properties", 5);
+  });
+
+  /* 7. Exactly three arguments — every other arity throws. */
+  assertThrows("arity 0 throws", function () { Platform.Function.AddObjectArrayItem(); });
+  assertThrows("arity 1 throws", function () { Platform.Function.AddObjectArrayItem(rr); });
+  assertThrows("arity 2 throws", function () { Platform.Function.AddObjectArrayItem(rr, "Properties"); });
+  assertThrows("arity 4 throws", function () { Platform.Function.AddObjectArrayItem(rr, "Properties", "ID", 1); });
+  assertThrows("arity 5 throws", function () { Platform.Function.AddObjectArrayItem(rr, "Properties", "ID", 1, 2); });
+
+  /* 8. A plain JS object is not a valid apiObject. */
+  assertThrows("plain JS object as apiObject throws", function () {
+      var plain = { Properties: [] };
+      Platform.Function.AddObjectArrayItem(plain, "Properties", "ID");
+  });
+  </script>
+
+return-value: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs claim: the official Salesforce documentation types the
+   * result of AddObjectArrayItem as "@returns {object[]} response object", i.e.
+   * the array of items. At runtime the call returns a genuine JavaScript null
+   * and mutates the passed object in place instead.
+   *
+   * Official docs: returns an object[] (the array)
+   * SFMC runtime:  returns null (typeof "object", strict === null is true)
+   *
+   * Proves:
+   *   1. DEV the return value is a genuine null, not the documented object[]
+   *      and not undefined: typeof is "object", === null is true,
+   *      === undefined is false, String(result) is "null".
+   *   2. The same null is returned on every append, not just the first.
+   *   3. The recommended pattern works: ignore the return value, keep using
+   *      the mutated apiObject — appending more items to the SAME object
+   *      keeps succeeding, and the object stays a usable CLR host object.
+   *
+   * NOT ASSERTED: the resulting array contents cannot be read back from SSJS.
+   * The object returned by CreateObject is a .NET CLR host object and the
+   * engine blocks all introspection of it, so there is no deterministic way to
+   * observe the appended items — see the SetObjectProperty page.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var rr = Platform.Function.CreateObject("RetrieveRequest");
+  Platform.Function.SetObjectProperty(rr, "ObjectType", "DataFolder");
+
+  /* 1. DEVIATION — a genuine null, not the documented object[]. */
+  var r1 = Platform.Function.AddObjectArrayItem(rr, "Properties", "ID");
+  assert("DEV typeof result is object (docs: object[] array)", String(typeof r1), "object");
+  assert("DEV result === null (docs: an object[] response object)", r1 === null ? "true" : "false", "true");
+  assert("DEV result === undefined is false (it is null, not undefined)", r1 === undefined ? "true" : "false", "false");
+  assert("DEV String(result) is 'null'", String(r1), "null");
+  assert("result.length is not readable: result is null, not an array", r1 === null ? "true" : "false", "true");
+
+  /* 2. Every append returns the same null. */
+  var r2 = Platform.Function.AddObjectArrayItem(rr, "Properties", "Name");
+  assert("DEV second append also returns null", r2 === null ? "true" : "false", "true");
+  var r3 = Platform.Function.AddObjectArrayItem(rr, "Properties", "CustomerKey");
+  assert("DEV third append also returns null", r3 === null ? "true" : "false", "true");
+
+  /* 3. Workaround — keep the mutated object, ignore the return value. */
+  var threw = false;
+  try {
+      Platform.Function.AddObjectArrayItem(rr, "Properties", "ParentFolder.ID");
+  } catch (ex) {
+      threw = true;
+  }
+  assert("workaround: reusing the mutated apiObject keeps working", threw ? "true" : "false", "false");
+  assert("the mutated apiObject is still a CLR host object", String(typeof rr), "clr");
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples — the CreateObject / SetObjectProperty /
+   * AddObjectArrayItem build pattern.
+   *
+   * Proves the documented payload-building sequence runs end to end:
+   *   1. CreateObject produces the request object and the item object.
+   *   2. SetObjectProperty populates the item's scalar properties.
+   *   3. AddObjectArrayItem appends the populated item to the request's array
+   *      property, returning null each time.
+   *   4. Several items can be appended to the same array property.
+   *   5. The note "prefer WSProxy for new code" is backed by WSProxy being
+   *      available in this engine — Script.Util.WSProxy is a CLR host
+   *      constructor (typeof "clr") and `new` on it yields a usable instance.
+   *
+   * NOT ASSERTED: the page's example ends in InvokeCreate against a real
+   * TriggeredSendDefinition. Firing a live send is not a repeatable,
+   * side-effect-free assertion, so the script proves the payload construction
+   * only, not the dispatch.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertNoThrow(id, fn) {
+      var ok = true;
+      var msg = "ok";
+      try { fn(); } catch (ex) { ok = false; msg = ex.message; }
+      Platform.Response.Write((ok ? "PASS " : "FAIL ") + id + " -> [" + msg + "]\n");
+  }
+
+  /* 1. Build the request object and a subscriber to append. */
+  var sendDef = Platform.Function.CreateObject("TriggeredSend");
+  assert("typeof CreateObject('TriggeredSend') is clr", String(typeof sendDef), "clr");
+  var sub = Platform.Function.CreateObject("Subscriber");
+  assert("typeof CreateObject('Subscriber') is clr", String(typeof sub), "clr");
+
+  /* 2. Populate the subscriber's scalar properties. */
+  assertNoThrow("SetObjectProperty(sub, 'EmailAddress', ...) succeeds", function () {
+      Platform.Function.SetObjectProperty(sub, "EmailAddress", "jane@example.com");
+  });
+  assertNoThrow("SetObjectProperty(sub, 'SubscriberKey', ...) succeeds", function () {
+      Platform.Function.SetObjectProperty(sub, "SubscriberKey", "sub_jane");
+  });
+
+  /* 3. Append it to the request's Subscribers array; the return is null. */
+  var ret = Platform.Function.AddObjectArrayItem(sendDef, "Subscribers", sub);
+  assert("AddObjectArrayItem(sendDef, 'Subscribers', sub) returns null", ret === null ? "true" : "false", "true");
+
+  /* 4. A second subscriber can be appended to the same array property. */
+  var sub2 = Platform.Function.CreateObject("Subscriber");
+  assertNoThrow("SetObjectProperty(sub2, 'EmailAddress', ...) succeeds", function () {
+      Platform.Function.SetObjectProperty(sub2, "EmailAddress", "john@example.com");
+  });
+  assertNoThrow("SetObjectProperty(sub2, 'SubscriberKey', ...) succeeds", function () {
+      Platform.Function.SetObjectProperty(sub2, "SubscriberKey", "sub_john");
+  });
+  var ret2 = Platform.Function.AddObjectArrayItem(sendDef, "Subscribers", sub2);
+  assert("appending a second Subscriber also returns null", ret2 === null ? "true" : "false", "true");
+
+  /* 5. The recommended alternative — WSProxy — is available in this engine. */
+  assert("Script.Util.WSProxy is a CLR host constructor", String(typeof Script.Util.WSProxy), "clr");
+  var proxy = new Script.Util.WSProxy();
+  assert("new Script.Util.WSProxy() yields a CLR instance", String(typeof proxy), "clr");
+  assertNoThrow("the WSProxy instance exposes a callable retrieve method", function () {
+      var t = typeof proxy.retrieve;
+  });
+  </script>

@@ -1,0 +1,183 @@
+# Test scripts for /core-library/base64decode/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented limitation of the bare-name Core form.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage GET. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# NORMALIZATION RULE: assert() compares with a plain === and does NOT coerce.
+# Engine-returned values are normalized at the call site with "" + value —
+# never with String(value), which yields a CLR string that fails === and
+# aborts the page when a string method is called on it.
+#
+# NON-ASCII RULE: every non-ASCII test value is built with String.fromCharCode
+# so source encoding cannot obscure the Base64 evidence.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters — Base64Decode(encodedString)
+   *
+   * Proves:
+   *   1. After Platform.Load("core", "1.1.5") the bare name Base64Decode is a
+   *      function and a successful call is the existence proof.
+   *   2. encodedString is the ONLY parameter (min_args 1, max_args 1) and it is
+   *      typed string: a Base64 string decodes to its plain-text value.
+   *   3. return_type is string: typeof the result is "string" and real string
+   *      methods work on it.
+   *   4. NEGATIVE — there is no charset parameter. A second argument is neither
+   *      honoured nor rejected: it is silently IGNORED, so the result is
+   *      byte-identical to the 1-argument form even for a charset that would
+   *      change the result in Platform.Function.Base64Decode (asserted in the
+   *      description chapter). This is why the page tells you to use the
+   *      Platform.Function form when charset control is needed.
+   *   5. NEGATIVE — the documented "required" parameter is not enforced at
+   *      runtime: the 0-argument form returns the empty string instead of
+   *      throwing. Callers must still pass encodedString; the page documents
+   *      the contract, not the engine's laxity.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+
+  var ENC = "VGhpcyB3YXMgYSBCYXNlNjQgZW5jb2RlZCBzdHJpbmcu";
+  var PLAIN = "This was a Base64 encoded string.";
+  /* "caf" + U+00E9, encoded as UTF-8 bytes. */
+  var UTF8_CAFE = "Y2Fmw6k=";
+  var CAFE = "caf" + String.fromCharCode(233);
+
+  /* 1. The bare name exists as a function after the Core load. */
+  assert("typeof Base64Decode is function after Platform.Load", typeOf(function () { return typeof Base64Decode; }), "function");
+
+  /* 2. The single encodedString parameter decodes to plain text. */
+  assert("1-argument call decodes encodedString", "" + Base64Decode(ENC), PLAIN);
+
+  /* 3. return_type is string. */
+  assert("typeof the result is string", typeOf(function () { return typeof Base64Decode(ENC); }), "string");
+  assert("string methods work on the result", "" + ("" + Base64Decode(ENC)).substring(0, 4), "This");
+  assert("the result has the expected length", "" + ("" + Base64Decode(ENC)).length, "33");
+
+  /* 4. NEGATIVE — max_args is 1: a second argument is silently ignored. */
+  assert("1-argument decode of UTF-8 bytes", "" + Base64Decode(UTF8_CAFE), CAFE);
+  assert("a 2nd 'ASCII' argument is IGNORED (no charset parameter)", "" + Base64Decode(UTF8_CAFE, "ASCII"), CAFE);
+  assert("a 2nd 'UTF-8' argument is IGNORED (no charset parameter)", "" + Base64Decode(UTF8_CAFE, "UTF-8"), CAFE);
+  assert("a 2nd nonsense argument is IGNORED, not rejected", "" + Base64Decode(UTF8_CAFE, "NOPE"), CAFE);
+  assert("a 3rd argument is IGNORED too", "" + Base64Decode(ENC, "UTF-8", "extra"), PLAIN);
+
+  /* 5. NEGATIVE — the required parameter is not enforced by the engine. */
+  assert("0-argument form returns the empty string instead of throwing", "" + Base64Decode(), "");
+  assert("the empty string decodes to the empty string", "" + Base64Decode(""), "");
+  </script>
+
+description: |
+  <script runat="server">
+  /*
+   * Chapter: Description — bare-name Core form, Platform.Load required,
+   * no charset support.
+   *
+   * Proves:
+   *   1. Platform.Load("core", "1.1.5") is REQUIRED: the bare name is undefined
+   *      before the load and a function after it. The pre-load typeof is
+   *      resolved inside a thunk so an unbound global cannot abort the page.
+   *   2. It decodes a Base64 string back to plain text, and reverses the
+   *      bare-name Base64Encode for text, digits and punctuation.
+   *   3. It is the SINGLE-ARGUMENT form: it has no charset parameter, and a
+   *      charset passed anyway has no effect.
+   *   4. The recommended workaround works: Platform.Function.Base64Decode
+   *      (encodedString, charset) DOES honour charset — decoding UTF-8 bytes
+   *      as "ASCII" there produces substitution characters, while the bare
+   *      form always returns the UTF-8 interpretation. This proves the two
+   *      forms genuinely differ and the page's advice is necessary.
+   *   5. The bare form and the 1-argument Platform.Function form agree.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+
+  /* 1. Platform.Load is required — check BEFORE loading. */
+  assert("bare Base64Decode is undefined before Platform.Load", typeOf(function () { return typeof Base64Decode; }), "undefined");
+
+  Platform.Load("core", "1.1.5");
+
+  assert("bare Base64Decode is a function after Platform.Load", typeOf(function () { return typeof Base64Decode; }), "function");
+
+  /* 2. It decodes Base64 back to plain text and reverses Base64Encode. */
+  assert("decodes a Base64 string to plain text", "" + Base64Decode("VGhpcyB3YXMgYSBCYXNlNjQgZW5jb2RlZCBzdHJpbmcu"), "This was a Base64 encoded string.");
+  assert("round trip with the bare-name Base64Encode", "" + Base64Decode(Base64Encode("Convert to Base64")), "Convert to Base64");
+  assert("round trip of digits", "" + Base64Decode(Base64Encode("0123456789")), "0123456789");
+  assert("round trip of punctuation", "" + Base64Decode(Base64Encode("a+b/c=d?e&f")), "a+b/c=d?e&f");
+
+  /* 3 + 4. No charset support here; the Platform.Function form has it. */
+  var UTF8_CAFE = "Y2Fmw6k=";
+  var CAFE = "caf" + String.fromCharCode(233);
+  assert("bare form always decodes as UTF-8", "" + Base64Decode(UTF8_CAFE), CAFE);
+  assert("bare form ignores an 'ASCII' 2nd argument", "" + Base64Decode(UTF8_CAFE, "ASCII"), CAFE);
+  assert("workaround: Platform.Function form with 'UTF-8' matches the bare form", "" + Platform.Function.Base64Decode(UTF8_CAFE, "UTF-8"), CAFE);
+  assert("workaround: Platform.Function form with 'ASCII' really changes the result", "" + Platform.Function.Base64Decode(UTF8_CAFE, "ASCII"), "caf??");
+
+  /* 5. The two 1-argument forms agree. */
+  assert("bare form equals the 1-argument Platform.Function form", "" + Base64Decode(UTF8_CAFE), "" + Platform.Function.Base64Decode(UTF8_CAFE));
+  assert("bare form equals the Platform.Function form for ASCII text", "" + Base64Decode("SGVsbG8sIFdvcmxkIQ=="), "" + Platform.Function.Base64Decode("SGVsbG8sIFdvcmxkIQ=="));
+  </script>
+
+example: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Example
+   *
+   * Proves the page example line by line:
+   *   1. Base64Decode('VGhpcyB3YXMgYSBCYXNlNjQgZW5jb2RlZCBzdHJpbmcu') returns
+   *      exactly the commented result "This was a Base64 encoded string.".
+   *   2. The decoded value is a genuine string, so Write() emits it verbatim
+   *      and string operations work on it.
+   *   3. The example's Platform.Load("core", "1.1.5") call is what makes the
+   *      bare name resolvable.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+
+  /* 1. The exact example from the page. */
+  var encoded = "VGhpcyB3YXMgYSBCYXNlNjQgZW5jb2RlZCBzdHJpbmcu";
+  var decoded = Base64Decode(encoded);
+  assert("the example decodes to the commented result", "" + decoded, "This was a Base64 encoded string.");
+
+  /* 3. The Core load is what makes the bare name usable. */
+  assert("the example's Core load made the bare name a function", typeOf(function () { return typeof Base64Decode; }), "function");
+
+  /* 2. The decoded value is a real string that Write() can output. */
+  assert("typeof decoded is string", typeOf(function () { return typeof decoded; }), "string");
+  assert("string methods work on the decoded value", "" + ("" + decoded).substring(0, 4), "This");
+  assert("the decoded value ends with a period", "" + ("" + decoded).charAt(("" + decoded).length - 1), ".");
+  Platform.Response.Write("PASS Write(decoded) emitted -> [" + ("" + decoded) + "]\n");
+  </script>

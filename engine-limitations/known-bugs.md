@@ -243,6 +243,30 @@ Always check the return value for `null` rather than relying on a thrown error. 
 
 ---
 
+## ParseJSON Boolean Arguments Return CLR `"True"` / `"False"` {#parsejson-boolean-arguments-return-clr-true--false}
+
+**Severity: Low** — accepted, but conversion is unexpected
+
+[`Platform.Function.ParseJSON`](/platform-functions/parsejson/) accepts a boolean argument without throwing, but the host stringifies it with CLR capitalization. The result is the string `"True"` or `"False"` — not a boolean primitive, and not the same as parsing the JSON text `"true"` / `"false"` (those return the lowercase strings `"true"` / `"false"`, because top-level JSON scalars stay strings in this engine).
+
+```javascript
+// ❌ Looks like a JSON boolean, but returns CLR text
+var a = Platform.Function.ParseJSON(true);   // "True"  (string)
+var b = Platform.Function.ParseJSON(false);  // "False" (string)
+
+// ✅ JSON-text form (still a string scalar — not a boolean primitive)
+var c = Platform.Function.ParseJSON("true");   // "true"
+var d = Platform.Function.ParseJSON("false");  // "false"
+
+// ✅ Prefer an explicit object/array JSON string when you need real booleans inside
+var e = Platform.Function.ParseJSON('{"ok":true}');
+Write(e.ok); // true (boolean property)
+```
+
+Pass a JSON string (or a number when that is intentional). Do not rely on boolean arguments for JSON-boolean semantics.
+
+---
+
 ## new on User-Defined Constructors
 
 **Severity: Low** — behavior depends on pattern
@@ -525,3 +549,53 @@ Portfolio.Add({
 `Portfolio` is a retired **Classic Content** feature in any case — for new work use the Content Builder Asset REST endpoints instead.
 
 **Works correctly:** [`<PortfolioInstance>.Remove()`](/core-library/portfolio/#instance-remove) followed by [`Portfolio.Add()`](/core-library/portfolio/#add). See also [Differs from Official Docs](/engine-limitations/differs-from-docs/#portfolioinstance-update).
+
+---
+
+## &lt;ContentAreaObjInstance&gt;.Update Creates a Content Area When It Fails {#contentareaobjinstance-update-creates-ghost}
+
+**Severity: Medium** — a failed update silently leaves a new, empty record behind
+
+Calling [`<ContentAreaObjInstance>.Update(properties)`](/core-library/contentareaobj/#instance-update) on an instance whose external key does not resolve returns the plain string `"Error"` — and **still creates an empty content area under that key**. The failure is therefore not a no-op: repeated failed updates accumulate junk records that only an explicit `Remove` clears.
+
+[`<ContentAreaObjInstance>.Remove()`](/core-library/contentareaobj/#instance-remove) fails cleanly on the same unbound key: it returns `"Error"` and creates nothing.
+
+```javascript
+Platform.Load("core", "1.1.1");
+
+// ❌ returns "Error" — but a new, empty content area now exists under that key
+var status = ContentAreaObj.Init("keyThatDoesNotExist").Update({ Name: "New name" });
+
+// ✅ confirm the key resolves first
+var rows = ContentAreaObj.Retrieve({
+    Property: "CustomerKey",
+    SimpleOperator: "equals",
+    Value: "keyThatDoesNotExist"
+});
+if (rows && rows.length) {
+    ContentAreaObj.Init("keyThatDoesNotExist").Update({ Name: "New name" });
+}
+```
+
+`ContentAreaObj` is a retired **Classic Content** feature in any case — for new work use the Content Builder Asset REST endpoints instead.
+
+---
+
+## &lt;DataExtensionInstance&gt;.Fields.UpdateSendableField Reports "OK" for a No-Argument Call {#dataextensionfields-updatesendablefield-false-ok}
+
+**Severity: Low** — a call that changes nothing reports success
+
+[`<DataExtensionInstance>.Fields.UpdateSendableField(deFieldName, subscriberField)`](/core-library/dataextension-fields/#instance-fields-updatesendablefield) returns the string `"Error"` for every other invalid invocation — an unknown data extension field, an unknown subscriber attribute, even a single-argument call. But calling it with **no arguments at all** returns `"OK"` while leaving the existing sendable mapping untouched.
+
+A `"OK"` return therefore does not prove a mapping was applied. Pass both arguments explicitly, and read the mapping back through the SOAP API (`DataExtension.SendableDataExtensionField.Name`) when the result matters.
+
+```javascript
+Platform.Load("core", "1.1.5");
+var de = DataExtension.Init("sendableDataExtension");
+
+// ❌ returns "OK" — but nothing changed
+var status = de.Fields.UpdateSendableField();
+
+// ✅ both arguments, and a real change
+var status = de.Fields.UpdateSendableField("DifferentSubKey", "Subscriber Key");
+```

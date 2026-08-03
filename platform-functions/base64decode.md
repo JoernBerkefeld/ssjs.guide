@@ -15,6 +15,7 @@ min_args: 1
 max_args: 2
 verification: verified
 differs_from_docs: true
+test_scripts: complete
 ---
 
 ## Parameters
@@ -24,6 +25,8 @@ differs_from_docs: true
 | `encodedString` | string | Yes | Base64 encoded string to decode |
 | `charset` | string | No | Character set to use when decoding, such as `ASCII` or `UTF-8` |
 
+{% include test-script.html bundle="platform-functions--base64decode" chapter="parameters" %}
+
 ## Description
 
 Decodes a standard Base64-encoded string back to its original value. Use the optional `charset` parameter to control how the decoded bytes are interpreted.
@@ -32,7 +35,11 @@ It decodes any valid standard Base64 string — the input does not have to have 
 
 {% include differs-from-docs.html note="The official docs imply it only decodes values created by the matching Base64Encode() function, but the runtime decodes any valid standard Base64 string." %}
 
+{% include test-script.html bundle="platform-functions--base64decode" chapter="any-standard-base64" label="Show test script — decodes any standard Base64, not just Base64Encode output" %}
+
 For a single-argument form without charset control, see [`Base64Decode()`](/core-library/base64decode/) under the Core Library bare-name functions.
+
+{% include test-script.html bundle="platform-functions--base64decode" chapter="description" %}
 
 ## Example
 
@@ -41,6 +48,8 @@ var encodedStr = Platform.Function.Lookup("forBase64Info", "ReceiptData", "Recei
 var decodedStr = Platform.Function.Base64Decode(encodedStr);
 Write(decodedStr);
 ```
+
+{% include test-script.html bundle="platform-functions--base64decode" chapter="example" %}
 
 ## See Also
 

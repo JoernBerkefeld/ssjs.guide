@@ -1,0 +1,356 @@
+# Test scripts for /core-library/beginimpressionregion/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and the documented deviation from the official Salesforce docs.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage GET. Re-run them before changing any claim on the page.
+#
+# SCOPE OF THE EVIDENCE — CLOUDPAGE ONLY: every assertion in this bundle was
+# executed as a plain CloudPage GET. Nothing here was run inside a real email
+# send. Although impression regions are primarily a send/email-tracking
+# feature, no send-context assertion is made — that behaviour is untested and
+# may differ from what these scripts show.
+#
+# NOT ASSERTED (not assertable on a CloudPage):
+#   - whether an impression is actually recorded in Marketing Cloud tracking
+#     when a region opens. Impression counts surface in tracking reports after
+#     a send is processed, which is not deterministically observable from
+#     inside the rendering request.
+#   - whether the bare name behaves the same inside an email send. Only the
+#     CloudPage GET context was exercised.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# NORMALIZATION RULE: assert() compares with a plain === and does NOT coerce.
+# Engine-returned values are normalized at the call site with "" + value —
+# never with String(value), which yields a CLR string that fails === and
+# aborts the page when a string method is called on it.
+#
+# ENGINE NOTE: the CLR exception message thrown by BeginImpressionRegion
+# cannot be inspected with .length / .indexOf / .substring — those operations
+# abort the whole CloudPage with HTTP 422. The message may only be
+# concatenated into output verbatim, so these scripts assert "it throws" and
+# PRINT the message rather than matching it.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters — BeginImpressionRegion(name)
+   *
+   * Proves:
+   *   1. After Platform.Load("core", "1.1.5") the bare name is a function
+   *      (the documented requires_core_load contract).
+   *   2. DEV the documented 1-argument call — the form the official docs show
+   *      as a working call taking one string region name — does NOT succeed:
+   *      it throws a resolved-value error.
+   *   3. The rejection is independent of the argument's TYPE: a string
+   *      literal, a number literal, a boolean literal and null all throw with
+   *      the same resolved-value error, printed verbatim next to each line.
+   *   4. Arities outside the documented 1-argument signature (0 and 2) throw
+   *      as well, so no call shape at all works from SSJS.
+   *
+   * SCOPE: CloudPage GET only. Nothing below asserts how the call behaves
+   * inside an actual email send.
+   *
+   * NOT ASSERTED: the exact text of the thrown message. Any string operation
+   * on this CLR exception message (.length / .indexOf / .substring) aborts
+   * the CloudPage with HTTP 422, so it is printed rather than matched.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+
+  /* 1. The bare name resolves as a function after the Core load. */
+  assert("typeof BeginImpressionRegion is function after Platform.Load", typeOf(function () { return typeof BeginImpressionRegion; }), "function");
+
+  /* 2 + 3. DEV every 1-argument call throws, whatever the argument type. */
+  assertThrows("DEV 1-arg string literal throws (docs: a valid call)", function () {
+      return BeginImpressionRegion("hero-banner");
+  });
+  assertThrows("DEV 1-arg number literal throws (docs: a valid call)", function () {
+      return BeginImpressionRegion(1);
+  });
+  assertThrows("DEV 1-arg boolean literal throws (docs: a valid call)", function () {
+      return BeginImpressionRegion(true);
+  });
+  assertThrows("DEV 1-arg null throws (docs: a valid call)", function () {
+      return BeginImpressionRegion(null);
+  });
+
+  /* 4. Off-signature arities throw too. */
+  assertThrows("arity 0 throws", function () {
+      return BeginImpressionRegion();
+  });
+  assertThrows("arity 2 throws", function () {
+      return BeginImpressionRegion("a", "b");
+  });
+  </script>
+
+description: |
+  <script runat="server">
+  /*
+   * Chapter: Description — bare-name Core form, Platform.Load required,
+   * unusable from SSJS, TreatAsContent workaround.
+   *
+   * Proves:
+   *   1. Platform.Load("core", "1.1.5") is REQUIRED: the bare name is
+   *      undefined before the load and a function after it. The pre-load
+   *      typeof is resolved inside a thunk so an unbound global cannot abort
+   *      the page.
+   *   2. DEV once loaded the bare name IS defined but calling it throws — a
+   *      string literal and a variable fail identically, so no SSJS call
+   *      shape works.
+   *   3. The bare alias and the qualified Platform.Function form behave
+   *      identically (both throw), so the qualified form is no escape hatch.
+   *   4. The documented workaround works: emitting the AMPscript form with
+   *      Platform.Function.TreatAsContent() does NOT throw, returns a string,
+   *      and produces no output (the function emits nothing).
+   *   5. The dynamic-name recommendation works: a JS-built name spliced into
+   *      the AMPscript SOURCE STRING is a literal to the AMPscript parser and
+   *      is accepted.
+   *
+   * SCOPE: CloudPage GET only — the email/send context is not covered by any
+   * assertion here, as the page's scope callout states.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function assertNoThrow(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "FAIL " : "PASS ") + id + " -> " + (threw ? "threw: " + msg : "did not throw") + "\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+
+  /* 1. Platform.Load is required — check BEFORE loading. */
+  assert("bare BeginImpressionRegion is undefined before Platform.Load", typeOf(function () { return typeof BeginImpressionRegion; }), "undefined");
+
+  Platform.Load("core", "1.1.5");
+
+  assert("bare BeginImpressionRegion is a function after Platform.Load", typeOf(function () { return typeof BeginImpressionRegion; }), "function");
+
+  /* 2. DEV the loaded bare name still cannot be called. */
+  assertThrows("DEV bare-name call with a string literal throws (docs: valid)", function () {
+      return BeginImpressionRegion("hero-banner");
+  });
+  var regionName = "hero-banner";
+  assertThrows("DEV bare-name call with a variable throws identically", function () {
+      return BeginImpressionRegion(regionName);
+  });
+
+  /* 3. The qualified Platform.Function form throws too — no escape hatch. */
+  assertThrows("DEV the qualified Platform.Function form throws as well", function () {
+      return Platform.Function.BeginImpressionRegion("hero-banner");
+  });
+
+  /* 4. Workaround — the AMPscript form via TreatAsContent does not throw. */
+  assertNoThrow("workaround TreatAsContent begin does not throw", function () {
+      return Platform.Function.TreatAsContent('%%[BeginImpressionRegion("tac-region")]%%');
+  });
+  var tac = Platform.Function.TreatAsContent('%%[BeginImpressionRegion("tac-region-2")]%%');
+  assert("workaround TreatAsContent begin has no output", "" + tac, "");
+  assert("typeof the TreatAsContent result is string", typeOf(function () { return typeof tac; }), "string");
+
+  /* 5. A JS-built name spliced into the AMPscript source is accepted. */
+  var built = "built-at-runtime";
+  assertNoThrow("a JS-built name spliced into the AMPscript source is accepted", function () {
+      return Platform.Function.TreatAsContent('%%[ BeginImpressionRegion("' + built + '") ]%%');
+  });
+  </script>
+
+ssjs-always-throws: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs claim: the official Salesforce documentation presents
+   * BeginImpressionRegion(name) as a normal callable function taking a string
+   * region name. At runtime NO SSJS call shape works — every invocation of
+   * the bare Core alias throws, while the equivalent AMPscript literal call
+   * succeeds in the very same content.
+   *
+   * Official docs: BeginImpressionRegion("Header") begins a tracking region
+   * SFMC runtime:  the SSJS call throws
+   *                "A BeginImpressionRegion function call includes an invalid
+   *                 parameter value. The values making up the parameter value
+   *                 for this call must be a literal (constant) values."
+   *                (printed verbatim by each assertion below)
+   *
+   * Proves both halves of the claim:
+   *   1. DEV a compile-time string literal — the form the docs show — throws
+   *      through the bare alias. A concatenation, a variable and the empty
+   *      string throw identically, so from SSJS there is no working shape: an
+   *      SSJS argument always reaches the function as a ResolvedValueParameter,
+   *      never as the literal token the function requires.
+   *   2. DEV the qualified Platform.Function form throws too, so the
+   *      deviation is not specific to the bare-name Core alias.
+   *   3. The AMPscript route via TreatAsContent() succeeds in the same
+   *      request, proving the feature itself works and only the SSJS binding
+   *      is blocked — impression regions are an AMPscript-only feature.
+   *   4. The literal-only rule IS real — but it lives in the AMPscript parser.
+   *      Inside the emitted AMPscript the region name must be a literal: an
+   *      AMPscript variable is rejected as a ResolvedVariableParameter and a
+   *      nested function call is rejected too, while a name spliced into the
+   *      source string (a literal to the AMPscript parser, even though JS
+   *      built it) is accepted.
+   *
+   * SCOPE: all of the above was observed on a plain CloudPage GET. No
+   * assertion here speaks to what happens during a real email send, which was
+   * never exercised and may behave differently.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function assertNoThrow(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "FAIL " : "PASS ") + id + " -> " + (threw ? "threw: " + msg : "did not throw") + "\n");
+  }
+
+  /* 1. DEV every bare-alias argument shape throws — literal included. */
+  assertThrows("DEV bare-name compile-time string literal throws (docs: valid)", function () {
+      return BeginImpressionRegion("hero-banner");
+  });
+  assertThrows("DEV bare-name string concatenation throws as well", function () {
+      return BeginImpressionRegion("hero" + "-banner");
+  });
+  var dynamicName = "dynamic-name";
+  assertThrows("DEV bare-name variable argument throws as well", function () {
+      return BeginImpressionRegion(dynamicName);
+  });
+  assertThrows("DEV bare-name empty string literal throws too", function () {
+      return BeginImpressionRegion("");
+  });
+
+  /* 2. DEV the qualified form throws too. */
+  assertThrows("DEV the qualified Platform.Function form throws identically", function () {
+      return Platform.Function.BeginImpressionRegion("hero-banner");
+  });
+
+  /* 3. The AMPscript route succeeds in the same request. */
+  assertNoThrow("AMPscript form via TreatAsContent succeeds where SSJS throws", function () {
+      return Platform.Function.TreatAsContent('%%[BeginImpressionRegion("amp-proof")]%%');
+  });
+  var out = Platform.Function.TreatAsContent('%%[BeginImpressionRegion("amp-proof-2")]%%');
+  assert("the AMPscript form produces no output", "" + out, "");
+  var endOut = Platform.Function.TreatAsContent('%%[EndImpressionRegion()]%%');
+  assert("the AMPscript end form produces no output", "" + endOut, "");
+
+  /* 4. The literal-only rule is an AMPscript-parser rule: an AMPscript
+     VARIABLE argument is rejected, a literal is accepted. */
+  assertThrows("an AMPscript variable argument is rejected (ResolvedVariableParameter)", function () {
+      return Platform.Function.TreatAsContent('%%[ var @r set @r = "amp-var" BeginImpressionRegion(@r) ]%%');
+  });
+  assertThrows("an AMPscript function-call argument is rejected too", function () {
+      return Platform.Function.TreatAsContent('%%[ BeginImpressionRegion(Concat("a", "b")) ]%%');
+  });
+  var built = "built-at-runtime";
+  assertNoThrow("a JS-built name spliced into the AMPscript source is accepted", function () {
+      return Platform.Function.TreatAsContent('%%[ BeginImpressionRegion("' + built + '") ]%%');
+  });
+  /* Control: an AMPscript var block itself works fine through TreatAsContent,
+     so the rejection above is about the argument, not about var support. */
+  var ctl = Platform.Function.TreatAsContent('%%[ var @r set @r = "zz" ]%%out=%%=v(@r)=%%');
+  assert("control: AMPscript variables work through TreatAsContent", "" + ctl, "out=zz");
+  </script>
+
+example: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Example
+   *
+   * Proves the page example line by line:
+   *   1. The example's Platform.Load("core", "1.1.5") is what makes the bare
+   *      name resolvable — typeof is "function" afterwards.
+   *   2. DEV the example's own comment is correct: the bare-name call
+   *      BeginImpressionRegion("hero-banner") THROWS at runtime, which is why
+   *      the page marks impression regions as AMPscript-only. The official
+   *      docs show this exact shape as a working call.
+   *   3. The documented AMPscript workaround for the same intent does work:
+   *      emitting the region through TreatAsContent() neither throws nor
+   *      produces output, and the paired EndImpressionRegion AMPscript form
+   *      runs too.
+   *
+   * SCOPE: CloudPage GET only — no email/send-context behaviour is asserted.
+   *
+   * NOT ASSERTED: whether an impression is actually recorded in tracking.
+   * Impression counts surface in Marketing Cloud tracking reports after a
+   * send is processed, which is not deterministically observable from within
+   * the rendering request, so only the call-level behaviour is asserted.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function assertNoThrow(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "FAIL " : "PASS ") + id + " -> " + (threw ? "threw: " + msg : "did not throw") + "\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+
+  /* 1. The Core load from the example makes the bare name usable. */
+  assert("the example's Core load made the bare name a function", typeOf(function () { return typeof BeginImpressionRegion; }), "function");
+
+  /* 2. DEV the example line itself throws, exactly as its comment says. */
+  assertThrows("DEV the example call BeginImpressionRegion('hero-banner') throws", function () {
+      return BeginImpressionRegion("hero-banner");
+  });
+
+  /* 3. The documented AMPscript workaround for the same intent works. */
+  assertNoThrow("workaround: the AMPscript form of the example does not throw", function () {
+      return Platform.Function.TreatAsContent('%%[BeginImpressionRegion("hero-banner")]%%');
+  });
+  var open1 = Platform.Function.TreatAsContent('%%[BeginImpressionRegion("hero-banner-2")]%%');
+  assert("workaround: opening the region emits nothing", "" + open1, "");
+  var close1 = Platform.Function.TreatAsContent('%%[EndImpressionRegion()]%%');
+  assert("workaround: closing the region emits nothing", "" + close1, "");
+  </script>

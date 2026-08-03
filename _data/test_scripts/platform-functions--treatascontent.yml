@@ -1,0 +1,530 @@
+# Test scripts for /platform-functions/treatascontent/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every argument/arity edge case.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# SCOPE OF THE EVIDENCE — CLOUDPAGE ONLY: every assertion in this bundle was
+# executed as a plain CloudPage GET on the MCDEV_Training_QA business unit.
+# Nothing here was run inside a real email send or an automation. AMPscript
+# content evaluation can differ by rendering context, so no send-context
+# claim is asserted — that behaviour is untested and may differ.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# WHY THE DELIMITERS ARE BUILT FROM FRAGMENTS (this cost four HTTP 422s):
+# the page these scripts run on is itself AMPscript-rendered content, and the
+# AMPscript pre-processor runs BEFORE the SSJS engine sees the source. Any
+# AMPscript delimiter written LITERALLY inside the script is therefore
+# consumed by that pre-processor rather than reaching TreatAsContent — an
+# inline expression is silently evaluated and substituted, and an UNBALANCED
+# delimiter aborts the entire CloudPage with HTTP 422 before a single line
+# runs. That abort is not a catchable JavaScript error.
+# Every script below therefore assembles its AMPscript from these constants:
+#     PCT    = "%" + "%"        the doubled percent sign
+#     OPEN   = PCT + "["        block open
+#     CLOSEB = "]" + PCT        block close
+#     INL    = PCT + "="        inline-expression open
+#     ENDI   = "=" + PCT        inline-expression close
+# Copy this idiom if you write your own probes — it is the only reliable way
+# to feed AMPscript source through a CloudPage to TreatAsContent.
+
+parameters: |
+  <script runat="server">
+  /*
+   * Chapter: Parameters — Platform.Function.TreatAsContent(content)
+   *
+   * Proves:
+   *   1. The member resolves on Platform.Function as a host CLR method
+   *      (typeof "clrmethodinfo", the engine's marker for such a method).
+   *   2. `content` is required and the signature takes EXACTLY one argument:
+   *      arity 0, 2 and 3 all throw the engine's overloaded
+   *      "Unable to retrieve security descriptor for this frame." error.
+   *   3. A string argument is evaluated and its rendered result returned.
+   *   4. Scalar non-string arguments ARE coerced to string rather than
+   *      rejected: a number, zero, and both booleans are all accepted.
+   *   5. Booleans coerce with .NET capitalisation — true renders as "True"
+   *      and false as "False", NOT the JavaScript "true"/"false".
+   *   6. null and undefined are accepted and render to the empty string.
+   *   7. The coercion is NOT universal: an array — empty or populated —
+   *      throws the security-descriptor error instead of coercing. Only
+   *      scalars coerce.
+   *
+   * NOT ASSERTED: a plain object argument. Stringifying a plain object aborts
+   * the whole CloudPage with HTTP 422 rather than raising a catchable error,
+   * so no assertion could ever report its outcome.
+   *
+   * SCOPE: CloudPage GET only — no email-send behaviour is asserted.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  /* Caught messages are .NET strings and are never === a JS literal, so they
+     are compared by fragment instead. */
+  function assertRaises(id, fn, fragment) {
+      var msg = "NO-THROW";
+      try { fn(); } catch (ex) { msg = ex.message; }
+      var ok = String(msg).indexOf(fragment) !== -1;
+      Platform.Response.Write((ok ? "PASS " : "FAIL ") + id + " -> [" + msg + "]\n");
+  }
+  var ARITY_ERROR = "Unable to retrieve security descriptor for this frame.";
+
+  /* AMPscript delimiters must be BUILT, never written literally — the page's
+     own AMPscript pre-processor would consume them first (see bundle header). */
+  var PCT = "%" + "%";
+  var INL = PCT + "=";
+  var ENDI = "=" + PCT;
+
+  /* 1. The member resolves as a host CLR method. */
+  assert("typeof Platform.Function.TreatAsContent is clrmethodinfo", String(typeof Platform.Function.TreatAsContent), "clrmethodinfo");
+
+  /* 3. A string argument is evaluated and returned. */
+  assert("a string argument is evaluated and its result returned", Platform.Function.TreatAsContent(INL + "Add(2,3)" + ENDI), "5");
+
+  /* 4-5. Scalar non-string arguments coerce to string. */
+  assert("a number argument is coerced to string", Platform.Function.TreatAsContent(42), "42");
+  assert("the number 0 is coerced, not treated as absent", Platform.Function.TreatAsContent(0), "0");
+  assert("boolean true coerces with .NET capitalisation (NOT the JS \"true\")", Platform.Function.TreatAsContent(true), "True");
+  assert("boolean false coerces with .NET capitalisation (NOT the JS \"false\")", Platform.Function.TreatAsContent(false), "False");
+
+  /* 6. null and undefined render to the empty string. */
+  assert("null is accepted and renders to the empty string", Platform.Function.TreatAsContent(null), "");
+  assert("undefined is accepted and renders to the empty string", Platform.Function.TreatAsContent(undefined), "");
+
+  /* 7. Arrays are NOT coerced — only scalars are. */
+  assertRaises("an ARRAY argument throws — coercion covers scalars only", function () {
+      return Platform.Function.TreatAsContent(["a", "b"]);
+  }, ARITY_ERROR);
+  assertRaises("an EMPTY array argument throws too", function () {
+      return Platform.Function.TreatAsContent([]);
+  }, ARITY_ERROR);
+
+  /* 2. Exactly one argument — every other arity throws. */
+  assertRaises("arity 0 throws (content is required)", function () {
+      return Platform.Function.TreatAsContent();
+  }, ARITY_ERROR);
+  assertRaises("arity 2 throws (the signature takes exactly one argument)", function () {
+      return Platform.Function.TreatAsContent(INL + "Add(2,3)" + ENDI, "extra");
+  }, ARITY_ERROR);
+  assertRaises("arity 3 throws", function () {
+      return Platform.Function.TreatAsContent("x", 1, 2);
+  }, ARITY_ERROR);
+  </script>
+
+description: |
+  <script runat="server">
+  /*
+   * Chapter: Description — what the function does with the string it is given.
+   *
+   * Proves:
+   *   1. It RETURNS the rendered string; it does NOT write to the response.
+   *      A marker is written before and after a call whose result is
+   *      discarded — the evaluated token appears in neither position, and is
+   *      recoverable only from the return value. This single fact determines
+   *      every usage pattern on the page: the result must be captured.
+   *   2. The return is always typeof "string".
+   *   3. Inline AMPscript is evaluated and its output returned.
+   *   4. A string with NO AMPscript is passed through unchanged.
+   *   5. AMPscript can be mixed with surrounding literal text.
+   *   6. An AMPscript FUNCTION CALL is evaluated — this is the whole point of
+   *      the function: reaching AMPscript-only functions from SSJS.
+   *   7. A BLOCK-ONLY string renders to the empty string (length 0), because
+   *      a block produces no output of its own.
+   *   8. The empty string is a valid argument and returns the empty string.
+   *   9. An unset AMPscript variable renders to the empty string.
+   *  10. The function does NOT require Platform.Load("core") — every
+   *      assertion in this script runs with no Core load at all. The
+   *      bare-name form, by contrast, DOES require it: it is undefined here,
+   *      and the Notes chapter's script completes that proof by loading Core.
+   *
+   * SCOPE: CloudPage GET only — no email-send behaviour is asserted.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* AMPscript delimiters must be BUILT, never written literally — the page's
+     own AMPscript pre-processor would consume them first (see bundle header). */
+  var PCT = "%" + "%";
+  var OPEN = PCT + "[";
+  var CLOSEB = "]" + PCT;
+  var INL = PCT + "=";
+  var ENDI = "=" + PCT;
+
+  /* 10. No Platform.Load("core") anywhere in this script. */
+  assert("the qualified form works with NO Platform.Load(\"core\")", Platform.Function.TreatAsContent(INL + "Add(2,3)" + ENDI), "5");
+  assert("the bare name is undefined without Platform.Load(\"core\")", String(typeof TreatAsContent), "undefined");
+
+  /* 1. It RETURNS the result rather than writing it to the response. */
+  Platform.Response.Write("MARKER-BEFORE\n");
+  var discarded = Platform.Function.TreatAsContent("ZZTOKENZZ");
+  Platform.Response.Write("MARKER-AFTER\n");
+  assert("the evaluated content is RETURNED, not written to the response", discarded, "ZZTOKENZZ");
+  Platform.Response.Write("(the two markers above are adjacent - no ZZTOKENZZ leaked between them)\n");
+
+  /* 2. The return is always a string. */
+  assert("typeof the return is string", String(typeof Platform.Function.TreatAsContent(INL + "Add(2,3)" + ENDI)), "string");
+
+  /* 3-5. Evaluation, passthrough, and the two mixed. */
+  assert("inline AMPscript is evaluated and its output returned", Platform.Function.TreatAsContent(INL + "Add(2,3)" + ENDI), "5");
+  assert("a string with no AMPscript is returned unchanged", Platform.Function.TreatAsContent("hello world"), "hello world");
+  assert("AMPscript is evaluated in place, literal text is preserved", Platform.Function.TreatAsContent("pre-" + INL + "Add(1,1)" + ENDI + "-post"), "pre-2-post");
+
+  /* 6. An AMPscript function call is evaluated. */
+  assert("an AMPscript function call is evaluated", Platform.Function.TreatAsContent(INL + "Uppercase(\"abc\")" + ENDI), "ABC");
+
+  /* 7. A block-only string produces no output. */
+  assert("a block-only string renders to the empty string", Platform.Function.TreatAsContent(OPEN + " set @blockOnly = \"BV\" " + CLOSEB), "");
+  assert("the block-only result has length 0", String(Platform.Function.TreatAsContent(OPEN + " set @blockOnly2 = \"BV2\" " + CLOSEB)).length, 0);
+
+  /* 8. The empty string is a valid argument. */
+  assert("the empty string is a valid argument and returns the empty string", Platform.Function.TreatAsContent(""), "");
+  assert("typeof the empty-string result is still string", String(typeof Platform.Function.TreatAsContent("")), "string");
+
+  /* 9. An unset AMPscript variable renders to nothing. */
+  assert("an unset AMPscript variable renders to the empty string", Platform.Function.TreatAsContent(INL + "v(@neverSetAnywhere)" + ENDI), "");
+  </script>
+
+the-safe-pattern: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: The Safe Pattern — pass values IN with Variable.SetValue and read
+   * results OUT with Variable.GetValue, instead of concatenating them into the
+   * AMPscript source.
+   *
+   * Proves:
+   *   1. IN — a value set from SSJS with Variable.SetValue is readable inside
+   *      the evaluated AMPscript via v(@name).
+   *   2. OUT — a variable set inside an AMPscript block is readable from SSJS
+   *      afterwards with Variable.GetValue. This is the documented way to
+   *      retrieve a block's result, since the block itself returns "".
+   *   3. The block that sets the variable really does return the empty string,
+   *      so the return value is NOT the way to read it.
+   *   4. PERSISTENCE ACROSS CALLS — a variable set in one TreatAsContent call
+   *      is still readable inside a LATER, separate TreatAsContent call in the
+   *      same request. The evaluated fragments share one AMPscript variable
+   *      scope; they are not isolated evaluations.
+   *   5. A full round trip: SSJS -> AMPscript -> transformed by an AMPscript
+   *      function -> back to SSJS, with no string concatenation of the value
+   *      into the AMPscript source at any point.
+   *   6. WHY THE WARNING IS REAL — the unsafe shape, demonstrated with a
+   *      harmless payload: a value spliced into the source string is EVALUATED
+   *      as AMPscript, while the same value passed via Variable.SetValue is
+   *      returned as inert literal data. That contrast is the entire argument
+   *      for the safe pattern.
+   *
+   * SCOPE: CloudPage GET only. Variable scope in an email send was not
+   * exercised and may differ.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* AMPscript delimiters must be BUILT, never written literally — the page's
+     own AMPscript pre-processor would consume them first (see bundle header). */
+  var PCT = "%" + "%";
+  var OPEN = PCT + "[";
+  var CLOSEB = "]" + PCT;
+  var INL = PCT + "=";
+  var ENDI = "=" + PCT;
+
+  /* 1. IN — SSJS value reaches the AMPscript. */
+  Platform.Variable.SetValue("@safeIn", "IN-OK");
+  assert("a value set with Variable.SetValue is readable via v(@name)", Platform.Function.TreatAsContent(INL + "v(@safeIn)" + ENDI), "IN-OK");
+
+  /* 2-3. OUT — a block sets a variable, returns nothing, and the value is
+     retrieved with Variable.GetValue. */
+  var blockResult = Platform.Function.TreatAsContent(OPEN + " set @safeOut = \"OUT-OK\" " + CLOSEB);
+  assert("the block itself returns the empty string, not the value", blockResult, "");
+  assert("the value set inside the block is readable with Variable.GetValue", String(Platform.Variable.GetValue("@safeOut")), "OUT-OK");
+
+  /* 4. Persistence across separate calls in the same request. */
+  Platform.Function.TreatAsContent(OPEN + " set @persisted = \"PERSIST-OK\" " + CLOSEB);
+  assert("a variable set in one call is readable in a LATER call", Platform.Function.TreatAsContent(INL + "v(@persisted)" + ENDI), "PERSIST-OK");
+  assert("the same variable is also readable from SSJS", String(Platform.Variable.GetValue("@persisted")), "PERSIST-OK");
+
+  /* 5. Full round trip with no concatenation of the value. */
+  Platform.Variable.SetValue("@roundTripIn", "abc");
+  Platform.Function.TreatAsContent(OPEN + " set @roundTripOut = Uppercase(v(@roundTripIn)) " + CLOSEB);
+  assert("round trip: SSJS value -> AMPscript function -> back to SSJS", String(Platform.Variable.GetValue("@roundTripOut")), "ABC");
+
+  /* 6. The contrast that justifies the warning. The payload is harmless
+     arithmetic; a real attacker would substitute a Lookup. */
+  var attackerControlled = INL + "Add(9,9)" + ENDI;
+  assert("UNSAFE: a value spliced into the source is EVALUATED as AMPscript", Platform.Function.TreatAsContent("val=" + attackerControlled), "val=18");
+  Platform.Variable.SetValue("@safeAgainst", attackerControlled);
+  assert("SAFE: the same value passed via SetValue comes back as inert data", Platform.Function.TreatAsContent("val=" + INL + "v(@safeAgainst)" + ENDI), "val=" + attackerControlled);
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples — the three documented shapes, plus the sibling pages'
+   * documented workarounds that depend on this function.
+   *
+   * The page's own examples call EncryptSymmetric / DecryptSymmetric / Lookup
+   * against credentials and data extensions that do not exist on this business
+   * unit, so they are asserted STRUCTURALLY: the same call shape is exercised
+   * with AMPscript functions that need no external fixture, proving the
+   * mechanism the examples rely on rather than the specific fixture.
+   *
+   * Proves:
+   *   1. Example shape 1 — a block-only call that assigns a result, retrieved
+   *      afterwards with Variable.GetValue. This is the shape used by the
+   *      DecryptSymmetric and the "complex AMPscript logic" examples.
+   *   2. Example shape 2 — the inline form used by the decryptSymmetric()
+   *      helper, where the AMPscript result comes straight back as the return
+   *      value of TreatAsContent.
+   *   3. Example shape 3 — several statements in ONE block assigning several
+   *      variables, all readable afterwards (the "complex logic" example).
+   *   4. A value passed in with Variable.SetValue is visible to the AMPscript
+   *      function being invoked, which is what the URLEncode example relies on.
+   *   5. WORKAROUND (sibling page /platform-functions/beginimpressionregion/):
+   *      BeginImpressionRegion is unusable directly from SSJS — the direct
+   *      call throws — but the AMPscript form emitted through TreatAsContent
+   *      is accepted and produces no output. The published escape hatch still
+   *      works.
+   *   6. WORKAROUND: the spliced-literal trick for a DYNAMIC region name — a
+   *      name built in JavaScript and concatenated into the AMPscript SOURCE
+   *      is accepted, because the AMPscript parser then sees a literal token.
+   *   7. WORKAROUND: EndImpressionRegion via the same route also emits nothing.
+   *   8. WORKAROUND (sibling page /platform-functions/contentblockbyname/):
+   *      the AMPscript form of ContentBlockByName invoked through
+   *      TreatAsContent returns the Content Builder asset's body.
+   *
+   * SCOPE: CloudPage GET only. Impression regions are chiefly a send-time
+   * tracking feature; nothing here asserts what happens in a real email send.
+   *
+   * NOT ASSERTED: whether an impression is actually RECORDED. Impression
+   * counts surface in Marketing Cloud tracking reports after a send is
+   * processed, which is not deterministically observable from inside the
+   * rendering request, so only call-level behaviour is asserted.
+   *
+   * FIXTURE: the ContentBlockByName assertion resolves the Content Builder
+   * block "ssjs-guide-test-block" on MCDEV_Training_QA, whose body is the
+   * single token SSJSGUIDE-TEST-BLOCK-OK.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function assertNoThrow(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "FAIL " : "PASS ") + id + " -> " + (threw ? "threw: " + msg : "did not throw") + "\n");
+  }
+
+  /* AMPscript delimiters must be BUILT, never written literally — the page's
+     own AMPscript pre-processor would consume them first (see bundle header). */
+  var PCT = "%" + "%";
+  var OPEN = PCT + "[";
+  var CLOSEB = "]" + PCT;
+  var INL = PCT + "=";
+  var ENDI = "=" + PCT;
+
+  /* 1. Example shape 1 — block assigns, GetValue retrieves. */
+  Platform.Variable.SetValue("@exSource", "secret-value");
+  var ex1 = Platform.Function.TreatAsContent(OPEN + " set @exResult = Uppercase(v(@exSource)) " + CLOSEB);
+  assert("example shape 1: the block call itself returns the empty string", ex1, "");
+  assert("example shape 1: the assigned result is retrieved with Variable.GetValue", String(Platform.Variable.GetValue("@exResult")), "SECRET-VALUE");
+
+  /* 2. Example shape 2 — inline form returns the value directly. */
+  Platform.Variable.SetValue("@inlineSource", "abc");
+  assert("example shape 2: the inline form returns the AMPscript result directly", Platform.Function.TreatAsContent(INL + "Uppercase(v(@inlineSource))" + ENDI), "ABC");
+
+  /* 3. Example shape 3 — several statements, several variables. */
+  Platform.Variable.SetValue("@multiIn", "xy");
+  Platform.Function.TreatAsContent(OPEN + " set @multiA = Uppercase(v(@multiIn)) set @multiB = Concat(v(@multiIn), \"-z\") " + CLOSEB);
+  assert("example shape 3: the first variable of a multi-statement block landed", String(Platform.Variable.GetValue("@multiA")), "XY");
+  assert("example shape 3: the second variable of the same block landed", String(Platform.Variable.GetValue("@multiB")), "xy-z");
+
+  /* 4. A SetValue value reaches the invoked AMPscript function, including the
+     multi-argument form used by the URLEncode example. Length() is used as the
+     probe because its result is unambiguous — this page's claim is that the
+     VALUE ARRIVES, not what any particular AMPscript function does with it
+     (URLEncode's own encoding semantics belong to its AMPscript reference). */
+  Platform.Variable.SetValue("@valueToEncode", "a b&c");
+  assert("a SetValue value reaches the AMPscript function intact (5 characters)", Platform.Function.TreatAsContent(INL + "Length(v(@valueToEncode))" + ENDI), "5");
+  assertNoThrow("the example's multi-argument URLEncode(@v, 1, 1) form is accepted", function () {
+      return Platform.Function.TreatAsContent(INL + "URLEncode(v(@valueToEncode), 1, 1)" + ENDI);
+  });
+  assert("the multi-argument form returns a string", String(typeof Platform.Function.TreatAsContent(INL + "URLEncode(v(@valueToEncode), 1, 1)" + ENDI)), "string");
+
+  /* 5. WORKAROUND — impression regions are reachable ONLY through this
+     function. The direct SSJS call throws; the AMPscript form does not. */
+  assertThrows("sibling page control: the DIRECT SSJS BeginImpressionRegion call throws", function () {
+      return Platform.Function.BeginImpressionRegion("hero");
+  });
+  assertNoThrow("workaround: the AMPscript form via TreatAsContent is accepted", function () {
+      return Platform.Function.TreatAsContent(OPEN + "BeginImpressionRegion(\"hero\")" + CLOSEB);
+  });
+  assert("workaround: opening a region emits no output", Platform.Function.TreatAsContent(OPEN + "BeginImpressionRegion(\"hero-2\")" + CLOSEB), "");
+
+  /* 6. WORKAROUND — a JS-built name spliced into the AMPscript source. */
+  var dynamicRegion = "promo-" + 7;
+  assertNoThrow("workaround: a JS-built region name spliced into the source is accepted", function () {
+      return Platform.Function.TreatAsContent(OPEN + "BeginImpressionRegion(\"" + dynamicRegion + "\")" + CLOSEB);
+  });
+  assert("workaround: the spliced-name call also emits no output", Platform.Function.TreatAsContent(OPEN + "BeginImpressionRegion(\"" + dynamicRegion + "-b\")" + CLOSEB), "");
+
+  /* 7. WORKAROUND — the paired close through the same route. */
+  assert("workaround: EndImpressionRegion via TreatAsContent emits no output", Platform.Function.TreatAsContent(OPEN + "EndImpressionRegion()" + CLOSEB), "");
+
+  /* 8. WORKAROUND — the ContentBlock family through the same route. */
+  assert("workaround: the AMPscript ContentBlockByName form returns the asset body", Platform.Function.TreatAsContent(INL + "ContentBlockByName(\"ssjs-guide-test-block\")" + ENDI), "SSJSGUIDE-TEST-BLOCK-OK");
+  </script>
+
+notes: |
+  <script runat="server">
+  /*
+   * Chapter: Notes — the return-value semantics, the Core-load rule, the
+   * bare-name form, HTML passthrough, and what happens when the evaluated
+   * AMPscript is malformed or fails.
+   *
+   * Proves:
+   *   1. Inline AMPscript comes back in the RETURN VALUE ("5" for Add(2,3)).
+   *   2. A block-only string renders to the empty string, so a block's result
+   *      must be read with Variable.GetValue rather than from the return.
+   *   3. Variable side effects persist across separate calls.
+   *   4. Platform.Load("core") is NOT required for the qualified
+   *      Platform.Function form — asserted before any load happens here.
+   *   5. The BARE NAME does require the Core load: typeof is "undefined"
+   *      before Platform.Load("core", "1.1.5") and "function" after, and the
+   *      loaded bare-name form evaluates AMPscript identically. Note the two
+   *      forms report DIFFERENT typeof values — "clrmethodinfo" for the
+   *      qualified form, "function" for the Core alias.
+   *   6. Non-string arguments are coerced only when SCALAR (number, boolean,
+   *      null, undefined); an array throws. Booleans coerce with .NET
+   *      capitalisation ("True"/"False").
+   *   7. Zero or two-plus arguments throw.
+   *   8. NOTHING IS ESCAPED OR SANITISED. HTML tags, a script tag, pre-encoded
+   *      entities and quote characters all come back byte-for-byte — which is
+   *      the mechanical reason the page's security warning matters.
+   *   9. ERRORS INSIDE THE EVALUATED AMPSCRIPT ARE CATCHABLE. An unterminated
+   *      block, an unknown AMPscript function, wrong argument types and an
+   *      explicit RaiseError all raise a catchable JavaScript exception with
+   *      the message "An error occurred when attempting to evaluate a
+   *      TreatAsContent function call." — they do NOT abort the page and do
+   *      NOT render an error string into the result. A caller can therefore
+   *      wrap the call in try/catch.
+   *  10. Not every malformed input is an error: a lone closing delimiter is
+   *      swallowed and yields the empty string, and an unterminated INLINE
+   *      expression is passed through as literal text.
+   *
+   * NOT ASSERTED: a plain object argument — stringifying one aborts the whole
+   * CloudPage with HTTP 422 instead of raising a catchable error, so no
+   * assertion could report its outcome.
+   *
+   * SCOPE: CloudPage GET only — no email-send behaviour is asserted.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertRaises(id, fn, fragment) {
+      var msg = "NO-THROW";
+      try { fn(); } catch (ex) { msg = ex.message; }
+      var ok = String(msg).indexOf(fragment) !== -1;
+      Platform.Response.Write((ok ? "PASS " : "FAIL ") + id + " -> [" + msg + "]\n");
+  }
+  var EVAL_ERROR = "An error occurred when attempting to evaluate a TreatAsContent function call.";
+  var ARITY_ERROR = "Unable to retrieve security descriptor for this frame.";
+
+  /* AMPscript delimiters must be BUILT, never written literally. For the
+     MALFORMED cases below this is not merely good hygiene but mandatory: an
+     unbalanced delimiter in the deployed source aborts the whole CloudPage
+     with HTTP 422 before a single line runs (see bundle header). */
+  var PCT = "%" + "%";
+  var OPEN = PCT + "[";
+  var CLOSEB = "]" + PCT;
+  var INL = PCT + "=";
+  var ENDI = "=" + PCT;
+
+  /* 4. No Core load required for the qualified form. */
+  assert("the qualified form needs no Platform.Load(\"core\")", Platform.Function.TreatAsContent(INL + "Add(2,3)" + ENDI), "5");
+
+  /* 1-2. Inline returns its output; a block-only string returns "". */
+  assert("inline AMPscript comes back in the return value", Platform.Function.TreatAsContent(INL + "Add(2,3)" + ENDI), "5");
+  assert("a block-only string returns the empty string", Platform.Function.TreatAsContent(OPEN + " set @noteVar = \"NV\" " + CLOSEB), "");
+
+  /* 3. Side effects persist across calls. */
+  assert("the variable set by that block is readable in a later call", Platform.Function.TreatAsContent(INL + "v(@noteVar)" + ENDI), "NV");
+
+  /* 8. Nothing is escaped or sanitised. */
+  assert("HTML tags are returned unescaped", Platform.Function.TreatAsContent("<b>bold</b>"), "<b>bold</b>");
+  assert("a script tag is returned unescaped and unsanitised", Platform.Function.TreatAsContent("<scr" + "ipt>alert(1)</scr" + "ipt>"), "<scr" + "ipt>alert(1)</scr" + "ipt>");
+  assert("pre-encoded entities are not double-encoded or decoded", Platform.Function.TreatAsContent("a &amp; b < c"), "a &amp; b < c");
+  assert("quote characters pass through untouched", Platform.Function.TreatAsContent("say \"hi\" & 'bye'"), "say \"hi\" & 'bye'");
+
+  /* 6. Scalar coercion, and the array exception. */
+  assert("a number coerces to string", Platform.Function.TreatAsContent(42), "42");
+  assert("boolean true coerces to the .NET \"True\"", Platform.Function.TreatAsContent(true), "True");
+  assert("boolean false coerces to the .NET \"False\"", Platform.Function.TreatAsContent(false), "False");
+  assert("null renders to the empty string", Platform.Function.TreatAsContent(null), "");
+  assert("undefined renders to the empty string", Platform.Function.TreatAsContent(undefined), "");
+  assertRaises("an array is NOT coerced - it throws", function () {
+      return Platform.Function.TreatAsContent(["a", "b"]);
+  }, ARITY_ERROR);
+
+  /* 7. Zero or two-plus arguments throw. */
+  assertRaises("zero arguments throws", function () {
+      return Platform.Function.TreatAsContent();
+  }, ARITY_ERROR);
+  assertRaises("two arguments throws", function () {
+      return Platform.Function.TreatAsContent(INL + "Add(2,3)" + ENDI, "extra");
+  }, ARITY_ERROR);
+
+  /* 9. Malformed or failing AMPscript raises a CATCHABLE error. */
+  assertRaises("an UNTERMINATED BLOCK raises a catchable error", function () {
+      return Platform.Function.TreatAsContent(OPEN + " set @a = 1");
+  }, EVAL_ERROR);
+  assertRaises("an UNKNOWN AMPscript function raises a catchable error", function () {
+      return Platform.Function.TreatAsContent(INL + "NoSuchFunctionXyz(1)" + ENDI);
+  }, EVAL_ERROR);
+  assertRaises("WRONG ARGUMENT TYPES inside the AMPscript raise a catchable error", function () {
+      return Platform.Function.TreatAsContent(INL + "Add(\"a\",\"b\")" + ENDI);
+  }, EVAL_ERROR);
+  assertRaises("an explicit RaiseError inside the block raises a catchable error", function () {
+      return Platform.Function.TreatAsContent(OPEN + " RaiseError(\"boom\") " + CLOSEB);
+  }, EVAL_ERROR);
+
+  /* 10. Two malformed inputs that are NOT errors. */
+  assert("a lone CLOSING delimiter is swallowed and yields the empty string", Platform.Function.TreatAsContent(CLOSEB), "");
+  assert("an unterminated INLINE expression is passed through as literal text", Platform.Function.TreatAsContent(INL + "Add(2,3)"), INL + "Add(2,3)");
+
+  /* 5. The bare-name Core form - load LAST so the no-load claim above holds. */
+  assert("the bare name is undefined before the Core load", String(typeof TreatAsContent), "undefined");
+  Platform.Load("core", "1.1.5");
+  assert("the bare name is a function after the Core load", String(typeof TreatAsContent), "function");
+  assert("the bare-name form evaluates AMPscript identically", TreatAsContent(INL + "Add(4,4)" + ENDI), "8");
+  assert("the two forms report different typeof values", String(typeof Platform.Function.TreatAsContent), "clrmethodinfo");
+  </script>

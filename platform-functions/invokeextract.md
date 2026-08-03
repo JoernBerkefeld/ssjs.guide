@@ -14,10 +14,13 @@ return_type: string
 min_args: 2
 max_args: 2
 verification: verified
+test_scripts: complete
 differs_from_docs: true
 ---
 
 {% include differs-from-docs.html note="The official docs list an optional third `options` argument and type the return value as an object; at runtime the call takes exactly two arguments (a third throws). The `statusArray` is inert — it is never populated, so do not read a RequestID from it. The documented OverallStatus *string* return could not be reproduced from a CloudPage: referencing the BU's real, saved Data Extract definitions still throws a catchable `NullReferenceException`, because the SOAP Extract verb resolves a definition by its internal GUID inside the Automation runtime, not from an inline SSJS invoke. The `string` return type is therefore per-docs and unproven at runtime here." %}
+
+{% include test-script.html bundle="platform-functions--invokeextract" chapter="differs-from-docs" label="Show test script — 2-argument arity, the untouched statusArray and the unreproducible string return" %}
 
 ## Parameters
 
@@ -25,6 +28,12 @@ differs_from_docs: true
 |------|------|----------|-------------|
 | `apiObject` | object | Yes | `ExtractRequest` built with `CreateObject`. Only `Parameters` (an `ExtractParameter[]` of `{Name, Value}`) and `Options` (an `ExtractOptions`) are writable; `Name`/`CustomerKey`/`RequestID`/`Fields`/`ExtractType` throw *"Invalid property name"* on `SetObjectProperty` |
 | `statusArray` | array | Yes | Status out-parameter required by the signature, but inert at runtime — it is never populated (stays unchanged). Pass an array (e.g. `[0, 0]`) |
+
+A **pre-sized** `[0, 0]` array is left unchanged too, so this is not the
+[`InvokeExecute`](/platform-functions/invokeexecute/) slot-growing behaviour: the call throws
+before any SOAP response exists to write back.
+
+{% include test-script.html bundle="platform-functions--invokeextract" chapter="parameters" %}
 
 ## Examples
 
@@ -42,6 +51,8 @@ Write("Result: " + result);
 ```
 
 {% include callout.html type="note" content="WSProxy is the recommended approach for most SOAP API interactions. Use InvokeExtract only when the Extract SOAP verb is specifically required for your operation." %}
+
+{% include test-script.html bundle="platform-functions--invokeextract" chapter="examples" %}
 
 ## See Also
 

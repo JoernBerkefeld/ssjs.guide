@@ -15,6 +15,7 @@ min_args: 3
 max_args: 3
 verification: verified
 differs_from_docs: true
+test_scripts: complete
 ---
 
 ## Parameters
@@ -25,13 +26,19 @@ differs_from_docs: true
 | `fieldNames` | string[] | Yes | Array of column names to populate |
 | `fieldValues` | array | Yes | Array of values aligned to `fieldNames` |
 
+{% include test-script.html bundle="platform-functions--insertde" chapter="parameters" %}
+
 ## Description
 
 `InsertDE` adds a new row to a Data Extension. It performs the same insert as [InsertData](/platform-functions/insertdata/), but **returns `null`** (no row count).
 
 {% include differs-from-docs.html note="The docs restrict `InsertDE` to email contexts, but at runtime it also executes and commits its insert on a CloudPage, returning `null` (not the affected-row count). It also resolves the DE by **Name** only, not the external key / CustomerKey." %}
 
+{% include test-script.html bundle="platform-functions--insertde" chapter="runs-on-cloudpages" label="Show test script — InsertDE runs and commits on a CloudPage, returns null, and resolves by Name only" %}
+
 [InsertData](/platform-functions/insertdata/) is still preferred outside email because it returns the number of affected rows.
+
+{% include test-script.html bundle="platform-functions--insertde" chapter="description" %}
 
 ## See Also
 

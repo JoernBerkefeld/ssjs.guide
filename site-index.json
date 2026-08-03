@@ -87,7 +87,7 @@
     "url": "/platform-functions/updatede/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Modifies existing rows in a Data Extension matching filter criteria.",
+    "description": "Modifies existing rows in a Data Extension matching filter criteria and returns null.",
     "params": [
       "deName",
       "whereFieldNames",
@@ -117,7 +117,7 @@
     "url": "/platform-functions/upsertde/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Inserts a new row or updates an existing one in a Data Extension.",
+    "description": "Inserts one row when no filter match exists or updates every matching row in a Data Extension.",
     "params": [
       "deName",
       "whereFieldNames",
@@ -522,7 +522,7 @@
     "url": "/platform-functions/parsejson/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Parses a JSON-formatted string and returns the resulting JavaScript object or array.",
+    "description": "Parses a JSON-formatted string (also accepts boolean or number) and returns the resulting JavaScript object or array.",
     "params": [
       "jsonString"
     ],
@@ -544,7 +544,7 @@
     "url": "/platform-functions/urlencode/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Percent-encodes a complete URL.",
+    "description": "Percent-encodes only the query string after the first question mark; a URL without one is returned unchanged.",
     "params": [
       "url",
       "encodeReservedKeywords"
@@ -921,7 +921,7 @@
       "libraryName",
       "version"
     ],
-    "returnType": "void"
+    "returnType": "null"
   },
   {
     "name": "Platform.Variable.GetValue",
@@ -932,7 +932,7 @@
     "params": [
       "variableName"
     ],
-    "returnType": "string"
+    "returnType": "string|number|boolean|null"
   },
   {
     "name": "Platform.Variable.SetValue",
@@ -944,7 +944,7 @@
       "variableName",
       "value"
     ],
-    "returnType": "void"
+    "returnType": "null"
   },
   {
     "name": "Platform.Response.SetResponseHeader",
@@ -956,7 +956,7 @@
       "headerName",
       "value"
     ],
-    "returnType": "void"
+    "returnType": "null"
   },
   {
     "name": "Platform.Response.RemoveResponseHeader",
@@ -967,7 +967,7 @@
     "params": [
       "headerName"
     ],
-    "returnType": "void"
+    "returnType": "null"
   },
   {
     "name": "Platform.Response.Redirect",
@@ -993,18 +993,18 @@
       "expires",
       "secure"
     ],
-    "returnType": "void"
+    "returnType": "null"
   },
   {
     "name": "Platform.Response.RemoveCookie",
     "url": "/platform-objects/platform-response/#removecookie",
     "section": "Platform Objects",
     "type": "method",
-    "description": "Removes a cookie from the client browser by setting its expiration to a past date.",
+    "description": "Attempts to remove a browser cookie from a CloudPage response.",
     "params": [
       "name"
     ],
-    "returnType": "void"
+    "returnType": "null"
   },
   {
     "name": "Platform.Response.Write",
@@ -1023,7 +1023,7 @@
     "section": "Platform Objects",
     "type": "property",
     "description": "Sets the Content-Type of the HTTP response.",
-    "returnType": "void"
+    "returnType": "clr"
   },
   {
     "name": "Platform.Response.CharacterSet",
@@ -1031,7 +1031,7 @@
     "section": "Platform Objects",
     "type": "property",
     "description": "Sets the character set of the HTTP response.",
-    "returnType": "void"
+    "returnType": "clr"
   },
   {
     "name": "Platform.Request.GetQueryStringParameter",
@@ -1042,18 +1042,18 @@
     "params": [
       "parameterName"
     ],
-    "returnType": "string"
+    "returnType": "string|null"
   },
   {
     "name": "Platform.Request.GetFormField",
     "url": "/platform-objects/platform-request/#getformfield",
     "section": "Platform Objects",
     "type": "method",
-    "description": "Retrieves data from a named form field, including values sent via POST.",
+    "description": "Retrieves a named field from a submitted POST form body.",
     "params": [
       "name"
     ],
-    "returnType": "string"
+    "returnType": "string|null"
   },
   {
     "name": "Platform.Request.GetPostData",
@@ -1075,7 +1075,7 @@
     "params": [
       "cookieName"
     ],
-    "returnType": "string"
+    "returnType": "string|null"
   },
   {
     "name": "Platform.Request.GetUserLanguages",
@@ -1094,7 +1094,7 @@
     "params": [
       "headerName"
     ],
-    "returnType": "string"
+    "returnType": "string|null"
   },
   {
     "name": "Platform.Request.Browser",

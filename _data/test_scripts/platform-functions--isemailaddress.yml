@@ -1,0 +1,240 @@
+# Test scripts for /platform-functions/isemailaddress/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every arity boundary.
+#
+# SCOPE: IsEmailAddress is a PURE, DETERMINISTIC PREDICATE over the string it
+# is handed — it performs a format check only and never contacts a mail
+# server. Every claim below is therefore fully observable from a CloudPage
+# GET, and every expectation is a real literal value rather than something
+# context-dependent.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# BOOLEAN RULE: this function returns a boolean, and String(<boolean expr>) is
+# mis-evaluated by Jint. Every boolean is turned into a literal with an
+# explicit ternary at the call site instead.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters — Platform.Function.IsEmailAddress(value)
+   *
+   * Proves:
+   *   1. The member exists and is invocable with exactly 1 argument (a
+   *      successful call is the only reliable existence proof for a
+   *      Platform.Function member).
+   *   2. return_type is boolean: typeof the result is "boolean", and the
+   *      result is strictly true / strictly false — never null, never
+   *      undefined, never a string.
+   *   3. value is REQUIRED: the 0-argument form throws.
+   *   4. max_args is 1: the 2-argument and 3-argument forms throw. There is
+   *      no reachable optional second argument.
+   *   5. The predicate DISCRIMINATES on FORMAT: a well-formed address answers
+   *      true while every malformed shape (missing @, missing domain, missing
+   *      local part, missing TLD, two @ signs, embedded or surrounding
+   *      whitespace, an RFC display-name form, a comma-separated list) answers
+   *      false. A PASS here is therefore not a constant.
+   *   6. It is a FORMAT check only — it never contacts a mail server, so an
+   *      address at a domain that does not exist is still true.
+   *   7. Case is irrelevant: an all-uppercase address is true.
+   *   8. UNLIKE IsCHTMLBrowser, an empty string, null and undefined do NOT
+   *      throw — they are answered false, which is what makes the
+   *      "if (!IsEmailAddress(x))" guard on this page safe for absent input.
+   *   9. Non-string primitives are coerced and answered false rather than
+   *      throwing; an array argument throws, even when it contains a valid
+   *      address.
+   *  10. The bare-name Core Library form IsEmailAddress(value) DOES exist
+   *      after Platform.Load and behaves identically to the qualified form.
+   *  11. The result stringifies to the lowercase JavaScript boolean literal
+   *      "true" / "false".
+   *
+   * NOT ASSERTED (documented as a deliberate non-assertion): the validator is
+   * more permissive than RFC 5322 in at least one respect — a local part with
+   * consecutive dots ("a..b@example.com") is answered TRUE. That is asserted
+   * below as observed behaviour, not as a correctness claim; no guidance on
+   * the page depends on it.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1 + 2. The 1-argument call works and answers a genuine boolean. */
+  var valid = Platform.Function.IsEmailAddress("test@example.com");
+  assert("typeof the result is boolean", String(typeof valid), "boolean");
+  assert("a well-formed address is strictly true", valid === true ? "true" : "false", "true");
+  assert("the result is not null", valid === null ? "true" : "false", "false");
+  assert("the result is not undefined", valid === undefined ? "true" : "false", "false");
+  assert("the result is not the string 'true'", valid === "true" ? "true" : "false", "false");
+
+  var invalid = Platform.Function.IsEmailAddress("not-an-email");
+  assert("typeof the negative result is boolean too", String(typeof invalid), "boolean");
+  assert("a malformed value is strictly false", invalid === false ? "true" : "false", "true");
+  assert("the negative result is not undefined", invalid === undefined ? "true" : "false", "false");
+
+  /* 5. The predicate discriminates on format. */
+  assert("a plus-tagged address on a multi-label domain is true", Platform.Function.IsEmailAddress("first.last+tag@sub.example.co.uk") ? "true" : "false", "true");
+  assert("an underscore in the local part is true", Platform.Function.IsEmailAddress("first_last@example.com") ? "true" : "false", "true");
+  assert("a hyphenated domain is true", Platform.Function.IsEmailAddress("user@my-domain.com") ? "true" : "false", "true");
+  assert("a value with no @ is false", Platform.Function.IsEmailAddress("not-an-email") ? "true" : "false", "false");
+  assert("a value with no domain is false", Platform.Function.IsEmailAddress("user@") ? "true" : "false", "false");
+  assert("a value with no local part is false", Platform.Function.IsEmailAddress("@example.com") ? "true" : "false", "false");
+  assert("a domain with no TLD is false", Platform.Function.IsEmailAddress("user@example") ? "true" : "false", "false");
+  assert("a domain ending in a dot is false", Platform.Function.IsEmailAddress("user@example.com.") ? "true" : "false", "false");
+  assert("two @ signs are false", Platform.Function.IsEmailAddress("a@b@c.com") ? "true" : "false", "false");
+  assert("a space inside the local part is false", Platform.Function.IsEmailAddress("user name@example.com") ? "true" : "false", "false");
+  assert("a leading space is false - the value is NOT trimmed", Platform.Function.IsEmailAddress(" test@example.com") ? "true" : "false", "false");
+  assert("a trailing space is false - the value is NOT trimmed", Platform.Function.IsEmailAddress("test@example.com ") ? "true" : "false", "false");
+  assert("an RFC display-name form is false", Platform.Function.IsEmailAddress("Name <test@example.com>") ? "true" : "false", "false");
+  assert("a comma-separated list of two addresses is false", Platform.Function.IsEmailAddress("a@b.com,c@d.com") ? "true" : "false", "false");
+
+  /* 5 (continued). Observed permissiveness relative to RFC 5322. */
+  assert("OBSERVED consecutive dots in the local part are accepted (RFC 5322 forbids them)", Platform.Function.IsEmailAddress("a..b@example.com") ? "true" : "false", "true");
+
+  /* 6. Format only — no mail-server lookup. */
+  assert("a well-formed address at a non-existent domain is still true - format check only", Platform.Function.IsEmailAddress("nobody@this-domain-does-not-exist-97531.example") ? "true" : "false", "true");
+
+  /* 7. Case is irrelevant. */
+  assert("an all-uppercase address is true", Platform.Function.IsEmailAddress("TEST@EXAMPLE.COM") ? "true" : "false", "true");
+
+  /* 3. value is required. */
+  assertThrows("arity 0 throws (value is required)", function () {
+      return Platform.Function.IsEmailAddress();
+  });
+
+  /* 4. max_args is 1 — no optional second argument is reachable. */
+  assertThrows("arity 2 throws (max_args is 1)", function () {
+      return Platform.Function.IsEmailAddress("test@example.com", "x");
+  });
+  assertThrows("arity 3 throws (max_args is 1)", function () {
+      return Platform.Function.IsEmailAddress("test@example.com", "x", "y");
+  });
+
+  /* 8. Empty / null / undefined are answered false, NOT thrown. */
+  assert("an empty string is answered false, not thrown", Platform.Function.IsEmailAddress("") ? "true" : "false", "false");
+  assert("a whitespace-only string is answered false", Platform.Function.IsEmailAddress("   ") ? "true" : "false", "false");
+  assert("a null argument is answered false, not thrown", Platform.Function.IsEmailAddress(null) ? "true" : "false", "false");
+  assert("an undefined argument is answered false, not thrown", Platform.Function.IsEmailAddress(undefined) ? "true" : "false", "false");
+  assert("the empty-string result is a genuine boolean, not null", String(typeof Platform.Function.IsEmailAddress("")), "boolean");
+
+  /* 9. Non-string primitives are coerced; an array throws. */
+  assert("a number argument is coerced and answered false", Platform.Function.IsEmailAddress(123) ? "true" : "false", "false");
+  assert("a boolean argument is coerced and answered false", Platform.Function.IsEmailAddress(true) ? "true" : "false", "false");
+  assertThrows("an empty array argument throws", function () {
+      return Platform.Function.IsEmailAddress([]);
+  });
+  assertThrows("an array holding a valid address throws rather than unwrapping it", function () {
+      return Platform.Function.IsEmailAddress(["test@example.com"]);
+  });
+
+  /* 10. The bare-name Core Library form exists after Platform.Load. */
+  assert("typeof the bare-name IsEmailAddress is function after Platform.Load", String(typeof IsEmailAddress), "function");
+  assert("the bare-name form answers true for a well-formed address", IsEmailAddress("test@example.com") ? "true" : "false", "true");
+  assert("the bare-name form answers false for a malformed value", IsEmailAddress("nope") ? "true" : "false", "false");
+
+  /* 11. Stringification. */
+  assert("the positive result stringifies to lowercase 'true'", "" + Platform.Function.IsEmailAddress("test@example.com"), "true");
+  assert("the negative result stringifies to lowercase 'false'", "" + Platform.Function.IsEmailAddress("nope"), "false");
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples — the form-handler guard and the validateInput() helper.
+   *
+   * Proves the shape of both documented examples without performing their
+   * side effects (UpsertData / Redirect are not exercised here — this script
+   * proves only the branch decision that gates them):
+   *   1. Example 1 line 1: Platform.Request.GetFormField("email") is callable
+   *      on a CloudPage GET, and returns null when no such field was posted.
+   *   2. Example 1's guard "!Platform.Function.IsEmailAddress(email)" is SAFE
+   *      for that null: it does not throw, and it evaluates to true, so the
+   *      error branch — not the UpsertData/Redirect branch — is taken when the
+   *      form field is absent. This is the whole reason the example is written
+   *      with the negated guard.
+   *   3. The same guard evaluates to false for a well-formed address, so the
+   *      success branch is reachable and the example is not a constant.
+   *   4. The guard's operand is a genuine boolean, so "!" is a plain boolean
+   *      negation rather than a coercion of a string or null.
+   *   5. Example 2's validateInput() helper, reproduced verbatim, returns:
+   *        - "Email is required"   for a missing / empty / absent email
+   *        - "Invalid email format" for a present but malformed email
+   *        - null                   for a valid email
+   *      including the ORDER of its two guards — the required-check fires
+   *      before the format-check, so an empty string yields "Email is
+   *      required" and never "Invalid email format".
+   *   6. The falsy pre-check "if (!input.email)" is what makes example 2's
+   *      required-branch reachable: IsEmailAddress("") is itself false, so
+   *      without that pre-check an empty email would report the wrong message.
+   *
+   * SCOPE: evidence gathered on a CloudPage GET. UpsertData() and
+   * Platform.Response.Redirect() from example 1 are deliberately NOT invoked —
+   * they write data and terminate the response, and neither is a claim about
+   * IsEmailAddress.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* 1. Example 1 line 1. */
+  var email = Platform.Request.GetFormField("email");
+  assert("GetFormField('email') returns null when the field was not posted", email === null ? "true" : "false", "true");
+
+  /* 2 + 4. The guard is safe for that null and takes the error branch. */
+  var guardThrew = false;
+  var guardTookErrorBranch = false;
+  var guardOperandType = "";
+  try {
+      guardOperandType = typeof Platform.Function.IsEmailAddress(email);
+      if (!Platform.Function.IsEmailAddress(email)) { guardTookErrorBranch = true; }
+  } catch (ex) {
+      guardThrew = true;
+  }
+  assert("the example's guard does not throw on a null form field", guardThrew ? "true" : "false", "false");
+  assert("the guard's operand is a genuine boolean", String(guardOperandType), "boolean");
+  assert("a null form field takes the error branch, not the UpsertData branch", guardTookErrorBranch ? "true" : "false", "true");
+
+  /* 3. The success branch is reachable. */
+  var validTookErrorBranch = false;
+  if (!Platform.Function.IsEmailAddress("test@example.com")) { validTookErrorBranch = true; }
+  assert("a well-formed address does NOT take the error branch", validTookErrorBranch ? "true" : "false", "false");
+
+  /* 5 + 6. Example 2's helper, verbatim. */
+  function validateInput(input) {
+      if (!input.email) { return "Email is required"; }
+      if (!Platform.Function.IsEmailAddress(input.email)) { return "Invalid email format"; }
+      return null;
+  }
+
+  assert("validateInput reports the required error when email is absent", String(validateInput({})), "Email is required");
+  assert("validateInput reports the required error when email is an empty string", String(validateInput({ email: "" })), "Email is required");
+  assert("validateInput reports the required error when email is null", String(validateInput({ email: null })), "Email is required");
+  assert("validateInput reports the format error for a malformed email", String(validateInput({ email: "not-an-email" })), "Invalid email format");
+  assert("validateInput reports the format error for an address with no TLD", String(validateInput({ email: "user@example" })), "Invalid email format");
+  assert("validateInput returns null for a valid email", validateInput({ email: "test@example.com" }) === null ? "true" : "false", "true");
+  assert("validateInput returns null for a valid plus-tagged email", validateInput({ email: "first.last+tag@sub.example.co.uk" }) === null ? "true" : "false", "true");
+  assert("the required-check fires BEFORE the format-check for an empty email", String(validateInput({ email: "" })) === "Invalid email format" ? "true" : "false", "false");
+  </script>

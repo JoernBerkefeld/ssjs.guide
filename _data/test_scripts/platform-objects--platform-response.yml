@@ -1,0 +1,168 @@
+# Test scripts for /platform-objects/platform-response/
+#
+# Run these on a plain CloudPage GET. Header, cookie, content-type, and redirect
+# claims require a raw HTTP client with automatic redirects disabled; the body
+# alone cannot prove those side effects.
+
+contenttype: |
+  <script runat="server">
+  /*
+   * Chapter: Platform.Response.ContentType
+   * Proves:
+   *   1. Assignment works without Platform.Load.
+   *   2. A raw fetch reports Content-Type: text/plain; charset=UTF-8.
+   *   3. Reads and calls return opaque CLR values, not the configured string.
+   * EXPECTED OUTPUT: every assertion line starts with PASS.
+   */
+  function assert(id, actual, expected) { Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n"); }
+  function capture(fn) { try { return { threw: false, value: fn() }; } catch (ex) { return { threw: true }; } }
+  Platform.Response.ContentType = "text/plain";
+  Platform.Response.CharacterSet = "UTF-8";
+  var readResult = capture(function () { return Platform.Response.ContentType; });
+  var callResult = capture(function () { return Platform.Response.ContentType(); });
+  assert("ContentType read does not throw", readResult.threw ? "threw" : "returned", "returned");
+  assert("ContentType read returns CLR value", typeof readResult.value, "clr");
+  assert("ContentType call does not throw", callResult.threw ? "threw" : "returned", "returned");
+  assert("ContentType call returns CLR value", typeof callResult.value, "clr");
+  </script>
+
+characterset: |
+  <script runat="server">
+  /*
+   * Chapter: Platform.Response.CharacterSet
+   * Proves:
+   *   1. Assignment works without Platform.Load and changes the charset token.
+   *   2. Reads and calls return opaque CLR values, not the configured string.
+   * EXPECTED OUTPUT: every assertion line starts with PASS.
+   */
+  function assert(id, actual, expected) { Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n"); }
+  function capture(fn) { try { return { threw: false, value: fn() }; } catch (ex) { return { threw: true }; } }
+  Platform.Response.ContentType = "text/plain";
+  Platform.Response.CharacterSet = "UTF-8";
+  var readResult = capture(function () { return Platform.Response.CharacterSet; });
+  var callResult = capture(function () { return Platform.Response.CharacterSet(); });
+  assert("CharacterSet read does not throw", readResult.threw ? "threw" : "returned", "returned");
+  assert("CharacterSet read returns CLR value", typeof readResult.value, "clr");
+  assert("CharacterSet call does not throw", callResult.threw ? "threw" : "returned", "returned");
+  assert("CharacterSet call returns CLR value", typeof callResult.value, "clr");
+  </script>
+
+write: |
+  <script runat="server">
+  /*
+   * Chapter: Platform.Response.Write
+   * Proves:
+   *   1. Platform.Response and Write are available without Platform.Load.
+   *   2. Write appends the exact marker to the HTTP response body.
+   *   3. The bare Write alias is absent before Core and callable after Core.
+   * EXPECTED OUTPUT: every assertion line starts with PASS.
+   */
+  function assert(id, actual, expected) { Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n"); }
+  function typeOf(fn) { try { return fn(); } catch (ex) { return "threw"; } }
+  assert("Platform.Response is available without Platform.Load", typeOf(function () { return typeof Platform.Response; }), "clr");
+  assert("Write proxy is available without Platform.Load", typeOf(function () { return typeof Platform.Response.Write; }), "clrmethodinfo");
+  assert("bare Write is undefined before Platform.Load", typeOf(function () { return typeof Write; }), "undefined");
+  Platform.Load("core", "1.1.5");
+  assert("bare Write is callable after Platform.Load", typeOf(function () { return typeof Write; }), "function");
+  Platform.Response.Write("PASS Write appends exact body marker -> [WRITE-MARKER]\n");
+  </script>
+
+setresponseheader: |
+  <script runat="server">
+  /*
+   * Chapter: Platform.Response.SetResponseHeader
+   * Proves:
+   *   1. The call sets X-Platform-Response: set-value on the raw response.
+   *   2. DEV: the call returns JavaScript null (official docs: void).
+   * EXPECTED OUTPUT: every assertion line starts with PASS; also inspect headers.
+   */
+  function assert(id, actual, expected) { Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n"); }
+  var returned = Platform.Response.SetResponseHeader("X-Platform-Response", "set-value");
+  assert("DEV SetResponseHeader returns strict null (official docs: void)", returned === null ? "null" : "not-null", "null");
+  assert("SetResponseHeader null is falsy", returned ? "truthy" : "falsy", "falsy");
+  </script>
+
+removeresponseheader: |
+  <script runat="server">
+  /*
+   * Chapter: Platform.Response.RemoveResponseHeader
+   * Proves:
+   *   1. A header set in the request is absent after removal.
+   *   2. DEV: the call returns JavaScript null (official docs: void).
+   * EXPECTED OUTPUT: every assertion line starts with PASS; also inspect headers.
+   */
+  function assert(id, actual, expected) { Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n"); }
+  Platform.Response.SetResponseHeader("X-Platform-Remove", "remove-me");
+  var returned = Platform.Response.RemoveResponseHeader("X-Platform-Remove");
+  assert("DEV RemoveResponseHeader returns strict null (official docs: void)", returned === null ? "null" : "not-null", "null");
+  </script>
+
+setcookie: |
+  <script runat="server">
+  /*
+   * Chapter: Platform.Response.SetCookie
+   * Proves:
+   *   1. The two-argument form emits a session Set-Cookie header.
+   *   2. Expiry and secure arguments appear in a second Set-Cookie header.
+   *   3. DEV: both calls return JavaScript null (official docs: void).
+   * EXPECTED OUTPUT: every assertion line starts with PASS; also inspect headers.
+   */
+  function assert(id, actual, expected) { Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n"); }
+  var sessionReturn = Platform.Response.SetCookie("platformResponseSession", "session-value");
+  var secureReturn = Platform.Response.SetCookie("platformResponseSecure", "secure-value", "Thu, 01 Jan 2037 00:00:00 GMT", true);
+  assert("DEV SetCookie session returns strict null (official docs: void)", sessionReturn === null ? "null" : "not-null", "null");
+  assert("DEV SetCookie secure returns strict null (official docs: void)", secureReturn === null ? "null" : "not-null", "null");
+  </script>
+
+removecookie: |
+  <script runat="server">
+  /*
+   * Chapter: Platform.Response.RemoveCookie
+   * Run modes with raw headers and a cookie jar:
+   *   1. ?mode=seed emits platformResponseDeleteFinal=present-value.
+   *   2. Send that cookie to ?mode=remove: RemoveCookie returns JavaScript null,
+   *      the incoming value remains readable, and no Set-Cookie header is emitted.
+   *   3. Re-seed and send the cookie to ?mode=fallback: SetCookie with an empty
+   *      value and past JavaScript Date emits an expired cookie with path=/.
+   *   4. A subsequent ?mode=check request has no incoming cookie.
+   * EXPECTED OUTPUT: every assertion line starts with PASS; raw headers prove deletion.
+   */
+  function assert(id, actual, expected) { Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n"); }
+  var mode = Platform.Request.GetQueryStringParameter("mode");
+  var cookieName = "platformResponseDeleteFinal";
+  if (mode === "seed") {
+      var seedReturn = Platform.Response.SetCookie(cookieName, "present-value");
+      assert("seed returns strict null", seedReturn === null ? "null" : "not-null", "null");
+  }
+  if (mode === "remove") {
+      var inbound = Platform.Request.GetCookieValue(cookieName);
+      var removeReturn = Platform.Response.RemoveCookie(cookieName);
+      assert("request cookie is present before RemoveCookie", inbound, "present-value");
+      assert("DEV RemoveCookie returns strict null (official docs: void)", removeReturn === null ? "null" : "not-null", "null");
+  }
+  if (mode === "fallback") {
+      var inboundFallback = Platform.Request.GetCookieValue(cookieName);
+      var fallbackReturn = Platform.Response.SetCookie(cookieName, "", new Date(1970, 0, 1), true);
+      assert("request cookie is present before fallback", inboundFallback, "present-value");
+      assert("Date fallback returns strict null", fallbackReturn === null ? "null" : "not-null", "null");
+  }
+  if (mode === "check") {
+      var afterDeletion = Platform.Request.GetCookieValue(cookieName);
+      assert("cookie is absent on subsequent request", String(afterDeletion), "null");
+  }
+  </script>
+
+redirect: |
+  <script runat="server">
+  /*
+   * Chapter: Platform.Response.Redirect
+   * Proves with raw fetches and automatic redirects disabled:
+   *   1. One argument returns 302 and the exact Location header.
+   *   2. false returns 302; true returns 301.
+   *   3. DEV: Redirect terminates immediately and discards earlier body output.
+   * EXPECTED OUTPUT: HTTP 302 plus Location; redirect payload replaces PASS output.
+   */
+  Platform.Response.Write("FAIL output before redirect must be discarded\n");
+  Platform.Response.Redirect("https://example.com/platform-response-default");
+  Platform.Response.Write("FAIL output after redirect must be unreachable\n");
+  </script>

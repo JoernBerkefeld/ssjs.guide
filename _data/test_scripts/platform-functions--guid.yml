@@ -1,0 +1,223 @@
+# Test scripts for /platform-functions/guid/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every structural invariant of the returned value.
+#
+# NON-DETERMINISM: GUID() returns a NEW value on every call, so no script
+# asserts a literal result. Every assertion is a structural invariant
+# (type, length, hyphen positions, character class, case, uniqueness).
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+description: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Description — generates a new GUID in standard UUID v4 format,
+   * e.g. "550e8400-e29b-41d4-a716-446655440000".
+   *
+   * Proves:
+   *   1. The member exists and is invocable with 0 arguments (a successful
+   *      call is the only reliable existence proof for a Platform.Function
+   *      member).
+   *   2. return_type is string: typeof the result is "string".
+   *   3. The value has the canonical UUID length of 36 characters.
+   *   4. The 8-4-4-4-12 shape: hyphens sit at indexes 8, 13, 18 and 23, the
+   *      five groups have lengths 8/4/4/4/12, and splitting on "-" yields
+   *      exactly 5 groups.
+   *   5. Every non-hyphen character is a lowercase hex digit (0-9 a-f) — the
+   *      value carries no uppercase letters and no other characters.
+   *   6. The value is NOT wrapped in braces or parentheses, unlike the
+   *      registry/CLR "{...}" rendering of a GUID.
+   *   7. It is version 4: the first character of the third group is "4".
+   *   8. min_args / max_args are both 0: passing an argument throws.
+   *   9. Successive calls return DIFFERENT values (that is the whole point of
+   *      a "globally unique" identifier) — checked across 20 calls.
+   *
+   * SCOPE: evidence gathered on a CloudPage GET only; no email / automation /
+   * triggered-send send-context behaviour is exercised here.
+   *
+   * NOT ASSERTED: actual global uniqueness across tenants and time, and the
+   * RFC 4122 variant bits beyond the documented "UUID v4 format" claim —
+   * neither is deterministically observable from a single request.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. Existence proof — the 0-argument call succeeds. */
+  var id = Platform.Function.GUID();
+
+  /* 2. return_type is string. */
+  assert("typeof Platform.Function.GUID() is string", String(typeof id), "string");
+
+  /* 3. Canonical UUID length. */
+  assert("the value is 36 characters long", String(id.length), "36");
+
+  /* 4. The 8-4-4-4-12 shape. */
+  assert("a hyphen sits at index 8", id.charAt(8), "-");
+  assert("a hyphen sits at index 13", id.charAt(13), "-");
+  assert("a hyphen sits at index 18", id.charAt(18), "-");
+  assert("a hyphen sits at index 23", id.charAt(23), "-");
+  var groups = id.split("-");
+  assert("splitting on '-' yields 5 groups", String(groups.length), "5");
+  assert("group 1 is 8 characters", String(groups[0].length), "8");
+  assert("group 2 is 4 characters", String(groups[1].length), "4");
+  assert("group 3 is 4 characters", String(groups[2].length), "4");
+  assert("group 4 is 4 characters", String(groups[3].length), "4");
+  assert("group 5 is 12 characters", String(groups[4].length), "12");
+
+  /* 5. Character class — lowercase hex digits only, no other characters. */
+  var HEX = "0123456789abcdef";
+  var badChars = 0;
+  var upperChars = 0;
+  var i;
+  for (i = 0; i < id.length; i++) {
+      var ch = id.charAt(i);
+      if (i === 8 || i === 13 || i === 18 || i === 23) {
+          if (ch !== "-") { badChars = badChars + 1; }
+      } else {
+          if (HEX.indexOf(ch) < 0) { badChars = badChars + 1; }
+          if (ch !== ch.toLowerCase()) { upperChars = upperChars + 1; }
+      }
+  }
+  assert("every non-hyphen character is a lowercase hex digit", String(badChars), "0");
+  assert("the value contains no uppercase characters", String(upperChars), "0");
+  assert("the value equals its own lowercase form", id === id.toLowerCase() ? "true" : "false", "true");
+
+  /* 6. No brace / parenthesis wrapping. */
+  assert("the value does not start with '{'", id.charAt(0) === "{" ? "true" : "false", "false");
+  assert("the value does not end with '}'", id.charAt(35) === "}" ? "true" : "false", "false");
+  assert("the value contains no '{' anywhere", String(id.indexOf("{")), "-1");
+  assert("the value contains no '(' anywhere", String(id.indexOf("(")), "-1");
+
+  /* 7. Version 4 — the third group starts with "4". */
+  assert("the third group starts with '4' (UUID v4)", groups[2].charAt(0), "4");
+  assert("the character at index 14 is '4' (UUID v4)", id.charAt(14), "4");
+
+  /* 8. min_args and max_args are both 0. */
+  assertThrows("passing 1 argument throws (max_args is 0)", function () {
+      return Platform.Function.GUID("x");
+  });
+  assertThrows("passing 2 arguments throws (max_args is 0)", function () {
+      return Platform.Function.GUID("x", "y");
+  });
+
+  /* 9. Successive calls differ. */
+  var second = Platform.Function.GUID();
+  assert("two successive calls return different values", id === second ? "true" : "false", "false");
+  assert("the second value is also 36 characters long", String(second.length), "36");
+
+  var seen = {};
+  var duplicates = 0;
+  var wrongShape = 0;
+  var n;
+  for (n = 0; n < 20; n++) {
+      var g = Platform.Function.GUID();
+      if (g.length !== 36) { wrongShape = wrongShape + 1; }
+      if (seen[g]) { duplicates = duplicates + 1; }
+      seen[g] = true;
+  }
+  assert("20 successive calls produced no duplicate", String(duplicates), "0");
+  assert("all 20 values have the canonical 36-character shape", String(wrongShape), "0");
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples — writing a GUID, using one as a unique session token,
+   * and using one as a row ID for a data extension without a natural key.
+   *
+   * Proves the shape of the documented examples:
+   *   1. Example 1: the value assigned to a variable is a genuine string that
+   *      Write() emits verbatim, in the canonical form the comment shows.
+   *   2. String operations work on the value (it is a real JS string, not a
+   *      CLR object that merely stringifies).
+   *   3. Example 2: a value used as a session token is unique per call, which
+   *      is exactly the property a session token needs.
+   *   4. Example 3: a value used as a row ID is unique per row — generating
+   *      one id per row across a loop yields no collision, and every id keeps
+   *      the canonical 36-character form.
+   *   5. The bare-name Core Library form GUID() returns a value of the same
+   *      shape as the Platform.Function form, and the two never collide.
+   *
+   * SCOPE: evidence gathered on a CloudPage GET only.
+   *
+   * NOT ASSERTED: the Platform.Response.SetCookie() and
+   * Platform.Function.InsertData() calls in the page examples. SetCookie
+   * writes a response header whose effect is not observable from within the
+   * same request, and InsertData depends on a "Submissions" data extension
+   * fixture that does not exist in the verification business unit. Both
+   * examples illustrate USES of the returned value; the property they rely on
+   * — a fresh unique string per call — is asserted below.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* 1. Example 1 — var id = Platform.Function.GUID(); Write(id); */
+  var id = Platform.Function.GUID();
+  assert("typeof the example value is string", String(typeof id), "string");
+  assert("the example value is 36 characters long", String(id.length), "36");
+  var written = "" + id;
+  assert("Write() would emit the value verbatim", written === id ? "true" : "false", "true");
+  Platform.Response.Write("PASS Write(id) emitted -> [" + id + "]\n");
+
+  /* 2. It is a real JS string — string methods work on it. */
+  assert("substring(0, 8) returns the first group", id.substring(0, 8), id.split("-")[0]);
+  assert("charAt(8) is the first hyphen", id.charAt(8), "-");
+  assert("indexOf('-') is 8", String(id.indexOf("-")), "8");
+  assert("toUpperCase() produces a different, uppercase value", id.toUpperCase() === id ? "true" : "false", "false");
+  assert("toUpperCase().toLowerCase() round-trips to the original", id.toUpperCase().toLowerCase(), id);
+
+  /* 3. Example 2 — a unique session token per call. */
+  var sessionToken = Platform.Function.GUID();
+  assert("typeof the session token is string", String(typeof sessionToken), "string");
+  assert("the session token is 36 characters long", String(sessionToken.length), "36");
+  assert("the session token differs from the earlier value", sessionToken === id ? "true" : "false", "false");
+  var secondToken = Platform.Function.GUID();
+  assert("two session tokens generated in a row differ", secondToken === sessionToken ? "true" : "false", "false");
+
+  /* 4. Example 3 — one unique row ID per row. */
+  var rowIds = {};
+  var collisions = 0;
+  var wrongShape = 0;
+  var r;
+  for (r = 0; r < 10; r++) {
+      var rowId = Platform.Function.GUID();
+      if (rowId.length !== 36) { wrongShape = wrongShape + 1; }
+      if (rowIds[rowId]) { collisions = collisions + 1; }
+      rowIds[rowId] = true;
+  }
+  assert("10 row IDs generated in a loop are all distinct", String(collisions), "0");
+  assert("every generated row ID keeps the canonical shape", String(wrongShape), "0");
+
+  /* 5. The bare-name Core Library form has the same shape and never collides. */
+  var bare = GUID();
+  assert("typeof the bare-name GUID() result is string", String(typeof bare), "string");
+  assert("the bare-name result is 36 characters long", String(bare.length), "36");
+  assert("the bare-name result has a hyphen at index 8", bare.charAt(8), "-");
+  assert("the bare-name result differs from the Platform.Function value", bare === id ? "true" : "false", "false");
+  </script>

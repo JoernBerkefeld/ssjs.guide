@@ -15,15 +15,22 @@ min_args: 1
 max_args: 1
 verification: verified
 differs_from_docs: true
+test_scripts: complete
 ---
 
 ## Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `jsonString` | string | Yes | A single well-formed JSON string to deserialise. Must be a string — an array or other object argument throws a runtime error. |
+| `jsonString` | string \| boolean \| number | Yes | A JSON-like string, boolean, or number to deserialise. Numbers match the equivalent numeric string. Booleans are accepted but convert to CLR `"True"` / `"False"` (see warning). Arrays and other object arguments throw; `null` and `undefined` return `null`. |
 
-{% include differs-from-docs.html note="The official docs type the argument as \"string or string[]\" and describe passing an \"array of strings\". Runtime-verified: passing an array (or any non-string object) throws System.InvalidOperationException (\"Unable to retrieve security descriptor for this frame\"). Only a single string argument is accepted." %}
+{% include callout.html type="warning" content="Boolean arguments are **accepted** (they do not throw) but convert via CLR stringification to `\"True\"` / `\"False\"` — not JSON boolean primitives, and not the same as `ParseJSON(\"true\")` / `ParseJSON(\"false\")`, which return the lowercase strings `\"true\"` / `\"false\"`. Do not pass booleans expecting JSON-boolean behaviour. See [Known Bugs](/engine-limitations/known-bugs/#parsejson-boolean-arguments-return-clr-true--false)." %}
+
+{% include differs-from-docs.html note="The official docs type the argument as \"string or string[]\" and describe passing an \"array of strings\", but arrays and other object values are not accepted. A number is accepted and matches the equivalent numeric string; a boolean is accepted but yields the CLR strings \"True\"/\"False\". null and undefined return null." %}
+
+{% include test-script.html bundle="platform-functions--parsejson" chapter="parameter-type-deviation" label="Show test script — accepted argument types" %}
+
+{% include test-script.html bundle="platform-functions--parsejson" chapter="parameters" %}
 
 ## Return value
 
@@ -31,16 +38,25 @@ Runtime-verified on a CloudPage:
 
 - A JSON **object** string returns a native object; a JSON **array** string returns a host array (with `.length` and index access, though `instanceof Array` is `false`).
 - A **scalar** JSON value (`"42"`, `'"hello"'`, `"true"`, `"null"`) is returned **unchanged as a string** — scalars are not deserialised to primitives.
-- **Invalid**, **empty**, `null`, or `undefined` input returns **`null`** — it does **not** throw.
-- Non-string scalar arguments (number, boolean) are coerced to their string form rather than throwing.
+- An **empty** or whitespace-only string, `null`, `undefined`, or malformed structural input such as `"{not json"` returns **`null`** without throwing.
+- The parser is **more permissive than strict JSON**: it accepts trailing content after an object, trailing commas, single-quoted keys, and unquoted keys. Do not use successful parsing as proof that an input is standards-compliant JSON.
+- A leading Unicode BOM is not skipped; that input comes back as a string rather than a deserialised object.
+- Duplicate object keys keep the last value. Numbers use the engine's IEEE-754 number representation, so integers above the safe range lose precision.
+- A **number** argument matches `ParseJSON` of the equivalent numeric string. A **boolean** argument is accepted but returns the CLR strings `"True"` / `"False"` (not the lowercase JSON-scalar strings).
 
-{% include differs-from-docs.html note="The official docs give the return type as \"object or object[]\". Runtime-verified: scalar JSON values come back as strings and invalid/empty/null/undefined input returns null (no error thrown), so the effective return type is object, array, string, or null." %}
+{% include differs-from-docs.html note="The official docs give the return type as \"object or object[]\". Runtime-verified: scalar JSON values come back as strings, empty/malformed/null/undefined input can return null, and several non-standard JSON extensions are accepted. The effective return type is object, array, string, or null." %}
+
+{% include test-script.html bundle="platform-functions--parsejson" chapter="return-type-deviation" label="Show test script — return types and permissive parsing" %}
+
+{% include test-script.html bundle="platform-functions--parsejson" chapter="return-value" %}
 
 ## Description
 
 `ParseJSON` is the SSJS stand-in for `JSON.parse()` — the native method is absent from the JINT engine that powers SFMC scripting.
 
-> **Runtime-verified behaviour:** contrary to a common belief, `ParseJSON` does **not** throw when passed `null`, `undefined`, or a non-string scalar — it returns `null` (for null/undefined/invalid input) or a coerced string. The genuine error case is a **wrong argument count** (zero args, or a second argument) or a **non-string object/array** argument, which throw an engine `InvalidOperationException`. Always check the return value for `null`.
+> **Runtime-verified behaviour:** contrary to a common belief, `ParseJSON` does **not** throw when passed `null`, `undefined`, a number, or a boolean — it returns `null` (for null/undefined and some invalid structural inputs), a number-matched string, or the CLR strings `"True"` / `"False"` for booleans. Object and array arguments are not accepted. Always check the return value for `null`, and validate strict JSON separately if strict syntax matters.
+
+{% include test-script.html bundle="platform-functions--parsejson" chapter="description" %}
 
 ## Examples
 
@@ -109,6 +125,8 @@ for (var i = 0; i < colors.length; i++) {
 }
 ```
 
+{% include test-script.html bundle="platform-functions--parsejson" chapter="examples" %}
+
 ## Common Mistakes
 
 **Passing a non-string object or array argument:**
@@ -122,7 +140,7 @@ var obj = Platform.Function.ParseJSON(["a", "b"]);
 var obj = Platform.Function.ParseJSON('["a","b"]');
 ```
 
-**Not checking the return value:** `ParseJSON` returns `null` for the JSON `null` literal, an empty string, or invalid JSON — it does not throw:
+**Not checking the return value:** `ParseJSON` returns `null` for an empty string or some malformed structural input — it does not throw. The JSON text `"null"` is different: as a top-level scalar, it returns the string `"null"`:
 
 ```javascript
 var data = Platform.Function.ParseJSON(str);
@@ -138,6 +156,10 @@ if (!data) {
 Platform.Function.ParseJSON("42");     // "42"  (string, not number 42)
 Platform.Function.ParseJSON("true");   // "true" (string, not boolean true)
 ```
+
+**Assuming successful parsing means strict JSON:** the runtime also accepts several non-standard forms, including trailing content, trailing commas, single-quoted keys, and unquoted keys. Validate the input with a strict parser before it reaches SFMC when standards compliance or signature verification matters.
+
+{% include test-script.html bundle="platform-functions--parsejson" chapter="common-mistakes" %}
 
 ## See Also
 

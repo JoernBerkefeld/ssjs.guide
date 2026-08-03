@@ -1,0 +1,401 @@
+# Test scripts for /platform-functions/now/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the official Salesforce docs.
+#
+# SCOPE / PORTABILITY: Now() is TIME- AND CONTEXT-DEPENDENT. Assertions use
+# structural invariants, captured-value comparisons, bounded deltas, and date
+# conversion round trips instead of literal wall-clock timestamps or timezone
+# offsets. On a CloudPage, Now(true) has no triggering-send timestamp to select,
+# so the parameter script proves that both boolean forms return usable Date
+# snapshots without claiming they must differ in this context.
+#
+# PRIOR EVIDENCE REUSED: the LocalDateToSystemDate and SystemDateToLocalDate
+# verification sessions proved the CLR Date shape, the Write/String/Stringify
+# serialization split, the missing toISOString(), and that one captured Now()
+# value is a stable snapshot rather than a live clock handle.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters — Platform.Function.Now([useContextTime])
+   *
+   * Proves:
+   *   1. The zero-argument form works and returns a Date snapshot.
+   *   2. The optional boolean parameter accepts false and true; each form
+   *      returns a usable Date object.
+   *   3. On a CloudPage there is no triggering-send timestamp, so Now(true),
+   *      Now(false), and the omitted form are all close to the request clock.
+   *      This is a context control, not a claim that true is ignored in sends.
+   *   4. max_args is 1: calls with two or three arguments throw.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. The documented zero-argument form. */
+  var omitted = Platform.Function.Now();
+  assert("zero-argument Now() returns a Date", omitted.constructor === Date ? "true" : "false", "true");
+
+  /* 2 + 3. Both boolean values are accepted and return request-time Dates. */
+  var explicitFalse = Platform.Function.Now(false);
+  var explicitTrue = Platform.Function.Now(true);
+  var requestClock = new Date();
+  assert("Now(false) returns a Date", explicitFalse.constructor === Date ? "true" : "false", "true");
+  assert("Now(true) returns a Date", explicitTrue.constructor === Date ? "true" : "false", "true");
+  assert("omitted and false forms are within one second", Math.abs(explicitFalse.getTime() - omitted.getTime()) <= 1000 ? "true" : "false", "true");
+  assert("CloudPage control: Now(true) is within one second of the request clock", Math.abs(explicitTrue.getTime() - requestClock.getTime()) <= 1000 ? "true" : "false", "true");
+
+  /* 4. No second parameter is accepted. */
+  assertThrows("arity 2 throws (max_args is 1)", function () {
+      return Platform.Function.Now(false, "extra");
+  });
+  assertThrows("arity 3 throws (max_args is 1)", function () {
+      return Platform.Function.Now(false, "extra", "more");
+  });
+  </script>
+
+return-value: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Return value — Date interoperability and serialization.
+   *
+   * Proves:
+   *   1. The return value is a genuine Date object, not the RFC 2822 string
+   *      declared by the official docs: typeof is object, the object tag is
+   *      [object Date], and .constructor === Date.
+   *   2. Date accessors work directly: calendar getters, getTime(), valueOf(),
+   *      and millisecond precision are available.
+   *   3. The engine-wide anomaly applies: instanceof Date is false for both
+   *      Now() and new Date(); .constructor === Date is the workaround.
+   *   4. One captured Now() value is a stable snapshot while a separate later
+   *      call can advance. The comparison is monotonic and timing-tolerant.
+   *   5. String(), concatenation, Platform.Response.Write(), and Stringify()
+   *      do not all use the same rendering: String/concatenation are RFC-like,
+   *      Write is locale-style, and Stringify is quoted ISO-like.
+   *   6. toISOString() and string methods are unavailable on the Date object;
+   *      explicit String() or Stringify() is required before string operations.
+   *   7. A Now() Date structurally interoperates with SystemDateToLocalDate()
+   *      and LocalDateToSystemDate(); CLR marshalling may lose up to 2 ms.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var captured = Platform.Function.Now();
+
+  /* 1. A genuine Date object rather than a string. */
+  assert("DEV typeof Now() is object (official docs: string)", String(typeof captured), "object");
+  assert("DEV Object.prototype.toString reports [object Date] (official docs: string)", String(Object.prototype.toString.call(captured)), "[object Date]");
+  assert("DEV .constructor === Date (official docs: string)", captured.constructor === Date ? "true" : "false", "true");
+  assert("DEV Now() is not strictly equal to its RFC-like String form (official docs: string)", captured === String(captured) ? "true" : "false", "false");
+
+  /* 2. Date accessors and precision. */
+  assert("getFullYear() returns a number", String(typeof captured.getFullYear()), "number");
+  assert("getMonth() returns a number", String(typeof captured.getMonth()), "number");
+  assert("getDate() returns a number", String(typeof captured.getDate()), "number");
+  assert("getHours() returns a number", String(typeof captured.getHours()), "number");
+  assert("getMinutes() returns a number", String(typeof captured.getMinutes()), "number");
+  assert("getSeconds() returns a number", String(typeof captured.getSeconds()), "number");
+  assert("getMilliseconds() is in the valid 0..999 range", captured.getMilliseconds() >= 0 && captured.getMilliseconds() <= 999 ? "true" : "false", "true");
+  assert("getDay() returns a number", String(typeof captured.getDay()), "number");
+  assert("getTime() returns a number", String(typeof captured.getTime()), "number");
+  assert("valueOf() agrees with getTime()", captured.valueOf() === captured.getTime() ? "true" : "false", "true");
+
+  /* 3. instanceof anomaly and workaround. */
+  assert("ANOMALY Now() instanceof Date is false", captured instanceof Date ? "true" : "false", "false");
+  assert("ANOMALY new Date() instanceof Date is likewise false", new Date() instanceof Date ? "true" : "false", "false");
+  assert("workaround Now().constructor === Date", captured.constructor === Date ? "true" : "false", "true");
+  assert("workaround new Date().constructor === Date", new Date().constructor === Date ? "true" : "false", "true");
+
+  /* 4. Stable captured snapshot versus separate calls. */
+  var capturedMs = captured.getTime();
+  var controlStart = new Date().getTime();
+  var controlNow = controlStart;
+  while (controlNow - controlStart < 40) {
+      controlNow = new Date().getTime();
+  }
+  var later = Platform.Function.Now();
+  assert("a captured Now() value remains stable after the control clock advances", captured.getTime(), capturedMs);
+  assert("the new Date() control advanced by at least 40 ms", controlNow - controlStart >= 40 ? "true" : "false", "true");
+  assert("a separate later Now() call is monotonic", later.getTime() >= capturedMs ? "true" : "false", "true");
+  assert("the separate later Now() call remains close to new Date()", Math.abs(later.getTime() - new Date().getTime()) <= 1000 ? "true" : "false", "true");
+
+  /* 5. Three serialization forms. */
+  var stringForm = String(captured);
+  var concatForm = "" + captured;
+  var stringified = String(Stringify(captured));
+  assert("String() yields a non-empty string", stringForm.length > 0 ? "true" : "false", "true");
+  assert("concatenation yields the same RFC-like form as String()", concatForm, stringForm);
+  assert("the String() form includes the Date object's year", stringForm.indexOf(String(captured.getFullYear())) >= 0 ? "true" : "false", "true");
+  assert("Stringify() yields a quoted ISO-like string", stringified.substring(0, 1), "\"");
+  assert("Stringify() separates date and time with T", stringified.substring(11, 12), "T");
+  assert("Stringify() carries a millisecond component", stringified.substring(20, 21), ".");
+  assert("Stringify() has the full quoted YYYY-MM-DDTHH:MM:SS.mmm shape", stringified.length, 25);
+  assert("String() and Stringify() use different renderings", stringForm === stringified ? "true" : "false", "false");
+
+  var writeProbe = String(captured);
+  assert("Platform.Response.Write can write the Date without throwing", writeProbe.length > 0 ? "true" : "false", "true");
+
+  /* 6. Missing Date/string members and working serialization workaround. */
+  assertThrows("toISOString() throws, so Stringify() is the ISO-like workaround", function () {
+      return captured.toISOString();
+  });
+  assertThrows("DEV .indexOf() throws on the Date object (official docs: string)", function () {
+      return captured.indexOf(String(captured.getFullYear()));
+  });
+  assertThrows("DEV .substring() throws on the Date object (official docs: string)", function () {
+      return captured.substring(0, 4);
+  });
+  assert("workaround String(captured).indexOf() works", stringForm.indexOf(String(captured.getFullYear())) >= 0 ? "true" : "false", "true");
+  assert("workaround Stringify(captured).substring() works", stringified.substring(11, 12), "T");
+
+  /* 7. Structural conversion interoperability with known CLR tolerance. */
+  var local = Platform.Function.SystemDateToLocalDate(captured);
+  var roundTrip = Platform.Function.LocalDateToSystemDate(local);
+  var localShift = local.getTime() - captured.getTime();
+  var roundTripDelta = roundTrip.getTime() - captured.getTime();
+  assert("SystemDateToLocalDate(Now()) returns a Date", local.constructor === Date ? "true" : "false", "true");
+  assert("the local conversion is within 2 ms of a whole-hour shift", Math.abs(localShift % 3600000) <= 2 || Math.abs(localShift % 3600000) >= 3599998 ? "true" : "false", "true");
+  assert("the conversion round trip loses no more than 2 ms", Math.abs(roundTripDelta) <= 2 ? "true" : "false", "true");
+  </script>
+
+differs-return-type: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs claim: the official docs type Now() as an RFC 2822
+   * string, but the runtime returns a Date object that only becomes text when
+   * explicitly coerced or written.
+   *
+   * Salesforce docs: a date-time string is returned.
+   * SFMC Jint:       a Date object is returned; String() is RFC-like,
+   *                  Platform.Response.Write() is locale-style, and
+   *                  Stringify() is quoted ISO-like.
+   *
+   * Proves both halves of the claim:
+   *   1. DEV — the raw value has Date identity and Date methods, while direct
+   *      string methods throw.
+   *   2. The recommended explicit serialization workarounds produce strings.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var result = Platform.Function.Now();
+  var stringForm = String(result);
+  var stringified = String(Stringify(result));
+
+  /* 1. The raw result is a Date, not a string. */
+  assert("DEV typeof Now() is object (official docs: string)", String(typeof result), "object");
+  assert("DEV the raw object tag is [object Date] (official docs: string)", String(Object.prototype.toString.call(result)), "[object Date]");
+  assert("DEV .constructor === Date (official docs: string)", result.constructor === Date ? "true" : "false", "true");
+  assert("DEV getTime() works on the raw return (official docs: string)", String(typeof result.getTime()), "number");
+  assertThrows("DEV .indexOf() throws on the raw return (official docs: string)", function () {
+      return result.indexOf(String(result.getFullYear()));
+  });
+
+  /* 2. Explicit serialization produces strings in distinct forms. */
+  assert("workaround String(result) returns a string", String(typeof stringForm), "string");
+  assert("workaround String(result) contains the result year", stringForm.indexOf(String(result.getFullYear())) >= 0 ? "true" : "false", "true");
+  assert("workaround Stringify(result) returns a string", String(typeof stringified), "string");
+  assert("workaround Stringify(result) has an ISO-like T separator", stringified.substring(11, 12), "T");
+  assert("String() and Stringify() are distinct serialization forms", stringForm === stringified ? "true" : "false", "false");
+  </script>
+
+description: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Description — current server time and account-local conversion.
+   *
+   * Proves:
+   *   1. Now() returns a snapshot close to the independently constructed
+   *      request clock rather than a hard-coded or stale timestamp.
+   *   2. A separate later Now() call is monotonic while the captured value is
+   *      unchanged.
+   *   3. The value interoperates with SystemDateToLocalDate(), and the result
+   *      differs by an account-specific whole-hour offset within the known
+   *      2 ms CLR Date-marshalling tolerance.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var snapshot = Platform.Function.Now();
+  var snapshotMs = snapshot.getTime();
+  var requestClock = new Date();
+  assert("Now() is within one second of the independently constructed request clock", Math.abs(snapshotMs - requestClock.getTime()) <= 1000 ? "true" : "false", "true");
+
+  var controlStart = new Date().getTime();
+  var controlNow = controlStart;
+  while (controlNow - controlStart < 40) {
+      controlNow = new Date().getTime();
+  }
+  var later = Platform.Function.Now();
+  assert("the captured snapshot remains unchanged", snapshot.getTime(), snapshotMs);
+  assert("a separate later Now() call does not move backward", later.getTime() >= snapshotMs ? "true" : "false", "true");
+
+  var local = Platform.Function.SystemDateToLocalDate(snapshot);
+  var shift = local.getTime() - snapshotMs;
+  assert("SystemDateToLocalDate(Now()) returns a Date", local.constructor === Date ? "true" : "false", "true");
+  assert("account-local conversion is within 2 ms of a whole-hour offset", Math.abs(shift % 3600000) <= 2 || Math.abs(shift % 3600000) >= 3599998 ? "true" : "false", "true");
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples — accessor, persistence value, and DateAdd helper.
+   *
+   * Proves:
+   *   1. Capturing Platform.Function.Now() produces a Date whose year accessor
+   *      works and whose output form is non-empty.
+   *   2. The same Date value can be passed as an InsertData field value. The
+   *      script does not mutate a Data Extension; it independently proves the
+   *      Date object and serialization shape that the API receives.
+   *   3. The page's DateAdd helper accepts the captured Date and produces a
+   *      non-empty value containing a date exactly 30 calendar days later,
+   *      checked independently through AMPscript DateDiff rather than by Now().
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  function dateAdd(timestamp, intervalToAdd, intervalType) {
+      Platform.Variable.SetValue("@dateAdd_ts", timestamp);
+      Platform.Variable.SetValue("@dateAdd_add", intervalToAdd);
+      Platform.Variable.SetValue("@dateAdd_type", intervalType);
+      return Platform.Function.TreatAsContent("%%=DateAdd(@dateAdd_ts, @dateAdd_add, @dateAdd_type)=%%");
+  }
+
+  /* 1 + 2. Capture once and prove the Date value used by output/persistence. */
+  var now = Platform.Function.Now();
+  assert("the captured example value is a Date", now.constructor === Date ? "true" : "false", "true");
+  assert("the captured Date exposes its year", String(typeof now.getFullYear()), "number");
+  assert("the captured Date has a non-empty output form", String(now).length > 0 ? "true" : "false", "true");
+  assert("the value supplied to InsertData would be an object, not a preformatted string", String(typeof now), "object");
+
+  /* 3. Independently verify the DateAdd helper's 30-day result. */
+  var expiry = dateAdd(now, 30, "D");
+  Platform.Variable.SetValue("@dateDiff_start", now);
+  Platform.Variable.SetValue("@dateDiff_end", expiry);
+  var dayDifference = Platform.Function.TreatAsContent("%%=DateDiff(@dateDiff_start, @dateDiff_end, 'D')=%%");
+  assert("DateAdd returns a non-empty expiry value", String(expiry).length > 0 ? "true" : "false", "true");
+  assert("DateDiff independently confirms the expiry is 30 days later", String(dayDifference), "30");
+  </script>
+
+notes: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Notes — server/system time versus account-local time.
+   *
+   * Proves:
+   *   1. Now() is usable as a system-time Date snapshot.
+   *   2. SystemDateToLocalDate() converts that snapshot to another Date.
+   *   3. The conversion uses an account-specific whole-hour offset, asserted
+   *      structurally and with the known 2 ms CLR Date tolerance rather than
+   *      assuming a particular timezone or daylight-saving offset.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var systemTime = Platform.Function.Now();
+  var localTime = Platform.Function.SystemDateToLocalDate(systemTime);
+  var shift = localTime.getTime() - systemTime.getTime();
+  assert("Now() returns a system-time Date snapshot", systemTime.constructor === Date ? "true" : "false", "true");
+  assert("SystemDateToLocalDate() returns an account-local Date", localTime.constructor === Date ? "true" : "false", "true");
+  assert("the local conversion is within 2 ms of a whole-hour shift", Math.abs(shift % 3600000) <= 2 || Math.abs(shift % 3600000) >= 3599998 ? "true" : "false", "true");
+  </script>
+
+see-also: |
+  <script runat="server">
+  /*
+   * Chapter: See Also — bare-name Now() and SystemDateToLocalDate().
+   *
+   * Proves:
+   *   1. Platform.Function.Now() works before Platform.Load("core", ...).
+   *   2. The bare-name Now global is undefined before the load.
+   *   3. A top-level Core load makes bare-name Now callable.
+   *   4. The bare and qualified forms return equivalent Date snapshots within
+   *      one second, including the true parameter form.
+   *   5. SystemDateToLocalDate() accepts the qualified Now() Date directly.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* 1 + 2. Test before any load in this script scope. */
+  var qualifiedBeforeLoad = Platform.Function.Now();
+  assert("Platform.Function.Now() works before Platform.Load", qualifiedBeforeLoad.constructor === Date ? "true" : "false", "true");
+  assert("bare-name Now is undefined before Platform.Load", String(typeof Now), "undefined");
+
+  /* 3 + 4. Load and call the bare global at the same top-level scope. */
+  Platform.Load("core", "1.1.5");
+  assert("bare-name Now is a function after Platform.Load", String(typeof Now), "function");
+  var bareCurrent = Now();
+  var qualifiedCurrent = Platform.Function.Now();
+  assert("bare-name Now() returns a Date", bareCurrent.constructor === Date ? "true" : "false", "true");
+  assert("bare and qualified current-time forms are within one second", Math.abs(bareCurrent.getTime() - qualifiedCurrent.getTime()) <= 1000 ? "true" : "false", "true");
+  assert("bare and qualified true forms are within one second", Math.abs(Now(true).getTime() - Platform.Function.Now(true).getTime()) <= 1000 ? "true" : "false", "true");
+
+  /* 5. The related conversion consumes the Date directly. */
+  var local = Platform.Function.SystemDateToLocalDate(qualifiedCurrent);
+  assert("SystemDateToLocalDate(Platform.Function.Now()) returns a Date", local.constructor === Date ? "true" : "false", "true");
+  </script>

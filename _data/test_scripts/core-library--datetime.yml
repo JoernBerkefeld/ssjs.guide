@@ -1,0 +1,486 @@
+# Test scripts for /core-library/datetime/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes -- positive,
+# negative, and every documented deviation.
+#
+# SCOPE / PORTABILITY: SystemDateToLocalDate and LocalDateToSystemDate are
+# TIMEZONE- AND ACCOUNT-DEPENDENT. The size of the shift they apply is a
+# function of the business unit's configured local timezone versus Marketing
+# Cloud system time (CST, with daylight saving removed), so a literal expected
+# timestamp is only correct in the account these scripts were authored
+# against. Every assertion is therefore written against a STRUCTURAL
+# INVARIANT that holds in any account: the shift is a whole number of hours,
+# it is constant for a given instant regardless of input format, and the two
+# functions are exact inverses of one another.
+#
+# TIME-SENSITIVITY: no assertion compares against an absolute current
+# timestamp. Shape, parseability, relative ordering and round-trip identity
+# are asserted instead, so the scripts do not rot.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# CLR STRING RULE: engine-returned values and caught .message values are
+# normalized with `"" + value`, never with String(value). String(...) yields a
+# CLR string whose === against a JS literal is false and whose .indexOf()
+# throws "Unable to retrieve security descriptor for this frame", aborting the
+# whole page with HTTP 422.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+
+systemdatetolocaldate: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: DateTime.SystemDateToLocalDate
+   *
+   * Proves:
+   *   1. Platform.Load("core", "1.1.5") makes the DateTime namespace available
+   *      and DateTime.SystemDateToLocalDate is a callable function.
+   *   2. The return value is a genuine Date object: typeof "object",
+   *      Object.prototype.toString reports "[object Date]",
+   *      .constructor === Date, and getFullYear()/getHours()/getTime() work.
+   *   3. The documented ANOMALY: instanceof Date is false, because of the
+   *      engine-wide instanceof-on-builtins bug -- which is why the page tells
+   *      readers to detect with .constructor === Date. A plain new Date()
+   *      answers the same way, proving the anomaly is not specific to this
+   *      function.
+   *   4. It coerces to a string automatically via `"" + value` and via
+   *      String(value), as the page states.
+   *   5. dateString is REQUIRED: the 0-argument form throws.
+   *   6. Every documented input format is accepted and converted rather than
+   *      rejected: ISO 8601 with a Z suffix, US notation, long form, and a
+   *      time-only value.
+   *   7. The conversion is FORMAT-INDEPENDENT: whichever format denotes a
+   *      given instant, the shift applied is the same constant, so the
+   *      function converts a parsed instant rather than rewriting text.
+   *   8. Sub-hour precision survives untouched -- minutes, seconds and
+   *      milliseconds of a string input are reproduced exactly, because the
+   *      shift is a whole number of hours.
+   *   9. Invalid input throws: an empty string and an unparsable string.
+   *  10. The page's "equivalent full-form" claim: the short DateTime. form
+   *      returns the identical instant as
+   *      Platform.Function.SystemDateToLocalDate().
+   *  11. The conversion runs towards LOCAL time, i.e. in the opposite
+   *      direction to LocalDateToSystemDate, and is not a no-op.
+   *  12. TYPE-ACCEPTANCE: beyond the documented string, a real Date object is
+   *      also accepted and is shifted by the same offset as its string form
+   *      (this is what makes the page's Platform.Function.Now() example work).
+   *      Use a whole-second Date (ms = 0) so CLR marshalling does not obscure
+   *      the comparison.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var s2lIso = "2025-08-05T12:00:00";
+
+  /* 1. Namespace and member availability after the Core load. */
+  assert("Platform.Load provides a DateTime namespace", "" + (typeof DateTime), "object");
+  assert("DateTime.SystemDateToLocalDate is a function", "" + (typeof DateTime.SystemDateToLocalDate), "function");
+
+  var s2l = DateTime.SystemDateToLocalDate(s2lIso);
+
+  /* 2. A genuine Date object. */
+  assert("the return value is an object", "" + (typeof s2l), "object");
+  assert("Object.prototype.toString reports [object Date]", "" + Object.prototype.toString.call(s2l), "[object Date]");
+  assert("the constructor is Date", s2l.constructor === Date ? "true" : "false", "true");
+  assert("getFullYear() works", s2l.getFullYear(), 2025);
+  assert("getHours() returns a number", "" + (typeof s2l.getHours()), "number");
+  assert("getTime() returns a number", "" + (typeof s2l.getTime()), "number");
+
+  /* 3. The documented instanceof anomaly and its workaround. */
+  assert("ANOMALY instanceof Date is false (engine-wide instanceof-on-builtins bug)", s2l instanceof Date ? "true" : "false", "false");
+  assert("ANOMALY a plain new Date() is likewise not instanceof Date, so this is not specific to this method", new Date() instanceof Date ? "true" : "false", "false");
+  assert("WORKAROUND .constructor === Date is the reliable detection instead", s2l.constructor === Date ? "true" : "false", "true");
+
+  /* 4. Automatic string coercion. */
+  assert("concatenation coerces the value to a non-empty string", ("" + s2l).length > 0 ? "true" : "false", "true");
+  assert("String() coerces the value to a string", "" + (typeof String(s2l)), "string");
+  assert("the coerced rendering mentions the converted year", ("" + s2l).indexOf("" + s2l.getFullYear()) >= 0 ? "true" : "false", "true");
+
+  /* 5. dateString is required. */
+  assertThrows("the 0-argument form throws (dateString is required)", function () {
+      return DateTime.SystemDateToLocalDate();
+  });
+
+  /* 6 + 7. Documented formats are accepted and shifted by the SAME constant
+   *        offset -- measured against the engine's own parse of the identical
+   *        string, which makes the check independent of the account timezone. */
+  var s2lOffset = DateTime.SystemDateToLocalDate(s2lIso).getTime() - new Date(s2lIso).getTime();
+  assert("the shift is a whole number of hours", s2lOffset % 3600000, 0);
+  assert("the shift is not zero, so a conversion really happened", s2lOffset === 0 ? "true" : "false", "false");
+
+  var s2lIsoZ = "2025-08-05T12:34:56.789Z";
+  assert("ISO 8601 with a Z suffix is accepted and shifted by the same offset", DateTime.SystemDateToLocalDate(s2lIsoZ).getTime() - new Date(s2lIsoZ).getTime(), s2lOffset);
+
+  var s2lUs = "8/5/2025 12:34 PM";
+  assert("US notation is accepted and shifted by the same offset", DateTime.SystemDateToLocalDate(s2lUs).getTime() - new Date(s2lUs).getTime(), s2lOffset);
+
+  var s2lLong = "5 August 2025";
+  assert("long-form notation is accepted and shifted by the same offset", DateTime.SystemDateToLocalDate(s2lLong).getTime() - new Date(s2lLong).getTime(), s2lOffset);
+
+  /* A time-only value has no portable engine parse to compare against, so it
+   * is asserted on the sub-hour components it must preserve instead. */
+  var s2lTimeOnly = DateTime.SystemDateToLocalDate("14:23:56");
+  assert("a time-only value is accepted and yields a Date", s2lTimeOnly.constructor === Date ? "true" : "false", "true");
+  assert("a time-only value keeps its minutes", s2lTimeOnly.getMinutes(), 23);
+  assert("a time-only value keeps its seconds", s2lTimeOnly.getSeconds(), 56);
+
+  /* 8. Sub-hour precision survives. */
+  var s2lPrecise = DateTime.SystemDateToLocalDate("2025-08-05T12:34:56.789");
+  assert("minutes survive the conversion", s2lPrecise.getMinutes(), 34);
+  assert("seconds survive the conversion", s2lPrecise.getSeconds(), 56);
+  assert("milliseconds survive the conversion", s2lPrecise.getMilliseconds(), 789);
+
+  /* 9. Invalid input throws. */
+  assertThrows("an empty string throws", function () {
+      return DateTime.SystemDateToLocalDate("");
+  });
+  assertThrows("an unparsable string throws", function () {
+      return DateTime.SystemDateToLocalDate("not-a-date");
+  });
+
+  /* 10. Equivalence with the documented full form. */
+  assert("the short form returns the identical instant as Platform.Function.SystemDateToLocalDate", s2l.getTime(), Platform.Function.SystemDateToLocalDate(s2lIso).getTime());
+
+  /* 11. The direction of travel. */
+  assert("SystemDateToLocalDate shifts in exactly the opposite direction to LocalDateToSystemDate", s2lOffset, -(DateTime.LocalDateToSystemDate(s2lIso).getTime() - new Date(s2lIso).getTime()));
+
+  /* 12. Type-acceptance — Date counterpart for dateString.
+   *    Use the SAME wall-clock summer instant as s2lIso so the offset
+   *    comparison is not confounded by the winter DST delta. */
+  var s2lDateInput = new Date(2025, 7, 5, 12, 0, 0);
+  var s2lFromDate = DateTime.SystemDateToLocalDate(s2lDateInput);
+  assert("a real Date object is accepted as well as a string", s2lFromDate.constructor === Date ? "true" : "false", "true");
+  assert("a real Date object is shifted by the same offset as its string form", s2lFromDate.getTime() - s2lDateInput.getTime(), s2lOffset);
+  assert("a real Date object yields the same instant as the matching string input", s2lFromDate.getTime(), DateTime.SystemDateToLocalDate(s2lIso).getTime());
+  </script>
+
+localdatetosystemdate: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: DateTime.LocalDateToSystemDate
+   *
+   * Proves:
+   *   1. Platform.Load("core", "1.1.5") makes DateTime.LocalDateToSystemDate
+   *      available as a callable function.
+   *   2. The return value is a genuine Date object: typeof "object",
+   *      Object.prototype.toString reports "[object Date]",
+   *      .constructor === Date, and getFullYear()/getHours()/getTime() work.
+   *   3. The documented ANOMALY: instanceof Date is false (engine-wide
+   *      instanceof-on-builtins bug); .constructor === Date is the workaround.
+   *   4. It coerces to a string automatically via `"" + value` and String().
+   *   5. dateString is REQUIRED: the 0-argument form throws.
+   *   6. Every documented input format is accepted: ISO 8601 with a Z suffix,
+   *      US notation (the form used in the page's own example), long form, and
+   *      a time-only value.
+   *   7. The conversion is FORMAT-INDEPENDENT -- the same constant shift is
+   *      applied whichever format denotes the instant.
+   *   8. Sub-hour precision survives untouched, because the shift is a whole
+   *      number of hours.
+   *   9. Invalid input throws: an empty string and an unparsable string.
+   *  10. The page's "equivalent full-form" claim: the short DateTime. form
+   *      returns the identical instant as
+   *      Platform.Function.LocalDateToSystemDate().
+   *  11. It is the exact INVERSE of SystemDateToLocalDate: the round trip in
+   *      both directions returns the original instant to the millisecond, and
+   *      the two apply equal and opposite shifts.
+   *  12. TYPE-ACCEPTANCE: beyond the documented string, a real Date object is
+   *      also accepted and is shifted by the same offset as its string form.
+   *      Use a whole-second Date (ms = 0) so CLR marshalling does not obscure
+   *      the comparison.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var l2sIso = "2025-08-05T12:00:00";
+
+  /* 1. Member availability after the Core load. */
+  assert("DateTime.LocalDateToSystemDate is a function", "" + (typeof DateTime.LocalDateToSystemDate), "function");
+
+  var l2s = DateTime.LocalDateToSystemDate(l2sIso);
+
+  /* 2. A genuine Date object. */
+  assert("the return value is an object", "" + (typeof l2s), "object");
+  assert("Object.prototype.toString reports [object Date]", "" + Object.prototype.toString.call(l2s), "[object Date]");
+  assert("the constructor is Date", l2s.constructor === Date ? "true" : "false", "true");
+  assert("getFullYear() works", l2s.getFullYear(), 2025);
+  assert("getHours() returns a number", "" + (typeof l2s.getHours()), "number");
+  assert("getTime() returns a number", "" + (typeof l2s.getTime()), "number");
+
+  /* 3. The documented instanceof anomaly and its workaround. */
+  assert("ANOMALY instanceof Date is false (engine-wide instanceof-on-builtins bug)", l2s instanceof Date ? "true" : "false", "false");
+  assert("WORKAROUND .constructor === Date is the reliable detection instead", l2s.constructor === Date ? "true" : "false", "true");
+
+  /* 4. Automatic string coercion. */
+  assert("concatenation coerces the value to a non-empty string", ("" + l2s).length > 0 ? "true" : "false", "true");
+  assert("String() coerces the value to a string", "" + (typeof String(l2s)), "string");
+
+  /* 5. dateString is required. */
+  assertThrows("the 0-argument form throws (dateString is required)", function () {
+      return DateTime.LocalDateToSystemDate();
+  });
+
+  /* 6 + 7. Documented formats, all shifted by the same constant offset. */
+  var l2sOffset = DateTime.LocalDateToSystemDate(l2sIso).getTime() - new Date(l2sIso).getTime();
+  assert("the shift is a whole number of hours", l2sOffset % 3600000, 0);
+  assert("the shift is not zero, so a conversion really happened", l2sOffset === 0 ? "true" : "false", "false");
+
+  var l2sIsoZ = "2025-08-05T12:34:56.789Z";
+  assert("ISO 8601 with a Z suffix is accepted and shifted by the same offset", DateTime.LocalDateToSystemDate(l2sIsoZ).getTime() - new Date(l2sIsoZ).getTime(), l2sOffset);
+
+  var l2sUs = "8/5/2025 12:34 PM";
+  assert("US notation (the page's own example input) is accepted and shifted by the same offset", DateTime.LocalDateToSystemDate(l2sUs).getTime() - new Date(l2sUs).getTime(), l2sOffset);
+
+  var l2sLong = "5 August 2025";
+  assert("long-form notation is accepted and shifted by the same offset", DateTime.LocalDateToSystemDate(l2sLong).getTime() - new Date(l2sLong).getTime(), l2sOffset);
+
+  var l2sTimeOnly = DateTime.LocalDateToSystemDate("14:23:56");
+  assert("a time-only value is accepted and yields a Date", l2sTimeOnly.constructor === Date ? "true" : "false", "true");
+  assert("a time-only value keeps its minutes", l2sTimeOnly.getMinutes(), 23);
+  assert("a time-only value keeps its seconds", l2sTimeOnly.getSeconds(), 56);
+
+  /* 8. Sub-hour precision survives. */
+  var l2sPrecise = DateTime.LocalDateToSystemDate("2025-08-05T12:34:56.789");
+  assert("minutes survive the conversion", l2sPrecise.getMinutes(), 34);
+  assert("seconds survive the conversion", l2sPrecise.getSeconds(), 56);
+  assert("milliseconds survive the conversion", l2sPrecise.getMilliseconds(), 789);
+
+  /* 9. Invalid input throws. */
+  assertThrows("an empty string throws", function () {
+      return DateTime.LocalDateToSystemDate("");
+  });
+  assertThrows("an unparsable string throws", function () {
+      return DateTime.LocalDateToSystemDate("not-a-date");
+  });
+
+  /* 10. Equivalence with the documented full form. */
+  assert("the short form returns the identical instant as Platform.Function.LocalDateToSystemDate", l2s.getTime(), Platform.Function.LocalDateToSystemDate(l2sIso).getTime());
+
+  /* 11. The exact inverse of SystemDateToLocalDate. */
+  assert("the two conversions apply equal and opposite shifts", l2sOffset, -(DateTime.SystemDateToLocalDate(l2sIso).getTime() - new Date(l2sIso).getTime()));
+  assert("the round trip LocalDateToSystemDate(SystemDateToLocalDate(x)) returns the original instant exactly", DateTime.LocalDateToSystemDate(DateTime.SystemDateToLocalDate(l2sIso)).getTime() - new Date(l2sIso).getTime(), 0);
+  assert("the round trip SystemDateToLocalDate(LocalDateToSystemDate(x)) returns the original instant exactly", DateTime.SystemDateToLocalDate(DateTime.LocalDateToSystemDate(l2sIso)).getTime() - new Date(l2sIso).getTime(), 0);
+
+  /* 12. Type-acceptance — Date counterpart for dateString.
+   *    Use the SAME wall-clock summer instant as l2sIso so the offset
+   *    comparison is not confounded by the winter DST delta. */
+  var l2sDateInput = new Date(2025, 7, 5, 12, 0, 0);
+  var l2sFromDate = DateTime.LocalDateToSystemDate(l2sDateInput);
+  assert("a real Date object is accepted as well as a string", l2sFromDate.constructor === Date ? "true" : "false", "true");
+  assert("a real Date object is shifted by the same offset as its string form", l2sFromDate.getTime() - l2sDateInput.getTime(), l2sOffset);
+  assert("a real Date object yields the same instant as the matching string input", l2sFromDate.getTime(), DateTime.LocalDateToSystemDate(l2sIso).getTime());
+  </script>
+
+timezone-retrieve: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: DateTime.TimeZone.Retrieve
+   *
+   * Proves:
+   *   1. Platform.Load("core", "1.1.5") makes the DateTime.TimeZone namespace
+   *      available and DateTime.TimeZone.Retrieve is a callable function.
+   *   2. Calling it with NO filter returns the full time-zone list -- a
+   *      non-empty indexable collection.
+   *   3. A WSProxy-style filter narrows the result: filtering ID equals 1
+   *      returns exactly one row, and that subset is smaller than the full
+   *      list.
+   *   4. Each row carries ID (number) and Name (string), exactly as the page's
+   *      return description states -- proven both by direct field access and
+   *      by enumerating the row, which yields precisely those two fields.
+   *   5. The rows serialize: Stringify() renders a row as a JSON object
+   *      carrying both fields, and the collection as a JSON array.
+   *   6. A filter that matches nothing returns an EMPTY collection rather than
+   *      null, so .length can be read unconditionally.
+   *   7. A MALFORMED filter throws instead of returning an empty list: a plain
+   *      string, and an object missing the three filter properties.
+   *   8. The page's example loop works: iterating rows by index and reading
+   *      .ID / .Name yields usable values.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. Namespace and member availability. */
+  assert("Platform.Load provides a DateTime.TimeZone namespace", "" + (typeof DateTime.TimeZone), "object");
+  assert("DateTime.TimeZone.Retrieve is a function", "" + (typeof DateTime.TimeZone.Retrieve), "function");
+
+  /* 2. The unfiltered call returns the full list. */
+  var tzAll = DateTime.TimeZone.Retrieve();
+  assert("the unfiltered call returns an object", "" + (typeof tzAll), "object");
+  assert("the full list exposes a numeric length", "" + (typeof tzAll.length), "number");
+  assert("the full list is not empty", tzAll.length > 0 ? "true" : "false", "true");
+  assert("the full list is indexable and its first entry is an object", "" + (typeof tzAll[0]), "object");
+
+  /* 3. A filter narrows the result. */
+  var tzRows = DateTime.TimeZone.Retrieve({
+      Property: "ID",
+      SimpleOperator: "equals",
+      Value: 1
+  });
+  assert("filtering ID equals 1 returns exactly one row", tzRows.length, 1);
+  assert("the filtered subset is smaller than the full list", tzRows.length < tzAll.length ? "true" : "false", "true");
+
+  /* 4. Each row carries ID (number) and Name (string) -- and nothing else. */
+  assert("the row exposes a numeric ID", "" + (typeof tzRows[0].ID), "number");
+  assert("the row's ID is the one that was filtered for", tzRows[0].ID, 1);
+  assert("the row exposes a string Name", "" + (typeof tzRows[0].Name), "string");
+  assert("the row's Name is not empty", ("" + tzRows[0].Name).length > 0 ? "true" : "false", "true");
+  var tzFields = "";
+  for (var tzKey in tzRows[0]) {
+      tzFields += tzKey + ",";
+  }
+  assert("enumerating the row yields exactly the two documented fields", tzFields, "ID,Name,");
+
+  /* 5. The rows serialize. */
+  var tzRowJson = "" + Stringify(tzRows[0]);
+  assert("Stringify() renders a row as a JSON object", tzRowJson.substring(0, 1), "{");
+  assert("the serialized row carries its ID field", tzRowJson.indexOf("\"ID\"") >= 0 ? "true" : "false", "true");
+  assert("the serialized row carries its Name field", tzRowJson.indexOf("\"Name\"") >= 0 ? "true" : "false", "true");
+  assert("Stringify() renders the collection as a JSON array", ("" + Stringify(tzRows)).substring(0, 1), "[");
+
+  /* 6. A no-match filter yields an empty collection, not null. */
+  var tzNone = DateTime.TimeZone.Retrieve({
+      Property: "ID",
+      SimpleOperator: "equals",
+      Value: 999999
+  });
+  assert("a filter matching nothing still returns an object", "" + (typeof tzNone), "object");
+  assert("a filter matching nothing is not null", tzNone === null ? "true" : "false", "false");
+  assert("a filter matching nothing has length 0", tzNone.length, 0);
+
+  /* 7. A malformed filter throws. */
+  assertThrows("a plain string filter throws rather than returning an empty list", function () {
+      return DateTime.TimeZone.Retrieve("ID");
+  });
+  assertThrows("an object missing the three filter properties throws", function () {
+      return DateTime.TimeZone.Retrieve({ foo: 1 });
+  });
+
+  /* 8. The page's example loop. */
+  var tzLoop = "";
+  for (var tzI = 0; tzI < tzRows.length; tzI++) {
+      tzLoop += tzRows[tzI].ID + " = " + tzRows[tzI].Name;
+  }
+  assert("the example loop produces one 'ID = Name' rendering per row", tzLoop.indexOf("1 = ") === 0 ? "true" : "false", "true");
+  </script>
+
+differs-timezone-retrieve: |
+  <script runat="server">
+  /*
+   * differs-from-docs callout on DateTime.TimeZone.Retrieve.
+   *
+   * NOTE: this script deliberately begins BEFORE any Platform.Load call,
+   * because the load requirement is one of the claims under test. Run it on
+   * its own, or as the FIRST script on the page -- once any other script has
+   * loaded the Core library the first two assertions no longer test anything.
+   *
+   * Proves, one assertion per half of the callout:
+   *   1. Platform.Load("core", ...) is genuinely required: before the load
+   *      DateTime is undefined and a call through it throws.
+   *   2. DEV -- the filter argument is OPTIONAL, contrary to the official
+   *      docs, which type it as required: the 0-argument call returns the
+   *      full, non-empty time-zone list rather than throwing.
+   *   3. DEV -- a filter that matches nothing returns an EMPTY collection
+   *      rather than null (the official docs give no empty-result contract),
+   *      so .length is readable unconditionally and the result is safe to
+   *      iterate without a null guard.
+   *   4. A MALFORMED filter is NOT treated as "no filter": a plain string, and
+   *      an object missing the Property/SimpleOperator/Value trio, both raise
+   *      a time-zone retrieval error instead of returning an empty list.
+   *   5. The returned collection behaves as a JavaScript array -- it is
+   *      indexable, has .length, reports "[object Array]", and exposes array
+   *      methods such as push and slice. Only instanceof Array is false, and
+   *      that is the engine-wide instanceof-on-builtins bug rather than
+   *      anything specific to this method: a plain [] answers the same way.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW"; }
+  }
+
+  /* 1. The Core load is genuinely required -- assert this FIRST, because the
+   *    check is destroyed the moment the library loads. */
+  assert("before Platform.Load the DateTime namespace is undefined", typeOf(function () { return typeof DateTime; }), "undefined");
+  assertThrows("before Platform.Load a DateTime.TimeZone.Retrieve call throws", function () {
+      return DateTime.TimeZone.Retrieve();
+  });
+
+  Platform.Load("core", "1.1.5");
+
+  /* 2. DEV -- the filter is optional. */
+  var devAll = DateTime.TimeZone.Retrieve();
+  assert("DEV the 0-argument call succeeds and returns an object (official docs: filter is required)", "" + (typeof devAll), "object");
+  assert("DEV the 0-argument call returns the FULL, non-empty time-zone list (official docs: filter is required)", devAll.length > 0 ? "true" : "false", "true");
+
+  /* 3. DEV -- no match yields an empty collection, never null. */
+  var devNone = DateTime.TimeZone.Retrieve({
+      Property: "ID",
+      SimpleOperator: "equals",
+      Value: 999999
+  });
+  assert("DEV a filter matching nothing returns a collection, not null (official docs give no empty-result contract)", devNone === null ? "true" : "false", "false");
+  assert("DEV .length is readable unconditionally on that empty result", devNone.length, 0);
+
+  /* 4. A malformed filter is not silently ignored. */
+  assertThrows("a plain string filter raises a retrieval error rather than being ignored", function () {
+      return DateTime.TimeZone.Retrieve("ID");
+  });
+  assertThrows("an object missing Property/SimpleOperator/Value raises a retrieval error", function () {
+      return DateTime.TimeZone.Retrieve({ foo: 1 });
+  });
+
+  /* 5. The collection behaves as a JavaScript array. */
+  assert("the collection reports [object Array]", "" + Object.prototype.toString.call(devAll), "[object Array]");
+  assert("the collection exposes a numeric length", "" + (typeof devAll.length), "number");
+  assert("the collection is indexable", "" + (typeof devAll[0]), "object");
+  assert("the array method push is present", "" + (typeof devAll.push), "function");
+  assert("the array method slice is present", "" + (typeof devAll.slice), "function");
+  assert("ANOMALY instanceof Array is false (engine-wide instanceof-on-builtins bug)", devAll instanceof Array ? "true" : "false", "false");
+  assert("ANOMALY a plain [] literal answers the same way, so this is not specific to this method", [] instanceof Array ? "true" : "false", "false");
+  </script>

@@ -1,0 +1,174 @@
+# Test scripts for /core-library/attribute/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and the documented deviation from the official docs.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage GET. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# NORMALIZATION RULE: assert() compares with a plain === and does NOT coerce.
+# Engine-returned values are normalized at the call site with "" + value —
+# never with String(value), which yields a CLR string that fails === and
+# aborts the page when a string method is called on it.
+
+description: |
+  <script runat="server">
+  /*
+   * Chapter: Description / Attribute.GetValue
+   *
+   * CloudPage GET context. Proves:
+   *   1. Attribute requires Platform.Load("Core", ...) — the bare global is
+   *      undefined before the load and an object afterwards.
+   *   2. Attribute.GetValue is a function and returns a string.
+   *   3. DEVIATION marked "DEV": the official docs imply Attribute.GetValue is
+   *      unavailable in CloudPages; it works there after the Core load, and with
+   *      no recipient in context it returns "" instead of throwing.
+   *   4. Attribute.GetValue(name) is equivalent to
+   *      Platform.Recipient.GetAttributeValue(name).
+   *   5. The recommended CloudPage workaround — reading subscriber data from a
+   *      Data Extension via Platform.Function.Lookup / LookupRows — is available.
+   *   6. Wrong-case Attribute.getValue throws.
+   *   7. NOT ASSERTABLE here: the actual attribute VALUES returned in email,
+   *      triggered-send, and personalized recipient contexts. A plain CloudPage
+   *      GET binds no recipient, so empty values cannot establish send behaviour.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function threwMessage(fn) {
+      try { fn(); return "did NOT throw"; } catch (ex) { return "" + ex.message; }
+  }
+
+  /* 1. Core load requirement. */
+  assert("bare Attribute is undefined before Platform.Load", typeOf(function () { return typeof Attribute; }), "undefined");
+  Platform.Load("Core", "1.1.1");
+  assert("typeof Attribute after Platform.Load('Core','1.1.1') is object", typeOf(function () { return typeof Attribute; }), "object");
+
+  /* 2. Shape of the documented member. */
+  assert("typeof Attribute.GetValue is function", typeOf(function () { return typeof Attribute.GetValue; }), "function");
+  assert("Attribute.GetValue('FirstName') returns a string", typeOf(function () { return typeof Attribute.GetValue("FirstName"); }), "string");
+
+  /* 3. DEVIATION — works in CloudPages and returns "" with no recipient bound. */
+  assert("DEV Attribute.GetValue executes in a CloudPage (docs imply unavailable)", invocationResult(function () { return Attribute.GetValue("FirstName"); }), "returned");
+  assert("DEV Attribute.GetValue('FirstName') is '' with no recipient (docs imply it throws/is unavailable)", "" + Attribute.GetValue("FirstName"), "");
+  assert("DEV Attribute.GetValue('City') is '' with no recipient (docs imply it throws/is unavailable)", "" + Attribute.GetValue("City"), "");
+  assert("DEV Attribute.GetValue('EmailAddress') is '' with no recipient (docs imply it throws/is unavailable)", "" + Attribute.GetValue("EmailAddress"), "");
+  assert("unknown attribute name also returns '' rather than throwing", "" + Attribute.GetValue("NoSuchAttr_zz9"), "");
+
+  /* 4. Equivalence with Platform.Recipient.GetAttributeValue. */
+  assert("Attribute.GetValue equals Platform.Recipient.GetAttributeValue", "" + Attribute.GetValue("FirstName"), "" + Platform.Recipient.GetAttributeValue("FirstName"));
+  assert("workaround Platform.Recipient.GetAttributeValue returns a string", typeOf(function () { return typeof Platform.Recipient.GetAttributeValue("FirstName"); }), "string");
+
+  /* 5. Recommended CloudPage workaround — read from a Data Extension instead. */
+  assert("workaround Platform.Function.Lookup is available", typeOf(function () { return typeof Platform.Function.Lookup; }), "clrmethodinfo");
+  assert("workaround Platform.Function.LookupRows is available", typeOf(function () { return typeof Platform.Function.LookupRows; }), "clrmethodinfo");
+
+  /* 6. Negative case — the member name is case sensitive. */
+  assert("wrong-case Attribute.getValue throws", invocationResult(function () { return Attribute.getValue("FirstName"); }), "threw");
+  assert("wrong-case Attribute.getValue reports Object expected", threwMessage(function () { return Attribute.getValue("FirstName"); }).indexOf("Object expected") >= 0, true);
+  </script>
+
+example: |
+  <script runat="server">
+  /*
+   * Chapter: Example
+   *
+   * CloudPage GET context. Proves the exact example on the page runs:
+   *   1. Platform.Load("Core", "1.1.1") succeeds.
+   *   2. Attribute.GetValue("FirstName") and Attribute.GetValue("City") both
+   *      return strings.
+   *   3. With no recipient bound the values are empty, so the documented
+   *      `if (firstName)` guard is FALSY and the Write is skipped — this is why
+   *      the example guards the output at all.
+   *   4. The Core-injected Write() function used by the example exists.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function branch(v) { if (v) { return "truthy"; } return "falsy"; }
+
+  /* 1. The example's Core load (repeated loads are idempotent). */
+  assert("Platform.Load('Core','1.1.1') succeeds", invocationResult(function () { return Platform.Load("Core", "1.1.1"); }), "returned");
+  Platform.Load("Core", "1.1.1");
+
+  /* 2 + 3. The example's two reads and its guard. */
+  var firstName = Attribute.GetValue("FirstName");
+  var city = Attribute.GetValue("City");
+  assert("example firstName is a string", typeof firstName, "string");
+  assert("example city is a string", typeof city, "string");
+  assert("example firstName is '' with no recipient in CloudPage context", "" + firstName, "");
+  assert("example city is '' with no recipient in CloudPage context", "" + city, "");
+  assert("example guard if(firstName) is falsy with no recipient", branch(firstName), "falsy");
+
+  /* 4. The Write() shortcut the example uses is injected by the Core load. */
+  assert("typeof Write after Core load is function", typeOf(function () { return typeof Write; }), "function");
+  </script>
+
+cloudpage-availability: |
+  <script runat="server">
+  /*
+   * Differs-from-docs claim: the official docs imply Attribute.GetValue is
+   * unavailable in CloudPages.
+   *
+   * Official docs: Attribute.GetValue is an email/send-context member.
+   * SFMC runtime:  after Platform.Load("Core", ...) the Attribute object exists
+   *                in a CloudPage, GetValue executes and returns a string, and
+   *                with no recipient in context it returns "" rather than
+   *                throwing.
+   *
+   * Proves both halves of the claim:
+   *   1. Availability — the object and the method exist and invoke in a plain
+   *      published CloudPage GET.
+   *   2. Empty-string-instead-of-throw — every read returns "" and never throws.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  /* 1. DEVIATION — available in a CloudPage after the Core load. */
+  assert("bare Attribute is undefined before the Core load", typeOf(function () { return typeof Attribute; }), "undefined");
+  Platform.Load("Core", "1.1.1");
+  assert("DEV Attribute exists in a CloudPage after Core load (docs imply unavailable)", typeOf(function () { return typeof Attribute; }), "object");
+  assert("DEV Attribute.GetValue exists in a CloudPage (docs imply unavailable)", typeOf(function () { return typeof Attribute.GetValue; }), "function");
+  assert("DEV Attribute.GetValue invokes in a CloudPage (docs imply unavailable)", invocationResult(function () { return Attribute.GetValue("FirstName"); }), "returned");
+
+  /* 2. DEVIATION — returns "" instead of throwing when no recipient is bound. */
+  assert("DEV no-recipient read returns instead of throwing", invocationResult(function () { return Attribute.GetValue("EmailAddress"); }), "returned");
+  assert("DEV no-recipient read returns the empty string", "" + Attribute.GetValue("EmailAddress"), "");
+  assert("DEV no-recipient read is still typed string", typeOf(function () { return typeof Attribute.GetValue("EmailAddress"); }), "string");
+  assert("DEV empty attribute name also returns '' instead of throwing", "" + Attribute.GetValue(""), "");
+  </script>

@@ -15,6 +15,7 @@ availability:
   triggered_send: true
 verification: verified
 differs_from_docs: true
+test_scripts: complete
 syntax: "Attribute.GetValue(name)"
 return_type: string
 min_args: 1
@@ -37,6 +38,10 @@ In non-recipient CloudPage scenarios where you need subscriber data, read it fro
 
 The AMPscript parallel is `AttributeValue()` (different language); SSJS uses `Attribute.GetValue(name)`.
 
+{% include test-script.html bundle="core-library--attribute" chapter="cloudpage-availability" label="Show test script — CloudPage availability and empty-string result" %}
+
+{% include test-script.html bundle="core-library--attribute" chapter="description" %}
+
 ## Example
 
 ```javascript
@@ -49,6 +54,8 @@ if (firstName) {
     Write("<p>Hello, " + firstName + "!</p>");
 }
 ```
+
+{% include test-script.html bundle="core-library--attribute" chapter="example" %}
 
 ## See Also
 

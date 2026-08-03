@@ -1,0 +1,351 @@
+# Test scripts for /platform-functions/stringify/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every documented claim — positive, negative,
+# and every runtime deviation from strict JSON serialization.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating independent expressions can interleave evaluation in the
+# Jint engine and pair labels with the wrong values.
+
+parameters: |
+  <script runat="server">
+  /*
+   * Chapter: Parameters
+   *
+   * Proves:
+   *   1. Exactly one argument is accepted by the qualified form; zero arguments
+   *      and a second argument both throw.
+   *   2. Every scalar type is accepted, not only the "object" the official
+   *      reference names as the parameter type.
+   *   3. An explicit null and an explicit undefined both return the literal
+   *      JSON string "null" — not the JavaScript null value.
+   *   4. The return value is always a JavaScript string.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  assert("one object argument returns its JSON text", Platform.Function.Stringify({ a: 1 }), '{"a":1}');
+  assert("the return value is a string", String(typeof Platform.Function.Stringify({ a: 1 })), "string");
+
+  assertThrows("zero arguments throw", function () {
+      return Platform.Function.Stringify();
+  });
+  assertThrows("a second argument throws (there is no replacer/space parameter)", function () {
+      return Platform.Function.Stringify({ a: 1 }, 2);
+  });
+  assertThrows("a second null argument also throws", function () {
+      return Platform.Function.Stringify({ a: 1 }, null);
+  });
+
+  assert("a string argument is accepted (docs type the parameter as object)", Platform.Function.Stringify("hello"), '"hello"');
+  assert("an empty string argument is accepted", Platform.Function.Stringify(""), '""');
+  assert("a number argument is accepted", Platform.Function.Stringify(42), "42");
+  assert("a negative decimal argument is accepted", Platform.Function.Stringify(-12.5), "-12.5");
+  assert("a true argument is accepted", Platform.Function.Stringify(true), "true");
+  assert("a false argument is accepted", Platform.Function.Stringify(false), "false");
+  assert("an array argument is accepted", Platform.Function.Stringify([]), "[]");
+
+  assert("an explicit null returns the literal string null", Platform.Function.Stringify(null), "null");
+  assert("the null result is a string, not the JS null value", Platform.Function.Stringify(null) === null ? "true" : "false", "false");
+  var undef;
+  assert("an explicit undefined returns the literal string null", Platform.Function.Stringify(undef), "null");
+  assert("the undefined result is a string too", String(typeof Platform.Function.Stringify(undef)), "string");
+  </script>
+
+description: |
+  <script runat="server">
+  /*
+   * Chapter: Description (including "Difference from the global Stringify() form")
+   *
+   * Proves:
+   *   1. The qualified Platform.Function form works before any Core load, so
+   *      Platform.Load("core", "1.1.5") is not required for it.
+   *   2. The bare-name global Stringify is undefined before the Core load and
+   *      becomes a callable function afterwards.
+   *   3. Both forms produce byte-identical output for the same value.
+   *   4. The two forms are NOT identical in argument validation: the qualified
+   *      form throws on zero args and on an extra arg, while the bare-name form
+   *      returns "null" for zero args and silently ignores an extra arg.
+   *   5. The native JSON object is unavailable, which is why Stringify exists.
+   *   6. Stringify produces JSON, whereas String() does not — the documented
+   *      distinction between the two.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* Before any Platform.Load call. */
+  assert("qualified Stringify works without Platform.Load", Platform.Function.Stringify({ a: 1 }), '{"a":1}');
+  assert("bare-name Stringify is undefined before the Core load", String(typeof Stringify), "undefined");
+  assert("native JSON object is unavailable in this engine", String(typeof JSON), "undefined");
+
+  Platform.Load("core", "1.1.5");
+
+  assert("bare-name Stringify is a function after the Core load", String(typeof Stringify), "function");
+  assert("bare-name Stringify produces the same JSON", Stringify({ a: 1 }), '{"a":1}');
+
+  var sample = { name: "Jane", score: 95, active: true };
+  assert("both forms produce byte-identical output", Stringify(sample) === Platform.Function.Stringify(sample) ? "true" : "false", "true");
+
+  /* Argument validation is where the two forms genuinely diverge. */
+  assertThrows("qualified form throws on zero arguments", function () {
+      return Platform.Function.Stringify();
+  });
+  assert("bare-name form returns the string null for zero arguments", Stringify(), "null");
+  assertThrows("qualified form throws on an extra argument", function () {
+      return Platform.Function.Stringify({ a: 1 }, 2);
+  });
+  assert("bare-name form ignores an extra argument", Stringify({ a: 1 }, 2), '{"a":1}');
+
+  /* Documented distinction from String(). */
+  assert("Stringify emits JSON with quoted keys", Platform.Function.Stringify({ name: "Jane", age: 30 }), '{"name":"Jane","age":30}');
+  assert("String() on a scalar does not quote it the way Stringify does", String(42), "42");
+  assert("Stringify quotes a string value, String() does not", Platform.Function.Stringify("x"), '"x"');
+  assert("String() leaves the same value unquoted", String("x"), "x");
+  </script>
+
+serialization-details: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Serialization details
+   *
+   * Proves the exact, runtime-verified output shape:
+   *   1. Objects serialize compactly — no space after ":" or ",".
+   *   2. DEVIATION from a compact serializer: ARRAY elements are separated by
+   *      a comma followed by CRLF (char 44, 13, 10), so array output spans
+   *      multiple lines. It is still valid JSON (whitespace is legal there),
+   *      but it is not byte-identical to a compact JSON.stringify.
+   *   3. Empty objects and empty arrays serialize to {} and [].
+   *   4. Quotes, backslashes, newlines and tabs are escaped; forward slashes
+   *      and single quotes are NOT escaped.
+   *   5. Non-ASCII characters pass through RAW — they are not \uXXXX escaped.
+   *   6. DEVIATION: a control character (U+0001) is emitted raw and unescaped,
+   *      producing invalid JSON (the JSON spec requires \u0001).
+   *   7. DEVIATION: a double quote inside a KEY is not escaped, producing
+   *      invalid JSON, even though key strings are a "known JSON type".
+   *   8. undefined-valued properties and undefined array elements become null.
+   *   9. DEVIATION: function-valued members become the string "function"
+   *      (JSON.stringify omits object properties and emits null in arrays).
+   *  10. Negative zero serializes as 0.
+   *  11. Large and small magnitudes use the .NET round-trip exponent form
+   *      (9.00719925474099E+15, 6.02E+23, 1E-07) rather than the JavaScript
+   *      form, and precision is lost above the safe-integer range.
+   *  12. DEVIATION: NaN serializes to the single character U+221E, and the
+   *      infinity SIGNS ARE INVERTED — positive Infinity yields "-INFINITY"
+   *      and negative Infinity yields "INFINITY". JSON.stringify emits null
+   *      for all three. This is an engine bug, confirmed via two independent
+   *      constructions (1/0 and Number.POSITIVE_INFINITY).
+   *  13. Date values serialize to a quoted ISO-like local string with
+   *      millisecond precision and no timezone suffix.
+   *  14. A circular reference does not throw: the repeated node becomes null.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function codes(s) {
+      var out = [];
+      for (var i = 0; i < s.length; i++) { out.push(s.charCodeAt(i)); }
+      return out.join(" ");
+  }
+
+  /* 1-3: compactness and separators. */
+  assert("object output has no spaces", Platform.Function.Stringify({ a: 1, b: 2 }), '{"a":1,"b":2}');
+  assert("object output length confirms no padding", String(Platform.Function.Stringify({ a: 1, b: 2 }).length), "13");
+  assert("DEV array elements are separated by comma+CRLF (compact JSON: just a comma)", codes(Platform.Function.Stringify([1, 2])), "91 49 44 13 10 50 93");
+  assert("DEV a nested array carries the same CRLF separator", codes(Platform.Function.Stringify({ d: [3, 4] })), "123 34 100 34 58 91 51 44 13 10 52 93 125");
+  assert("empty object serializes to braces", Platform.Function.Stringify({}), "{}");
+  assert("empty array serializes to brackets", Platform.Function.Stringify([]), "[]");
+  assert("nested empty containers are preserved", Platform.Function.Stringify({ o: {}, a: [] }), '{"o":{},"a":[]}');
+
+  /* 4-5: escaping. */
+  assert("a double quote in a value is escaped", Platform.Function.Stringify({ k: 'he said "hi"' }), '{"k":"he said \\"hi\\""}');
+  assert("a backslash is escaped", Platform.Function.Stringify({ k: "a\\b" }), '{"k":"a\\\\b"}');
+  assert("a newline becomes backslash-n", codes(Platform.Function.Stringify("a\nb")), "34 97 92 110 98 34");
+  assert("a tab becomes backslash-t", codes(Platform.Function.Stringify("a\tb")), "34 97 92 116 98 34");
+  assert("a forward slash is NOT escaped", Platform.Function.Stringify({ k: "a/b" }), '{"k":"a/b"}');
+  assert("a single quote is NOT escaped", Platform.Function.Stringify({ k: "it's" }), '{"k":"it\'s"}');
+  assert("a key containing a space is quoted normally", Platform.Function.Stringify({ "a b": 1 }), '{"a b":1}');
+  assert("an accented character passes through raw (not \\u00e9)", codes(Platform.Function.Stringify("\u00e9")), "34 233 34");
+  assert("the raw accent output is only three characters long", String(Platform.Function.Stringify("\u00e9").length), "3");
+  assert("a Greek character passes through raw", codes(Platform.Function.Stringify("\u03a9")), "34 937 34");
+  assert("a CJK character passes through raw", codes(Platform.Function.Stringify("\u65e5")), "34 26085 34");
+
+  /* 6-7: output that is not valid JSON. */
+  assert("DEV a control character is emitted raw (JSON spec: must be \\u0001)", codes(Platform.Function.Stringify(String.fromCharCode(1))), "34 1 34");
+  assert("DEV a quote inside a KEY is not escaped (JSON spec: must be \\\")", codes(Platform.Function.Stringify({ 'a"b': 1 })), "123 34 97 34 98 34 58 49 125");
+
+  /* 8-9: undefined and function members. */
+  var undef;
+  assert("an undefined property becomes null (JSON.stringify: omitted)", Platform.Function.Stringify({ a: 1, b: undef }), '{"a":1,"b":null}');
+  assert("DEV a function property becomes the string function (JSON.stringify: omitted)", Platform.Function.Stringify({ a: 1, b: function () { return 1; } }), '{"a":1,"b":"function"}');
+  assert("an undefined array element becomes null", codes(Platform.Function.Stringify([1, undef, 3])), "91 49 44 13 10 110 117 108 108 44 13 10 51 93");
+  assert("DEV a function array element becomes the string function (JSON.stringify: null)", codes(Platform.Function.Stringify([1, function () { return 1; }, 3])), "91 49 44 13 10 34 102 117 110 99 116 105 111 110 34 44 13 10 51 93");
+  assert("an explicit null array element stays null", codes(Platform.Function.Stringify([1, null, 3])), "91 49 44 13 10 110 117 108 108 44 13 10 51 93");
+
+  /* 10-11: numeric formatting. */
+  assert("negative zero serializes as plain zero", Platform.Function.Stringify(-0), "0");
+  assert("DEV a large integer uses the .NET exponent form (JS: 9007199254740991)", Platform.Function.Stringify(9007199254740991), "9.00719925474099E+15");
+  assert("DEV an unsafe integer loses precision to the same text", Platform.Function.Stringify(9007199254740993), "9.00719925474099E+15");
+  assert("DEV an exponent literal keeps the .NET form (JS: 6.02e+23)", Platform.Function.Stringify(6.02e23), "6.02E+23");
+  assert("DEV a small exponent keeps the .NET form (JS: 1e-7)", Platform.Function.Stringify(1e-7), "1E-07");
+  assert("the exponent form does not survive a ParseJSON round trip as a number", String(typeof Platform.Function.ParseJSON(Platform.Function.Stringify(6.02e23))), "string");
+
+  /* 12: NaN and the inverted infinity signs. */
+  assert("DEV NaN serializes to a single U+221E character (JSON.stringify: null)", codes(Platform.Function.Stringify(0 / 0)), "8734");
+  assert("DEV the NaN output is one character long", String(Platform.Function.Stringify(0 / 0).length), "1");
+  assert("DEV positive Infinity serializes with a MINUS sign (JSON.stringify: null)", codes(Platform.Function.Stringify(1 / 0)), "45 8734");
+  assert("DEV negative Infinity serializes WITHOUT a sign (JSON.stringify: null)", codes(Platform.Function.Stringify(0 - 1 / 0)), "8734");
+  assert("DEV Number.POSITIVE_INFINITY confirms the inverted sign independently", codes(Platform.Function.Stringify(Number.POSITIVE_INFINITY)), "45 8734");
+  assert("DEV Number.NEGATIVE_INFINITY confirms the inverted sign independently", codes(Platform.Function.Stringify(Number.NEGATIVE_INFINITY)), "8734");
+
+  /* 13: CLR Date values. */
+  var nowVal = Platform.Function.Now();
+  var dateJson = Platform.Function.Stringify(nowVal);
+  assert("a Date serializes to a quoted string", String(dateJson.substring(0, 1)), '"');
+  assert("the quoted Date uses an ISO-like separator", String(dateJson.substring(11, 12)), "T");
+  assert("the quoted Date has millisecond precision and no timezone suffix", String(dateJson.length), "25");
+  assert("a Date nested in an object uses the same form", Platform.Function.Stringify({ t: nowVal }), '{"t":' + dateJson + "}");
+  assert("String() on the same Date gives a different, non-ISO form", String(nowVal) === dateJson ? "true" : "false", "false");
+
+  /* 14: circular reference. */
+  var circA = { name: "a" };
+  circA.self = circA;
+  assert("a circular reference does not throw; the repeat becomes null", Platform.Function.Stringify(circA), '{"name":"a","self":null}');
+  </script>
+
+nan-infinity-deviation: |
+  <script runat="server">
+  /*
+   * Differs-from-docs claim: NaN and both infinities serialize incorrectly.
+   *
+   * Proves:
+   *   1. DEV — NaN becomes the single character U+221E (JSON.stringify: null).
+   *   2. DEV — positive Infinity serializes WITH a minus sign, negative
+   *      Infinity WITHOUT one: the signs are inverted (JSON.stringify: null).
+   *   3. The inversion reproduces via two independent constructions, so it is
+   *      not an artefact of the 1/0 expression.
+   *   4. The same corruption appears inside an object, so guarding the value
+   *      before serializing is the only workaround.
+   *   5. A finite number in the same object is unaffected.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function codes(s) {
+      var out = [];
+      for (var i = 0; i < s.length; i++) { out.push(s.charCodeAt(i)); }
+      return out.join(" ");
+  }
+
+  assert("DEV NaN serializes to U+221E (JSON.stringify: null)", codes(Platform.Function.Stringify(0 / 0)), "8734");
+  assert("DEV the NaN output is a single character", String(Platform.Function.Stringify(0 / 0).length), "1");
+  assert("DEV NaN is not serialized as null", Platform.Function.Stringify(0 / 0) === "null" ? "true" : "false", "false");
+
+  assert("DEV 1/0 serializes with an inverted minus sign (JSON.stringify: null)", codes(Platform.Function.Stringify(1 / 0)), "45 8734");
+  assert("DEV -1/0 serializes without a sign (JSON.stringify: null)", codes(Platform.Function.Stringify(0 - 1 / 0)), "8734");
+  assert("DEV Number.POSITIVE_INFINITY reproduces the inverted sign", codes(Platform.Function.Stringify(Number.POSITIVE_INFINITY)), "45 8734");
+  assert("DEV Number.NEGATIVE_INFINITY reproduces the missing sign", codes(Platform.Function.Stringify(Number.NEGATIVE_INFINITY)), "8734");
+  assert("DEV the two infinities do not serialize identically", Platform.Function.Stringify(1 / 0) === Platform.Function.Stringify(0 - 1 / 0) ? "true" : "false", "false");
+
+  var mixed = Platform.Function.Stringify({ n: 0 / 0, i: 1 / 0, ok: 5 });
+  assert("DEV the corruption survives inside an object", codes(mixed), "123 34 110 34 58 8734 44 34 105 34 58 45 8734 44 34 111 107 34 58 53 125");
+  assert("a finite sibling value is unaffected", String(mixed.indexOf('"ok":5') > -1 ? "true" : "false"), "true");
+
+  /* Workaround: guard the value before serializing. */
+  var raw = 0 / 0;
+  var guarded = isNaN(raw) || raw === Number.POSITIVE_INFINITY || raw === Number.NEGATIVE_INFINITY ? null : raw;
+  assert("the recommended guard yields valid JSON null", Platform.Function.Stringify({ v: guarded }), '{"v":null}');
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples
+   *
+   * Proves:
+   *   1. The documented person example produces exactly the commented output.
+   *   2. The InsertData payload example serializes to well-formed JSON with the
+   *      Now() timestamp rendered as a quoted ISO-like string.
+   *   3. The debug pattern wraps the serialized value in <pre> markup.
+   *   4. Round trip: ParseJSON(Stringify(x)) restores an independently known
+   *      object, and Stringify of a fixed hard-coded JSON literal reproduces
+   *      that literal apart from the array CRLF separators.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var person = {
+      name: "Jane Smith",
+      email: "jane@example.com",
+      score: 95
+  };
+  assert("the person example matches the documented output exactly", Platform.Function.Stringify(person), '{"name":"Jane Smith","email":"jane@example.com","score":95}');
+
+  var payload = {
+      action: "page_view",
+      page: "/preferences",
+      timestamp: Platform.Function.Now()
+  };
+  var payloadJson = Platform.Function.Stringify(payload);
+  assert("the payload example keeps the action value", String(payloadJson.substring(0, 22)), '{"action":"page_view",');
+  assert("the payload example does not escape the slash in the page value", String(payloadJson.indexOf('"page":"/preferences"') > -1 ? "true" : "false"), "true");
+  assert("the payload timestamp is a quoted ISO-like string", String(payloadJson.indexOf('"timestamp":"20') > -1 ? "true" : "false"), "true");
+  var reparsedPayload = Platform.Function.ParseJSON(payloadJson);
+  assert("the serialized payload parses back to an object", String(typeof reparsedPayload), "object");
+  assert("the reparsed payload keeps the action", String(reparsedPayload.action), "page_view");
+
+  var debugValue = { rows: 2 };
+  assert("the debug pattern wraps the JSON in pre markup", "<pre>" + Platform.Function.Stringify(debugValue) + "</pre>", '<pre>{"rows":2}</pre>');
+
+  /* Round trip anchored to a hard-coded expected string, not to ParseJSON alone. */
+  var tripObj = { name: "Jane", score: 95, active: true, tags: ["a", "b"] };
+  var tripJson = Platform.Function.Stringify(tripObj);
+  assert("the round-trip source serializes to the expected text", tripJson.replace("\r\n", ""), '{"name":"Jane","score":95,"active":true,"tags":["a","b"]}');
+  var back = Platform.Function.ParseJSON(tripJson);
+  assert("the round trip restores the string field", String(back.name), "Jane");
+  assert("the round trip restores the number field as a number", String(typeof back.score), "number");
+  assert("the round trip restores the numeric value", String(back.score), "95");
+  assert("the round trip restores the boolean field", back.active ? "true" : "false", "true");
+  assert("the round trip restores the array length", String(back.tags.length), "2");
+  assert("the round trip restores an array element", String(back.tags[1]), "b");
+
+  var fixedLiteral = '{"id":7,"ok":true,"nil":null,"txt":"a\\"b","rows":[{"n":1},{"n":2}]}';
+  var reStringified = Platform.Function.Stringify(Platform.Function.ParseJSON(fixedLiteral));
+  assert("re-serializing a fixed literal reproduces it once CRLF is removed", reStringified.replace("\r\n", ""), fixedLiteral);
+  assert("re-serializing a fixed literal is NOT byte-identical because of the array CRLF", reStringified === fixedLiteral ? "true" : "false", "false");
+  </script>

@@ -15,6 +15,7 @@ min_args: 3
 max_args: 3
 verification: verified
 differs_from_docs: true
+test_scripts: complete
 ---
 
 ## Parameters
@@ -25,13 +26,15 @@ differs_from_docs: true
 | `whereFieldNames` | string\|string[] | Yes | Filter field name, or an array of field names connected with AND logic |
 | `whereFieldValues` | string\|array | Yes | Filter field value matching `whereFieldNames`; must be an array of equal length when `whereFieldNames` is an array |
 
+{% include test-script.html bundle="platform-functions--lookuprows" chapter="parameters" %}
+
 ## Description
 
 `LookupRows` returns an array of row objects from the specified Data Extension. Each element in the array is an object where property names are the column names and values are the cell values. Each row object also carries two **system fields**: `_CustomObjectKey` (a `number`) and `_CreatedDate` (a `string`) — runtime-verified.
 
-{% include differs-from-docs.html note="At runtime `LookupRows` returns `null` (not an empty array `[]`) when no row matches — guard before reading `.length`. Each matched row also carries undocumented system fields `_CustomObjectKey` (number) and `_CreatedDate` (string), and the DE is resolved by **Name** only, not the external key." %}
+{% include differs-from-docs.html note="At runtime `LookupRows` returns `null` (not an empty array `[]`) when no row matches — guard before reading `.length`. Each matched row also carries undocumented system fields `_CustomObjectKey` (number) and `_CreatedDate` (string), the DE is resolved by **Name** only, and a NULL Text field is normalized to an ordinary empty string rather than scalar `Lookup`'s hazardous CLR null." %}
 
-`LookupRows` returns most fields as their **typed/native JS value** (Number and Decimal columns come back as `number`, Boolean columns as `boolean`), so you can use them without manual casting. **Date columns are the exception:** they are returned as an ISO-8601 `string` (e.g. `"2024-01-15T00:00:00.000"`), **not** as a `Date` object — this differs from [`Lookup`](/platform-functions/lookup/), which returns a real `Date` for Date columns (runtime-verified). Text and EmailAddress columns are `string` in both. This still contrasts with `DataExtension.Rows.Retrieve()`, which stringifies **every** field (including Number/Boolean). In return, `Retrieve` gives you an empty array (`[]`) rather than `null` on no match — see [DataExtension.Rows](/core-library/dataextension-rows/) for that trade-off.
+`LookupRows` returns most fields as their **typed/native JS value** (Number and Decimal columns come back as `number`, Boolean columns as `boolean`), so you can use them without manual casting. **Date columns are the exception:** they are returned as an ISO-8601 `string` (e.g. `"2024-01-15T00:00:00.000"`), **not** as a `Date` object — this differs from [`Lookup`](/platform-functions/lookup/), which returns a real `Date` for Date columns (runtime-verified). Text and EmailAddress columns are `string` in both. An omitted/NULL Text field is also normalized to an ordinary empty `string`: strict and loose null comparisons are false, a truthiness test is safely falsy, and `String()` yields `""`. This matches `LookupOrderedRows` and sharply contrasts with scalar `Lookup`, whose omitted field is a CLR null that throws on loose equality and truthiness. This still contrasts with `DataExtension.Rows.Retrieve()`, which stringifies **every** field (including Number/Boolean). In return, `Retrieve` gives you an empty array (`[]`) rather than `null` on no match — see [DataExtension.Rows](/core-library/dataextension-rows/) for that trade-off.
 
 ### Field type → returned JavaScript type (runtime-verified)
 
@@ -50,7 +53,9 @@ Result of probing a Data Extension containing one column of each valid [field ty
 
 Unlike [`Lookup`](/platform-functions/lookup/) (which returns a real `Date` for Date columns), the multi-row lookups stringify Date columns. All other types match `Lookup`.
 
-> **Row limit:** `LookupRows` may return up to 2,000 rows by default. Use `LookupOrderedRows` with a `sortCount` limit for larger datasets.
+> **Row limit:** `LookupRows` has no count argument and returns matching rows up to the 2,000-row platform ceiling. Use `LookupOrderedRows` when you need a smaller explicit count or deterministic sorting.
+
+{% include test-script.html bundle="platform-functions--lookuprows" chapter="description" label="Show test script — row shape, field types, nulls, and query caching" %}
 
 ## Examples
 
@@ -120,6 +125,8 @@ var email = row["Email"];
 var date  = row["CreatedDate"];
 ```
 
+{% include test-script.html bundle="platform-functions--lookuprows" chapter="examples" %}
+
 ## Notes
 
 - Returns Number/Decimal columns as `number` and Boolean columns as `boolean`; **Date columns come back as an ISO-8601 `string`** (unlike `Lookup`, which returns a real `Date`). By contrast, `DataExtension.Rows.Retrieve()` stringifies every field, including numbers and booleans
@@ -128,7 +135,10 @@ var date  = row["CreatedDate"];
 - Resolves the DE by **Name**, not external key / CustomerKey
 - Returns all matching rows up to SFMC's row limit
 - Results are not guaranteed to be in any particular order — use `LookupOrderedRows` for sorted results
-- Accessing a non-existent column returns `undefined`
+- Accessing a non-existent column returns `undefined`; returned row property names preserve the DE column's case and property access is case-sensitive
+- DE/filter identifiers and Text filter values were case-insensitive on the verification BU, but collation can vary by configuration — do not rely on that behavior
+
+{% include test-script.html bundle="platform-functions--lookuprows" chapter="notes" %}
 
 ## See Also
 

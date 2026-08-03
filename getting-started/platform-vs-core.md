@@ -12,13 +12,13 @@ SSJS exposes SFMC functionality through two distinct library layers with differe
 
 ```
 SSJS Runtime
-├── Global functions     (Write, Stringify, Base64Encode, …)
 ├── Platform             (always available, no Load required)
 │   ├── Platform.Function.*    (~55 methods)
 │   ├── Platform.Variable.*    (AMPscript bridge)
 │   ├── Platform.Response.*    (HTTP response)
 │   ├── Platform.Request.*     (HTTP request)
-│   └── Platform.Recipient.*
+│   ├── Platform.Recipient.*
+│   └── WSProxy
 └── Core library         (requires Platform.Load("core", "1.1.5"))
     ├── DataExtension, DataExtension.Rows, DataExtension.Fields
     ├── Subscriber, Email, TriggeredSend
@@ -29,7 +29,7 @@ SSJS Runtime
     └── BounceEvent, ClickEvent, OpenEvent, … (tracking events)
 ```
 
-## Platform.Function.*
+## Platform Functions
 
 Available without any loading. Call directly as `Platform.Function.MethodName(...)`.
 

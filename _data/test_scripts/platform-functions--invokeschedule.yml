@@ -1,0 +1,480 @@
+# Test scripts for /platform-functions/invokeschedule/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the official Salesforce docs.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage on the MCDEV_Training_QA business unit.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# SOAP OBJECT UNDER TEST: an Automation addressed by ObjectID — the one object
+# type found to be ACCEPTED by the Schedule verb on this business unit. Every
+# other type probed (QueryDefinition, TriggeredSendDefinition,
+# FileTransferActivity, ImportDefinition) is refused outright with
+# "Cannot perform Schedule on objects of type <T>" and error code 5.
+#
+# SIDE EFFECTS: the Schedule verb really schedules work, so the success path is
+# exercised against a RANDOM ObjectID GUID that resolves to no program on the
+# business unit. The API still answers "Program scheduled.", which proves the
+# call round-tripped, while nothing real is ever put on a schedule. No object
+# is created, so nothing needs cleaning up.
+
+differs-from-docs: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Callout: differs-from-docs — the return value, the required statusArray
+   * and what the status slots actually carry.
+   *
+   * Proves:
+   *   1. DEVIATION — the call returns a STRING, not an object as the official
+   *      docs state. It is the OverallStatus value: "OK" on the success path
+   *      and "Error" on the failure path.
+   *   2. DEVIATION — statusArray is REQUIRED, not optional: the 3-argument
+   *      call (apiObject, action, schedule) throws. Four arguments is the
+   *      minimum working arity.
+   *   3. The status array is a genuine OUT parameter. status[0] receives the
+   *      status MESSAGE (a string), status[1] a NUMERIC error code (0 on
+   *      success) and status[2] a string. status[1] is therefore the
+   *      InvokePerform slot shape (/platform-functions/invokeperform/) and NOT
+   *      the InvokeExecute / InvokeRetrieve one, where status[1] is a
+   *      RequestID GUID string.
+   *   4. DEVIATION — the page's own wording that the RequestID is written into
+   *      statusArray does not hold: no GUID is ever written. The corrected
+   *      page says status[1] is a numeric error code.
+   *   5. PAIRED CONTROL on the status out parameter — three otherwise
+   *      IDENTICAL calls differing only in the initial size of the status
+   *      array. A PRE-SIZED [0, 0, 0] IS populated in all three slots; a
+   *      [0, 0] receives the first two and leaves status[2] undefined; an
+   *      EMPTY [] is never grown and stays at length 0. The engine writes
+   *      only into slots the array ALREADY has. This is the InvokeExecute /
+   *      InvokePerform / InvokeRetrieve behaviour and NOT the InvokeExtract
+   *      one (/platform-functions/invokeextract/), where even a pre-sized
+   *      array stays untouched because the call throws first. An observation
+   *      that status.length stays 0 is MEANINGLESS unless the array was
+   *      pre-sized.
+   *   6. A success guard must branch on the RETURN value, not on status[0]:
+   *      status[0] holds the status MESSAGE ("Program scheduled."), so a
+   *      status[0] !== "OK" guard would fire on every SUCCESSFUL call. This is
+   *      the InvokeCreate / InvokePerform defect shape, NOT the InvokeDelete /
+   *      InvokeRetrieve one where status[0] itself equals "OK". Never carry a
+   *      status-slot conclusion across verbs.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit). The page also
+   * lists automation availability; the automation context was not exercised.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* A ScheduleDefinition the API accepts, and an Automation addressed by a
+     random ObjectID GUID so that nothing real is ever put on a schedule. */
+  var objectId = String(Platform.Function.GUID());
+  function sched() {
+      var s = Platform.Function.CreateObject("ScheduleDefinition");
+      Platform.Function.SetObjectProperty(s, "StartDateTime", "2027-03-01T09:00:00");
+      Platform.Function.SetObjectProperty(s, "RecurrenceType", "Daily");
+      Platform.Function.SetObjectProperty(s, "RecurrenceRangeType", "EndAfter");
+      Platform.Function.SetObjectProperty(s, "Occurrences", "1");
+      return s;
+  }
+  function autoObj() {
+      var o = Platform.Function.CreateObject("Automation");
+      Platform.Function.SetObjectProperty(o, "ObjectID", objectId);
+      return o;
+  }
+
+  /* 1 + 3 + 5. The documented call, PRE-SIZED [0, 0, 0]. */
+  var sized = [0, 0, 0];
+  var result = Platform.Function.InvokeSchedule(autoObj(), "start", sched(), sized, null);
+  assert("DEV the return value is a STRING, not an object (docs: an object)", String(typeof result), "string");
+  assert("DEV the return value is the OverallStatus value 'OK' on success (docs: an object)", String(result), "OK");
+  assert("a PRE-SIZED status array keeps its length", sized.length, 3);
+  assert("status[0] receives the status MESSAGE, not the 'OK' value", String(sized[0]), "Program scheduled.");
+  assert("status[0] is a string", String(typeof sized[0]), "string");
+  assert("DEV status[1] is a NUMBER - a numeric error code, NOT the RequestID GUID string the docs imply", String(typeof sized[1]), "number");
+  assert("status[1] is 0 on the success path", sized[1], 0);
+  assert("DEV no RequestID GUID is written anywhere - status[1] is not 36 characters long", String(sized[1]).length === 36 ? "true" : "false", "false");
+  assert("status[2] is a string", String(typeof sized[2]), "string");
+
+  /* 5. CONTROL — the SAME call with an EMPTY status array. */
+  var empty = [];
+  var resultE = Platform.Function.InvokeSchedule(autoObj(), "start", sched(), empty, null);
+  assert("control: the identical call still returns 'OK'", String(resultE), "OK");
+  assert("control: an EMPTY status array is never grown - it stays at length 0", empty.length, 0);
+  assert("control: status[0] of an empty array is undefined", empty[0] === undefined ? "true" : "false", "true");
+  assert("control: status[1] of an empty array is undefined", empty[1] === undefined ? "true" : "false", "true");
+
+  /* 5. CONTROL — a 2-slot array receives the first two values only. */
+  var two = [0, 0];
+  Platform.Function.InvokeSchedule(autoObj(), "start", sched(), two, null);
+  assert("control: a 2-slot status array keeps its length", two.length, 2);
+  assert("control: a 2-slot status array still receives the status message", String(two[0]), "Program scheduled.");
+  assert("control: a 2-slot status array still receives the numeric error code", two[1], 0);
+  assert("control: status[2] of a 2-slot array stays undefined", two[2] === undefined ? "true" : "false", "true");
+
+  /* 2. statusArray is REQUIRED - the 3-argument call throws. */
+  assertThrows("DEV the 3-argument call throws - statusArray is REQUIRED (docs imply it is optional)", function () {
+      return Platform.Function.InvokeSchedule(autoObj(), "start", sched());
+  });
+
+  /* 1. The failure path returns the string "Error". */
+  var failStatus = [0, 0, 0];
+  var failObj = Platform.Function.CreateObject("Automation");
+  Platform.Function.SetObjectProperty(failObj, "CustomerKey", "ssjsg_no_such_automation");
+  var failResult = Platform.Function.InvokeSchedule(failObj, "start", sched(), failStatus, null);
+  assert("the failure path returns the string 'Error'", String(failResult), "Error");
+  assert("the failure return value is a string too", String(typeof failResult), "string");
+  assert("an Automation addressed by CustomerKey is rejected - it must be addressed by ObjectID", String(failStatus[0]), "ObjectID is required to schedule a Program.");
+  assert("the missing-ObjectID failure carries error code 355000", failStatus[1], 355000);
+
+  /* 6. The guard must branch on the RETURN value, not on status[0]. */
+  assert("the correct guard result !== 'OK' does NOT fire on the success path", result !== "OK" ? "true" : "false", "false");
+  assert("a status[0] !== 'OK' guard WOULD wrongly fire here - status[0] is the status MESSAGE", sized[0] !== "OK" ? "true" : "false", "true");
+  assert("the correct guard result !== 'OK' DOES fire on the failure path", failResult !== "OK" ? "true" : "false", "true");
+  </script>
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters —
+   * Platform.Function.InvokeSchedule(apiObject, action, schedule, statusArray[, options])
+   *
+   * Proves, one parameter at a time:
+   *   1. apiObject is a SOAP object built with CreateObject and configured
+   *      with SetObjectProperty. Such an object is a .NET CLR host object
+   *      (typeof "clr"); SetObjectProperty returns a genuine null, NOT
+   *      undefined.
+   *   2. A plain JavaScript object or a string as apiObject throws — the
+   *      parameter is not structurally typed, it must be an
+   *      ExactTarget.Integration.WSDL type.
+   *   3. A null apiObject is the one non-object that does NOT throw: no SOAP
+   *      call is made, the return value is a genuine null (not undefined, not
+   *      a status string) and the status array is left untouched. This mirrors
+   *      the same finding on /platform-functions/invokecreate/,
+   *      /platform-functions/invokedelete/, /platform-functions/invokeexecute/,
+   *      /platform-functions/invokeextract/, /platform-functions/invokeperform/,
+   *      /platform-functions/invokeretrieve/ and
+   *      /platform-functions/invokeconfigure/.
+   *   4. action is a string and it is CASE-INSENSITIVE: "Start" behaves
+   *      exactly like "start", matching /platform-functions/invokeperform/.
+   *      A null action throws; an unsupported action is rejected by the API
+   *      with error code 5 and an explicit message naming the only supported
+   *      action — "start" is the ONLY action this verb accepts.
+   *   5. schedule is a ScheduleDefinition CLR object. A null schedule and a
+   *      plain JavaScript object as schedule both throw. Only StartDateTime,
+   *      EndDateTime, RecurrenceType, RecurrenceRangeType and Occurrences are
+   *      writable on it — TimeZone, TimeZoneID and Recurrence all reject
+   *      SetObjectProperty. StartDateTime is mandatory: omitting it is
+   *      rejected by the API with a message that says so.
+   *   6. statusArray must be an array — a non-array throws — and it is a
+   *      genuine OUT parameter that must be PRE-SIZED: with [0, 0, 0] all
+   *      three slots are filled (status message, numeric error code, string).
+   *   7. options is genuinely optional: the 4-argument call behaves exactly
+   *      like the 5-argument one with options null.
+   *   8. ARITY — 4 and 5 are the only valid arities. 0, 1, 2, 3 and 6 all
+   *      throw. Never assume an argument is reachable just because a sibling
+   *      verb has one: /platform-functions/invokeretrieve/ accepts only 2.
+   *   9. The Schedule verb is refused outright for most SOAP types:
+   *      QueryDefinition, TriggeredSendDefinition, FileTransferActivity and
+   *      ImportDefinition are all answered with "Cannot perform Schedule on
+   *      objects of type <T>" and error code 5. That is the API rejecting the
+   *      object TYPE, not the function failing.
+   *
+   * NOT ASSERTED: the values set on the apiObject cannot be read back from
+   * the object itself — it is a CLR host object and the engine blocks all
+   * introspection of it (see /platform-functions/createobject/). They are
+   * proven indirectly by the API's own response.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var objectId = String(Platform.Function.GUID());
+  function sched() {
+      var s = Platform.Function.CreateObject("ScheduleDefinition");
+      Platform.Function.SetObjectProperty(s, "StartDateTime", "2027-03-01T09:00:00");
+      Platform.Function.SetObjectProperty(s, "RecurrenceType", "Daily");
+      Platform.Function.SetObjectProperty(s, "RecurrenceRangeType", "EndAfter");
+      Platform.Function.SetObjectProperty(s, "Occurrences", "1");
+      return s;
+  }
+  function autoObj() {
+      var o = Platform.Function.CreateObject("Automation");
+      Platform.Function.SetObjectProperty(o, "ObjectID", objectId);
+      return o;
+  }
+
+  /* 1. apiObject and schedule are CreateObject SOAP objects — CLR host objects. */
+  assert("typeof CreateObject('Automation') is clr", String(typeof Platform.Function.CreateObject("Automation")), "clr");
+  assert("typeof CreateObject('ScheduleDefinition') is clr", String(typeof Platform.Function.CreateObject("ScheduleDefinition")), "clr");
+  var setResult = Platform.Function.SetObjectProperty(Platform.Function.CreateObject("Automation"), "ObjectID", objectId);
+  assert("SetObjectProperty(apiObject, 'ObjectID', ...) returns a genuine null", setResult === null ? "true" : "false", "true");
+  assert("SetObjectProperty does NOT return undefined", setResult === undefined ? "true" : "false", "false");
+
+  /* 5. The ScheduleDefinition writable-property matrix. */
+  assert("ScheduleDefinition.StartDateTime is writable", Platform.Function.SetObjectProperty(Platform.Function.CreateObject("ScheduleDefinition"), "StartDateTime", "2027-03-01T09:00:00") === null ? "true" : "false", "true");
+  assert("ScheduleDefinition.EndDateTime is writable", Platform.Function.SetObjectProperty(Platform.Function.CreateObject("ScheduleDefinition"), "EndDateTime", "2027-03-02T09:00:00") === null ? "true" : "false", "true");
+  assert("ScheduleDefinition.RecurrenceType is writable", Platform.Function.SetObjectProperty(Platform.Function.CreateObject("ScheduleDefinition"), "RecurrenceType", "Daily") === null ? "true" : "false", "true");
+  assert("ScheduleDefinition.RecurrenceRangeType is writable", Platform.Function.SetObjectProperty(Platform.Function.CreateObject("ScheduleDefinition"), "RecurrenceRangeType", "EndAfter") === null ? "true" : "false", "true");
+  assert("ScheduleDefinition.Occurrences is writable", Platform.Function.SetObjectProperty(Platform.Function.CreateObject("ScheduleDefinition"), "Occurrences", "1") === null ? "true" : "false", "true");
+  assertThrows("ScheduleDefinition.TimeZone rejects SetObjectProperty", function () {
+      return Platform.Function.SetObjectProperty(Platform.Function.CreateObject("ScheduleDefinition"), "TimeZone", "Central Standard Time");
+  });
+  assertThrows("ScheduleDefinition.TimeZoneID rejects SetObjectProperty", function () {
+      return Platform.Function.SetObjectProperty(Platform.Function.CreateObject("ScheduleDefinition"), "TimeZoneID", "1");
+  });
+  assertThrows("ScheduleDefinition.Recurrence rejects SetObjectProperty", function () {
+      return Platform.Function.SetObjectProperty(Platform.Function.CreateObject("ScheduleDefinition"), "Recurrence", "x");
+  });
+
+  /* 6 + 7. The documented 5-argument call and its 4-argument form. */
+  var status5 = [0, 0, 0];
+  var r5 = Platform.Function.InvokeSchedule(autoObj(), "start", sched(), status5, null);
+  assert("the 5-argument call returns 'OK'", String(r5), "OK");
+  assert("statusArray is an OUT parameter: status[0] received the status message", String(status5[0]), "Program scheduled.");
+  assert("statusArray is an OUT parameter: status[1] received the numeric error code", status5[1], 0);
+  assert("the pre-sized statusArray keeps its length", status5.length, 3);
+
+  var status4 = [0, 0, 0];
+  var r4 = Platform.Function.InvokeSchedule(autoObj(), "start", sched(), status4);
+  assert("options is OPTIONAL: the 4-argument call returns 'OK' too", String(r4), "OK");
+  assert("the 4-argument call fills status[0] identically", String(status4[0]), "Program scheduled.");
+  assert("the 4-argument call fills status[1] identically", status4[1], 0);
+
+  /* 8. Arity outside 4 and 5 throws. */
+  assertThrows("arity 0 throws (the valid arities are 4 and 5)", function () {
+      return Platform.Function.InvokeSchedule();
+  });
+  assertThrows("arity 1 throws (the valid arities are 4 and 5)", function () {
+      return Platform.Function.InvokeSchedule(autoObj());
+  });
+  assertThrows("arity 2 throws (the valid arities are 4 and 5)", function () {
+      return Platform.Function.InvokeSchedule(autoObj(), "start");
+  });
+  assertThrows("arity 3 throws - statusArray is required", function () {
+      return Platform.Function.InvokeSchedule(autoObj(), "start", sched());
+  });
+  assertThrows("arity 6 throws - there is no sixth argument", function () {
+      var s = [0, 0, 0];
+      return Platform.Function.InvokeSchedule(autoObj(), "start", sched(), s, null, null);
+  });
+
+  /* 2. apiObject must be a real SOAP object. */
+  assertThrows("a plain JavaScript object as apiObject throws", function () {
+      var s = [0, 0, 0];
+      return Platform.Function.InvokeSchedule({}, "start", sched(), s, null);
+  });
+  assertThrows("a string as apiObject throws", function () {
+      var s = [0, 0, 0];
+      return Platform.Function.InvokeSchedule("Automation", "start", sched(), s, null);
+  });
+
+  /* 3. null apiObject: no SOAP call is made — genuine null back, status untouched. */
+  var nullStatus = [0, 0, 0];
+  var nullResult = Platform.Function.InvokeSchedule(null, "start", sched(), nullStatus, null);
+  assert("a null apiObject does NOT throw", nullResult === null ? "true" : "false", "true");
+  assert("a null apiObject returns a genuine null, not a status string", String(typeof nullResult), "object");
+  assert("a null apiObject is not undefined", nullResult === undefined ? "true" : "false", "false");
+  assert("a null apiObject leaves status[0] untouched (no SOAP call was made)", nullStatus[0], 0);
+  assert("a null apiObject leaves status[1] untouched (no SOAP call was made)", nullStatus[1], 0);
+
+  /* 4. action. */
+  assertThrows("a null action throws", function () {
+      var s = [0, 0, 0];
+      return Platform.Function.InvokeSchedule(autoObj(), null, sched(), s, null);
+  });
+  var badActionStatus = [0, 0, 0];
+  var badAction = Platform.Function.InvokeSchedule(autoObj(), "bogusaction", sched(), badActionStatus, null);
+  assert("an unsupported action is rejected by the API, not by the function - it returns 'Error'", String(badAction), "Error");
+  assert("the API names the only supported action", String(badActionStatus[0]), "This action is not supported. Currently only 'start' is supported.");
+  assert("the unsupported-action failure carries error code 5", badActionStatus[1], 5);
+  var caseStatus = [0, 0, 0];
+  var caseResult = Platform.Function.InvokeSchedule(autoObj(), "Start", sched(), caseStatus, null);
+  assert("action is CASE-INSENSITIVE: 'Start' works exactly like 'start' (same as InvokePerform)", String(caseResult), "OK");
+  assert("the capitalised action fills status[0] identically", String(caseStatus[0]), "Program scheduled.");
+  assert("the capitalised action fills status[1] identically", caseStatus[1], 0);
+
+  /* 5. schedule. */
+  assertThrows("a null schedule throws", function () {
+      var s = [0, 0, 0];
+      return Platform.Function.InvokeSchedule(autoObj(), "start", null, s, null);
+  });
+  assertThrows("a plain JavaScript object as schedule throws", function () {
+      var s = [0, 0, 0];
+      return Platform.Function.InvokeSchedule(autoObj(), "start", {}, s, null);
+  });
+  var noStartStatus = [0, 0, 0];
+  var noStartSched = Platform.Function.CreateObject("ScheduleDefinition");
+  Platform.Function.SetObjectProperty(noStartSched, "RecurrenceType", "Daily");
+  Platform.Function.SetObjectProperty(noStartSched, "Occurrences", "1");
+  var esd = Platform.Function.CreateObject("EmailSendDefinition");
+  Platform.Function.SetObjectProperty(esd, "CustomerKey", "ssjsg_no_such_send_definition");
+  var noStartResult = Platform.Function.InvokeSchedule(esd, "start", noStartSched, noStartStatus, null);
+  assert("a ScheduleDefinition without StartDateTime is rejected - it returns 'Error'", String(noStartResult), "Error");
+  assert("the API says StartDateTime is mandatory", String(noStartStatus[0]), "A ScheduleDefinition StartDateTime must be specified.");
+  assert("the missing-StartDateTime failure carries error code 5", noStartStatus[1], 5);
+
+  /* 6. statusArray must be an array. */
+  assertThrows("a non-array statusArray throws", function () {
+      return Platform.Function.InvokeSchedule(autoObj(), "start", sched(), "notanarray", null);
+  });
+
+  /* 9. Most SOAP types are refused outright by the Schedule verb. */
+  function refused(type) {
+      var o = Platform.Function.CreateObject(type);
+      Platform.Function.SetObjectProperty(o, "CustomerKey", "ssjsg_no_such_" + type);
+      var s = [0, 0, 0];
+      var r = Platform.Function.InvokeSchedule(o, "start", sched(), s, null);
+      assert("a " + type + " is REFUSED by the Schedule verb - it returns 'Error'", String(r), "Error");
+      assert("the API says so explicitly for " + type, String(s[0]), "Cannot perform Schedule on objects of type " + type);
+      assert("the refused-type error code for " + type + " is 5", s[1], 5);
+  }
+  refused("QueryDefinition");
+  refused("TriggeredSendDefinition");
+  refused("FileTransferActivity");
+  refused("ImportDefinition");
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples — the CreateObject / SetObjectProperty / InvokeSchedule
+   * build-and-schedule pattern.
+   *
+   * Proves:
+   *   1. Every line of the page's example runs: CreateObject("Automation"),
+   *      SetObjectProperty for the ObjectID, CreateObject
+   *      ("ScheduleDefinition") with StartDateTime, RecurrenceType,
+   *      RecurrenceRangeType and Occurrences, and the final 5-argument
+   *      InvokeSchedule with a [0, 0, 0] status array. The call succeeds —
+   *      the return value is "OK" and status[0] reads "Program scheduled.".
+   *   2. The object MUST be addressed by ObjectID. The identical Automation
+   *      addressed by CustomerKey is rejected with "ObjectID is required to
+   *      schedule a Program." and error code 355000. This mirrors the
+   *      addressing finding on /platform-functions/invokeperform/.
+   *   3. The example's guard is on the RETURN value, not on status[0],
+   *      because status[0] holds the status MESSAGE: a status[0] !== "OK"
+   *      guard would fire on every successful call. Same defect shape as the
+   *      one corrected on /platform-functions/invokecreate/ and
+   *      /platform-functions/invokeperform/ — and the OPPOSITE of
+   *      /platform-functions/invokeretrieve/, where status[0] itself equals
+   *      "OK". Never carry a guard shape across verbs.
+   *   4. The Schedule verb really ran — it is NOT a presence-only check.
+   *      DISCRIMINATING CONTROL: the SAME call shape answers "OK" /
+   *      "Program scheduled." for the ObjectID form and "Error" /
+   *      "ObjectID is required to schedule a Program." for the CustomerKey
+   *      form, and a different object type is refused outright with a third,
+   *      type-specific message. A call that had silently done nothing could
+   *      not distinguish the three.
+   *   5. The page's earlier EmailSendDefinition example was NOT a working
+   *      invocation: an EmailSendDefinition addressed by CustomerKey is
+   *      answered with a [ScheduleEmailSendDefinition] exception and error
+   *      code 2. That is asserted here as a permanent negative case so the
+   *      corrected example cannot silently regress.
+   *   6. StartDateTime is mandatory on the ScheduleDefinition — the example
+   *      sets it on purpose. A schedule without it is rejected with
+   *      "A ScheduleDefinition StartDateTime must be specified."
+   *
+   * SIDE EFFECTS: the Schedule verb schedules real work, so the success path
+   * runs against a RANDOM ObjectID GUID that resolves to no program on this
+   * business unit. The API still answers "Program scheduled.", which proves
+   * the round trip, while nothing real is ever put on a schedule and nothing
+   * needs cleaning up.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* 1. The page's example, line by line. */
+  var objectId = String(Platform.Function.GUID());
+  var automation = Platform.Function.CreateObject("Automation");
+  assert("example line 1: CreateObject('Automation') yields a CLR host object", String(typeof automation), "clr");
+  assert("example line 2: SetObjectProperty(automation, 'ObjectID', ...) returns a genuine null", Platform.Function.SetObjectProperty(automation, "ObjectID", objectId) === null ? "true" : "false", "true");
+
+  var scheduleDef = Platform.Function.CreateObject("ScheduleDefinition");
+  assert("example line 3: CreateObject('ScheduleDefinition') yields a CLR host object", String(typeof scheduleDef), "clr");
+  assert("example line 4: StartDateTime is writable and mandatory", Platform.Function.SetObjectProperty(scheduleDef, "StartDateTime", "2027-03-01T09:00:00") === null ? "true" : "false", "true");
+  assert("example line 5: RecurrenceType is writable", Platform.Function.SetObjectProperty(scheduleDef, "RecurrenceType", "Daily") === null ? "true" : "false", "true");
+  assert("example line 6: RecurrenceRangeType is writable", Platform.Function.SetObjectProperty(scheduleDef, "RecurrenceRangeType", "EndAfter") === null ? "true" : "false", "true");
+  assert("example line 7: Occurrences is writable", Platform.Function.SetObjectProperty(scheduleDef, "Occurrences", "1") === null ? "true" : "false", "true");
+
+  var statusArr = [0, 0, 0];
+  var result = Platform.Function.InvokeSchedule(automation, "start", scheduleDef, statusArr, null);
+  assert("example line 8: the schedule SUCCEEDS - the return value is 'OK'", String(result), "OK");
+  assert("example line 8: status[0] carries the status message", String(statusArr[0]), "Program scheduled.");
+  assert("example line 8: status[1] carries the numeric error code 0", statusArr[1], 0);
+
+  /* 2 + 4. DISCRIMINATING CONTROL — the same object addressed by CustomerKey. */
+  var byKey = Platform.Function.CreateObject("Automation");
+  Platform.Function.SetObjectProperty(byKey, "CustomerKey", "ssjsg_is_example_key");
+  var keyStatus = [0, 0, 0];
+  var keyResult = Platform.Function.InvokeSchedule(byKey, "start", scheduleDef, keyStatus, null);
+  assert("control: addressing the Automation by CustomerKey answers 'Error' - address it by ObjectID", String(keyResult), "Error");
+  assert("control: the API says ObjectID is required", String(keyStatus[0]), "ObjectID is required to schedule a Program.");
+  assert("control: the missing-ObjectID failure carries error code 355000", keyStatus[1], 355000);
+
+  /* 4. A third, type-specific answer proves the verb really dispatches. */
+  var otherType = Platform.Function.CreateObject("ImportDefinition");
+  Platform.Function.SetObjectProperty(otherType, "CustomerKey", "ssjsg_is_example_import");
+  var otherStatus = [0, 0, 0];
+  var otherResult = Platform.Function.InvokeSchedule(otherType, "start", scheduleDef, otherStatus, null);
+  assert("control: a different object type gets a THIRD, type-specific answer", String(otherStatus[0]), "Cannot perform Schedule on objects of type ImportDefinition");
+  assert("control: the refused-type call returns 'Error' too", String(otherResult), "Error");
+
+  /* 3. The example's guard separates success from failure; a status[0] guard cannot. */
+  assert("the example guard result !== 'OK' does NOT fire on the success path", result !== "OK" ? "true" : "false", "false");
+  assert("the example guard result !== 'OK' DOES fire on the failure path", keyResult !== "OK" ? "true" : "false", "true");
+  assert("a status[0] !== 'OK' guard would WRONGLY fire on the success path - status[0] is the MESSAGE", statusArr[0] !== "OK" ? "true" : "false", "true");
+
+  /* 5. The page's earlier EmailSendDefinition example was not a working invocation. */
+  var esd = Platform.Function.CreateObject("EmailSendDefinition");
+  Platform.Function.SetObjectProperty(esd, "CustomerKey", "MySendDef");
+  var esdStatus = [0, 0, 0];
+  var esdResult = Platform.Function.InvokeSchedule(esd, "start", scheduleDef, esdStatus, null);
+  assert("the earlier EmailSendDefinition example shape does NOT work - it returns 'Error'", String(esdResult), "Error");
+  assert("the EmailSendDefinition failure carries error code 2", esdStatus[1], 2);
+
+  /* 6. StartDateTime is mandatory. */
+  var bareSched = Platform.Function.CreateObject("ScheduleDefinition");
+  Platform.Function.SetObjectProperty(bareSched, "RecurrenceType", "Daily");
+  Platform.Function.SetObjectProperty(bareSched, "Occurrences", "1");
+  var bareStatus = [0, 0, 0];
+  var bareResult = Platform.Function.InvokeSchedule(esd, "start", bareSched, bareStatus, null);
+  assert("a ScheduleDefinition without StartDateTime is rejected - it returns 'Error'", String(bareResult), "Error");
+  assert("the API says StartDateTime is mandatory", String(bareStatus[0]), "A ScheduleDefinition StartDateTime must be specified.");
+  </script>

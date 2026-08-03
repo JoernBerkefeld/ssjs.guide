@@ -1,0 +1,675 @@
+# Test scripts for /platform-objects/platform-load/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes - positive,
+# negative, and every documented deviation.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# SPECIAL CASE: Platform.Load is the function that ENABLES the Core library, so
+# it is the one member that cannot be tested with the usual "load Core, then
+# assert" harness - its own preconditions are the thing under test. The
+# `available-without-load` and `call-order-is-critical` scripts therefore
+# deliberately run with NO Platform.Load at the top, and Platform.Load's effect
+# lasts for the whole REQUEST (it is not per script block). When chapters are
+# concatenated into one CloudPage those two must therefore run FIRST, and in
+# that order, because `available-without-load` never loads Core at all while
+# `call-order-is-critical` loads it half way through.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+available-without-load: |
+  <script runat="server">
+  /* NO Platform.Load anywhere in this script - that is the point of it. */
+
+  /*
+   * Chapter note: "the Platform.* objects are available WITHOUT calling
+   * Platform.Load; only the bare-name Core aliases require it."
+   *
+   * Proves:
+   *   1. Platform itself, Platform.Load, Platform.Request, Platform.Response,
+   *      Platform.Variable, Platform.Recipient and Platform.Function are all
+   *      reachable with no load at all. They report typeof "clr" (a CLR host
+   *      object), and Platform.Load reports "clrmethodinfo" - neither is the
+   *      plain JavaScript "object"/"function" a reader might expect.
+   *   2. Platform.Function.* is not merely reachable but CALLABLE with no load.
+   *   3. The bare-name Core aliases do NOT exist yet: DataExtension,
+   *      Subscriber, List, Email, TriggeredSend, HTTP, Script, Variable,
+   *      Attribute and Stringify are all undefined.
+   *   4. Calling one of them raises a catchable "Object expected: <member>"
+   *      exception - it does not silently return undefined.
+   *   5. There is no bare-name Load global; Platform.Load is the only form.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  /* typeof on a bare name that does not exist yet must be evaluated INSIDE a
+     function. At the top level of a script block it is a parse-time risk that
+     aborts the whole CloudPage with HTTP 422 before any line prints. */
+  function typeOf(fn) {
+      try { return fn(); } catch (ex) { return "THREW: " + ex.message; }
+  }
+
+  /* 1. The Platform.* host objects need no load. */
+  assert("typeof Platform is clr with NO Platform.Load", typeOf(function () { return typeof Platform; }), "clr");
+  assert("typeof Platform.Load is clrmethodinfo - the bootstrap needs no load", typeOf(function () { return typeof Platform.Load; }), "clrmethodinfo");
+  assert("Platform.Request is reachable with NO Platform.Load", typeOf(function () { return typeof Platform.Request; }), "clr");
+  assert("Platform.Response is reachable with NO Platform.Load", typeOf(function () { return typeof Platform.Response; }), "clr");
+  assert("Platform.Variable is reachable with NO Platform.Load", typeOf(function () { return typeof Platform.Variable; }), "clr");
+  assert("Platform.Recipient is reachable with NO Platform.Load", typeOf(function () { return typeof Platform.Recipient; }), "clr");
+  assert("Platform.Function is reachable with NO Platform.Load", typeOf(function () { return typeof Platform.Function; }), "clr");
+
+  /* 2. Platform.Function.* is callable, not just reachable. */
+  var noLoadStringify = Platform.Function.Stringify({ a: 1 });
+  assert("Platform.Function.Stringify is CALLABLE with NO Platform.Load", noLoadStringify, "{\"a\":1}");
+
+  /* 3. Negative path - every bare-name Core alias is still undefined. */
+  assert("bare DataExtension is undefined without Platform.Load", typeOf(function () { return typeof DataExtension; }), "undefined");
+  assert("bare Subscriber is undefined without Platform.Load", typeOf(function () { return typeof Subscriber; }), "undefined");
+  assert("bare List is undefined without Platform.Load", typeOf(function () { return typeof List; }), "undefined");
+  assert("bare Email is undefined without Platform.Load", typeOf(function () { return typeof Email; }), "undefined");
+  assert("bare TriggeredSend is undefined without Platform.Load", typeOf(function () { return typeof TriggeredSend; }), "undefined");
+  assert("bare HTTP is undefined without Platform.Load", typeOf(function () { return typeof HTTP; }), "undefined");
+  assert("bare Variable is undefined without Platform.Load", typeOf(function () { return typeof Variable; }), "undefined");
+  assert("bare Attribute is undefined without Platform.Load", typeOf(function () { return typeof Attribute; }), "undefined");
+  assert("bare Stringify is undefined without Platform.Load", typeOf(function () { return typeof Stringify; }), "undefined");
+  assert("bare Script is undefined without Platform.Load", typeOf(function () { return typeof Script; }), "undefined");
+
+  /* 4. Calling one of them throws rather than returning undefined. */
+  assertThrows("calling bare Stringify without Platform.Load throws", function () {
+      return Stringify({ a: 1 });
+  });
+  assertThrows("calling DataExtension.Init without Platform.Load throws", function () {
+      return DataExtension.Init("MyDE");
+  });
+  assertThrows("calling Variable.SetValue without Platform.Load throws", function () {
+      return Variable.SetValue("@x", 1);
+  });
+
+  /* 5. There is no bare-name Load global. */
+  assert("there is NO bare-name Load global - Platform.Load is the only form", typeOf(function () { return typeof Load; }), "undefined");
+  </script>
+
+call-order-is-critical: |
+  <script runat="server">
+  /* NO Platform.Load at the top - the pre-load state is under test. */
+
+  /*
+   * Chapter: Call Order is Critical
+   *
+   * Proves:
+   *   1. Using a Core alias BEFORE Platform.Load fails - the bare name is
+   *      undefined and the call raises a catchable exception.
+   *   2. The EXACT failure mode: the engine reports "Object expected: <member>"
+   *      naming the bare member. It is NOT the "Object doesn't support this
+   *      property or method" string an earlier revision of this page claimed.
+   *   3. The failure is catchable, so a pre-load call does not abort the page.
+   *   4. DEVIATION from the chapter's original wording: Platform.Load does NOT
+   *      have to be the literal FIRST statement of the block. Any number of
+   *      non-Core statements may precede it - and even a FAILED Core call may.
+   *      What actually matters is only that it precedes the first SUCCESSFUL
+   *      use of a Core alias.
+   *   5. The same calls succeed once Platform.Load has run, so the ordering
+   *      really is what makes the difference.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  /* Caught messages are .NET strings - never compare them with ===. */
+  function messageOf(fn) {
+      try { fn(); } catch (ex) { return "" + ex.message; }
+      return "";
+  }
+  function contains(haystack, needle) {
+      return String(haystack).indexOf(needle) !== -1 ? "true" : "false";
+  }
+  /* typeof on a not-yet-loaded bare name must be evaluated INSIDE a function -
+     at the top level of a script block it aborts the page with HTTP 422. */
+  function typeOf(fn) {
+      try { return fn(); } catch (ex) { return "THREW: " + ex.message; }
+  }
+
+  /* 1. The WRONG order from the page - the alias does not exist yet. */
+  assert("bare DataExtension is undefined before Platform.Load", typeOf(function () { return typeof DataExtension; }), "undefined");
+  assertThrows("DataExtension.Init before Platform.Load throws", function () {
+      return DataExtension.Init("MyDE");
+  });
+
+  /* 2. What the engine actually reports. */
+  var preMsg = messageOf(function () { return DataExtension.Init("MyDE"); });
+  assert("the pre-load message is \"Object expected\" and names the member Init", contains(preMsg, "Object expected: Init"), "true");
+  assert("DEV the message is NOT \"Object doesn't support this property or method\" (claimed by an earlier revision of this page)", contains(preMsg, "support this property"), "false");
+  var preStringifyMsg = messageOf(function () { return Stringify({ a: 1 }); });
+  assert("a bare Core function reports its own name in the message", contains(preStringifyMsg, "Object expected: Stringify"), "true");
+
+  /* 3. The failure is catchable - it did not abort the page. */
+  assert("the page is still running after the pre-load failure", 1 + 1, "2");
+
+  /* 4. DEVIATION - Platform.Load need not be the FIRST statement. */
+  var precedingStatement = "ran before Platform.Load";
+  assert("DEV a non-Core statement may precede Platform.Load (page claimed it must be the first statement)", precedingStatement, "ran before Platform.Load");
+  Platform.Load("core", "1.1.5");
+
+  /* 5. The CORRECT order now works - the load is what changed. */
+  assert("bare DataExtension exists after Platform.Load", typeOf(function () { return typeof DataExtension; }), "object");
+  function initType(key) {
+      try { return typeof DataExtension.Init(key); } catch (ex) { return "THREW: " + ex.message; }
+  }
+  assert("DataExtension.Init(key) succeeds after Platform.Load", initType("MyDE"), "object");
+  var postStringify = Stringify({ a: 1 });
+  assert("the earlier failed call did not poison the request", postStringify, "{\"a\":1}");
+  </script>
+
+syntax: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Syntax
+   *
+   * Proves the shape of Platform.Load(libraryName, version):
+   *   1. It is a CLR method (typeof "clrmethodinfo"), not a plain JavaScript
+   *      function.
+   *   2. DEVIATION from the documented return type: the page and ssjs-data
+   *      described it as `void`, i.e. returning undefined. It actually returns
+   *      the literal null - typeof "object", strictly === null.
+   *   3. Arity is exactly 2. Zero, one and three arguments are all rejected
+   *      with the engine's generic unaccepted-arity signal, "Unable to retrieve
+   *      security descriptor for this frame."
+   *   4. There is no bare-name Load global, even after the Core load.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  /* Classifies a load attempt at a chosen arity without aborting the script. */
+  function loadArity(n) {
+      try {
+          if (n === 0) { Platform.Load(); }
+          else if (n === 1) { Platform.Load("core"); }
+          else if (n === 3) { Platform.Load("core", "1.1.5", "extra"); }
+          else { Platform.Load("core", "1.1.5"); }
+          return "ok";
+      } catch (ex) { return "throw"; }
+  }
+  function arityMessage(n) {
+      try { loadArityRaw(n); } catch (ex) { return "" + ex.message; }
+      return "";
+  }
+  function loadArityRaw(n) {
+      if (n === 0) { Platform.Load(); }
+      else if (n === 1) { Platform.Load("core"); }
+      else { Platform.Load("core", "1.1.5", "extra"); }
+  }
+  function contains(haystack, needle) {
+      return String(haystack).indexOf(needle) !== -1 ? "true" : "false";
+  }
+  /* typeof on a bare name that may not exist must be evaluated INSIDE a
+     function - at the top level of a script block it aborts the page with 422. */
+  function typeOf(fn) {
+      try { return fn(); } catch (ex) { return "THREW: " + ex.message; }
+  }
+
+  /* 1. Shape. */
+  assert("typeof Platform.Load is clrmethodinfo", typeOf(function () { return typeof Platform.Load; }), "clrmethodinfo");
+
+  /* 2. DEVIATION - the return value is null, not undefined. */
+  var rv = Platform.Load("core", "1.1.5");
+  assert("DEV typeof the return value is object (page/ssjs-data said void)", typeOf(function () { return typeof rv; }), "object");
+  assert("DEV the return value is strictly null (page/ssjs-data said void, i.e. undefined)", rv === null ? "true" : "false", "true");
+  assert("the return value is NOT undefined", rv === undefined ? "true" : "false", "false");
+
+  /* 3. Arity is exactly 2. */
+  assert("the documented 2-argument form is accepted", loadArity(2), "ok");
+  assert("the 0-argument form is rejected", loadArity(0), "throw");
+  assert("the 1-argument form is rejected - version is required", loadArity(1), "throw");
+  assert("a 3rd argument is rejected - max_args is 2", loadArity(3), "throw");
+  var arityMsg = arityMessage(3);
+  assert("a wrong arity raises the generic security-descriptor signal", contains(arityMsg, "security descriptor"), "true");
+
+  /* 4. Negative path - no bare-name alias. */
+  assert("there is NO bare-name Load global, even after the Core load", typeOf(function () { return typeof Load; }), "undefined");
+  </script>
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters
+   *
+   * Proves how each parameter is actually validated:
+   *   1. The documented pair - libraryName "core", version "1.1.5" - is
+   *      accepted.
+   *   2. libraryName is matched CASE-INSENSITIVELY: "Core" and "CORE" both
+   *      load the same library.
+   *   3. An unknown libraryName is rejected with a catchable exception whose
+   *      message says the library version does not exist and echoes the
+   *      supplied library name plus the parsed major/minor/revision numbers.
+   *   4. A non-string libraryName (a number) is rejected the same way.
+   *   5. DEVIATION from the Parameters table: libraryName is documented as
+   *      Required, but an EMPTY STRING and null are both accepted silently.
+   *      The call succeeds and becomes a no-op instead of raising an error, so
+   *      a typo that evaluates to "" or null is silently swallowed.
+   *   6. version is validated in two distinct stages, with two distinct
+   *      messages: a non-numeric string fails the short-value parse, while an
+   *      empty or null version fails the "at least the major version number"
+   *      check before any lookup happens.
+   *   7. None of the rejected calls disturbs the already-loaded Core library.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function loadResult(lib, ver) {
+      try { Platform.Load(lib, ver); return "ok"; } catch (ex) { return "throw"; }
+  }
+  function messageOf(lib, ver) {
+      try { Platform.Load(lib, ver); } catch (ex) { return "" + ex.message; }
+      return "";
+  }
+  function contains(haystack, needle) {
+      return String(haystack).indexOf(needle) !== -1 ? "true" : "false";
+  }
+  /* Evaluate every typeof INSIDE a function - a top-level `var t = typeof X;`
+     is mis-paired by the Jint engine and produces phantom FAILs. */
+  function typeOf(fn) {
+      try { return fn(); } catch (ex) { return "THREW: " + ex.message; }
+  }
+
+  /* 1. The documented pair. */
+  assert("libraryName \"core\" with version \"1.1.5\" is accepted", loadResult("core", "1.1.5"), "ok");
+
+  /* 2. libraryName is case-insensitive. */
+  assert("libraryName \"Core\" is accepted", loadResult("Core", "1.1.5"), "ok");
+  assert("libraryName \"CORE\" is accepted", loadResult("CORE", "1.1.5"), "ok");
+
+  /* 3. Negative path - an unknown library name. */
+  assert("an unknown libraryName is rejected", loadResult("bogus", "1.1.5"), "throw");
+  var unknownMsg = messageOf("bogus", "1.1.5");
+  assert("the rejection message says the library version does not exist", contains(unknownMsg, "does not exist"), "true");
+  assert("the rejection message echoes the supplied library name", contains(unknownMsg, "Library: bogus"), "true");
+  assert("the rejection message echoes the parsed major version number", contains(unknownMsg, "Major Version Number: 1"), "true");
+  assert("the rejection message echoes the parsed revision version number", contains(unknownMsg, "Revision Version Number: 5"), "true");
+
+  /* 4. A non-string libraryName. */
+  assert("a numeric libraryName is rejected", loadResult(123, "1.1.5"), "throw");
+
+  /* 5. DEVIATION - libraryName is documented Required but empty/null pass. */
+  assert("DEV an EMPTY libraryName is accepted silently (Parameters table: Required)", loadResult("", "1.1.5"), "ok");
+  assert("DEV a null libraryName is accepted silently (Parameters table: Required)", loadResult(null, "1.1.5"), "ok");
+
+  /* 6. version has two distinct validation stages. */
+  assert("a non-numeric version is rejected", loadResult("core", "latest"), "throw");
+  var badVerMsg = messageOf("core", "latest");
+  assert("a non-numeric version fails the short-value parse", contains(badVerMsg, "not a valid short value"), "true");
+  assert("an empty version is rejected", loadResult("core", ""), "throw");
+  var emptyVerMsg = messageOf("core", "");
+  assert("an empty version fails the major-version-number check", contains(emptyVerMsg, "at least the major version number"), "true");
+  assert("a null version is rejected", loadResult("core", null), "throw");
+  var nullVerMsg = messageOf("core", null);
+  assert("a null version fails the same major-version-number check", contains(nullVerMsg, "at least the major version number"), "true");
+
+  /* 7. The rejected calls left the loaded library alone. */
+  assert("Core is still loaded after every rejected call", typeOf(function () { return typeof DataExtension; }), "object");
+  var stillWorks = Stringify({ a: 1 });
+  assert("Core functions still work after every rejected call", stillWorks, "{\"a\":1}");
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples
+   *
+   * Runs the chapter's example verbatim and asserts each step:
+   *   1. Platform.Load("core", "1.1.5") succeeds.
+   *   2. DataExtension is then available as a bare-name global.
+   *   3. DataExtension.Init("MyDE") returns an object, as the example assumes.
+   *   4. The returned instance exposes the Rows namespace the example's second
+   *      line uses.
+   *
+   * The example's Rows.Retrieve() call itself is NOT asserted here: it depends
+   * on a Data Extension existing in the business unit, so it is covered on the
+   * DataExtension reference page instead.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function loadResult(lib, ver) {
+      try { Platform.Load(lib, ver); return "ok"; } catch (ex) { return "throw"; }
+  }
+  /* Evaluate every typeof INSIDE a function. A top-level `var t = typeof X;`
+     is both a 422 risk for a not-yet-loaded bare name and a source of phantom
+     FAILs - the Jint engine mis-pairs the assignment with the assertion. */
+  function typeOf(fn) {
+      try { return fn(); } catch (ex) { return "THREW: " + ex.message; }
+  }
+
+  /* 1. The load line from the example. */
+  assert("the example's Platform.Load line succeeds", loadResult("core", "1.1.5"), "ok");
+
+  /* 2. and 3. The example's DataExtension.Init line. */
+  assert("DataExtension is available after the example's load", typeOf(function () { return typeof DataExtension; }), "object");
+  assert("DataExtension.Init is a function", typeOf(function () { return typeof DataExtension.Init; }), "function");
+  var de = DataExtension.Init("MyDE");
+  assert("DataExtension.Init(\"MyDE\") returns an object", typeOf(function () { return typeof de; }), "object");
+
+  /* 4. The instance exposes the Rows namespace the example goes on to use. */
+  assert("the returned instance exposes a Rows namespace", typeOf(function () { return typeof de.Rows; }), "object");
+  </script>
+
+available-libraries: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Available Libraries
+   *
+   * Proves the single documented table row - library "core" at version
+   * "1.1.5", providing DataExtension, Subscriber, List, Email, TriggeredSend,
+   * HTTP and Script.Util:
+   *   1. The "core" / "1.1.5" pair loads without throwing.
+   *   2. Each of the seven listed namespace objects is available afterwards.
+   *   3. QUIRK worth knowing: Script and Script.Util themselves report typeof
+   *      "undefined" even when loaded - only the leaf member Script.Util.*
+   *      reports a real type. A `typeof Script.Util` guard is therefore
+   *      useless; probe Script.Util.HttpRequest instead.
+   *   4. Negative path: "core" really is the only library. "platform" and
+   *      "wsproxy" are both rejected, so the table has exactly one row.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function loadResult(lib, ver) {
+      try { Platform.Load(lib, ver); return "ok"; } catch (ex) { return "throw"; }
+  }
+  /* typeof on a bare name must be evaluated INSIDE a function - at the top
+     level of a script block it aborts the page with HTTP 422. */
+  function typeOf(fn) {
+      try { return fn(); } catch (ex) { return "THREW: " + ex.message; }
+  }
+
+  /* 1. The documented row. */
+  assert("library \"core\" version \"1.1.5\" loads", loadResult("core", "1.1.5"), "ok");
+
+  /* 2. The namespace objects the row lists. */
+  assert("DataExtension is available", typeOf(function () { return typeof DataExtension; }), "object");
+  assert("Subscriber is available", typeOf(function () { return typeof Subscriber; }), "object");
+  assert("List is available", typeOf(function () { return typeof List; }), "object");
+  assert("Email is available", typeOf(function () { return typeof Email; }), "object");
+  assert("TriggeredSend is available", typeOf(function () { return typeof TriggeredSend; }), "object");
+  assert("HTTP is available", typeOf(function () { return typeof HTTP; }), "object");
+  assert("Script.Util is available - its leaf member reports clr", typeOf(function () { return typeof Script.Util.HttpRequest; }), "clr");
+
+  /* 3. QUIRK - the Script namespace itself reports undefined when loaded. */
+  assert("quirk: typeof Script is undefined even after the load", typeOf(function () { return typeof Script; }), "undefined");
+  assert("quirk: typeof Script.Util is undefined even after the load", typeOf(function () { return typeof Script.Util; }), "undefined");
+
+  /* 4. Negative path - no other library is offered. */
+  assert("there is no \"platform\" library to load", loadResult("platform", "1.1.5"), "throw");
+  assert("there is no \"wsproxy\" library to load", loadResult("wsproxy", "1.1.5"), "throw");
+  </script>
+
+version-numbers: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Version Numbers
+   *
+   * Sweeps the version parameter to establish exactly which strings load:
+   *   1. "1.1.5" - the version the page recommends - is accepted.
+   *   2. The short forms the page cautions against DO work: "1", "1.0", "1.1",
+   *      "1.0.0" and every revision "1.1.0" through "1.1.6" are accepted.
+   *   3. "1.1.6" - one revision ABOVE the recommended one - is also accepted,
+   *      so "1.1.5" is not the newest build, merely the recommended one.
+   *   4. Anything above the highest published revision is rejected: "1.1.7"
+   *      and up, "1.2", "1.3" all raise "does not exist" and echo the parsed
+   *      major/minor/revision numbers back.
+   *   5. Other major versions are rejected - "0" and "2" both throw.
+   *   6. A negative revision is rejected.
+   *   7. QUIRK: 32767 (short.MaxValue) behaves as a wildcard "newest" sentinel
+   *      in the minor and revision slots - "1.32767", "1.1.32767" and
+   *      "1.0.32767" all load - but NOT in the major slot, where "32767"
+   *      throws like any other unknown major version.
+   *   8. A rejected load is inert: it throws, changes nothing, never aborts the
+   *      page, and leaves the previously loaded Core library fully usable.
+   *   9. Loading the same library twice in one request is idempotent and safe.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  /* Named loadVersion, not loadResult, so that concatenating this chapter with
+     the Parameters chapter into one CloudPage cannot redefine that chapter's
+     two-argument helper of the same name. */
+  function loadVersion(ver) {
+      try { Platform.Load("core", ver); return "ok"; } catch (ex) { return "throw"; }
+  }
+  function versionMessage(ver) {
+      try { Platform.Load("core", ver); } catch (ex) { return "" + ex.message; }
+      return "";
+  }
+  function contains(haystack, needle) {
+      return String(haystack).indexOf(needle) !== -1 ? "true" : "false";
+  }
+  /* Evaluate every typeof INSIDE a function - a top-level `var t = typeof X;`
+     is mis-paired by the Jint engine and produces phantom FAILs. */
+  function typeOf(fn) {
+      try { return fn(); } catch (ex) { return "THREW: " + ex.message; }
+  }
+
+  /* 1. The recommended version. */
+  assert("version \"1.1.5\" is accepted", loadVersion("1.1.5"), "ok");
+
+  /* 2. The short forms the page cautions against DO work. */
+  assert("version \"1\" is accepted", loadVersion("1"), "ok");
+  assert("version \"1.0\" is accepted", loadVersion("1.0"), "ok");
+  assert("version \"1.1\" is accepted", loadVersion("1.1"), "ok");
+  assert("version \"1.0.0\" is accepted", loadVersion("1.0.0"), "ok");
+  assert("version \"1.1.0\" is accepted", loadVersion("1.1.0"), "ok");
+  assert("version \"1.1.1\" is accepted", loadVersion("1.1.1"), "ok");
+  assert("version \"1.1.2\" is accepted", loadVersion("1.1.2"), "ok");
+  assert("version \"1.1.3\" is accepted", loadVersion("1.1.3"), "ok");
+  assert("version \"1.1.4\" is accepted", loadVersion("1.1.4"), "ok");
+
+  /* 3. One revision ABOVE the recommended one also loads. */
+  assert("version \"1.1.6\" is accepted - one revision above the recommended one", loadVersion("1.1.6"), "ok");
+
+  /* 4. Negative path - anything above 1.1.6 is rejected. */
+  assert("version \"1.1.7\" is rejected", loadVersion("1.1.7"), "throw");
+  assert("version \"1.1.10\" is rejected", loadVersion("1.1.10"), "throw");
+  assert("version \"1.2\" is rejected", loadVersion("1.2"), "throw");
+  assert("version \"1.3\" is rejected", loadVersion("1.3"), "throw");
+  var missingMsg = versionMessage("1.1.7");
+  assert("the rejection message says the version does not exist", contains(missingMsg, "does not exist"), "true");
+  assert("the rejection message echoes the parsed revision number", contains(missingMsg, "Revision Version Number: 7"), "true");
+
+  /* 5. Other major versions are rejected. */
+  assert("version \"0\" is rejected", loadVersion("0"), "throw");
+  assert("version \"2\" is rejected", loadVersion("2"), "throw");
+
+  /* 6. A negative revision is rejected. */
+  assert("version \"1.1.-1\" is rejected", loadVersion("1.1.-1"), "throw");
+
+  /* 7. QUIRK - 32767 is a wildcard sentinel in the minor/revision slots only. */
+  assert("quirk: version \"1.1.32767\" loads - 32767 acts as a newest-revision sentinel", loadVersion("1.1.32767"), "ok");
+  assert("quirk: version \"1.32767\" loads - the sentinel works in the minor slot too", loadVersion("1.32767"), "ok");
+  assert("quirk: version \"1.0.32767\" loads", loadVersion("1.0.32767"), "ok");
+  assert("quirk: version \"32767\" alone is REJECTED - the sentinel does not apply to the major slot", loadVersion("32767"), "throw");
+
+  /* 8. A rejected load is inert. */
+  assert("Core is still loaded after a rejected version", typeOf(function () { return typeof DataExtension; }), "object");
+  var afterFailureCall = Stringify({ a: 1 });
+  assert("Core functions still work after a rejected version", afterFailureCall, "{\"a\":1}");
+
+  /* 9. Double load is idempotent. */
+  assert("loading the same version twice does not throw", loadVersion("1.1.5"), "ok");
+  var afterDouble = Stringify({ a: 1 });
+  assert("Core still works after a double load", afterDouble, "{\"a\":1}");
+  assert("the Core aliases survive a double load", typeOf(function () { return typeof DataExtension; }), "object");
+  </script>
+
+multiple-script-blocks: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Multiple Script Blocks
+   *
+   * TWO script blocks in ONE CloudPage request. Proves:
+   *   1. Platform.Load in the FIRST block makes the Core aliases available in
+   *      every LATER block. The load is scoped to the REQUEST, not to the
+   *      script block, so it only has to be called once per page.
+   *   2. Variable scope is shared across the blocks too - a var declared in
+   *      the first block is readable in the second, and so are its functions.
+   *   3. A Core function is callable in the second block with no load of its
+   *      own.
+   *   4. A redundant second Platform.Load in the later block is harmless.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  /* Evaluate every typeof INSIDE a function - a top-level `var t = typeof X;`
+     is mis-paired by the Jint engine and produces phantom FAILs. This helper is
+     declared in the FIRST block and reused from the second, which is itself part
+     of what this chapter proves. */
+  function typeOf(fn) {
+      try { return fn(); } catch (ex) { return "THREW: " + ex.message; }
+  }
+  var setInFirstBlock = "block-one";
+  assert("Core is loaded in the first block", typeOf(function () { return typeof DataExtension; }), "object");
+  </script>
+
+  <script runat="server">
+  /* Second block - deliberately NO Platform.Load of its own. */
+  assert("the assert helper from the first block is still callable", 1 + 1, "2");
+  assert("a var from the first block is readable in the second", setInFirstBlock, "block-one");
+  assert("the load from the FIRST block still applies in the second block", typeOf(function () { return typeof DataExtension; }), "object");
+  var secondBlockStringify = Stringify({ a: 1 });
+  assert("a Core function is callable in the second block with no load of its own", secondBlockStringify, "{\"a\":1}");
+  Platform.Load("core", "1.1.5");
+  assert("a redundant second Platform.Load is harmless", typeOf(function () { return typeof DataExtension; }), "object");
+  </script>
+
+what-loading-core-enables: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: What Loading Core Enables
+   *
+   * Proves that each of the seven objects the chapter links to really becomes
+   * available, and that the documented entry points are callable:
+   *   1. DataExtension, Subscriber, List, Email, TriggeredSend and HTTP all
+   *      exist after the load.
+   *   2. Script.Util is reachable through its leaf member - Script and
+   *      Script.Util themselves report typeof "undefined" even when loaded.
+   *   3. DataExtension.Init and Subscriber.Init are callable and return
+   *      objects.
+   *   4. HTTP.Get and Script.Util.HttpRequest exist as documented.
+   *   5. The list is not padded: Attribute and Variable also become available
+   *      through the same load even though the chapter does not list them.
+   *
+   * The pre-load proof that NONE of these exists before the load lives in the
+   * Call Order is Critical chapter.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function initType(fn, key) {
+      try { return typeof fn(key); } catch (ex) { return "THREW: " + ex.message; }
+  }
+  /* typeof on a bare name must be evaluated INSIDE a function - at the top
+     level of a script block it aborts the page with HTTP 422. */
+  function typeOf(fn) {
+      try { return fn(); } catch (ex) { return "THREW: " + ex.message; }
+  }
+
+  /* 1. The six bare-name namespace objects. */
+  assert("DataExtension is enabled", typeOf(function () { return typeof DataExtension; }), "object");
+  assert("Subscriber is enabled", typeOf(function () { return typeof Subscriber; }), "object");
+  assert("List is enabled", typeOf(function () { return typeof List; }), "object");
+  assert("Email is enabled", typeOf(function () { return typeof Email; }), "object");
+  assert("TriggeredSend is enabled", typeOf(function () { return typeof TriggeredSend; }), "object");
+  assert("HTTP is enabled", typeOf(function () { return typeof HTTP; }), "object");
+
+  /* 2. Script.Util is reachable only through its leaf member. */
+  assert("quirk: typeof Script is undefined even when loaded", typeOf(function () { return typeof Script; }), "undefined");
+  assert("quirk: typeof Script.Util is undefined even when loaded", typeOf(function () { return typeof Script.Util; }), "undefined");
+
+  /* 3. The documented entry points are callable. */
+  assert("DataExtension.Init is a function", typeOf(function () { return typeof DataExtension.Init; }), "function");
+  assert("DataExtension.Init(key) returns an object", initType(DataExtension.Init, "MyDE"), "object");
+  assert("Subscriber.Init is a function", typeOf(function () { return typeof Subscriber.Init; }), "function");
+  assert("Subscriber.Init(key) returns an object", initType(Subscriber.Init, "subkey"), "object");
+
+  /* 4. The documented HTTP entry points exist. */
+  assert("HTTP.Get exists", typeOf(function () { return typeof HTTP.Get; }), "function");
+  assert("Script.Util.HttpRequest exists", typeOf(function () { return typeof Script.Util.HttpRequest; }), "clr");
+
+  /* 5. The same load also enables members the chapter does not list. */
+  assert("Attribute is enabled by the same load", typeOf(function () { return typeof Attribute; }), "object");
+  assert("Variable is enabled by the same load", typeOf(function () { return typeof Variable; }), "object");
+  assert("the bare-name Platform function aliases are enabled too", typeOf(function () { return typeof Stringify; }), "function");
+  </script>

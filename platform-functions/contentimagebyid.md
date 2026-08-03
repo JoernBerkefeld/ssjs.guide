@@ -14,18 +14,23 @@ return_type: string
 min_args: 1
 max_args: 2
 verification: verified
+test_scripts: complete
 ---
 
 ## Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `id` | number | Yes | Numeric ID of the image in Content Builder |
-| `fallbackId` | number | No | ID of a replacement image when the primary cannot be resolved |
+| `id` | string \| number | Yes | Numeric ID of the image in Content Builder |
+| `fallbackId` | string \| number | No | ID of a replacement image when the primary cannot be resolved |
+
+{% include test-script.html bundle="platform-functions--contentimagebyid" chapter="parameters" %}
 
 ## Return value
 
 A string containing an `img` tag (including typical attributes such as `src`, `alt`, and `title` as provided by the platform).
+
+{% include test-script.html bundle="platform-functions--contentimagebyid" chapter="return-value" %}
 
 ## Examples
 
@@ -38,6 +43,8 @@ Write(banner);
 var icon = Platform.Function.ContentImageByID(555, 999);
 Write(icon);
 ```
+
+{% include test-script.html bundle="platform-functions--contentimagebyid" chapter="examples" %}
 
 ## See Also
 

@@ -14,6 +14,7 @@ return_type: string
 min_args: 1
 max_args: 2
 verification: verified
+test_scripts: complete
 ---
 
 ## Parameters
@@ -23,11 +24,15 @@ verification: verified
 | `string` | string | Yes | String to evaluate |
 | `charset` | string | No | Character set to use when evaluating the string, such as `ASCII` or `UTF-8` |
 
+{% include test-script.html bundle="platform-functions--md5" chapter="parameters" %}
+
 ## Description
 
 Returns an MD5 hash of the given input string. Use the optional `charset` parameter when the input string contains characters outside ASCII range.
 
 {% include callout.html type="warning" content="MD5 is a one-way hash, not encryption. Do not use it to store passwords or protect sensitive data." %}
+
+{% include test-script.html bundle="platform-functions--md5" chapter="description" %}
 
 ## Examples
 
@@ -45,6 +50,8 @@ Write(hashedStr);
 var hashedStr = Platform.Function.MD5("Hello World", "UTF-8");
 Write(hashedStr); // "b10a8db164e0754105b7a99be72e3fe5"
 ```
+
+{% include test-script.html bundle="platform-functions--md5" chapter="examples" %}
 
 ## See Also
 

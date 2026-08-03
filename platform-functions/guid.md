@@ -14,11 +14,14 @@ return_type: string
 min_args: 0
 max_args: 0
 verification: verified
+test_scripts: complete
 ---
 
 ## Description
 
 Generates a new GUID (Globally Unique Identifier) in standard UUID v4 format, e.g. `"550e8400-e29b-41d4-a716-446655440000"`.
+
+{% include test-script.html bundle="platform-functions--guid" chapter="description" %}
 
 ## Examples
 
@@ -38,6 +41,8 @@ Platform.Function.InsertData(
     "Timestamp", Platform.Function.Now()
 );
 ```
+
+{% include test-script.html bundle="platform-functions--guid" chapter="examples" %}
 
 ## See Also
 

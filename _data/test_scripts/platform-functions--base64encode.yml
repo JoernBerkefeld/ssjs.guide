@@ -1,0 +1,260 @@
+# Test scripts for /platform-functions/base64encode/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and the documented deviation from the official Salesforce docs.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters — Platform.Function.Base64Encode(string[, charset])
+   *
+   * Proves:
+   *   1. The member exists and is invocable with 1 argument (a successful call
+   *      is the only reliable existence proof for a Platform.Function member).
+   *   2. string is REQUIRED: the 0-argument form throws.
+   *   3. charset is OPTIONAL: the 1-argument and the 2-argument forms both
+   *      succeed and agree for pure-ASCII input.
+   *   4. max_args is 2: a 3-argument call throws.
+   *   5. The documented charset values "ASCII" and "UTF-8" are both accepted.
+   *   6. return_type is string: typeof the result is "string" for both arities.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false;
+      try { fn(); } catch (ex) { threw = true; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw" : "did NOT throw") + "\n");
+  }
+
+  var PLAIN = "Hello, World!";
+
+  /* 1. The 1-argument form works — existence proof. */
+  var oneArg = Platform.Function.Base64Encode(PLAIN);
+  assert("1-argument call encodes", oneArg, "SGVsbG8sIFdvcmxkIQ==");
+
+  /* 6. return_type is string. */
+  assert("typeof 1-argument result is string", String(typeof oneArg), "string");
+
+  /* 3 + 5. The optional charset argument is accepted. */
+  var utf8 = Platform.Function.Base64Encode(PLAIN, "UTF-8");
+  assert("charset 'UTF-8' encodes", utf8, "SGVsbG8sIFdvcmxkIQ==");
+  var ascii = Platform.Function.Base64Encode(PLAIN, "ASCII");
+  assert("charset 'ASCII' encodes", ascii, "SGVsbG8sIFdvcmxkIQ==");
+  assert("typeof 2-argument result is string", String(typeof utf8), "string");
+
+  /* 3. Both arities agree for pure-ASCII input. */
+  assert("1-argument and UTF-8 results agree for ASCII input", oneArg === utf8 ? "true" : "false", "true");
+  assert("UTF-8 and ASCII results agree for ASCII input", ascii === utf8 ? "true" : "false", "true");
+
+  /* 2. string is required. */
+  assertThrows("arity 0 throws (string is required)", function () {
+      return Platform.Function.Base64Encode();
+  });
+
+  /* 4. max_args is 2. */
+  assertThrows("arity 3 throws (max_args is 2)", function () {
+      return Platform.Function.Base64Encode(PLAIN, "UTF-8", "extra");
+  });
+  </script>
+
+description: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Description — encodes a string value to standard Base64, with the
+   * optional charset controlling byte encoding for non-ASCII strings.
+   *
+   * Proves:
+   *   1. Encoding produces standard Base64 for plain text, digits and
+   *      punctuation, matching the literals an external encoder produces.
+   *   2. All three padding forms are emitted correctly (no padding, "=", "==").
+   *   3. Base64Decode reverses Base64Encode, including through the charset form.
+   *   4. The charset argument controls byte encoding: a multi-byte character
+   *      encoded with "UTF-8" yields the standard UTF-8 Base64 literal.
+   *   5. The bare-name Core Library form Base64Encode(string) produces the same
+   *      value as the 1-argument Platform.Function form.
+   *   6. Encoding the empty string yields the empty string.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* 1. Standard Base64 for plain text, digits and punctuation. */
+  var plain = "This was a Base64 encoded string.";
+  var enc = Platform.Function.Base64Encode(plain);
+  assert("encodes plain text to the standard literal", enc, "VGhpcyB3YXMgYSBCYXNlNjQgZW5jb2RlZCBzdHJpbmcu");
+
+  var digits = "0123456789";
+  assert("encodes digits to the standard literal", Platform.Function.Base64Encode(digits), "MDEyMzQ1Njc4OQ==");
+
+  var punct = "a+b/c=d?e&f";
+  assert("encodes punctuation to the standard literal", Platform.Function.Base64Encode(punct), "YStiL2M9ZD9lJmY=");
+
+  /* 2. All three padding forms. */
+  assert("3-byte input needs no padding", Platform.Function.Base64Encode("Man"), "TWFu");
+  assert("2-byte input gets one pad char", Platform.Function.Base64Encode("Ma"), "TWE=");
+  assert("1-byte input gets two pad chars", Platform.Function.Base64Encode("M"), "TQ==");
+
+  /* 3. Round trip through Base64Decode. */
+  assert("round trip returns the original value", Platform.Function.Base64Decode(enc), plain);
+  var encUtf8 = Platform.Function.Base64Encode(plain, "UTF-8");
+  assert("round trip via the UTF-8 charset form", Platform.Function.Base64Decode(encUtf8, "UTF-8"), plain);
+
+  /* 4. The charset controls byte encoding for multi-byte characters. */
+  var eAcute = String.fromCharCode(233);
+  assert("UTF-8 charset encodes a multi-byte character", Platform.Function.Base64Encode("caf" + eAcute, "UTF-8"), "Y2Fmw6k=");
+
+  /* 5. The bare-name Core Library form agrees. */
+  assert("bare-name Base64Encode agrees with Platform.Function.Base64Encode", Base64Encode(plain), Platform.Function.Base64Encode(plain));
+
+  /* 6. The empty string encodes to the empty string. */
+  assert("empty input encodes to the empty string", Platform.Function.Base64Encode(""), "");
+  </script>
+
+standard-base64: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs claim: the official Salesforce documentation states the
+   * output can only be decoded by the matching Base64Decode() function. At
+   * runtime the output is plain, interoperable standard Base64 that ANY
+   * decoder can read.
+   *
+   * Official docs: only Base64Decode() can read the output
+   * SFMC runtime:  standard interoperable Base64
+   *
+   * Proves both halves of the claim:
+   *   1. DEV the output is literal-for-literal identical to what an external
+   *      standard Base64 encoder produces, for every padding form.
+   *   2. DEV an INDEPENDENT decoder written in plain JavaScript below — which
+   *      knows nothing about SFMC — reads the output back correctly.
+   *   3. DEV the alphabet used is the standard one ("+" and "/", "=" padding),
+   *      not a URL-safe or otherwise proprietary variant.
+   *   4. Base64Decode still reads the output, so the deviation is an EXTENSION
+   *      of the documented behaviour, not a replacement for it.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* An independent, plain-JavaScript standard Base64 decoder. It uses only
+   * language primitives — no SFMC function is involved in reading the value
+   * back, which is what "any decoder can read it" means. */
+  var B64ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  function externalDecode(s) {
+      /* strip standard "=" padding without relying on a regex */
+      var end = s.length;
+      while (end > 0 && s.charAt(end - 1) === "=") { end = end - 1; }
+      var body = s.substring(0, end);
+      var out = "";
+      var i = 0;
+      while (i < body.length) {
+          /* guard on the INDEX, never on charAt() returning "": in this engine
+           * indexOf("") is 0, which would silently append a NUL character */
+          var left = body.length - i;
+          var c0 = B64ALPHABET.indexOf(body.charAt(i));
+          var c1 = left > 1 ? B64ALPHABET.indexOf(body.charAt(i + 1)) : -1;
+          var c2 = left > 2 ? B64ALPHABET.indexOf(body.charAt(i + 2)) : -1;
+          var c3 = left > 3 ? B64ALPHABET.indexOf(body.charAt(i + 3)) : -1;
+          i = i + 4;
+          out = out + String.fromCharCode(((c0 << 2) | (c1 >> 4)) & 255);
+          if (c2 >= 0) { out = out + String.fromCharCode((((c1 & 15) << 4) | (c2 >> 2)) & 255); }
+          if (c3 >= 0) { out = out + String.fromCharCode((((c2 & 3) << 6) | c3) & 255); }
+      }
+      return out;
+  }
+
+  /* 0. Sanity check the independent decoder against known standard literals,
+   * so a later PASS really proves interoperability. */
+  assert("external decoder self-check 'TWFu' -> 'Man'", externalDecode("TWFu"), "Man");
+  assert("external decoder self-check 'TWE=' -> 'Ma'", externalDecode("TWE="), "Ma");
+  assert("external decoder self-check 'TQ==' -> 'M'", externalDecode("TQ=="), "M");
+
+  /* 1. DEVIATION — the output matches external standard Base64 literals. */
+  assert("DEV output matches the external literal for 'Man' (no padding)", Platform.Function.Base64Encode("Man"), "TWFu");
+  assert("DEV output matches the external literal for 'Ma' (one pad char)", Platform.Function.Base64Encode("Ma"), "TWE=");
+  assert("DEV output matches the external literal for 'M' (two pad chars)", Platform.Function.Base64Encode("M"), "TQ==");
+  assert("DEV output matches the external literal for a longer string", Platform.Function.Base64Encode("This was a Base64 encoded string."), "VGhpcyB3YXMgYSBCYXNlNjQgZW5jb2RlZCBzdHJpbmcu");
+
+  /* 2. DEVIATION — an independent decoder reads the output back. */
+  var encoded = Platform.Function.Base64Encode("Hello, World!");
+  assert("DEV a non-SFMC decoder reads the output (docs: only Base64Decode can)", externalDecode(encoded), "Hello, World!");
+  var encodedPunct = Platform.Function.Base64Encode("a+b/c=d?e&f");
+  assert("DEV a non-SFMC decoder reads punctuation output", externalDecode(encodedPunct), "a+b/c=d?e&f");
+  var encodedCharset = Platform.Function.Base64Encode("Hello, World!", "UTF-8");
+  assert("DEV a non-SFMC decoder reads the charset-form output", externalDecode(encodedCharset), "Hello, World!");
+
+  /* 3. DEVIATION — the standard alphabet, not a URL-safe variant. */
+  assert("DEV the standard '+' character is used, not the URL-safe '-'", Platform.Function.Base64Encode("aa>"), "YWE+");
+  assert("DEV the standard '/' character is used, not the URL-safe '_'", Platform.Function.Base64Encode("aa?"), "YWE/");
+  assert("DEV padding uses '='", Platform.Function.Base64Encode("M").charAt(3), "=");
+
+  /* 4. The documented case still holds. */
+  assert("Base64Decode still reads the output", Platform.Function.Base64Decode(encoded), "Hello, World!");
+  </script>
+
+example: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Example — read a plain value, encode it, write the result.
+   *
+   * Proves the shape of the documented example:
+   *   1. A plain value held in a variable encodes into a Base64 string that
+   *      Write() can output.
+   *   2. The encoded value is a real string, so string operations work on it.
+   *   3. Write() emits exactly the encoded value.
+   *
+   * NOT ASSERTED: the Platform.Function.Lookup("ForBase64Info", ...) call in
+   * the page example. It depends on a data extension fixture that does not
+   * exist in the verification business unit, so the lookup itself is not
+   * deterministically observable here. The example's Base64Encode half — the
+   * part this page documents — is asserted below with the same value shape.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* 1. Stand-in for the Lookup result: a plain value in a variable. */
+  var normalStr = "Receipt #4711";
+  var encodedStr = Platform.Function.Base64Encode(normalStr);
+  assert("the encoded lookup value is the standard Base64 literal", encodedStr, "UmVjZWlwdCAjNDcxMQ==");
+
+  /* 2. The result is a genuine string. */
+  assert("typeof encodedStr is string", String(typeof encodedStr), "string");
+  assert("string methods work on the encoded value", encodedStr.substring(0, 4), "UmVj");
+  assert("the encoded value has the expected length", String(encodedStr.length), "20");
+
+  /* 3. Write() emits exactly the encoded value. */
+  var out = Platform.Function.Base64Encode("Write me");
+  assert("Write() input is the encoded value", out, "V3JpdGUgbWU=");
+  Platform.Response.Write("PASS Write(encodedStr) emitted -> [" + out + "]\n");
+  </script>

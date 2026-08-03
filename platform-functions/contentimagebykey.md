@@ -14,6 +14,7 @@ return_type: string
 min_args: 1
 max_args: 2
 verification: verified
+test_scripts: complete
 ---
 
 ## Parameters
@@ -23,9 +24,13 @@ verification: verified
 | `key` | string | Yes | External key of the image in Content Builder |
 | `fallbackKey` | string | No | External key of a replacement image when the primary cannot be resolved |
 
+{% include test-script.html bundle="platform-functions--contentimagebykey" chapter="parameters" %}
+
 ## Return value
 
 A string containing an `img` tag (including typical attributes such as `src`, `alt`, and `title` as provided by the platform).
+
+{% include test-script.html bundle="platform-functions--contentimagebykey" chapter="return-value" %}
 
 ## Examples
 
@@ -38,6 +43,8 @@ Write(hero);
 var thumb = Platform.Function.ContentImageByKey("product-thumb", "product-thumb-default");
 Write(thumb);
 ```
+
+{% include test-script.html bundle="platform-functions--contentimagebykey" chapter="examples" %}
 
 ## See Also
 

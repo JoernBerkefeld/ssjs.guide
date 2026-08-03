@@ -1,0 +1,372 @@
+# Test scripts for /platform-functions/contentarea/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and the documented deviation from the official Salesforce docs.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# ENGINE NOTE: engine-returned values and caught .message values are .NET/CLR
+# strings. They are normalized with `"" + value` — never with String(value),
+# which yields a CLR string whose === against a JS literal is false and whose
+# .indexOf() aborts the whole page with HTTP 422.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters —
+   *   Platform.Function.ContentArea(id[, regionName, stopOnError, fallbackContent])
+   *
+   * Proves:
+   *   1. The member resolves on Platform.Function (typeof "clrmethodinfo",
+   *      the engine's uniform marker for a host CLR method — it proves
+   *      nothing about existence, only invocation does).
+   *   2. DEV the required `id` parameter alone — the minimal documented call —
+   *      does NOT return content: it throws. The official docs describe a
+   *      1-argument call as valid and returning the content-area markup.
+   *   3. Number↔string type-acceptance for `id`: the documented number form
+   *      and a numeric-string counterpart ("123456") both throw the same
+   *      evaluate-function-call error. Because no successful return exists
+   *      for either side, the counterpart is NOT proven accepted — the
+   *      Parameters table keeps `number` (no widen to string | number).
+   *   4. DEV the documented optional `regionName` (parameter 2) does not work
+   *      either, and fails DIFFERENTLY: it is rejected as a resolved-value
+   *      parameter. A string literal, the empty string and null all throw.
+   *   5. Because parameter 2 is rejected, the documented `stopOnError`
+   *      (parameter 3) and `fallbackContent` (parameter 4) are UNREACHABLE:
+   *      arity 3 and arity 4 throw the same ImpressionRegionName error, so
+   *      neither stopOnError:false nor the fallback string ever takes effect.
+   *   6. Arities outside the documented 1..4 range (0 and 5) throw the
+   *      overloaded "security descriptor" error.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. The member resolves as a host CLR method. */
+  assert("typeof Platform.Function.ContentArea is clrmethodinfo", "" + (typeof Platform.Function.ContentArea), "clrmethodinfo");
+
+  /* 2. DEV the minimal documented call (id only) throws. */
+  assertThrows("DEV arity 1 with a numeric id throws (docs: returns the content)", function () {
+      return Platform.Function.ContentArea(123456);
+  });
+
+  /* 3. Number↔string type-acceptance for id — both throw; no successful return → keep number. */
+  assertThrows("type-accept: numeric-string id also throws (no successful return -> keep number)", function () {
+      return Platform.Function.ContentArea("123456");
+  });
+  var msgNum = "";
+  try { Platform.Function.ContentArea(123456); } catch (eN) { msgNum = "" + eN.message; }
+  var msgStr = "";
+  try { Platform.Function.ContentArea("123456"); } catch (eS) { msgStr = "" + eS.message; }
+  assert("type-accept: number and numeric-string id share the evaluate-function-call error", (msgNum.indexOf("evaluate an ContentArea function call") >= 0 && msgStr.indexOf("evaluate an ContentArea function call") >= 0) ? "true" : "false", "true");
+
+  /* 4. DEV the documented optional regionName is rejected as a resolved value. */
+  assertThrows("DEV arity 2 regionName string literal throws (docs: optional impression region)", function () {
+      return Platform.Function.ContentArea(123456, "impressionRegion");
+  });
+  assertThrows("DEV arity 2 empty-string regionName throws as well", function () {
+      return Platform.Function.ContentArea(123456, "");
+  });
+  assertThrows("DEV arity 2 null regionName throws as well", function () {
+      return Platform.Function.ContentArea(123456, null);
+  });
+
+  /* 5. stopOnError and fallbackContent are unreachable behind that rejection. */
+  assertThrows("DEV arity 3 stopOnError=false still throws (docs: false lets the call proceed)", function () {
+      return Platform.Function.ContentArea(123456, "impressionRegion", false);
+  });
+  assertThrows("DEV arity 3 stopOnError=true throws", function () {
+      return Platform.Function.ContentArea(123456, "impressionRegion", true);
+  });
+  assertThrows("DEV arity 4 fallbackContent never emitted, call throws (docs: fallback is displayed)", function () {
+      return Platform.Function.ContentArea(123456, "impressionRegion", false, "Fallback text here");
+  });
+
+  /* 6. Off-signature arities throw the overloaded security-descriptor error. */
+  assertThrows("arity 0 throws", function () {
+      return Platform.Function.ContentArea();
+  });
+  assertThrows("arity 5 throws", function () {
+      return Platform.Function.ContentArea(123456, "reg", false, "fb", "extra");
+  });
+  </script>
+
+description: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Description — deprecated, unusable from SSJS, and how the
+   * bare-name Core form compares.
+   *
+   * Proves:
+   *   1. DEV the failure is NOT "the content area does not exist". A WSProxy
+   *      retrieve of the ContentArea SOAP object returns Status OK with at
+   *      least one real area in this business unit, and calling
+   *      Platform.Function.ContentArea() with THAT real numeric id still
+   *      throws — so the deprecation, not a missing area, is what fails.
+   *   2. Every id shape fails the same way: a real id, a bogus id, 0, and a
+   *      negative id all throw.
+   *   3. The bare-name Core form IS defined as a real function after
+   *      Platform.Load("core", "1.1.5") — typeof is "function", not the
+   *      phantom "clrmethodinfo" the Platform.Function form reports — so the
+   *      global is genuinely present and is not an escape hatch: it throws
+   *      for arity 1 and arity 2 exactly like the qualified form.
+   *   4. The recommended replacement path is real: Platform.Function
+   *      resolves ContentBlockByID as a host method (the documented modern
+   *      substitute for classic Content Areas).
+   *
+   * NOT ASSERTED: that a Content Area ever renders. No arity of either form
+   * returns a value, so there is no positive result to assert.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. A real Content Area exists in this business unit. */
+  var realId = 0;
+  var proxyStatus = "";
+  try {
+      var prox = new Script.Util.WSProxy();
+      var res = prox.retrieve("ContentArea", ["ID", "Name"], null);
+      proxyStatus = res.Status;
+      if (res.Results && res.Results.length > 0) { realId = res.Results[0].ID; }
+  } catch (ex) {
+      proxyStatus = "threw: " + ex.message;
+  }
+  assert("WSProxy retrieve of the ContentArea object succeeds", String(proxyStatus), "OK");
+  assert("at least one real Content Area exists in this BU", realId > 0 ? "true" : "false", "true");
+
+  assertThrows("DEV calling with that REAL id still throws (not a missing-area problem)", function () {
+      return Platform.Function.ContentArea(realId);
+  });
+
+  /* 2. Every id shape fails identically. */
+  assertThrows("a bogus id throws", function () {
+      return Platform.Function.ContentArea(123456);
+  });
+  assertThrows("id 0 throws", function () {
+      return Platform.Function.ContentArea(0);
+  });
+  assertThrows("a negative id throws", function () {
+      return Platform.Function.ContentArea(-1);
+  });
+
+  /* 3. The bare-name Core form is a real function but is no escape hatch. */
+  assert("typeof the bare-name ContentArea is function after Platform.Load", String(typeof ContentArea), "function");
+  assertThrows("bare-name arity 1 throws too", function () {
+      return ContentArea(realId);
+  });
+  assertThrows("bare-name arity 2 with a regionName throws too", function () {
+      return ContentArea(123456, "impressionRegion");
+  });
+  assertThrows("bare-name arity 3 with the string errorMsg throws too", function () {
+      return ContentArea(123456, "impressionRegion", "Could not load content area");
+  });
+
+  /* 4. The documented modern replacement resolves as a host method. */
+  assert("typeof Platform.Function.ContentBlockByID is clrmethodinfo", String(typeof Platform.Function.ContentBlockByID), "clrmethodinfo");
+  </script>
+
+no-working-call-shape: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs claim: the official Salesforce documentation presents
+   * Platform.Function.ContentArea(id, regionName, stopOnError, fallbackContent)
+   * as an ordinary callable returning the content area's rendered markup, with
+   * stopOnError:false letting a failed call proceed and fallbackContent shown
+   * when nothing is returned. At runtime NO arity returns a value.
+   *
+   * Official docs: ContentArea(123456,"impressionRegion",false,"defaultContentHere")
+   *                returns the content the area produced.
+   * SFMC runtime:  arity 1     -> "An error occurred when attempting to
+   *                                evaluate an ContentArea function call."
+   *                arity 2/3/4 -> "A ContentArea function call includes an
+   *                                invalid parameter value. … must be a
+   *                                literal (constant) values."
+   *                                Parameter Name: ImpressionRegionName
+   *                                Parameter Ordinal: 2
+   *                                Parameter Type: ResolvedValueParameter
+   *                arity 0/5+  -> "Unable to retrieve security descriptor for
+   *                                this frame."
+   *                (each message is printed verbatim by its assertion below)
+   *
+   * Proves every part of the claim:
+   *   1. DEV arity 1 throws — with a bogus id AND with a real id proven to
+   *      exist in this business unit.
+   *   2. DEV arity 2 throws a DIFFERENT, resolved-value error for every
+   *      regionName shape: string literal, concatenation, variable, empty
+   *      string and null. So the failure is not "literal vs variable" — the
+   *      parameter cannot be supplied at all.
+   *   3. DEV arity 3 and arity 4 throw the same parameter-2 error, which is
+   *      what makes stopOnError and fallbackContent unreachable: the fallback
+   *      string is never emitted.
+   *   4. Arity 0 and arity 5 throw the overloaded security-descriptor error.
+   *   5. DEV the bare-name Core alias throws too, so the deviation is not
+   *      specific to the Platform.Function namespace.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEV arity 1 throws for a bogus id and for a genuinely existing one. */
+  var realId = 0;
+  try {
+      var prox = new Script.Util.WSProxy();
+      var res = prox.retrieve("ContentArea", ["ID", "Name"], null);
+      if (res.Results && res.Results.length > 0) { realId = res.Results[0].ID; }
+  } catch (ex) { realId = 0; }
+  assert("a real Content Area id was resolved for this run", realId > 0 ? "true" : "false", "true");
+
+  assertThrows("DEV arity 1 bogus id throws (docs: returns content)", function () {
+      return Platform.Function.ContentArea(123456);
+  });
+  assertThrows("DEV arity 1 REAL existing id throws (docs: returns content)", function () {
+      return Platform.Function.ContentArea(realId);
+  });
+
+  /* 2. DEV every regionName shape is rejected as a resolved value. */
+  assertThrows("DEV arity 2 string literal regionName throws", function () {
+      return Platform.Function.ContentArea(123456, "impressionRegion");
+  });
+  assertThrows("DEV arity 2 concatenated regionName throws", function () {
+      return Platform.Function.ContentArea(123456, "impression" + "Region");
+  });
+  var dynRegion = "impressionRegion";
+  assertThrows("DEV arity 2 variable regionName throws", function () {
+      return Platform.Function.ContentArea(123456, dynRegion);
+  });
+  assertThrows("DEV arity 2 empty-string regionName throws", function () {
+      return Platform.Function.ContentArea(123456, "");
+  });
+  assertThrows("DEV arity 2 null regionName throws", function () {
+      return Platform.Function.ContentArea(123456, null);
+  });
+
+  /* 3. DEV stopOnError and fallbackContent never take effect. */
+  assertThrows("DEV arity 3 stopOnError=false throws (docs: the call proceeds)", function () {
+      return Platform.Function.ContentArea(123456, "impressionRegion", false);
+  });
+  assertThrows("DEV arity 3 stopOnError=true throws", function () {
+      return Platform.Function.ContentArea(123456, "impressionRegion", true);
+  });
+  assertThrows("DEV arity 4 throws so fallbackContent is never emitted (docs: fallback shown)", function () {
+      return Platform.Function.ContentArea(123456, "impressionRegion", false, "FALLBACK");
+  });
+  assertThrows("DEV arity 4 with a null regionName throws as well", function () {
+      return Platform.Function.ContentArea(123456, null, false, "FALLBACK");
+  });
+
+  /* 4. Off-signature arities throw the overloaded security-descriptor error. */
+  assertThrows("arity 0 throws", function () {
+      return Platform.Function.ContentArea();
+  });
+  assertThrows("arity 5 throws", function () {
+      return Platform.Function.ContentArea(123456, "reg", false, "fb", "extra");
+  });
+
+  /* 5. DEV the bare-name Core alias throws too. */
+  assertThrows("DEV bare-name arity 1 throws as well", function () {
+      return ContentArea(123456);
+  });
+  assertThrows("DEV bare-name arity 2 throws as well", function () {
+      return ContentArea(123456, "impressionRegion");
+  });
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples — both documented examples, and the replacement.
+   *
+   * Proves:
+   *   1. DEV example 1, the plain 1-argument call
+   *      Platform.Function.ContentArea(123456), throws instead of returning
+   *      the content area's markup as the docs show.
+   *   2. DEV example 2, the full 4-argument call
+   *      Platform.Function.ContentArea(123456, "impressionRegion", false,
+   *      "Fallback text here"), throws too — the documented fallbackContent
+   *      is never written to the response.
+   *   3. Because the call throws, Platform.Response.Write() never receives a
+   *      value: the variable both examples assign to stays undefined.
+   *   4. The page's recommended replacement,
+   *      Platform.Function.ContentBlockByID, resolves as a host CLR method.
+   *
+   * NOT ASSERTED: the rendered output of a working Content Area, and whether
+   * an impression is recorded for the region. No call shape succeeds, and
+   * impression counts only surface in Marketing Cloud tracking reports after
+   * a send is processed, which is not observable from within this request.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEV example 1 — the plain 1-argument call. */
+  assertThrows("DEV example 1: ContentArea(123456) throws (docs: returns the content)", function () {
+      return Platform.Function.ContentArea(123456);
+  });
+
+  /* 3. The assigned variable therefore never receives a value. */
+  var content1;
+  try { content1 = Platform.Function.ContentArea(123456); } catch (ex1) { /* documented throw */ }
+  assert("example 1: the assigned variable stays undefined", String(typeof content1), "undefined");
+
+  /* 2. DEV example 2 — the full 4-argument call with a fallback. */
+  assertThrows("DEV example 2: the 4-argument call throws (docs: shows the fallback)", function () {
+      return Platform.Function.ContentArea(123456, "impressionRegion", false, "Fallback text here");
+  });
+
+  var content2;
+  try { content2 = Platform.Function.ContentArea(123456, "impressionRegion", false, "Fallback text here"); } catch (ex2) { /* documented throw */ }
+  assert("example 2: the fallback is never assigned", String(typeof content2), "undefined");
+  assert("example 2: the fallback string is NOT the result", content2 === "Fallback text here" ? "true" : "false", "false");
+
+  /* 4. The recommended replacement resolves as a host method. */
+  assert("typeof Platform.Function.ContentBlockByID is clrmethodinfo", String(typeof Platform.Function.ContentBlockByID), "clrmethodinfo");
+  </script>

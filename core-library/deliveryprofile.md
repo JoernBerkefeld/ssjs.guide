@@ -5,6 +5,7 @@ parent: Core Library
 parent_url: /core-library/
 description: Core library DeliveryProfile — create, update, and remove delivery profiles (no Retrieve in this namespace).
 verification: verified
+test_scripts: complete
 requires_core_load: true
 differs_from_docs: true
 type_mapping:
@@ -56,6 +57,8 @@ Platform.Load("core", "1");
 var myProfile = DeliveryProfile.Init("myDeliveryProfile");
 ```
 
+{% include test-script.html bundle="core-library--deliveryprofile" chapter="init" %}
+
 ---
 
 ### DeliveryProfile.Add {#add}
@@ -80,6 +83,8 @@ DeliveryProfile.Add(properties)
 
 {% include differs-from-docs.html note="Runtime-verified on a CloudPage: `Add()` returns a CLR object (`ExactTarget.Integration.WSDL.DeliveryProfile`), not the string `\"OK\"`. Reading a property off it throws *\"Use of Common Language Runtime (CLR) is not allowed\"*. Treat any non-throwing return as success." %}
 
+{% include test-script.html bundle="core-library--deliveryprofile" chapter="add" label="Show test script — Add returns an unreadable CLR object, not \"OK\"" %}
+
 #### Examples
 
 ```javascript
@@ -92,6 +97,8 @@ var newDP = {
 };
 var result = DeliveryProfile.Add(newDP);
 ```
+
+{% include test-script.html bundle="core-library--deliveryprofile" chapter="add" %}
 
 ---
 
@@ -123,6 +130,8 @@ var myProfile = DeliveryProfile.Init("myDeliveryProfile");
 var status = myProfile.Update({ Name: "SSJS Updated Delivery Profile" });
 ```
 
+{% include test-script.html bundle="core-library--deliveryprofile" chapter="instance-update" %}
+
 ---
 
 ### &lt;DeliveryProfileInstance&gt;.Remove {#instance-remove}
@@ -146,6 +155,8 @@ Platform.Load("core", "1.1.5");
 var myProfile = DeliveryProfile.Init("myDeliveryProfile");
 var status = myProfile.Remove();
 ```
+
+{% include test-script.html bundle="core-library--deliveryprofile" chapter="instance-remove" %}
 
 ## See also
 

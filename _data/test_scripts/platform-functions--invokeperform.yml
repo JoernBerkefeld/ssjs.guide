@@ -1,0 +1,441 @@
+# Test scripts for /platform-functions/invokeperform/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the official Salesforce docs.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage on the MCDEV_Training_QA business unit.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# SOAP OBJECT UNDER TEST: a QueryDefinition, addressed by its ObjectID. That
+# is the one shape found to make InvokePerform succeed from a CloudPage — the
+# call answers "OK" and the API reports "QueryDefinition perform called
+# successfully". Every script builds its own throwaway target Data Extension
+# and QueryDefinition through WSProxy and deletes both again, so the business
+# unit is left clean. NOTE that Perform is NOT accepted on every SOAP type:
+# a TriggeredSendDefinition is rejected outright with "Cannot perform Perform
+# on objects of type TriggeredSendDefinition" and error code 5.
+
+differs-from-docs: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Callout: differs-from-docs — the return type, the three status slots and
+   * the optional fourth argument.
+   *
+   * Proves:
+   *   1. DEVIATION — the call returns the OverallStatus MESSAGE as a STRING
+   *      ("OK" on success, "Error" on failure). The official docs type the
+   *      return value as an object; typeof is "string" here.
+   *   2. status[0] receives the status MESSAGE (a string), NOT the "OK"
+   *      value — the value that equals "OK" is the RETURN value. Guarding on
+   *      status[0] !== "OK" would therefore fire on a successful call.
+   *   3. status[1] receives a NUMERIC error code (0 on success). This is the
+   *      InvokeCreate / InvokeDelete slot shape, NOT the InvokeExecute one,
+   *      where status[1] holds a RequestID GUID string. Never carry a status
+   *      slot type across verbs.
+   *   4. status[2] receives the serialized perform-response object as a
+   *      string.
+   *   5. DEVIATION — the options argument is OPTIONAL: the 3-argument call
+   *      returns exactly the same result as the 4-argument one. The official
+   *      docs mark options as required.
+   *   6. ARITY — 3 and 4 arguments are the only valid arities. 0, 1, 2 and 5
+   *      all throw.
+   *   7. PAIRED CONTROL on the status out parameter — two otherwise IDENTICAL
+   *      calls differing only in the initial size of the status array. A
+   *      PRE-SIZED [0, 0, 0] IS populated in all three slots; an EMPTY []
+   *      is never grown and stays at length 0. The engine writes only into
+   *      slots the array ALREADY has. This is the InvokeExecute behaviour
+   *      (/platform-functions/invokeexecute/) and NOT the InvokeExtract one
+   *      (/platform-functions/invokeextract/), where even a pre-sized array
+   *      stays untouched because the call throws first.
+   *   8. A 2-slot array receives only the first two values; status[2] stays
+   *      undefined — so the documented [0, 0, 0] shape is what makes the
+   *      perform response readable.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit). The page also
+   * lists automation availability; the automation context was not exercised.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var prox = new Script.Util.WSProxy();
+  /* A run-unique suffix — a deleted QueryDefinition lingers in the SOAP index
+     for a while, so a fixed CustomerKey would resolve to a stale, inactive
+     definition on a re-run. */
+  var runId = String(Platform.Function.Now().getTime());
+  var deKey = "ssjsg_pf_diff_de_" + runId;
+  var qdKey = "ssjsg_pf_diff_qd_" + runId;
+
+  /* Setup — a throwaway target DE and QueryDefinition, created via WSProxy. */
+  var deRes = prox.createItem("DataExtension", {
+      CustomerKey: deKey, Name: deKey,
+      Fields: [{ Name: "SubscriberKey", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true }]
+  });
+  assert("setup: the throwaway target Data Extension is created", String(deRes.Status), "OK");
+  var qdRes = prox.createItem("QueryDefinition", {
+      CustomerKey: qdKey, Name: qdKey,
+      QueryText: "SELECT SubscriberKey FROM _Subscribers",
+      TargetType: "DE",
+      DataExtensionTarget: { CustomerKey: deKey, Name: deKey },
+      TargetUpdateType: "Overwrite"
+  });
+  assert("setup: the throwaway QueryDefinition is created", String(qdRes.Status), "OK");
+  var lookup = prox.retrieve("QueryDefinition", ["ObjectID"], { Property: "CustomerKey", SimpleOperator: "equals", Value: qdKey });
+  var oid = lookup.Results[0].ObjectID;
+  assert("setup: the QueryDefinition resolves to an ObjectID GUID of canonical length", String(oid).length, 36);
+
+  /* An apiObject addressed by ObjectID — the shape Perform accepts. */
+  function qd() {
+      var o = Platform.Function.CreateObject("QueryDefinition");
+      Platform.Function.SetObjectProperty(o, "ObjectID", oid);
+      return o;
+  }
+
+  /* 1 + 2 + 3 + 4 + 7. The documented 4-argument call, PRE-SIZED [0, 0, 0]. */
+  var sized = [0, 0, 0];
+  var result = Platform.Function.InvokePerform(qd(), "start", sized, null);
+  assert("DEV typeof InvokePerform(...) is string - the OverallStatus message (docs: an object)", String(typeof result), "string");
+  assert("DEV the return value is the OverallStatus message 'OK' on success (docs: a response object)", String(result), "OK");
+  assert("a PRE-SIZED status array keeps its length", sized.length, 3);
+  assert("status[0] receives the status MESSAGE, not the 'OK' value", String(sized[0]), "QueryDefinition perform called successfully");
+  assert("status[0] is a string", String(typeof sized[0]), "string");
+  assert("guarding on status[0] !== 'OK' would WRONGLY fire on this SUCCESSFUL call - the return value is what equals 'OK'", sized[0] !== "OK" ? "true" : "false", "true");
+  assert("status[1] receives a NUMERIC error code, 0 on success (InvokeExecute puts a RequestID GUID string here)", String(typeof sized[1]), "number");
+  assert("status[1] is 0 on the success path", sized[1], 0);
+  assert("status[2] receives the serialized perform-response object as a string", String(typeof sized[2]), "string");
+  assert("the serialized perform response carries the API's own StatusCode", String(sized[2]).indexOf("\"StatusCode\":\"OK\"") >= 0 ? "true" : "false", "true");
+
+  /* 5. The options argument is OPTIONAL — the 3-argument call behaves identically. */
+  var three = [0, 0, 0];
+  var result3 = Platform.Function.InvokePerform(qd(), "start", three);
+  assert("DEV the 3-argument call (options omitted) works - options is OPTIONAL (docs: required)", String(result3), "OK");
+  assert("DEV the 3-argument call fills status[0] identically", String(three[0]), "QueryDefinition perform called successfully");
+  assert("DEV the 3-argument call fills status[1] identically", three[1], 0);
+
+  /* 6. Arity outside 3..4 throws. */
+  assertThrows("arity 0 throws (the valid arities are 3 and 4)", function () {
+      return Platform.Function.InvokePerform();
+  });
+  assertThrows("arity 1 throws (the valid arities are 3 and 4)", function () {
+      return Platform.Function.InvokePerform(qd());
+  });
+  assertThrows("arity 2 throws (the valid arities are 3 and 4)", function () {
+      return Platform.Function.InvokePerform(qd(), "start");
+  });
+  assertThrows("arity 5 throws (the valid arities are 3 and 4)", function () {
+      var s5 = [0, 0, 0];
+      return Platform.Function.InvokePerform(qd(), "start", s5, null, null);
+  });
+
+  /* 7. CONTROL — the SAME call with an EMPTY status array. */
+  var empty = [];
+  var resultE = Platform.Function.InvokePerform(qd(), "start", empty, null);
+  assert("control: the identical call still returns 'OK'", String(resultE), "OK");
+  assert("control: an EMPTY status array is never grown - it stays at length 0", empty.length, 0);
+  assert("control: status[0] of an empty array is undefined", empty[0] === undefined ? "true" : "false", "true");
+  assert("control: status[1] of an empty array is undefined", empty[1] === undefined ? "true" : "false", "true");
+
+  /* 8. A 2-slot array gets only two of the three values. */
+  var two = [0, 0];
+  var result2 = Platform.Function.InvokePerform(qd(), "start", two, null);
+  assert("a 2-slot status array still returns 'OK'", String(result2), "OK");
+  assert("a 2-slot status array keeps its length", two.length, 2);
+  assert("a 2-slot status array still receives the status message", String(two[0]), "QueryDefinition perform called successfully");
+  assert("a 2-slot status array still receives the numeric error code", two[1], 0);
+  assert("status[2] stays undefined - the documented [0, 0, 0] shape is what exposes the perform response", two[2] === undefined ? "true" : "false", "true");
+
+  /* Cleanup — the business unit is left clean. A QueryDefinition is deleted
+     by ObjectID; a CustomerKey-only delete answers InvalidRequest. */
+  var delQd = prox.deleteItem("QueryDefinition", { ObjectID: oid });
+  assert("cleanup: the throwaway QueryDefinition is deleted again", String(delQd.Status), "OK");
+  var delDe = prox.deleteItem("DataExtension", { CustomerKey: deKey });
+  assert("cleanup: the throwaway target Data Extension is deleted again", String(delDe.Status), "OK");
+  </script>
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters — Platform.Function.InvokePerform(apiObject, method, status[, options])
+   *
+   * Proves, one parameter at a time:
+   *   1. apiObject is a SOAP object built with CreateObject and configured
+   *      with SetObjectProperty. Such an object is a .NET CLR host object
+   *      (typeof "clr") and SetObjectProperty returns a genuine null.
+   *   2. A plain JavaScript object or a string as apiObject throws — the
+   *      parameter is not structurally typed, it must be an
+   *      ExactTarget.Integration.WSDL type.
+   *   3. A null apiObject is the one non-object that does NOT throw: no SOAP
+   *      call is made, the return value is a genuine null (not undefined, not
+   *      a status string) and the status array is left untouched. This
+   *      mirrors the same finding on /platform-functions/invokecreate/,
+   *      /platform-functions/invokedelete/, /platform-functions/invokeexecute/,
+   *      /platform-functions/invokeextract/ and
+   *      /platform-functions/invokeconfigure/.
+   *   4. method is a string naming the action, and it is dispatched BY NAME
+   *      and case-insensitively: "start" and "Start" both succeed, while an
+   *      unknown name is rejected by the API with its own message and error
+   *      code 2. A null method throws.
+   *   5. NOT EVERY SOAP TYPE ACCEPTS PERFORM. A TriggeredSendDefinition is
+   *      rejected outright with "Cannot perform Perform on objects of type
+   *      TriggeredSendDefinition" and error code 5, even for a real,
+   *      existing definition addressed by its ObjectID. That is the API
+   *      refusing the object type, not the function failing.
+   *   6. status must be an array — a non-array throws — and it is a genuine
+   *      OUT parameter that must be PRE-SIZED: with [0, 0, 0] all three
+   *      documented slots are filled (message string, numeric error code,
+   *      serialized perform response).
+   *   7. options is OPTIONAL: it may be omitted entirely or passed as null,
+   *      and both give the same result.
+   *
+   * NOT ASSERTED: the values set on the apiObject cannot be read back from
+   * the object itself — it is a CLR host object and the engine blocks all
+   * introspection of it (see /platform-functions/createobject/). They are
+   * proven indirectly by the API's own response.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var prox = new Script.Util.WSProxy();
+  /* A run-unique suffix — a deleted QueryDefinition lingers in the SOAP index
+     for a while, so a fixed CustomerKey would resolve to a stale, inactive
+     definition on a re-run. */
+  var runId = String(Platform.Function.Now().getTime());
+  var deKey = "ssjsg_pf_param_de_" + runId;
+  var qdKey = "ssjsg_pf_param_qd_" + runId;
+
+  /* Setup — a throwaway target DE and QueryDefinition, created via WSProxy. */
+  var deRes = prox.createItem("DataExtension", {
+      CustomerKey: deKey, Name: deKey,
+      Fields: [{ Name: "SubscriberKey", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true }]
+  });
+  assert("setup: the throwaway target Data Extension is created", String(deRes.Status), "OK");
+  var qdRes = prox.createItem("QueryDefinition", {
+      CustomerKey: qdKey, Name: qdKey,
+      QueryText: "SELECT SubscriberKey FROM _Subscribers",
+      TargetType: "DE",
+      DataExtensionTarget: { CustomerKey: deKey, Name: deKey },
+      TargetUpdateType: "Overwrite"
+  });
+  assert("setup: the throwaway QueryDefinition is created", String(qdRes.Status), "OK");
+  var oid = prox.retrieve("QueryDefinition", ["ObjectID"], { Property: "CustomerKey", SimpleOperator: "equals", Value: qdKey }).Results[0].ObjectID;
+
+  /* 1. apiObject is a CreateObject SOAP object — a CLR host object. */
+  var apiObject = Platform.Function.CreateObject("QueryDefinition");
+  assert("typeof CreateObject('QueryDefinition') is clr", String(typeof apiObject), "clr");
+  var setResult = Platform.Function.SetObjectProperty(apiObject, "ObjectID", oid);
+  assert("SetObjectProperty(apiObject, 'ObjectID', ...) returns a genuine null", setResult === null ? "true" : "false", "true");
+  assert("SetObjectProperty does NOT return undefined", setResult === undefined ? "true" : "false", "false");
+
+  function qd() {
+      var o = Platform.Function.CreateObject("QueryDefinition");
+      Platform.Function.SetObjectProperty(o, "ObjectID", oid);
+      return o;
+  }
+
+  /* 6 + 7. The documented 4-argument call fills all three status slots. */
+  var status = [0, 0, 0];
+  var result = Platform.Function.InvokePerform(apiObject, "start", status, null);
+  assert("InvokePerform(apiObject, method, status, options) returns the OverallStatus message", String(result), "OK");
+  assert("status is an OUT parameter: status[0] received the status message", String(status[0]), "QueryDefinition perform called successfully");
+  assert("status is an OUT parameter: status[1] received the numeric error code 0", status[1], 0);
+  assert("status is an OUT parameter: status[2] received the serialized perform response", String(typeof status[2]), "string");
+  assert("the pre-sized status array keeps its length", status.length, 3);
+
+  /* 7. options may be omitted entirely. */
+  var omitted = [0, 0, 0];
+  assert("options may be OMITTED - the 3-argument call returns the same result", String(Platform.Function.InvokePerform(qd(), "start", omitted)), "OK");
+  assert("the 3-argument call fills status[1] the same way", omitted[1], 0);
+
+  /* 2. apiObject must be a real SOAP object. */
+  assertThrows("a plain JavaScript object as apiObject throws", function () {
+      var s = [0, 0, 0];
+      return Platform.Function.InvokePerform({}, "start", s, null);
+  });
+  assertThrows("a string as apiObject throws", function () {
+      var s = [0, 0, 0];
+      return Platform.Function.InvokePerform("QueryDefinition", "start", s, null);
+  });
+
+  /* 3. null apiObject: no SOAP call is made — genuine null back, status untouched. */
+  var nullStatus = [0, 0, 0];
+  var nullResult = Platform.Function.InvokePerform(null, "start", nullStatus, null);
+  assert("a null apiObject does NOT throw", nullResult === null ? "true" : "false", "true");
+  assert("a null apiObject returns a genuine null, not a status string", String(typeof nullResult), "object");
+  assert("a null apiObject is not undefined", nullResult === undefined ? "true" : "false", "false");
+  assert("a null apiObject leaves status[0] untouched (no SOAP call was made)", nullStatus[0], 0);
+  assert("a null apiObject leaves status[1] untouched (no SOAP call was made)", nullStatus[1], 0);
+
+  /* 4. method is dispatched by name, case-insensitively. */
+  var upper = [0, 0, 0];
+  assert("method is case-insensitive: 'Start' works exactly like 'start'", String(Platform.Function.InvokePerform(qd(), "Start", upper, null)), "OK");
+  assert("the capitalised method fills status[0] identically", String(upper[0]), "QueryDefinition perform called successfully");
+  var badVerb = [0, 0, 0];
+  assert("an unknown method name returns 'Error' - the API rejects the action, the function still ran", String(Platform.Function.InvokePerform(qd(), "notarealverb", badVerb, null)), "Error");
+  assert("the unknown-method answer names the rejected action", String(badVerb[0]).indexOf("notarealverb is not an action that can be Performed") === 0 ? "true" : "false", "true");
+  assert("the unknown-method answer carries error code 2", badVerb[1], 2);
+  assertThrows("a null method throws", function () {
+      var s = [0, 0, 0];
+      return Platform.Function.InvokePerform(qd(), null, s, null);
+  });
+
+  /* 5. Not every SOAP type accepts the Perform verb. */
+  var tsd = Platform.Function.CreateObject("TriggeredSendDefinition");
+  Platform.Function.SetObjectProperty(tsd, "CustomerKey", "ssjs-triggeredsend");
+  var tsdStatus = [0, 0, 0];
+  assert("a TriggeredSendDefinition is REJECTED by the API - Perform is not accepted on that type", String(Platform.Function.InvokePerform(tsd, "start", tsdStatus, null)), "Error");
+  assert("the API says so explicitly", String(tsdStatus[0]), "Cannot perform Perform on objects of type TriggeredSendDefinition");
+  assert("the rejected-object-type error code is 5", tsdStatus[1], 5);
+
+  /* 6. status must be an array. */
+  assertThrows("a non-array status throws", function () {
+      return Platform.Function.InvokePerform(qd(), "start", "notanarray", null);
+  });
+
+  /* Cleanup — the business unit is left clean. A QueryDefinition is deleted
+     by ObjectID; a CustomerKey-only delete answers InvalidRequest. */
+  assert("cleanup: the throwaway QueryDefinition is deleted again", String(prox.deleteItem("QueryDefinition", { ObjectID: oid }).Status), "OK");
+  assert("cleanup: the throwaway target Data Extension is deleted again", String(prox.deleteItem("DataExtension", { CustomerKey: deKey }).Status), "OK");
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples — the CreateObject / SetObjectProperty / InvokePerform
+   * build-and-perform pattern, end to end.
+   *
+   * Proves:
+   *   1. Every line of the page's example runs: CreateObject
+   *      ("QueryDefinition"), SetObjectProperty for the ObjectID, and the
+   *      final 4-argument InvokePerform with a [0, 0, 0] status array.
+   *   2. The call really performed the action — it is NOT a presence-only
+   *      check. DISCRIMINATING CONTROL: the SAME call shape against an
+   *      ObjectID that does not exist on this business unit answers "Error"
+   *      with a Perform::Start exception and error code 9999999, while the
+   *      real, just-created definition answers "OK" /
+   *      "QueryDefinition perform called successfully" / 0. A call that had
+   *      silently done nothing could not distinguish the two.
+   *   3. The example's three reads off the status array are each meaningful:
+   *      statusMessage is a string, errorCode a number, performResponse the
+   *      serialized perform-response object as a string carrying the API's
+   *      own StatusCode.
+   *   4. The example addresses the definition by ObjectID on purpose:
+   *      addressing the SAME definition by CustomerKey instead answers
+   *      "Error" with error code 2, so the CustomerKey shape is not a
+   *      working invocation for the Perform verb.
+   *   5. The correct success guard branches on the RETURN value, not on
+   *      status[0]: `result !== "OK"` is false on the success path and true
+   *      on the failure path, whereas `status[0] !== "OK"` would wrongly
+   *      fire on a SUCCESSFUL call because status[0] holds the status
+   *      MESSAGE.
+   *   6. The script leaves nothing behind: the QueryDefinition and its target
+   *      Data Extension are both deleted again.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var prox = new Script.Util.WSProxy();
+  /* A run-unique suffix — a deleted QueryDefinition lingers in the SOAP index
+     for a while, so a fixed CustomerKey would resolve to a stale, inactive
+     definition on a re-run. */
+  var runId = String(Platform.Function.Now().getTime());
+  var deKey = "ssjsg_pf_ex_de_" + runId;
+  var qdKey = "ssjsg_pf_ex_qd_" + runId;
+
+  /* Setup — a throwaway target DE and QueryDefinition, created via WSProxy. */
+  var deRes = prox.createItem("DataExtension", {
+      CustomerKey: deKey, Name: deKey,
+      Fields: [{ Name: "SubscriberKey", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true }]
+  });
+  assert("setup: the throwaway target Data Extension is created", String(deRes.Status), "OK");
+  var qdRes = prox.createItem("QueryDefinition", {
+      CustomerKey: qdKey, Name: qdKey,
+      QueryText: "SELECT SubscriberKey FROM _Subscribers",
+      TargetType: "DE",
+      DataExtensionTarget: { CustomerKey: deKey, Name: deKey },
+      TargetUpdateType: "Overwrite"
+  });
+  assert("setup: the throwaway QueryDefinition is created", String(qdRes.Status), "OK");
+  var objectId = prox.retrieve("QueryDefinition", ["ObjectID"], { Property: "CustomerKey", SimpleOperator: "equals", Value: qdKey }).Results[0].ObjectID;
+
+  /* 1 + 3. The page's example, line by line. */
+  var queryDef = Platform.Function.CreateObject("QueryDefinition");
+  assert("example line 1: CreateObject('QueryDefinition') yields a CLR host object", String(typeof queryDef), "clr");
+  var setResult = Platform.Function.SetObjectProperty(queryDef, "ObjectID", objectId);
+  assert("example line 2: SetObjectProperty(queryDef, 'ObjectID', ...) returns a genuine null", setResult === null ? "true" : "false", "true");
+
+  var StatusAndRequestID = [0, 0, 0];
+  var result = Platform.Function.InvokePerform(queryDef, "start", StatusAndRequestID, null);
+  var statusMessage = StatusAndRequestID[0];
+  var errorCode = StatusAndRequestID[1];
+  var performResponse = StatusAndRequestID[2];
+  assert("example line 3: the call returns the OverallStatus message 'OK'", String(result), "OK");
+  assert("example line 4: statusMessage is the API's own success message", String(statusMessage), "QueryDefinition perform called successfully");
+  assert("example line 5: errorCode is the number 0 on the success path", errorCode, 0);
+  assert("example line 5: errorCode is a number, not a GUID string", String(typeof errorCode), "number");
+  assert("example line 6: performResponse is the serialized perform response, a string", String(typeof performResponse), "string");
+  assert("example line 6: the serialized perform response carries the API's own StatusCode", String(performResponse).indexOf("\"StatusCode\":\"OK\"") >= 0 ? "true" : "false", "true");
+
+  /* 5. The correct guard is on the RETURN value. */
+  assert("the correct guard result !== 'OK' does NOT fire on the success path", result !== "OK" ? "true" : "false", "false");
+  assert("a status[0] !== 'OK' guard WOULD wrongly fire here - status[0] is the status MESSAGE", statusMessage !== "OK" ? "true" : "false", "true");
+
+  /* 2. CONTROL — the identical call against an ObjectID that does not exist. */
+  var ghost = Platform.Function.CreateObject("QueryDefinition");
+  Platform.Function.SetObjectProperty(ghost, "ObjectID", "a1b2c3d4-1111-2222-3333-444455556666");
+  var ghostStatus = [0, 0, 0];
+  var ghostResult = Platform.Function.InvokePerform(ghost, "start", ghostStatus, null);
+  assert("control: the identical call against a non-existent ObjectID returns 'Error'", String(ghostResult), "Error");
+  assert("control: the API answers with a Perform::Start exception", String(ghostStatus[0]).indexOf("Exception occurred during [Perform::Start]") === 0 ? "true" : "false", "true");
+  assert("control: the unresolvable-ObjectID failure carries error code 9999999", ghostStatus[1], 9999999);
+  assert("the correct guard result !== 'OK' DOES fire on the failure path", ghostResult !== "OK" ? "true" : "false", "true");
+
+  /* 4. CustomerKey is not a working invocation shape for Perform. */
+  var byKey = Platform.Function.CreateObject("QueryDefinition");
+  Platform.Function.SetObjectProperty(byKey, "CustomerKey", qdKey);
+  var byKeyStatus = [0, 0, 0];
+  assert("addressing the SAME definition by CustomerKey answers 'Error' - address it by ObjectID", String(Platform.Function.InvokePerform(byKey, "start", byKeyStatus, null)), "Error");
+  assert("the CustomerKey attempt also carries error code 2", byKeyStatus[1], 2);
+
+  /* 6. Cleanup — the business unit is left clean. A QueryDefinition is
+     deleted by ObjectID; a CustomerKey-only delete answers InvalidRequest. */
+  assert("cleanup: the throwaway QueryDefinition is deleted again", String(prox.deleteItem("QueryDefinition", { ObjectID: objectId }).Status), "OK");
+  assert("cleanup: the throwaway target Data Extension is deleted again", String(prox.deleteItem("DataExtension", { CustomerKey: deKey }).Status), "OK");
+  </script>

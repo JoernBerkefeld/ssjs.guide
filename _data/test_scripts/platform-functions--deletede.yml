@@ -1,0 +1,374 @@
+# Test scripts for /platform-functions/deletede/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the official Salesforce docs.
+#
+# DeleteDE is a DESTRUCTIVE function that returns NO row count, so neither
+# presence-only nor throws-only evidence would prove anything. Every script
+# therefore builds its OWN throwaway data extension, inserts known rows,
+# deletes them with DeleteDE and proves the deletion by reading the rows back.
+# Each script removes its data extension again at the end.
+#
+# HARNESS NOTE (proven in the sibling DeleteData run): within a single request
+# the engine CACHES a data-extension query — issuing the SAME
+# LookupRows(deName, field, value) twice returns the FIRST result even after
+# rows were deleted in between. That is a caching artefact, not a failed
+# delete. Every verification query below is therefore issued AT MOST ONCE per
+# script, and "the row was still there" claims are proven by a following
+# DeleteData return count instead of a repeated read.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage on the MCDEV_Training_QA business unit.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters —
+   * Platform.Function.DeleteDE(deName, whereFieldNames, whereFieldValues)
+   *
+   * Proves:
+   *   1. The member exists and the documented 3-argument call succeeds against
+   *      a real data extension that this script creates itself.
+   *   2. deName resolves the data extension by its NAME. The data extension
+   *      built here deliberately has a Name that DIFFERS from its CustomerKey,
+   *      so the two identifiers are distinguishable; the CustomerKey form
+   *      throws and removes nothing.
+   *   3. whereFieldNames is an array of column names and whereFieldValues an
+   *      array of values aligned to it — a single-column filter and a
+   *      two-column (AND) filter are both exercised, and the AND filter is
+   *      proven to spare rows that match only one of the two columns.
+   *   4. Exactly three arguments are required (min_args 3 / max_args 3):
+   *      arity 0, 1, 2 and 4 all throw.
+   *   5. THE DELETE REALLY COMMITS: every row is read back afterwards with
+   *      Platform.Function.LookupRows and the surviving / removed rows match
+   *      the filters exactly. DeleteDE returns no count, so read-back is the
+   *      ONLY evidence available.
+   *   6. A filter naming a column that does not exist throws, and a data
+   *      extension name that does not exist throws — and neither removes
+   *      anything.
+   *
+   * QUERY-CACHING CONSTRAINT: identical data-extension queries are cached
+   * within one request, so each verification query below is issued only once.
+   * Setup state is asserted through InsertData's own return count rather than
+   * through a read that would later have to be repeated.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit). The page also
+   * lists email, automation and triggered-send availability; those execution
+   * contexts were NOT exercised here.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* Build a throwaway data extension whose Name differs from its CustomerKey. */
+  function addField(de, name, len, isKey) {
+      var f = Platform.Function.CreateObject("DataExtensionField");
+      Platform.Function.SetObjectProperty(f, "Name", name);
+      Platform.Function.SetObjectProperty(f, "FieldType", "Text");
+      Platform.Function.SetObjectProperty(f, "MaxLength", len);
+      Platform.Function.SetObjectProperty(f, "IsPrimaryKey", isKey);
+      Platform.Function.SetObjectProperty(f, "IsRequired", isKey);
+      Platform.Function.AddObjectArrayItem(de, "Fields", f);
+  }
+  function createDE(name, key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      Platform.Function.SetObjectProperty(de, "Name", name);
+      addField(de, "Email", "100", "true");
+      addField(de, "Status", "50", "false");
+      addField(de, "Active", "10", "false");
+      var st = [0, 0];
+      return String(Platform.Function.InvokeCreate(de, st, null));
+  }
+  function dropDE(key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      var st = [0, 0];
+      return String(Platform.Function.InvokeDelete(de, st, null));
+  }
+  function rowCount(deName, field, value) {
+      var rows = Platform.Function.LookupRows(deName, field, value);
+      return rows === null ? 0 : rows.length;
+  }
+
+  var deName = "ssjsguide_deletede_params_name";
+  var deKey = "ssjsguide_deletede_params_key";
+
+  assert("setup: the throwaway data extension is created", createDE(deName, deKey), "OK");
+  assert("control: the Name and the CustomerKey differ", deName === deKey ? "same" : "different", "different");
+
+  /* Seed four rows: a(expired,0) b(expired,1) c(active,1) d(active,1). */
+  assert("setup: row a inserted", Platform.Function.InsertData(deName, ["Email", "Status", "Active"], ["a@example.com", "expired", "0"]), 1);
+  assert("setup: row b inserted", Platform.Function.InsertData(deName, ["Email", "Status", "Active"], ["b@example.com", "expired", "1"]), 1);
+  assert("setup: row c inserted", Platform.Function.InsertData(deName, ["Email", "Status", "Active"], ["c@example.com", "active", "1"]), 1);
+  assert("setup: row d inserted", Platform.Function.InsertData(deName, ["Email", "Status", "Active"], ["d@example.com", "active", "1"]), 1);
+
+  /* 1 + 3. The documented 3-argument call, single-column filter. */
+  var res = Platform.Function.DeleteDE(deName, ["Email"], ["a@example.com"]);
+  assert("the documented 3-argument call does not throw and yields null", res === null ? "null" : "not null", "null");
+
+  /* 3. Two-column (AND) filter — arrays aligned by position. */
+  var res2 = Platform.Function.DeleteDE(deName, ["Status", "Active"], ["active", "1"]);
+  assert("the two-column AND filter call also yields null", res2 === null ? "null" : "not null", "null");
+
+  /* 2. The CustomerKey is not accepted — it throws instead of deleting. */
+  assertThrows("DEV the external key / CustomerKey is rejected (docs do not restrict deName to the Name)", function () {
+      return Platform.Function.DeleteDE(deKey, ["Email"], ["b@example.com"]);
+  });
+
+  /* 4. Exactly three arguments. */
+  assertThrows("arity 0 throws", function () { return Platform.Function.DeleteDE(); });
+  assertThrows("arity 1 throws", function () { return Platform.Function.DeleteDE(deName); });
+  assertThrows("arity 2 throws", function () { return Platform.Function.DeleteDE(deName, ["Email"]); });
+  assertThrows("arity 4 throws", function () { return Platform.Function.DeleteDE(deName, ["Email"], ["b@example.com"], "extra"); });
+
+  /* 6. Bad filter column and bad data extension name both throw. */
+  assertThrows("a filter column that does not exist throws", function () {
+      return Platform.Function.DeleteDE(deName, ["NoSuchColumn"], ["x"]);
+  });
+  assertThrows("a data extension name that does not exist throws", function () {
+      return Platform.Function.DeleteDE("ssjsguide_deletede_no_such_de", ["Email"], ["x"]);
+  });
+
+  /* 5. Read every row back — each query issued exactly once. */
+  assert("the single-filter delete really committed: row a is gone", rowCount(deName, "Email", "a@example.com"), 0);
+  assert("the AND filter spared the 'expired' row: row b survived", rowCount(deName, "Email", "b@example.com"), 1);
+  assert("the AND filter removed row c", rowCount(deName, "Email", "c@example.com"), 0);
+  assert("the AND filter removed row d", rowCount(deName, "Email", "d@example.com"), 0);
+  assert("no 'active' row is left", rowCount(deName, "Status", "active"), 0);
+  assert("exactly 1 'expired' row is left", rowCount(deName, "Status", "expired"), 1);
+  assert("the rejected CustomerKey call and the failed negative cases removed nothing", rowCount(deName, "Active", "1"), 1);
+
+  /* Cleanup. */
+  assert("cleanup: the throwaway data extension is deleted", dropDE(deKey), "OK");
+  </script>
+
+description: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Description
+   *
+   * Proves every claim the Description chapter makes:
+   *   1. DeleteDE removes the rows matching the filter criteria — proven by
+   *      reading the rows back, because the call itself reports nothing.
+   *   2. It performs the SAME delete as DeleteData: the identical filter,
+   *      applied to two identical rows, removes each of them. The only
+   *      difference is the return value.
+   *   3. DEV — it returns a genuine JavaScript null (=== null is true), NOT a
+   *      row count and NOT undefined. typeof that null is "object", which is
+   *      the ordinary JavaScript typeof-null result, so typeof alone cannot
+   *      distinguish it from an object — the === null check is the real
+   *      evidence.
+   *   4. A filter that matches nothing also returns null and deletes nothing —
+   *      DeleteDE cannot report "no rows matched", which is exactly why the
+   *      page recommends DeleteData outside email.
+   *   5. WORKAROUND — DeleteData is preferred outside email because it returns
+   *      a real number for the very same operation. Asserted side by side in
+   *      this script.
+   *   6. IRREVERSIBLE — after a DeleteDE the row does not come back:
+   *      Platform.Function.Lookup returns a genuine null for it while a
+   *      surviving row is still readable.
+   *
+   * QUERY-CACHING CONSTRAINT: identical data-extension queries are cached
+   * within one request, so every verification query below is issued only once.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit). The email,
+   * automation and triggered-send contexts listed on the page were NOT
+   * exercised.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  function addField(de, name, len, isKey) {
+      var f = Platform.Function.CreateObject("DataExtensionField");
+      Platform.Function.SetObjectProperty(f, "Name", name);
+      Platform.Function.SetObjectProperty(f, "FieldType", "Text");
+      Platform.Function.SetObjectProperty(f, "MaxLength", len);
+      Platform.Function.SetObjectProperty(f, "IsPrimaryKey", isKey);
+      Platform.Function.SetObjectProperty(f, "IsRequired", isKey);
+      Platform.Function.AddObjectArrayItem(de, "Fields", f);
+  }
+  function createDE(name, key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      Platform.Function.SetObjectProperty(de, "Name", name);
+      addField(de, "Email", "100", "true");
+      addField(de, "Status", "50", "false");
+      var st = [0, 0];
+      return String(Platform.Function.InvokeCreate(de, st, null));
+  }
+  function dropDE(key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      var st = [0, 0];
+      return String(Platform.Function.InvokeDelete(de, st, null));
+  }
+  function rowCount(deName, field, value) {
+      var rows = Platform.Function.LookupRows(deName, field, value);
+      return rows === null ? 0 : rows.length;
+  }
+
+  var deName = "ssjsguide_deletede_desc_name";
+  var deKey = "ssjsguide_deletede_desc_key";
+
+  assert("setup: the throwaway data extension is created", createDE(deName, deKey), "OK");
+  assert("setup: row d1 inserted", Platform.Function.InsertData(deName, ["Email", "Status"], ["d1@example.com", "twin"]), 1);
+  assert("setup: row d2 inserted", Platform.Function.InsertData(deName, ["Email", "Status"], ["d2@example.com", "twin"]), 1);
+  assert("setup: row d3 inserted", Platform.Function.InsertData(deName, ["Email", "Status"], ["d3@example.com", "keep"]), 1);
+
+  /* 1 + 3. The delete itself and its return value. */
+  var res = Platform.Function.DeleteDE(deName, ["Email"], ["d1@example.com"]);
+  assert("DEV DeleteDE returns a genuine JavaScript null, not a row count (docs: no return value documented for CloudPages)", res === null ? "null" : "not null", "null");
+  assert("DEV DeleteDE's return value is NOT undefined", res === undefined ? "undefined" : "defined", "defined");
+  assert("DeleteDE's null is not a number", String(typeof res) === "number" ? "number" : "not a number", "not a number");
+  assert("typeof DeleteDE(...) is object — the ordinary JavaScript typeof of null", String(typeof res), "object");
+
+  /* 4. A filter matching nothing also returns null. */
+  var none = Platform.Function.DeleteDE(deName, ["Email"], ["nobody@example.com"]);
+  assert("a filter that matches nothing also returns null", none === null ? "null" : "not null", "null");
+
+  /* 2 + 5. The same delete via DeleteData returns a number instead. */
+  var deleted = Platform.Function.DeleteData(deName, ["Email"], ["d2@example.com"]);
+  assert("WORKAROUND DeleteData performs the same delete but returns a number", String(typeof deleted), "number");
+  assert("WORKAROUND DeleteData reports the affected-row count DeleteDE withholds", deleted, 1);
+
+  /* 1 + 2. Read the rows back — each query issued exactly once. */
+  assert("the DeleteDE row d1 is really gone", rowCount(deName, "Email", "d1@example.com"), 0);
+  assert("the DeleteData row d2 is really gone", rowCount(deName, "Email", "d2@example.com"), 0);
+  assert("the no-match DeleteDE deleted nothing: row d3 is untouched", rowCount(deName, "Status", "keep"), 1);
+
+  /* 6. Irreversible — the deleted row does not come back. */
+  assert("Lookup returns a genuine null for the DeleteDE-removed row d1", Platform.Function.Lookup(deName, "Status", "Email", "d1@example.com") === null ? "null" : "not null", "null");
+  assert("the surviving row d3 is still readable", String(Platform.Function.Lookup(deName, "Status", "Email", "d3@example.com")), "keep");
+
+  assert("cleanup: the throwaway data extension is deleted", dropDE(deKey), "OK");
+  </script>
+
+runs-on-cloudpages: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs claim, all three halves of it:
+   *
+   *   a) The official docs restrict DeleteDE to EMAIL contexts. At runtime it
+   *      nevertheless EXECUTES and COMMITS its delete on a CloudPage — this
+   *      whole script runs on a CloudPage, and the targeted row is proven
+   *      absent afterwards.
+   *   b) It returns null, NOT the affected-row count that DeleteData returns
+   *      for the identical operation. Both are called side by side here.
+   *   c) It resolves the data extension by NAME only, not by the external key
+   *      / CustomerKey.
+   *
+   * THE CONTROL THAT MAKES (c) DISCRIMINATING: the throwaway data extension
+   * built here has a Name that is DIFFERENT from its CustomerKey. If the
+   * engine accepted either identifier, the CustomerKey call would delete the
+   * row. It does not — and because DeleteDE itself reports nothing, the proof
+   * that the row survived that call is the FOLLOWING DeleteData(<Name>, …)
+   * returning 1 rather than 0.
+   *
+   * QUERY-CACHING CONSTRAINT: identical data-extension queries are cached
+   * within one request, so every verification query below is issued only once.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit). The email context
+   * in which the official docs place DeleteDE was NOT exercised — the claim
+   * proven here is that the CloudPage context works too, not that the email
+   * context differs.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  function addField(de, name, len, isKey) {
+      var f = Platform.Function.CreateObject("DataExtensionField");
+      Platform.Function.SetObjectProperty(f, "Name", name);
+      Platform.Function.SetObjectProperty(f, "FieldType", "Text");
+      Platform.Function.SetObjectProperty(f, "MaxLength", len);
+      Platform.Function.SetObjectProperty(f, "IsPrimaryKey", isKey);
+      Platform.Function.SetObjectProperty(f, "IsRequired", isKey);
+      Platform.Function.AddObjectArrayItem(de, "Fields", f);
+  }
+  function createDE(name, key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      Platform.Function.SetObjectProperty(de, "Name", name);
+      addField(de, "Email", "100", "true");
+      addField(de, "Status", "50", "false");
+      var st = [0, 0];
+      return String(Platform.Function.InvokeCreate(de, st, null));
+  }
+  function dropDE(key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      var st = [0, 0];
+      return String(Platform.Function.InvokeDelete(de, st, null));
+  }
+  function rowCount(deName, field, value) {
+      var rows = Platform.Function.LookupRows(deName, field, value);
+      return rows === null ? 0 : rows.length;
+  }
+
+  var deName = "ssjsguide_deletede_cp_name";
+  var deKey = "ssjsguide_deletede_cp_key";
+
+  /* c) The control: Name and CustomerKey are different strings. */
+  assert("control: the Name and the CustomerKey differ", deName === deKey ? "same" : "different", "different");
+
+  assert("setup: the throwaway data extension is created", createDE(deName, deKey), "OK");
+  assert("setup: the key-test row is inserted", Platform.Function.InsertData(deName, ["Email", "Status"], ["keytest@example.com", "keep"]), 1);
+  assert("setup: the cloudpage-test row is inserted", Platform.Function.InsertData(deName, ["Email", "Status"], ["cptest@example.com", "keep"]), 1);
+
+  /* c) The CustomerKey form throws instead of deleting. */
+  assertThrows("DEV DeleteDE(<CustomerKey>, ...) throws (docs: deName is not restricted to the Name)", function () {
+      return Platform.Function.DeleteDE(deKey, ["Email"], ["keytest@example.com"]);
+  });
+
+  /* c) Proof that the rejected call removed nothing: DeleteData with the Name
+     still finds the row and reports 1. */
+  var stillThere = Platform.Function.DeleteData(deName, ["Email"], ["keytest@example.com"]);
+  assert("DEV the row the CustomerKey call could not touch is still there (DeleteData by Name returns 1)", stillThere, 1);
+
+  /* a) + b) DeleteDE executes on a CloudPage and returns null, not a count. */
+  var res = Platform.Function.DeleteDE(deName, ["Email"], ["cptest@example.com"]);
+  assert("DEV DeleteDE runs on a CloudPage without throwing (docs: email contexts only)", res === null ? "null" : "not null", "null");
+  assert("DEV DeleteDE returns null, not the affected-row count DeleteData gives", String(typeof res) === "number" ? "number" : "not a number", "not a number");
+  assert("DEV DeleteDE's return value is NOT undefined either", res === undefined ? "undefined" : "defined", "defined");
+
+  /* a) The delete really COMMITTED on the CloudPage — read-back is the only
+     evidence DeleteDE leaves behind. Query issued exactly once. */
+  assert("DEV DeleteDE COMMITS its delete on a CloudPage (docs: email contexts only)", rowCount(deName, "Email", "cptest@example.com"), 0);
+  assert("nothing else was removed: the data extension is empty only because both rows were targeted", rowCount(deName, "Status", "keep"), 0);
+
+  assert("cleanup: the throwaway data extension is deleted", dropDE(deKey), "OK");
+  </script>

@@ -1,0 +1,168 @@
+# Test scripts for /platform-functions/md5/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes, plus the
+# boundary, coercion, charset and invocation behavior observed at runtime.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters — Platform.Function.MD5(string[, charset])
+   *
+   * Proves:
+   *   1. The Platform.Function member exists and is invocable with 1 argument.
+   *   2. The return type is string.
+   *   3. charset is optional: omitted and explicit UTF-8 agree.
+   *   4. The documented charset values ASCII and UTF-8 are accepted.
+   *   5. Charset matching is case-insensitive for "utf-8".
+   *   6. Invalid, empty, null and undefined charset values throw.
+   *   7. The bare-name MD5 form is absent and invocation throws.
+   *   8. The documented arity is enforced: 0 and 3 arguments throw.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false;
+      try { fn(); } catch (ex) { threw = true; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw" : "did NOT throw") + "\n");
+  }
+
+  var oneArg = Platform.Function.MD5("Hello World");
+  assert("1-argument Platform.Function.MD5 call succeeds", oneArg, "b10a8db164e0754105b7a99be72e3fe5");
+  assert("typeof the result is string", String(typeof oneArg), "string");
+
+  var utf8 = Platform.Function.MD5("Hello World", "UTF-8");
+  var ascii = Platform.Function.MD5("Hello World", "ASCII");
+  assert("UTF-8 charset is accepted", utf8, "b10a8db164e0754105b7a99be72e3fe5");
+  assert("ASCII charset is accepted", ascii, "b10a8db164e0754105b7a99be72e3fe5");
+  assert("omitted charset defaults to UTF-8 for ASCII input", oneArg, utf8);
+  assert("ASCII and UTF-8 agree for ASCII input", ascii, utf8);
+  assert("lowercase utf-8 charset is accepted", Platform.Function.MD5("Hello World", "utf-8"), utf8);
+
+  assert("bare-name MD5 is undefined", String(typeof MD5), "undefined");
+
+  /* Potentially throwing cases are last. */
+  assertThrows("invalid charset throws", function () { return Platform.Function.MD5("abc", "NO-SUCH-CHARSET"); });
+  assertThrows("empty charset throws", function () { return Platform.Function.MD5("abc", ""); });
+  assertThrows("null charset throws", function () { return Platform.Function.MD5("abc", null); });
+  assertThrows("undefined charset throws", function () { var u; return Platform.Function.MD5("abc", u); });
+  assertThrows("0-argument Platform form throws", function () { return Platform.Function.MD5(); });
+  assertThrows("3-argument Platform form throws", function () { return Platform.Function.MD5("abc", "UTF-8", "extra"); });
+  assertThrows("bare-name MD5 invocation throws", function () { return MD5("abc"); });
+  </script>
+
+description: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Description — returns a lowercase 32-character hexadecimal MD5
+   * hash; the optional charset controls non-ASCII byte encoding.
+   *
+   * Proves:
+   *   1. Known deterministic MD5 vectors match independent reference values.
+   *   2. Every result is a lowercase, 32-character hexadecimal string.
+   *   3. Omitted charset and UTF-8 agree for non-ASCII input.
+   *   4. ASCII replaces a non-ASCII character before hashing, so its result
+   *      differs from UTF-8 and matches the independent MD5 of "caf?".
+   *   5. Empty string, null and undefined all hash as the empty string.
+   *   6. Numbers are converted to their decimal string form.
+   *   7. Booleans are converted to capitalized "True" / "False" strings.
+   *   8. Array input throws instead of being coerced.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false;
+      try { fn(); } catch (ex) { threw = true; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw" : "did NOT throw") + "\n");
+  }
+
+  /* Independent RFC-style reference vectors. */
+  assert("MD5('') known vector", Platform.Function.MD5(""), "d41d8cd98f00b204e9800998ecf8427e");
+  assert("MD5('abc') known vector", Platform.Function.MD5("abc"), "900150983cd24fb0d6963f7d28e17f72");
+  assert("MD5('Hello World') known vector", Platform.Function.MD5("Hello World"), "b10a8db164e0754105b7a99be72e3fe5");
+
+  var hash = Platform.Function.MD5("abc");
+  var hex = "0123456789abcdef";
+  var bad = 0;
+  var i;
+  for (i = 0; i < hash.length; i++) {
+      if (hex.indexOf(hash.charAt(i)) < 0) { bad = bad + 1; }
+  }
+  assert("result length is exactly 32", String(hash.length), "32");
+  assert("result contains lowercase hexadecimal characters only", String(bad), "0");
+  assert("result equals its lowercase form", hash === hash.toLowerCase() ? "true" : "false", "true");
+  assert("result does not equal its uppercase form", hash === hash.toUpperCase() ? "true" : "false", "false");
+
+  var cafeUtf8 = Platform.Function.MD5("caf\u00e9", "UTF-8");
+  assert("UTF-8 non-ASCII vector", cafeUtf8, "07117fe4a1ebd544965dc19573183da2");
+  assert("omitted charset defaults to UTF-8 for non-ASCII input", Platform.Function.MD5("caf\u00e9"), cafeUtf8);
+  assert("ASCII non-ASCII vector matches MD5('caf?')", Platform.Function.MD5("caf\u00e9", "ASCII"), "333027b148fc48b3494f9b895f9c857a");
+  assert("ASCII and UTF-8 differ for non-ASCII input", Platform.Function.MD5("caf\u00e9", "ASCII") === cafeUtf8 ? "true" : "false", "false");
+
+  assert("null input hashes as the empty string", Platform.Function.MD5(null), "d41d8cd98f00b204e9800998ecf8427e");
+  var undef;
+  assert("undefined input hashes as the empty string", Platform.Function.MD5(undef), "d41d8cd98f00b204e9800998ecf8427e");
+  assert("number input is converted to decimal text", Platform.Function.MD5(123), "202cb962ac59075b964b07152d234b70");
+  assert("boolean input is converted to capitalized text", Platform.Function.MD5(true), "f827cf462f62848df37c5e1e94a4da74");
+
+  /* Potentially throwing case is last. */
+  assertThrows("array input throws", function () { return Platform.Function.MD5([1, 2]); });
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples — hash a value held in a variable and hash with an
+   * explicit UTF-8 charset.
+   *
+   * Proves:
+   *   1. A normal string value held in a variable produces the expected hash.
+   *   2. The explicit UTF-8 example returns the documented literal.
+   *   3. The returned value is a genuine string that Write() can emit and on
+   *      which string operations work.
+   *
+   * NOT ASSERTED: the Platform.Function.Lookup("ForMD5Info", ...) call. It
+   * depends on a data extension fixture that does not exist in the verification
+   * business unit. The MD5 half of that example is asserted with an equivalent
+   * normal string variable.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var normalStr = "abc";
+  var hashedStr = Platform.Function.MD5(normalStr);
+  assert("a normal string variable hashes to the known literal", hashedStr, "900150983cd24fb0d6963f7d28e17f72");
+  assert("typeof the example result is string", String(typeof hashedStr), "string");
+  assert("string operations work on the example result", hashedStr.substring(0, 8), "90015098");
+  Platform.Response.Write("PASS Write(hashedStr) emitted -> [" + hashedStr + "]\n");
+
+  var explicit = Platform.Function.MD5("Hello World", "UTF-8");
+  assert("explicit UTF-8 example matches its documented result", explicit, "b10a8db164e0754105b7a99be72e3fe5");
+  </script>

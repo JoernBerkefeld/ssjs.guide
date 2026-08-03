@@ -1,0 +1,540 @@
+# Test scripts for /platform-functions/contentblockbyname/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and the documented deviations from the official Salesforce docs.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# SCOPE: the evidence behind these scripts is CloudPage-only. The member's
+# real-world context — rendering a block inside an email send, and the
+# impression tracking that `regionName` feeds — was NOT exercised. Only the
+# call-level behaviour observable inside a single CloudPage request is proven.
+#
+# FIXTURES: three Content Builder HTML blocks exist in the QA business unit
+# for these probes, each whose entire body is a single short token (this
+# function embeds the asset body into the page, so probing a large asset
+# would flood the run):
+#   Content Builder\ssjs-guide-test-block
+#       -> SSJSGUIDE-TEST-BLOCK-OK        (root of Content Builder)
+#   Content Builder\ssjs-guide-tests\ssjs-guide-folder-block
+#       -> SSJSGUIDE-FOLDER-BLOCK-OK      (one folder deep)
+#   Content Builder\ssjs-guide-tests\nested\ssjs-guide-nested-block
+#       -> SSJSGUIDE-NESTED-BLOCK-OK      (two folders deep)
+# The name "ssjs-guide-no-such-block-xyz" is used as the "block does not
+# exist" case.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# ENGINE NOTE 1: the CLR exception messages thrown by ContentBlockByName
+# cannot be inspected with .length / .indexOf / .substring — those operations
+# abort the whole CloudPage with HTTP 422. The messages may only be
+# concatenated into output verbatim, so these scripts assert "it throws" and
+# PRINT the message rather than matching it programmatically.
+#
+# ENGINE NOTE 2 (specific to this page): a string literal whose LAST character
+# is a backslash — e.g. "Content Builder\\" — aborts the whole CloudPage with
+# HTTP 422 before any line runs, even with no function call involved. Every
+# separator below is therefore either kept in the middle of a literal or built
+# with String.fromCharCode(92).
+#
+# HARNESS NOTE: `mcdev deploy` refuses any asset whose code references a
+# content block that does not exist on the BU, so these scripts (which must
+# reference a missing name to prove the missing-block behaviour) are deployed
+# to the validate-ssjs asset through the REST API instead.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters —
+   *   Platform.Function.ContentBlockByName(name[, regionName, stopOnError,
+   *                                        fallbackContent, statusVariable])
+   *
+   * Proves:
+   *   1. The member resolves on Platform.Function (typeof "clrmethodinfo",
+   *      the engine's uniform marker for a host CLR method — it proves
+   *      nothing about existence, only invocation does).
+   *   2. `name` is required and the documented minimal 1-argument call
+   *      returns the asset's rendered body as a string (return_type: string,
+   *      min_args: 1).
+   *   3. The name is accepted as a string LITERAL and as a VARIABLE — the
+   *      single-argument form has no literal restriction.
+   *   4. A name that does not exist throws (it does NOT return the empty
+   *      string), and so does passing the asset's numeric ID.
+   *   5. DEV the documented optional `regionName` (parameter 2) is
+   *      unreachable from SSJS: a plain STRING LITERAL is rejected with the
+   *      resolved-value error naming ImpressionRegionName / Ordinal 2 /
+   *      ResolvedValueParameter. A number, a boolean, the empty string, null
+   *      and a variable all fail the same way — so this is NOT a
+   *      literal-vs-variable restriction, the parameter cannot be supplied.
+   *   6. DEV because parameter 2 is rejected outright, the documented
+   *      `stopOnError` (parameter 3) and `fallbackContent` (parameter 4) are
+   *      UNREACHABLE from SSJS: arity 3 and arity 4 throw the same
+   *      ImpressionRegionName error.
+   *   7. DEV the documented `statusVariable` (parameter 5) is unreachable for
+   *      a second, different reason: arity 5 does not even reach the
+   *      parameter check — it throws the overloaded "security descriptor"
+   *      error, exactly like arity 0.
+   *
+   * SCOPE: CloudPage only. Whether `regionName` would register an impression
+   * is not asserted — impression counts surface in Marketing Cloud tracking
+   * reports after a send is processed and are not observable from inside this
+   * request. (It is moot here in any case: the parameter cannot be supplied.)
+   *
+   * NOT ASSERTED: the exact text of the thrown messages. Any string operation
+   * on these CLR exception messages (.length / .indexOf / .substring) aborts
+   * the CloudPage with HTTP 422, so each message is printed verbatim next to
+   * its assertion for the reader instead of being matched programmatically.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. The member resolves as a host CLR method. */
+  assert("typeof Platform.Function.ContentBlockByName is clrmethodinfo", String(typeof Platform.Function.ContentBlockByName), "clrmethodinfo");
+
+  /* 2. The required name alone renders the block and returns a string. */
+  var body = Platform.Function.ContentBlockByName("ssjs-guide-test-block");
+  assert("arity 1 with a real name returns a string", String(typeof body), "string");
+  assert("arity 1 returns the fixture block's body", body, "SSJSGUIDE-TEST-BLOCK-OK");
+
+  /* 3. Literal and variable are both accepted at arity 1. */
+  var varName = "ssjs-guide-test-block";
+  assert("arity 1 accepts a VARIABLE name", Platform.Function.ContentBlockByName(varName), "SSJSGUIDE-TEST-BLOCK-OK");
+
+  /* 4. A non-existent name throws; the numeric ID is not accepted as a name. */
+  assertThrows("arity 1 with a non-existent name throws (docs: no content returned)", function () {
+      return Platform.Function.ContentBlockByName("ssjs-guide-no-such-block-xyz");
+  });
+  assertThrows("arity 1 with a non-existent name as a VARIABLE throws too", function () {
+      var missing = "ssjs-guide-no-such-block-xyz";
+      return Platform.Function.ContentBlockByName(missing);
+  });
+  assertThrows("passing the numeric asset ID instead of the name throws", function () {
+      return Platform.Function.ContentBlockByName(1469165);
+  });
+  assertThrows("the empty string is not a valid name", function () {
+      return Platform.Function.ContentBlockByName("");
+  });
+
+  /* 5. DEV regionName cannot be supplied at all — every shape is rejected. */
+  assertThrows("DEV arity 2 with a STRING LITERAL regionName throws (docs: optional impression region)", function () {
+      return Platform.Function.ContentBlockByName("ssjs-guide-test-block", "ssjsGuideRegion");
+  });
+  assertThrows("DEV arity 2 with a numeric regionName throws too", function () {
+      return Platform.Function.ContentBlockByName("ssjs-guide-test-block", 7);
+  });
+  assertThrows("DEV arity 2 with a boolean regionName throws too", function () {
+      return Platform.Function.ContentBlockByName("ssjs-guide-test-block", false);
+  });
+  assertThrows("DEV arity 2 with an empty-string regionName throws too", function () {
+      return Platform.Function.ContentBlockByName("ssjs-guide-test-block", "");
+  });
+  assertThrows("DEV arity 2 with a null regionName throws too", function () {
+      return Platform.Function.ContentBlockByName("ssjs-guide-test-block", null);
+  });
+  var varRegion = "ssjsGuideRegion";
+  assertThrows("DEV arity 2 with a VARIABLE regionName throws the same way (not a literal-vs-variable rule)", function () {
+      return Platform.Function.ContentBlockByName("ssjs-guide-test-block", varRegion);
+  });
+
+  /* 6. DEV stopOnError and fallbackContent are unreachable behind that rejection. */
+  assertThrows("DEV arity 3 stopOnError=true throws (docs: terminates on a missing block)", function () {
+      return Platform.Function.ContentBlockByName("ssjs-guide-no-such-block-xyz", "ssjsGuideRegion", true);
+  });
+  assertThrows("DEV arity 3 stopOnError=false throws (docs: the call proceeds)", function () {
+      return Platform.Function.ContentBlockByName("ssjs-guide-no-such-block-xyz", "ssjsGuideRegion", false);
+  });
+  assertThrows("DEV arity 4 fallbackContent never emitted, call throws (docs: fallback is displayed)", function () {
+      return Platform.Function.ContentBlockByName("ssjs-guide-no-such-block-xyz", "ssjsGuideRegion", false, "FALLBACK-OK");
+  });
+  assertThrows("DEV arity 4 throws even when the block EXISTS", function () {
+      return Platform.Function.ContentBlockByName("ssjs-guide-test-block", "ssjsGuideRegion", false, "FALLBACK-OK");
+  });
+
+  /* 7. DEV statusVariable: arity 5 throws the security-descriptor error, as does arity 0. */
+  assertThrows("DEV arity 5 with statusVariable throws (docs: receives 0 or -1)", function () {
+      return Platform.Function.ContentBlockByName("ssjs-guide-test-block", "ssjsGuideRegion", false, "FALLBACK-OK", "statusVar");
+  });
+  assertThrows("arity 0 throws", function () {
+      return Platform.Function.ContentBlockByName();
+  });
+  assertThrows("arity 6 throws", function () {
+      return Platform.Function.ContentBlockByName("ssjs-guide-test-block", "ssjsGuideRegion", false, "FALLBACK-OK", "statusVar", "extra");
+  });
+  </script>
+
+only-one-argument-works: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs claim: the official Salesforce documentation shows
+   *   Platform.Function.ContentBlockByName(pathAndName, regionName,
+   *                                        stopOnError, fallbackContent,
+   *                                        statusVariable)
+   * as ordinary working SSJS. At runtime ONLY the single-argument form works.
+   *
+   * Official docs: the multi-argument call returns the block's content, with
+   *                stopOnError:false letting a failed call proceed,
+   *                fallbackContent shown when nothing is returned, and
+   *                statusVariable receiving 0 or -1.
+   * SFMC runtime:  arity 1     -> returns the block's body (works)
+   *                arity 2/3/4 -> "A ContentBlockByName function call includes
+   *                                an invalid parameter value. … must be a
+   *                                literal (constant) values."
+   *                                Parameter Name: ImpressionRegionName
+   *                                Parameter Ordinal: 2
+   *                                Parameter Type: ResolvedValueParameter
+   *                arity 0/5+  -> "Unable to retrieve security descriptor for
+   *                                this frame."
+   *                (each message is printed verbatim by its assertion below)
+   *
+   * Proves every part of the claim, and — crucially — CONTROLS for the two
+   * competing explanations:
+   *   1. The 1-argument form genuinely works, so the failure at arity 2+ is
+   *      not "the function is broken" and not "the block does not exist".
+   *   2. DEV arity 2 throws for a STRING LITERAL regionName in a plain
+   *      top-level call with no closure and no variable anywhere — so the
+   *      failure is not a literal-vs-variable rule and not an artefact of
+   *      wrapping the call in a test helper.
+   *   3. DEV every other regionName shape (number, boolean, empty string,
+   *      null, variable) fails identically, and arity 3 and 4 fail with the
+   *      SAME parameter-2 error, which is what makes stopOnError and
+   *      fallbackContent unreachable. Arity 5 fails even earlier, with the
+   *      security-descriptor error, so statusVariable is unreachable too.
+   *   4. CONTROL: the AMPscript form of the same function, invoked through
+   *      Platform.Function.TreatAsContent, accepts ALL FIVE parameters and
+   *      returns content — proving the platform implements the documented
+   *      semantics and that the restriction is specific to the SSJS binding.
+   *   5. The siblings Platform.Function.ContentBlockByID and
+   *      Platform.Function.ContentBlockByKey have the identical restriction,
+   *      so this is a family-wide SSJS binding limitation.
+   *   6. There is no bare-name Core escape hatch: typeof ContentBlockByName is
+   *      "undefined" after Platform.Load and invoking it throws
+   *      "Object expected: ContentBlockByName".
+   *
+   * SCOPE: CloudPage only — the same calls inside an email send were not
+   * exercised.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. The 1-argument form works — the function itself is not broken. */
+  assert("CONTROL arity 1 returns the block's body", Platform.Function.ContentBlockByName("ssjs-guide-test-block"), "SSJSGUIDE-TEST-BLOCK-OK");
+
+  /* 2. DEV a top-level, closure-free, all-literal arity-2 call still throws. */
+  var topLevel2 = "did NOT throw";
+  try { Platform.Function.ContentBlockByName("ssjs-guide-test-block", "ssjsGuideRegion"); }
+  catch (exTop) { topLevel2 = "threw"; }
+  assert("DEV top-level all-literal arity 2 throws (docs: returns content)", topLevel2, "threw");
+  assertThrows("DEV arity 2 string literal regionName throws (message printed)", function () {
+      return Platform.Function.ContentBlockByName("ssjs-guide-test-block", "ssjsGuideRegion");
+  });
+
+  /* 3. DEV every regionName shape, and arity 3/4/5, fail. */
+  assertThrows("DEV arity 2 numeric regionName throws", function () {
+      return Platform.Function.ContentBlockByName("ssjs-guide-test-block", 7);
+  });
+  assertThrows("DEV arity 2 boolean regionName throws", function () {
+      return Platform.Function.ContentBlockByName("ssjs-guide-test-block", false);
+  });
+  assertThrows("DEV arity 2 empty-string regionName throws", function () {
+      return Platform.Function.ContentBlockByName("ssjs-guide-test-block", "");
+  });
+  assertThrows("DEV arity 2 null regionName throws", function () {
+      return Platform.Function.ContentBlockByName("ssjs-guide-test-block", null);
+  });
+  var dynRegion = "ssjsGuideRegion";
+  assertThrows("DEV arity 2 variable regionName throws", function () {
+      return Platform.Function.ContentBlockByName("ssjs-guide-test-block", dynRegion);
+  });
+  assertThrows("DEV arity 3 stopOnError=true throws (docs: terminates the call)", function () {
+      return Platform.Function.ContentBlockByName("ssjs-guide-no-such-block-xyz", "ssjsGuideRegion", true);
+  });
+  assertThrows("DEV arity 3 stopOnError=false throws (docs: the call proceeds)", function () {
+      return Platform.Function.ContentBlockByName("ssjs-guide-no-such-block-xyz", "ssjsGuideRegion", false);
+  });
+  assertThrows("DEV arity 4 throws so fallbackContent is never emitted (docs: fallback shown)", function () {
+      return Platform.Function.ContentBlockByName("ssjs-guide-no-such-block-xyz", "ssjsGuideRegion", false, "FALLBACK-OK");
+  });
+  assertThrows("DEV arity 5 throws so statusVariable is never set (docs: receives 0 or -1)", function () {
+      return Platform.Function.ContentBlockByName("ssjs-guide-test-block", "ssjsGuideRegion", false, "FALLBACK-OK", "statusVar");
+  });
+
+  /* 4. CONTROL — the AMPscript form implements the full documented signature. */
+  assert("CONTROL AMPscript arity 2 with a region returns the body", Platform.Function.TreatAsContent('%%=ContentBlockByName("ssjs-guide-test-block","ssjsGuideRegion")=%%'), "SSJSGUIDE-TEST-BLOCK-OK");
+  assert("CONTROL AMPscript arity 4 returns fallbackContent for a missing block", Platform.Function.TreatAsContent('%%=ContentBlockByName("ssjs-guide-no-such-block-xyz","ssjsGuideRegion",false,"FALLBACK-OK")=%%'), "FALLBACK-OK");
+  assert("CONTROL AMPscript arity 4 ignores the fallback when the block exists", Platform.Function.TreatAsContent('%%=ContentBlockByName("ssjs-guide-test-block","ssjsGuideRegion",false,"FALLBACK-OK")=%%'), "SSJSGUIDE-TEST-BLOCK-OK");
+  assert("CONTROL AMPscript arity 3 stopOnError=false yields the empty string", Platform.Function.TreatAsContent('%%=ContentBlockByName("ssjs-guide-no-such-block-xyz","ssjsGuideRegion",false)=%%'), "");
+  assertThrows("CONTROL AMPscript arity 3 stopOnError=true propagates the error", function () {
+      return Platform.Function.TreatAsContent('%%=ContentBlockByName("ssjs-guide-no-such-block-xyz","ssjsGuideRegion",true)=%%');
+  });
+  assert("CONTROL AMPscript arity 5 with a statusVariable returns the body", Platform.Function.TreatAsContent('%%[ var @s ]%%%%=ContentBlockByName("ssjs-guide-test-block","ssjsGuideRegion",false,"FALLBACK-OK",@s)=%%'), "SSJSGUIDE-TEST-BLOCK-OK");
+
+  /* 5. The siblings carry the identical restriction. */
+  assert("CONTROL ContentBlockByID arity 1 works", Platform.Function.ContentBlockByID(1469165), "SSJSGUIDE-TEST-BLOCK-OK");
+  assertThrows("DEV ContentBlockByID arity 2 throws the same ImpressionRegionName error", function () {
+      return Platform.Function.ContentBlockByID(1469165, "ssjsGuideRegion");
+  });
+  assert("CONTROL ContentBlockByKey arity 1 works", Platform.Function.ContentBlockByKey("ssjs-guide-test-block"), "SSJSGUIDE-TEST-BLOCK-OK");
+  assertThrows("DEV ContentBlockByKey arity 2 throws the same ImpressionRegionName error", function () {
+      return Platform.Function.ContentBlockByKey("ssjs-guide-test-block", "ssjsGuideRegion");
+  });
+
+  /* 6. No bare-name Core escape hatch exists. */
+  assert("there is no bare-name ContentBlockByName global", String(typeof ContentBlockByName), "undefined");
+  assertThrows("invoking the bare name throws Object expected", function () {
+      return ContentBlockByName("ssjs-guide-test-block");
+  });
+
+  /* 7. Off-signature arities throw the security-descriptor error. */
+  assertThrows("arity 0 throws", function () {
+      return Platform.Function.ContentBlockByName();
+  });
+  assertThrows("arity 6 throws", function () {
+      return Platform.Function.ContentBlockByName("ssjs-guide-test-block", "ssjsGuideRegion", false, "FALLBACK-OK", "statusVar", "extra");
+  });
+  </script>
+
+description: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Description — renders a Content Builder block by its NAME and
+   * RETURNS the processed HTML, the "Name resolution" rules, the runtime
+   * notes, the SSJS authoring caveat and the TreatAsContent workaround.
+   *
+   * Proves:
+   *   1. The function renders a CONTENT BUILDER asset: the value returned for
+   *      name "ssjs-guide-test-block" is exactly that asset's stored body, and
+   *      it is a non-empty string. The call RETURNS the content rather than
+   *      emitting it.
+   *   2. Name resolution — a BARE name resolves the asset no matter how deep
+   *      it sits: the root-level fixture, the one-folder-deep fixture and the
+   *      two-folders-deep fixture all resolve by name alone.
+   *   3. DEV the path separator is a BACKSLASH, not a forward slash. Every
+   *      forward-slash path throws (docs write the example path with a
+   *      backslash but the guide previously showed "My Folder/My Block"), and
+   *      the backslash equivalents of the very same paths all resolve.
+   *   4. Both the FULLY-QUALIFIED path starting at the "Content Builder" root
+   *      and a PARTIAL path (immediate folder + name) resolve the asset.
+   *   5. A path naming the WRONG folder for that asset throws — so the path
+   *      is genuinely matched, not merely ignored.
+   *   6. The name may be a variable, including one built by concatenation
+   *      (the separator supplied via String.fromCharCode(92), see the
+   *      authoring caveat).
+   *   7. The runtime notes: a non-existent name throws (it does NOT return the
+   *      empty string), the numeric ID is not accepted, a folder path with no
+   *      block name throws, arity 0 and arity 5+ throw the
+   *      security-descriptor error, and there is NO bare-name Core form
+   *      (typeof "undefined"; invoking it throws "Object expected").
+   *   8. The WORKAROUND section, end to end — every optional parameter that
+   *      SSJS rejects is reachable through the AMPscript form via
+   *      Platform.Function.TreatAsContent:
+   *        - a named impression region returns the body,
+   *        - fallbackContent is returned for a missing block,
+   *        - stopOnError:true propagates the error,
+   *        - stopOnError:false without a fallback yields the empty string,
+   *        - the 5-argument statusVariable form returns the body,
+   *        - and the AMPscript form uses the SAME backslash path syntax.
+   *
+   * NOT ASSERTED: the SSJS authoring caveat itself — that a string literal
+   * ENDING in a backslash aborts the CloudPage with HTTP 422. It is not a
+   * catchable JS throw: the page never renders, so no assertion in this or
+   * any other script could report it. It was established by bisecting the
+   * probe runs (a script containing only `var a = "Content Builder\\";` and a
+   * Write of it returned HTTP 422 with no output at all). Every separator in
+   * these scripts therefore avoids that shape.
+   *
+   * ALSO NOT ASSERTED: that AMPscript/SSJS *inside* the referenced block
+   * executes. The fixtures are plain static tokens, and adding executable
+   * content to them would make every other assertion on this page depend on
+   * that block's own rendering. The AMPscript-form controls below do prove
+   * that the platform renders content through this call path.
+   *
+   * SCOPE: CloudPage only — rendering the same block inside an email send was
+   * not exercised, and whether the impression region is actually recorded is
+   * not observable from inside this request.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* The path separator, built without ever ending a literal in a backslash. */
+  var SEP = String.fromCharCode(92);
+  assert("the separator helper really is a backslash (char code 92)", String(SEP.charCodeAt(0)), "92");
+
+  /* 1. It renders and RETURNS the Content Builder asset's stored body. */
+  var byName = Platform.Function.ContentBlockByName("ssjs-guide-test-block");
+  assert("the name renders the Content Builder asset's body", byName, "SSJSGUIDE-TEST-BLOCK-OK");
+  assert("the returned value is a non-empty string", (typeof byName === "string" && byName !== "") ? "true" : "false", "true");
+  var quiet = Platform.Function.ContentBlockByName("ssjs-guide-test-block");
+  assert("the call returns the content rather than emitting it", quiet, "SSJSGUIDE-TEST-BLOCK-OK");
+
+  /* 2. A bare name resolves the asset at any folder depth. */
+  assert("a bare name resolves a block in the Content Builder ROOT", Platform.Function.ContentBlockByName("ssjs-guide-test-block"), "SSJSGUIDE-TEST-BLOCK-OK");
+  assert("a bare name resolves a block ONE folder deep", Platform.Function.ContentBlockByName("ssjs-guide-folder-block"), "SSJSGUIDE-FOLDER-BLOCK-OK");
+  assert("a bare name resolves a block TWO folders deep", Platform.Function.ContentBlockByName("ssjs-guide-nested-block"), "SSJSGUIDE-NESTED-BLOCK-OK");
+
+  /* 3. DEV the separator is a backslash — forward slashes throw. */
+  assertThrows("DEV a forward-slash path throws for the ROOT block (guide showed 'Folder/Block')", function () {
+      return Platform.Function.ContentBlockByName("Content Builder/ssjs-guide-test-block");
+  });
+  assertThrows("DEV a forward-slash path throws for a block one folder deep", function () {
+      return Platform.Function.ContentBlockByName("ssjs-guide-tests/ssjs-guide-folder-block");
+  });
+  assertThrows("DEV a forward-slash path throws for a block two folders deep", function () {
+      return Platform.Function.ContentBlockByName("ssjs-guide-tests/nested/ssjs-guide-nested-block");
+  });
+  assert("the BACKSLASH equivalent resolves the ROOT block", Platform.Function.ContentBlockByName("Content Builder" + SEP + "ssjs-guide-test-block"), "SSJSGUIDE-TEST-BLOCK-OK");
+
+  /* 4. Fully-qualified and partial backslash paths both resolve. */
+  assert("a FULLY-QUALIFIED backslash path resolves a block one folder deep", Platform.Function.ContentBlockByName("Content Builder" + SEP + "ssjs-guide-tests" + SEP + "ssjs-guide-folder-block"), "SSJSGUIDE-FOLDER-BLOCK-OK");
+  assert("a PARTIAL backslash path resolves a block one folder deep", Platform.Function.ContentBlockByName("ssjs-guide-tests" + SEP + "ssjs-guide-folder-block"), "SSJSGUIDE-FOLDER-BLOCK-OK");
+  assert("a FULLY-QUALIFIED backslash path resolves a block two folders deep", Platform.Function.ContentBlockByName("Content Builder" + SEP + "ssjs-guide-tests" + SEP + "nested" + SEP + "ssjs-guide-nested-block"), "SSJSGUIDE-NESTED-BLOCK-OK");
+  assert("a PARTIAL backslash path resolves a block two folders deep", Platform.Function.ContentBlockByName("ssjs-guide-tests" + SEP + "nested" + SEP + "ssjs-guide-nested-block"), "SSJSGUIDE-NESTED-BLOCK-OK");
+
+  /* 5. A wrong folder in the path is rejected — the path really is matched. */
+  assertThrows("a backslash path naming the WRONG folder for the asset throws", function () {
+      return Platform.Function.ContentBlockByName("Content Builder" + SEP + "ssjs-guide-tests" + SEP + "ssjs-guide-test-block");
+  });
+
+  /* 6. Variables and concatenation are accepted. */
+  var pathVar = "Content Builder" + SEP + "ssjs-guide-tests" + SEP + "ssjs-guide-folder-block";
+  assert("a VARIABLE holding a backslash path resolves the asset", Platform.Function.ContentBlockByName(pathVar), "SSJSGUIDE-FOLDER-BLOCK-OK");
+  var folder = "ssjs-guide-tests";
+  assert("a CONCATENATED backslash path resolves the asset", Platform.Function.ContentBlockByName("Content Builder" + SEP + folder + SEP + "ssjs-guide-folder-block"), "SSJSGUIDE-FOLDER-BLOCK-OK");
+
+  /* 7. The runtime notes. */
+  assertThrows("a non-existent name throws", function () {
+      return Platform.Function.ContentBlockByName("ssjs-guide-no-such-block-xyz");
+  });
+  assertThrows("a non-existent name with a backslash path throws", function () {
+      return Platform.Function.ContentBlockByName("Content Builder" + SEP + "ssjs-guide-no-such-block-xyz");
+  });
+  assertThrows("passing the numeric asset ID to ContentBlockByName throws", function () {
+      return Platform.Function.ContentBlockByName(1469165);
+  });
+  assertThrows("a path naming only a FOLDER (no block) throws", function () {
+      return Platform.Function.ContentBlockByName("Content Builder" + SEP + "ssjs-guide-tests");
+  });
+  assertThrows("arity 0 throws the security-descriptor error", function () {
+      return Platform.Function.ContentBlockByName();
+  });
+  assertThrows("arity 5 throws the security-descriptor error", function () {
+      return Platform.Function.ContentBlockByName("ssjs-guide-test-block", "r", false, "fb", "statusVar");
+  });
+  assert("there is no bare-name Core form", String(typeof ContentBlockByName), "undefined");
+  assertThrows("invoking the bare name throws Object expected", function () {
+      return ContentBlockByName("ssjs-guide-test-block");
+  });
+
+  /* 8. The workaround — every optional parameter reachable through AMPscript. */
+  assert("workaround: a named impression region returns the body", Platform.Function.TreatAsContent('%%=ContentBlockByName("ssjs-guide-test-block","heroRegion")=%%'), "SSJSGUIDE-TEST-BLOCK-OK");
+  assert("workaround: fallbackContent is returned for a missing block", Platform.Function.TreatAsContent('%%=ContentBlockByName("ssjs-guide-no-such-block-xyz","heroRegion",false,"FALLBACK")=%%'), "FALLBACK");
+  assertThrows("workaround: stopOnError=true propagates the error", function () {
+      return Platform.Function.TreatAsContent('%%=ContentBlockByName("ssjs-guide-no-such-block-xyz","heroRegion",true)=%%');
+  });
+  assert("workaround: stopOnError=false with no fallback yields the empty string", Platform.Function.TreatAsContent('%%=ContentBlockByName("ssjs-guide-no-such-block-xyz","heroRegion",false)=%%'), "");
+  assert("workaround: the 5-argument statusVariable form returns the body", Platform.Function.TreatAsContent('%%[ var @s ]%%%%=ContentBlockByName("ssjs-guide-test-block","heroRegion",false,"FALLBACK",@s)=%%'), "SSJSGUIDE-TEST-BLOCK-OK");
+  assert("workaround: the AMPscript form uses the SAME backslash path syntax", Platform.Function.TreatAsContent('%%=ContentBlockByName("Content Builder' + SEP + 'ssjs-guide-tests' + SEP + 'ssjs-guide-folder-block","heroRegion")=%%'), "SSJSGUIDE-FOLDER-BLOCK-OK");
+  </script>
+
+example: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Example —
+   *   var html   = Platform.Function.ContentBlockByName("Global Header");
+   *   var footer = Platform.Function.ContentBlockByName("Content Builder\\Shared\\Standard Footer");
+   *   Write(html); Write(footer);
+   * plus the variable / concatenated-path pair.
+   *
+   * Proves the documented examples' shape:
+   *   1. The documented bare-name pattern works verbatim: the call assigns a
+   *      string to the variable and that string is the block's body.
+   *   2. The documented BACKSLASH-separated folder-path pattern works and
+   *      resolves a block that lives in a subfolder.
+   *   3. The bare-name Write() global used by the examples is available after
+   *      Platform.Load("core", "1.1.5") and emits its argument unchanged —
+   *      writing the block's body reproduces it exactly in the response.
+   *   4. The name may be a VARIABLE, exactly as the second example shows.
+   *   5. The second example's String.fromCharCode(92) separator really
+   *      produces a working path — this is the shape the page recommends
+   *      instead of a literal ending in a backslash.
+   *
+   * SCOPE: CloudPage only. Write() in an email-send context was not
+   * exercised. The page's own illustrative names ("Global Header",
+   * "Content Builder\\Shared\\Standard Footer") do not exist on the test BU,
+   * so the assertions use the fixtures while preserving each example's SHAPE.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS, except the single
+   * WRITE-PROBE line between the assertions, which IS the raw Write() output
+   * being proven in point 3 and reads
+   * WRITE-PROBE-START SSJSGUIDE-TEST-BLOCK-OK WRITE-PROBE-END.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var SEP = String.fromCharCode(92);
+
+  /* 1. The documented bare-name pattern. */
+  var html = Platform.Function.ContentBlockByName("ssjs-guide-test-block");
+  assert("the example's variable receives a string", String(typeof html), "string");
+  assert("the example's variable holds the block's body", html, "SSJSGUIDE-TEST-BLOCK-OK");
+
+  /* 2. The documented backslash folder-path pattern. */
+  var footer = Platform.Function.ContentBlockByName("Content Builder" + SEP + "ssjs-guide-tests" + SEP + "ssjs-guide-folder-block");
+  assert("the example's folder-path form resolves a block in a subfolder", footer, "SSJSGUIDE-FOLDER-BLOCK-OK");
+
+  /* 3. The bare-name Write() global from the examples is available and faithful. */
+  assert("typeof the bare-name Write is function after Platform.Load", String(typeof Write), "function");
+  Platform.Response.Write("WRITE-PROBE-START ");
+  Write(html);
+  Platform.Response.Write(" WRITE-PROBE-END\n");
+
+  /* 4. The variable form from the second example. */
+  var blockName = "ssjs-guide-test-block";
+  assert("a VARIABLE name resolves the asset", Platform.Function.ContentBlockByName(blockName), "SSJSGUIDE-TEST-BLOCK-OK");
+
+  /* 5. The String.fromCharCode(92) separator the page recommends. */
+  assert("String.fromCharCode(92) is the backslash separator", String(SEP.charCodeAt(0)), "92");
+  assert("a path built with that separator resolves the asset", Platform.Function.ContentBlockByName("Content Builder" + SEP + "ssjs-guide-tests" + SEP + "nested" + SEP + "ssjs-guide-nested-block"), "SSJSGUIDE-NESTED-BLOCK-OK");
+  </script>

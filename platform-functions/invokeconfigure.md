@@ -14,10 +14,13 @@ return_type: string
 min_args: 4
 max_args: 4
 verification: verified
+test_scripts: complete
 differs_from_docs: true
 ---
 
 {% include differs-from-docs.html note="The official docs type the return value as an object, but at runtime the call returns the OverallStatus message as a string (`\"OK\"` / `\"Error\"`); `status[0]` receives the status message and `status[1]` a numeric error code. The valid signature is 4 arguments `(apiObject, action, status, options)`." %}
+
+{% include test-script.html bundle="platform-functions--invokeconfigure" chapter="differs-from-docs" label="Show test script — string return value, status array and 4-argument arity" %}
 
 ## Parameters
 
@@ -28,21 +31,30 @@ differs_from_docs: true
 | `status` | array | Yes | Array that receives the status and request ID of the API call (e.g. `[0, 0]`) |
 | `options` | object | Yes | Additional API options to include in the call. Can contain a `null` value. |
 
+`options` may be `null`. `status` is an **out parameter**: the call writes the status
+message into `status[0]` and a
+numeric error code into `status[1]`. A `null` `apiObject` makes no SOAP call, returns
+`null`, and leaves `status` untouched.
+
+{% include test-script.html bundle="platform-functions--invokeconfigure" chapter="parameters" %}
+
 ## Examples
 
 ```javascript
-var configObj = Platform.Function.CreateObject("DataRetentionPolicyConfiguration");
-Platform.Function.SetObjectProperty(configObj, "CustomerKey", "MyDE");
-Platform.Function.SetObjectProperty(configObj, "DataRetentionPeriod", "6");
-Platform.Function.SetObjectProperty(configObj, "DataRetentionPeriodLength", "Months");
+var configObj = Platform.Function.CreateObject("PropertyDefinition");
+Platform.Function.SetObjectProperty(configObj, "Name", "MyAttribute");
+Platform.Function.SetObjectProperty(configObj, "PropertyType", "string");
 
 var StatusAndRequestID = [0, 0];
 var result = Platform.Function.InvokeConfigure(configObj, "create", StatusAndRequestID, null);
+// result === "OK", StatusAndRequestID[0] === "Success", StatusAndRequestID[1] === 0
 var status = StatusAndRequestID[0];
-var requestID = StatusAndRequestID[1];
+var errorCode = StatusAndRequestID[1];
 ```
 
 {% include callout.html type="note" content="WSProxy is the recommended approach for most SOAP API interactions. Use InvokeConfigure only when the Configure SOAP verb is specifically required." %}
+
+{% include test-script.html bundle="platform-functions--invokeconfigure" chapter="examples" %}
 
 ## See Also
 

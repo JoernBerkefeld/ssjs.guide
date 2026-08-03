@@ -1,0 +1,456 @@
+# Test scripts for /core-library/account/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the official Salesforce docs.
+#
+# The scripts resolve the running business unit dynamically (via
+# Account.Retrieve with ID greaterThan 0) instead of hard-coding tenant
+# values, so they can be pasted into any business unit unchanged.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage published from the parent business unit. Re-run them before
+# changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+init: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Account.Init(key)
+   *
+   * Proves:
+   *   1. Account.Init returns an object (typeof "object").
+   *   2. That object exposes exactly one enumerable member, Update, and
+   *      stringifies as {"Update":"function"}.
+   *   3. typeof inst.Update is "function".
+   *   4. DEVIATIONS from the official docs, each marked "DEV":
+   *        - the instance carries NO readable account fields: inst.ID,
+   *          inst.Name and inst.CustomerKey all read back undefined
+   *          (docs imply an initialized account object)
+   *        - the SAME Update-only stub is returned for ANY key value — a
+   *          real account CustomerKey, a numeric MID, an account Name, and
+   *          a nonsense string all yield an identical stub, so Init alone
+   *          never confirms that a key resolves to a real account
+   *   5. The documented workaround: read account fields with
+   *      Account.Retrieve, not from the Init instance.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* Resolve the running business unit's own row so the probe is portable. */
+  var selfRows = Account.Retrieve({ Property: "ID", SimpleOperator: "greaterThan", Value: 0 });
+  var selfRow = selfRows[0];
+  var selfKey = String(selfRow.CustomerKey);
+  var selfName = String(selfRow.Name);
+  var selfId = String(selfRow.ID);
+
+  /* 1 + 2 + 3. Shape of the instance returned for a REAL account key. */
+  var inst = Account.Init(selfKey);
+  assert("typeof Account.Init(selfCustomerKey) is object", typeof inst, "object");
+  assert("Stringify(inst) is {\"Update\":\"function\"}", Stringify(inst), "{\"Update\":\"function\"}");
+  assert("typeof inst.Update is function", typeof inst.Update, "function");
+
+  var instKeys = [];
+  for (var k in inst) { instKeys.push(k); }
+  assert("inst has exactly one enumerable member", String(instKeys.length), "1");
+  assert("the only enumerable member is Update", instKeys.join(","), "Update");
+
+  /* 4a. DEVIATION — no readable account fields on the instance. */
+  assert("DEV inst.ID is undefined (docs: an initialized account)", typeof inst.ID, "undefined");
+  assert("DEV inst.Name is undefined (docs: an initialized account)", typeof inst.Name, "undefined");
+  assert("DEV inst.CustomerKey is undefined (docs: an initialized account)", typeof inst.CustomerKey, "undefined");
+
+  /* 4b. DEVIATION — the identical stub comes back for ANY key value. */
+  var instMid = Account.Init(selfRow.ID);
+  assert("DEV Init(numeric MID) returns the same stub (docs: key is an external key)", Stringify(instMid), "{\"Update\":\"function\"}");
+  assert("DEV Init(numeric MID) exposes Update", typeof instMid.Update, "function");
+
+  var instName = Account.Init(selfName);
+  assert("DEV Init(account Name) returns the same stub (docs: key is an external key)", Stringify(instName), "{\"Update\":\"function\"}");
+  assert("DEV Init(account Name) exposes Update", typeof instName.Update, "function");
+
+  var instBogus = Account.Init("no-such-key-zzz-" + selfId);
+  assert("DEV Init(nonsense key) returns the same stub (docs: no such account)", Stringify(instBogus), "{\"Update\":\"function\"}");
+  assert("DEV Init(nonsense key) exposes Update", typeof instBogus.Update, "function");
+  assert("DEV Init(nonsense key) has no readable ID", typeof instBogus.ID, "undefined");
+  assert("DEV Init(nonsense key) stub is indistinguishable from the real one", Stringify(instBogus) === Stringify(inst) ? "true" : "false", "true");
+
+  /* 5. Workaround — account fields come from Account.Retrieve. */
+  assert("workaround: Retrieve row exposes a readable Name", typeof selfRow.Name, "string");
+  assert("workaround: Retrieve row exposes a readable CustomerKey", typeof selfRow.CustomerKey, "string");
+  assert("workaround: Retrieve row exposes a readable ID", selfId.length > 0 ? "true" : "false", "true");
+  </script>
+
+retrieve: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Account.Retrieve(filter)
+   *
+   * Proves:
+   *   1. On a match the result is an object exposing .length and .push and
+   *      stringifying as a JSON array of length 1.
+   *   2. DEVIATION "DEV": the matched collection is NOT an instanceof Array,
+   *      so callers must guard with a truthy .length check rather than the
+   *      truthiness of the object itself.
+   *   3. On no match the result is the SAME array-like shape with .length
+   *      of 0: it still exposes .push, stringifies as [] and has no
+   *      enumerable keys, and the zero-length collection is itself falsy.
+   *   4. DEVIATION "DEV": Retrieve resolves ONLY the running session's own
+   *      account. Name (equals), ID (equals, as numeric OR string form, and
+   *      greaterThan 0) and CustomerKey (equals) each return the running
+   *      business unit's own row; any other account returns the empty shape.
+   *   5. DEVIATION "DEV": the properties MID, AccountID and BusinessUnitID
+   *      are not recognized and return the empty shape.
+   *   6. A matched row is the full Account SOAP object: every field the page
+   *      lists is asserted present, including the nested TimeZone object and
+   *      the *Specified boolean companions.
+   *   7. The documented workaround: `if (rows && rows.length)` before
+   *      indexing.
+   *
+   * NOTE: the "other business unit" cases are asserted with values that
+   * cannot belong to the running account (a foreign ID, a nonexistent Name
+   * and a nonexistent CustomerKey) so the script is portable; the original
+   * verification additionally tried real sibling/child business units by
+   * Name, ID and CustomerKey and observed the same empty shape.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  function ret(prop, op, val) {
+      return Account.Retrieve({ Property: prop, SimpleOperator: op, Value: val });
+  }
+  function isEmptyShape(rows) {
+      if (typeof rows == "undefined" || rows === null) { return "not-an-object"; }
+      if (typeof rows.length == "undefined") { return "no-length"; }
+      if (rows.length !== 0) { return "length-" + rows.length; }
+      var n = 0;
+      for (var k in rows) { n++; }
+      if (n !== 0) { return "has-keys"; }
+      if (Stringify(rows) !== "[]") { return "not-[]"; }
+      return "empty";
+  }
+  function matchCount(rows) {
+      if (typeof rows == "undefined" || rows === null) { return "no-object"; }
+      if (typeof rows.length == "undefined") { return "no-length"; }
+      return String(rows.length);
+  }
+
+  /* 1. Bootstrap: ID greaterThan 0 resolves the running account. */
+  var boot = ret("ID", "greaterThan", 0);
+  assert("DEV Retrieve(ID greaterThan 0) returns exactly the own row (docs: all matching accounts)", matchCount(boot), "1");
+  var selfRow = boot[0];
+  var selfKey = String(selfRow.CustomerKey);
+  var selfName = String(selfRow.Name);
+  var selfId = selfRow.ID;
+
+  /* 1 + 2. Shape of a matched collection. */
+  var hit = ret("CustomerKey", "equals", selfKey);
+  assert("typeof matched result is object", typeof hit, "object");
+  assert("matched result exposes .length", typeof hit.length, "number");
+  assert("matched result .length is 1", String(hit.length), "1");
+  assert("matched result exposes .push", typeof hit.push, "function");
+  assert("matched result stringifies as a JSON array", Stringify(hit).substring(0, 1), "[");
+  assert("DEV matched result is NOT instanceof Array (docs: object[])", hit instanceof Array ? "true" : "false", "false");
+  assert("workaround: (rows && rows.length) is truthy on a match", (hit && hit.length) ? "true" : "false", "true");
+
+  /* 3. Shape of a no-match result. */
+  var miss = ret("CustomerKey", "equals", "no-such-customer-key-zzz");
+  assert("typeof no-match result is object", typeof miss, "object");
+  assert("no-match result exposes .length", typeof miss.length, "number");
+  assert("no-match result .length is 0", String(miss.length), "0");
+  assert("no-match result still exposes .push", typeof miss.push, "function");
+  assert("no-match result stringifies as []", Stringify(miss), "[]");
+  assert("no-match result has no enumerable keys", isEmptyShape(miss), "empty");
+  assert("DEV no-match result is NOT instanceof Array (docs: object[])", miss instanceof Array ? "true" : "false", "false");
+  assert("workaround: (rows && rows.length) is falsy on no match", (miss && miss.length) ? "true" : "false", "false");
+  assert("DEV the zero-length collection is itself falsy (spec: every object is truthy)", miss ? "true" : "false", "false");
+
+  /* 4. Only the running session's own account resolves. */
+  assert("Retrieve by own Name equals returns 1 row", matchCount(ret("Name", "equals", selfName)), "1");
+  assert("Retrieve by own ID equals (numeric) returns 1 row", matchCount(ret("ID", "equals", selfId)), "1");
+  assert("Retrieve by own ID equals (string form) returns 1 row", matchCount(ret("ID", "equals", String(selfId))), "1");
+  assert("Retrieve by own CustomerKey equals returns 1 row", matchCount(ret("CustomerKey", "equals", selfKey)), "1");
+
+  assert("DEV another account by Name returns the empty shape (docs: any matching account)", isEmptyShape(ret("Name", "equals", "no-such-account-name-zzz")), "empty");
+  assert("DEV another account by ID returns the empty shape (docs: any matching account)", isEmptyShape(ret("ID", "equals", 1)), "empty");
+  assert("DEV another account by CustomerKey GUID returns the empty shape (docs: any matching account)", isEmptyShape(ret("CustomerKey", "equals", "00000000-0000-0000-0000-000000000000")), "empty");
+  assert("DEV another account by plain-string CustomerKey returns the empty shape (docs: any matching account)", isEmptyShape(ret("CustomerKey", "equals", "no-such-plain-key")), "empty");
+
+  /* 5. Unrecognized properties. */
+  assert("DEV Property MID is not recognized (docs: no such filter property)", isEmptyShape(ret("MID", "equals", selfId)), "empty");
+  assert("DEV Property AccountID is not recognized (docs: no such filter property)", isEmptyShape(ret("AccountID", "equals", selfId)), "empty");
+  assert("DEV Property BusinessUnitID is not recognized (docs: no such filter property)", isEmptyShape(ret("BusinessUnitID", "equals", selfId)), "empty");
+
+  /* 6. The matched row is the full Account SOAP object. */
+  var rowKeys = {};
+  for (var rk in selfRow) { rowKeys[rk] = true; }
+  function assertField(name) {
+      Platform.Response.Write((rowKeys[name] === true ? "PASS " : "FAIL ") + "row exposes " + name + "\n");
+  }
+  assertField("Name");
+  assertField("ID");
+  assertField("CustomerKey");
+  assertField("AccountType");
+  assertField("ParentID");
+  assertField("BrandID");
+  assertField("PrivateLabelID");
+  assertField("ReportingParentID");
+  assertField("Email");
+  assertField("FromName");
+  assertField("BusinessName");
+  assertField("Phone");
+  assertField("Address");
+  assertField("Fax");
+  assertField("City");
+  assertField("State");
+  assertField("Zip");
+  assertField("Country");
+  assertField("IsActive");
+  assertField("IsTestAccount");
+  assertField("OrgID");
+  assertField("DBID");
+  assertField("ParentName");
+  assertField("CustomerID");
+  assertField("DeletedDate");
+  assertField("EditionID");
+  assertField("Children");
+  assertField("Subscription");
+  assertField("PrivateLabels");
+  assertField("BusinessRules");
+  assertField("AccountUsers");
+  assertField("InheritAddress");
+  assertField("IsTrialAccount");
+  assertField("Locale");
+  assertField("ParentAccount");
+  assertField("TimeZone");
+  assertField("Roles");
+  assertField("StackID");
+  assertField("SalesForceID");
+  assertField("LanguageLocale");
+  assertField("IndustryCode");
+  assertField("Edition");
+  assertField("SalesforceOrgID");
+  assertField("AccountState");
+  assertField("SubscriptionRestrictionFlags");
+  assertField("Client");
+  assertField("PartnerKey");
+  assertField("PartnerProperties");
+  assertField("CreatedDate");
+  assertField("ModifiedDate");
+  assertField("ObjectID");
+  assertField("Owner");
+  assertField("CorrelationID");
+  assertField("ObjectState");
+  assertField("IsPlatformObject");
+  assertField("IDSpecified");
+  assertField("ParentIDSpecified");
+  assertField("CreatedDateSpecified");
+
+  /* 6b. TimeZone is a nested object with ID / Name / CustomerKey. */
+  assert("row.TimeZone is an object", typeof selfRow.TimeZone, "object");
+  assert("row.TimeZone exposes ID", typeof selfRow.TimeZone.ID != "undefined" ? "true" : "false", "true");
+  assert("row.TimeZone exposes Name", typeof selfRow.TimeZone.Name != "undefined" ? "true" : "false", "true");
+  assert("row.TimeZone exposes CustomerKey", typeof selfRow.TimeZone.CustomerKey != "undefined" ? "true" : "false", "true");
+  </script>
+
+instance-update: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <AccountInstance>.Update(properties)
+   *
+   * Proves:
+   *   1. The return value is a string (typeof "string").
+   *   2. DEVIATIONS from the official docs, each marked "DEV":
+   *        - every real single-field payload RETURNS the plain string
+   *          "Error" (docs: returns "OK" on success) — asserted for
+   *          FromName, BusinessName, a CustomerKey-only object, an empty
+   *          object {}, and an ID+CustomerKey object
+   *        - a Description payload (not a real SOAP Account field) THROWS
+   *          the plain string "Error Updating Account." — a string, not an
+   *          Error instance, so the caught value has NO .message
+   *        - nothing persists: setting FromName to a marker and re-reading
+   *          the account by ID shows the original value unchanged
+   *        - the documented "OK" success return was not reproduced
+   *   3. Only the Account.Init(...) stub exposes Update; a row returned by
+   *      Account.Retrieve has typeof row.Update === "undefined" and calling
+   *      it throws the Jint error "Object expected: Update".
+   *   4. The documented workaround: wrap the call in try/catch and treat any
+   *      non-"OK" return AND any throw as failure.
+   *
+   * SAFETY: every write below is a proven no-op on this engine (nothing
+   * persists). The CustomerKey payload deliberately re-sends the account's
+   * CURRENT CustomerKey so the call is idempotent even if it ever did
+   * persist, and the FromName marker write is verified to have left the
+   * original value intact.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrowsString(id, fn, fragment) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex; }
+      var ok = threw && msg.indexOf(fragment) >= 0;
+      Platform.Response.Write((ok ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  /*
+   * Each Update payload is sent EXACTLY ONCE and its outcome cached: the
+   * call is a live SOAP round-trip and repeating it would push the page
+   * past the CloudPage time budget (HTTP 422).
+   */
+  /*
+   * NOTE: normalize with "" + x, NOT String(x). String() on an engine value
+   * yields a CLR string wrapper whose .indexOf/.length are unusable and whose
+   * === against a JS literal is false; plain concatenation yields a real JS
+   * string.
+   */
+  function callUpdate(props) {
+      var inst = Account.Init(SELF_KEY);
+      try { return { kind: "returned", value: "" + inst.Update(props), raw: null }; }
+      catch (ex) { return { kind: "threw", value: "" + ex, raw: ex }; }
+  }
+  function readField(row, field) {
+      if (row === null) { return "<<no-row>>"; }
+      return String(row[field]);
+  }
+
+  /* Resolve the running business unit's own account. */
+  var bootRows = Account.Retrieve({ Property: "ID", SimpleOperator: "greaterThan", Value: 0 });
+  var bootRow = bootRows[0];
+  var SELF_KEY = String(bootRow.CustomerKey);
+  var SELF_ID = bootRow.ID;
+  var SELF_FROMNAME = String(bootRow.FromName);
+  var SELF_BIZNAME = String(bootRow.BusinessName);
+  var MARKER = "ssjs-guide-test-script-marker";
+
+  /* One call per payload. */
+  var rFromName = callUpdate({ FromName: MARKER });
+  var rBizName = callUpdate({ BusinessName: MARKER });
+  var rCustKey = callUpdate({ CustomerKey: SELF_KEY });
+  var rEmpty = callUpdate({});
+  var rIdKey = callUpdate({ ID: SELF_ID, CustomerKey: SELF_KEY });
+  var rDescription = callUpdate({ Description: MARKER });
+
+  /* Re-read the account ONCE after all writes. */
+  var afterRows = Account.Retrieve({ Property: "ID", SimpleOperator: "equals", Value: SELF_ID });
+  var afterRow = (afterRows && afterRows.length > 0) ? afterRows[0] : null;
+
+  /* 1. The return value is a string. */
+  assert("typeof <AccountInstance>.Update(...) return is string", typeof rFromName.value, "string");
+
+  /* 2a. DEVIATION - every real single-field payload returns "Error". */
+  assert("DEV Update({FromName}) returns \"Error\" (docs: \"OK\" on success)", rFromName.kind + ":" + rFromName.value, "returned:Error");
+  assert("DEV Update({BusinessName}) returns \"Error\" (docs: \"OK\" on success)", rBizName.kind + ":" + rBizName.value, "returned:Error");
+  assert("DEV Update({CustomerKey}) returns \"Error\" (docs: \"OK\" on success)", rCustKey.kind + ":" + rCustKey.value, "returned:Error");
+  assert("DEV Update({}) returns \"Error\" (docs: \"OK\" on success)", rEmpty.kind + ":" + rEmpty.value, "returned:Error");
+  assert("DEV Update({ID,CustomerKey}) returns \"Error\" (docs: \"OK\" on success)", rIdKey.kind + ":" + rIdKey.value, "returned:Error");
+  assert("DEV the documented \"OK\" success return is never produced", rFromName.value === "OK" ? "true" : "false", "false");
+
+  /* 2b. DEVIATION - a Description payload throws a PLAIN STRING. */
+  assert("DEV Update({Description}) THROWS rather than returning (docs: returns a string)", rDescription.kind, "threw");
+  assert("DEV the thrown string is exactly \"Error Updating Account.\"", rDescription.value, "Error Updating Account.");
+  assert("DEV the thrown value is a string, not an Error instance", typeof rDescription.raw, "string");
+  assert("DEV the thrown value therefore has NO .message", typeof rDescription.raw.message, "undefined");
+
+  /* 2c. DEVIATION - nothing persists. */
+  assert("DEV FromName is unchanged after the marker write (docs: the update is applied)", readField(afterRow, "FromName"), SELF_FROMNAME);
+  assert("DEV CustomerKey is unchanged after the CustomerKey write (docs: the update is applied)", readField(afterRow, "CustomerKey"), SELF_KEY);
+  assert("DEV BusinessName is unchanged after the marker write (docs: the update is applied)", readField(afterRow, "BusinessName"), SELF_BIZNAME);
+
+  /* 3. Only the Init stub exposes Update. */
+  assert("Account.Init(...) stub exposes Update", typeof Account.Init(SELF_KEY).Update, "function");
+  assert("DEV a Retrieve row has NO Update method (docs: the account object is updatable)", typeof bootRow.Update, "undefined");
+  assertThrowsString("DEV calling Update on a Retrieve row throws \"Object expected: Update\"", function () { return bootRow.Update({ FromName: MARKER }); }, "Object expected: Update");
+
+  /* 4. Workaround - a non-"OK" return AND a throw are both failures. */
+  function classify(outcome) {
+      if (outcome.kind === "threw") { return "failure"; }
+      return outcome.value === "OK" ? "success" : "failure";
+  }
+  assert("workaround: non-\"OK\" return is reported as failure", classify(rFromName), "failure");
+  assert("workaround: a thrown plain string is reported as failure", classify(rDescription), "failure");
+  </script>
+
+tracking-retrieve: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Account.Tracking.Retrieve(filter)
+   *
+   * Proves:
+   *   1. Account.Tracking.Retrieve is a static call — no Account.Init() is
+   *      required first.
+   *   2. It returns an array-like collection of tracking rows exposing
+   *      .length.
+   *   3. Each row exposes the documented counter objects Sends, Bounces,
+   *      Clicks, Opens and Unsubscribes, with these sub-counters:
+   *        Sends        -> Total
+   *        Bounces      -> Total, HardBounces, SoftBounces, BlockBounces,
+   *                        TechnicalBounces, UnknownBounces
+   *        Clicks       -> Total, Unique
+   *        Opens        -> Total, Unique
+   *        Unsubscribes -> Unique
+   *   4. Every counter is a number.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* Resolve the running business unit's own CustomerKey. */
+  var selfRows = Account.Retrieve({ Property: "ID", SimpleOperator: "greaterThan", Value: 0 });
+  var selfKey = String(selfRows[0].CustomerKey);
+
+  /* 1 + 2. Static call, array-like result. */
+  assert("typeof Account.Tracking is object", typeof Account.Tracking, "object");
+  assert("typeof Account.Tracking.Retrieve is function", typeof Account.Tracking.Retrieve, "function");
+
+  var rows = Account.Tracking.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: selfKey });
+  assert("typeof result is object", typeof rows, "object");
+  assert("result exposes .length", typeof rows.length, "number");
+  assert("result has at least one row", rows.length > 0 ? "true" : "false", "true");
+
+  /* 3 + 4. Row shape. */
+  var row = rows[0];
+  assert("row exposes Sends", typeof row.Sends, "object");
+  assert("row exposes Bounces", typeof row.Bounces, "object");
+  assert("row exposes Clicks", typeof row.Clicks, "object");
+  assert("row exposes Opens", typeof row.Opens, "object");
+  assert("row exposes Unsubscribes", typeof row.Unsubscribes, "object");
+
+  assert("Sends.Total is a number", typeof row.Sends.Total, "number");
+  assert("Bounces.Total is a number", typeof row.Bounces.Total, "number");
+  assert("Bounces.HardBounces is a number", typeof row.Bounces.HardBounces, "number");
+  assert("Bounces.SoftBounces is a number", typeof row.Bounces.SoftBounces, "number");
+  assert("Bounces.BlockBounces is a number", typeof row.Bounces.BlockBounces, "number");
+  assert("Bounces.TechnicalBounces is a number", typeof row.Bounces.TechnicalBounces, "number");
+  assert("Bounces.UnknownBounces is a number", typeof row.Bounces.UnknownBounces, "number");
+  assert("Clicks.Total is a number", typeof row.Clicks.Total, "number");
+  assert("Clicks.Unique is a number", typeof row.Clicks.Unique, "number");
+  assert("Opens.Total is a number", typeof row.Opens.Total, "number");
+  assert("Opens.Unique is a number", typeof row.Opens.Unique, "number");
+  assert("Unsubscribes.Unique is a number", typeof row.Unsubscribes.Unique, "number");
+  </script>

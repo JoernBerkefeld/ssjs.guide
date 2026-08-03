@@ -1,0 +1,289 @@
+# Test scripts for /platform-functions/lookuporderedrows/
+#
+# Every script creates, seeds, queries, and deletes its own throwaway Data
+# Extension. Identical queries are never repeated after a write because the
+# wide probe proved LookupOrderedRows shares SFMC's request-scoped query cache.
+# All scripts were last run green on MCDEV_Training_QA.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+  /*
+   * Chapter: Parameters
+   * Proves:
+   * 1. The documented fixed five-argument call works; the binding is not variadic.
+   * 2. count limits positive results; 0 and negative values remove the effective
+   *    limit (subject to the documented 2,000-row platform maximum).
+   * 3. count accepts a number and a numeric string with the same limited row set.
+   * 4. filter names/values accept strings or positionally aligned arrays using AND.
+   * 5. Unequal arrays, invalid count values, bad identifiers and wrong arities throw.
+   * 6. The DE is resolved by Name, not CustomerKey.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function addField(de, name, type, len, isKey) {
+      var f = Platform.Function.CreateObject("DataExtensionField");
+      Platform.Function.SetObjectProperty(f, "Name", name);
+      Platform.Function.SetObjectProperty(f, "FieldType", type);
+      if (len) { Platform.Function.SetObjectProperty(f, "MaxLength", len); }
+      Platform.Function.SetObjectProperty(f, "IsPrimaryKey", isKey);
+      Platform.Function.SetObjectProperty(f, "IsRequired", isKey);
+      Platform.Function.AddObjectArrayItem(de, "Fields", f);
+  }
+  function createDE(name, key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      Platform.Function.SetObjectProperty(de, "Name", name);
+      addField(de, "Id", "Text", "50", "true");
+      addField(de, "Grp", "Text", "50", "false");
+      addField(de, "Code", "Text", "50", "false");
+      addField(de, "Active", "Boolean", null, "false");
+      var st = [0, 0];
+      return String(Platform.Function.InvokeCreate(de, st, null));
+  }
+  function dropDE(key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      var st = [0, 0];
+      return String(Platform.Function.InvokeDelete(de, st, null));
+  }
+  function ids(rows) {
+      var s = "", i;
+      if (rows === null) { return "null"; }
+      for (i = 0; i < rows.length; i++) { s += (i ? "," : "") + String(rows[i]["Id"]); }
+      return s;
+  }
+  var deName = "ssjsg_lor_parameters_name";
+  var deKey = "ssjsg_lor_parameters_key";
+  assert("control: Name and CustomerKey differ", deName === deKey ? "same" : "different", "different");
+  assert("setup: throwaway DE created", createDE(deName, deKey), "OK");
+  assert("setup: row a inserted", Platform.Function.InsertData(deName, ["Id", "Grp", "Code", "Active"], ["a", "all", "beta", "true"]), 1);
+  assert("setup: row b inserted", Platform.Function.InsertData(deName, ["Id", "Grp", "Code", "Active"], ["b", "all", "alpha", "false"]), 1);
+  assert("setup: row c inserted", Platform.Function.InsertData(deName, ["Id", "Grp", "Code", "Active"], ["c", "all", "gamma", "true"]), 1);
+  assert("setup: row d inserted", Platform.Function.InsertData(deName, ["Id", "Grp", "Code", "Active"], ["d", "all", "delta", "false"]), 1);
+
+  var limited = Platform.Function.LookupOrderedRows(deName, 2, "Code ASC", "Grp", "all");
+  assert("documented five-argument call returns two limited rows", limited.length, 2);
+  assert("positive number count keeps the first two sorted rows", ids(limited), "b,a");
+  var limitedStr = Platform.Function.LookupOrderedRows(deName, "2", "Code ASC", "Grp", "all");
+  assert("numeric string count '2' yields the same rows as number count 2", ids(limitedStr), "b,a");
+  var zero = Platform.Function.LookupOrderedRows(deName, 0, "Code ASC", "Active", "true");
+  assert("count 0 removes the effective limit for the matching set", ids(zero), "a,c");
+  var negative = Platform.Function.LookupOrderedRows(deName, -1, "Code ASC", "Active", "false");
+  assert("negative count removes the effective limit for the matching set", ids(negative), "b,d");
+  var zeroStr = Platform.Function.LookupOrderedRows(deName, "0", "Code ASC", "Active", "true");
+  assert("numeric string count '0' matches number count 0 for the matching set", ids(zeroStr), "a,c");
+
+  var oneArray = Platform.Function.LookupOrderedRows(deName, 10, "Code ASC", ["Grp"], ["all"]);
+  assert("single-element filter arrays behave like string filters", ids(oneArray), "b,a,d,c");
+  var multi = Platform.Function.LookupOrderedRows(deName, 10, "Code ASC", ["Grp", "Active"], ["all", "true"]);
+  assert("multiple filter arrays apply AND logic", ids(multi), "a,c");
+  var swapped = Platform.Function.LookupOrderedRows(deName, 10, "Code ASC", ["Grp", "Active"], ["true", "all"]);
+  assert("filter arrays are positionally aligned", swapped === null ? "null" : ids(swapped), "null");
+
+  assertThrows("more filter names than values throws", function () { return Platform.Function.LookupOrderedRows(deName, 10, "Code ASC", ["Grp", "Active"], ["all"]); });
+  assertThrows("more filter values than names throws", function () { return Platform.Function.LookupOrderedRows(deName, 10, "Code ASC", ["Grp"], ["all", "true"]); });
+  assertThrows("DEV CustomerKey form throws (docs do not restrict the identifier to Name)", function () { return Platform.Function.LookupOrderedRows(deKey, 10, "Code ASC", "Grp", "all"); });
+  assertThrows("a nonexistent filter column throws", function () { return Platform.Function.LookupOrderedRows(deName, 10, "Code ASC", "NoSuchColumn", "x"); });
+  assertThrows("a nonexistent DE throws", function () { return Platform.Function.LookupOrderedRows("ssjsg_lor_no_such_de", 10, "Code ASC", "Grp", "x"); });
+  assertThrows("null count throws", function () { return Platform.Function.LookupOrderedRows(deName, null, "Code ASC", "Grp", "all"); });
+  assertThrows("undefined count throws", function () { var u; return Platform.Function.LookupOrderedRows(deName, u, "Code ASC", "Grp", "all"); });
+  assertThrows("non-numeric count text throws", function () { return Platform.Function.LookupOrderedRows(deName, "nope", "Code ASC", "Grp", "all"); });
+  assertThrows("NaN count throws", function () { return Platform.Function.LookupOrderedRows(deName, NaN, "Code ASC", "Grp", "all"); });
+  assertThrows("arity 0 throws", function () { return Platform.Function.LookupOrderedRows(); });
+  assertThrows("arity 4 throws", function () { return Platform.Function.LookupOrderedRows(deName, 10, "Code ASC", "Grp"); });
+  assertThrows("arity 6 throws", function () { return Platform.Function.LookupOrderedRows(deName, 10, "Code ASC", "Grp", "all", "extra"); });
+  assertThrows("AMPscript-style repeated filter pairs are not variadic", function () { return Platform.Function.LookupOrderedRows(deName, 10, "Code ASC", "Grp", "all", "Active", "true"); });
+  assert("cleanup: throwaway DE deleted", dropDE(deKey), "OK");
+  </script>
+
+description: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+  /*
+   * Chapter: Description and field types
+   * Proves:
+   * 1. A match returns an indexed row array with .length and property access;
+   *    no match returns genuine JavaScript null, not [].
+   * 2. ASC/DESC, comma-separated tie-breakers and case-insensitive sort tokens work.
+   * 3. Text/Number/Decimal/Boolean keep native types; Date is an ISO string.
+   * 4. Rows expose _CustomObjectKey and _CreatedDate.
+   * 5. A NULL Text field is returned as an ordinary empty string here — unlike
+   *    Lookup's hazardous CLR null — while String() remains safe.
+   * 6. An invalid sort column/direction throws; omitted direction is accepted
+   *    but does not provide a documented deterministic direction.
+   * 7. Identical repeated queries are request-cached; changing query shape sees
+   *    a row inserted after the first query.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function addField(de, name, type, len, scale, isKey) {
+      var f = Platform.Function.CreateObject("DataExtensionField");
+      Platform.Function.SetObjectProperty(f, "Name", name);
+      Platform.Function.SetObjectProperty(f, "FieldType", type);
+      if (len) { Platform.Function.SetObjectProperty(f, "MaxLength", len); }
+      if (scale) { Platform.Function.SetObjectProperty(f, "Scale", scale); }
+      Platform.Function.SetObjectProperty(f, "IsPrimaryKey", isKey);
+      Platform.Function.SetObjectProperty(f, "IsRequired", isKey);
+      Platform.Function.AddObjectArrayItem(de, "Fields", f);
+  }
+  function createDE(name, key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      Platform.Function.SetObjectProperty(de, "Name", name);
+      addField(de, "Id", "Text", "50", null, "true");
+      addField(de, "Grp", "Text", "50", null, "false");
+      addField(de, "Code", "Text", "50", null, "false");
+      addField(de, "Rank", "Number", null, null, "false");
+      addField(de, "Amount", "Decimal", "18", "2", "false");
+      addField(de, "Active", "Boolean", null, null, "false");
+      addField(de, "WhenVal", "Date", null, null, "false");
+      addField(de, "NullCol", "Text", "50", null, "false");
+      addField(de, "BlankCol", "Text", "50", null, "false");
+      var st = [0, 0];
+      return String(Platform.Function.InvokeCreate(de, st, null));
+  }
+  function dropDE(key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      var st = [0, 0];
+      return String(Platform.Function.InvokeDelete(de, st, null));
+  }
+  function ids(rows) {
+      var s = "", i;
+      if (rows === null) { return "null"; }
+      for (i = 0; i < rows.length; i++) { s += (i ? "," : "") + String(rows[i]["Id"]); }
+      return s;
+  }
+  var deName = "ssjsg_lor_description_name";
+  var deKey = "ssjsg_lor_description_key";
+  assert("setup: throwaway DE created", createDE(deName, deKey), "OK");
+  assert("setup: row a inserted", Platform.Function.InsertData(deName, ["Id", "Grp", "Code", "Rank", "Amount", "Active", "WhenVal", "BlankCol"], ["a", "sort", "beta", "2", "2.20", "true", "2024-01-15", ""]), 1);
+  assert("setup: row b inserted", Platform.Function.InsertData(deName, ["Id", "Grp", "Code", "Rank", "Amount", "Active", "WhenVal", "BlankCol"], ["b", "sort", "alpha", "1", "1.10", "false", "2024-01-16", "filled"]), 1);
+  assert("setup: row c inserted", Platform.Function.InsertData(deName, ["Id", "Grp", "Code", "Rank", "Amount", "Active", "WhenVal", "BlankCol"], ["c", "sort", "gamma", "2", "3.30", "true", "2024-01-17", "filled"]), 1);
+  assert("setup: row d inserted", Platform.Function.InsertData(deName, ["Id", "Grp", "Code", "Rank", "Amount", "Active", "WhenVal", "BlankCol"], ["d", "sort", "delta", "1", "4.40", "false", "2024-01-18", "filled"]), 1);
+
+  var asc = Platform.Function.LookupOrderedRows(deName, 10, "Rank ASC, Code DESC", "Grp", "sort");
+  assert("matched result has typeof object", String(typeof asc), "object");
+  assert("matched result exposes .length", asc.length, 4);
+  assert("zero-based indexing and property access work", String(asc[0]["Code"]), "delta");
+  assert("multi-field ASC sort discriminates ties", ids(asc), "d,b,c,a");
+  var desc = Platform.Function.LookupOrderedRows(deName, 10, "Rank DESC, Code ASC", "Grp", "sort");
+  assert("DESC plus secondary ASC reverses the rank groups deterministically", ids(desc), "a,c,b,d");
+  var lower = Platform.Function.LookupOrderedRows(deName, 10, "rank desc, code asc", "Grp", "sort");
+  assert("sort column names and ASC/DESC tokens are case-insensitive on this BU", ids(lower), "a,c,b,d");
+
+  assert("Text returns string", String(typeof asc[0]["Code"]), "string");
+  assert("Number returns number and supports arithmetic", String(typeof asc[0]["Rank"]) + ":" + String(asc[0]["Rank"] + 1), "number:2");
+  assert("Decimal returns number", String(typeof asc[0]["Amount"]), "number");
+  assert("Boolean returns boolean", String(typeof asc[0]["Active"]), "boolean");
+  assert("DEV Date returns an ISO string, not a Date object", String(typeof asc[0]["WhenVal"]) + ":" + String(asc[0]["WhenVal"]), "string:2024-01-18T00:00:00.000");
+  assert("DEV row exposes numeric _CustomObjectKey", String(typeof asc[0]["_CustomObjectKey"]), "number");
+  assert("DEV row exposes string _CreatedDate", String(typeof asc[0]["_CreatedDate"]), "string");
+  assert("explicit empty string remains an ordinary string", String(typeof asc[3]["BlankCol"]) + ":" + String(asc[3]["BlankCol"]), "string:");
+  assert("NULL field is normalized to an ordinary string in row results", String(typeof asc[0]["NullCol"]), "string");
+  assert("NULL field is not strict null", asc[0]["NullCol"] === null ? "true" : "false", "false");
+  assert("String() safely yields empty text for the normalized NULL field", String(asc[0]["NullCol"]), "");
+  assert("normalized NULL field loose-null comparison is false without throwing", asc[0]["NullCol"] == null ? "true" : "false", "false");
+  assert("normalized NULL field is safely falsy", asc[0]["NullCol"] ? "true" : "false", "false");
+
+  var none = Platform.Function.LookupOrderedRows(deName, 10, "Code ASC", "Grp", "none");
+  assert("DEV no match returns genuine JavaScript null", none === null ? "true" : "false", "true");
+  assert("no match has typeof object", String(typeof none), "object");
+  assert("no match String() is null", String(none), "null");
+
+  var before = Platform.Function.LookupOrderedRows(deName, 10, "Code ASC", "Grp", "cache");
+  assert("cache control: query before insert returns null", before === null ? "null" : ids(before), "null");
+  assert("cache setup: later row inserted", Platform.Function.InsertData(deName, ["Id", "Grp", "Code"], ["cache-1", "cache", "cachecode"]), 1);
+  var repeated = Platform.Function.LookupOrderedRows(deName, 10, "Code ASC", "Grp", "cache");
+  assert("identical repeated query remains stale in the same request", repeated === null ? "null" : ids(repeated), "null");
+  var changed = Platform.Function.LookupOrderedRows(deName, 10, "Code ASC", "Id", "cache-1");
+  assert("varying the query shape sees the newly inserted row", changed === null ? "null" : ids(changed), "cache-1");
+
+  var omittedDirection = Platform.Function.LookupOrderedRows(deName, 10, "Rank", "Grp", "sort");
+  assert("a sort expression with omitted direction is accepted", omittedDirection.length, 4);
+  assertThrows("a nonexistent sort column throws", function () { return Platform.Function.LookupOrderedRows(deName, 10, "NoSuchColumn ASC", "Grp", "sort"); });
+  assertThrows("a malformed sort direction throws", function () { return Platform.Function.LookupOrderedRows(deName, 10, "Rank SIDEWAYS", "Grp", "sort"); });
+  assert("cleanup: throwaway DE deleted", dropDE(deKey), "OK");
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+  /*
+   * Chapter: Examples
+   * Proves all four documented example shapes: a descending recent-order query,
+   * a top-five descending price query, count 0 for all matches, and two filter
+   * arrays applying AND logic.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function addField(de, name, type, len, isKey) {
+      var f = Platform.Function.CreateObject("DataExtensionField");
+      Platform.Function.SetObjectProperty(f, "Name", name);
+      Platform.Function.SetObjectProperty(f, "FieldType", type);
+      if (len) { Platform.Function.SetObjectProperty(f, "MaxLength", len); }
+      Platform.Function.SetObjectProperty(f, "IsPrimaryKey", isKey);
+      Platform.Function.SetObjectProperty(f, "IsRequired", isKey);
+      Platform.Function.AddObjectArrayItem(de, "Fields", f);
+  }
+  function createDE(name, key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      Platform.Function.SetObjectProperty(de, "Name", name);
+      addField(de, "OrderID", "Text", "50", "true");
+      addField(de, "OrderDate", "Date", null, "false");
+      addField(de, "Status", "Text", "50", "false");
+      addField(de, "Price", "Decimal", "18", "false");
+      addField(de, "Active", "Boolean", null, "false");
+      addField(de, "LastName", "Text", "50", "false");
+      addField(de, "PreferredLanguage", "Text", "50", "false");
+      addField(de, "RewardsTier", "Text", "50", "false");
+      var st = [0, 0];
+      return String(Platform.Function.InvokeCreate(de, st, null));
+  }
+  function dropDE(key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      var st = [0, 0];
+      return String(Platform.Function.InvokeDelete(de, st, null));
+  }
+  function ids(rows) {
+      var s = "", i;
+      for (i = 0; i < rows.length; i++) { s += (i ? "," : "") + String(rows[i]["OrderID"]); }
+      return s;
+  }
+  var deName = "ssjsg_lor_examples_name";
+  var deKey = "ssjsg_lor_examples_key";
+  assert("setup: throwaway DE created", createDE(deName, deKey), "OK");
+  assert("setup: order 1 inserted", Platform.Function.InsertData(deName, ["OrderID", "OrderDate", "Status", "Price", "Active", "LastName", "PreferredLanguage", "RewardsTier"], ["1", "2024-01-01", "complete", "10.00", "true", "Zulu", "English", "Silver"]), 1);
+  assert("setup: order 2 inserted", Platform.Function.InsertData(deName, ["OrderID", "OrderDate", "Status", "Price", "Active", "LastName", "PreferredLanguage", "RewardsTier"], ["2", "2024-01-03", "complete", "30.00", "true", "Alpha", "English", "Silver"]), 1);
+  assert("setup: order 3 inserted", Platform.Function.InsertData(deName, ["OrderID", "OrderDate", "Status", "Price", "Active", "LastName", "PreferredLanguage", "RewardsTier"], ["3", "2024-01-02", "pending", "20.00", "false", "Mike", "English", "Gold"]), 1);
+
+  var recent = Platform.Function.LookupOrderedRows(deName, 10, "OrderDate DESC", "Status", "complete");
+  assert("recent-orders example returns both complete orders", recent.length, 2);
+  assert("recent-orders example puts the newest complete order first", ids(recent), "2,1");
+  var top = Platform.Function.LookupOrderedRows(deName, 5, "Price DESC", "Active", "true");
+  assert("top-products example sorts active rows by descending price", ids(top), "2,1");
+  var all = Platform.Function.LookupOrderedRows(deName, 0, "LastName ASC", "Status", "complete");
+  assert("count-0 example returns every matching row in order", ids(all), "2,1");
+  var filtered = Platform.Function.LookupOrderedRows(deName, 0, "LastName ASC", ["PreferredLanguage", "RewardsTier"], ["English", "Silver"]);
+  assert("multiple-filter example applies AND logic and returns both Silver English rows", ids(filtered), "2,1");
+  assert("cleanup: throwaway DE deleted", dropDE(deKey), "OK");
+  </script>

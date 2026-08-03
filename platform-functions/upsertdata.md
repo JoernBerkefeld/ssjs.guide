@@ -15,6 +15,7 @@ min_args: 5
 max_args: 5
 verification: verified
 differs_from_docs: true
+test_scripts: complete
 ---
 
 ## Parameters
@@ -24,24 +25,31 @@ differs_from_docs: true
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `deName` | string | Yes | Data Extension **Name** (the external key / CustomerKey is **not** accepted — runtime-verified) |
-| `whereFieldNames` | string\|string[] | Yes | Column name(s) to identify whether the row exists; use an array for composite keys |
-| `whereFieldValues` | string\|array | Yes | Value(s) matching `whereFieldNames`; must be an array of equal length when `whereFieldNames` is an array |
+| `whereFieldNames` | string[] | Yes | Nonempty array of column names used to find existing rows; multiple columns use positional AND logic |
+| `whereFieldValues` | array | Yes | Nonempty array of values positionally aligned to `whereFieldNames` |
 | `fieldNames` | string[] | Yes | Array of column names to insert or update |
 | `fieldValues` | array | Yes | Array of values aligned to `fieldNames` |
 
-> **No flat/variadic form.** A flat argument list such as `UpsertData(deName, field1, value1, filterField, filterValue)` is **not supported** — it throws at runtime (verified across argument counts of 3–7). Always pass the `fieldNames` / `fieldValues` and `whereFieldNames` / `whereFieldValues` pairs as arrays.
+> **Arrays are required.** Scalar strings are rejected even for a single filter or field. The name/value arrays must be nonempty and have matching lengths.
+
+{% include test-script.html bundle="platform-functions--upsertdata" chapter="parameters" %}
 
 ## Description
 
-`UpsertData` checks whether a row with the specified key(s) exists:
-- If it **exists**: updates the specified columns
-- If it **doesn't exist**: inserts a new row
+`UpsertData` checks for rows matching all supplied filter pairs:
+- If there are **no matches**, it inserts one row using both the filter pairs and field pairs.
+- If there is **one match**, it updates that row in place.
+- If there are **multiple matches**, it updates all of them.
 
-Returns the number of rows affected.
+The return value is a number: `1` for a new insert, `1` for one updated match, or the affected-row count for multiple matches.
 
-{% include differs-from-docs.html note="The docs show a flat/variadic form (`UpsertData(deName, field1, value1, …, filterField, filterValue)`); that form is **not supported** and throws at runtime — only the array-based five-argument signature works. The DE is also resolved by **Name** only, not the external key / CustomerKey." %}
+{% include differs-from-docs.html note="The official reference permits scalar strings for one `whereFieldNames` / `whereFieldValues` pair, and also shows a flat/variadic form. Neither works: runtime calls require nonempty, positionally aligned arrays in all four name/value positions, and every scalar form throws. The DE is also resolved by **Name** only, not the external key / CustomerKey." %}
+
+{% include test-script.html bundle="platform-functions--upsertdata" chapter="array-arguments-required" label="Show test script — array-only signature" %}
 
 This is the most robust write operation for Data Extensions — use it instead of `InsertData` when you're not sure if the row already exists.
+
+{% include test-script.html bundle="platform-functions--upsertdata" chapter="description" %}
 
 ## Examples
 
@@ -109,13 +117,21 @@ try {
 }
 ```
 
+{% include test-script.html bundle="platform-functions--upsertdata" chapter="examples" %}
+
 ## Notes
 
-- Resolves the DE by **Name**, not external key / CustomerKey
-- The flat/variadic argument form is not supported and throws at runtime; always use arrays for the where and field pairs
-- `UpsertDE` performs the same upsert but returns `null` instead of a row count. The official docs describe `UpsertDE` as email-only, yet it was runtime-verified to run and commit on a CloudPage too — prefer `UpsertData` outside email for the affected-row count.
-- The key columns must match the DE's primary key or sendable field to avoid creating duplicates
-- For large batch upserts, consider WSProxy's `updateBatch` for better performance
+- Resolves the DE by **Name**, not external key / CustomerKey.
+- All four filter and field name/value parameters require nonempty, equal-length arrays.
+- The filter columns do not have to be primary-key columns. If they match several rows, every match is updated; if they match none, their values become part of the inserted row.
+- Missing required insert fields and primary-key conflicts throw.
+- Number, Boolean, Date, and array values coerce when written to Text fields. Explicit `""`, `null`, and `undefined` persist as ordinary empty strings in nullable Text.
+- DE names, column names, and Text filter values matched case-insensitively in the tested business unit.
+- `Platform.Function.UpsertData` works without Core; `Platform.Load("core", ...)` does not create a bare `UpsertData` global.
+- `UpsertDE` performs the same upsert but returns `null` instead of a row count. Its insert and update branches should be verified independently rather than inferred from this function.
+- For large batch upserts, consider WSProxy's `updateBatch` for better performance.
+
+{% include test-script.html bundle="platform-functions--upsertdata" chapter="notes" %}
 
 ## See Also
 

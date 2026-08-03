@@ -1,0 +1,417 @@
+# Test scripts for /core-library/dataextension-fields/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and the documented deviation from the official Salesforce docs.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# SAFETY: every script creates its OWN throw-away sendable data extension
+# under a uniquely named external key, exercises the field operations on it,
+# proves the effect by reading the field list (or the sendable mapping) back,
+# and removes the data extension again. An orphan left by a previous aborted
+# run is cleaned up before the probe starts, so no pre-existing data
+# extension is ever touched.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# ENGINE NOTE: engine-returned values and caught .message values are .NET/CLR
+# strings. They are normalized with `"" + value` — never with String(value),
+# which yields a CLR string whose === against a JS literal is false and whose
+# .indexOf() aborts the whole page with HTTP 422.
+
+instance-fields-add: |
+  <script runat="server">
+
+  /*
+   * Chapter: <DataExtensionInstance>.Fields.Add(properties)
+   *
+   * Proves:
+   *   1. The Core load requirement: the bare DataExtension namespace does not
+   *      resolve before Platform.Load("core", "1.1.5") (typeof "undefined",
+   *      resolved lazily inside a thunk so an unbound name cannot abort the
+   *      page), and is an object afterwards.
+   *   2. An initialized DataExtension exposes a Fields namespace whose Add is
+   *      a function.
+   *   3. The documented example payload (Name, CustomerKey, FieldType,
+   *      IsRequired, DefaultValue) is accepted and returns the documented
+   *      string "OK".
+   *   4. Add is a real write: the column exists in Fields.Retrieve afterwards
+   *      where it did not before, and its FieldType and DefaultValue round
+   *      trip.
+   *   5. Every documented FieldType value is accepted: Boolean, Date,
+   *      Decimal, EmailAddress, Locale, Number, Phone, Text — each returns
+   *      "OK" and each column really appears in the field list.
+   *   6. properties.Name is required: a payload without Name returns the
+   *      string "Error" and adds no column.
+   *   7. Negative cases return "Error" rather than throwing, so callers must
+   *      compare the return value against "OK" (workaround): no arguments at
+   *      all, a duplicate column name, and a Fields.Add on an instance bound
+   *      to a data extension that does not exist.
+   *   8. A failing Add leaves nothing behind: the column count is unchanged
+   *      after the negative cases, and the unbound-key call creates no data
+   *      extension.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function outcomeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+
+  /* 1. Before the Core load the namespace does not resolve. */
+  assert("before Platform.Load the DataExtension namespace is undefined", outcomeOf(function () { return typeof DataExtension; }), "undefined");
+
+  Platform.Load("core", "1.1.5");
+
+  assert("after Platform.Load typeof DataExtension is object", outcomeOf(function () { return typeof DataExtension; }), "object");
+
+  function countDE(key) {
+      return DataExtension.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key }).length;
+  }
+  function fieldNames(de) {
+      var f = de.Fields.Retrieve();
+      var s = ",";
+      for (var i = 0; i < f.length; i++) { s += ("" + f[i].Name) + ","; }
+      return s;
+  }
+  function fieldCount(de) {
+      return de.Fields.Retrieve().length;
+  }
+  function fieldByName(de, name) {
+      var f = de.Fields.Retrieve();
+      for (var i = 0; i < f.length; i++) { if (("" + f[i].Name) === name) { return f[i]; } }
+      return null;
+  }
+
+  var KEY = "ssjsguide-ts-def-add";
+
+  /* Orphan cleanup from a previous aborted run, then create the fixture. */
+  if (countDE(KEY) > 0) { DataExtension.Init(KEY).Remove(); }
+  assert("precondition: no probe data extension exists", "" + countDE(KEY), "0");
+  DataExtension.Add({
+      CustomerKey: KEY,
+      Name: KEY,
+      Fields: [
+          { Name: "SubKey", FieldType: "Text", IsPrimaryKey: true, MaxLength: 50, IsRequired: true }
+      ],
+      SendableInfo: { Field: { Name: "SubKey", FieldType: "Text" }, RelatesOn: "Subscriber Key" }
+  });
+  assert("fixture: the probe data extension was created", "" + countDE(KEY), "1");
+
+  /* 2. The Fields namespace and its Add method. */
+  var de = DataExtension.Init(KEY);
+  assert("typeof <DataExtensionInstance>.Fields is object", typeof de.Fields, "object");
+  assert("typeof <DataExtensionInstance>.Fields.Add is function", typeof de.Fields.Add, "function");
+  assert("the fixture starts with exactly one column", "" + fieldCount(de), "1");
+  assert("NewFieldV2 does not exist yet", fieldNames(de).indexOf(",NewFieldV2,") >= 0 ? "true" : "false", "false");
+
+  /* 3. The documented example payload returns "OK". */
+  var status = outcomeOf(function () {
+      return de.Fields.Add({ Name: "NewFieldV2", CustomerKey: "CustomerKey", FieldType: "Number", IsRequired: true, DefaultValue: "100" });
+  });
+  assert("Add(documented example payload) returns \"OK\"", status, "OK");
+  assert("the return value is a string", typeof status, "string");
+
+  /* 4. The column really was added and its definition round trips. */
+  assert("the column count grew to 2", "" + fieldCount(de), "2");
+  assert("NewFieldV2 now appears in the field list", fieldNames(de).indexOf(",NewFieldV2,") >= 0 ? "true" : "false", "true");
+  var added = fieldByName(de, "NewFieldV2");
+  assert("the added field is retrievable as an object", added === null ? "null" : "object", "object");
+  assert("its FieldType round trips as Number", "" + added.FieldType, "Number");
+  assert("its DefaultValue round trips as 100", "" + added.DefaultValue, "100");
+
+  /* 5. Every documented FieldType value is accepted. */
+  assert("FieldType Boolean is accepted", outcomeOf(function () { return de.Fields.Add({ Name: "F_Boolean", FieldType: "Boolean", MaxLength: 50 }); }), "OK");
+  assert("FieldType Date is accepted", outcomeOf(function () { return de.Fields.Add({ Name: "F_Date", FieldType: "Date", MaxLength: 50 }); }), "OK");
+  assert("FieldType Decimal is accepted", outcomeOf(function () { return de.Fields.Add({ Name: "F_Decimal", FieldType: "Decimal", MaxLength: 18, Scale: 2 }); }), "OK");
+  assert("FieldType EmailAddress is accepted", outcomeOf(function () { return de.Fields.Add({ Name: "F_EmailAddress", FieldType: "EmailAddress", MaxLength: 50 }); }), "OK");
+  assert("FieldType Locale is accepted", outcomeOf(function () { return de.Fields.Add({ Name: "F_Locale", FieldType: "Locale", MaxLength: 50 }); }), "OK");
+  assert("FieldType Number is accepted", outcomeOf(function () { return de.Fields.Add({ Name: "F_Number", FieldType: "Number", MaxLength: 50 }); }), "OK");
+  assert("FieldType Phone is accepted", outcomeOf(function () { return de.Fields.Add({ Name: "F_Phone", FieldType: "Phone", MaxLength: 50 }); }), "OK");
+  assert("FieldType Text is accepted", outcomeOf(function () { return de.Fields.Add({ Name: "F_Text", FieldType: "Text", MaxLength: 50 }); }), "OK");
+  assert("all eight typed columns exist (1 + NewFieldV2 + 8)", "" + fieldCount(de), "10");
+  var names = fieldNames(de);
+  assert("the Boolean column is present", names.indexOf(",F_Boolean,") >= 0 ? "true" : "false", "true");
+  assert("the Date column is present", names.indexOf(",F_Date,") >= 0 ? "true" : "false", "true");
+  assert("the Decimal column is present", names.indexOf(",F_Decimal,") >= 0 ? "true" : "false", "true");
+  assert("the EmailAddress column is present", names.indexOf(",F_EmailAddress,") >= 0 ? "true" : "false", "true");
+  assert("the Locale column is present", names.indexOf(",F_Locale,") >= 0 ? "true" : "false", "true");
+  assert("the Number column is present", names.indexOf(",F_Number,") >= 0 ? "true" : "false", "true");
+  assert("the Phone column is present", names.indexOf(",F_Phone,") >= 0 ? "true" : "false", "true");
+  assert("the Text column is present", names.indexOf(",F_Text,") >= 0 ? "true" : "false", "true");
+
+  /* 6 + 7. Negative cases return "Error" instead of throwing. */
+  var noName = outcomeOf(function () { return de.Fields.Add({ FieldType: "Text", MaxLength: 10 }); });
+  assert("a payload without Name returns \"Error\"", noName, "Error");
+  assert("it returns rather than throws", noName.indexOf("THREW") === 0 ? "true" : "false", "false");
+  assert("workaround: compare the return value against \"OK\"", noName === "OK" ? "success" : "failure", "failure");
+  assert("Add with no arguments returns \"Error\"", outcomeOf(function () { return de.Fields.Add(); }), "Error");
+  assert("adding a duplicate column name returns \"Error\"", outcomeOf(function () { return de.Fields.Add({ Name: "F_Text", FieldType: "Text", MaxLength: 50 }); }), "Error");
+
+  /* 8. None of the failing calls changed anything. */
+  assert("the column count is unchanged after the negative cases", "" + fieldCount(de), "10");
+
+  var GHOST = "ssjsguide-ts-def-add-ghost";
+  assert("precondition: nothing exists under the unbound key", "" + countDE(GHOST), "0");
+  var unbound = outcomeOf(function () { return DataExtension.Init(GHOST).Fields.Add({ Name: "X", FieldType: "Text", MaxLength: 5 }); });
+  assert("Fields.Add on an unbound key returns \"Error\"", unbound, "Error");
+  assert("it returns rather than throws", unbound.indexOf("THREW") === 0 ? "true" : "false", "false");
+  assert("the failing Add created NO data extension", "" + countDE(GHOST), "0");
+
+  /* Cleanup. */
+  assert("cleanup: the probe data extension is removed", outcomeOf(function () { return DataExtension.Init(KEY).Remove(); }), "OK");
+  assert("cleanup: no probe data extension is left behind", "" + countDE(KEY), "0");
+  assert("cleanup: no ghost data extension is left behind", "" + countDE(GHOST), "0");
+  </script>
+
+instance-fields-retrieve: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <DataExtensionInstance>.Fields.Retrieve()
+   *
+   * Proves:
+   *   1. Retrieve is a function on the Fields namespace and takes no
+   *      arguments — a superfluous argument is ignored rather than rejected.
+   *   2. It returns a host array: it reports as [object Array], exposes a
+   *      numeric .length and the array method push.
+   *   3. instanceof Array is FALSE — it is a host-backed collection, not a
+   *      genuine JS Array, so callers must guard with a .length check rather
+   *      than an Array check (workaround).
+   *   4. The returned length matches the number of columns the data
+   *      extension actually has, and grows when a column is added.
+   *   5. Each field object exposes the documented metadata with the
+   *      documented types: Name (string), FieldType (string), IsPrimaryKey
+   *      (boolean), MaxLength (number), Ordinal (number), DefaultValue
+   *      (string) — and the values round trip for a column this script
+   *      created itself.
+   *   6. DEV each field object ALSO carries an ObjectID (string). The
+   *      official Salesforce reference's example response lists only Name,
+   *      FieldType, IsPrimaryKey, MaxLength, Ordinal and DefaultValue.
+   *   7. An instance bound to a data extension that does not exist returns an
+   *      EMPTY array — not null, not undefined, and it does not throw. It
+   *      still reports as [object Array] and serializes as [].
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function outcomeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+  function countDE(key) {
+      return DataExtension.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key }).length;
+  }
+  function fieldByName(de, name) {
+      var f = de.Fields.Retrieve();
+      for (var i = 0; i < f.length; i++) { if (("" + f[i].Name) === name) { return f[i]; } }
+      return null;
+  }
+
+  var KEY = "ssjsguide-ts-def-retr";
+
+  /* Orphan cleanup from a previous aborted run, then create the fixture. */
+  if (countDE(KEY) > 0) { DataExtension.Init(KEY).Remove(); }
+  assert("precondition: no probe data extension exists", "" + countDE(KEY), "0");
+  DataExtension.Add({
+      CustomerKey: KEY,
+      Name: KEY,
+      Fields: [
+          { Name: "SubKey", FieldType: "Text", IsPrimaryKey: true, MaxLength: 50, IsRequired: true },
+          { Name: "AltKey", FieldType: "Text", MaxLength: 50 }
+      ],
+      SendableInfo: { Field: { Name: "SubKey", FieldType: "Text" }, RelatesOn: "Subscriber Key" }
+  });
+  assert("fixture: the probe data extension was created", "" + countDE(KEY), "1");
+
+  var de = DataExtension.Init(KEY);
+
+  /* 1. Availability. */
+  assert("typeof <DataExtensionInstance>.Fields.Retrieve is function", typeof de.Fields.Retrieve, "function");
+
+  /* 2 + 3. Shape of the returned collection. */
+  var fields = de.Fields.Retrieve();
+  assert("typeof the result is object", typeof fields, "object");
+  assert("the result is not null", fields === null ? "true" : "false", "false");
+  assert("the result reports as [object Array]", Object.prototype.toString.call(fields), "[object Array]");
+  assert("the result exposes a numeric .length", typeof fields.length, "number");
+  assert("the result exposes .push", typeof fields.push, "function");
+  assert("instanceof Array is false (host-backed collection)", fields instanceof Array ? "true" : "false", "false");
+  assert("workaround: (fields && fields.length) is truthy on a match", (fields && fields.length) ? "true" : "false", "true");
+
+  /* 4. The length matches the real column count and grows with the DE. */
+  assert("the fixture reports its two columns", "" + fields.length, "2");
+  assert("a superfluous argument is ignored", "" + de.Fields.Retrieve("junk").length, "2");
+  assert("adding a column succeeds", outcomeOf(function () { return de.Fields.Add({ Name: "Score", FieldType: "Number", DefaultValue: "42" }); }), "OK");
+  assert("the retrieved length grew to 3", "" + de.Fields.Retrieve().length, "3");
+
+  /* 5. Documented metadata and its types. */
+  var f = fieldByName(de, "Score");
+  assert("the added column is retrievable by name", f === null ? "null" : "object", "object");
+  assert("Name is a string", typeof f.Name, "string");
+  assert("FieldType is a string", typeof f.FieldType, "string");
+  assert("IsPrimaryKey is a boolean", typeof f.IsPrimaryKey, "boolean");
+  assert("MaxLength is a number", typeof f.MaxLength, "number");
+  assert("Ordinal is a number", typeof f.Ordinal, "number");
+  assert("DefaultValue is a string", typeof f.DefaultValue, "string");
+  assert("Name round trips", "" + f.Name, "Score");
+  assert("FieldType round trips", "" + f.FieldType, "Number");
+  assert("DefaultValue round trips", "" + f.DefaultValue, "42");
+  assert("IsPrimaryKey is false for a non-key column", f.IsPrimaryKey ? "true" : "false", "false");
+  var pk = fieldByName(de, "SubKey");
+  assert("IsPrimaryKey is true for the primary key column", pk.IsPrimaryKey ? "true" : "false", "true");
+  assert("MaxLength round trips for the primary key column", "" + pk.MaxLength, "50");
+
+  /* 6. DEV — ObjectID is present although the docs example omits it. */
+  assert("DEV each field also carries an ObjectID (docs example omits it)", typeof f.ObjectID, "string");
+  assert("DEV that ObjectID is non-empty (docs example omits it)", ("" + f.ObjectID).length > 0 ? "true" : "false", "true");
+  assert("DEV the primary key column carries an ObjectID too (docs example omits it)", typeof pk.ObjectID, "string");
+
+  /* 7. An unbound data extension yields an empty array, not null and no throw. */
+  var GHOST = "ssjsguide-ts-def-retr-ghost";
+  assert("precondition: nothing exists under the unbound key", "" + countDE(GHOST), "0");
+  var un = DataExtension.Init(GHOST);
+  assert("Fields.Retrieve on an unbound key does not throw", outcomeOf(function () { return typeof un.Fields.Retrieve(); }), "object");
+  var empty = un.Fields.Retrieve();
+  assert("the unbound result is not null", empty === null ? "true" : "false", "false");
+  assert("the unbound result .length is 0 (an empty array)", "" + empty.length, "0");
+  assert("the unbound result still reports as [object Array]", Object.prototype.toString.call(empty), "[object Array]");
+  assert("the unbound result serializes as []", Stringify(empty), "[]");
+  assert("workaround: (fields && fields.length) is falsy on no match", (empty && empty.length) ? "true" : "false", "false");
+  assert("the unbound Fields.Retrieve created NO data extension", "" + countDE(GHOST), "0");
+
+  /* Cleanup. */
+  assert("cleanup: the probe data extension is removed", outcomeOf(function () { return DataExtension.Init(KEY).Remove(); }), "OK");
+  assert("cleanup: no probe data extension is left behind", "" + countDE(KEY), "0");
+  </script>
+
+instance-fields-updatesendablefield: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <DataExtensionInstance>.Fields.UpdateSendableField(deFieldName,
+   *          subscriberField)
+   *
+   * Proves:
+   *   1. UpdateSendableField is a function on the Fields namespace.
+   *   2. It returns the documented string "OK" on success.
+   *   3. It is a real write: the sendable relationship of the data extension
+   *      really changes. The script reads the mapping back through WSProxy
+   *      (SendableDataExtensionField.Name) before and after the call — the
+   *      Core library exposes no reader for it, so the round trip goes
+   *      through the consuming API instead.
+   *   4. Both documented subscriberField values are accepted:
+   *      "Subscriber Key" and "Subscriber Id".
+   *   5. Negative cases return the string "Error" rather than throwing, so
+   *      callers must compare the return value against "OK" (workaround):
+   *      an unknown data extension field name, an unknown subscriber
+   *      attribute, and a single-argument call.
+   *   6. A failing call leaves the previous mapping untouched.
+   *   7. A superfluous third argument is ignored — the call still succeeds
+   *      and still applies the first two arguments.
+   *   8. CAVEAT: a zero-argument call returns "OK" although it changes
+   *      nothing. The return value alone therefore does not prove that a
+   *      mapping was applied; read the mapping back when it matters.
+   *
+   * NOT ASSERTABLE: the subscriber-side attribute name that the platform
+   * stores for "Subscriber Id" is not exposed by any Core library reader and
+   * the WSProxy SendableSubscriberField.Name value is an internal platform
+   * identifier rather than the argument that was passed, so only the
+   * data-extension side of the mapping is asserted here.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function outcomeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+  function countDE(key) {
+      return DataExtension.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key }).length;
+  }
+  var api = new Script.Util.WSProxy();
+  function sendableField(key) {
+      var r = api.retrieve("DataExtension", ["Name", "SendableDataExtensionField.Name"], { Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      if (!r.Results || r.Results.length === 0) { return "no-de"; }
+      return "" + r.Results[0].SendableDataExtensionField.Name;
+  }
+
+  var KEY = "ssjsguide-ts-def-usf";
+
+  /* Orphan cleanup from a previous aborted run, then create the fixture. */
+  if (countDE(KEY) > 0) { DataExtension.Init(KEY).Remove(); }
+  assert("precondition: no probe data extension exists", "" + countDE(KEY), "0");
+  DataExtension.Add({
+      CustomerKey: KEY,
+      Name: KEY,
+      Fields: [
+          { Name: "SubKey", FieldType: "Text", IsPrimaryKey: true, MaxLength: 50, IsRequired: true },
+          { Name: "DifferentSubKey", FieldType: "Text", MaxLength: 50 },
+          { Name: "SubId", FieldType: "Number" }
+      ],
+      SendableInfo: { Field: { Name: "SubKey", FieldType: "Text" }, RelatesOn: "Subscriber Key" }
+  });
+  assert("fixture: the probe data extension was created", "" + countDE(KEY), "1");
+
+  var de = DataExtension.Init(KEY);
+
+  /* 1. Availability. */
+  assert("typeof <DataExtensionInstance>.Fields.UpdateSendableField is function", typeof de.Fields.UpdateSendableField, "function");
+
+  /* 3a. The mapping the fixture was created with. */
+  assert("the fixture starts out mapped on SubKey", sendableField(KEY), "SubKey");
+
+  /* 2 + 4a. The documented example call with "Subscriber Key". */
+  var status = outcomeOf(function () { return de.Fields.UpdateSendableField("DifferentSubKey", "Subscriber Key"); });
+  assert("UpdateSendableField(field, \"Subscriber Key\") returns \"OK\"", status, "OK");
+  assert("the return value is a string", typeof status, "string");
+
+  /* 3b. The write really happened. */
+  assert("the sendable field really changed to DifferentSubKey", sendableField(KEY), "DifferentSubKey");
+
+  /* 4b. "Subscriber Id" is accepted too. */
+  assert("UpdateSendableField(field, \"Subscriber Id\") returns \"OK\"", outcomeOf(function () { return de.Fields.UpdateSendableField("SubId", "Subscriber Id"); }), "OK");
+  assert("the sendable field really changed to SubId", sendableField(KEY), "SubId");
+
+  /* 5 + 6. Negative cases return "Error" and change nothing. */
+  var badField = outcomeOf(function () { return de.Fields.UpdateSendableField("NoSuchField", "Subscriber Key"); });
+  assert("an unknown data extension field returns \"Error\"", badField, "Error");
+  assert("it returns rather than throws", badField.indexOf("THREW") === 0 ? "true" : "false", "false");
+  assert("workaround: compare the return value against \"OK\"", badField === "OK" ? "success" : "failure", "failure");
+  assert("the previous mapping survived the failed call", sendableField(KEY), "SubId");
+
+  var badAttr = outcomeOf(function () { return de.Fields.UpdateSendableField("SubKey", "Not A Subscriber Field"); });
+  assert("an unknown subscriber attribute returns \"Error\"", badAttr, "Error");
+  assert("it returns rather than throws", badAttr.indexOf("THREW") === 0 ? "true" : "false", "false");
+  assert("the previous mapping survived that failed call too", sendableField(KEY), "SubId");
+
+  assert("a single-argument call returns \"Error\"", outcomeOf(function () { return de.Fields.UpdateSendableField("SubKey"); }), "Error");
+  assert("the previous mapping survived the single-argument call", sendableField(KEY), "SubId");
+
+  /* 8. CAVEAT — a zero-argument call reports success but changes nothing. */
+  assert("CAVEAT a zero-argument call returns \"OK\"", outcomeOf(function () { return de.Fields.UpdateSendableField(); }), "OK");
+  assert("CAVEAT yet the mapping is unchanged after it", sendableField(KEY), "SubId");
+
+  /* 7. A superfluous third argument is ignored. */
+  assert("a superfluous third argument still returns \"OK\"", outcomeOf(function () { return de.Fields.UpdateSendableField("SubKey", "Subscriber Key", "extra"); }), "OK");
+  assert("the first two arguments were still applied", sendableField(KEY), "SubKey");
+
+  /* Cleanup. */
+  assert("cleanup: the probe data extension is removed", outcomeOf(function () { return DataExtension.Init(KEY).Remove(); }), "OK");
+  assert("cleanup: no probe data extension is left behind", "" + countDE(KEY), "0");
+  </script>

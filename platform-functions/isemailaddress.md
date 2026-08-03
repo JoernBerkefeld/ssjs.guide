@@ -14,6 +14,7 @@ return_type: boolean
 min_args: 1
 max_args: 1
 verification: verified
+test_scripts: complete
 ---
 
 ## Parameters
@@ -21,6 +22,8 @@ verification: verified
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `value` | string | Yes | String to validate as an email address |
+
+{% include test-script.html bundle="platform-functions--isemailaddress" chapter="parameters" %}
 
 ## Examples
 
@@ -44,6 +47,8 @@ function validateInput(input) {
     return null;
 }
 ```
+
+{% include test-script.html bundle="platform-functions--isemailaddress" chapter="examples" %}
 
 ## See Also
 

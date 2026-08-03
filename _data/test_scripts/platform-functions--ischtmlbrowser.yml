@@ -1,0 +1,218 @@
+# Test scripts for /platform-functions/ischtmlbrowser/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every arity boundary.
+#
+# SCOPE — READ FIRST: IsCHTMLBrowser is a PURE PREDICATE over the string it is
+# handed. It does NOT inspect the rendering context itself, so every claim
+# below is fully observable from a CloudPage GET. What is NOT observable here
+# is the real-world path in which SFMC feeds a genuine CHTML email client's
+# user agent into the function at send time — that remains UNTESTED and no
+# assertion below depends on it.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# BOOLEAN RULE: this function returns a boolean, and String(<boolean expr>) is
+# mis-evaluated by Jint. Every boolean is turned into a literal with an
+# explicit ternary at the call site instead.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters — Platform.Function.IsCHTMLBrowser(userAgentString)
+   *
+   * Proves:
+   *   1. The member exists and is invocable with exactly 1 argument (a
+   *      successful call is the only reliable existence proof for a
+   *      Platform.Function member).
+   *   2. return_type is boolean: typeof the result is "boolean", and the
+   *      result is strictly true / strictly false — never null, never
+   *      undefined, never a string.
+   *   3. userAgentString is REQUIRED: the 0-argument form throws.
+   *   4. max_args is 1: the 2-argument and 3-argument forms throw. There is no
+   *      reachable optional second argument.
+   *   5. The predicate DISCRIMINATES: it answers true for user agents of CHTML
+   *      feature-phone browsers and false for a modern desktop browser, so a
+   *      PASS here is not a constant.
+   *   6. An empty string and a null argument both THROW rather than answering
+   *      false — the parameter must carry an actual user-agent value.
+   *   7. Non-string primitives are coerced and answered false rather than
+   *      throwing; an array argument throws.
+   *   8. It matches on user-agent SHAPE, not on the literal text "CHTML": the
+   *      strings "chtml" and "CHTML" are both answered false.
+   *   9. There is no bare-name Core Library form — IsCHTMLBrowser(...) without
+   *      the Platform.Function prefix throws "Object expected: IsCHTMLBrowser"
+   *      even after Platform.Load.
+   *
+   * SCOPE: evidence gathered on a CloudPage GET only. The function is a pure
+   * predicate over its argument, so the CloudPage context does not restrict
+   * what can be proven — but the send-time path in which a real CHTML email
+   * client's user agent reaches this function is UNTESTED here.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var DESKTOP = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+  var DOCOMO = "DoCoMo/2.0 SH902i(c100;TB;W24H12)";
+  var KDDI = "KDDI-SA31 UP.Browser/6.2.0.7.3.129 (GUI) MMP/2.0";
+  var SOFTBANK = "SoftBank/1.0/910T/TJ001/SN000000000000000 Browser/NetFront/3.3 Profile/MIDP-2.0 Configuration/CLDC-1.1";
+  var UPBROWSER = "UP.Browser/6.2.3.8";
+
+  /* 1 + 2. The 1-argument call works and answers a genuine boolean. */
+  var chtml = Platform.Function.IsCHTMLBrowser(DOCOMO);
+  assert("typeof the result is boolean", String(typeof chtml), "boolean");
+  assert("the result is strictly true for a CHTML user agent", chtml === true ? "true" : "false", "true");
+  assert("the result is not null", chtml === null ? "true" : "false", "false");
+  assert("the result is not undefined", chtml === undefined ? "true" : "false", "false");
+  assert("the result is not the string 'true'", chtml === "true" ? "true" : "false", "false");
+
+  var desktop = Platform.Function.IsCHTMLBrowser(DESKTOP);
+  assert("typeof the negative result is boolean too", String(typeof desktop), "boolean");
+  assert("a modern desktop browser is strictly false", desktop === false ? "true" : "false", "true");
+  assert("the negative result is not undefined", desktop === undefined ? "true" : "false", "false");
+
+  /* 5. The predicate discriminates — several CHTML-era user agents answer true. */
+  assert("a DoCoMo/2.0 feature-phone user agent is true", Platform.Function.IsCHTMLBrowser(DOCOMO) ? "true" : "false", "true");
+  assert("a KDDI UP.Browser user agent is true", Platform.Function.IsCHTMLBrowser(KDDI) ? "true" : "false", "true");
+  assert("a SoftBank NetFront user agent is true", Platform.Function.IsCHTMLBrowser(SOFTBANK) ? "true" : "false", "true");
+  assert("a bare UP.Browser user agent is true", Platform.Function.IsCHTMLBrowser(UPBROWSER) ? "true" : "false", "true");
+  assert("a Chrome desktop user agent is false", Platform.Function.IsCHTMLBrowser(DESKTOP) ? "true" : "false", "false");
+  assert("an Outlook desktop user agent is false", Platform.Function.IsCHTMLBrowser("Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 10.0; Microsoft Outlook 16.0.5)") ? "true" : "false", "false");
+
+  /* 8. It matches on user-agent shape, not on the literal word "CHTML". */
+  assert("the literal string 'chtml' is NOT treated as a CHTML browser", Platform.Function.IsCHTMLBrowser("chtml") ? "true" : "false", "false");
+  assert("the literal string 'CHTML' is NOT treated as a CHTML browser", Platform.Function.IsCHTMLBrowser("CHTML") ? "true" : "false", "false");
+
+  /* 3. userAgentString is required. */
+  assertThrows("arity 0 throws (userAgentString is required)", function () {
+      return Platform.Function.IsCHTMLBrowser();
+  });
+
+  /* 4. max_args is 1 — no optional second argument is reachable. */
+  assertThrows("arity 2 throws (max_args is 1)", function () {
+      return Platform.Function.IsCHTMLBrowser(DESKTOP, "x");
+  });
+  assertThrows("arity 3 throws (max_args is 1)", function () {
+      return Platform.Function.IsCHTMLBrowser(DESKTOP, "x", "y");
+  });
+
+  /* 6. An empty or null user agent throws instead of answering false. */
+  assertThrows("an empty-string user agent throws", function () {
+      return Platform.Function.IsCHTMLBrowser("");
+  });
+  assertThrows("a null user agent throws", function () {
+      return Platform.Function.IsCHTMLBrowser(null);
+  });
+
+  /* 7. Non-string primitives are coerced; an array throws. */
+  assert("a number argument is coerced and answered false", Platform.Function.IsCHTMLBrowser(123) ? "true" : "false", "false");
+  assert("a boolean argument is coerced and answered false", Platform.Function.IsCHTMLBrowser(true) ? "true" : "false", "false");
+  assertThrows("an array argument throws", function () {
+      return Platform.Function.IsCHTMLBrowser([]);
+  });
+
+  /* 9. No bare-name Core Library form exists. */
+  assertThrows("the bare-name form IsCHTMLBrowser(...) throws - Platform.Function is required", function () {
+      return IsCHTMLBrowser(DOCOMO);
+  });
+  </script>
+
+example: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Example — write Platform.Request.UserAgent, then write
+   * Platform.Function.IsCHTMLBrowser(Platform.Request.UserAgent).
+   *
+   * Proves the shape of the documented example:
+   *   1. Platform.Request.UserAgent is readable inside a CloudPage request and
+   *      stringifies without throwing.
+   *   2. The example's third line — feeding a user-agent value straight into
+   *      IsCHTMLBrowser and writing the result — produces a genuine boolean
+   *      that Write() renders as "true" / "false".
+   *   3. The example is meaningful because the answer follows the value fed
+   *      in: the same three lines answer true for a CHTML feature-phone user
+   *      agent and false for a desktop one.
+   *   4. The written output is the lowercase JavaScript boolean rendering, not
+   *      "True"/"False" and not an empty string.
+   *   5. ENVIRONMENTAL NOTE, asserted rather than assumed: an HTTP client that
+   *      sends no User-Agent header makes Platform.Request.UserAgent
+   *      stringify to the empty string, and the example's call then throws —
+   *      which is exactly the empty-string rule proven in the Parameters
+   *      chapter, not a defect of the example. The assertion below records
+   *      whichever of the two states this request is in, so the script is
+   *      green from a real browser and from a header-less fetch alike.
+   *
+   * SCOPE: evidence gathered on a CloudPage GET only. Whether SFMC supplies a
+   * genuine CHTML client's user agent at email send time is UNTESTED here —
+   * no assertion depends on it.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var DESKTOP = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+  var DOCOMO = "DoCoMo/2.0 SH902i(c100;TB;W24H12)";
+
+  /* 1. Example line 1 — Platform.Request.UserAgent is readable. */
+  var ua = Platform.Request.UserAgent;
+  assert("Platform.Request.UserAgent is a CLR host value", String(typeof ua), "clr");
+  var uaText = "" + ua;
+  assert("Platform.Request.UserAgent stringifies without throwing", String(typeof uaText), "string");
+
+  /* 5. Record which of the two request states this is, and assert the
+     matching behaviour of the example's call. */
+  var hasUa = uaText.length > 0;
+  Platform.Response.Write("PASS request state -> [" + (hasUa ? "User-Agent header present: " + uaText : "no User-Agent header sent - the example's call must throw, per the empty-string rule") + "]\n");
+  var uaThrew = false;
+  var uaResultIsBoolean = false;
+  try {
+      uaResultIsBoolean = (typeof Platform.Function.IsCHTMLBrowser(Platform.Request.UserAgent)) === "boolean";
+  } catch (ex) {
+      uaThrew = true;
+  }
+  assert("the example's call throws exactly when no User-Agent header was sent", uaThrew ? "true" : "false", hasUa ? "false" : "true");
+  assert("when a User-Agent header IS present the example's call answers a boolean", (hasUa ? uaResultIsBoolean : true) ? "true" : "false", "true");
+
+  /* 2 + 3. The example's three lines, driven by an explicit user agent so the
+     assertion does not depend on what the requesting client sent. */
+  var chtmlAnswer = Platform.Function.IsCHTMLBrowser(DOCOMO);
+  assert("example line 3 answers a boolean for a CHTML user agent", String(typeof chtmlAnswer), "boolean");
+  assert("example line 3 answers true for a CHTML user agent", chtmlAnswer === true ? "true" : "false", "true");
+  var desktopAnswer = Platform.Function.IsCHTMLBrowser(DESKTOP);
+  assert("example line 3 answers a boolean for a desktop user agent", String(typeof desktopAnswer), "boolean");
+  assert("example line 3 answers false for a desktop user agent", desktopAnswer === false ? "true" : "false", "true");
+  assert("the answer follows the value fed in, so the example is not a constant", chtmlAnswer === desktopAnswer ? "true" : "false", "false");
+
+  /* 4. What Write() actually renders. */
+  var writtenTrue = "" + chtmlAnswer;
+  assert("Write() renders the positive answer as lowercase 'true'", writtenTrue, "true");
+  var writtenFalse = "" + desktopAnswer;
+  assert("Write() renders the negative answer as lowercase 'false'", writtenFalse, "false");
+  assert("the rendered answer is not the empty string", writtenTrue.length > 0 ? "true" : "false", "true");
+  Platform.Response.Write("PASS example output for a CHTML user agent -> [" + DOCOMO + "<br>Is CHTML: " + writtenTrue + "]\n");
+  Platform.Response.Write("PASS example output for a desktop user agent -> [Is CHTML: " + writtenFalse + "]\n");
+  </script>

@@ -1,0 +1,121 @@
+# Test scripts for /platform-objects/platform-variable/
+#
+# Run these in order in one HTML CloudPage document when proving cross-language
+# visibility. The separate scope request proves values do not persist.
+
+methods: |
+  <script runat="server">
+  /*
+   * Chapter: Methods
+   * Proves:
+   *   1. Platform.Variable is available without Platform.Load.
+   *   2. The bare Variable alias is absent before Core 1.1.5 and usable after it.
+   *   3. The alias and Platform.Variable share the same request-local state.
+   * EXPECTED OUTPUT: every assertion line starts with PASS.
+   */
+  function assert(id, actual, expected) { Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n"); }
+  function typeOf(fn) { try { return fn(); } catch (ex) { return "threw:" + String(ex.message); } }
+  function capture(fn) { try { return { threw: false, value: fn() }; } catch (ex) { return { threw: true, message: String(ex.message) }; } }
+  assert("Platform.Variable is available without Platform.Load", typeOf(function () { return typeof Platform.Variable; }), "clr");
+  assert("bare Variable is undefined before Platform.Load", typeOf(function () { return typeof Variable; }), "undefined");
+  var aliasType = typeOf(function () { Platform.Load("core", "1.1.5"); return typeof Variable; });
+  assert("bare Variable is available after Core 1.1.5", aliasType, "object");
+  var aliasSet = capture(function () { return Variable.SetValue("@platformVariableAlias", "alias-roundtrip"); });
+  assert("bare Variable.SetValue is callable", aliasSet.threw ? "threw:" + aliasSet.message : "returned", "returned");
+  assert("bare alias shares Platform.Variable state", Platform.Variable.GetValue("@platformVariableAlias"), "alias-roundtrip");
+  </script>
+
+getvalue: |
+  <script runat="server">
+  /*
+   * Chapter: GetValue
+   * Prerequisite: an earlier AMPscript block sets @ampBefore, @ampEmpty,
+   * @ampNumber, @ampCase, and @AMPCASE.
+   * Proves:
+   *   1. AMPscript-set values are visible to later SSJS in the same request.
+   *   2. The leading @ is optional and names are case-insensitive.
+   *   3. Strings, numbers, and empty strings retain their runtime value/type.
+   *   4. A never-set variable is strict JavaScript null with typeof object.
+   * EXPECTED OUTPUT: every assertion line starts with PASS.
+   */
+  function assert(id, actual, expected) { Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n"); }
+  var ampNumber = Platform.Variable.GetValue("@ampNumber");
+  assert("AMPscript value is visible with at-name", Platform.Variable.GetValue("@ampBefore"), "amp-to-ssjs");
+  assert("AMPscript value is visible without at-name", Platform.Variable.GetValue("ampBefore"), "amp-to-ssjs");
+  assert("explicit empty string remains empty", Platform.Variable.GetValue("@ampEmpty"), "");
+  assert("AMPscript number value is 42", ampNumber, 42);
+  assert("AMPscript number typeof is number", typeof ampNumber, "number");
+  assert("variable names are case-insensitive", Platform.Variable.GetValue("@ampCase"), "amp-case-second");
+  var missing = Platform.Variable.GetValue("platformVariableMissing20260801");
+  assert("DEV missing variable is strict null (official docs: string)", missing === null ? "null" : "not-null", "null");
+  assert("DEV missing variable typeof is object (official docs: string)", typeof missing, "object");
+  </script>
+
+setvalue: |
+  <script runat="server">
+  /*
+   * Chapter: SetValue
+   * Proves:
+   *   1. Names with and without @ address the same variable.
+   *   2. DEV: SetValue returns strict JavaScript null (official docs: void).
+   *   3. Strings, numbers, booleans, empty strings, null, and undefined are accepted.
+   *   4. Scalar values retain their SSJS type; null and undefined read back as null.
+   *   5. A later AMPscript block can read the values in the same request.
+   * EXPECTED OUTPUT: every assertion line starts with PASS; the later AMPscript
+   * markers must show the corresponding values.
+   */
+  function assert(id, actual, expected) { Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n"); }
+  function capture(fn) { try { return { threw: false, value: fn() }; } catch (ex) { return { threw: true, message: String(ex.message) }; } }
+  var setAt = Platform.Variable.SetValue("@ssjsToAmp", "ssjs-to-amp");
+  assert("DEV SetValue with at-name returns strict null (official docs: void)", setAt === null ? "null" : "not-null", "null");
+  var setBare = Platform.Variable.SetValue("ssjsBareName", "bare-name-value");
+  assert("DEV SetValue without at-name returns strict null (official docs: void)", setBare === null ? "null" : "not-null", "null");
+  assert("at-name and bare-name address the same variable", Platform.Variable.GetValue("@ssjsBareName"), "bare-name-value");
+  Platform.Variable.SetValue("@ssjsString", "text");
+  Platform.Variable.SetValue("@ssjsNumber", 42.5);
+  Platform.Variable.SetValue("@ssjsTrue", true);
+  Platform.Variable.SetValue("@ssjsFalse", false);
+  Platform.Variable.SetValue("@ssjsEmpty", "");
+  var setNull = capture(function () { return Platform.Variable.SetValue("@ssjsNull", null); });
+  var unset;
+  var setUndefined = capture(function () { return Platform.Variable.SetValue("@ssjsUndefined", unset); });
+  assert("string round-trips", Platform.Variable.GetValue("@ssjsString"), "text");
+  assert("number round-trips as number", Platform.Variable.GetValue("@ssjsNumber"), 42.5);
+  assert("number typeof remains number", typeof Platform.Variable.GetValue("@ssjsNumber"), "number");
+  assert("true round-trips as boolean", Platform.Variable.GetValue("@ssjsTrue"), true);
+  assert("true typeof remains boolean", typeof Platform.Variable.GetValue("@ssjsTrue"), "boolean");
+  assert("false round-trips as boolean", Platform.Variable.GetValue("@ssjsFalse"), false);
+  assert("false typeof remains boolean", typeof Platform.Variable.GetValue("@ssjsFalse"), "boolean");
+  assert("explicit empty string round-trips", Platform.Variable.GetValue("@ssjsEmpty"), "");
+  assert("SetValue null does not throw", setNull.threw ? "threw:" + setNull.message : "returned", "returned");
+  assert("SetValue null returns strict null", !setNull.threw && setNull.value === null ? "null" : "other", "null");
+  assert("null input reads back strict null", Platform.Variable.GetValue("@ssjsNull") === null ? "null" : "other", "null");
+  assert("SetValue undefined does not throw", setUndefined.threw ? "threw:" + setUndefined.message : "returned", "returned");
+  assert("SetValue undefined returns strict null", !setUndefined.threw && setUndefined.value === null ? "null" : "other", "null");
+  assert("undefined input reads back strict null", Platform.Variable.GetValue("@ssjsUndefined") === null ? "null" : "other", "null");
+  </script>
+
+common-patterns: |
+  <script runat="server">
+  /*
+   * Chapter: Common Patterns
+   * Prerequisite: a preceding AMPscript block has set @ampAfter.
+   * Proves:
+   *   1. Values can cross SSJS -> AMPscript -> SSJS in execution order.
+   *   2. The bridge is limited to the current page request.
+   *   3. Personalization values require their real send/subscriber context and are
+   *      not created by the bridge itself.
+   * EXPECTED OUTPUT: every assertion line starts with PASS. Run the request-local
+   * assertion in a second request after the first request set the named value.
+   */
+  function assert(id, actual, expected) { Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n"); }
+  var mode = Platform.Request.GetQueryStringParameter("mode");
+  if (mode === "scope") {
+      var prior = Platform.Variable.GetValue("platformVariableCrossRequest20260801");
+      assert("request-local value is absent in a later request", prior === null ? "null" : String(prior), "null");
+  } else {
+      Platform.Variable.SetValue("@platformVariableCrossRequest20260801", "request-one");
+      assert("value is visible within the same request", Platform.Variable.GetValue("@platformVariableCrossRequest20260801"), "request-one");
+      assert("later AMPscript value is visible to following SSJS", Platform.Variable.GetValue("@ampAfter"), "amp-after-ssjs");
+  }
+  </script>

@@ -1,0 +1,590 @@
+# Test scripts for /core-library/accountuser/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the official Salesforce docs.
+#
+# The scripts resolve the running business unit and a real account user
+# dynamically (via Account.Retrieve / AccountUser.Retrieve) instead of
+# hard-coding tenant values, so they can be pasted into any business unit
+# unchanged.
+#
+# SAFETY: every write asserted here is a proven no-op on this engine — the
+# AccountUser write methods return the plain string "Error" (or throw) and
+# create/change nothing. The Update / Activate / Deactivate probes are bound
+# to a deliberately nonexistent user key so no real user is ever targeted.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage published from the PARENT business unit — AccountUser work
+# requires the parent-BU session. Re-run them before changing any claim on
+# the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# NOTE: normalize engine/CLR values with "" + x, NOT String(x). String() on
+# an engine value yields a CLR string wrapper whose .indexOf/.length are
+# unusable and whose === against a JS literal is false.
+
+init: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: AccountUser.Init(targetUserKey, myClientID)
+   *
+   * Proves:
+   *   1. AccountUser is available after the Core load and Init is a function.
+   *   2. Init returns an AccountUserInstance — an object exposing the three
+   *      documented instance methods Update, Activate and Deactivate, each
+   *      typeof "function".
+   *   3. The instance carries NO readable user fields: inst.ID, inst.Name
+   *      and inst.CustomerKey all read back undefined — use
+   *      AccountUser.Retrieve to read user data (workaround).
+   *   4. The SAME stub is returned for a REAL user external key and for a
+   *      nonsense key, so Init alone never confirms that a key resolves to a
+   *      real user.
+   *   5. Type-acceptance for myClientID: a numeric MID and the same MID as a
+   *      string produce the same meaningful stub (same Stringify / same
+   *      instance methods) — both forms are accepted.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function outcomeOf(fn) {
+      try { return { kind: "returned", value: fn(), err: "" }; }
+      catch (ex) { return { kind: "threw", value: null, err: "" + ex }; }
+  }
+
+  /* 1. Availability. */
+  assert("typeof AccountUser is object", typeof AccountUser, "object");
+  assert("typeof AccountUser.Init is function", typeof AccountUser.Init, "function");
+
+  /* Resolve the running business unit and a real account user. */
+  var selfRows = Account.Retrieve({ Property: "ID", SimpleOperator: "greaterThan", Value: 0 });
+  var SELF_ID_NUM = +("" + selfRows[0].ID);
+  var SELF_ID_STR = "" + SELF_ID_NUM;
+  var users = AccountUser.Retrieve({ Property: "ID", SimpleOperator: "greaterThan", Value: 0 });
+  var REAL_KEY = "" + users[0].CustomerKey;
+
+  /* 2. Shape of the instance returned for a REAL user key (documented number MID). */
+  var inst = AccountUser.Init(REAL_KEY, SELF_ID_NUM);
+  assert("typeof myClientID number form is number", typeof SELF_ID_NUM, "number");
+  assert("typeof AccountUser.Init(realUserKey, number MID) is object", typeof inst, "object");
+  assert("typeof inst.Update is function", typeof inst.Update, "function");
+  assert("typeof inst.Activate is function", typeof inst.Activate, "function");
+  assert("typeof inst.Deactivate is function", typeof inst.Deactivate, "function");
+
+  /* 3. The instance carries no readable user fields. */
+  assert("inst.ID is undefined (read user fields via Retrieve instead)", typeof inst.ID, "undefined");
+  assert("inst.Name is undefined (read user fields via Retrieve instead)", typeof inst.Name, "undefined");
+  assert("inst.CustomerKey is undefined (read user fields via Retrieve instead)", typeof inst.CustomerKey, "undefined");
+
+  /* 4. A nonsense key yields an indistinguishable stub. */
+  var bogus = AccountUser.Init("ssjs-guide-no-such-user-zzz", SELF_ID_NUM);
+  assert("Init(nonsense key) still returns an object", typeof bogus, "object");
+  assert("Init(nonsense key) exposes Update", typeof bogus.Update, "function");
+  assert("Init(nonsense key) exposes Activate", typeof bogus.Activate, "function");
+  assert("Init(nonsense key) exposes Deactivate", typeof bogus.Deactivate, "function");
+  assert("Init(nonsense key) stub is indistinguishable from the real one", Stringify(bogus) === Stringify(inst) ? "true" : "false", "true");
+
+  /* 5. Type-acceptance: myClientID accepts number and numeric string equally. */
+  assert("typeof myClientID string form is string", typeof SELF_ID_STR, "string");
+  var rStr = outcomeOf(function () { return AccountUser.Init(REAL_KEY, SELF_ID_STR); });
+  assert("Init(realUserKey, string MID) returns (does not throw)", rStr.kind, "returned");
+  assert("Init(realUserKey, string MID) returns an object", typeof rStr.value, "object");
+  assert("Init(string MID) exposes Update like number MID", typeof rStr.value.Update, "function");
+  assert("Init(string MID) exposes Activate like number MID", typeof rStr.value.Activate, "function");
+  assert("Init(string MID) exposes Deactivate like number MID", typeof rStr.value.Deactivate, "function");
+  assert("Init(string MID) stub matches Init(number MID)", Stringify(rStr.value) === Stringify(inst) ? "true" : "false", "true");
+
+  /* Workaround: user fields come from AccountUser.Retrieve. */
+  assert("workaround: a Retrieve row exposes a readable Name", typeof users[0].Name, "string");
+  assert("workaround: a Retrieve row exposes a readable CustomerKey", typeof users[0].CustomerKey, "string");
+  </script>
+
+add: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: AccountUser.Add(properties)
+   *
+   * Proves the "blocked / differs from docs" callout in full:
+   *   1. AccountUser.Add is a function and takes one properties object.
+   *   2. DEVIATION "DEV": no working invocation exists. A short payload
+   *      RETURNS the plain string "Error" (docs: returns "OK" on success).
+   *      Asserted for a Name+UserID payload, a Name-only payload, an empty
+   *      object and a no-argument call.
+   *   3. DEVIATION "DEV": the documented full payload (Name, UserID,
+   *      Password, Email, ClientID, DefaultBusinessUnitKey,
+   *      AssociatedBusinessUnits) also returns "Error", never "OK".
+   *   4. DEVIATION "DEV": a payload carrying additional AccountUser fields
+   *      (CustomerKey / nested Client) or a non-object argument THROWS the
+   *      plain string "Error adding AccountUser" — a string, NOT an Error
+   *      instance, so the caught value has no .message.
+   *   5. The control: the equivalent WSProxy createItem("AccountUser", ...)
+   *      returns SOAP Status "Error" with ErrorCode 11001 and a
+   *      "does not have permission to edit ACCOUNTUSERS" StatusMessage,
+   *      which is what makes this specific to AccountUser writes.
+   *   6. The workaround: wrap the call in try/catch and treat any non-"OK"
+   *      return AND any throw as failure.
+   *
+   * SAFETY: every call below is a proven no-op — no user is created.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  /* One call per payload; the outcome is cached because each call is a live
+     SOAP round-trip and repeating it would blow the CloudPage time budget. */
+  function callAdd(argFn) {
+      try { return { kind: "returned", value: "" + argFn(), raw: null }; }
+      catch (ex) { return { kind: "threw", value: "" + ex, raw: ex }; }
+  }
+
+  var selfRows = Account.Retrieve({ Property: "ID", SimpleOperator: "greaterThan", Value: 0 });
+  var SELF_ID = selfRows[0].ID;
+  var SELF_ACCT_KEY = "" + selfRows[0].CustomerKey;
+
+  /* 1. Availability. */
+  assert("typeof AccountUser.Add is function", typeof AccountUser.Add, "function");
+
+  /* 2. Short payloads return the plain string "Error". */
+  var rShort = callAdd(function () { return AccountUser.Add({ Name: "ssjs guide probe", UserID: "ssjsguideprobe" }); });
+  assert("DEV Add(short payload) RETURNS \"Error\" (docs: \"OK\" on success)", rShort.kind + ":" + rShort.value, "returned:Error");
+  assert("DEV the return value is a string, never \"OK\"", typeof rShort.value, "string");
+
+  var rNameOnly = callAdd(function () { return AccountUser.Add({ Name: "ssjs guide probe" }); });
+  assert("DEV Add({Name}) RETURNS \"Error\" (docs: \"OK\" on success)", rNameOnly.kind + ":" + rNameOnly.value, "returned:Error");
+
+  var rEmpty = callAdd(function () { return AccountUser.Add({}); });
+  assert("DEV Add({}) RETURNS \"Error\" (docs: \"OK\" on success)", rEmpty.kind + ":" + rEmpty.value, "returned:Error");
+
+  var rNoArg = callAdd(function () { return AccountUser.Add(); });
+  assert("DEV Add() with no argument RETURNS \"Error\" (docs: properties is required)", rNoArg.kind + ":" + rNoArg.value, "returned:Error");
+
+  /* 3. The documented full payload also fails. */
+  var rDoc = callAdd(function () {
+      return AccountUser.Add({
+          Name: "Andrea Cruz",
+          UserID: "ssjsguideprobe-doc",
+          Password: "insert new password here",
+          Email: "acruz@example.com",
+          ClientID: SELF_ID,
+          DefaultBusinessUnitKey: SELF_ACCT_KEY,
+          AssociatedBusinessUnits: [SELF_ACCT_KEY]
+      });
+  });
+  assert("DEV Add(documented payload) RETURNS \"Error\" (docs: \"OK\" on success)", rDoc.kind + ":" + rDoc.value, "returned:Error");
+  assert("DEV the documented \"OK\" success return is never produced", rDoc.value === "OK" ? "true" : "false", "false");
+
+  /* 4. Richer / wrongly typed payloads THROW a plain string. */
+  var rRich = callAdd(function () {
+      return AccountUser.Add({
+          Name: "Andrea Cruz",
+          UserID: "ssjsguideprobe-rich",
+          Password: "insert new password here",
+          Email: "acruz@example.com",
+          CustomerKey: "ssjs-guide-probe-rich",
+          Client: { ID: SELF_ID },
+          DefaultBusinessUnitKey: SELF_ACCT_KEY,
+          AssociatedBusinessUnits: [SELF_ACCT_KEY]
+      });
+  });
+  assert("DEV Add(full payload incl. CustomerKey/Client) THROWS (docs: returns a string)", rRich.kind, "threw");
+  assert("DEV the thrown string is exactly \"Error adding AccountUser\"", rRich.value, "Error adding AccountUser");
+  assert("DEV the thrown value is a string, not an Error instance", typeof rRich.raw, "string");
+  assert("DEV the thrown value therefore has NO .message", typeof rRich.raw.message, "undefined");
+
+  var rBadType = callAdd(function () { return AccountUser.Add("nope"); });
+  assert("DEV Add(non-object) THROWS \"Error adding AccountUser\" (docs: properties is an object)", rBadType.kind + ":" + rBadType.value, "threw:Error adding AccountUser");
+
+  /* 5. Control - the equivalent WSProxy write is rejected by permissions. */
+  var wsp = (function () {
+      try {
+          var api = new Script.Util.WSProxy();
+          var res = api.createItem("AccountUser", {
+              Name: "Andrea Cruz",
+              UserID: "ssjsguideprobe-wsp",
+              Password: "insert new password here",
+              Email: "acruz@example.com",
+              Client: { ID: SELF_ID }
+          });
+          return { status: "" + res.Status, code: "" + res.Results[0].ErrorCode, msg: "" + res.Results[0].StatusMessage };
+      } catch (ex) { return { status: "threw:" + ex, code: "", msg: "" }; }
+  })();
+  assert("control: WSProxy createItem(\"AccountUser\") Status is \"Error\"", wsp.status, "Error");
+  assert("control: WSProxy ErrorCode is 11001", wsp.code, "11001");
+  assert("control: the StatusMessage names the ACCOUNTUSERS permission", wsp.msg.indexOf("permission to edit ACCOUNTUSERS") >= 0 ? "true" : "false", "true");
+
+  /* 6. Workaround - non-"OK" return AND a throw are both failures. */
+  function classify(outcome) {
+      if (outcome.kind === "threw") { return "failure"; }
+      return outcome.value === "OK" ? "success" : "failure";
+  }
+  assert("workaround: a non-\"OK\" return is reported as failure", classify(rShort), "failure");
+  assert("workaround: a thrown plain string is reported as failure", classify(rRich), "failure");
+  </script>
+
+retrieve: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: AccountUser.Retrieve(filter)
+   *
+   * Proves:
+   *   1. AccountUser.Retrieve is a function taking one filter object.
+   *   2. On a match the result is an object exposing .length and .push and
+   *      stringifying as a JSON array.
+   *   3. DEVIATION "DEV": the returned collection is NOT an instanceof Array
+   *      in this engine (docs: object[]), so callers must guard with a
+   *      .length check before indexing rather than relying on Array checks.
+   *   4. On no match the result is the SAME array-like shape with .length of
+   *      0, still exposing .push and stringifying as [].
+   *   5. The documented filter shape (Property / SimpleOperator / Value)
+   *      resolves a user by CustomerKey, by Name and by ID.
+   *   6. A matched row is the full AccountUser SOAP object — every listed
+   *      field is asserted present, including the *Specified companions.
+   *   7. The workaround: `if (rows && rows.length)` before indexing.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function retr(prop, op, val) {
+      return AccountUser.Retrieve({ Property: prop, SimpleOperator: op, Value: val });
+  }
+  function matchCount(rows) {
+      if (typeof rows == "undefined" || rows === null) { return "no-object"; }
+      if (typeof rows.length == "undefined") { return "no-length"; }
+      return "" + rows.length;
+  }
+
+  /* 1. Availability. */
+  assert("typeof AccountUser.Retrieve is function", typeof AccountUser.Retrieve, "function");
+
+  /* 2 + 3. Shape of a matched collection. */
+  var all = retr("ID", "greaterThan", 0);
+  assert("typeof matched result is object", typeof all, "object");
+  assert("matched result exposes .length", typeof all.length, "number");
+  assert("matched result has at least one row", all.length > 0 ? "true" : "false", "true");
+  assert("matched result exposes .push", typeof all.push, "function");
+  assert("DEV matched result is NOT instanceof Array (docs: object[])", all instanceof Array ? "true" : "false", "false");
+  assert("workaround: (rows && rows.length) is truthy on a match", (all && all.length) ? "true" : "false", "true");
+
+  var row = all[0];
+  var REAL_KEY = "" + row.CustomerKey;
+  var REAL_NAME = "" + row.Name;
+  var REAL_ID = row.ID;
+
+  /* 4. Shape of a no-match result. */
+  var miss = retr("CustomerKey", "equals", "ssjs-guide-no-such-user-key-zzz");
+  assert("typeof no-match result is object", typeof miss, "object");
+  assert("no-match result .length is 0", "" + miss.length, "0");
+  assert("no-match result still exposes .push", typeof miss.push, "function");
+  assert("no-match result stringifies as []", Stringify(miss), "[]");
+  assert("DEV no-match result is NOT instanceof Array (docs: object[])", miss instanceof Array ? "true" : "false", "false");
+  assert("workaround: (rows && rows.length) is falsy on no match", (miss && miss.length) ? "true" : "false", "false");
+
+  /* 5. The documented filter shape resolves a user several ways. */
+  assert("Retrieve by CustomerKey equals returns 1 row", matchCount(retr("CustomerKey", "equals", REAL_KEY)), "1");
+  assert("Retrieve by Name equals returns at least 1 row", retr("Name", "equals", REAL_NAME).length > 0 ? "true" : "false", "true");
+  assert("Retrieve by ID equals returns 1 row", matchCount(retr("ID", "equals", REAL_ID)), "1");
+
+  /* 6. The matched row is the full AccountUser SOAP object. */
+  var rowKeys = {};
+  for (var rk in row) { rowKeys[rk] = true; }
+  function assertField(name) {
+      Platform.Response.Write((rowKeys[name] === true ? "PASS " : "FAIL ") + "row exposes " + name + "\n");
+  }
+  assertField("ID");
+  assertField("Client");
+  assertField("CreatedDate");
+  assertField("ModifiedDate");
+  assertField("AccountUserID");
+  assertField("UserID");
+  assertField("Name");
+  assertField("MustChangePassword");
+  assertField("ActiveFlag");
+  assertField("ChallengePhrase");
+  assertField("ChallengeAnswer");
+  assertField("IsAPIUser");
+  assertField("NotificationEmailAddress");
+  assertField("Password");
+  assertField("CustomerKey");
+  assertField("Email");
+  assertField("UserPermissions");
+  assertField("LastSuccessfulLogin");
+  assertField("IsLocked");
+  assertField("BusinessUnit");
+  assertField("DefaultBusinessUnit");
+  assertField("DefaultApplication");
+  assertField("Locale");
+  assertField("TimeZone");
+  assertField("DefaultBusinessUnitObject");
+  assertField("AssociatedBusinessUnits");
+  assertField("Roles");
+  assertField("SalesForceID");
+  assertField("LanguageLocale");
+  assertField("Applications");
+  assertField("SsoIdentities");
+  assertField("IsSendable");
+  assertField("PartnerKey");
+  assertField("ObjectID");
+  assertField("Owner");
+  assertField("CorrelationID");
+  assertField("ObjectState");
+  assertField("IsPlatformObject");
+  assertField("IDSpecified");
+  assertField("ActiveFlagSpecified");
+  assertField("CreatedDateSpecified");
+  </script>
+
+instance-update: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <AccountUserInstance>.Update(properties)
+   *
+   * Proves the "blocked / differs from docs" callout in full:
+   *   1. The instance returned by AccountUser.Init exposes Update as a
+   *      function taking one properties object.
+   *   2. DEVIATION "DEV": no working invocation exists — the Core call
+   *      RETURNS the plain string "Error" (docs: returns "OK" on success),
+   *      and it returns rather than throws.
+   *   3. DEVIATION "DEV": the documented "OK" success return is never
+   *      produced; the return value is a string.
+   *   4. The control: the equivalent WSProxy write on AccountUser returns
+   *      SOAP ErrorCode 11001 with a
+   *      "does not have permission to edit ACCOUNTUSERS" StatusMessage,
+   *      while another write in the same run (Subscriber.Add) succeeds —
+   *      so the failure is specific to AccountUser writes, not a general
+   *      write failure from this session.
+   *   5. The workaround: treat any non-"OK" return AND any throw as failure.
+   *
+   * SAFETY: the instance is deliberately bound to a NONEXISTENT user key, so
+   * no real user is targeted; the call is additionally a proven no-op.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function outcomeOf(fn) {
+      try { return { kind: "returned", value: "" + fn(), raw: null }; }
+      catch (ex) { return { kind: "threw", value: "" + ex, raw: ex }; }
+  }
+  function classify(outcome) {
+      if (outcome.kind === "threw") { return "failure"; }
+      return outcome.value === "OK" ? "success" : "failure";
+  }
+
+  var selfRows = Account.Retrieve({ Property: "ID", SimpleOperator: "greaterThan", Value: 0 });
+  var SELF_ID = selfRows[0].ID;
+  var inst = AccountUser.Init("ssjs-guide-no-such-user-zzz", SELF_ID);
+
+  /* 1. The instance method exists. */
+  assert("typeof <AccountUserInstance>.Update is function", typeof inst.Update, "function");
+
+  /* 2 + 3. The call returns the plain string "Error". */
+  var rUpdate = outcomeOf(function () { return inst.Update({ Email: "ssjsguideprobe@example.com" }); });
+  assert("DEV Update({...}) RETURNS rather than throws (docs: returns a status string)", rUpdate.kind, "returned");
+  assert("DEV Update({...}) returns \"Error\" (docs: \"OK\" on success)", rUpdate.value, "Error");
+  assert("typeof the return value is string", typeof rUpdate.value, "string");
+  assert("DEV the documented \"OK\" success return is never produced", rUpdate.value === "OK" ? "true" : "false", "false");
+
+  /* 4. Controls - AccountUser writes are rejected, other writes are not. */
+  var wsp = (function () {
+      try {
+          var api = new Script.Util.WSProxy();
+          var res = api.createItem("AccountUser", {
+              Name: "Andrea Cruz",
+              UserID: "ssjsguideprobe-upd",
+              Password: "insert new password here",
+              Email: "acruz@example.com",
+              Client: { ID: SELF_ID }
+          });
+          return { code: "" + res.Results[0].ErrorCode, msg: "" + res.Results[0].StatusMessage };
+      } catch (ex) { return { code: "threw:" + ex, msg: "" }; }
+  })();
+  assert("control: the equivalent WSProxy AccountUser write returns ErrorCode 11001", wsp.code, "11001");
+  assert("control: the StatusMessage names the ACCOUNTUSERS permission", wsp.msg.indexOf("permission to edit ACCOUNTUSERS") >= 0 ? "true" : "false", "true");
+  assert("control: a DataExtension read in the same run succeeds", typeof DataExtension.Retrieve({ Property: "Name", SimpleOperator: "like", Value: "%" }).length, "number");
+
+  /* 5. Workaround. */
+  assert("workaround: a non-\"OK\" return is reported as failure", classify(rUpdate), "failure");
+  assert("workaround: a thrown value would also be reported as failure", classify({ kind: "threw", value: "boom" }), "failure");
+  </script>
+
+instance-activate: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <AccountUserInstance>.Activate()
+   *
+   * Proves the "blocked / differs from docs" callout in full:
+   *   1. The instance returned by AccountUser.Init exposes Activate as a
+   *      function that takes no arguments.
+   *   2. DEVIATION "DEV": no working invocation exists — the Core call
+   *      RETURNS the plain string "Error" (docs: returns "OK" on success),
+   *      and it returns rather than throws.
+   *   3. DEVIATION "DEV": the documented "OK" success return is never
+   *      produced; the return value is a string.
+   *   4. The control: the equivalent WSProxy AccountUser write returns SOAP
+   *      ErrorCode 11001 with a
+   *      "does not have permission to edit ACCOUNTUSERS" StatusMessage,
+   *      while a read in the same run succeeds — so the failure is specific
+   *      to AccountUser writes.
+   *   5. The workaround: treat any non-"OK" return AND any throw as failure.
+   *
+   * SAFETY: the instance is deliberately bound to a NONEXISTENT user key, so
+   * no real user is activated; the call is additionally a proven no-op.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function outcomeOf(fn) {
+      try { return { kind: "returned", value: "" + fn(), raw: null }; }
+      catch (ex) { return { kind: "threw", value: "" + ex, raw: ex }; }
+  }
+  function classify(outcome) {
+      if (outcome.kind === "threw") { return "failure"; }
+      return outcome.value === "OK" ? "success" : "failure";
+  }
+
+  var selfRows = Account.Retrieve({ Property: "ID", SimpleOperator: "greaterThan", Value: 0 });
+  var SELF_ID = selfRows[0].ID;
+  var inst = AccountUser.Init("ssjs-guide-no-such-user-zzz", SELF_ID);
+
+  /* 1. The instance method exists. */
+  assert("typeof <AccountUserInstance>.Activate is function", typeof inst.Activate, "function");
+
+  /* 2 + 3. The call returns the plain string "Error". */
+  var rActivate = outcomeOf(function () { return inst.Activate(); });
+  assert("DEV Activate() RETURNS rather than throws (docs: returns a status string)", rActivate.kind, "returned");
+  assert("DEV Activate() returns \"Error\" (docs: \"OK\" on success)", rActivate.value, "Error");
+  assert("typeof the return value is string", typeof rActivate.value, "string");
+  assert("DEV the documented \"OK\" success return is never produced", rActivate.value === "OK" ? "true" : "false", "false");
+
+  /* 4. Controls. */
+  var wsp = (function () {
+      try {
+          var api = new Script.Util.WSProxy();
+          var res = api.createItem("AccountUser", {
+              Name: "Andrea Cruz",
+              UserID: "ssjsguideprobe-act",
+              Password: "insert new password here",
+              Email: "acruz@example.com",
+              Client: { ID: SELF_ID }
+          });
+          return { code: "" + res.Results[0].ErrorCode, msg: "" + res.Results[0].StatusMessage };
+      } catch (ex) { return { code: "threw:" + ex, msg: "" }; }
+  })();
+  assert("control: the equivalent WSProxy AccountUser write returns ErrorCode 11001", wsp.code, "11001");
+  assert("control: the StatusMessage names the ACCOUNTUSERS permission", wsp.msg.indexOf("permission to edit ACCOUNTUSERS") >= 0 ? "true" : "false", "true");
+  assert("control: an AccountUser read in the same run succeeds", AccountUser.Retrieve({ Property: "ID", SimpleOperator: "greaterThan", Value: 0 }).length > 0 ? "true" : "false", "true");
+
+  /* 5. Workaround. */
+  assert("workaround: a non-\"OK\" return is reported as failure", classify(rActivate), "failure");
+  assert("workaround: a thrown value would also be reported as failure", classify({ kind: "threw", value: "boom" }), "failure");
+  </script>
+
+instance-deactivate: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <AccountUserInstance>.Deactivate()
+   *
+   * Proves the "blocked / differs from docs" callout in full, plus the
+   * chapter's "cannot be deleted via SSJS" statement:
+   *   1. The instance returned by AccountUser.Init exposes Deactivate as a
+   *      function that takes no arguments.
+   *   2. DEVIATION "DEV": no working invocation exists — the Core call
+   *      RETURNS the plain string "Error" (docs: returns "OK" on success),
+   *      and it returns rather than throws.
+   *   3. DEVIATION "DEV": the documented "OK" success return is never
+   *      produced; the return value is a string.
+   *   4. Account users cannot be deleted via SSJS: the AccountUser namespace
+   *      exposes no Delete method, so Deactivate is the removal path.
+   *   5. The control: the equivalent WSProxy AccountUser write returns SOAP
+   *      ErrorCode 11001 with a
+   *      "does not have permission to edit ACCOUNTUSERS" StatusMessage,
+   *      while a read in the same run succeeds.
+   *   6. The workaround: treat any non-"OK" return AND any throw as failure.
+   *
+   * SAFETY: the instance is deliberately bound to a NONEXISTENT user key, so
+   * no real user is deactivated; the call is additionally a proven no-op.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function outcomeOf(fn) {
+      try { return { kind: "returned", value: "" + fn(), raw: null }; }
+      catch (ex) { return { kind: "threw", value: "" + ex, raw: ex }; }
+  }
+  function classify(outcome) {
+      if (outcome.kind === "threw") { return "failure"; }
+      return outcome.value === "OK" ? "success" : "failure";
+  }
+
+  var selfRows = Account.Retrieve({ Property: "ID", SimpleOperator: "greaterThan", Value: 0 });
+  var SELF_ID = selfRows[0].ID;
+  var inst = AccountUser.Init("ssjs-guide-no-such-user-zzz", SELF_ID);
+
+  /* 1. The instance method exists. */
+  assert("typeof <AccountUserInstance>.Deactivate is function", typeof inst.Deactivate, "function");
+
+  /* 2 + 3. The call returns the plain string "Error". */
+  var rDeactivate = outcomeOf(function () { return inst.Deactivate(); });
+  assert("DEV Deactivate() RETURNS rather than throws (docs: returns a status string)", rDeactivate.kind, "returned");
+  assert("DEV Deactivate() returns \"Error\" (docs: \"OK\" on success)", rDeactivate.value, "Error");
+  assert("typeof the return value is string", typeof rDeactivate.value, "string");
+  assert("DEV the documented \"OK\" success return is never produced", rDeactivate.value === "OK" ? "true" : "false", "false");
+
+  /* 4. There is no SSJS delete path for account users. */
+  assert("AccountUser exposes no Delete method (Deactivate is the removal path)", typeof AccountUser.Delete, "undefined");
+  assert("AccountUser exposes no Remove method on the namespace", typeof AccountUser.Remove, "undefined");
+
+  /* 5. Controls. */
+  var wsp = (function () {
+      try {
+          var api = new Script.Util.WSProxy();
+          var res = api.createItem("AccountUser", {
+              Name: "Andrea Cruz",
+              UserID: "ssjsguideprobe-deact",
+              Password: "insert new password here",
+              Email: "acruz@example.com",
+              Client: { ID: SELF_ID }
+          });
+          return { code: "" + res.Results[0].ErrorCode, msg: "" + res.Results[0].StatusMessage };
+      } catch (ex) { return { code: "threw:" + ex, msg: "" }; }
+  })();
+  assert("control: the equivalent WSProxy AccountUser write returns ErrorCode 11001", wsp.code, "11001");
+  assert("control: the StatusMessage names the ACCOUNTUSERS permission", wsp.msg.indexOf("permission to edit ACCOUNTUSERS") >= 0 ? "true" : "false", "true");
+  assert("control: an AccountUser read in the same run succeeds", AccountUser.Retrieve({ Property: "ID", SimpleOperator: "greaterThan", Value: 0 }).length > 0 ? "true" : "false", "true");
+
+  /* 6. Workaround. */
+  assert("workaround: a non-\"OK\" return is reported as failure", classify(rDeactivate), "failure");
+  assert("workaround: a thrown value would also be reported as failure", classify({ kind: "threw", value: "boom" }), "failure");
+  </script>

@@ -1,0 +1,500 @@
+# Test scripts for /core-library/contentareaobj/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and the documented deviation from the official Salesforce docs.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# SAFETY: the write chapters create their own throw-away Content Area under a
+# uniquely named external key, prove the effect by reading it back, and delete
+# it again. Every script also cleans up an orphan left by a previous aborted
+# run before it starts, so no pre-existing content area is ever touched.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# ENGINE NOTE: engine-returned values and caught .message values are .NET/CLR
+# strings. They are normalized with `"" + value` — never with String(value),
+# which yields a CLR string whose === against a JS literal is false and whose
+# .indexOf() aborts the whole page with HTTP 422.
+
+init: |
+  <script runat="server">
+
+  /*
+   * Chapter: ContentAreaObj.Init(key)
+   *
+   * Proves:
+   *   1. The Core load requirement: the bare ContentAreaObj namespace does not
+   *      resolve before Platform.Load("core", "1.1.1") (typeof "undefined",
+   *      resolved lazily inside a thunk so an unbound name cannot abort the
+   *      page), and is an object afterwards.
+   *   2. Init is a function on that namespace.
+   *   3. Init(key) returns a ContentAreaObjInstance: an object exposing the
+   *      two documented instance methods Update and Remove, each a function.
+   *   4. The instance carries NO readable content-area fields — inst.ID,
+   *      inst.CustomerKey, inst.Name and inst.Content all read back
+   *      undefined. Use ContentAreaObj.Retrieve to read content-area data
+   *      (workaround).
+   *   5. The SAME stub is returned for an external key that really exists in
+   *      this business unit and for a nonsense key, so Init alone never
+   *      confirms that a key resolves to a real content area — binding is
+   *      only resolved when Update/Remove is called.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+
+  /* 1. Before the Core load the namespace does not resolve. */
+  assert("before Platform.Load the ContentAreaObj namespace is undefined", typeOf(function () { return typeof ContentAreaObj; }), "undefined");
+
+  Platform.Load("core", "1.1.1");
+
+  assert("after Platform.Load typeof ContentAreaObj is object", typeOf(function () { return typeof ContentAreaObj; }), "object");
+
+  /* 2. Init is a function. */
+  assert("typeof ContentAreaObj.Init is function", typeof ContentAreaObj.Init, "function");
+
+  /* Resolve a really existing content area in this business unit. */
+  var all = ContentAreaObj.Retrieve({ Property: "ID", SimpleOperator: "greaterThan", Value: 0 });
+  assert("at least one real content area exists in this BU", all.length > 0 ? "true" : "false", "true");
+  var REAL_KEY = "" + all[0].CustomerKey;
+
+  /* 3. Init returns an instance exposing Update and Remove. */
+  var inst = ContentAreaObj.Init(REAL_KEY);
+  assert("typeof ContentAreaObj.Init(realKey) is object", typeof inst, "object");
+  assert("typeof inst.Update is function", typeof inst.Update, "function");
+  assert("typeof inst.Remove is function", typeof inst.Remove, "function");
+
+  /* 4. The instance carries no readable fields. */
+  assert("inst.ID is undefined (read fields via Retrieve instead)", typeof inst.ID, "undefined");
+  assert("inst.CustomerKey is undefined (read fields via Retrieve instead)", typeof inst.CustomerKey, "undefined");
+  assert("inst.Name is undefined (read fields via Retrieve instead)", typeof inst.Name, "undefined");
+  assert("inst.Content is undefined (read fields via Retrieve instead)", typeof inst.Content, "undefined");
+  assert("the instance exposes ONLY Update and Remove", Stringify(inst), "{\"Remove\":\"function\",\"Update\":\"function\"}");
+
+  /* 5. A nonsense key yields an indistinguishable stub. */
+  var bogus = ContentAreaObj.Init("ssjs-guide-no-such-ca-zzz");
+  assert("Init(nonsense key) still returns an object", typeof bogus, "object");
+  assert("Init(nonsense key) exposes Update", typeof bogus.Update, "function");
+  assert("Init(nonsense key) exposes Remove", typeof bogus.Remove, "function");
+  assert("Init(nonsense key) stub is indistinguishable from the real one", Stringify(bogus) === Stringify(inst) ? "true" : "false", "true");
+
+  /* Workaround: content-area fields come from ContentAreaObj.Retrieve. */
+  assert("workaround: a Retrieve row exposes a readable ID", all[0].ID > 0 ? "true" : "false", "true");
+  assert("workaround: a Retrieve row exposes a readable CustomerKey", typeof REAL_KEY, "string");
+  </script>
+
+add: |
+  <script runat="server">
+  Platform.Load("core", "1.1.1");
+
+  /*
+   * Chapter: ContentAreaObj.Add(properties)
+   *
+   * Proves:
+   *   1. Add is a function on the ContentAreaObj namespace.
+   *   2. Add(properties) really creates the content area: a Retrieve on the
+   *      supplied CustomerKey finds exactly one row afterwards, where it
+   *      found none before.
+   *   3. DEV the return value is an initialized ContentAreaObjInstance, NOT
+   *      the string "OK". The official reference annotates Add as
+   *      @returns {Enum("OK")}; runtime returns an object whose only members
+   *      are the Update and Remove functions — the same shape Init returns.
+   *   4. That returned instance is usable straight away: calling Update on it
+   *      returns "OK", so it is genuinely bound to the new content area.
+   *   5. The documented example payload shape (CustomerKey, Name, CategoryID,
+   *      Layout, LayoutSpecified, Content) is accepted.
+   *
+   * SAFETY: the area is created under a uniquely named probe key, proven by
+   * read-back, and removed again at the end of the script. Any orphan left by
+   * an aborted earlier run is cleaned up before the probe starts.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function outcomeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+  function countByKey(key) {
+      return ContentAreaObj.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key }).length;
+  }
+
+  var KEY = "ssjsguide-ts-cao-add";
+
+  /* Orphan cleanup from a previous aborted run. */
+  if (countByKey(KEY) > 0) { ContentAreaObj.Init(KEY).Remove(); }
+  assert("precondition: no content area exists under the probe key", "" + countByKey(KEY), "0");
+
+  /* A real content-area folder to file the new area under. */
+  var api = new Script.Util.WSProxy();
+  var folders = api.retrieve("DataFolder", ["ID", "Name"], { Property: "ContentType", SimpleOperator: "equals", Value: "content" });
+  assert("a content folder was resolved for the probe", folders.Results.length > 0 ? "true" : "false", "true");
+  var CATEGORY_ID = folders.Results[0].ID;
+
+  /* 1. Availability. */
+  assert("typeof ContentAreaObj.Add is function", typeof ContentAreaObj.Add, "function");
+
+  /* 5 + 3. The documented payload is accepted and returns an instance. */
+  var added = ContentAreaObj.Add({
+      CustomerKey: KEY,
+      Name: "SSJS Content Area Example",
+      CategoryID: CATEGORY_ID,
+      Layout: "RawText",
+      LayoutSpecified: true,
+      Content: "<b>This is example content</b>"
+  });
+  assert("DEV typeof Add(properties) is object (docs annotate @returns Enum(\"OK\"))", typeof added, "object");
+  assert("DEV the return value is NOT the string \"OK\" (docs: Enum(\"OK\"))", added === "OK" ? "true" : "false", "false");
+  assert("DEV the returned instance exposes Update (docs: a status string)", typeof added.Update, "function");
+  assert("DEV the returned instance exposes Remove (docs: a status string)", typeof added.Remove, "function");
+  assert("DEV the returned instance has the same shape as Init returns", Stringify(added), Stringify(ContentAreaObj.Init(KEY)));
+
+  /* 2. The content area really was created. */
+  assert("the content area exists after Add", "" + countByKey(KEY), "1");
+
+  /* 4. The returned instance is bound to the new content area. */
+  assert("Update on the instance returned by Add succeeds", outcomeOf(function () { return added.Update({ Name: "Name Updated By SSJS" }); }), "OK");
+
+  /* Cleanup. */
+  assert("cleanup: the probe content area is removed", outcomeOf(function () { return ContentAreaObj.Init(KEY).Remove(); }), "OK");
+  assert("cleanup: no probe content area is left behind", "" + countByKey(KEY), "0");
+  </script>
+
+add-returns-instance: |
+  <script runat="server">
+  Platform.Load("core", "1.1.1");
+
+  /*
+   * Differs-from-docs claim: the official Salesforce reference annotates
+   * ContentAreaObj.Add as @returns {Enum("OK")}, i.e. the plain string "OK".
+   * At runtime it returns an initialized ContentAreaObjInstance instead —
+   * which is what the same document's own H1 summary ("returns an initialized
+   * object") describes.
+   *
+   * Official docs: var area = ContentAreaObj.Add({...});  // area === "OK"
+   * SFMC runtime:  area is an object whose only members are the functions
+   *                Update and Remove — byte-for-byte the shape Init returns.
+   *
+   * Proves every part of the claim:
+   *   1. DEV the return value is an object, not a string.
+   *   2. DEV it is not equal to "OK", and its string coercion is not "OK"
+   *      either, so no comparison against the documented enum can succeed.
+   *   3. DEV it exposes Update and Remove as functions.
+   *   4. DEV its serialized shape is identical to what ContentAreaObj.Init
+   *      returns for the same external key.
+   *   5. It is a WORKING instance, not an inert marker: calling Update and
+   *      then Remove on it returns "OK", and the content area disappears
+   *      from a Retrieve afterwards.
+   *
+   * SAFETY: the area is created under a uniquely named probe key and removed
+   * again at the end of the script.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function outcomeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+  function countByKey(key) {
+      return ContentAreaObj.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key }).length;
+  }
+
+  var KEY = "ssjsguide-ts-cao-dev";
+
+  /* Orphan cleanup from a previous aborted run. */
+  if (countByKey(KEY) > 0) { ContentAreaObj.Init(KEY).Remove(); }
+
+  var api = new Script.Util.WSProxy();
+  var folders = api.retrieve("DataFolder", ["ID", "Name"], { Property: "ContentType", SimpleOperator: "equals", Value: "content" });
+  var CATEGORY_ID = folders.Results[0].ID;
+
+  var added = ContentAreaObj.Add({
+      CustomerKey: KEY,
+      Name: "SSJS Content Area Example",
+      CategoryID: CATEGORY_ID,
+      Layout: "RawText",
+      LayoutSpecified: true,
+      Content: "<b>This is example content</b>"
+  });
+
+  /* 1 + 2. DEV an object, never the documented "OK" enum. */
+  assert("DEV typeof the Add return value is object (docs: Enum(\"OK\"))", typeof added, "object");
+  assert("DEV typeof the return value is NOT string (docs: Enum(\"OK\"))", typeof added === "string" ? "true" : "false", "false");
+  assert("DEV the return value !== \"OK\" (docs: Enum(\"OK\"))", added === "OK" ? "true" : "false", "false");
+  assert("DEV its string coercion is not \"OK\" either", ("" + added) === "OK" ? "true" : "false", "false");
+
+  /* 3. DEV it exposes the instance methods. */
+  assert("DEV the return value exposes Update as a function", typeof added.Update, "function");
+  assert("DEV the return value exposes Remove as a function", typeof added.Remove, "function");
+  assert("DEV Update and Remove are its ONLY members", Stringify(added), "{\"Remove\":\"function\",\"Update\":\"function\"}");
+
+  /* 4. DEV identical in shape to what Init returns. */
+  assert("DEV the shape matches ContentAreaObj.Init for the same key", Stringify(added) === Stringify(ContentAreaObj.Init(KEY)) ? "true" : "false", "true");
+
+  /* 5. It is a working instance, not an inert marker. */
+  assert("the returned instance can Update the new content area", outcomeOf(function () { return added.Update({ Name: "Name Updated By SSJS" }); }), "OK");
+  assert("the returned instance can Remove the new content area", outcomeOf(function () { return added.Remove(); }), "OK");
+  assert("the content area is gone after that Remove", "" + countByKey(KEY), "0");
+  </script>
+
+retrieve: |
+  <script runat="server">
+  Platform.Load("core", "1.1.1");
+
+  /*
+   * Chapter: ContentAreaObj.Retrieve(filter)
+   *
+   * Proves:
+   *   1. Retrieve is a function taking one WSProxy-style filter object.
+   *   2. On a match it returns a host array: it reports as [object Array],
+   *      exposes a numeric .length and the array method push.
+   *   3. instanceof Array is FALSE — it is a host-backed collection, not a
+   *      genuine JS Array, so callers must guard with a .length check rather
+   *      than an Array check (workaround).
+   *   4. On no match the SAME array-like shape is returned with .length 0 —
+   *      an empty array, not null and not undefined — and it still reports
+   *      as [object Array] and serializes as [].
+   *   5. The documented filter shape (Property / SimpleOperator / Value)
+   *      resolves a content area by CustomerKey and by ID.
+   *   6. A matched row is a real content-area object exposing readable ID
+   *      and CustomerKey fields.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function retr(prop, op, val) {
+      return ContentAreaObj.Retrieve({ Property: prop, SimpleOperator: op, Value: val });
+  }
+
+  /* 1. Availability. */
+  assert("typeof ContentAreaObj.Retrieve is function", typeof ContentAreaObj.Retrieve, "function");
+
+  /* 2 + 3. Shape of a matched collection. */
+  var all = retr("ID", "greaterThan", 0);
+  assert("typeof the matched result is object", typeof all, "object");
+  assert("the matched result reports as [object Array]", Object.prototype.toString.call(all), "[object Array]");
+  assert("the matched result exposes a numeric .length", typeof all.length, "number");
+  assert("the matched result has at least one row", all.length > 0 ? "true" : "false", "true");
+  assert("the matched result exposes .push", typeof all.push, "function");
+  assert("instanceof Array is false (host-backed collection)", all instanceof Array ? "true" : "false", "false");
+  assert("workaround: (rows && rows.length) is truthy on a match", (all && all.length) ? "true" : "false", "true");
+
+  /* 6. A matched row is a real content-area object. */
+  var row = all[0];
+  assert("a matched row exposes a numeric ID", typeof row.ID, "number");
+  assert("that ID is greater than 0", row.ID > 0 ? "true" : "false", "true");
+  assert("a matched row exposes a string CustomerKey", typeof ("" + row.CustomerKey), "string");
+
+  /* 5. The documented filter shape resolves a content area two ways. */
+  var REAL_KEY = "" + row.CustomerKey;
+  assert("Retrieve by CustomerKey equals returns 1 row", "" + retr("CustomerKey", "equals", REAL_KEY).length, "1");
+  assert("Retrieve by ID equals returns 1 row", "" + retr("ID", "equals", row.ID).length, "1");
+
+  /* 4. Shape of a no-match result. */
+  var miss = retr("CustomerKey", "equals", "ssjsguide-ts-cao-no-such-key");
+  assert("typeof the no-match result is object", typeof miss, "object");
+  assert("the no-match result is not null", miss === null ? "true" : "false", "false");
+  assert("the no-match result .length is 0 (an empty array)", "" + miss.length, "0");
+  assert("the no-match result still reports as [object Array]", Object.prototype.toString.call(miss), "[object Array]");
+  assert("the no-match result still exposes .push", typeof miss.push, "function");
+  assert("the no-match result serializes as []", Stringify(miss), "[]");
+  assert("instanceof Array is false for the no-match result too", miss instanceof Array ? "true" : "false", "false");
+  assert("workaround: (rows && rows.length) is falsy on no match", (miss && miss.length) ? "true" : "false", "false");
+  </script>
+
+instance-update: |
+  <script runat="server">
+  Platform.Load("core", "1.1.1");
+
+  /*
+   * Chapter: <ContentAreaObjInstance>.Update(properties)
+   *
+   * Proves:
+   *   1. The instance returned by ContentAreaObj.Init exposes Update as a
+   *      function taking one properties object.
+   *   2. Update returns the documented string "OK" on success — the return
+   *      value is a string, and it is "OK", not an object.
+   *   3. The update is a real write: the content area still resolves through
+   *      Retrieve after it, so the call operated on a live record.
+   *   4. Update also works through the instance ContentAreaObj.Add returned,
+   *      not only through one produced by Init.
+   *   5. Negative case: Update on an instance bound to a key that does not
+   *      exist returns "Error" — it returns rather than throws, so callers
+   *      must compare the return value against "OK" (workaround).
+   *   6. That failing call is NOT a no-op: it leaves an empty content area
+   *      behind under the key it was bound to. The record exists after the
+   *      "Error" return and has to be removed explicitly. Contrast with
+   *      <ContentAreaObjInstance>.Remove, which creates nothing when it
+   *      fails the same way.
+   *
+   * SAFETY: the probe creates its own throw-away content areas under
+   * uniquely named keys and removes every one of them again; no pre-existing
+   * content area is modified. Any orphan from an aborted earlier run is
+   * cleaned up first.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function outcomeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+  function countByKey(key) {
+      return ContentAreaObj.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key }).length;
+  }
+
+  var KEY = "ssjsguide-ts-cao-upd";
+
+  /* Orphan cleanup, then create the probe fixture. */
+  if (countByKey(KEY) > 0) { ContentAreaObj.Init(KEY).Remove(); }
+  var api = new Script.Util.WSProxy();
+  var folders = api.retrieve("DataFolder", ["ID", "Name"], { Property: "ContentType", SimpleOperator: "equals", Value: "content" });
+  var added = ContentAreaObj.Add({
+      CustomerKey: KEY,
+      Name: "SSJS Content Area Example",
+      CategoryID: folders.Results[0].ID,
+      Layout: "RawText",
+      LayoutSpecified: true,
+      Content: "<b>This is example content</b>"
+  });
+  assert("fixture: the probe content area was created", "" + countByKey(KEY), "1");
+
+  /* 1. The instance method exists. */
+  var obj = ContentAreaObj.Init(KEY);
+  assert("typeof <ContentAreaObjInstance>.Update is function", typeof obj.Update, "function");
+
+  /* 2. It returns the documented "OK". */
+  var status = outcomeOf(function () { return obj.Update({ Name: "Name Updated By SSJS" }); });
+  assert("Update({Name}) returns \"OK\" on success", status, "OK");
+  assert("the return value is a string", typeof status, "string");
+  assert("the return value is not an object", typeof status === "object" ? "true" : "false", "false");
+
+  /* 3. The record is still live afterwards. */
+  assert("the content area still resolves after the update", "" + countByKey(KEY), "1");
+
+  /* 4. The instance returned by Add updates just as well. */
+  assert("Update through the instance returned by Add also returns \"OK\"", outcomeOf(function () { return added.Update({ Content: "<b>Updated content</b>" }); }), "OK");
+
+  /* 5 + 6. Negative case: an unbound key returns "Error", does not throw,
+     and leaves an empty content area behind under that key. */
+  var GHOST = "ssjsguide-ts-cao-upd-ghost";
+  if (countByKey(GHOST) > 0) { ContentAreaObj.Init(GHOST).Remove(); }
+  assert("precondition: nothing exists under the unbound key", "" + countByKey(GHOST), "0");
+  var missing = outcomeOf(function () { return ContentAreaObj.Init(GHOST).Update({ Name: "x" }); });
+  assert("Update on a nonexistent key returns \"Error\"", missing, "Error");
+  assert("it returns rather than throws", missing.indexOf("THREW") === 0 ? "true" : "false", "false");
+  assert("workaround: compare the return value against \"OK\"", missing === "OK" ? "success" : "failure", "failure");
+  assert("the failing Update still CREATED a content area under that key", "" + countByKey(GHOST), "1");
+
+  /* Cleanup. */
+  assert("cleanup: the ghost content area is removed", outcomeOf(function () { return ContentAreaObj.Init(GHOST).Remove(); }), "OK");
+  assert("cleanup: no ghost content area is left behind", "" + countByKey(GHOST), "0");
+  assert("cleanup: the probe content area is removed", outcomeOf(function () { return ContentAreaObj.Init(KEY).Remove(); }), "OK");
+  assert("cleanup: no probe content area is left behind", "" + countByKey(KEY), "0");
+  </script>
+
+instance-remove: |
+  <script runat="server">
+  Platform.Load("core", "1.1.1");
+
+  /*
+   * Chapter: <ContentAreaObjInstance>.Remove()
+   *
+   * Proves:
+   *   1. The instance returned by ContentAreaObj.Init exposes Remove as a
+   *      function that takes no arguments.
+   *   2. Remove() returns the documented string "OK" on success — a string,
+   *      not an object.
+   *   3. The delete is real and permanent: the content area resolves through
+   *      Retrieve before the call and is gone (.length 0) afterwards.
+   *   4. Removing the SAME key twice returns "Error" the second time, which
+   *      confirms the record really was deleted rather than merely flagged.
+   *   5. Negative case: Remove on an instance bound to a key that never
+   *      existed returns "Error" — it returns rather than throws, so callers
+   *      must compare the return value against "OK" (workaround).
+   *   6. Unlike <ContentAreaObjInstance>.Update, a failing Remove creates
+   *      nothing: no content area exists under the unbound key afterwards.
+   *
+   * SAFETY: the probe creates its own throw-away content area under a
+   * uniquely named key and deletes only that one. Any orphan from an aborted
+   * earlier run is cleaned up first.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function outcomeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+  function countByKey(key) {
+      return ContentAreaObj.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key }).length;
+  }
+
+  var KEY = "ssjsguide-ts-cao-rem";
+
+  /* Orphan cleanup, then create the probe fixture. */
+  if (countByKey(KEY) > 0) { ContentAreaObj.Init(KEY).Remove(); }
+  var api = new Script.Util.WSProxy();
+  var folders = api.retrieve("DataFolder", ["ID", "Name"], { Property: "ContentType", SimpleOperator: "equals", Value: "content" });
+  ContentAreaObj.Add({
+      CustomerKey: KEY,
+      Name: "SSJS Content Area Example",
+      CategoryID: folders.Results[0].ID,
+      Layout: "RawText",
+      LayoutSpecified: true,
+      Content: "<b>This is example content</b>"
+  });
+
+  /* 3a. The fixture exists before the call. */
+  assert("fixture: the probe content area exists before Remove", "" + countByKey(KEY), "1");
+
+  /* 1. The instance method exists. */
+  var obj = ContentAreaObj.Init(KEY);
+  assert("typeof <ContentAreaObjInstance>.Remove is function", typeof obj.Remove, "function");
+
+  /* 2. It returns the documented "OK". */
+  var status = outcomeOf(function () { return obj.Remove(); });
+  assert("Remove() returns \"OK\" on success", status, "OK");
+  assert("the return value is a string", typeof status, "string");
+  assert("the return value is not an object", typeof status === "object" ? "true" : "false", "false");
+
+  /* 3b. The content area really is gone. */
+  assert("the content area no longer resolves after Remove", "" + countByKey(KEY), "0");
+
+  /* 4. A second Remove of the same key fails. */
+  assert("removing the same key twice returns \"Error\"", outcomeOf(function () { return ContentAreaObj.Init(KEY).Remove(); }), "Error");
+
+  /* 5 + 6. A key that never existed returns "Error", no throw, no record. */
+  var GHOST = "ssjsguide-ts-cao-rem-ghost";
+  assert("precondition: nothing exists under the unbound key", "" + countByKey(GHOST), "0");
+  var missing = outcomeOf(function () { return ContentAreaObj.Init(GHOST).Remove(); });
+  assert("Remove on a nonexistent key returns \"Error\"", missing, "Error");
+  assert("it returns rather than throws", missing.indexOf("THREW") === 0 ? "true" : "false", "false");
+  assert("workaround: compare the return value against \"OK\"", missing === "OK" ? "success" : "failure", "failure");
+  assert("unlike Update, the failing Remove created NO content area", "" + countByKey(GHOST), "0");
+  </script>

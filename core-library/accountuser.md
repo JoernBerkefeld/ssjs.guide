@@ -5,6 +5,7 @@ parent: Core Library
 parent_url: /core-library/
 description: Core library AccountUser — manage users in the business unit (init, add, retrieve, update, activate, deactivate).
 verification: verified
+test_scripts: complete
 requires_core_load: true
 type_mapping:
   ssjs: "AccountUser"
@@ -47,7 +48,7 @@ AccountUser.Init(targetUserKey, myClientID)
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `targetUserKey` | string | Yes | External key of the user |
-| `myClientID` | number | Yes | MID of the business unit |
+| `myClientID` | string \| number | Yes | MID of the business unit |
 
 #### Return value
 
@@ -60,13 +61,15 @@ Platform.Load("core", "1.1.5");
 var acctUser = AccountUser.Init("myAccountUser", 123456789);
 ```
 
+{% include test-script.html bundle="core-library--accountuser" chapter="init" %}
+
 ---
 
 ### AccountUser.Add {#add}
 
 {% include method-status.html status="blocked" differs=true %}
 
-{% include callout.html type="warning" content="No working invocation found at runtime. Probed against a Parent BU session: a short payload returned the plain string `\"Error\"` and a full documented payload threw `\"Error adding AccountUser\"`. The equivalent WSProxy `createItem(\"AccountUser\", …)` returned SOAP fault `ErrorCode 11001`, `StatusMessage \"User 0 does not have permission to edit ACCOUNTUSERS on account &lt;Parent BU&gt;.\"`. In the same run `Subscriber.Add` returned `\"OK\"` and `DataExtension.Retrieve` succeeded, so this is specific to AccountUser writes from this session rather than a general write failure." %}
+{% include callout.html type="warning" content="No working invocation found at runtime. Probed against a Parent BU session: a short payload and the documented payload both returned the plain string `\"Error\"`, while a payload carrying additional AccountUser fields (`CustomerKey`, a nested `Client`) — or a non-object argument — threw the plain string `\"Error adding AccountUser\"`. The equivalent WSProxy `createItem(\"AccountUser\", …)` returned SOAP fault `ErrorCode 11001`, `StatusMessage \"User 0 does not have permission to edit ACCOUNTUSERS on account &lt;Parent BU&gt;.\"`. In the same run `Subscriber.Add` returned `\"OK\"` and `DataExtension.Retrieve` succeeded, so this is specific to AccountUser writes from this session rather than a general write failure." %}
 
 Creates a new Marketing Cloud user with the specified properties.
 
@@ -84,7 +87,9 @@ AccountUser.Add(properties)
 
 #### Return value
 
-`"OK"` on success. Observed returning the plain string `"Error"` (short payload) or throwing `"Error adding AccountUser"` (full payload) when the write does not succeed.
+`"OK"` on success. Observed returning the plain string `"Error"`, or throwing the plain string `"Error adding AccountUser"` for payloads carrying additional AccountUser fields, when the write does not succeed. Because it can throw a plain string (not an `Error` instance, so the caught value has no `.message`), wrap the call in `try`/`catch` and treat any non-`"OK"` return — and any throw — as failure.
+
+{% include test-script.html bundle="core-library--accountuser" chapter="add" label="Show test script — every payload returns \"Error\" or throws" %}
 
 #### Examples
 
@@ -101,6 +106,8 @@ var newUser = {
 };
 var status = AccountUser.Add(newUser);
 ```
+
+{% include test-script.html bundle="core-library--accountuser" chapter="add" %}
 
 ---
 
@@ -124,7 +131,7 @@ AccountUser.Retrieve(filter)
 
 #### Return value
 
-`object[]`
+`object[]` — an array-like collection of `AccountUser` SOAP rows. Proven at runtime it exposes `.length` and `.push`, but it is **not** an `instanceof Array` in this engine, so guard with a `.length` check before indexing. On no match the same shape is returned with `.length` of `0` and stringifies as `[]`.
 
 #### Examples
 
@@ -136,6 +143,8 @@ var accountUser = AccountUser.Retrieve({
     Value: "MyAccount"
 });
 ```
+
+{% include test-script.html bundle="core-library--accountuser" chapter="retrieve" %}
 
 ---
 
@@ -161,7 +170,9 @@ Updates the initialized user's profile with the given properties.
 
 #### Return value
 
-`"OK"` on success. Observed returning the plain string `"Error"` when the write does not succeed.
+`"OK"` on success. Observed returning (not throwing) the plain string `"Error"` when the write does not succeed, so treat any non-`"OK"` return as failure.
+
+{% include test-script.html bundle="core-library--accountuser" chapter="instance-update" label="Show test script — Update returns \"Error\" while other calls in the same run succeed" %}
 
 #### Examples
 
@@ -170,6 +181,8 @@ Platform.Load("core", "1.1.5");
 var acctUser = AccountUser.Init("myAccountUser", 123456789);
 var status = acctUser.Update({ Password: "XXXXX" });
 ```
+
+{% include test-script.html bundle="core-library--accountuser" chapter="instance-update" %}
 
 ---
 
@@ -189,7 +202,9 @@ Activates the initialized user account.
 
 #### Return value
 
-`"OK"` on success. Observed returning the plain string `"Error"` when the write does not succeed.
+`"OK"` on success. Observed returning (not throwing) the plain string `"Error"` when the write does not succeed, so treat any non-`"OK"` return as failure.
+
+{% include test-script.html bundle="core-library--accountuser" chapter="instance-activate" label="Show test script — Activate returns \"Error\" while reads in the same run succeed" %}
 
 #### Examples
 
@@ -198,6 +213,8 @@ Platform.Load("core", "1.1.5");
 var acctUser = AccountUser.Init("myAccountUser", 123456789);
 var status = acctUser.Activate();
 ```
+
+{% include test-script.html bundle="core-library--accountuser" chapter="instance-activate" %}
 
 ---
 
@@ -217,7 +234,9 @@ Deactivates the initialized user. Account users **cannot** be deleted via SSJS; 
 
 #### Return value
 
-`"OK"` on success. Observed returning the plain string `"Error"` when the write does not succeed.
+`"OK"` on success. Observed returning (not throwing) the plain string `"Error"` when the write does not succeed, so treat any non-`"OK"` return as failure.
+
+{% include test-script.html bundle="core-library--accountuser" chapter="instance-deactivate" label="Show test script — Deactivate returns \"Error\" and no Delete method exists" %}
 
 #### Examples
 
@@ -226,6 +245,8 @@ Platform.Load("core", "1.1.5");
 var acctUser = AccountUser.Init("myAccountUser", 123456789);
 var status = acctUser.Deactivate();
 ```
+
+{% include test-script.html bundle="core-library--accountuser" chapter="instance-deactivate" %}
 
 ## See also
 

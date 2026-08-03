@@ -15,6 +15,7 @@ availability:
 requires_core_load: true
 verification: verified
 differs_from_docs: false
+test_scripts: complete
 syntax: "Base64Encode(string)"
 return_type: string
 min_args: 1
@@ -27,11 +28,15 @@ max_args: 1
 |------|------|----------|-------------|
 | `string` | string | Yes | Text to encode |
 
+{% include test-script.html bundle="core-library--base64encode" chapter="parameters" %}
+
 ## Description
 
 Encodes a plain text string to Base64. Requires `Platform.Load("core", "1.1.5")` before use.
 
 This is the single-argument bare-name form. It does not support a `charset` parameter — use [`Platform.Function.Base64Encode(string, charset)`](/platform-functions/base64encode/) when charset control is needed.
+
+{% include test-script.html bundle="core-library--base64encode" chapter="description" %}
 
 ## Example
 
@@ -41,6 +46,8 @@ var decoded = 'Convert to Base64';
 var encoded = Base64Encode(decoded);
 Write(encoded); // "Q29udmVydCB0byBCYXNlNjQ="
 ```
+
+{% include test-script.html bundle="core-library--base64encode" chapter="example" %}
 
 ## See Also
 

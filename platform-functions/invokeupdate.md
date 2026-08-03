@@ -14,10 +14,13 @@ return_type: string
 min_args: 3
 max_args: 3
 verification: verified
+test_scripts: complete
 differs_from_docs: true
 ---
 
 {% include differs-from-docs.html note="The official docs type the return value as an object, but at runtime the call returns the OverallStatus message as a string (`\"OK\"` / `\"Error\"`); `status[0]` receives the status message and `status[1]` a numeric request-id / error code. The documented separate `statusMsgVar` / `errorCodeVar` out-parameters are refuted at runtime — supplying that 4-argument form throws. The valid signature is 3 arguments `(apiObject, status, options)`." %}
+
+{% include test-script.html bundle="platform-functions--invokeupdate" chapter="differs-from-docs" label="Show test script — string return value, status slots and the 3-argument signature" %}
 
 ## Parameters
 
@@ -26,6 +29,8 @@ differs_from_docs: true
 | `apiObject` | object | Yes | SOAP object built with `CreateObject`/`SetObjectProperty` |
 | `status` | array | Yes | Array that receives the status and request ID of the API call (e.g. `[0, 0]`) |
 | `options` | object | Yes | API configure options to include in the call. Can contain a `null` value. |
+
+{% include test-script.html bundle="platform-functions--invokeupdate" chapter="parameters" %}
 
 ## Examples
 
@@ -39,6 +44,8 @@ var result = Platform.Function.InvokeUpdate(sub, StatusAndRequestID, null);
 var status = StatusAndRequestID[0];
 var requestID = StatusAndRequestID[1];
 ```
+
+{% include test-script.html bundle="platform-functions--invokeupdate" chapter="examples" %}
 
 ## See Also
 

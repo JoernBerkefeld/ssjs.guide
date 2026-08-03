@@ -8,6 +8,7 @@ redirect_from:
   - /platform-objects/datetime/
   - /platform-objects/datetime-timezone/
 verification: verified
+test_scripts: complete
 differs_from_docs: true
 description: Date-time utilities for converting between system time and local time, and for retrieving time zone definitions. Requires the Core library.
 ---
@@ -16,7 +17,7 @@ The `DateTime` namespace provides date-time conversion helpers and time zone loo
 
 {% include callout.html type="warning" content="Requires <code>Platform.Load(\"core\", \"1.1.5\")</code> before use." %}
 
-{% include callout.html type="note" content="Runtime-verified: the conversion methods return genuine <code>Date</code> objects (<code>typeof \"object\"</code>, <code>Object.prototype.toString</code> reports <code>[object Date]</code>, <code>.constructor === Date</code>, working <code>getFullYear()</code>/<code>getHours()</code>/<code>getTime()</code>; only <code>instanceof Date</code> is false due to the engine-wide instanceof-on-builtins bug — test with <code>.constructor === Date</code>). They also coerce to a string automatically (via <code>String(value)</code>, <code>\"\" + value</code>, or <code>Write(value)</code>). <code>DateTime.TimeZone.Retrieve()</code> rows are CLR objects that <code>Stringify()</code> cannot serialize — enumerate their fields with <code>for..in</code>." %}
+{% include callout.html type="note" content="Runtime-verified: the conversion methods return genuine <code>Date</code> objects (<code>typeof \"object\"</code>, <code>Object.prototype.toString</code> reports <code>[object Date]</code>, <code>.constructor === Date</code>, working <code>getFullYear()</code>/<code>getHours()</code>/<code>getTime()</code>; only <code>instanceof Date</code> is false due to the engine-wide instanceof-on-builtins bug — test with <code>.constructor === Date</code>). They also coerce to a string automatically (via <code>String(value)</code>, <code>\"\" + value</code>, or <code>Write(value)</code>)." %}
 
 ## Methods
 
@@ -34,9 +35,9 @@ Converts a date-time value from Marketing Cloud system time (Central Standard Ti
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `dateString` | string | Yes | A date-time string in system time (CST) to convert to local time. |
+| `dateString` | string \| Date | Yes | A date-time value in system time (CST) to convert to local time. |
 
-Accepted formats include ISO 8601 (`2025-08-05T12:34:56.789Z`), US notation (`8/5/2025 12:34 PM`), long-form (`5 August 2025`), and time-only (`14:23:56`).
+Accepted formats include ISO 8601 (`2025-08-05T12:34:56.789Z`), US notation (`8/5/2025 12:34 PM`), long-form (`5 August 2025`), and time-only (`14:23:56`). A real `Date` object is accepted as well, which is what makes passing `Platform.Function.Now()` straight in work.
 
 **Returns:** `Date` — the converted local date-time as a `Date` object (`typeof "object"`, `Object.prototype.toString` reports `[object Date]`, `.constructor === Date`; only `instanceof Date` is false). Coerces to an ISO-like string when written or stringified.
 
@@ -48,6 +49,8 @@ var localTime = DateTime.SystemDateToLocalDate(Platform.Function.Now());
 Write(localTime);
 ```
 
+{% include test-script.html bundle="core-library--datetime" chapter="systemdatetolocaldate" %}
+
 ---
 
 ### DateTime.LocalDateToSystemDate {#localdatetosystemdate}
@@ -56,9 +59,9 @@ Converts a date-time value from the local time of the account or user to Marketi
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `dateString` | string | Yes | A date-time string in local account/user time to convert to system time (CST). |
+| `dateString` | string \| Date | Yes | A date-time value in local account/user time to convert to system time (CST). |
 
-Accepted formats include ISO 8601 (`2025-08-05T12:34:56.789Z`), US notation (`8/5/2025 12:34 PM`), long-form (`5 August 2025`), and time-only (`14:23:56`).
+Accepted formats include ISO 8601 (`2025-08-05T12:34:56.789Z`), US notation (`8/5/2025 12:34 PM`), long-form (`5 August 2025`), and time-only (`14:23:56`). A real `Date` object is accepted as well.
 
 **Returns:** `Date` — the converted system date-time as a `Date` object (`typeof "object"`, `Object.prototype.toString` reports `[object Date]`, `.constructor === Date`; only `instanceof Date` is false). Coerces to an ISO-like string when written or stringified.
 
@@ -69,6 +72,8 @@ Platform.Load("core", "1.1.5");
 var systemTime = DateTime.LocalDateToSystemDate("8/5/2025 12:34 PM");
 Write(systemTime);
 ```
+
+{% include test-script.html bundle="core-library--datetime" chapter="localdatetosystemdate" %}
 
 ---
 
@@ -88,7 +93,9 @@ DateTime.TimeZone.Retrieve([filter])
 
 **Returns:** `object[]` — matching time zone rows, each carrying `ID` (number) and `Name` (string).
 
-{% include differs-from-docs.html note="The `filter` argument is **optional**, contrary to the docs — calling `DateTime.TimeZone.Retrieve()` with no argument returns the full time-zone list. A filter that matches nothing returns an empty collection rather than `null`, so `.length` can be read unconditionally, but a *malformed* filter (a plain string, or an object missing the three filter properties) raises a time-zone retrieval error instead of returning an empty list. The returned value is a CLR collection, not a JavaScript array: it is indexable and has `.length`, but `instanceof Array` is `false` and array methods such as `push` are absent. `Platform.Load(\"core\", ...)` is genuinely required — before the load `DateTime` is `undefined` and the call throws." %}
+{% include differs-from-docs.html note="The `filter` argument is **optional**, contrary to the docs — calling `DateTime.TimeZone.Retrieve()` with no argument returns the full time-zone list. A filter that matches nothing returns an empty collection rather than `null`, so `.length` can be read unconditionally, but a *malformed* filter (a plain string, or an object missing the three filter properties) raises a time-zone retrieval error instead of returning an empty list. `Platform.Load(\"core\", ...)` is genuinely required — before the load `DateTime` is `undefined` and the call throws." %}
+
+{% include test-script.html bundle="core-library--datetime" chapter="differs-timezone-retrieve" label="Show test script — optional filter, empty result and the Core-load requirement" %}
 
 ```javascript
 Platform.Load("core", "1.1.5");
@@ -103,8 +110,12 @@ var rows = DateTime.TimeZone.Retrieve({
     SimpleOperator: "equals",
     Value: 1
 });
-// Stringify() cannot serialize these CLR rows — read the fields directly
 for (var i = 0; i < rows.length; i++) {
     Write(rows[i].ID + " = " + rows[i].Name + "\n");
 }
+
+// The rows also serialize directly
+Write(Stringify(rows));
 ```
+
+{% include test-script.html bundle="core-library--datetime" chapter="timezone-retrieve" %}

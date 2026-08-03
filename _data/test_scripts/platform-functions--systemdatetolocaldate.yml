@@ -1,0 +1,608 @@
+# Test scripts for /platform-functions/systemdatetolocaldate/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every arity boundary.
+#
+# SCOPE / PORTABILITY: SystemDateToLocalDate is TIMEZONE- AND ACCOUNT-DEPENDENT.
+# The size of the shift it applies is a function of the business unit's
+# configured local timezone versus Marketing Cloud system time (CST, with
+# daylight saving removed), so a literal expected timestamp is only correct in
+# the account these scripts were authored against. Every assertion below is
+# therefore written against a STRUCTURAL INVARIANT that holds in any account:
+#   * the shift is a whole number of hours (minutes, seconds and milliseconds
+#     of the input survive untouched);
+#   * the shift is CONSTANT for a given date, regardless of input format;
+#   * LocalDateToSystemDate is its exact inverse, so the round trip returns the
+#     original instant to the millisecond;
+#   * the summer shift is exactly one hour further from system time than the
+#     winter shift, because system time has no daylight saving while the
+#     account's local timezone does.
+# The only DST-observing assumption is that last point — it is the claim the
+# page makes, so it is asserted rather than hidden.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# BOOLEAN RULE: String(<boolean expr>) is mis-evaluated by Jint. Every boolean
+# is turned into a literal with an explicit ternary at the call site instead.
+#
+# RESERVED-WORD RULE: `short` is a future-reserved word in this engine and
+# using it as a variable name is a PARSE error that aborts the entire page
+# with HTTP 422 before a single line prints. The See Also script uses
+# `shortForm` instead.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters — Platform.Function.SystemDateToLocalDate(dateString)
+   *
+   * Proves:
+   *   1. The member exists and is invocable with exactly 1 argument (a
+   *      successful call is the only reliable existence proof for a
+   *      Platform.Function member).
+   *   2. dateString is REQUIRED: the 0-argument form throws.
+   *   3. max_args is 1: the 2-argument and 3-argument forms throw. There is
+   *      no reachable optional second argument.
+   *   4. Every documented input format is accepted and converted rather than
+   *      rejected: ISO 8601 with a Z suffix, US notation, long form, and a
+   *      time-only value.
+   *   5. The conversion is FORMAT-INDEPENDENT: whichever of those formats
+   *      denotes a given instant, the shift applied to it is the same
+   *      constant, so the function converts a parsed instant rather than
+   *      rewriting text.
+   *   6. Sub-hour precision survives the conversion untouched — the minutes,
+   *      seconds and milliseconds of the input are reproduced exactly,
+   *      because the shift is a whole number of hours.
+   *   7. An EMPTY STRING throws, as documented — it is NOT answered with a
+   *      null or an invalid Date.
+   *   8. An INVALID DATE throws, with the same SystemDateToLocalDate-specific
+   *      message.
+   *   9. TYPE-ACCEPTANCE (Date<->string): a real Date object is accepted with
+   *      the SAME meaningful result as the equivalent date-time string (same
+   *      converted getTime / same whole-hour offset) when the Date is built
+   *      with whole-second precision (ms=0). That is what makes the page's
+   *      own example, which passes Platform.Function.Now(), work. Every OTHER
+   *      non-string type throws: null, undefined, a number holding epoch
+   *      milliseconds, a boolean, and an array wrapping an otherwise valid
+   *      date string. (Sub-second Date-object marshalling slack is covered
+   *      in the Example chapter, not here.)
+   *  10. The function is deterministic: two identical calls yield the same
+   *      instant.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var ISO = "2025-08-05T12:00:00";
+
+  /* 1. The 1-argument call works and yields a usable Date. */
+  var base = Platform.Function.SystemDateToLocalDate(ISO);
+  assert("the 1-argument call succeeds and yields an object", String(typeof base), "object");
+  assert("the returned value carries a real epoch timestamp", String(typeof base.getTime()), "number");
+
+  /* 2. dateString is required. */
+  assertThrows("arity 0 throws (dateString is required)", function () {
+      return Platform.Function.SystemDateToLocalDate();
+  });
+
+  /* 3. max_args is 1 — no optional second argument is reachable. */
+  assertThrows("arity 2 throws (max_args is 1)", function () {
+      return Platform.Function.SystemDateToLocalDate(ISO, "x");
+  });
+  assertThrows("arity 3 throws (max_args is 1)", function () {
+      return Platform.Function.SystemDateToLocalDate(ISO, "x", "y");
+  });
+
+  /* 4 + 5. Every documented format is accepted, and all of them are shifted
+   *        by the SAME constant offset — asserted relative to the engine's own
+   *        parse of the identical string, which makes the check independent of
+   *        the account's timezone. */
+  var offsetMs = Platform.Function.SystemDateToLocalDate(ISO).getTime() - new Date(ISO).getTime();
+  assert("the shift is a whole number of hours", offsetMs % 3600000, 0);
+  assert("the shift is not zero, so a conversion really happened", offsetMs === 0 ? "true" : "false", "false");
+
+  var isoZ = "2025-08-05T12:34:56.789Z";
+  assert("ISO 8601 with a Z suffix is accepted and shifted by the same offset", Platform.Function.SystemDateToLocalDate(isoZ).getTime() - new Date(isoZ).getTime(), offsetMs);
+
+  var us = "8/5/2025 12:34 PM";
+  assert("US notation is accepted and shifted by the same offset", Platform.Function.SystemDateToLocalDate(us).getTime() - new Date(us).getTime(), offsetMs);
+
+  var longForm = "5 August 2025";
+  assert("long-form notation is accepted and shifted by the same offset", Platform.Function.SystemDateToLocalDate(longForm).getTime() - new Date(longForm).getTime(), offsetMs);
+
+  var dateOnly = "2025-08-05";
+  assert("a date-only value is accepted and shifted by the same offset", Platform.Function.SystemDateToLocalDate(dateOnly).getTime() - new Date(dateOnly).getTime(), offsetMs);
+
+  /* A time-only value has no portable engine parse to compare against, so it
+   * is asserted on the sub-hour components it must preserve instead. */
+  var timeOnly = Platform.Function.SystemDateToLocalDate("14:23:56");
+  assert("a time-only value is accepted and yields a Date", timeOnly.constructor === Date ? "true" : "false", "true");
+  assert("a time-only value keeps its minutes", timeOnly.getMinutes(), 23);
+  assert("a time-only value keeps its seconds", timeOnly.getSeconds(), 56);
+
+  /* 6. Sub-hour precision survives. */
+  var precise = Platform.Function.SystemDateToLocalDate("2025-08-05T12:34:56.789");
+  assert("minutes survive the conversion", precise.getMinutes(), 34);
+  assert("seconds survive the conversion", precise.getSeconds(), 56);
+  assert("milliseconds survive the conversion", precise.getMilliseconds(), 789);
+
+  /* 7 + 8. Empty and invalid input throw. */
+  assertThrows("an empty string throws", function () {
+      return Platform.Function.SystemDateToLocalDate("");
+  });
+  assertThrows("an invalid date string throws", function () {
+      return Platform.Function.SystemDateToLocalDate("not-a-date");
+  });
+  assertThrows("a numeric STRING of epoch milliseconds is not a parsable date and throws", function () {
+      return Platform.Function.SystemDateToLocalDate("1754416800000");
+  });
+
+  /* 9. TYPE-ACCEPTANCE: Date counterpart shares the string call's result. */
+  var dateInput = new Date(2025, 7, 5, 12, 0, 0);
+  var fromDateObject = Platform.Function.SystemDateToLocalDate(dateInput);
+  var fromMatchingString = Platform.Function.SystemDateToLocalDate(ISO);
+  assert("a real Date object is accepted as well as a string", fromDateObject.constructor === Date ? "true" : "false", "true");
+  assert("Date and equivalent string yield the same converted instant", fromDateObject.getTime(), fromMatchingString.getTime());
+  assert("a real Date object is shifted by the same offset as its string form", fromDateObject.getTime() - dateInput.getTime(), offsetMs);
+
+  assertThrows("null throws", function () {
+      return Platform.Function.SystemDateToLocalDate(null);
+  });
+  assertThrows("undefined throws", function () {
+      return Platform.Function.SystemDateToLocalDate(undefined);
+  });
+  assertThrows("a number holding epoch milliseconds throws", function () {
+      return Platform.Function.SystemDateToLocalDate(1754416800000);
+  });
+  assertThrows("a boolean throws", function () {
+      return Platform.Function.SystemDateToLocalDate(true);
+  });
+  assertThrows("an array wrapping a valid date string throws rather than unwrapping it", function () {
+      return Platform.Function.SystemDateToLocalDate(["2025-08-05T12:00:00"]);
+  });
+
+  /* 10. Determinism. */
+  assert("two identical calls yield the same instant", Platform.Function.SystemDateToLocalDate(ISO).getTime() === Platform.Function.SystemDateToLocalDate(ISO).getTime() ? "true" : "false", "true");
+  </script>
+
+description: |
+  <script runat="server">
+  /*
+   * Chapter: Description — the Platform.Load requirement and the direction of
+   * the conversion.
+   *
+   * NOTE: this script deliberately does NOT call Platform.Load, because that
+   * is precisely the claim under test. Run it on its own, or as the FIRST
+   * script on the page — once any other script has loaded the core library,
+   * the DateTime assertions below no longer test anything.
+   *
+   * Proves:
+   *   1. Platform.Function.SystemDateToLocalDate() works with NO
+   *      Platform.Load("core", ...) call at all.
+   *   2. Its sibling Platform.Function.LocalDateToSystemDate() likewise needs
+   *      no load, so the whole Platform.Function. namespace is preloaded.
+   *   3. By contrast the short DateTime. form is NOT available without the
+   *      load — typeof DateTime is "undefined" until Platform.Load runs,
+   *      which is why the page documents the load only for that form.
+   *   4. The conversion runs in the OPPOSITE direction to
+   *      LocalDateToSystemDate: the two shifts applied to the same input are
+   *      equal in size and opposite in sign, and neither is zero.
+   *   5. The result is expressed in the account's local time, so the shift is
+   *      a whole number of hours away from system time.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var ISO = "2025-08-05T12:00:00";
+
+  /* 3. The short form is unavailable BEFORE any Platform.Load — assert this
+   *    first, because the check is destroyed the moment the library loads. */
+  assert("the short DateTime form is NOT available without Platform.Load", String(typeof DateTime), "undefined");
+
+  /* 1 + 2. The qualified form needs no load. */
+  var r = Platform.Function.SystemDateToLocalDate(ISO);
+  assert("Platform.Function.SystemDateToLocalDate works without Platform.Load", r.constructor === Date ? "true" : "false", "true");
+  var inverse = Platform.Function.LocalDateToSystemDate(ISO);
+  assert("Platform.Function.LocalDateToSystemDate likewise works without Platform.Load", inverse.constructor === Date ? "true" : "false", "true");
+
+  /* 4 + 5. Opposite direction, whole hours, non-zero. */
+  var toLocal = r.getTime() - new Date(ISO).getTime();
+  var toSystem = inverse.getTime() - new Date(ISO).getTime();
+  assert("the shift towards local time is a whole number of hours", toLocal % 3600000, 0);
+  assert("the shift is not zero, so a conversion really happened", toLocal === 0 ? "true" : "false", "false");
+  assert("SystemDateToLocalDate shifts in exactly the opposite direction to LocalDateToSystemDate", toLocal, -toSystem);
+  </script>
+
+return-value: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Return value — the Date-object claim and the local-time
+   * semantics.
+   *
+   * Proves:
+   *   1. The return value is a genuine Date object, not a string: typeof is
+   *      "object", Object.prototype.toString reports "[object Date]", and
+   *      .constructor === Date.
+   *   2. It behaves identically to new Date(): getFullYear(), getMonth(),
+   *      getDate(), getHours(), getMinutes(), getSeconds(),
+   *      getMilliseconds(), getDay(), getTime() and valueOf() all work, and
+   *      getTime() === valueOf().
+   *   3. The documented ANOMALY: instanceof Date is false, because of the
+   *      engine-wide instanceof-on-builtins bug — which is exactly why the
+   *      page tells readers to detect with .constructor === Date. Both halves
+   *      are asserted so the recommended workaround is proven, not assumed.
+   *   4. It is NOT a string: it is not === its own string form, and its
+   *      typeof is not "string".
+   *   5. It serializes on demand, but the TWO serializations differ:
+   *      Stringify() produces the ISO-like "YYYY-MM-DDTHH:MM:SS.mmm" form
+   *      (asserted by structure rather than by a literal timestamp so the
+   *      assertion survives in any account), while String() and Write()
+   *      produce the human-readable rendering instead. Both denote the same
+   *      instant.
+   *   6. The LOCAL-TIME semantics, asserted structurally rather than as a
+   *      literal offset:
+   *        a. the shift is a whole number of hours;
+   *        b. the SUMMER shift is exactly one hour further from system time
+   *           than the WINTER shift, because daylight saving moves the
+   *           account's local time but never the system clock;
+   *        c. converting the identical wall-clock system time in summer and
+   *           in winter therefore lands on local hours exactly one apart.
+   *   7. LocalDateToSystemDate is the exact INVERSE: the round trip in both
+   *      directions and in both seasons returns the original instant to the
+   *      millisecond, and the two functions apply equal and opposite shifts.
+   *   8. Not every Date member survives: toISOString() throws
+   *      "Object expected: toISOString", so the ISO-like serialization must
+   *      be obtained via Stringify(), not via toISOString().
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var SUMMER = "2025-08-05T12:00:00";
+  var WINTER = "2025-01-15T12:00:00";
+  var r = Platform.Function.SystemDateToLocalDate(SUMMER);
+
+  /* 1. A genuine Date object. */
+  assert("typeof the return value is object", String(typeof r), "object");
+  assert("Object.prototype.toString reports [object Date]", String(Object.prototype.toString.call(r)), "[object Date]");
+  assert("the constructor is Date", r.constructor === Date ? "true" : "false", "true");
+
+  /* 2. It behaves like new Date(). */
+  assert("getFullYear() works", r.getFullYear(), 2025);
+  assert("getMonth() returns a number", String(typeof r.getMonth()), "number");
+  assert("getDate() returns a number", String(typeof r.getDate()), "number");
+  assert("getHours() returns a number", String(typeof r.getHours()), "number");
+  assert("getMinutes() is the untouched input minutes", r.getMinutes(), 0);
+  assert("getSeconds() is the untouched input seconds", r.getSeconds(), 0);
+  assert("getMilliseconds() returns a number", String(typeof r.getMilliseconds()), "number");
+  assert("getDay() returns a number", String(typeof r.getDay()), "number");
+  assert("getTime() returns a number", String(typeof r.getTime()), "number");
+  assert("valueOf() agrees with getTime()", r.valueOf() === r.getTime() ? "true" : "false", "true");
+
+  /* 3. The documented instanceof anomaly, plus the recommended workaround. */
+  assert("ANOMALY instanceof Date is false (engine-wide instanceof-on-builtins bug)", r instanceof Date ? "true" : "false", "false");
+  assert("WORKAROUND .constructor === Date is the reliable detection instead", r.constructor === Date ? "true" : "false", "true");
+  assert("WORKAROUND a plain new Date() is detected the same way", new Date().constructor === Date ? "true" : "false", "true");
+  assert("ANOMALY a plain new Date() is likewise not instanceof Date, so this is not specific to this function", new Date() instanceof Date ? "true" : "false", "false");
+
+  /* 4. It is NOT a string. */
+  assert("typeof is not string", String(typeof r) === "string" ? "true" : "false", "false");
+  assert("the value is not identical to its own string form", r === String(r) ? "true" : "false", "false");
+
+  /* 5. It serializes on demand — in two DIFFERENT shapes. */
+  var stringified = String(Stringify(r));
+  assert("Stringify() yields a quoted ISO-like string", stringified.substring(0, 1), "\"");
+  assert("the Stringify() form separates date and time with T", stringified.substring(11, 12), "T");
+  assert("the Stringify() form carries a millisecond component", stringified.substring(20, 21), ".");
+  assert("the Stringify() form is a full 'YYYY-MM-DDTHH:MM:SS.mmm' plus quotes", stringified.length, 25);
+  assert("the Stringify() form reports the same year as the object", stringified.substring(1, 5), String(r.getFullYear()));
+  assert("String() yields a non-empty string", String(r).length > 0 ? "true" : "false", "true");
+  assert("concatenation yields the same string as String()", "" + r === String(r) ? "true" : "false", "true");
+  assert("the written / String() rendering is NOT the ISO-like Stringify form", String(r) === String(Stringify(r)) ? "true" : "false", "false");
+  assert("the written rendering does not start with the ISO year-first shape", String(r).substring(4, 5) === "-" ? "true" : "false", "false");
+  assert("the written rendering still denotes the same year as the object", String(String(r).indexOf(String(r.getFullYear())) >= 0 ? "yes" : "no"), "yes");
+
+  /* 6. Local time versus a system clock without daylight saving. */
+  var summerOffset = Platform.Function.SystemDateToLocalDate(SUMMER).getTime() - new Date(SUMMER).getTime();
+  var winterOffset = Platform.Function.SystemDateToLocalDate(WINTER).getTime() - new Date(WINTER).getTime();
+  assert("the summer shift is a whole number of hours", summerOffset % 3600000, 0);
+  assert("the winter shift is a whole number of hours", winterOffset % 3600000, 0);
+  assert("summer and winter are shifted by DIFFERENT amounts, so daylight saving matters", summerOffset === winterOffset ? "true" : "false", "false");
+  assert("the summer shift is exactly one hour further from system time than the winter shift", summerOffset - winterOffset, 3600000);
+  assert("the same wall-clock system input therefore lands one local hour LATER in summer than in winter", Platform.Function.SystemDateToLocalDate(SUMMER).getHours() - Platform.Function.SystemDateToLocalDate(WINTER).getHours(), 1);
+  assert("the wall-clock minutes are identical in both seasons, confirming an hours-only shift", Platform.Function.SystemDateToLocalDate(SUMMER).getMinutes() === Platform.Function.SystemDateToLocalDate(WINTER).getMinutes() ? "true" : "false", "true");
+
+  /* 7. LocalDateToSystemDate is the exact inverse. */
+  var summerInverse = Platform.Function.LocalDateToSystemDate(SUMMER).getTime() - new Date(SUMMER).getTime();
+  var winterInverse = Platform.Function.LocalDateToSystemDate(WINTER).getTime() - new Date(WINTER).getTime();
+  assert("LocalDateToSystemDate applies the equal and opposite summer shift", summerInverse, -summerOffset);
+  assert("LocalDateToSystemDate applies the equal and opposite winter shift", winterInverse, -winterOffset);
+  assert("the round trip LocalDateToSystemDate(SystemDateToLocalDate(x)) returns the summer instant exactly", Platform.Function.LocalDateToSystemDate(Platform.Function.SystemDateToLocalDate(SUMMER)).getTime() - new Date(SUMMER).getTime(), 0);
+  assert("the round trip SystemDateToLocalDate(LocalDateToSystemDate(x)) returns the summer instant exactly", Platform.Function.SystemDateToLocalDate(Platform.Function.LocalDateToSystemDate(SUMMER)).getTime() - new Date(SUMMER).getTime(), 0);
+  assert("the round trip also returns the winter instant exactly, so the inverse holds across daylight saving", Platform.Function.LocalDateToSystemDate(Platform.Function.SystemDateToLocalDate(WINTER)).getTime() - new Date(WINTER).getTime(), 0);
+
+  /* 8. toISOString is not available on the returned Date. */
+  assertThrows("toISOString() throws, so Stringify() is the way to obtain the ISO-like form", function () {
+      return r.toISOString();
+  });
+  </script>
+
+differs-return-type: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * differs-from-docs callout: the official docs type the return value as a
+   * string, but the runtime returns a Date object.
+   *
+   * Proves, one DEV assertion per half of that claim:
+   *   1. DEV — the value is NOT a string, which is what the official docs
+   *      lead a reader to expect. typeof is "object", not "string", and a
+   *      strict comparison against its own textual form fails.
+   *   2. DEV — string METHODS are unavailable on it, so code written to the
+   *      official docs' string contract (indexOf, substring, split, replace)
+   *      breaks at runtime rather than merely returning something odd.
+   *   3. DEV — it is instead a Date, carrying the full Date accessor surface
+   *      the docs never mention. That is the whole point of the callout: the
+   *      value is strictly MORE capable than documented, not less.
+   *   4. The "produces a string only on demand" half: an explicit Stringify()
+   *      or String() call does produce a string, and only then do string
+   *      operations become available.
+   *   5. A control proving the contrast is real: a genuine string of the same
+   *      textual content answers the opposite way on every one of those
+   *      probes.
+   *
+   * NOT ASSERTABLE (deliberate non-assertion): whether the returned value
+   * exposes a `.length` property. Reading `.length` on it does NOT yield
+   * undefined the way it would on a plain object, but the CLR-backed value it
+   * does yield is an interop artefact rather than a documented claim on the
+   * page, and it is not a string length. Absence-of-string-ness is therefore
+   * proven by the string METHODS throwing (point 2), which is deterministic.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var r = Platform.Function.SystemDateToLocalDate("2025-08-05T12:00:00");
+  var control = String(r);
+
+  /* 1. DEV — not a string. */
+  assert("DEV typeof the return value is object (official docs: string)", String(typeof r), "object");
+  assert("DEV the return value is not strictly equal to its own textual form (official docs imply it would be)", r === control ? "true" : "false", "false");
+  assert("DEV the return value has no string length (official docs: a string would report its character count)", r.length === control.length ? "true" : "false", "false");
+
+  /* 2. DEV — string methods are unavailable. */
+  assertThrows("DEV .indexOf() throws (official docs: a string would support it)", function () {
+      return r.indexOf("2025");
+  });
+  assertThrows("DEV .substring() throws (official docs: a string would support it)", function () {
+      return r.substring(0, 4);
+  });
+  assertThrows("DEV .split() throws (official docs: a string would support it)", function () {
+      return r.split("T");
+  });
+  assertThrows("DEV .replace() throws (official docs: a string would support it)", function () {
+      return r.replace("T", " ");
+  });
+
+  /* 3. DEV — it is a Date, with the accessor surface the docs omit. */
+  assert("DEV Object.prototype.toString reports [object Date] (official docs: string)", String(Object.prototype.toString.call(r)), "[object Date]");
+  assert("DEV .constructor === Date (official docs: string)", r.constructor === Date ? "true" : "false", "true");
+  assert("DEV getFullYear() works, which no string would offer", r.getFullYear(), 2025);
+  assert("DEV getTime() returns a number, which no string would offer", String(typeof r.getTime()), "number");
+
+  /* 4. It serializes on demand. */
+  assert("Stringify() does produce a string", String(typeof Stringify(r)), "string");
+  assert("String() does produce a string", String(typeof control), "string");
+  assert("string operations work once it has been stringified", String(control.length > 0 ? "yes" : "no"), "yes");
+  assert("the stringified form is a non-empty rendering of the same year", String(String(Stringify(r)).indexOf(String(r.getFullYear())) >= 0 ? "yes" : "no"), "yes");
+
+  /* 5. Control — a real string answers the opposite way throughout. */
+  assert("CONTROL a real string reports typeof string", String(typeof control), "string");
+  assert("CONTROL a real string exposes .length", String(typeof control.length), "number");
+  assert("CONTROL a real string supports indexOf without throwing", control.indexOf("2025") >= 0 ? "true" : "false", "true");
+  assert("CONTROL a real string is not reported as [object Date]", String(Object.prototype.toString.call(control)) === "[object Date]" ? "true" : "false", "false");
+  </script>
+
+example: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Example — converting Platform.Function.Now() to local time.
+   *
+   * Reproduces the page's three-line example verbatim and proves it does what
+   * it appears to do:
+   *   1. Line 1: Platform.Function.Now() returns a Date object on a
+   *      CloudPage, so the example's `systemTime` variable is a Date and not
+   *      a string.
+   *   2. Line 2: passing that Date straight into SystemDateToLocalDate works
+   *      — no explicit stringification is needed — and yields another Date.
+   *   3. The conversion actually shifts the instant: the result differs from
+   *      the input by the account's whole-hour offset, not by zero.
+   *   4. The shift applied to Now() is the same shift applied to an explicit
+   *      date in the same season, so the example is not a special case.
+   *   5. Line 3: Write(localTime) emits a non-empty rendering rather than an
+   *      empty string or an error — the value serializes when written, which
+   *      is what makes the example readable output.
+   *   6. The example is reversible: feeding its result back through
+   *      LocalDateToSystemDate returns the original Now() instant exactly, so
+   *      nothing is lost by round-tripping through local time.
+   *
+   *   7. A MILLISECOND-PRECISION CAVEAT, proven rather than papered over.
+   *      Passing a Date OBJECT (which is what the example does with Now())
+   *      marshals it through the CLR, and that round trip is not exact below
+   *      the second: for some millisecond values the converted instant comes
+   *      back up to 2 ms short of the exact whole-hour shift, and the
+   *      millisecond component can read back up to 2 ms low. The size of the
+   *      loss depends on the millisecond value, so it is neither a constant
+   *      offset nor elapsed time. It is a Date-object marshalling artefact,
+   *      NOT a property of the conversion itself: passing the SAME instant
+   *      as a STRING (as the Parameters chapter does) shifts by the exact
+   *      whole-hour offset with no loss at all, and that contrast is
+   *      asserted here as the control. Every assertion below is therefore
+   *      made to SECOND precision, with the sub-second slack bounded and
+   *      asserted explicitly rather than assumed away.
+   *
+   * SCOPE: evidence gathered on a CloudPage GET. Because Now() advances
+   * between calls, the example's value is captured ONCE into a variable and
+   * every assertion is made against that single captured instant.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* The page's example, verbatim apart from capturing the value for assertion. */
+  var systemTime = Platform.Function.Now();
+  var localTime  = Platform.Function.SystemDateToLocalDate(systemTime);
+
+  /* 1. Now() is a Date. */
+  assert("Now() returns an object, not a string", String(typeof systemTime), "object");
+  assert("Now() returns a Date", systemTime.constructor === Date ? "true" : "false", "true");
+
+  /* 2. The Date goes straight in and a Date comes out. */
+  assert("the converted value is an object", String(typeof localTime), "object");
+  assert("the converted value is a Date", localTime.constructor === Date ? "true" : "false", "true");
+
+  /* 3. The conversion really shifts, by the account's constant whole-hour
+   *    offset — asserted to SECOND precision because of point 7. */
+  var nowOffset = localTime.getTime() - systemTime.getTime();
+  assert("the example's conversion shifts by a whole number of hours, to the second", Math.round(nowOffset / 1000) % 3600, 0);
+  assert("the example's conversion is not a no-op", nowOffset === 0 ? "true" : "false", "false");
+  assert("the example's conversion is at least an hour in size, so a real timezone shift happened", Math.abs(nowOffset) >= 3600000 ? "true" : "false", "true");
+
+  /* 7. CAVEAT — the sub-second slack is real, bounded, and specific to
+   *    passing a Date OBJECT. The string control proves the conversion
+   *    itself is exact. */
+  var slack = nowOffset - Math.round(nowOffset / 1000) * 1000;
+  assert("CAVEAT a Date-object input loses no more than 2 ms of the exact whole-hour shift", Math.abs(slack) <= 2 ? "true" : "false", "true");
+
+  var controlText = "2026-07-31T12:00:00.000";
+  var controlOffset = Platform.Function.SystemDateToLocalDate(controlText).getTime() - new Date(controlText).getTime();
+  assert("CONTROL the same conversion driven by a STRING is exact to the millisecond, so the slack is a Date-marshalling artefact", controlOffset % 3600000, 0);
+  assert("CONTROL the string round trip is exact to the millisecond", Platform.Function.LocalDateToSystemDate(Platform.Function.SystemDateToLocalDate(controlText)).getTime() - new Date(controlText).getTime(), 0);
+
+  /* 4. The shift applied to Now() is the same shift applied to an explicit
+   *    date in the same season — compared in seconds for the same reason. */
+  var sameSeason = new Date(systemTime.getFullYear(), systemTime.getMonth(), systemTime.getDate(), 12, 0, 0);
+  var seasonOffset = Platform.Function.SystemDateToLocalDate(sameSeason).getTime() - sameSeason.getTime();
+  assert("an explicit date in the same season is shifted by the identical offset, to the second", Math.round(seasonOffset / 1000), Math.round(nowOffset / 1000));
+
+  assert("the shifted minutes match the input minutes, confirming an hours-only shift", localTime.getMinutes(), systemTime.getMinutes());
+  assert("the shifted seconds match the input seconds", localTime.getSeconds(), systemTime.getSeconds());
+
+  /* 5. Write() emits a readable, non-empty rendering. */
+  assert("the value renders to a non-empty string when written", String(localTime).length > 0 ? "true" : "false", "true");
+  assert("the rendering mentions the converted year", String(String(localTime).indexOf(String(localTime.getFullYear())) >= 0 ? "yes" : "no"), "yes");
+
+  /* 6. The example round-trips back to the original instant, within the
+   *    Date-marshalling slack established above. */
+  var roundTrip = Platform.Function.LocalDateToSystemDate(localTime).getTime() - systemTime.getTime();
+  assert("LocalDateToSystemDate returns the example's original instant, exactly to the second", Math.round(roundTrip / 1000), 0);
+  assert("the example's round trip loses no more than 2 ms in total", Math.abs(roundTrip) <= 2 ? "true" : "false", "true");
+  </script>
+
+see-also: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: See Also — the DateTime.SystemDateToLocalDate() short form.
+   *
+   * Proves the page's claim that the short form is "equivalent to this
+   * function":
+   *   1. Platform.Load("core", "1.1.5") makes a DateTime object available.
+   *   2. DateTime.SystemDateToLocalDate() is callable and returns a Date.
+   *   3. It is EQUIVALENT, not merely similar: for the same input it returns
+   *      the identical instant as Platform.Function.SystemDateToLocalDate(),
+   *      it applies the same whole-hour offset, and it throws on the same
+   *      invalid input.
+   *   4. Its sibling DateTime.LocalDateToSystemDate() is likewise equivalent
+   *      to Platform.Function.LocalDateToSystemDate(), and the two short
+   *      forms round-trip against each other exactly.
+   *   5. NEGATIVE — there is NO bare-name SystemDateToLocalDate() global,
+   *      even after Platform.Load. The two reachable forms are the
+   *      Platform.Function. prefix and the DateTime. prefix, which is why the
+   *      page documents exactly those two.
+   *
+   * NOTE: the local variable is named shortForm, not short — `short` is a
+   * future-reserved word and using it aborts the whole page with HTTP 422
+   * before a single assertion prints.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var ISO = "2025-08-05T12:00:00";
+
+  /* 1 + 2. The short form exists after Platform.Load. */
+  assert("Platform.Load provides a DateTime object", String(typeof DateTime), "object");
+  var shortForm = DateTime.SystemDateToLocalDate(ISO);
+  assert("the short form returns an object", String(typeof shortForm), "object");
+  assert("the short form returns a Date", shortForm.constructor === Date ? "true" : "false", "true");
+
+  /* 3. Equivalence with the qualified form. */
+  assert("the short form returns the identical instant as Platform.Function.SystemDateToLocalDate", shortForm.getTime(), Platform.Function.SystemDateToLocalDate(ISO).getTime());
+  assert("the short form applies the same whole-hour offset", (shortForm.getTime() - new Date(ISO).getTime()) % 3600000, 0);
+  assertThrows("the short form throws on an invalid date, exactly like the qualified form", function () {
+      return DateTime.SystemDateToLocalDate("not-a-date");
+  });
+
+  /* 4. The sibling short form and the round trip. */
+  assert("DateTime.LocalDateToSystemDate matches Platform.Function.LocalDateToSystemDate", DateTime.LocalDateToSystemDate(ISO).getTime(), Platform.Function.LocalDateToSystemDate(ISO).getTime());
+  assert("the two short forms round-trip to the original instant exactly", DateTime.LocalDateToSystemDate(DateTime.SystemDateToLocalDate(ISO)).getTime() - new Date(ISO).getTime(), 0);
+
+  /* 5. NEGATIVE — no bare-name global. */
+  assert("there is NO bare-name SystemDateToLocalDate global, even after Platform.Load", String(typeof SystemDateToLocalDate), "undefined");
+  assert("there is NO bare-name LocalDateToSystemDate global either", String(typeof LocalDateToSystemDate), "undefined");
+  </script>

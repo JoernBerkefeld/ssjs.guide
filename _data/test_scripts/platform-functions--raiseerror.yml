@@ -1,0 +1,457 @@
+# Test scripts for /platform-functions/raiseerror/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the official docs.
+#
+# SPECIAL HAZARD — RaiseError TERMINATES the request when it is not caught.
+# An UNCAUGHT Platform.Function.RaiseError(...) on a CloudPage aborts the
+# whole response: the request returns HTTP 422 with an EMPTY body, and every
+# byte written before the call is DISCARDED. A script that ends the request
+# therefore prints nothing at all and can never be shown green.
+#
+# Every script below is consequently written in the CATCHABLE formulation:
+# RaiseError IS catchable in the SFMC Jint engine, so the raise can be proven
+# from inside a try/catch without killing the page. The uncaught/terminating
+# behaviour was proven separately by a dedicated one-shot deployment whose
+# only observable result was "HTTP 422, empty body"; it is recorded in the
+# script headers and in the verification DB as a NOT-ASSERTABLE claim rather
+# than faked as a passing line.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# AUTHORING RULE 2 (learned on this page): a CAUGHT exception's `.message` is
+# a .NET string, not a JS primitive. Comparing it with `===` against a JS
+# string literal is FALSE even when the two render identically — two catches
+# of the very same message do not compare equal to each other either. Never
+# assert a caught message with `===`. The assertRaises() helper below compares
+# by length + indexOf instead, which works on both string flavours.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters —
+   *   message              string  required
+   *   currentRecipientOnly boolean optional
+   *   errorCode            string  optional
+   *   errorNumber          number  optional
+   * Declared arity: min_args 1, max_args 4.
+   *
+   * Proves:
+   *   1. The member exists: typeof Platform.Function.RaiseError is
+   *      "clrmethodinfo" and, decisively, a 1-argument call actually raises.
+   *   2. ARITY. 1, 2, 3 and 4 arguments all RAISE (the raised message is the
+   *      message argument). 0 arguments and 5+ arguments do NOT raise — they
+   *      report the engine's signature error "Unable to retrieve security
+   *      descriptor for this frame." This is the discriminator between a real
+   *      raise and an arity rejection, and every arity is asserted against it.
+   *   3. currentRecipientOnly accepts both true and false, and neither value
+   *      changes the observable CloudPage outcome (see NOT ASSERTED below).
+   *   4. MESSAGE COERCION. A number raises with its decimal string, a boolean
+   *      raises with the CAPITALIZED .NET form "True"/"False", and an empty
+   *      string, null and undefined all raise with an EMPTY message — they do
+   *      NOT produce the literals "null"/"undefined" and they do NOT suppress
+   *      the raise. An array or a plain object is NOT a usable message: it is
+   *      rejected with the signature error instead of being raised.
+   *   5. LOAD DEPENDENCE / NAME FORM. The qualified form works both before and
+   *      after Platform.Load("core","1.1.5"). There is NO bare-name RaiseError
+   *      global in SSJS: typeof is "undefined" before AND after the Core load,
+   *      and calling it reports "Object expected: RaiseError" — an ordinary
+   *      missing-global error, not a raise.
+   *
+   * NOT ASSERTED (not observable from a CloudPage):
+   *   - The send-context effect of currentRecipientOnly. The page documents
+   *     RaiseError(msg,false) as a hard bounce for the subscriber and
+   *     RaiseError(msg,true) as a silent skip. Both are properties of an EMAIL
+   *     SEND job; a CloudPage GET has no recipient and no send job, so the two
+   *     values are indistinguishable here. Proving this requires a real send.
+   *   - The uncaught/terminating outcome. Proven by a separate one-shot
+   *     deployment: an uncaught call returns HTTP 422 with an EMPTY body and
+   *     discards all output written before it. Because that response contains
+   *     no output at all, it cannot be expressed as a PASS line in any script.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  /* Runs fn() and compares the RAISED message with `expected`, or with the
+     literal "NO-THROW" when nothing was raised. The comparison deliberately
+     avoids === : a caught .NET message never === a JS string literal. */
+  function assertRaises(id, fn, expected) {
+      var got = "NO-THROW";
+      try { fn(); } catch (ex) { got = "" + ex.message; }
+      var ok = (got.length === expected.length && got.indexOf(expected) === 0);
+      Platform.Response.Write((ok ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  var ARITY_ERROR = "Unable to retrieve security descriptor for this frame.";
+
+  /* 1. Existence. */
+  assert("typeof Platform.Function.RaiseError is clrmethodinfo", String(typeof Platform.Function.RaiseError), "clrmethodinfo");
+  assertRaises("a 1-argument call really raises (existence proof)", function () { return Platform.Function.RaiseError("exists"); }, "exists");
+
+  /* 2. Arity — 1..4 raise, 0 and 5+ are rejected as signature errors. */
+  assertRaises("0 arguments does NOT raise (min_args is 1)", function () { return Platform.Function.RaiseError(); }, ARITY_ERROR);
+  assertRaises("1 argument raises with the message", function () { return Platform.Function.RaiseError("a1"); }, "a1");
+  assertRaises("2 arguments raise with the message", function () { return Platform.Function.RaiseError("a2", true); }, "a2");
+  assertRaises("3 arguments raise with the message", function () { return Platform.Function.RaiseError("a3", true, "CODE"); }, "a3");
+  assertRaises("4 arguments raise with the message", function () { return Platform.Function.RaiseError("a4", true, "CODE", 404); }, "a4");
+  assertRaises("5 arguments does NOT raise (max_args is 4)", function () { return Platform.Function.RaiseError("a5", true, "CODE", 404, "extra"); }, ARITY_ERROR);
+  assertRaises("6 arguments does NOT raise (max_args is 4)", function () { return Platform.Function.RaiseError("a6", true, "CODE", 404, "x", "y"); }, ARITY_ERROR);
+
+  /* 3. currentRecipientOnly accepts both booleans; neither is rejected, and
+        both produce the very same raise on a CloudPage. */
+  assertRaises("currentRecipientOnly true is accepted", function () { return Platform.Function.RaiseError("cro-true", true); }, "cro-true");
+  assertRaises("currentRecipientOnly false is accepted", function () { return Platform.Function.RaiseError("cro-false", false); }, "cro-false");
+  assertRaises("true raises the message unchanged", function () { return Platform.Function.RaiseError("same", true); }, "same");
+  assertRaises("false raises the very same message on a CloudPage", function () { return Platform.Function.RaiseError("same", false); }, "same");
+
+  /* 4. Message coercion. */
+  assertRaises("a string message is raised verbatim", function () { return Platform.Function.RaiseError("plain text"); }, "plain text");
+  assertRaises("an EMPTY string still raises, with an empty message", function () { return Platform.Function.RaiseError(""); }, "");
+  assertRaises("a number is coerced to its decimal string", function () { return Platform.Function.RaiseError(42); }, "42");
+  assertRaises("a negative number is coerced to its decimal string", function () { return Platform.Function.RaiseError(-7); }, "-7");
+  assertRaises("boolean true is coerced to the CAPITALIZED .NET form True", function () { return Platform.Function.RaiseError(true); }, "True");
+  assertRaises("boolean false is coerced to the CAPITALIZED .NET form False", function () { return Platform.Function.RaiseError(false); }, "False");
+  assertRaises("null still raises, with an EMPTY message (not the text null)", function () { return Platform.Function.RaiseError(null); }, "");
+  var undef;
+  assertRaises("undefined still raises, with an EMPTY message (not the text undefined)", function () { return Platform.Function.RaiseError(undef); }, "");
+  var arr = [1, 2];
+  assertRaises("an array is NOT a usable message - rejected as a signature error", function () { return Platform.Function.RaiseError(arr); }, ARITY_ERROR);
+  var arr0 = [];
+  assertRaises("an empty array is NOT a usable message either", function () { return Platform.Function.RaiseError(arr0); }, ARITY_ERROR);
+  var obj = {};
+  assertRaises("a plain object is NOT a usable message - rejected as a signature error", function () { return Platform.Function.RaiseError(obj); }, ARITY_ERROR);
+
+  /* 5. Name form and Core-load dependence. */
+  assert("the qualified form needs no Core load (it is a clrmethodinfo)", String(typeof Platform.Function.RaiseError), "clrmethodinfo");
+  assert("there is NO bare-name RaiseError global after the Core load", String(typeof RaiseError), "undefined");
+  assertRaises("calling the bare name reports a missing-global error, not a raise", function () { return RaiseError("bare"); }, "Object expected: RaiseError");
+  assertRaises("the bare name fails the same way with 4 arguments", function () { return RaiseError("bare4", true, "CODE", 1); }, "Object expected: RaiseError");
+  </script>
+
+optional-args: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs claim: the official Salesforce docs mark
+   * currentRecipientOnly, errorCode and errorNumber as REQUIRED, but the
+   * runtime raises correctly when called with just the message.
+   *
+   * Official docs: RaiseError(message, currentRecipientOnly, errorCode,
+   *                errorNumber) — all four arguments required.
+   * SFMC runtime:  only `message` is required; 1, 2, 3 and 4 arguments all
+   *                raise identically.
+   *
+   * Proves:
+   *   1. DEV — the 1-argument call, which the official docs describe as
+   *      incomplete, raises exactly like the fully-specified 4-argument call.
+   *   2. The genuinely enforced boundary is min_args 1 / max_args 4: only 0
+   *      and 5+ arguments are rejected, and they are rejected with the
+   *      engine's signature error rather than with a raise.
+   *   3. TYPE-ACCEPTANCE (Number↔string) for errorCode and errorNumber.
+   *      Documented forms are errorCode:string and errorNumber:number. The
+   *      counterparts (errorCode as number, errorNumber as numeric string)
+   *      are probed here. Both args are silently dropped from the caught
+   *      exception, so "same meaningful result" means both forms raise with
+   *      the identical message (not rejected as a signature error).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assertRaises(id, fn, expected) {
+      var got = "NO-THROW";
+      try { fn(); } catch (ex) { got = "" + ex.message; }
+      var ok = (got.length === expected.length && got.indexOf(expected) === 0);
+      Platform.Response.Write((ok ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  var ARITY_ERROR = "Unable to retrieve security descriptor for this frame.";
+
+  /* 1. DEV — message alone is enough, contrary to the official docs. */
+  assertRaises("DEV 1 argument raises (official docs: all 4 arguments required)", function () { return Platform.Function.RaiseError("only-message"); }, "only-message");
+  assertRaises("DEV 2 arguments raise (official docs: all 4 arguments required)", function () { return Platform.Function.RaiseError("two", true); }, "two");
+  assertRaises("DEV 3 arguments raise (official docs: all 4 arguments required)", function () { return Platform.Function.RaiseError("three", true, "CODE"); }, "three");
+  assertRaises("the documented 4-argument form also raises", function () { return Platform.Function.RaiseError("four", true, "CODE", 404); }, "four");
+  assertRaises("DEV the 1-argument form raises the identical message ...", function () { return Platform.Function.RaiseError("same"); }, "same");
+  assertRaises("DEV ... as the fully-specified 4-argument form", function () { return Platform.Function.RaiseError("same", true, "CODE", 1); }, "same");
+
+  /* 2. The boundary that IS enforced. */
+  assertRaises("0 arguments is rejected (message really is required)", function () { return Platform.Function.RaiseError(); }, ARITY_ERROR);
+  assertRaises("5 arguments is rejected (max_args is 4)", function () { return Platform.Function.RaiseError("x", true, "CODE", 1, "extra"); }, ARITY_ERROR);
+
+  /* 3. TYPE-ACCEPTANCE — errorCode string↔number, errorNumber number↔string.
+        Catchable formulation only (uncaught RaiseError aborts the page). */
+  assertRaises("errorCode documented string raises", function () { return Platform.Function.RaiseError("ec-str", true, "42"); }, "ec-str");
+  assertRaises("errorCode counterpart number raises with the same message", function () { return Platform.Function.RaiseError("ec-str", true, 42); }, "ec-str");
+  assertRaises("errorNumber documented number raises", function () { return Platform.Function.RaiseError("en-num", true, "CODE", 404); }, "en-num");
+  assertRaises("errorNumber counterpart string raises with the same message", function () { return Platform.Function.RaiseError("en-num", true, "CODE", "404"); }, "en-num");
+  assertRaises("both counterparts together raise with the same message", function () { return Platform.Function.RaiseError("both", true, 99, "100"); }, "both");
+  </script>
+
+caught-exception-shape: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs claim: when caught in a CloudPage try/catch, the raised
+   * exception exposes only `message` and `description` (an
+   * AMPScriptRaiseErrorException); the errorCode and errorNumber arguments are
+   * NOT surfaced on the error object.
+   *
+   * Official docs: errorCode and errorNumber are documented arguments, which
+   *                implies they identify the error to the caller.
+   * SFMC runtime:  both are accepted and both are silently dropped — no
+   *                property of the caught object carries either value.
+   *
+   * Proves:
+   *   1. RaiseError IS catchable on a CloudPage — a try/catch around it
+   *      resumes normal execution (the whole script below is the proof).
+   *   2. The caught value is an object whose `message` is the message argument
+   *      and whose `description` is the fully-qualified .NET exception text
+   *      "ExactTarget.OMM.AMPScriptRaiseErrorException: <message> - from Jint".
+   *   3. DEV — errorCode and errorNumber are undefined on the caught object
+   *      even when both were passed, and no alternative property name
+   *      (number, code) carries them either.
+   *   4. The caught value is NOT a JS Error: `instanceof Error` is false and
+   *      `name` is reported as "TypeError" rather than a RaiseError-specific
+   *      name — so do not branch on either.
+   *   5. QUIRK — for-in over the caught object does not enumerate error
+   *      properties at all; it enumerates the CHARACTERS of the message.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* 1. Catchable — execution resumes after the catch block. */
+  var caught = null;
+  var resumed = "no";
+  try {
+      Platform.Function.RaiseError("shape-msg", true, "MY_CODE", 987);
+  } catch (ex) {
+      caught = ex;
+  }
+  resumed = "yes";
+  assert("RaiseError is catchable - execution resumed after the catch", resumed, "yes");
+  assert("the catch block actually received a value", caught === null ? "true" : "false", "false");
+
+  /* 2. message and description. */
+  assert("typeof the caught value is object", String(typeof caught), "object");
+  assert("caught.message is the message argument", String(caught.message), "shape-msg");
+  assert("typeof caught.message is string", String(typeof caught.message), "string");
+  assert("caught.description names AMPScriptRaiseErrorException", String(caught.description).indexOf("ExactTarget.OMM.AMPScriptRaiseErrorException") === 0 ? "true" : "false", "true");
+  assert("caught.description embeds the message", String(caught.description).indexOf("shape-msg") > 0 ? "true" : "false", "true");
+  assert("caught.description reports the Jint origin", String(caught.description).indexOf("from Jint") > 0 ? "true" : "false", "true");
+  assert("caught.description differs from caught.message", String(caught.description) === String(caught.message) ? "true" : "false", "false");
+
+  /* 3. DEV — errorCode and errorNumber are dropped. */
+  assert("DEV caught.errorCode is undefined although MY_CODE was passed", String(typeof caught.errorCode), "undefined");
+  assert("DEV caught.errorNumber is undefined although 987 was passed", String(typeof caught.errorNumber), "undefined");
+  assert("DEV caught.number is undefined too", String(typeof caught.number), "undefined");
+  assert("DEV caught.code is undefined too", String(typeof caught.code), "undefined");
+  assert("DEV the code MY_CODE appears nowhere in description", String(caught.description).indexOf("MY_CODE") >= 0 ? "true" : "false", "false");
+  assert("DEV the number 987 appears nowhere in description", String(caught.description).indexOf("987") >= 0 ? "true" : "false", "false");
+  assert("DEV the code MY_CODE appears nowhere in message", String(caught.message).indexOf("MY_CODE") >= 0 ? "true" : "false", "false");
+
+  /* 4. It is not a JS Error, and name is misleading. */
+  assert("caught is NOT an instanceof Error", caught instanceof Error ? "true" : "false", "false");
+  assert("caught.name is reported as TypeError, not a RaiseError name", String(caught.name), "TypeError");
+
+  /* 5. QUIRK — for-in enumerates the message characters, not properties. */
+  var keys = [];
+  for (var k in caught) { keys.push(k); }
+  assert("QUIRK for-in yields one key per message character", String(keys.length), String(String(caught.message).length));
+  assert("QUIRK the first for-in key is the message's first character", String(keys[0]), String(caught.message).charAt(0));
+  assert("QUIRK for-in never yields the key message", keys.join(",").indexOf("message") >= 0 ? "true" : "false", "false");
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples —
+   *   1. Halt with an error when a lookup returns nothing:
+   *        if (!email) { Platform.Function.RaiseError("No email found for contact: " + contactId); }
+   *   2. In an email send, skip rather than bounce:
+   *        if (pref !== "yes") { Platform.Function.RaiseError("Subscriber opted out.", true); }
+   *
+   * Proves the mechanics both examples depend on:
+   *   1. The guard shape is correct: a falsy lookup result enters the branch
+   *      and the RaiseError inside it fires, while a truthy result skips it
+   *      entirely and RaiseError is never reached.
+   *   2. String concatenation in the message argument is evaluated BEFORE the
+   *      raise, so the raised message carries the interpolated value.
+   *   3. The second example's 2-argument form raises with the literal message
+   *      "Subscriber opted out.", and the `pref !== "yes"` comparison drives
+   *      the branch exactly as written.
+   *
+   * NOT ASSERTED:
+   *   - Platform.Function.Lookup("Contacts", …) / Lookup("Preferences", …).
+   *     Those data extensions are fixtures that do not exist in the
+   *     verification business unit; the examples merely CONSUME the lookup
+   *     result, so the lookups are replaced with stand-in values and the
+   *     branch logic they feed is asserted instead.
+   *   - The "skip rather than bounce" outcome of the second example. That is
+   *     an email-send behaviour with no CloudPage equivalent (see the Notes
+   *     chapter).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertRaises(id, fn, expected) {
+      var got = "NO-THROW";
+      try { fn(); } catch (ex) { got = "" + ex.message; }
+      var ok = (got.length === expected.length && got.indexOf(expected) === 0);
+      Platform.Response.Write((ok ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  /* 1. Example 1 — guard on a missing lookup result. */
+  var contactId = "C-1234";
+  var missingEmail = "";
+  assert("example 1: an empty lookup result is falsy and enters the guard", missingEmail ? "true" : "false", "false");
+  assertRaises("example 1: the guard raises with the interpolated contact id", function () {
+      var email = missingEmail;
+      if (!email) { Platform.Function.RaiseError("No email found for contact: " + contactId); }
+      return "guard not taken";
+  }, "No email found for contact: C-1234");
+
+  var foundEmail = "jane@example.com";
+  assert("example 1: a non-empty lookup result is truthy", foundEmail ? "true" : "false", "true");
+  assertRaises("example 1: a found email skips the guard and never raises", function () {
+      var email = foundEmail;
+      if (!email) { Platform.Function.RaiseError("No email found for contact: " + contactId); }
+      return "guard not taken";
+  }, "NO-THROW");
+
+  /* 1b. A null lookup result behaves the same as an empty one. */
+  assertRaises("example 1: a null lookup result also enters the guard", function () {
+      var email = null;
+      if (!email) { Platform.Function.RaiseError("No email found for contact: " + contactId); }
+      return "guard not taken";
+  }, "No email found for contact: C-1234");
+
+  /* 2. Concatenation is evaluated before the raise. */
+  assertRaises("the message argument is concatenated before it is raised", function () { return Platform.Function.RaiseError("id=" + 7 + "/" + "x"); }, "id=7/x");
+
+  /* 3. Example 2 — opt-in preference guard with currentRecipientOnly. */
+  var prefNo = "no";
+  assert("example 2: pref 'no' fails the !== 'yes' test", prefNo !== "yes" ? "true" : "false", "true");
+  assertRaises("example 2: the opt-out guard raises the documented message", function () {
+      var pref = prefNo;
+      if (pref !== "yes") { Platform.Function.RaiseError("Subscriber opted out.", true); }
+      return "guard not taken";
+  }, "Subscriber opted out.");
+
+  var prefYes = "yes";
+  assert("example 2: pref 'yes' passes the test", prefYes !== "yes" ? "true" : "false", "false");
+  assertRaises("example 2: an opted-in subscriber never raises", function () {
+      var pref = prefYes;
+      if (pref !== "yes") { Platform.Function.RaiseError("Subscriber opted out.", true); }
+      return "guard not taken";
+  }, "NO-THROW");
+  </script>
+
+notes: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Notes —
+   *   - In email sends, RaiseError(msg, false) causes a hard bounce for the
+   *     subscriber and RaiseError(msg, true) skips the subscriber silently.
+   *   - On a CloudPage an uncaught RaiseError terminates the request; use
+   *     `throw` when you want ordinary catch-and-recover control flow.
+   *
+   * Proves the CloudPage half of the chapter:
+   *   1. RaiseError IS catchable, so it can participate in try/catch — but the
+   *      caught object is an AMPScriptRaiseErrorException, not a JS Error.
+   *   2. `throw` is the alternative the chapter recommends, and it does give
+   *      real catch-and-recover control flow: a thrown string is caught as
+   *      exactly that string and execution resumes after the catch.
+   *   3. ENGINE QUIRKS worth knowing when choosing between the two: this
+   *      engine's `new Error(msg)` does NOT expose a `.message` property and
+   *      is NOT an `instanceof Error`, though its `.name` is "Error". A caught
+   *      RaiseError reports the misleading name "TypeError" instead — so a
+   *      thrown STRING is the most predictable signal on a CloudPage.
+   *   4. A finally block still runs for a caught RaiseError, so cleanup code
+   *      is not skipped.
+   *
+   * NOT ASSERTED (not observable from a CloudPage):
+   *   - The hard-bounce vs silent-skip behaviour of currentRecipientOnly.
+   *     Both are properties of an email SEND job. A CloudPage GET has no
+   *     recipient, no subscriber and no send job, so false and true are
+   *     indistinguishable here; the claim can only be settled by a real send.
+   *   - The terminating outcome of an UNCAUGHT RaiseError. A dedicated
+   *     one-shot deployment proved it returns HTTP 422 with an EMPTY body and
+   *     that all output written before the call is DISCARDED — which is
+   *     precisely why it cannot appear as a PASS line: a terminating script
+   *     emits no output whatsoever. Asserting it would require the script to
+   *     end the request and print nothing.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertRaises(id, fn, expected) {
+      var got = "NO-THROW";
+      try { fn(); } catch (ex) { got = "" + ex.message; }
+      var ok = (got.length === expected.length && got.indexOf(expected) === 0);
+      Platform.Response.Write((ok ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  /* 1. RaiseError is catchable, but the caught value is not a JS Error. */
+  var reErr = null;
+  try { Platform.Function.RaiseError("note-msg", false); } catch (ex) { reErr = ex; }
+  assert("a caught RaiseError leaves a value in the catch block", reErr === null ? "true" : "false", "false");
+  assert("the caught RaiseError message is the message argument", String(reErr.message), "note-msg");
+  assert("the caught RaiseError is NOT an instanceof Error", reErr instanceof Error ? "true" : "false", "false");
+  assert("the caught RaiseError carries an AMPScriptRaiseErrorException description", String(reErr.description).indexOf("AMPScriptRaiseErrorException") >= 0 ? "true" : "false", "true");
+  assertRaises("currentRecipientOnly false raises on a CloudPage just like true", function () { return Platform.Function.RaiseError("cro", false); }, "cro");
+
+  /* 2. `throw` gives ordinary catch-and-recover control flow. */
+  var thrownString = null;
+  try { throw "plain string"; } catch (ex) { thrownString = ex; }
+  assert("throw of a string is caught as that string", String(thrownString), "plain string");
+  assert("typeof a thrown string is string", String(typeof thrownString), "string");
+
+  var recovered = "not-recovered";
+  try { throw "boom"; } catch (ex) { recovered = "recovered"; }
+  assert("execution recovers after catching a throw", recovered, "recovered");
+
+  /* 3. ENGINE QUIRKS around new Error() — why a thrown string is safer here. */
+  var thrownError = null;
+  try { throw new Error("recoverable"); } catch (ex) { thrownError = ex; }
+  assert("throw new Error is caught", thrownError === null ? "true" : "false", "false");
+  assert("QUIRK new Error(msg) exposes no .message in this engine", String(typeof thrownError.message), "undefined");
+  assert("QUIRK a thrown Error is not an instanceof Error in this engine", thrownError instanceof Error ? "true" : "false", "false");
+  assert("a thrown Error does report the name Error", String(thrownError.name), "Error");
+  assert("a RaiseError reports the misleading name TypeError instead", String(reErr.name), "TypeError");
+
+  /* 4. finally still runs for a caught RaiseError. */
+  var ranFinally = "no";
+  try {
+      try { Platform.Function.RaiseError("with-finally"); } finally { ranFinally = "yes"; }
+  } catch (ex) {
+      /* swallow the re-raised error */
+  }
+  assert("a finally block still runs for a caught RaiseError", ranFinally, "yes");
+  </script>

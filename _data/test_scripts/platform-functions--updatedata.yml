@@ -1,0 +1,265 @@
+# Test scripts for /platform-functions/updatedata/
+#
+# Each script creates, seeds, updates, reads, and deletes its own throwaway Data
+# Extension. Read-after-write checks use a different query shape because identical
+# queries are request-cached. All scripts were last run green on MCDEV_Training_QA.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values — that manufactures phantom "deviations".
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+  /*
+   * Chapter: Parameters
+   * Proves:
+   * 1. The fixed five-argument call returns a numeric affected-row count.
+   * 2. The DE resolves by Name, not CustomerKey.
+   * 3. All four name/value arguments must be equal-length, nonempty arrays.
+   * 4. Multiple filters use positional AND logic and multiple columns update together.
+   * 5. Unknown identifiers throw; a primary-key value can be updated.
+   * 6. Text, Number, Decimal, Boolean and Date columns accept native values.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function addField(de, name, type, len, scale, isKey) {
+      var field = Platform.Function.CreateObject("DataExtensionField");
+      Platform.Function.SetObjectProperty(field, "Name", name);
+      Platform.Function.SetObjectProperty(field, "FieldType", type);
+      if (len) { Platform.Function.SetObjectProperty(field, "MaxLength", len); }
+      if (scale) { Platform.Function.SetObjectProperty(field, "Scale", scale); }
+      Platform.Function.SetObjectProperty(field, "IsPrimaryKey", isKey ? "true" : "false");
+      Platform.Function.SetObjectProperty(field, "IsRequired", isKey ? "true" : "false");
+      Platform.Function.AddObjectArrayItem(de, "Fields", field);
+  }
+  function createDE(name, key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      Platform.Function.SetObjectProperty(de, "Name", name);
+      addField(de, "Id", "Text", "50", null, true);
+      addField(de, "Grp", "Text", "50", null, false);
+      addField(de, "Txt", "Text", "100", null, false);
+      addField(de, "Num", "Number", null, null, false);
+      addField(de, "Dec", "Decimal", "18", "2", false);
+      addField(de, "Flag", "Boolean", null, null, false);
+      addField(de, "Dt", "Date", null, null, false);
+      var status = [0, 0];
+      return String(Platform.Function.InvokeCreate(de, status, null));
+  }
+  function dropDE(key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      var status = [0, 0];
+      return String(Platform.Function.InvokeDelete(de, status, null));
+  }
+  function countRows(name, field, value) {
+      var rows = Platform.Function.LookupRows(name, field, value);
+      return rows === null ? 0 : rows.length;
+  }
+  var deName = "ssjsg_ud_params_2138_name";
+  var deKey = "ssjsg_ud_params_2138_key";
+  assert("setup: throwaway DE created", createDE(deName, deKey), "OK");
+  assert("control: Name and CustomerKey differ", deName === deKey ? "same" : "different", "different");
+  assert("setup: row a inserted", Platform.Function.InsertData(deName, ["Id", "Grp", "Txt"], ["a", "all", "seed"]), 1);
+  assert("setup: row b inserted", Platform.Function.InsertData(deName, ["Id", "Grp", "Txt"], ["b", "all", "seed"]), 1);
+  assert("setup: row c inserted", Platform.Function.InsertData(deName, ["Id", "Grp", "Txt"], ["c", "other", "seed"]), 1);
+  var one = Platform.Function.UpdateData(deName, ["Id"], ["a"], ["Txt"], ["one"]);
+  assert("documented five-argument call returns 1 for one match", one, 1);
+  assert("affected-row count has typeof number", String(typeof one), "number");
+  assert("multiple matching rows return their affected-row count", Platform.Function.UpdateData(deName, ["Grp"], ["all"], ["Txt"], ["many"]), 2);
+  assert("multiple filters use AND and multiple update columns are aligned", Platform.Function.UpdateData(deName, ["Id", "Grp"], ["c", "other"], ["Txt", "Grp"], ["both", "changed"]), 1);
+  assert("the multi-column update persisted Txt", String(Platform.Function.Lookup(deName, "Txt", "Grp", "changed")), "both");
+  assert("the two-row update persisted for both matches", countRows(deName, "Txt", "many"), 2);
+  assertThrows("DEV scalar filter strings throw (docs: string or string[])", function () { return Platform.Function.UpdateData(deName, "Id", "a", ["Txt"], ["x"]); });
+  assertThrows("DEV scalar update strings throw (docs: update names/values are arrays)", function () { return Platform.Function.UpdateData(deName, ["Id"], ["a"], "Txt", "x"); });
+  assertThrows("empty filter arrays throw", function () { return Platform.Function.UpdateData(deName, [], [], ["Txt"], ["x"]); });
+  assertThrows("empty update arrays throw", function () { return Platform.Function.UpdateData(deName, ["Id"], ["a"], [], []); });
+  assertThrows("more filter names than values throws", function () { return Platform.Function.UpdateData(deName, ["Id", "Grp"], ["a"], ["Txt"], ["x"]); });
+  assertThrows("more filter values than names throws", function () { return Platform.Function.UpdateData(deName, ["Id"], ["a", "all"], ["Txt"], ["x"]); });
+  assertThrows("more update names than values throws", function () { return Platform.Function.UpdateData(deName, ["Id"], ["a"], ["Txt", "Grp"], ["x"]); });
+  assertThrows("more update values than names throws", function () { return Platform.Function.UpdateData(deName, ["Id"], ["a"], ["Txt"], ["x", "y"]); });
+  assertThrows("DEV CustomerKey form throws (docs identify the DE by name)", function () { return Platform.Function.UpdateData(deKey, ["Id"], ["a"], ["Txt"], ["key"]); });
+  assertThrows("a nonexistent DE throws", function () { return Platform.Function.UpdateData("ssjsg_ud_no_such_de", ["Id"], ["a"], ["Txt"], ["x"]); });
+  assertThrows("a nonexistent filter column throws", function () { return Platform.Function.UpdateData(deName, ["NoSuchFilter"], ["a"], ["Txt"], ["x"]); });
+  assertThrows("a nonexistent update column throws", function () { return Platform.Function.UpdateData(deName, ["Id"], ["a"], ["NoSuchUpdate"], ["x"]); });
+  assert("a primary-key column can be updated", Platform.Function.UpdateData(deName, ["Id"], ["c"], ["Id"], ["c2"]), 1);
+  assert("the primary-key update persisted", countRows(deName, "Id", "c2"), 1);
+  assert("Text update succeeds", Platform.Function.UpdateData(deName, ["Id"], ["b"], ["Txt"], ["typed"]), 1);
+  assert("Number update succeeds", Platform.Function.UpdateData(deName, ["Id"], ["b"], ["Num"], [42]), 1);
+  assert("Decimal update succeeds", Platform.Function.UpdateData(deName, ["Id"], ["b"], ["Dec"], [3.14]), 1);
+  assert("Boolean update succeeds", Platform.Function.UpdateData(deName, ["Id"], ["b"], ["Flag"], [true]), 1);
+  assert("Date update succeeds", Platform.Function.UpdateData(deName, ["Id"], ["b"], ["Dt"], [new Date(2024, 0, 15)]), 1);
+  assert("Number reads back as number", String(typeof Platform.Function.Lookup(deName, "Num", "Txt", "typed")), "number");
+  assert("Decimal reads back as number", String(typeof Platform.Function.Lookup(deName, "Dec", "Num", 42)), "number");
+  assert("Boolean reads back as boolean", String(typeof Platform.Function.Lookup(deName, "Flag", "Dec", 3.14)), "boolean");
+  assert("Date reads back as Date-like object", String(typeof Platform.Function.Lookup(deName, "Dt", "Flag", true)), "object");
+  assert("cleanup: throwaway DE deleted", dropDE(deKey), "OK");
+  </script>
+
+resolved-by-name-only: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+  /*
+   * Differs-from-docs claim: UpdateData resolves a Data Extension by Name only.
+   * Proves the CustomerKey form throws and the Name form updates and commits.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function addField(de, name, len, isKey) {
+      var field = Platform.Function.CreateObject("DataExtensionField");
+      Platform.Function.SetObjectProperty(field, "Name", name);
+      Platform.Function.SetObjectProperty(field, "FieldType", "Text");
+      Platform.Function.SetObjectProperty(field, "MaxLength", len);
+      Platform.Function.SetObjectProperty(field, "IsPrimaryKey", isKey);
+      Platform.Function.SetObjectProperty(field, "IsRequired", isKey);
+      Platform.Function.AddObjectArrayItem(de, "Fields", field);
+  }
+  function createDE(name, key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      Platform.Function.SetObjectProperty(de, "Name", name);
+      addField(de, "Id", "50", "true"); addField(de, "Txt", "50", "false");
+      var status = [0, 0]; return String(Platform.Function.InvokeCreate(de, status, null));
+  }
+  function dropDE(key) {
+      var de = Platform.Function.CreateObject("DataExtension"); Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      var status = [0, 0]; return String(Platform.Function.InvokeDelete(de, status, null));
+  }
+  var deName = "ssjsg_ud_name_2138_name", deKey = "ssjsg_ud_name_2138_key";
+  assert("control: Name and CustomerKey differ", deName === deKey ? "same" : "different", "different");
+  assert("setup: throwaway DE created", createDE(deName, deKey), "OK");
+  assert("setup: row inserted", Platform.Function.InsertData(deName, ["Id", "Txt"], ["a", "seed"]), 1);
+  assertThrows("DEV UpdateData(CustomerKey, ...) throws (docs: data extension name)", function () { return Platform.Function.UpdateData(deKey, ["Id"], ["a"], ["Txt"], ["wrong"]); });
+  assert("UpdateData(Name, ...) updates the row", Platform.Function.UpdateData(deName, ["Id"], ["a"], ["Txt"], ["right"]), 1);
+  assert("the Name-form update committed", String(Platform.Function.Lookup(deName, "Txt", "Id", "a")), "right");
+  assert("cleanup: throwaway DE deleted", dropDE(deKey), "OK");
+  </script>
+
+array-arguments-required: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+  /*
+   * Differs-from-docs claim: scalar single-filter strings are documented but rejected.
+   * Proves scalar filter and update forms throw while one-element arrays work.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function addField(de, name, len, isKey) {
+      var field = Platform.Function.CreateObject("DataExtensionField");
+      Platform.Function.SetObjectProperty(field, "Name", name); Platform.Function.SetObjectProperty(field, "FieldType", "Text");
+      Platform.Function.SetObjectProperty(field, "MaxLength", len); Platform.Function.SetObjectProperty(field, "IsPrimaryKey", isKey);
+      Platform.Function.SetObjectProperty(field, "IsRequired", isKey); Platform.Function.AddObjectArrayItem(de, "Fields", field);
+  }
+  function createDE(name, key) {
+      var de = Platform.Function.CreateObject("DataExtension"); Platform.Function.SetObjectProperty(de, "CustomerKey", key); Platform.Function.SetObjectProperty(de, "Name", name);
+      addField(de, "Id", "50", "true"); addField(de, "Txt", "50", "false"); var status = [0, 0]; return String(Platform.Function.InvokeCreate(de, status, null));
+  }
+  function dropDE(key) {
+      var de = Platform.Function.CreateObject("DataExtension"); Platform.Function.SetObjectProperty(de, "CustomerKey", key); var status = [0, 0]; return String(Platform.Function.InvokeDelete(de, status, null));
+  }
+  var deName = "ssjsg_ud_arrays_2138_name", deKey = "ssjsg_ud_arrays_2138_key";
+  assert("setup: throwaway DE created", createDE(deName, deKey), "OK");
+  assert("setup: row inserted", Platform.Function.InsertData(deName, ["Id", "Txt"], ["a", "seed"]), 1);
+  assertThrows("DEV scalar whereFieldNames/whereFieldValues throw (docs: strings accepted)", function () { return Platform.Function.UpdateData(deName, "Id", "a", ["Txt"], ["wrong"]); });
+  assertThrows("DEV scalar fieldNames/fieldValues throw (docs: arrays required)", function () { return Platform.Function.UpdateData(deName, ["Id"], ["a"], "Txt", "wrong"); });
+  assert("workaround one-element arrays are accepted", Platform.Function.UpdateData(deName, ["Id"], ["a"], ["Txt"], ["right"]), 1);
+  assert("workaround array-form update commits", String(Platform.Function.Lookup(deName, "Txt", "Id", "a")), "right");
+  assert("cleanup: throwaway DE deleted", dropDE(deKey), "OK");
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+  /*
+   * Chapter: Examples
+   * Proves single-column, multi-column and try/catch no-match examples.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function addField(de, name, type, len, isKey) {
+      var field = Platform.Function.CreateObject("DataExtensionField"); Platform.Function.SetObjectProperty(field, "Name", name); Platform.Function.SetObjectProperty(field, "FieldType", type);
+      if (len) { Platform.Function.SetObjectProperty(field, "MaxLength", len); } Platform.Function.SetObjectProperty(field, "IsPrimaryKey", isKey); Platform.Function.SetObjectProperty(field, "IsRequired", isKey); Platform.Function.AddObjectArrayItem(de, "Fields", field);
+  }
+  function createDE(name, key) {
+      var de = Platform.Function.CreateObject("DataExtension"); Platform.Function.SetObjectProperty(de, "CustomerKey", key); Platform.Function.SetObjectProperty(de, "Name", name);
+      addField(de, "Id", "Text", "50", "true"); addField(de, "Email", "Text", "100", "false"); addField(de, "Status", "Text", "50", "false"); addField(de, "LastLogin", "Date", null, "false"); addField(de, "LoginCount", "Number", null, "false"); addField(de, "ShippedDate", "Date", null, "false"); var status = [0, 0]; return String(Platform.Function.InvokeCreate(de, status, null));
+  }
+  function dropDE(key) { var de = Platform.Function.CreateObject("DataExtension"); Platform.Function.SetObjectProperty(de, "CustomerKey", key); var status = [0, 0]; return String(Platform.Function.InvokeDelete(de, status, null)); }
+  var deName = "ssjsg_ud_examples_2138_name", deKey = "ssjsg_ud_examples_2138_key";
+  assert("setup: throwaway DE created", createDE(deName, deKey), "OK");
+  assert("setup: subscriber inserted", Platform.Function.InsertData(deName, ["Id", "Email", "Status", "LoginCount"], ["sub", "a@example.com", "active", 1]), 1);
+  var affected = Platform.Function.UpdateData(deName, ["Id"], ["sub"], ["Status"], ["unsubscribed"]);
+  assert("single-column example returns one updated row", affected, 1);
+  assert("single-column example committed", String(Platform.Function.Lookup(deName, "Status", "Id", "sub")), "unsubscribed");
+  assert("multiple-column example returns one updated row", Platform.Function.UpdateData(deName, ["Email"], ["a@example.com"], ["LastLogin", "LoginCount", "Status"], [Now(), 2, "active"]), 1);
+  assert("multiple-column example committed all values", String(Platform.Function.Lookup(deName, "LoginCount", "Status", "active")), "2");
+  var noMatch = Platform.Function.UpdateData(deName, ["Id"], ["missing"], ["ShippedDate"], [Now()]);
+  assert("error-handling example receives 0 without throwing when no row matches", noMatch, 0);
+  assert("cleanup: throwaway DE deleted", dropDE(deKey), "OK");
+  </script>
+
+notes: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+  /*
+   * Chapter: Notes
+   * Proves zero-match return shape, Name resolution, UpsertData workaround,
+   * native-to-Text coercion, empty persistence, collation, Core-load independence,
+   * and that no bare-name UpdateData global is injected by Core.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) { Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n"); }
+  function assertThrows(id, fn) { var threw = false, msg = ""; try { fn(); } catch (ex) { threw = true; msg = ex.message; } Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n"); }
+  function addField(de, name, len, isKey) { var field = Platform.Function.CreateObject("DataExtensionField"); Platform.Function.SetObjectProperty(field, "Name", name); Platform.Function.SetObjectProperty(field, "FieldType", "Text"); Platform.Function.SetObjectProperty(field, "MaxLength", len); Platform.Function.SetObjectProperty(field, "IsPrimaryKey", isKey); Platform.Function.SetObjectProperty(field, "IsRequired", isKey); Platform.Function.AddObjectArrayItem(de, "Fields", field); }
+  function createDE(name, key) { var de = Platform.Function.CreateObject("DataExtension"); Platform.Function.SetObjectProperty(de, "CustomerKey", key); Platform.Function.SetObjectProperty(de, "Name", name); addField(de, "Id", "50", "true"); addField(de, "Grp", "50", "false"); addField(de, "Txt", "100", "false"); var status = [0, 0]; return String(Platform.Function.InvokeCreate(de, status, null)); }
+  function dropDE(key) { var de = Platform.Function.CreateObject("DataExtension"); Platform.Function.SetObjectProperty(de, "CustomerKey", key); var status = [0, 0]; return String(Platform.Function.InvokeDelete(de, status, null)); }
+  var deName = "ssjsg_ud_notes_2138_name", deKey = "ssjsg_ud_notes_2138_key";
+  assert("setup: throwaway DE created", createDE(deName, deKey), "OK");
+  assert("setup: row inserted", Platform.Function.InsertData(deName, ["Id", "Grp", "Txt"], ["a", "MiXeD", "seed"]), 1);
+  var zero = Platform.Function.UpdateData(deName, ["Id"], ["missing"], ["Txt"], ["x"]);
+  assert("no match returns exactly 0", zero, 0);
+  assert("no match return has typeof number", String(typeof zero), "number");
+  assert("no match is not null", zero === null ? "null" : "not null", "not null");
+  assert("no match is not undefined", zero === undefined ? "undefined" : "defined", "defined");
+  assertThrows("CustomerKey is rejected", function () { return Platform.Function.UpdateData(deKey, ["Id"], ["a"], ["Txt"], ["wrong"]); });
+  assert("this BU matches DE names case-insensitively", Platform.Function.UpdateData(deName.toUpperCase(), ["Id"], ["a"], ["Txt"], ["case-de"]), 1);
+  assert("this BU matches filter columns case-insensitively", Platform.Function.UpdateData(deName, ["ID"], ["a"], ["Txt"], ["case-filter"]), 1);
+  assert("this BU matches update columns case-insensitively", Platform.Function.UpdateData(deName, ["Id"], ["a"], ["TXT"], ["case-update"]), 1);
+  assert("this BU matches Text filter values case-insensitively", Platform.Function.UpdateData(deName, ["Grp"], ["MIXED"], ["Txt"], ["case-value"]), 1);
+  assert("number values coerce into Text", Platform.Function.UpdateData(deName, ["Id"], ["a"], ["Txt"], [123]), 1);
+  assert("number-to-Text persistence is a string", String(typeof Platform.Function.Lookup(deName, "Txt", "Grp", "MiXeD")), "string");
+  assert("null values persist as ordinary empty strings in rowsets", Platform.Function.UpdateData(deName, ["Id"], ["a"], ["Txt"], [null]), 1);
+  var rows = Platform.Function.LookupRows(deName, "Id", "a");
+  assert("null-written Text rowset value has typeof string", String(typeof rows[0]["Txt"]), "string");
+  assert("null-written Text rowset value is empty", String(rows[0]["Txt"]), "");
+  assert("workaround UpsertData updates an existing row and returns the count", Platform.Function.UpsertData(deName, ["Id"], ["a"], ["Txt"], ["upserted"]), 1);
+  assert("Platform.Function.UpdateData remains callable after Core load", Platform.Function.UpdateData(deName, ["Id"], ["a"], ["Txt"], ["prefixed"]), 1);
+  assert("bare-name UpdateData remains undefined after Core load", String(typeof UpdateData), "undefined");
+  assertThrows("calling bare-name UpdateData throws", function () { return UpdateData(deName, ["Id"], ["a"], ["Txt"], ["bare"]); });
+  assert("cleanup: throwaway DE deleted", dropDE(deKey), "OK");
+  </script>

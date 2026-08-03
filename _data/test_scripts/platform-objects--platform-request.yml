@@ -1,0 +1,135 @@
+# Test scripts for /platform-objects/platform-request/
+#
+# Run on a published CloudPage GET with:
+# ?present=value&empty=&repeat=1&repeat=2&CaseName=Upper&space=hello%20world&plus=hello+world&percent=%25%32%35&unicode=%C3%A4%C3%B6%C3%BC&42=numeric
+# Send X-Request-Probe: controlled-header, Accept-Language: de-DE,en;q=0.7,
+# Referer: https://example.test/referrer, and probeCookie=cookie-value.
+
+properties: |
+  <script runat="server">
+  /*
+   * Chapter: Properties
+   * Proves:
+   *   1. Request properties are available without Platform.Load on CloudPage GET.
+   *   2. Method, query string, URL, referrer, IP, and SSL values have their CLR-backed shapes.
+   *   3. QueryString includes the leading question mark and RequestURL includes it.
+   *   4. Browser exposes its five named fields even when the user agent is unrecognized.
+   * EXPECTED OUTPUT: every assertion line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function capture(fn) {
+      try { return { threw: false, value: fn() }; } catch (ex) { return { threw: true, message: String(ex.message) }; }
+  }
+  assert("Platform.Request is available without Platform.Load", typeof Platform.Request, "clr");
+  assert("Method is CLR-backed", typeof Platform.Request.Method, "clr");
+  assert("Method converts to GET", String(Platform.Request.Method), "GET");
+  assert("QueryString is CLR-backed", typeof Platform.Request.QueryString, "clr");
+  assert("QueryString includes leading question mark", String(Platform.Request.QueryString).charAt(0), "?");
+  assert("RequestURL is CLR-backed", typeof Platform.Request.RequestURL, "clr");
+  assert("RequestURL contains the controlled query", String(Platform.Request.RequestURL).indexOf("present=value") >= 0 ? "yes" : "no", "yes");
+  assert("ReferrerURL reads the controlled Referer header", String(Platform.Request.ReferrerURL), "https://example.test/referrer");
+  assert("ClientIP is a populated CLR string", typeof Platform.Request.ClientIP, "clr");
+  assert("ClientIP is non-empty", String(Platform.Request.ClientIP).length > 0 ? "yes" : "no", "yes");
+  assert("HasSSL is a CLR boolean", typeof Platform.Request.HasSSL, "clr");
+  assert("IsSSL is a CLR boolean", typeof Platform.Request.IsSSL, "clr");
+  assert("HTTPS request makes HasSSL truthy", Platform.Request.HasSSL ? "true" : "false", "true");
+  assert("HTTPS request makes IsSSL truthy", Platform.Request.IsSSL ? "true" : "false", "true");
+  assert("HasSSL and IsSSL render identically", String(Platform.Request.HasSSL), String(Platform.Request.IsSSL));
+  var browser = Platform.Request.Browser;
+  assert("Browser is CLR-backed", typeof browser, "clr");
+  assert("Browser.Platform is readable", typeof browser.Platform, "clr");
+  assert("Browser.Browser is readable", typeof browser.Browser, "clr");
+  assert("Browser.Version is readable", typeof browser.Version, "clr");
+  assert("Browser.MajorVersion is readable", typeof browser.MajorVersion, "clr");
+  assert("Browser.MinorVersion is readable", typeof browser.MinorVersion, "clr");
+  var agent = capture(function () { return Platform.Request.UserAgent; });
+  assert("UserAgent is readable when the controlled request sends it", agent.threw ? "threw" : "returned", "returned");
+  assert("UserAgent is CLR-backed", agent.threw ? "threw" : typeof agent.value, "clr");
+  </script>
+
+methods: |
+  <script runat="server">
+  /*
+   * Chapter: Methods
+   * Proves:
+   *   1. Query getters distinguish absent null from empty string, join repeats with a comma,
+   *      match names case-insensitively, decode URL encoding, and coerce numeric names.
+   *   2. GetFormField does not read GET query parameters; absent form/cookie/header values are strict null.
+   *   3. Cookie and request-header getters read controlled values; header names are case-insensitive.
+   *   4. GetPostData returns an empty string on a GET, including its second read.
+   *   5. GetUserLanguages is not callable; GetRequestHeader is the working replacement.
+   *   6. Platform.Request needs no Core load, while the distinct bare Request object appears after Core loads.
+   * EXPECTED OUTPUT: every assertion line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      try { fn(); Platform.Response.Write("FAIL " + id + " -> [did not throw]\n"); }
+      catch (ex) { Platform.Response.Write("PASS " + id + " -> [" + String(ex.message) + "]\n"); }
+  }
+  function typeOf(fn) {
+      try { return fn(); } catch (ex) { return "threw:" + String(ex.message); }
+  }
+  var absent = Platform.Request.GetQueryStringParameter("absent");
+  assert("present query parameter returns its value", Platform.Request.GetQueryStringParameter("present"), "value");
+  assert("DEV absent query parameter is strict null (official docs: empty string)", absent === null ? "null" : "other", "null");
+  assert("absent query parameter is falsy", absent ? "true" : "false", "false");
+  assert("absent query parameter safely equals null", absent == null ? "true" : "false", "true");
+  assert("empty query parameter returns empty string", Platform.Request.GetQueryStringParameter("empty"), "");
+  assert("repeated query parameter returns comma-joined values", Platform.Request.GetQueryStringParameter("repeat"), "1,2");
+  assert("query parameter names are case-insensitive", Platform.Request.GetQueryStringParameter("casename"), "Upper");
+  assert("percent-encoded space is decoded", Platform.Request.GetQueryStringParameter("space"), "hello world");
+  assert("plus sign is decoded as space", Platform.Request.GetQueryStringParameter("plus"), "hello world");
+  assert("percent escapes are decoded once", Platform.Request.GetQueryStringParameter("percent"), "%25");
+  var unicode = Platform.Request.GetQueryStringParameter("unicode");
+  assert("UTF-8 query value first code point", unicode.charCodeAt(0), 228);
+  assert("UTF-8 query value second code point", unicode.charCodeAt(1), 246);
+  assert("UTF-8 query value third code point", unicode.charCodeAt(2), 252);
+  assert("null parameter name returns strict null", Platform.Request.GetQueryStringParameter(null) === null ? "null" : "other", "null");
+  var unset;
+  assert("undefined parameter name returns strict null", Platform.Request.GetQueryStringParameter(unset) === null ? "null" : "other", "null");
+  assert("numeric parameter name is coerced", Platform.Request.GetQueryStringParameter(42), "numeric");
+  assert("GetFormField does not read GET query values", Platform.Request.GetFormField("present") === null ? "null" : "other", "null");
+  assert("absent form field is strict null", Platform.Request.GetFormField("absent") === null ? "null" : "other", "null");
+  assert("cookie getter reads controlled cookie", Platform.Request.GetCookieValue("probeCookie"), "cookie-value");
+  assert("DEV absent cookie is strict null (official docs: empty string)", Platform.Request.GetCookieValue("absentCookie") === null ? "null" : "other", "null");
+  assert("header getter reads controlled header", Platform.Request.GetRequestHeader("X-Request-Probe"), "controlled-header");
+  assert("header names are case-insensitive", Platform.Request.GetRequestHeader("x-request-probe"), "controlled-header");
+  assert("Accept-Language header is readable", Platform.Request.GetRequestHeader("Accept-Language"), "de-DE,en;q=0.7");
+  assert("absent header is strict null", Platform.Request.GetRequestHeader("X-Absent-Probe") === null ? "null" : "other", "null");
+  assertThrows("DEV GetUserLanguages throws (official docs: returns Accept-Language)", function () { Platform.Request.GetUserLanguages(); });
+  assert("workaround reads Accept-Language directly", Platform.Request.GetRequestHeader("Accept-Language"), "de-DE,en;q=0.7");
+  var firstBody = Platform.Request.GetPostData();
+  var secondBody = Platform.Request.GetPostData();
+  assert("GET first GetPostData call is empty string", firstBody, "");
+  assert("GET second GetPostData call is empty string", secondBody, "");
+  assert("bare Request is undefined before Platform.Load", typeOf(function () { return typeof Request; }), "undefined");
+  Platform.Load("core", "1.1.5");
+  assert("bare Request appears after Platform.Load", typeOf(function () { return typeof Request; }), "object");
+  assert("bare Request is distinct but reads the same query value", Request.GetQueryStringParameter("present"), "value");
+  </script>
+
+complete-request-handler-pattern: |
+  <script runat="server">
+  /*
+   * Chapter: Complete Request Handler Pattern
+   * Proves:
+   *   1. CLR-backed Method must be converted before strict string comparison.
+   *   2. Truthiness is a safe guard for a missing query parameter.
+   *   3. The controlled GET enters the GET branch and reads its present parameter.
+   * EXPECTED OUTPUT: every assertion line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  var rawMethod = Platform.Request.Method;
+  var method = String(rawMethod);
+  assert("DEV raw CLR Method is not strictly equal to GET (official docs imply string)", rawMethod === "GET" ? "equal" : "not-equal", "not-equal");
+  assert("converted Method is strictly equal to GET", method === "GET" ? "equal" : "not-equal", "equal");
+  assert("controlled request enters GET branch", method, "GET");
+  assert("present id-style parameter can be read", Platform.Request.GetQueryStringParameter("present"), "value");
+  assert("missing parameter is safely rejected by truthiness", Platform.Request.GetQueryStringParameter("absent") ? "present" : "missing", "missing");
+  </script>

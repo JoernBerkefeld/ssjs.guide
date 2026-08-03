@@ -14,20 +14,27 @@ return_type: number
 min_args: 5
 max_args: 5
 verification: verified
+test_scripts: complete
 differs_from_docs: true
 ---
 
 {% include differs-from-docs.html note="`UpdateData` resolves the Data Extension by its **Name** only — passing the external key / CustomerKey throws \"A Data Extension of this name does not exist.\" (runtime-verified)." %}
+{% include test-script.html bundle="platform-functions--updatedata" chapter="resolved-by-name-only" label="Show test script — Name-only resolution" %}
 
 ## Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `deName` | string | Yes | Data Extension **Name** (the external key / CustomerKey is **not** accepted — runtime-verified) |
-| `whereFieldNames` | string\|string[] | Yes | Column name(s) to identify the rows to update; use an array for multiple columns (AND logic) |
-| `whereFieldValues` | string\|array | Yes | Value(s) to match in `whereFieldNames`; must be an array of equal length when `whereFieldNames` is an array |
+| `whereFieldNames` | string[] | Yes | Array of column names used to identify rows; multiple columns use positional AND logic |
+| `whereFieldValues` | array | Yes | Array of values positionally aligned to `whereFieldNames`; must have the same length |
 | `fieldNames` | string[] | Yes | Array of column names to update |
-| `fieldValues` | array | Yes | Array of new values aligned to `fieldNames` |
+| `fieldValues` | array | Yes | Array of new values aligned to `fieldNames`; must have the same length |
+
+{% include differs-from-docs.html note="The official docs allow scalar strings for a single filter column and value, but the runtime requires arrays for all four filter and update name/value arguments; scalar forms throw." %}
+{% include test-script.html bundle="platform-functions--updatedata" chapter="array-arguments-required" label="Show test script — array arguments required" %}
+
+{% include test-script.html bundle="platform-functions--updatedata" chapter="parameters" %}
 
 ## Examples
 
@@ -70,12 +77,16 @@ try {
 }
 ```
 
+{% include test-script.html bundle="platform-functions--updatedata" chapter="examples" %}
+
 ## Notes
 
 - If no rows match the filter, returns `0` (not an error)
 - Resolves the DE by **Name**, not external key / CustomerKey
 - `UpdateDE` performs the same update but returns `null` instead of a row count. The official docs describe `UpdateDE` as email-only, yet it was runtime-verified to run and commit on a CloudPage too — prefer `UpdateData` outside email for the affected-row count.
 - For insert-or-update logic, use `UpsertData`
+
+{% include test-script.html bundle="platform-functions--updatedata" chapter="notes" %}
 
 ## See Also
 

@@ -6,6 +6,7 @@ parent_url: /platform-objects/
 description: Read attribute values and sendable data extension field values for the current recipient during an email send.
 verification: verified
 differs_from_docs: true
+test_scripts: complete
 ---
 
 `Platform.Recipient` provides access to subscriber attributes and sendable data extension fields for the contact being processed in the current send context.
@@ -15,6 +16,8 @@ differs_from_docs: true
 | Method | Returns | Description |
 |--------|---------|-------------|
 | [`Platform.Recipient.GetAttributeValue(attributeName)`](#getattributevalue) | string | Returns the value of a subscriber attribute or sendable DE field for the current recipient |
+
+{% include test-script.html bundle="platform-objects--platform-recipient" chapter="methods" %}
 
 ### Platform.Recipient.GetAttributeValue {#getattributevalue}
 
@@ -45,9 +48,13 @@ Platform.Load("core", "1.1.5");
 var email = Attribute.GetValue("EmailAddress");
 ```
 
+{% include test-script.html bundle="platform-objects--platform-recipient" chapter="getattributevalue" %}
+
 ## Notes
 
 {% include callout.html type="note" content="`Platform.Recipient` is only *populated* during a send context (email send, triggered send, or journey send). The method itself does not throw in a CloudPage — it simply returns `\"\"` (empty string) because no recipient is bound. To read URL parameters in a CloudPage, use `Platform.Request.GetQueryStringParameter` instead." %}
+
+{% include test-script.html bundle="platform-objects--platform-recipient" chapter="notes" %}
 
 ## See Also
 

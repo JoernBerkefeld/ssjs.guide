@@ -1,0 +1,512 @@
+# Test scripts for /platform-functions/urlencode/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes - positive,
+# negative, and the documented deviation from the official Salesforce docs.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# PAGE-SPECIFIC RULE: this function returns strings full of percent signs.
+# A CloudPage's AMPscript pre-processor consumes "%%"-delimited sequences,
+# so every script below builds percent characters from the fragment helper
+# P(hex) and prints values through san(), which replaces "%" with "{pct}".
+# Comparisons always use the RAW value; only the printed form is sanitised.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters - Platform.Function.UrlEncode(url[, encodeReservedKeywords])
+   *
+   * Proves:
+   *   1. The member exists and is invocable with 1 argument (a successful call
+   *      is the only reliable existence proof for a Platform.Function member).
+   *   2. return_type is string: typeof the result is "string".
+   *   3. url is REQUIRED: the 0-argument form throws.
+   *   4. max_args is 2: a 3-argument call throws.
+   *   5. encodeReservedKeywords is OPTIONAL and defaults to false: the
+   *      1-argument form and the explicit `false` form return the same value.
+   *   6. The flag is coerced the .NET way, not the JavaScript way: 1 and the
+   *      STRING "true" select the reserved-encoding mode, while 0 and the
+   *      STRING "false" select the default mode. In JavaScript the non-empty
+   *      string "false" is truthy, so this is a deviation worth knowing.
+   *   7. null is not an accepted flag value - it throws.
+   *   8. The url argument is coerced to a string: null and undefined both
+   *      yield the empty string, a number yields its digits, and a boolean
+   *      yields the .NET capitalised forms "True" / "False".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  /* Build percent signs from a fragment so no literal "%%" ever reaches the
+   * CloudPage pre-processor. */
+  function P(hex) { return "%" + hex; }
+
+  /* Printing helper: never emit a raw "%" into the response body. */
+  function san(s) {
+      var str = "" + s;
+      var out = "";
+      for (var i = 0; i < str.length; i++) {
+          var ch = str.charAt(i);
+          var code = str.charCodeAt(i);
+          if (ch === "%") { out = out + "{pct}"; }
+          else if (code < 32 || code > 126) { out = out + "{u" + code + "}"; }
+          else { out = out + ch; }
+      }
+      return out;
+  }
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + san(actual) + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false;
+      try { fn(); } catch (ex) { threw = true; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw" : "did NOT throw") + "\n");
+  }
+
+  var URL = "http://www.example.com?value=12+3 12;3";
+  var DEFAULT_OUT = "http://www.example.com?value=12+3" + P("20") + "12;3";
+  var TRUE_OUT = "http://www.example.com?value" + P("3d") + "12" + P("2b") + "3+12" + P("3b") + "3";
+
+  /* 1 + 2. The 1-argument form works and returns a string. */
+  var one = Platform.Function.UrlEncode(URL);
+  assert("1-argument call encodes", one, DEFAULT_OUT);
+  assert("typeof 1-argument result is string", String(typeof one), "string");
+  assert("typeof 2-argument result is string", String(typeof Platform.Function.UrlEncode(URL, true)), "string");
+
+  /* 3. url is required. */
+  assertThrows("arity 0 throws (url is required)", function () {
+      return Platform.Function.UrlEncode();
+  });
+
+  /* 4. max_args is 2. */
+  assertThrows("arity 3 throws (max_args is 2)", function () {
+      return Platform.Function.UrlEncode(URL, true, true);
+  });
+
+  /* 5. encodeReservedKeywords defaults to false. */
+  assert("explicit false matches the 1-argument form", Platform.Function.UrlEncode(URL, false), DEFAULT_OUT);
+  assert("explicit true encodes the reserved characters", Platform.Function.UrlEncode(URL, true), TRUE_OUT);
+
+  /* 6. Flag coercion follows .NET, not JavaScript truthiness. */
+  assert("flag 1 selects the reserved-encoding mode", Platform.Function.UrlEncode(URL, 1), TRUE_OUT);
+  assert("flag 0 selects the default mode", Platform.Function.UrlEncode(URL, 0), DEFAULT_OUT);
+  assert("flag string 'true' selects the reserved-encoding mode", Platform.Function.UrlEncode(URL, "true"), TRUE_OUT);
+  assert("DEV flag string 'false' selects the DEFAULT mode (JavaScript would treat the non-empty string as truthy)", Platform.Function.UrlEncode(URL, "false"), DEFAULT_OUT);
+
+  /* 7. null is not an accepted flag value. */
+  assertThrows("flag null throws", function () {
+      return Platform.Function.UrlEncode(URL, null);
+  });
+
+  /* 8. The url argument is coerced to a string. */
+  assert("empty input returns the empty string", Platform.Function.UrlEncode(""), "");
+  assert("empty input returns the empty string in true mode", Platform.Function.UrlEncode("", true), "");
+  assert("null input returns the empty string", Platform.Function.UrlEncode(null), "");
+  assert("undefined input returns the empty string", Platform.Function.UrlEncode(undefined), "");
+  assert("a number input is stringified", Platform.Function.UrlEncode(12345), "12345");
+  assert("boolean true stringifies the .NET way", Platform.Function.UrlEncode(true), "True");
+  assert("boolean false stringifies the .NET way", Platform.Function.UrlEncode(false), "False");
+  </script>
+
+encoding-rules: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Description - what actually gets encoded, and where.
+   *
+   * Proves:
+   *   1. Only the substring AFTER the first "?" is ever touched. A space in
+   *      the path is left alone in both modes, and a value containing no "?"
+   *      at all is returned completely unchanged in both modes. This is what
+   *      "the value must be a complete URL" means in practice.
+   *   2. Default mode (encodeReservedKeywords omitted / false) encodes ONLY
+   *      the space character, as %20. Every other character in the query
+   *      string is passed through untouched.
+   *   3. Reserved-encoding mode (true) encodes the space as "+", not %20.
+   *   4. Reserved-encoding mode passes through alphanumerics and the eight
+   *      characters - _ . ! * ( ) and leaves them literal.
+   *   5. Reserved-encoding mode percent-encodes the rest of printable ASCII,
+   *      with the exact literals asserted below.
+   *   6. Hex digits in the escapes are LOWERCASE (%3d, not %3D).
+   *   7. Non-ASCII input: default mode leaves it completely untouched;
+   *      reserved-encoding mode emits UTF-8 bytes as lowercase percent
+   *      escapes - two bytes for an umlaut, three for the euro sign, and
+   *      four for an astral-plane emoji written as a surrogate pair.
+   *   8. Default mode is idempotent (it only touches spaces), while
+   *      reserved-encoding mode is NOT: re-applying it double-encodes an
+   *      existing escape because "%" itself becomes %25.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function P(hex) { return "%" + hex; }
+
+  function san(s) {
+      var str = "" + s;
+      var out = "";
+      for (var i = 0; i < str.length; i++) {
+          var ch = str.charAt(i);
+          var code = str.charCodeAt(i);
+          if (ch === "%") { out = out + "{pct}"; }
+          else if (code < 32 || code > 126) { out = out + "{u" + code + "}"; }
+          else { out = out + ch; }
+      }
+      return out;
+  }
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + san(actual) + "]\n");
+  }
+
+  var Q = "http://x.com?q=";
+
+  /* 1. Only the query string is processed. */
+  assert("a space in the PATH is not encoded in default mode", Platform.Function.UrlEncode("http://x.com/a b?c=d e"), "http://x.com/a b?c=d" + P("20") + "e");
+  assert("a space in the PATH is not encoded in true mode", Platform.Function.UrlEncode("http://x.com/a b?c=d e", true), "http://x.com/a b?c" + P("3d") + "d+e");
+  assert("a value with no question mark is unchanged in default mode", Platform.Function.UrlEncode("hello world"), "hello world");
+  assert("a value with no question mark is unchanged in true mode", Platform.Function.UrlEncode("hello world", true), "hello world");
+  assert("a bare query fragment with no question mark is unchanged", Platform.Function.UrlEncode("q=a b"), "q=a b");
+  assert("a bare query fragment with no question mark is unchanged in true mode", Platform.Function.UrlEncode("q=a b", true), "q=a b");
+  assert("only the FIRST question mark starts the query string", Platform.Function.UrlEncode("http://x.com?a=1?b=2 3"), "http://x.com?a=1?b=2" + P("20") + "3");
+
+  /* 2. Default mode encodes the space and nothing else. */
+  assert("default mode encodes a space as {pct}20", Platform.Function.UrlEncode(Q + " end"), Q + P("20") + "end");
+  assert("default mode leaves & untouched", Platform.Function.UrlEncode(Q + "&end"), Q + "&end");
+  assert("default mode leaves = untouched", Platform.Function.UrlEncode(Q + "=end"), Q + "=end");
+  assert("default mode leaves + untouched", Platform.Function.UrlEncode(Q + "+end"), Q + "+end");
+  assert("default mode leaves ; untouched", Platform.Function.UrlEncode(Q + ";end"), Q + ";end");
+  assert("default mode leaves / untouched", Platform.Function.UrlEncode(Q + "/end"), Q + "/end");
+  assert("default mode leaves ? untouched", Platform.Function.UrlEncode(Q + "?end"), Q + "?end");
+  assert("default mode leaves a percent sign untouched", Platform.Function.UrlEncode(Q + "%end"), Q + P("") + "end");
+
+  /* 3. Reserved-encoding mode turns the space into a plus. */
+  assert("true mode encodes a space as +", Platform.Function.UrlEncode(Q + " end", true), "http://x.com?q" + P("3d") + "+end");
+
+  /* 4. Characters that pass through reserved-encoding mode unchanged. */
+  var PASSTHROUGH = ["!", "(", ")", "*", "-", ".", "_", "a", "Z", "0"];
+  for (var i = 0; i < PASSTHROUGH.length; i++) {
+      var pc = PASSTHROUGH[i];
+      assert("true mode passes through [" + pc + "]", Platform.Function.UrlEncode(Q + pc + "end", true), "http://x.com?q" + P("3d") + pc + "end");
+  }
+
+  /* 5 + 6. Characters that reserved-encoding mode percent-encodes, lowercase. */
+  var ENCODED = [
+      ["\"", "22"], ["#", "23"], ["$", "24"], ["%", "25"], ["&", "26"], ["'", "27"],
+      ["+", "2b"], [",", "2c"], ["/", "2f"], [":", "3a"], [";", "3b"], ["<", "3c"],
+      ["=", "3d"], [">", "3e"], ["?", "3f"], ["@", "40"], ["[", "5b"], ["\\", "5c"],
+      ["]", "5d"], ["^", "5e"], ["`", "60"], ["{", "7b"], ["|", "7c"], ["}", "7d"],
+      ["~", "7e"]
+  ];
+  for (var j = 0; j < ENCODED.length; j++) {
+      var ec = ENCODED[j][0];
+      var hex = ENCODED[j][1];
+      assert("true mode encodes [" + ec + "] as a lowercase escape", Platform.Function.UrlEncode(Q + ec + "end", true), "http://x.com?q" + P("3d") + P(hex) + "end");
+  }
+
+  /* 7. Non-ASCII input. */
+  var UMLAUT = String.fromCharCode(228);
+  var EURO = String.fromCharCode(8364);
+  var EMOJI = String.fromCharCode(55357, 56832);
+  assert("default mode leaves an umlaut untouched", Platform.Function.UrlEncode(Q + UMLAUT), Q + UMLAUT);
+  assert("default mode leaves the euro sign untouched", Platform.Function.UrlEncode(Q + EURO), Q + EURO);
+  assert("default mode leaves an emoji untouched", Platform.Function.UrlEncode(Q + EMOJI), Q + EMOJI);
+  assert("true mode emits 2 UTF-8 bytes for an umlaut", Platform.Function.UrlEncode(Q + UMLAUT, true), "http://x.com?q" + P("3d") + P("c3") + P("a4"));
+  assert("true mode emits 3 UTF-8 bytes for the euro sign", Platform.Function.UrlEncode(Q + EURO, true), "http://x.com?q" + P("3d") + P("e2") + P("82") + P("ac"));
+  assert("true mode emits 4 UTF-8 bytes for an astral-plane emoji", Platform.Function.UrlEncode(Q + EMOJI, true), "http://x.com?q" + P("3d") + P("f0") + P("9f") + P("98") + P("80"));
+
+  /* 8. Idempotence. */
+  var alreadyEncoded = Q + "a" + P("20") + "b";
+  assert("default mode is idempotent - an existing escape survives", Platform.Function.UrlEncode(alreadyEncoded), alreadyEncoded);
+  assert("applying default mode twice equals applying it once", Platform.Function.UrlEncode(Platform.Function.UrlEncode(Q + "a b")), Q + "a" + P("20") + "b");
+  assert("true mode double-encodes an existing escape", Platform.Function.UrlEncode(alreadyEncoded, true), "http://x.com?q" + P("3d") + "a" + P("25") + "20b");
+  assert("applying true mode twice double-encodes its own output", Platform.Function.UrlEncode(Platform.Function.UrlEncode(Q + "a b", true), true), "http://x.com?q" + P("25") + "3da" + P("2b") + "b");
+  </script>
+
+reserved-set: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs claim: the official Salesforce documentation names one
+   * specific reserved set - ! # $ & ' ( ) * + , / : ; = ? @ [ ] - and states
+   * that when encodeReservedKeywords is true, "all reserved characters in the
+   * URL are converted to percent-encoded values". The runtime set differs in
+   * BOTH directions.
+   *
+   * Official docs: the reserved set is  ! # $ & ' ( ) * + , / : ; = ? @ [ ]
+   * SFMC runtime:  ! ( ) * are NEVER encoded, and " % < > \ ^ ` { | } ~ ARE
+   *                encoded even though the docs do not list them as reserved.
+   *                The actual passthrough set is alphanumerics plus - _ . ! * ( ).
+   *
+   * Proves:
+   *   1. DEV each of ! ( ) * survives reserved-encoding mode unchanged, even
+   *      though the docs list them as reserved characters that get encoded.
+   *   2. DEV each of " % < > \ ^ ` { | } ~ IS percent-encoded, even though the
+   *      docs do not list any of them as reserved.
+   *   3. Control - the docs-listed characters # $ & ' + , / : ; = ? @ [ ] DO
+   *      get encoded, so the deviation is a partial mismatch of the set, not a
+   *      wholesale failure of the flag.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function P(hex) { return "%" + hex; }
+
+  function san(s) {
+      var str = "" + s;
+      var out = "";
+      for (var i = 0; i < str.length; i++) {
+          var ch = str.charAt(i);
+          var code = str.charCodeAt(i);
+          if (ch === "%") { out = out + "{pct}"; }
+          else if (code < 32 || code > 126) { out = out + "{u" + code + "}"; }
+          else { out = out + ch; }
+      }
+      return out;
+  }
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + san(actual) + "]\n");
+  }
+
+  var Q = "http://x.com?q=";
+  var HEAD = "http://x.com?q" + P("3d");
+
+  /* 1. DEVIATION - documented as reserved, but never encoded. */
+  var NOT_ENCODED = ["!", "(", ")", "*"];
+  for (var i = 0; i < NOT_ENCODED.length; i++) {
+      var nc = NOT_ENCODED[i];
+      assert("DEV [" + nc + "] is NOT encoded (docs: it is reserved and should be percent-encoded)", Platform.Function.UrlEncode(Q + nc + "end", true), HEAD + nc + "end");
+  }
+
+  /* 2. DEVIATION - encoded although the docs do not list it as reserved. */
+  var EXTRA_ENCODED = [
+      ["\"", "22"], ["%", "25"], ["<", "3c"], [">", "3e"], ["\\", "5c"],
+      ["^", "5e"], ["`", "60"], ["{", "7b"], ["|", "7c"], ["}", "7d"], ["~", "7e"]
+  ];
+  for (var j = 0; j < EXTRA_ENCODED.length; j++) {
+      var xc = EXTRA_ENCODED[j][0];
+      var xh = EXTRA_ENCODED[j][1];
+      assert("DEV [" + xc + "] IS encoded (docs: it is not in the reserved set)", Platform.Function.UrlEncode(Q + xc + "end", true), HEAD + P(xh) + "end");
+  }
+
+  /* 3. Control - the docs-listed reserved characters that DO get encoded. */
+  var DOCS_RESERVED = [
+      ["#", "23"], ["$", "24"], ["&", "26"], ["'", "27"], ["+", "2b"], [",", "2c"],
+      ["/", "2f"], [":", "3a"], [";", "3b"], ["=", "3d"], ["?", "3f"], ["@", "40"],
+      ["[", "5b"], ["]", "5d"]
+  ];
+  for (var k = 0; k < DOCS_RESERVED.length; k++) {
+      var dc = DOCS_RESERVED[k][0];
+      var dh = DOCS_RESERVED[k][1];
+      assert("control - the documented reserved character [" + dc + "] is encoded", Platform.Function.UrlEncode(Q + dc + "end", true), HEAD + P(dh) + "end");
+  }
+  </script>
+
+comparison: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Comparison with the ECMAScript encoders.
+   *
+   * Proves:
+   *   1. There is NO bare-name URLEncode or UrlEncode global, even after
+   *      Platform.Load("core", ...). Run this script at flat top-level scope -
+   *      that is the only scope where a bare Core global is injected, so an
+   *      "Object expected" throw here is a genuine absence and not a scope
+   *      artifact. (The same probe before the Core load is also undefined.)
+   *   2. escape is not defined in this engine either (its usual companion in
+   *      other JavaScript hosts).
+   *   3. Platform.Function.UrlEncode is NOT equivalent to encodeURI: for the
+   *      same input, encodeURI turns the space into "+" everywhere, while
+   *      default-mode UrlEncode leaves a space outside the query string alone.
+   *   4. Platform.Function.UrlEncode(s, true) is NOT equivalent to
+   *      encodeURIComponent: UrlEncode never touches the scheme, host, path or
+   *      the first "?", while encodeURIComponent escapes "/" and "?" too.
+   *   5. The two disagree in the other direction as well: UrlEncode escapes
+   *      "~", which encodeURIComponent leaves alone as an unreserved character.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function P(hex) { return "%" + hex; }
+
+  function san(s) {
+      var str = "" + s;
+      var out = "";
+      for (var i = 0; i < str.length; i++) {
+          var ch = str.charAt(i);
+          var code = str.charCodeAt(i);
+          if (ch === "%") { out = out + "{pct}"; }
+          else if (code < 32 || code > 126) { out = out + "{u" + code + "}"; }
+          else { out = out + ch; }
+      }
+      return out;
+  }
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + san(actual) + "]\n");
+  }
+  function assertRaises(id, fn, expectedFragment) {
+      var msg = "";
+      try { fn(); } catch (e) { msg = e.message; }
+      var ok = String(msg).indexOf(expectedFragment) !== -1;
+      Platform.Response.Write((ok ? "PASS " : "FAIL ") + id + " -> " + san(msg) + "\n");
+  }
+
+  /* 1. No bare-name form exists at flat top-level scope after the Core load. */
+  assert("typeof URLEncode is undefined", String(typeof URLEncode), "undefined");
+  assert("typeof UrlEncode is undefined", String(typeof UrlEncode), "undefined");
+  assertRaises("calling the bare URLEncode throws Object expected", function () { return URLEncode("http://x.com?a=b c"); }, "Object expected");
+  assertRaises("calling the bare UrlEncode throws Object expected", function () { return UrlEncode("http://x.com?a=b c"); }, "Object expected");
+
+  /* 2. escape is not defined either. */
+  assert("typeof escape is undefined", String(typeof escape), "undefined");
+  assertRaises("calling escape throws Object expected", function () { return escape("a b"); }, "Object expected");
+
+  /* 3 + 4. Concrete, side-by-side comparison on one input. */
+  var S = "a b/c?d=1&e=2+3;f";
+  assert("default-mode UrlEncode output", Platform.Function.UrlEncode(S), "a b/c?d=1&e=2+3;f");
+  assert("true-mode UrlEncode output", Platform.Function.UrlEncode(S, true), "a b/c?d" + P("3d") + "1" + P("26") + "e" + P("3d") + "2" + P("2b") + "3" + P("3b") + "f");
+  assert("encodeURI output", encodeURI(S), "a+b/c?d=1&e=2+3;f");
+  assert("encodeURIComponent output", encodeURIComponent(S), "a+b" + P("2f") + "c" + P("3f") + "d" + P("3d") + "1" + P("26") + "e" + P("3d") + "2" + P("2b") + "3" + P("3b") + "f");
+  assert("UrlEncode default mode differs from encodeURI", Platform.Function.UrlEncode(S) === encodeURI(S) ? "same" : "different", "different");
+  assert("UrlEncode true mode differs from encodeURIComponent", Platform.Function.UrlEncode(S, true) === encodeURIComponent(S) ? "same" : "different", "different");
+
+  /* 5. UrlEncode is stricter than encodeURIComponent for the tilde. */
+  assert("encodeURIComponent leaves the tilde alone", encodeURIComponent("~"), "~");
+  assert("UrlEncode true mode escapes the tilde", Platform.Function.UrlEncode("http://x.com?q=~", true), "http://x.com?q" + P("3d") + P("7e"));
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples - the two-mode example from the page.
+   *
+   * Proves the exact output of both documented calls on the page's own input
+   * value, character for character:
+   *   1. Default mode converts only the space to %20, leaving the literal "+"
+   *      and the ";" as they are.
+   *   2. Reserved-encoding mode converts "=" to %3d, the literal "+" to %2b,
+   *      the ";" to %3b, and the space to "+".
+   *   3. Both results are strings.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function P(hex) { return "%" + hex; }
+
+  function san(s) {
+      var str = "" + s;
+      var out = "";
+      for (var i = 0; i < str.length; i++) {
+          var ch = str.charAt(i);
+          var code = str.charCodeAt(i);
+          if (ch === "%") { out = out + "{pct}"; }
+          else if (code < 32 || code > 126) { out = out + "{u" + code + "}"; }
+          else { out = out + ch; }
+      }
+      return out;
+  }
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + san(actual) + "]\n");
+  }
+
+  var baseURL = "http://www.example.com?value=12+3 12;3";
+  var encodedDefault = Platform.Function.UrlEncode(baseURL);
+  var encodedFull = Platform.Function.UrlEncode(baseURL, true);
+
+  /* 1. Default mode. */
+  assert("encodedDefault converts only the space", encodedDefault, "http://www.example.com?value=12+3" + P("20") + "12;3");
+
+  /* 2. Reserved-encoding mode. */
+  assert("encodedFull converts = + ; and turns the space into a plus", encodedFull, "http://www.example.com?value" + P("3d") + "12" + P("2b") + "3+12" + P("3b") + "3");
+
+  /* 3. Both results are strings that Write() can output. */
+  assert("typeof encodedDefault is string", String(typeof encodedDefault), "string");
+  assert("typeof encodedFull is string", String(typeof encodedFull), "string");
+  </script>
+
+notes: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Notes - reaching the AMPscript URLEncode operands via
+   * TreatAsContent.
+   *
+   * Proves why the workaround is needed and that it works:
+   *   1. Platform.Function.UrlEncode cannot encode a value that is not a URL:
+   *      given "a b&c=d" it returns the input unchanged in BOTH modes, because
+   *      there is no "?" to start a query string.
+   *   2. The AMPscript URLEncode called with one operand behaves the same way -
+   *      it leaves the value unchanged.
+   *   3. Two operands (encodeAllChars) are still not enough - the value is
+   *      still returned unchanged.
+   *   4. Only the three-operand form URLEncode(value, 1, 1), where the third
+   *      operand encodeAllStrings is set, encodes an arbitrary string: the
+   *      space becomes "+", "&" becomes %26 and "=" becomes %3d.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function P(hex) { return "%" + hex; }
+
+  /* Build the AMPscript delimiter from fragments - a literal one in the source
+   * would be consumed by the CloudPage pre-processor before the SSJS engine
+   * ever sees it, aborting the whole page with no output. */
+  var DELIM = "%" + "%";
+
+  function san(s) {
+      var str = "" + s;
+      var out = "";
+      for (var i = 0; i < str.length; i++) {
+          var ch = str.charAt(i);
+          var code = str.charCodeAt(i);
+          if (ch === "%") { out = out + "{pct}"; }
+          else if (code < 32 || code > 126) { out = out + "{u" + code + "}"; }
+          else { out = out + ch; }
+      }
+      return out;
+  }
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + san(actual) + "]\n");
+  }
+
+  var VALUE = "a b&c=d";
+
+  /* 1. The Platform function cannot encode a non-URL value. */
+  assert("Platform.Function.UrlEncode leaves a non-URL value unchanged", Platform.Function.UrlEncode(VALUE), VALUE);
+  assert("Platform.Function.UrlEncode leaves a non-URL value unchanged in true mode", Platform.Function.UrlEncode(VALUE, true), VALUE);
+
+  /* 2. One AMPscript operand behaves the same. */
+  Variable.SetValue("@v1", VALUE);
+  Platform.Function.TreatAsContent(DELIM + "[Set @e1 = URLEncode(@v1)]" + DELIM);
+  assert("AMPscript URLEncode with one operand leaves the value unchanged", Variable.GetValue("@e1"), VALUE);
+
+  /* 3. Two operands are still not enough. */
+  Variable.SetValue("@v2", VALUE);
+  Platform.Function.TreatAsContent(DELIM + "[Set @e2 = URLEncode(@v2, 1)]" + DELIM);
+  assert("AMPscript URLEncode with two operands leaves the value unchanged", Variable.GetValue("@e2"), VALUE);
+
+  /* 4. The three-operand form encodes an arbitrary string. */
+  Variable.SetValue("@v3", VALUE);
+  Platform.Function.TreatAsContent(DELIM + "[Set @e3 = URLEncode(@v3, 1, 1)]" + DELIM);
+  assert("AMPscript URLEncode(value, 1, 1) encodes an arbitrary string", Variable.GetValue("@e3"), "a+b" + P("26") + "c" + P("3d") + "d");
+  </script>

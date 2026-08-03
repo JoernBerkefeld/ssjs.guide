@@ -15,9 +15,12 @@ min_args: 3
 max_args: 3
 verification: verified
 differs_from_docs: true
+test_scripts: complete
 ---
 
 {% include differs-from-docs.html note="`DeleteData` resolves the Data Extension by its **Name** only — passing the external key / CustomerKey throws \"A Data Extension of this name does not exist.\" (runtime-verified)." %}
+
+{% include test-script.html bundle="platform-functions--deletedata" chapter="resolved-by-name-only" label="Show test script — the Data Extension is resolved by Name, not by external key" %}
 
 ## Parameters
 
@@ -26,6 +29,8 @@ differs_from_docs: true
 | `deName` | string | Yes | Data Extension **Name** (the external key / CustomerKey is **not** accepted — runtime-verified) |
 | `whereFieldNames` | string[] | Yes | Array of column names to match for deletion |
 | `whereFieldValues` | array | Yes | Array of values aligned to `whereFieldNames` that identify rows to delete |
+
+{% include test-script.html bundle="platform-functions--deletedata" chapter="parameters" %}
 
 ## Examples
 
@@ -63,12 +68,16 @@ if (exists) {
 }
 ```
 
+{% include test-script.html bundle="platform-functions--deletedata" chapter="examples" %}
+
 ## Notes
 
 - Returns `0` when no rows match (not an error)
 - Resolves the DE by **Name**, not external key / CustomerKey
 - `DeleteDE` performs the same delete but returns `null` instead of a row count. The official docs describe `DeleteDE` as email-only, yet it was runtime-verified to run and commit on a CloudPage too — prefer `DeleteData` outside email for the affected-row count.
 - **Irreversible** — SFMC DEs have no built-in undo. Always verify the filter before deleting.
+
+{% include test-script.html bundle="platform-functions--deletedata" chapter="notes" %}
 
 ## See Also
 

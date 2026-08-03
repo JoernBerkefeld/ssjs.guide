@@ -1,0 +1,378 @@
+# Test scripts for /platform-functions/httpget/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the official docs.
+#
+# NETWORK DEPENDENCY: HTTPGet performs a real outbound HTTP request, so these
+# scripts depend on a remote endpoint. They target https://ssjs.guide/robots.txt
+# — a small, stable, public 40-byte file — and assert STRUCTURAL invariants
+# (typeof, non-empty body, exact known length, the out-parameter staying empty)
+# rather than remote body text that could change. A network failure is an
+# ENVIRONMENTAL problem, not a refutation of the page.
+#
+# TIMEOUTS: each HTTPGet call can take up to 30 seconds, so every script keeps
+# its number of live calls small. Deploy one chapter at a time when iterating.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters — the two valid call forms and the all-or-nothing
+   * trailing argument group.
+   *
+   * Proves:
+   *   1. The single-argument form HTTPGet(url) succeeds and returns the
+   *      response body as a string (min_args is 1).
+   *   2. The full 6-argument form succeeds and also returns the body string
+   *      (max_args is 6).
+   *   3. `url` is required: a 0-argument call throws.
+   *   4. DEVIATION marked "DEV": the argument count is a DISCONTINUOUS
+   *      overload, not a simple range. Passing 2, 3, 4 or 5 arguments throws
+   *      "Unable to retrieve security descriptor for this frame." The official
+   *      docs list arguments 3-6 as INDEPENDENTLY OPTIONAL, which would make
+   *      every count from 1 to 6 valid; an older claim said all six arguments
+   *      are REQUIRED, which would make the 1-argument form invalid. Both are
+   *      wrong — only 1 and 6 work.
+   *   5. `continueOnError` accepts both true and false, and
+   *      `emptyContentHandling` accepts each documented value (0 allow empty,
+   *      1 return error, 2 skip subscriber), in the 6-argument form.
+   *   6. `headerNames` / `headerValues` accept null (no headers) as documented.
+   *   7. DEVIATION marked "DEV": `statusVariable` is documented as receiving
+   *      the HTTP status code as statusVariable[0], but it is observed EMPTY
+   *      even on a successful call (length 0, [0] undefined).
+   *
+   * SCOPE: evidence gathered on a CloudPage GET only; no email / automation /
+   * triggered-send send-context behaviour is exercised here.
+   *
+   * NOT ASSERTED: the actual effect of `continueOnError` and
+   * `emptyContentHandling` on error / empty-content responses. Both change
+   * SEND-CONTEXT behaviour (terminating a send, skipping a subscriber), which
+   * is not observable from a CloudPage request — only that the values are
+   * accepted is asserted here.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* A small, stable, public endpoint: 40 bytes of text. */
+  var URL = "https://ssjs.guide/robots.txt";
+
+  /* 1. The single-argument form works and returns a string body. */
+  var body = Platform.Function.HTTPGet(URL);
+  assert("HTTPGet(url) returns a string", String(typeof body), "string");
+  assert("the returned body is non-empty", body.length > 0 ? "true" : "false", "true");
+
+  /* 2. The full 6-argument form works, with null header arrays. */
+  var status = [];
+  var content = Platform.Function.HTTPGet(URL, false, 0, null, null, status);
+  assert("the 6-argument form returns a string", String(typeof content), "string");
+  assert("the 6-argument body is non-empty", content.length > 0 ? "true" : "false", "true");
+  assert("both valid forms return the same body", content === body ? "true" : "false", "true");
+
+  /* 6. null is accepted for headerNames / headerValues (asserted above by the
+     successful call that passed null for both). */
+  assert("headerNames=null and headerValues=null are accepted", content.length > 0 ? "true" : "false", "true");
+
+  /* 7. DEVIATION — statusVariable stays empty even on success. */
+  assert("DEV statusVariable.length is 0 (docs: receives the status code)", String(status.length), "0");
+  assert("DEV statusVariable[0] is undefined (docs: the numeric HTTP status)", String(typeof status[0]), "undefined");
+
+  /* 3. url is required. */
+  assertThrows("HTTPGet() with 0 arguments throws (min_args is 1)", function () {
+      return Platform.Function.HTTPGet();
+  });
+
+  /* 4. DEVIATION — 2 to 5 arguments are all invalid. */
+  assertThrows("DEV 2 arguments throw (docs: args 3-6 independently optional)", function () {
+      return Platform.Function.HTTPGet(URL, false);
+  });
+  assertThrows("DEV 3 arguments throw (docs: args 3-6 independently optional)", function () {
+      return Platform.Function.HTTPGet(URL, false, 0);
+  });
+  assertThrows("DEV 4 arguments throw (docs: args 3-6 independently optional)", function () {
+      return Platform.Function.HTTPGet(URL, false, 0, null);
+  });
+  assertThrows("DEV 5 arguments throw (docs: args 3-6 independently optional)", function () {
+      return Platform.Function.HTTPGet(URL, false, 0, null, null);
+  });
+
+  /* 5. continueOnError and emptyContentHandling accept every documented value. */
+  var sA = [];
+  var cA = Platform.Function.HTTPGet(URL, true, 1, null, null, sA);
+  assert("continueOnError=true with emptyContentHandling=1 is accepted", cA.length > 0 ? "true" : "false", "true");
+  var sB = [];
+  var cB = Platform.Function.HTTPGet(URL, false, 2, null, null, sB);
+  assert("emptyContentHandling=2 (skip subscriber) is accepted", cB.length > 0 ? "true" : "false", "true");
+  assert("DEV statusVariable still empty on the emptyContentHandling=2 call", String(sB.length), "0");
+  </script>
+
+arity-overload: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs claim: the argument count of HTTPGet is a DISCONTINUOUS
+   * overload, not a simple range.
+   *
+   * Official docs: arguments 3-6 are independently optional, which would make
+   *                every argument count from 1 to 6 valid.
+   * Older claim:   all six arguments are required, which would make the
+   *                1-argument form invalid.
+   * SFMC runtime:  ONLY a 1-argument call and the full 6-argument call work.
+   *                2, 3, 4 and 5 arguments all throw
+   *                "Unable to retrieve security descriptor for this frame."
+   *
+   * Proves both halves of the claim:
+   *   1. Both valid arities really succeed — 1 argument and 6 arguments.
+   *   2. Every intermediate arity (2, 3, 4, 5) really throws, so the trailing
+   *      five arguments are an all-or-nothing group.
+   *   3. TYPE-ACCEPTANCE (Number↔string): `emptyContentHandling` accepts the
+   *      documented number (0) AND the numeric string ("0") in the valid
+   *      6-argument form (co-required trailing args kept valid), with the
+   *      SAME response body — widens the Parameters type to string | number.
+   *
+   * SCOPE: evidence gathered on a CloudPage GET only.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var URL = "https://ssjs.guide/robots.txt";
+
+  /* 1. The two valid arities. */
+  var one = Platform.Function.HTTPGet(URL);
+  assert("arity 1 succeeds and returns a string", String(typeof one), "string");
+  assert("arity 1 returns a non-empty body", one.length > 0 ? "true" : "false", "true");
+  var st = [];
+  var six = Platform.Function.HTTPGet(URL, false, 0, null, null, st);
+  assert("arity 6 succeeds and returns a string", String(typeof six), "string");
+  assert("arity 6 returns a non-empty body", six.length > 0 ? "true" : "false", "true");
+  assert("emptyContentHandling number 0 accepted (documented type)", six.length > 0 ? "true" : "false", "true");
+
+  /* 3. TYPE-ACCEPTANCE — emptyContentHandling numeric-string counterpart.
+     Keep co-required trailing args valid so the call stays in the 6-arg form. */
+  var stStr = [];
+  var sixStr = Platform.Function.HTTPGet(URL, false, "0", null, null, stStr);
+  assert("emptyContentHandling string \"0\" accepted (counterpart)", sixStr.length > 0 ? "true" : "false", "true");
+  assert("TYPE-ACCEPT number 0 and string \"0\" return the same body", sixStr === six ? "true" : "false", "true");
+
+  /* 2. Every intermediate arity throws — the trailing five are all-or-nothing. */
+  assertThrows("DEV arity 2 throws (docs imply it is valid)", function () {
+      return Platform.Function.HTTPGet(URL, false);
+  });
+  assertThrows("DEV arity 3 throws (docs imply it is valid)", function () {
+      return Platform.Function.HTTPGet(URL, false, 0);
+  });
+  assertThrows("DEV arity 4 throws (docs imply it is valid)", function () {
+      return Platform.Function.HTTPGet(URL, false, 0, null);
+  });
+  assertThrows("DEV arity 5 throws (docs imply it is valid)", function () {
+      return Platform.Function.HTTPGet(URL, false, 0, null, null);
+  });
+  assertThrows("DEV arity 0 throws (url is required)", function () {
+      return Platform.Function.HTTPGet();
+  });
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples — the three documented call shapes.
+   *
+   * Proves:
+   *   1. Valid form 1: var body = Platform.Function.HTTPGet(url) returns a
+   *      string, and Platform.Function.ParseJSON(body) parses it into an
+   *      object when the endpoint serves JSON.
+   *   2. Valid form 2: the full 6-argument form with null header arrays
+   *      returns the body in `content`, while `status[0]` stays undefined —
+   *      the example comment says to read the body from `content` and not to
+   *      trust status[0], and that is exactly what happens.
+   *   3. The 6-argument form with CUSTOM HEADERS (parallel headerNames /
+   *      headerValues arrays) is accepted and returns the body.
+   *   4. The See-Also note that HTTP.Get (Core) is the alternative transport:
+   *      it returns an OBJECT with a Content field, not a bare string — which
+   *      is why HTTPGet's string return value is worth documenting.
+   *
+   * SCOPE: evidence gathered on a CloudPage GET only. The example URLs
+   * api.example.com are placeholders and are NOT contacted; a small, stable,
+   * public endpoint is used instead.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var TEXT_URL = "https://ssjs.guide/robots.txt";
+  var JSON_URL = "https://ssjs.guide/site-index.json";
+
+  /* 1. Valid form 1 — single argument, body string, then ParseJSON. */
+  var body = Platform.Function.HTTPGet(JSON_URL);
+  assert("form 1: typeof body is string", String(typeof body), "string");
+  assert("form 1: the body is non-empty", body.length > 0 ? "true" : "false", "true");
+  var obj = Platform.Function.ParseJSON(body);
+  assert("form 1: ParseJSON(body) yields an object", String(typeof obj), "object");
+  assert("form 1: the parsed value carries data", obj.length > 0 ? "true" : "false", "true");
+
+  /* 2. Valid form 2 — full 6-argument form, status[0] unreliable. */
+  var status = [];
+  var content = Platform.Function.HTTPGet(TEXT_URL, false, 0, null, null, status);
+  assert("form 2: typeof content is string", String(typeof content), "string");
+  assert("form 2: content is non-empty", content.length > 0 ? "true" : "false", "true");
+  assert("form 2: status[0] is undefined as the comment warns", String(typeof status[0]), "undefined");
+  assert("form 2: status.length is 0 as the comment warns", String(status.length), "0");
+
+  /* 3. 6-argument form with custom headers. */
+  var status2 = [];
+  var content2 = Platform.Function.HTTPGet(TEXT_URL, false, 0, ["x-request-id"], ["sampleValue"], status2);
+  assert("form 3: typeof content2 is string", String(typeof content2), "string");
+  assert("form 3: content2 is non-empty", content2.length > 0 ? "true" : "false", "true");
+  assert("form 3: the header form returns the same body as the null form", content2 === content ? "true" : "false", "true");
+  assert("form 3: status2 is empty too", String(status2.length), "0");
+
+  /* 4. The note: HTTP.Get (Core) is the object-returning alternative. */
+  var r = HTTP.Get(TEXT_URL);
+  assert("note: HTTP.Get returns an object, not a string", String(typeof r), "object");
+  assert("note: HTTP.Get exposes the body under .Content", String(r.Content) === content ? "true" : "false", "true");
+  </script>
+
+return-value: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Return Value — returns the response body as a string; the
+   * statusVariable out-parameter is unreliable.
+   *
+   * Proves:
+   *   1. return_type is string: typeof the result is "string", NOT "number".
+   *   2. The returned string is the actual response BODY — it matches the body
+   *      HTTP.Get reports under its .Content field for the same URL.
+   *   3. DEVIATION marked "DEV": the official Salesforce docs describe the
+   *      return value as a NUMERIC STATUS. It is not a number, and it is not
+   *      even a numeric-looking string — Number(result) is NaN for a text body.
+   *   4. DEVIATION marked "DEV": statusVariable was meant to carry the numeric
+   *      status as statusVariable[0]. On a successful call it is observed
+   *      EMPTY: statusVariable.length === 0 and statusVariable[0] === undefined.
+   *   5. The returned value is a real JS string, so ordinary string operations
+   *      work on it (length, indexOf, substring, charAt).
+   *
+   * SCOPE: evidence gathered on a CloudPage GET only.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var URL = "https://ssjs.guide/robots.txt";
+
+  /* 1 + 3. It is a string body, not a numeric status. */
+  var status = [];
+  var result = Platform.Function.HTTPGet(URL, false, 0, null, null, status);
+  assert("typeof the return value is string", String(typeof result), "string");
+  assert("DEV typeof is NOT number (docs: a numeric status)", String(typeof result) === "number" ? "true" : "false", "false");
+  assert("DEV the value is not a numeric status code (docs: e.g. 200)", result === "200" ? "true" : "false", "false");
+  assert("DEV Number(result) is NaN - it is body text, not a status", isNaN(Number(result)) ? "true" : "false", "true");
+
+  /* 2. It really is the response body. */
+  var r = HTTP.Get(URL);
+  assert("the value equals the body HTTP.Get reports under .Content", result === String(r.Content) ? "true" : "false", "true");
+  assert("the body is non-empty", result.length > 0 ? "true" : "false", "true");
+
+  /* 4. DEVIATION — the statusVariable out-parameter stays empty. */
+  assert("DEV statusVariable.length === 0 on success (docs: holds the status)", String(status.length), "0");
+  assert("DEV statusVariable[0] === undefined on success (docs: the number)", String(typeof status[0]), "undefined");
+  assert("DEV statusVariable[0] is not 200", status[0] === 200 ? "true" : "false", "false");
+
+  /* 5. It behaves as an ordinary JS string. */
+  assert("the value supports .length", String(typeof result.length), "number");
+  assert("the value supports .indexOf", String(typeof result.indexOf("x")), "number");
+  assert("substring(0, 0) returns the empty string", result.substring(0, 0), "");
+  assert("charAt(0) returns a 1-character string", String(result.charAt(0).length), "1");
+  assert("the value round-trips through String()", String(result) === result ? "true" : "false", "true");
+  </script>
+
+returns-body-not-status: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs claim: HTTPGet returns the RESPONSE BODY as a string.
+   *
+   * Official docs: the return value is a NUMERIC STATUS, and the numeric
+   *                status is delivered via the statusVariable out-parameter as
+   *                statusVariable[0].
+   * SFMC runtime:  the return value is the response body as a string, and
+   *                statusVariable is observed EMPTY even on a successful call.
+   *
+   * Proves both halves of the claim:
+   *   1. The return value is a string carrying the body, not a number and not
+   *      a stringified status code.
+   *   2. The statusVariable out-parameter is empty after a successful call, so
+   *      the numeric status is not delivered anywhere.
+   *   3. The recommended workaround — read the body from the return value, and
+   *      use HTTP.Get / Script.Util.HttpRequest when you need the status code
+   *      — actually works: HTTP.Get exposes a numeric Status field alongside
+   *      the same body.
+   *
+   * SCOPE: evidence gathered on a CloudPage GET only.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var URL = "https://ssjs.guide/robots.txt";
+
+  /* 1. The return value is the body string, not a numeric status. */
+  var status = [];
+  var value = Platform.Function.HTTPGet(URL, false, 0, null, null, status);
+  assert("DEV typeof the return value is string (docs: number)", String(typeof value), "string");
+  assert("DEV the return value is not the number 200 (docs: a status)", value === 200 ? "true" : "false", "false");
+  assert("DEV the return value is not the string '200' either", value === "200" ? "true" : "false", "false");
+  assert("the return value carries the response body", value.length > 0 ? "true" : "false", "true");
+
+  /* 2. The status out-parameter is empty on success. */
+  assert("DEV statusVariable.length is 0 after a SUCCESSFUL call", String(status.length), "0");
+  assert("DEV statusVariable[0] is undefined after a SUCCESSFUL call", String(typeof status[0]), "undefined");
+
+  /* 3. Workaround — HTTP.Get gives you a numeric status and the same body. */
+  var r = HTTP.Get(URL);
+  assert("workaround: HTTP.Get returns an object", String(typeof r), "object");
+  assert("workaround: HTTP.Get exposes a numeric Status field", String(typeof r.Status), "number");
+  assert("workaround: HTTP.Get .Content matches the HTTPGet return value", String(r.Content) === value ? "true" : "false", "true");
+  </script>

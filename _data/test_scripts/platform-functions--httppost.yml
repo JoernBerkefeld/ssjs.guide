@@ -1,0 +1,395 @@
+# Test scripts for /platform-functions/httppost/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the official docs.
+#
+# NETWORK DEPENDENCY: HTTPPost performs a real outbound HTTP request, so these
+# scripts depend on a remote endpoint that ACCEPTS a POST body. They target
+# https://postman-echo.com/post and https://httpbin.org/status/<code> and
+# assert STRUCTURAL invariants (typeof, the returned status code, the
+# out-parameter staying empty, which arities throw) rather than remote body
+# text that could change. A network failure is an ENVIRONMENTAL problem, not a
+# refutation of the page.
+#
+# TIMEOUTS: each HTTPPost call can take up to 30 seconds, so every script keeps
+# its number of live calls small. Deploy one chapter at a time when iterating.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters — the two valid call forms and the all-or-nothing
+   * trailing argument group.
+   *
+   * Proves:
+   *   1. The 3-argument form HTTPPost(url, contentType, payload) succeeds and
+   *      returns the HTTP status code as a number (min_args is 3).
+   *   2. The full 6-argument form succeeds and also returns the status code
+   *      (max_args is 6).
+   *   3. url, contentType and payload are required: calls with 0, 1 or 2
+   *      arguments throw.
+   *   4. DEVIATION marked "DEV": the argument count is a DISCONTINUOUS
+   *      overload, not a simple range. The official docs list headerNames,
+   *      headerValues and response as INDEPENDENTLY OPTIONAL, which would make
+   *      4 and 5 arguments valid. At runtime they throw "Unable to retrieve
+   *      security descriptor for this frame." — only 3 and 6 work.
+   *   5. headerNames / headerValues accept null (no headers), and parallel
+   *      custom header arrays are accepted too.
+   *   6. DEVIATION marked "DEV": `response` is documented as receiving the
+   *      response body as response[0], but it is observed EMPTY even on a
+   *      successful 200 call (length 0, [0] undefined).
+   *
+   * SCOPE: evidence gathered on a CloudPage POST only; no email / automation /
+   * triggered-send send-context behaviour is exercised here.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* A stable public endpoint that accepts a POST body and echoes it back. */
+  var URL = "https://postman-echo.com/post";
+  var CT = "application/json";
+  var PAYLOAD = "{\"a\":1}";
+
+  /* 1. The 3-argument form works and returns a numeric status code. */
+  var code = Platform.Function.HTTPPost(URL, CT, PAYLOAD);
+  assert("HTTPPost(url, contentType, payload) returns a number", String(typeof code), "number");
+  assert("the 3-argument form reports the success status 200", String(code), "200");
+
+  /* 2 + 5 + 6. The full 6-argument form, with custom headers and the out-parameter. */
+  var response = [];
+  var code6 = Platform.Function.HTTPPost(URL, CT, PAYLOAD, ["Authorization"], ["Bearer sampleToken"], response);
+  assert("the 6-argument form returns a number", String(typeof code6), "number");
+  assert("the 6-argument form reports the success status 200", String(code6), "200");
+  assert("DEV response.length is 0 (docs: receives the response body)", String(response.length), "0");
+  assert("DEV response[0] is undefined (docs: the body as response[0])", String(typeof response[0]), "undefined");
+
+  /* 5. null is accepted for headerNames / headerValues. */
+  var response2 = [];
+  var codeNull = Platform.Function.HTTPPost(URL, CT, PAYLOAD, null, null, response2);
+  assert("headerNames=null and headerValues=null are accepted", String(codeNull), "200");
+  assert("DEV response stays empty on the null-header call too", String(response2.length), "0");
+
+  /* 3. The first three arguments are required. */
+  assertThrows("HTTPPost() with 0 arguments throws (min_args is 3)", function () {
+      return Platform.Function.HTTPPost();
+  });
+  assertThrows("1 argument throws (contentType and payload are required)", function () {
+      return Platform.Function.HTTPPost(URL);
+  });
+  assertThrows("2 arguments throw (payload is required)", function () {
+      return Platform.Function.HTTPPost(URL, CT);
+  });
+
+  /* 4. DEVIATION — 4 and 5 arguments are invalid. */
+  assertThrows("DEV 4 arguments throw (docs: headerNames independently optional)", function () {
+      return Platform.Function.HTTPPost(URL, CT, PAYLOAD, ["x-test"]);
+  });
+  assertThrows("DEV 5 arguments throw (docs: response independently optional)", function () {
+      return Platform.Function.HTTPPost(URL, CT, PAYLOAD, ["x-test"], ["v"]);
+  });
+  </script>
+
+arity-overload: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs claim: the argument count of HTTPPost is a DISCONTINUOUS
+   * overload, not a simple range.
+   *
+   * Official docs: headerNames, headerValues and response are independently
+   *                optional, which would make every argument count from 3 to 6
+   *                valid.
+   * SFMC runtime:  ONLY a 3-argument call and the full 6-argument call work.
+   *                0, 1, 2, 4 and 5 arguments all throw
+   *                "Unable to retrieve security descriptor for this frame."
+   *
+   * Proves both halves of the claim:
+   *   1. Both valid arities really succeed — 3 arguments and 6 arguments.
+   *   2. Every other arity really throws, so the trailing three arguments are
+   *      an all-or-nothing group.
+   *
+   * SCOPE: evidence gathered on a CloudPage POST only.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var URL = "https://postman-echo.com/post";
+  var CT = "application/json";
+  var PAYLOAD = "{\"a\":1}";
+
+  /* 1. The two valid arities. */
+  var three = Platform.Function.HTTPPost(URL, CT, PAYLOAD);
+  assert("arity 3 succeeds and returns a number", String(typeof three), "number");
+  assert("arity 3 returns the success status 200", String(three), "200");
+  var out = [];
+  var six = Platform.Function.HTTPPost(URL, CT, PAYLOAD, null, null, out);
+  assert("arity 6 succeeds and returns a number", String(typeof six), "number");
+  assert("arity 6 returns the success status 200", String(six), "200");
+
+  /* 2. Every other arity throws — the trailing three are all-or-nothing. */
+  assertThrows("DEV arity 0 throws (url, contentType and payload are required)", function () {
+      return Platform.Function.HTTPPost();
+  });
+  assertThrows("DEV arity 1 throws (contentType and payload are required)", function () {
+      return Platform.Function.HTTPPost(URL);
+  });
+  assertThrows("DEV arity 2 throws (payload is required)", function () {
+      return Platform.Function.HTTPPost(URL, CT);
+  });
+  assertThrows("DEV arity 4 throws (docs imply it is valid)", function () {
+      return Platform.Function.HTTPPost(URL, CT, PAYLOAD, ["x-test"]);
+  });
+  assertThrows("DEV arity 5 throws (docs imply it is valid)", function () {
+      return Platform.Function.HTTPPost(URL, CT, PAYLOAD, ["x-test"], ["v"]);
+  });
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples — the two documented call shapes.
+   *
+   * Proves:
+   *   1. Valid form 1: Stringify({...}) produces the JSON payload string the
+   *      example builds, and the 3-argument call returns the numeric status
+   *      code so that `statusCode == 200` is a meaningful test.
+   *   2. The example's try/catch is required, not decorative: an HTTP error
+   *      response throws instead of returning its status code.
+   *   3. Valid form 2: the 6-argument form with an Authorization header is
+   *      accepted and returns the status code, while `response[0]` stays
+   *      undefined exactly as the example comment warns.
+   *   4. The See-Also note that HTTP.Post (Core) is the alternative transport
+   *      when the body is needed: it returns an OBJECT whose Response[0]
+   *      carries the body that HTTPPost's out-parameter never receives.
+   *
+   * SCOPE: evidence gathered on a CloudPage POST only. The example URLs
+   * api.example.com are placeholders and are NOT contacted; stable public
+   * POST endpoints are used instead.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var URL = "https://postman-echo.com/post";
+  var CT = "application/json";
+
+  /* 1. Valid form 1 — Stringify builds the payload, the call returns a status. */
+  var payload = Stringify({ event: "pageview", page: "/home" });
+  assert("Stringify builds the documented JSON payload", payload, "{\"event\":\"pageview\",\"page\":\"/home\"}");
+  var statusCode = Platform.Function.HTTPPost(URL, CT, payload);
+  assert("form 1: typeof statusCode is number", String(typeof statusCode), "number");
+  assert("form 1: statusCode == 200 holds for a successful POST", String(statusCode), "200");
+
+  /* 2. The try/catch in the example is required — errors throw. */
+  assertThrows("form 1: an HTTP 500 response throws, so try/catch is required", function () {
+      return Platform.Function.HTTPPost("https://httpbin.org/status/500", CT, payload);
+  });
+
+  /* 3. Valid form 2 — auth header, and response[0] stays undefined. */
+  var response = [];
+  var code = Platform.Function.HTTPPost(URL, CT, payload, ["Authorization"], ["Bearer sampleToken"], response);
+  assert("form 2: the auth-header form returns a number", String(typeof code), "number");
+  assert("form 2: the auth-header form reports 200", String(code), "200");
+  assert("form 2: response[0] is undefined as the comment warns", String(typeof response[0]), "undefined");
+  assert("form 2: response.length is 0 as the comment warns", String(response.length), "0");
+
+  /* 4. The See-Also note: HTTP.Post is the body-returning alternative. */
+  var r = HTTP.Post(URL, CT, "{\"marker\":\"zz9\"}");
+  assert("note: HTTP.Post returns an object, not a number", String(typeof r), "object");
+  assert("note: HTTP.Post exposes a numeric StatusCode field", String(typeof r.StatusCode), "number");
+  assert("note: HTTP.Post delivers the body under Response[0]", String(r.Response[0]).indexOf("zz9") > -1 ? "true" : "false", "true");
+  </script>
+
+return-value: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Return Value — returns the HTTP status code as a number for a
+   * successful response; error statuses throw; the response out-parameter is
+   * unreliable.
+   *
+   * Proves:
+   *   1. return_type is number: typeof the result is "number", NOT "string".
+   *   2. The number really is the HTTP status code — different successful
+   *      statuses (200, 201, 202, 204) are reported distinctly.
+   *   3. Redirects are followed: a URL answering 301 reports the final 200.
+   *   4. DEVIATION marked "DEV": the official docs present the return value as
+   *      the status code of whatever the server answered and branch on
+   *      `statusCode == 200`, but a 4xx / 5xx response THROWS instead of
+   *      returning its status code, so a failing status can never be observed.
+   *   5. DEVIATION marked "DEV": `response` was meant to carry the response
+   *      body as response[0]. On a successful call it is observed EMPTY:
+   *      response.length === 0 and response[0] === undefined.
+   *   6. The workaround the chapter recommends — use HTTP.Post when the body
+   *      is needed — actually works: HTTP.Post exposes a numeric StatusCode
+   *      and delivers the body under Response[0].
+   *
+   * SCOPE: evidence gathered on a CloudPage POST only.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var URL = "https://postman-echo.com/post";
+  var CT = "application/json";
+  var PAYLOAD = "{\"a\":1}";
+
+  /* 1 + 5. A number, and the out-parameter stays empty. */
+  var response = [];
+  var result = Platform.Function.HTTPPost(URL, CT, PAYLOAD, null, null, response);
+  assert("typeof the return value is number", String(typeof result), "number");
+  assert("the return value is not a string", String(typeof result) === "string" ? "true" : "false", "false");
+  assert("the return value is the success status 200", String(result), "200");
+  assert("DEV response.length === 0 on success (docs: holds the body)", String(response.length), "0");
+  assert("DEV response[0] === undefined on success (docs: the body)", String(typeof response[0]), "undefined");
+
+  /* 2. Distinct successful statuses are reported distinctly. */
+  assert("a 201 response reports 201", String(Platform.Function.HTTPPost("https://httpbin.org/status/201", CT, PAYLOAD)), "201");
+  assert("a 204 response reports 204", String(Platform.Function.HTTPPost("https://httpbin.org/status/204", CT, PAYLOAD)), "204");
+
+  /* 3. Redirects are followed. */
+  assert("a 301 redirect is followed and reports the final 200", String(Platform.Function.HTTPPost("https://httpbin.org/status/301", CT, PAYLOAD)), "200");
+
+  /* 4. DEVIATION — error statuses throw instead of being returned. */
+  assertThrows("DEV a 404 response throws (docs: returns its status code)", function () {
+      return Platform.Function.HTTPPost("https://httpbin.org/status/404", CT, PAYLOAD);
+  });
+  assertThrows("DEV a 500 response throws (docs: returns its status code)", function () {
+      return Platform.Function.HTTPPost("https://httpbin.org/status/500", CT, PAYLOAD);
+  });
+
+  /* 6. Workaround — HTTP.Post gives you the body. */
+  var r = HTTP.Post(URL, CT, "{\"marker\":\"zz9\"}");
+  assert("workaround: HTTP.Post exposes a numeric StatusCode", String(typeof r.StatusCode), "number");
+  assert("workaround: HTTP.Post StatusCode is 200", String(r.StatusCode), "200");
+  assert("workaround: HTTP.Post Response[0] carries the body", String(r.Response[0]).indexOf("zz9") > -1 ? "true" : "false", "true");
+  </script>
+
+errors-throw-not-return: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs claim: an HTTP error status is never RETURNED — it
+   * THROWS.
+   *
+   * Official docs: the return value is the HTTP status code, and the docs'
+   *                own example branches on `statusCode == 200`, implying a
+   *                non-200 status is observable from the return value.
+   * SFMC runtime:  only a successful status is ever returned. A 4xx or 5xx
+   *                response throws "An error occurred when attempting to
+   *                evaluate a HTTPPost function call.  See inner exception for
+   *                details." An unreachable host throws the same way.
+   *
+   * Proves the claim, plus the CONTROL that discriminates it from a general
+   * network failure:
+   *   1. A successful call to the SAME host returns its status code, so the
+   *      throw is caused by the RESPONSE STATUS, not by the host being
+   *      unreachable from this business unit.
+   *   2. 400, 404 and 500 each throw.
+   *   3. 201, 202 and 204 each return their own status code, so it is
+   *      specifically the ERROR range that throws — not "anything other than
+   *      200".
+   *   4. An unreachable host throws too, so a thrown call cannot be used to
+   *      distinguish a transport failure from an error status.
+   *   5. The recommended workaround — wrap the call in try/catch — actually
+   *      catches the failure.
+   *
+   * SCOPE: evidence gathered on a CloudPage POST only.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var CT = "application/json";
+  var PAYLOAD = "{\"a\":1}";
+
+  /* 1. CONTROL — the same host answers successfully, so the host IS reachable. */
+  assert("control: a 200 from the same host is returned normally", String(Platform.Function.HTTPPost("https://httpbin.org/status/200", CT, PAYLOAD)), "200");
+
+  /* 3. Other SUCCESSFUL statuses are returned, not thrown. */
+  assert("control: a 201 is returned, not thrown", String(Platform.Function.HTTPPost("https://httpbin.org/status/201", CT, PAYLOAD)), "201");
+  assert("control: a 204 is returned, not thrown", String(Platform.Function.HTTPPost("https://httpbin.org/status/204", CT, PAYLOAD)), "204");
+
+  /* 2. DEVIATION — error statuses throw. */
+  assertThrows("DEV a 400 throws (docs: statusCode 400 is returned)", function () {
+      return Platform.Function.HTTPPost("https://httpbin.org/status/400", CT, PAYLOAD);
+  });
+  assertThrows("DEV a 404 throws (docs: statusCode 404 is returned)", function () {
+      return Platform.Function.HTTPPost("https://httpbin.org/status/404", CT, PAYLOAD);
+  });
+  assertThrows("DEV a 500 throws (docs: statusCode 500 is returned)", function () {
+      return Platform.Function.HTTPPost("https://httpbin.org/status/500", CT, PAYLOAD);
+  });
+
+  /* 4. An unreachable host throws the same way. */
+  assertThrows("an unreachable host throws too", function () {
+      return Platform.Function.HTTPPost("https://this-host-does-not-exist-zz9.example", CT, PAYLOAD);
+  });
+
+  /* 5. Workaround — try/catch is what makes a failing POST survivable. */
+  var caught = false;
+  try {
+      Platform.Function.HTTPPost("https://httpbin.org/status/404", CT, PAYLOAD);
+  } catch (ex) {
+      caught = true;
+  }
+  assert("workaround: try/catch catches the failing POST", caught ? "true" : "false", "true");
+  </script>

@@ -1,0 +1,517 @@
+# Test scripts for /platform-functions/invokeupdate/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the official Salesforce docs.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage on the MCDEV_Training_QA business unit.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# SOAP OBJECT UNDER TEST: a throwaway DataExtension. The Update verb is a
+# MUTATING operation, so a status string alone is not accepted as proof here:
+# every script that claims an update happened creates its own data extension,
+# updates its Description, and READS THE NEW VALUE BACK through WSProxy, with
+# a PAIRED CONTROL (the identical update against a key that was never created)
+# so that a "success" string cannot be mistaken for an actual change. Each
+# script deletes what it created.
+#
+# READ-BACK NOTE: identical queries are cached within a single request, so the
+# before/after read-backs deliberately ask for DIFFERENT field lists — a
+# repeated identical query would return the stale pre-update value.
+
+differs-from-docs: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Callout: differs-from-docs — the return value, what the status slots
+   * actually carry, and the argument count.
+   *
+   * Proves:
+   *   1. DEVIATION — the call returns a STRING, not the object the official
+   *      docs promise. typeof is "string".
+   *   2. On success the returned string is the SOAP OverallStatus value "OK".
+   *   3. On failure the returned string is "Error" — proven with a PAIRED
+   *      CONTROL, the same call shape against a key that was never created.
+   *   4. status[0] receives the status MESSAGE as a string
+   *      ("Data Extension updated." on a successful update), NOT the literal
+   *      "OK".
+   *   5. status[1] receives a NUMBER — 0 on success and the real SOAP error
+   *      code (310007, the DataExtension not-found code) on failure. It is a
+   *      numeric request-id / error-code slot, never a RequestID GUID string:
+   *      it is not 36 characters long. This is the InvokePerform /
+   *      InvokeSchedule slot shape (/platform-functions/invokeperform/) and
+   *      NOT the InvokeExecute / InvokeRetrieve one, where status[1] is a
+   *      RequestID GUID string.
+   *   6. DEVIATION — there are no separate statusMsgVar / errorCodeVar
+   *      out-parameters. The valid signature is exactly THREE arguments
+   *      (apiObject, status, options); the documented 4-argument form throws.
+   *   7. PAIRED CONTROL on the status out parameter — three otherwise
+   *      IDENTICAL successful calls differing ONLY in the initial size of the
+   *      status array. A PRE-SIZED [0, 0, 0] IS populated in all three slots;
+   *      a [0, 0] receives the first two and leaves status[2] undefined; an
+   *      EMPTY [] is never grown and stays at length 0. The engine writes only
+   *      into slots the array ALREADY has. InvokeUpdate is therefore NOT inert
+   *      — it matches InvokeExecute / InvokePerform / InvokeRetrieve /
+   *      InvokeSchedule and NOT InvokeExtract
+   *      (/platform-functions/invokeextract/), where even a pre-sized array
+   *      stays untouched because the call throws before a response exists. An
+   *      observation that status.length stays 0 is MEANINGLESS unless the
+   *      array was pre-sized.
+   *   8. status[2] is a bonus third slot the docs never mention: a STRING
+   *      carrying the serialised SOAP result, including its StatusMessage.
+   *   9. A success guard must branch on the RETURN value, not on status[0]:
+   *      status[0] holds the status MESSAGE, so a status[0] !== "OK" guard
+   *      would fire on every SUCCESSFUL call. This is the InvokeCreate /
+   *      InvokePerform / InvokeSchedule defect shape, NOT the InvokeDelete /
+   *      InvokeRetrieve one where status[0] itself equals "OK". Never carry a
+   *      status-slot conclusion across verbs.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit). The page also
+   * lists automation availability; the automation context was not exercised.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var deKey = "ssjsguide_iu_dfd";
+  var neverCreated = "ssjsguide_iu_dfd_control";
+
+  /* Build a throwaway data extension definition (full, for the create). */
+  function newDataExtension(customerKey, description) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", customerKey);
+      Platform.Function.SetObjectProperty(de, "Name", customerKey);
+      Platform.Function.SetObjectProperty(de, "Description", description);
+      var field = Platform.Function.CreateObject("DataExtensionField");
+      Platform.Function.SetObjectProperty(field, "Name", "Email");
+      Platform.Function.SetObjectProperty(field, "FieldType", "Text");
+      Platform.Function.SetObjectProperty(field, "MaxLength", "100");
+      Platform.Function.SetObjectProperty(field, "IsPrimaryKey", "true");
+      Platform.Function.SetObjectProperty(field, "IsRequired", "true");
+      Platform.Function.AddObjectArrayItem(de, "Fields", field);
+      return de;
+  }
+  /* The update payload — key plus the one property being changed. */
+  function updateDataExtension(customerKey, description) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", customerKey);
+      Platform.Function.SetObjectProperty(de, "Description", description);
+      return de;
+  }
+
+  /* Setup — the object the update will change. */
+  var createStatus = [0, 0];
+  assert("setup: the throwaway data extension is created", String(Platform.Function.InvokeCreate(newDataExtension(deKey, "ssjsguide-before"), createStatus, null)), "OK");
+
+  /* 1 + 2 + 4 + 5 + 7 + 8. The SUCCESS path, PRE-SIZED [0, 0, 0]. */
+  var okStatus = [0, 0, 0];
+  var okResult = Platform.Function.InvokeUpdate(updateDataExtension(deKey, "ssjsguide-after"), okStatus, null);
+  assert("DEV typeof InvokeUpdate(...) is string (docs: the return value is an object)", String(typeof okResult), "string");
+  assert("DEV the return value is the OverallStatus string 'OK' (docs: a response object)", String(okResult), "OK");
+  assert("a PRE-SIZED status array keeps its length", okStatus.length, 3);
+  assert("status[0] receives the status MESSAGE, not the 'OK' value", String(okStatus[0]), "Data Extension updated.");
+  assert("status[0] is a string", String(typeof okStatus[0]), "string");
+  assert("DEV status[1] receives a NUMBER, not a RequestID GUID string", String(typeof okStatus[1]), "number");
+  assert("status[1] is the error code 0 on success", okStatus[1], 0);
+  assert("DEV no RequestID GUID is written anywhere - status[1] is not 36 characters long", String(okStatus[1]).length === 36 ? "true" : "false", "false");
+  assert("status[2] is a string the docs never mention", String(typeof okStatus[2]), "string");
+  assert("status[2] carries the serialised SOAP result including its StatusMessage", String(okStatus[2]).indexOf("\"StatusMessage\":\"Data Extension updated.\"") >= 0 ? "true" : "false", "true");
+
+  /* The update REALLY took effect — read the new value back. */
+  var api = new Script.Util.WSProxy();
+  var after = api.retrieve("DataExtension", ["CustomerKey", "Name", "Description"], {
+      Property: "CustomerKey", SimpleOperator: "equals", Value: deKey
+  });
+  assert("read-back: the retrieve succeeds", String(after.Status), "OK");
+  assert("read-back: exactly one data extension carries the key", after.Results.length, 1);
+  assert("read-back: the Description really changed - the update was not a status string only", String(after.Results[0].Description), "ssjsguide-after");
+
+  /* 3 + 5. PAIRED CONTROL — the identical update on a key never created. */
+  var errStatus = [0, 0, 0];
+  var errResult = Platform.Function.InvokeUpdate(updateDataExtension(neverCreated, "ssjsguide-after"), errStatus, null);
+  assert("DEV the failure return value is the OverallStatus string 'Error' (docs: a response object)", String(errResult), "Error");
+  assert("control: status[0] receives the not-found status message", String(errStatus[0]), "Adding a new Data Extension definition is not allowed when doing an update-only operation. ");
+  assert("control: status[1] carries the real SOAP error code for DataExtension not-found", errStatus[1], 310007);
+  assert("control: the failure status[1] is a number too", String(typeof errStatus[1]), "number");
+
+  /* 7. CONTROL — the SAME successful call with an EMPTY status array. */
+  var empty = [];
+  var emptyResult = Platform.Function.InvokeUpdate(updateDataExtension(deKey, "ssjsguide-empty"), empty, null);
+  assert("control: the identical call still returns 'OK'", String(emptyResult), "OK");
+  assert("control: an EMPTY status array is never grown - it stays at length 0", empty.length, 0);
+  assert("control: status[0] of an empty array is undefined", empty[0] === undefined ? "true" : "false", "true");
+  assert("control: status[1] of an empty array is undefined", empty[1] === undefined ? "true" : "false", "true");
+
+  /* 7. CONTROL — a 2-slot array receives the first two values only. */
+  var two = [0, 0];
+  var twoResult = Platform.Function.InvokeUpdate(updateDataExtension(deKey, "ssjsguide-two"), two, null);
+  assert("control: the identical call with a 2-slot array still returns 'OK'", String(twoResult), "OK");
+  assert("control: a 2-slot status array keeps its length", two.length, 2);
+  assert("control: a 2-slot status array still receives the status message", String(two[0]), "Data Extension updated.");
+  assert("control: a 2-slot status array still receives the numeric error code", two[1], 0);
+  assert("control: status[2] of a 2-slot array stays undefined", two[2] === undefined ? "true" : "false", "true");
+
+  /* 6. Exactly three arguments — the documented 4-argument form throws. */
+  assertThrows("arity 0 throws (the valid arity is 3)", function () {
+      return Platform.Function.InvokeUpdate();
+  });
+  assertThrows("arity 1 throws (the valid arity is 3)", function () {
+      return Platform.Function.InvokeUpdate(updateDataExtension(deKey, "a1"));
+  });
+  assertThrows("arity 2 throws - options is NOT optional (the valid arity is 3)", function () {
+      var s = [0, 0];
+      return Platform.Function.InvokeUpdate(updateDataExtension(deKey, "a2"), s);
+  });
+  assertThrows("DEV arity 4 throws - there are no statusMsgVar / errorCodeVar out-parameters (docs: a 5-argument form)", function () {
+      var s = [0, 0];
+      return Platform.Function.InvokeUpdate(updateDataExtension(deKey, "a4"), s, null, null);
+  });
+
+  /* 9. The guard must branch on the RETURN value, not on status[0]. */
+  assert("the correct guard result !== 'OK' does NOT fire on the success path", okResult !== "OK" ? "true" : "false", "false");
+  assert("a status[0] !== 'OK' guard WOULD wrongly fire here - status[0] is the status MESSAGE", okStatus[0] !== "OK" ? "true" : "false", "true");
+  assert("the correct guard result !== 'OK' DOES fire on the failure path", errResult !== "OK" ? "true" : "false", "true");
+
+  /* Cleanup — remove the throwaway data extension created above. */
+  var cleanObj = Platform.Function.CreateObject("DataExtension");
+  Platform.Function.SetObjectProperty(cleanObj, "CustomerKey", deKey);
+  var cleanStatus = [0, 0];
+  assert("cleanup: deleting the created data extension returns 'OK'", String(Platform.Function.InvokeDelete(cleanObj, cleanStatus, null)), "OK");
+  assert("cleanup: status[0] reports the deletion", String(cleanStatus[0]), "Data Extension deleted.");
+  </script>
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters —
+   * Platform.Function.InvokeUpdate(apiObject, status, options)
+   *
+   * Proves, one parameter at a time:
+   *   1. apiObject must be a SOAP object built with CreateObject and populated
+   *      with SetObjectProperty. Such an object is a .NET CLR host object
+   *      (typeof "clr"), and SetObjectProperty returns a genuine null, NOT
+   *      undefined.
+   *   2. A plain JavaScript object or a string as apiObject throws — the
+   *      parameter is not structurally typed, it must be an
+   *      ExactTarget.Integration.WSDL type.
+   *   3. A null apiObject is the one non-object that does NOT throw: no SOAP
+   *      call is made, the return value is a genuine null (not undefined, not
+   *      an OverallStatus string) and the status array is left untouched. This
+   *      mirrors the same finding on /platform-functions/invokecreate/,
+   *      /platform-functions/invokedelete/, /platform-functions/invokeexecute/,
+   *      /platform-functions/invokeextract/, /platform-functions/invokeperform/,
+   *      /platform-functions/invokeretrieve/, /platform-functions/invokeschedule/
+   *      and /platform-functions/invokeconfigure/.
+   *   4. status must be an array — a non-array throws — and it is a genuine
+   *      OUT parameter, mutated in place: the caller reads status[0] /
+   *      status[1] after the call returns. The page's own "e.g. [0, 0]"
+   *      wording is exact: the array must be PRE-SIZED, because only slots it
+   *      already has are ever written.
+   *   5. options is REQUIRED but may be null — the page's "can contain a null
+   *      value" wording. Omitting it entirely (arity 2) throws, which is what
+   *      makes "required, may be null" different from "optional".
+   *   6. ARITY — 3 is the ONLY valid arity. 0, 1, 2 and 4 all throw, so there
+   *      is no reachable optional argument in either direction. Never assume
+   *      an argument is reachable because a sibling verb has one:
+   *      /platform-functions/invokeschedule/ takes 4 or 5 and
+   *      /platform-functions/invokeretrieve/ only 2.
+   *   7. The member exists: a successful 3-argument invocation is the only
+   *      reliable existence proof for a Platform.Function member (typeof
+   *      reports "clrmethodinfo" for every name, real or not, so it proves
+   *      nothing and is deliberately NOT asserted here).
+   *   8. The status message and error code are OBJECT-TYPE-SPECIFIC: a
+   *      DataExtension that cannot be updated answers 310007, while a
+   *      Subscriber that cannot be updated answers 12001 with a different
+   *      message. Never hard-code one type's pair for another.
+   *
+   * NOT ASSERTED: the values set on the apiObject cannot be read back from the
+   * object itself — it is a CLR host object and the engine blocks all
+   * introspection of it (see /platform-functions/createobject/). They are
+   * proven indirectly by the API's own response and by the WSProxy read-back.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var deKey = "ssjsguide_iu_params";
+
+  function newDataExtension(customerKey, description) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", customerKey);
+      Platform.Function.SetObjectProperty(de, "Name", customerKey);
+      Platform.Function.SetObjectProperty(de, "Description", description);
+      var field = Platform.Function.CreateObject("DataExtensionField");
+      Platform.Function.SetObjectProperty(field, "Name", "Email");
+      Platform.Function.SetObjectProperty(field, "FieldType", "Text");
+      Platform.Function.SetObjectProperty(field, "MaxLength", "100");
+      Platform.Function.SetObjectProperty(field, "IsPrimaryKey", "true");
+      Platform.Function.SetObjectProperty(field, "IsRequired", "true");
+      Platform.Function.AddObjectArrayItem(de, "Fields", field);
+      return de;
+  }
+  function updateDataExtension(customerKey, description) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", customerKey);
+      Platform.Function.SetObjectProperty(de, "Description", description);
+      return de;
+  }
+
+  /* 1. apiObject is a CreateObject SOAP object — a CLR host object. */
+  assert("typeof CreateObject('DataExtension') is clr", String(typeof Platform.Function.CreateObject("DataExtension")), "clr");
+  var setResult = Platform.Function.SetObjectProperty(Platform.Function.CreateObject("DataExtension"), "CustomerKey", deKey);
+  assert("SetObjectProperty(apiObject, 'CustomerKey', ...) returns a genuine null", setResult === null ? "true" : "false", "true");
+  assert("SetObjectProperty does NOT return undefined", setResult === undefined ? "true" : "false", "false");
+  var addResult = Platform.Function.AddObjectArrayItem(Platform.Function.CreateObject("DataExtension"), "Fields", Platform.Function.CreateObject("DataExtensionField"));
+  assert("AddObjectArrayItem returns a genuine null too", addResult === null ? "true" : "false", "true");
+
+  /* Setup — the object the update will change. */
+  var createStatus = [0, 0];
+  assert("setup: the throwaway data extension is created", String(Platform.Function.InvokeCreate(newDataExtension(deKey, "ssjsguide-p-before"), createStatus, null)), "OK");
+
+  /* 4 + 5 + 7. The documented 3-argument call with options = null. */
+  var status = [0, 0];
+  var result = Platform.Function.InvokeUpdate(updateDataExtension(deKey, "ssjsguide-p-after"), status, null);
+  assert("InvokeUpdate(apiObject, status, null) returns 'OK'", String(result), "OK");
+  assert("status is an OUT parameter: status[0] was written by the call", String(status[0]), "Data Extension updated.");
+  assert("status is an OUT parameter: status[1] was written by the call", status[1], 0);
+  assert("the pre-sized [0, 0] status array keeps its length", status.length, 2);
+
+  /* The mutation really happened. */
+  var api = new Script.Util.WSProxy();
+  var after = api.retrieve("DataExtension", ["CustomerKey", "Description"], {
+      Property: "CustomerKey", SimpleOperator: "equals", Value: deKey
+  });
+  assert("read-back: the retrieve succeeds", String(after.Status), "OK");
+  assert("read-back: the Description really changed", String(after.Results[0].Description), "ssjsguide-p-after");
+
+  /* 2. apiObject must be a real SOAP object. */
+  assertThrows("a plain JavaScript object as apiObject throws", function () {
+      var s = [0, 0];
+      return Platform.Function.InvokeUpdate({}, s, null);
+  });
+  assertThrows("a string as apiObject throws", function () {
+      var s = [0, 0];
+      return Platform.Function.InvokeUpdate("DataExtension", s, null);
+  });
+
+  /* 3. null apiObject: no SOAP call is made — genuine null back, status untouched. */
+  var nullStatus = [0, 0];
+  var nullResult = Platform.Function.InvokeUpdate(null, nullStatus, null);
+  assert("a null apiObject does NOT throw", nullResult === null ? "true" : "false", "true");
+  assert("a null apiObject returns a genuine null, not the OverallStatus string", String(typeof nullResult), "object");
+  assert("a null apiObject is not undefined", nullResult === undefined ? "true" : "false", "false");
+  assert("a null apiObject leaves status[0] untouched (no SOAP call was made)", nullStatus[0], 0);
+  assert("a null apiObject leaves status[1] untouched (no SOAP call was made)", nullStatus[1], 0);
+
+  /* 4. status must be an array. */
+  assertThrows("a non-array status throws", function () {
+      return Platform.Function.InvokeUpdate(updateDataExtension(deKey, "ns"), "notanarray", null);
+  });
+
+  /* 5 + 6. Arity outside 3 throws. */
+  assertThrows("arity 0 throws (the valid arity is 3)", function () {
+      return Platform.Function.InvokeUpdate();
+  });
+  assertThrows("arity 1 throws (the valid arity is 3)", function () {
+      return Platform.Function.InvokeUpdate(updateDataExtension(deKey, "p1"));
+  });
+  assertThrows("omitting options (arity 2) throws - options is required, not optional", function () {
+      var s = [0, 0];
+      return Platform.Function.InvokeUpdate(updateDataExtension(deKey, "p2"), s);
+  });
+  assertThrows("arity 4 throws - there is no fourth argument", function () {
+      var s = [0, 0];
+      return Platform.Function.InvokeUpdate(updateDataExtension(deKey, "p4"), s, null, null);
+  });
+
+  /* 8. Status messages and error codes are object-type-specific. */
+  var deMissStatus = [0, 0];
+  var deMiss = Platform.Function.InvokeUpdate(updateDataExtension("ssjsguide_iu_p_nosuch", "x"), deMissStatus, null);
+  assert("a DataExtension that cannot be updated returns 'Error'", String(deMiss), "Error");
+  assert("the DataExtension failure message names the update-only restriction", String(deMissStatus[0]), "Adding a new Data Extension definition is not allowed when doing an update-only operation. ");
+  assert("the DataExtension failure code is 310007", deMissStatus[1], 310007);
+
+  var subMissObj = Platform.Function.CreateObject("Subscriber");
+  Platform.Function.SetObjectProperty(subMissObj, "SubscriberKey", "ssjsguide_iu_p_nosub");
+  Platform.Function.SetObjectProperty(subMissObj, "EmailAddress", "ssjsguide_iu_p@example.com");
+  var subMissStatus = [0, 0];
+  var subMiss = Platform.Function.InvokeUpdate(subMissObj, subMissStatus, null);
+  assert("a Subscriber that cannot be updated returns 'Error' too", String(subMiss), "Error");
+  assert("the Subscriber failure message is DIFFERENT from the DataExtension one", String(subMissStatus[0]), "The subscriber was not found.");
+  assert("the Subscriber failure code is 12001, NOT the DataExtension 310007", subMissStatus[1], 12001);
+
+  /* Cleanup — remove the throwaway data extension created above. */
+  var cleanObj = Platform.Function.CreateObject("DataExtension");
+  Platform.Function.SetObjectProperty(cleanObj, "CustomerKey", deKey);
+  var cleanStatus = [0, 0];
+  assert("cleanup: deleting the created data extension returns 'OK'", String(Platform.Function.InvokeDelete(cleanObj, cleanStatus, null)), "OK");
+  assert("cleanup: status[0] reports the deletion", String(cleanStatus[0]), "Data Extension deleted.");
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples — the CreateObject / SetObjectProperty / InvokeUpdate
+   * build-and-update pattern, end to end.
+   *
+   * The Update verb MUTATES, so this script does not settle for a status
+   * string: it creates its own throwaway data extension, updates it, and
+   * READS THE NEW VALUE BACK, with a PAIRED CONTROL so that "OK" cannot be
+   * mistaken for an actual change. It deletes what it created.
+   *
+   * Proves:
+   *   1. The example's shape works: an apiObject built with CreateObject +
+   *      SetObjectProperty, passed to InvokeUpdate with a [0, 0] status array
+   *      and null options, returns "OK".
+   *   2. The two variables the example reads are exactly the two array slots:
+   *      status = StatusAndRequestID[0] is the message string, requestID =
+   *      StatusAndRequestID[1] the numeric code (0 on success).
+   *   3. status[0] is the MESSAGE, never the literal "OK" — the value that
+   *      equals "OK" is the RETURN VALUE. A status[0] !== "OK" guard would
+   *      therefore fire on every successful update. Same defect shape as the
+   *      one corrected on /platform-functions/invokecreate/,
+   *      /platform-functions/invokeperform/ and
+   *      /platform-functions/invokeschedule/ — and the OPPOSITE of
+   *      /platform-functions/invokedelete/ and
+   *      /platform-functions/invokeretrieve/, where status[0] itself equals
+   *      "OK". Never carry a guard shape across verbs.
+   *   4. ROUND-TRIP PROOF that the update really took effect: the Description
+   *      read back through WSProxy after the call is the NEW value, and it was
+   *      the OLD value before it. The two read-backs deliberately ask for
+   *      DIFFERENT field lists, because an identical repeated query is served
+   *      from the request cache and would return the stale pre-update value.
+   *   5. DISCRIMINATING PAIRED CONTROL: the identical update against a
+   *      CustomerKey that was never created answers "Error" with SOAP error
+   *      code 310007. An update that had silently done nothing could not
+   *      distinguish the two.
+   *   6. The example's Subscriber shape runs as written and reaches the API —
+   *      a Subscriber that does not exist on the business unit is answered
+   *      with "The subscriber was not found." and error code 12001, a
+   *      type-specific pair distinct from the DataExtension 310007 one. That
+   *      is the API rejecting the payload, not the function failing.
+   *   7. The example leaves nothing behind: after the round-trip delete, a
+   *      second update of the same key reports the not-found error.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var deKey = "ssjsguide_iu_example";
+  var neverCreated = "ssjsguide_iu_example_control";
+  var api = new Script.Util.WSProxy();
+
+  /* Setup — a throwaway data extension carrying a known Description. */
+  var de = Platform.Function.CreateObject("DataExtension");
+  assert("typeof CreateObject('DataExtension') is clr", String(typeof de), "clr");
+  assert("SetObjectProperty(de, 'CustomerKey', ...) returns a genuine null", Platform.Function.SetObjectProperty(de, "CustomerKey", deKey) === null ? "true" : "false", "true");
+  Platform.Function.SetObjectProperty(de, "Name", deKey);
+  Platform.Function.SetObjectProperty(de, "Description", "ssjsguide-example-before");
+  var field = Platform.Function.CreateObject("DataExtensionField");
+  Platform.Function.SetObjectProperty(field, "Name", "Email");
+  Platform.Function.SetObjectProperty(field, "FieldType", "Text");
+  Platform.Function.SetObjectProperty(field, "MaxLength", "100");
+  Platform.Function.SetObjectProperty(field, "IsPrimaryKey", "true");
+  Platform.Function.SetObjectProperty(field, "IsRequired", "true");
+  Platform.Function.AddObjectArrayItem(de, "Fields", field);
+  var createStatus = [0, 0];
+  assert("setup: the throwaway data extension is created", String(Platform.Function.InvokeCreate(de, createStatus, null)), "OK");
+
+  /* 4. BEFORE — read the old value once, with its own field list. */
+  var before = api.retrieve("DataExtension", ["CustomerKey", "Description"], {
+      Property: "CustomerKey", SimpleOperator: "equals", Value: deKey
+  });
+  assert("read-back before: the retrieve succeeds", String(before.Status), "OK");
+  assert("read-back before: the Description is the OLD value", String(before.Results[0].Description), "ssjsguide-example-before");
+
+  /* 1 + 2. The page's example shape, applied to the object just created. */
+  var target = Platform.Function.CreateObject("DataExtension");
+  Platform.Function.SetObjectProperty(target, "CustomerKey", deKey);
+  Platform.Function.SetObjectProperty(target, "Description", "ssjsguide-example-after");
+  var StatusAndRequestID = [0, 0];
+  var result = Platform.Function.InvokeUpdate(target, StatusAndRequestID, null);
+  assert("InvokeUpdate(target, StatusAndRequestID, null) returns 'OK'", String(result), "OK");
+  var status = StatusAndRequestID[0];
+  var requestID = StatusAndRequestID[1];
+  assert("status = StatusAndRequestID[0] is the message string", String(status), "Data Extension updated.");
+  assert("requestID = StatusAndRequestID[1] is the numeric code 0 on success", requestID, 0);
+
+  /* 3. The value that equals "OK" is the return value, not status[0]. */
+  assert("a status !== 'OK' guard WOULD fire on a SUCCESSFUL update - status[0] is the MESSAGE", status !== "OK" ? "true" : "false", "true");
+  assert("the value that equals 'OK' is the return value, not status[0]", result === "OK" ? "true" : "false", "true");
+
+  /* 4. AFTER — read the new value back, with a DIFFERENT field list so the
+     query is not served from the request cache. */
+  var after = api.retrieve("DataExtension", ["CustomerKey", "Name", "Description"], {
+      Property: "CustomerKey", SimpleOperator: "equals", Value: deKey
+  });
+  assert("read-back after: the retrieve succeeds", String(after.Status), "OK");
+  assert("read-back after: exactly one data extension carries the key", after.Results.length, 1);
+  assert("read-back after: the Description really changed - the update was not a status string only", String(after.Results[0].Description), "ssjsguide-example-after");
+
+  /* 5. PAIRED CONTROL — the identical update on a key never created. */
+  var controlObj = Platform.Function.CreateObject("DataExtension");
+  Platform.Function.SetObjectProperty(controlObj, "CustomerKey", neverCreated);
+  Platform.Function.SetObjectProperty(controlObj, "Description", "ssjsguide-example-after");
+  var controlStatus = [0, 0];
+  assert("control: updating a data extension that was never created returns 'Error'", String(Platform.Function.InvokeUpdate(controlObj, controlStatus, null)), "Error");
+  assert("control: status[0] reports the update-only restriction", String(controlStatus[0]), "Adding a new Data Extension definition is not allowed when doing an update-only operation. ");
+  assert("control: status[1] carries SOAP error code 310007", controlStatus[1], 310007);
+
+  /* 6. The page's Subscriber example shape reaches the API. */
+  var sub = Platform.Function.CreateObject("Subscriber");
+  assert("example line 1: CreateObject('Subscriber') yields a CLR host object", String(typeof sub), "clr");
+  assert("example line 2: SetObjectProperty(sub, 'EmailAddress', ...) returns a genuine null", Platform.Function.SetObjectProperty(sub, "EmailAddress", "ssjsguide_iu_updated@example.com") === null ? "true" : "false", "true");
+  assert("example line 3: SetObjectProperty(sub, 'SubscriberKey', ...) returns a genuine null", Platform.Function.SetObjectProperty(sub, "SubscriberKey", "ssjsguide_iu_no_such_sub") === null ? "true" : "false", "true");
+  var subStatus = [0, 0];
+  var subResult = Platform.Function.InvokeUpdate(sub, subStatus, null);
+  assert("example line 4: a Subscriber that does not exist is answered by the API, not by a throw", String(subResult), "Error");
+  assert("the Subscriber not-found message is type-specific", String(subStatus[0]), "The subscriber was not found.");
+  assert("the Subscriber not-found code is 12001, NOT the DataExtension 310007", subStatus[1], 12001);
+
+  /* 7. Cleanup, and proof that it is complete. */
+  var cleanObj = Platform.Function.CreateObject("DataExtension");
+  Platform.Function.SetObjectProperty(cleanObj, "CustomerKey", deKey);
+  var cleanStatus = [0, 0];
+  assert("cleanup: deleting the created data extension returns 'OK'", String(Platform.Function.InvokeDelete(cleanObj, cleanStatus, null)), "OK");
+  assert("cleanup: status[0] reports the deletion", String(cleanStatus[0]), "Data Extension deleted.");
+  var goneObj = Platform.Function.CreateObject("DataExtension");
+  Platform.Function.SetObjectProperty(goneObj, "CustomerKey", deKey);
+  Platform.Function.SetObjectProperty(goneObj, "Description", "ssjsguide-example-gone");
+  var goneStatus = [0, 0];
+  assert("cleanup verified: updating it again now reports 'Error'", String(Platform.Function.InvokeUpdate(goneObj, goneStatus, null)), "Error");
+  assert("cleanup verified: status[1] carries SOAP error code 310007", goneStatus[1], 310007);
+  </script>

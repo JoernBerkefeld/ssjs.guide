@@ -1,0 +1,351 @@
+# Test scripts for /platform-functions/isphonenumber/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every arity boundary.
+#
+# SCOPE: IsPhoneNumber is a PURE, DETERMINISTIC PREDICATE over the string it
+# is handed — it performs a North American Numbering Plan (NANP) format check
+# only and never contacts a carrier or number-portability service. Every claim
+# below is therefore fully observable from a CloudPage GET.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# BOOLEAN RULE: this function returns a boolean, and String(<boolean expr>) is
+# mis-evaluated by Jint. Every boolean is turned into a literal with an
+# explicit ternary at the call site instead.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters — Platform.Function.IsPhoneNumber(value)
+   *
+   * Proves:
+   *   1. The member exists and is invocable with exactly 1 argument (a
+   *      successful call is the only reliable existence proof for a
+   *      Platform.Function member).
+   *   2. return_type is boolean: typeof the result is "boolean", and the
+   *      result is strictly true / strictly false — never null, never
+   *      undefined, never a string.
+   *   3. value is REQUIRED: the 0-argument form throws.
+   *   4. max_args is 1: the 2-argument and 3-argument forms throw. There is
+   *      no reachable optional second argument.
+   *   5. Like IsEmailAddress and UNLIKE IsCHTMLBrowser, an empty string, null
+   *      and undefined do NOT throw — they are answered false, which is what
+   *      makes the "if (!IsPhoneNumber(x))" guard in the page's examples safe
+   *      for absent input.
+   *   6. Non-string primitives are coerced and answered on their digits
+   *      rather than throwing; an array argument throws, even when it holds a
+   *      valid number.
+   *   7. TYPE-ACCEPTANCE (Number↔string): value accepts both a numeric
+   *      string and a real number with the SAME meaningful result. A valid
+   *      NANP digit sequence as "2125551234" and as 2125551234 both return
+   *      true; a too-short digit sequence as "1234567" and as 1234567 both
+   *      return false. Therefore the documented type is string | number.
+   *   8. The bare-name Core Library form IsPhoneNumber(value) DOES exist
+   *      after Platform.Load and behaves identically to the qualified form.
+   *   9. The result stringifies to the lowercase JavaScript boolean literal
+   *      "true" / "false".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1 + 2. The 1-argument call works and answers a genuine boolean. */
+  var valid = Platform.Function.IsPhoneNumber("2125551234");
+  assert("typeof the result is boolean", String(typeof valid), "boolean");
+  assert("a valid NANP number is strictly true", valid === true ? "true" : "false", "true");
+  assert("the result is not null", valid === null ? "true" : "false", "false");
+  assert("the result is not undefined", valid === undefined ? "true" : "false", "false");
+  assert("the result is not the string 'true'", valid === "true" ? "true" : "false", "false");
+
+  var invalid = Platform.Function.IsPhoneNumber("not-a-phone");
+  assert("typeof the negative result is boolean too", String(typeof invalid), "boolean");
+  assert("a malformed value is strictly false", invalid === false ? "true" : "false", "true");
+  assert("the negative result is not undefined", invalid === undefined ? "true" : "false", "false");
+
+  /* 3. value is required. */
+  assertThrows("arity 0 throws (value is required)", function () {
+      return Platform.Function.IsPhoneNumber();
+  });
+
+  /* 4. max_args is 1 — no optional second argument is reachable. */
+  assertThrows("arity 2 throws (max_args is 1)", function () {
+      return Platform.Function.IsPhoneNumber("2125551234", "x");
+  });
+  assertThrows("arity 3 throws (max_args is 1)", function () {
+      return Platform.Function.IsPhoneNumber("2125551234", "x", "y");
+  });
+
+  /* 5. Empty / null / undefined are answered false, NOT thrown. */
+  assert("an empty string is answered false, not thrown", Platform.Function.IsPhoneNumber("") ? "true" : "false", "false");
+  assert("a whitespace-only string is answered false", Platform.Function.IsPhoneNumber("   ") ? "true" : "false", "false");
+  assert("a null argument is answered false, not thrown", Platform.Function.IsPhoneNumber(null) ? "true" : "false", "false");
+  assert("an undefined argument is answered false, not thrown", Platform.Function.IsPhoneNumber(undefined) ? "true" : "false", "false");
+  assert("the empty-string result is a genuine boolean, not null", String(typeof Platform.Function.IsPhoneNumber("")), "boolean");
+
+  /* 6. Non-string primitives are coerced; an array throws. */
+  assert("a numeric argument whose digits are a valid NANP number is coerced and answered true", Platform.Function.IsPhoneNumber(2125551234) ? "true" : "false", "true");
+  assert("a numeric argument with too few digits is coerced and answered false", Platform.Function.IsPhoneNumber(1234567) ? "true" : "false", "false");
+  assert("a boolean argument is coerced and answered false", Platform.Function.IsPhoneNumber(true) ? "true" : "false", "false");
+  assertThrows("an empty array argument throws", function () {
+      return Platform.Function.IsPhoneNumber([]);
+  });
+  assertThrows("an array holding a valid number throws rather than unwrapping it", function () {
+      return Platform.Function.IsPhoneNumber(["2125551234"]);
+  });
+
+  /* 7. TYPE-ACCEPTANCE — string and number counterparts share the same result. */
+  var strValid = Platform.Function.IsPhoneNumber("2125551234");
+  var numValid = Platform.Function.IsPhoneNumber(2125551234);
+  assert("documented-type string '2125551234' is true", strValid === true ? "true" : "false", "true");
+  assert("counterpart number 2125551234 is true", numValid === true ? "true" : "false", "true");
+  assert("string and number valid forms share the same boolean result", (strValid === numValid) ? "true" : "false", "true");
+  var strShort = Platform.Function.IsPhoneNumber("1234567");
+  var numShort = Platform.Function.IsPhoneNumber(1234567);
+  assert("documented-type string '1234567' is false", strShort === false ? "true" : "false", "true");
+  assert("counterpart number 1234567 is false", numShort === false ? "true" : "false", "true");
+  assert("string and number short forms share the same boolean result", (strShort === numShort) ? "true" : "false", "true");
+
+  /* 8. The bare-name Core Library form exists after Platform.Load. */
+  assert("typeof the bare-name IsPhoneNumber is function after Platform.Load", String(typeof IsPhoneNumber), "function");
+  assert("the bare-name form answers true for a valid NANP number", IsPhoneNumber("2125551234") ? "true" : "false", "true");
+  assert("the bare-name form answers false for a non-NANP number", IsPhoneNumber("4917612345678") ? "true" : "false", "false");
+
+  /* 9. Stringification. */
+  assert("the positive result stringifies to lowercase 'true'", "" + Platform.Function.IsPhoneNumber("2125551234"), "true");
+  assert("the negative result stringifies to lowercase 'false'", "" + Platform.Function.IsPhoneNumber("nope"), "false");
+  </script>
+
+return-value: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Return value — the NANP format rule and the differs-from-docs
+   * callout.
+   *
+   * Proves:
+   *   1. The core NANP shape: exactly 10 digits pass, and 10 digits preceded
+   *      by the country code 1 (11 digits) also pass.
+   *   2. Every other digit length fails — 7, 8, 9, 11-without-a-leading-1,
+   *      12, 13, 14, 15 and 20 digits are all false. The rule is a NANP
+   *      shape check, not "at least N digits".
+   *   3. The AREA CODE must start with 2-9: a 10-digit value beginning 0 or 1
+   *      is false, and the same holds for the area code that follows a
+   *      leading country-code 1.
+   *   4. The EXCHANGE (central-office) code must start with 2-9: 212-055-...
+   *      and 212-155-... style values are false.
+   *   5. PUNCTUATION IS IGNORED, not rejected: spaces, dots, hyphens and
+   *      parentheses in any combination still answer true for a valid NANP
+   *      number, as does leading or trailing whitespace.
+   *   6. Other characters ARE rejected: a "+" prefix, "/" and "_"
+   *      separators, letters, and a trailing extension all answer false —
+   *      even when the underlying digits are a valid NANP number. This is why
+   *      "+12125551234" is false while "1-212-555-1234" is true.
+   *   7. Non-NANP international numbers are false regardless of how they are
+   *      written — a German mobile, a UK landline and a South Korean number
+   *      all fail, which is the point of the differs-from-docs callout.
+   *   8. DEV — the SSJS reference page documents only generic "valid phone
+   *      number" validation and never names the NANP, so a reader following
+   *      it would expect international numbers to pass. They do not. The
+   *      AMPscript reference for the same function documents the NANP rule
+   *      correctly, and the runtime matches THAT page verbatim: every row of
+   *      its published result table is asserted below.
+   *   9. DEV — the AMPscript reference lists a known issue claiming
+   *      IsPhoneNumber wrongly returns true for some numbers beginning 922 or
+   *      926. Those area codes do answer true, but so does the neighbouring
+   *      921, so this is simply the documented area-code rule (first digit
+   *      2-9) rather than an observable anomaly. Asserted as observed
+   *      behaviour.
+   *
+   * NOT ASSERTED (deliberate non-assertion): whether a given NANP area code
+   * is actually ASSIGNED to a carrier. The function performs a shape check
+   * only — reserved N11-style codes such as 211 and unassigned ranges such as
+   * 200 both answer true — so "valid" here never means "reachable".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* 1. The accepted NANP shape. */
+  assert("a plain 10-digit NANP number is true", Platform.Function.IsPhoneNumber("2125551234") ? "true" : "false", "true");
+  assert("10 digits preceded by the country code 1 is true", Platform.Function.IsPhoneNumber("12125551234") ? "true" : "false", "true");
+
+  /* 2. Every other digit length fails. */
+  assert("7 digits is false", Platform.Function.IsPhoneNumber("2345678") ? "true" : "false", "false");
+  assert("8 digits is false", Platform.Function.IsPhoneNumber("23456789") ? "true" : "false", "false");
+  assert("9 digits is false", Platform.Function.IsPhoneNumber("234567890") ? "true" : "false", "false");
+  assert("11 digits NOT starting with 1 is false", Platform.Function.IsPhoneNumber("23456789012") ? "true" : "false", "false");
+  assert("12 digits is false", Platform.Function.IsPhoneNumber("234567890123") ? "true" : "false", "false");
+  assert("13 digits is false", Platform.Function.IsPhoneNumber("2345678901234") ? "true" : "false", "false");
+  assert("15 digits is false", Platform.Function.IsPhoneNumber("123456789012345") ? "true" : "false", "false");
+  assert("20 digits is false", Platform.Function.IsPhoneNumber("12345678901234567890") ? "true" : "false", "false");
+
+  /* 3. Area code must start 2-9. */
+  assert("a 10-digit value with an area code starting 0 is false", Platform.Function.IsPhoneNumber("0812345678") ? "true" : "false", "false");
+  assert("a 10-digit value with an area code starting 1 is false", Platform.Function.IsPhoneNumber("1812345678") ? "true" : "false", "false");
+  assert("a 10-digit value with an area code starting 2 is true", Platform.Function.IsPhoneNumber("2812345678") ? "true" : "false", "true");
+  assert("after the country-code 1, an area code starting 0 is false", Platform.Function.IsPhoneNumber("10812345678") ? "true" : "false", "false");
+  assert("after the country-code 1, an area code starting 1 is false", Platform.Function.IsPhoneNumber("11812345678") ? "true" : "false", "false");
+  assert("after the country-code 1, an area code starting 2 is true", Platform.Function.IsPhoneNumber("12812345678") ? "true" : "false", "true");
+  assert("an area code starting 9 is true", Platform.Function.IsPhoneNumber("9995551234") ? "true" : "false", "true");
+
+  /* 4. Exchange code must start 2-9. */
+  assert("an exchange code starting 0 is false", Platform.Function.IsPhoneNumber("17810234567") ? "true" : "false", "false");
+  assert("an exchange code starting 1 is false", Platform.Function.IsPhoneNumber("17811234567") ? "true" : "false", "false");
+  assert("an exchange code starting 2 is true", Platform.Function.IsPhoneNumber("17812345678") ? "true" : "false", "true");
+  assert("the exchange rule also rejects 555-style values written as 5551234567", Platform.Function.IsPhoneNumber("5551234567") ? "true" : "false", "false");
+
+  /* 5. Punctuation is IGNORED, not rejected. */
+  assert("spaces are ignored", Platform.Function.IsPhoneNumber("212 555 1234") ? "true" : "false", "true");
+  assert("dots are ignored", Platform.Function.IsPhoneNumber("212.555.1234") ? "true" : "false", "true");
+  assert("hyphens are ignored", Platform.Function.IsPhoneNumber("212-555-1234") ? "true" : "false", "true");
+  assert("parentheses plus a hyphen are ignored", Platform.Function.IsPhoneNumber("(212) 555-1234") ? "true" : "false", "true");
+  assert("parentheses with no separator are ignored", Platform.Function.IsPhoneNumber("(212)5551234") ? "true" : "false", "true");
+  assert("a leading country-code 1 with spaces is true", Platform.Function.IsPhoneNumber("1 212 555 1234") ? "true" : "false", "true");
+  assert("a leading country-code 1 with hyphens is true", Platform.Function.IsPhoneNumber("1-212-555-1234") ? "true" : "false", "true");
+  assert("a leading space is tolerated", Platform.Function.IsPhoneNumber(" 212 555 1234") ? "true" : "false", "true");
+  assert("a trailing space is tolerated", Platform.Function.IsPhoneNumber("212 555 1234 ") ? "true" : "false", "true");
+
+  /* 6. Every other character is rejected. */
+  assert("a + prefix is false even though the digits are a valid NANP number", Platform.Function.IsPhoneNumber("+12125551234") ? "true" : "false", "false");
+  assert("a / separator is false", Platform.Function.IsPhoneNumber("212/555/1234") ? "true" : "false", "false");
+  assert("an _ separator is false", Platform.Function.IsPhoneNumber("212_555_1234") ? "true" : "false", "false");
+  assert("a trailing letter is false", Platform.Function.IsPhoneNumber("212555123a") ? "true" : "false", "false");
+  assert("letters only are false", Platform.Function.IsPhoneNumber("abcdefghij") ? "true" : "false", "false");
+  assert("mixed digits and letters are false", Platform.Function.IsPhoneNumber("49176ABC5678") ? "true" : "false", "false");
+  assert("a trailing extension is false", Platform.Function.IsPhoneNumber("2125551234x99") ? "true" : "false", "false");
+  assert("a space-separated trailing extension is false", Platform.Function.IsPhoneNumber("2125551234 x99") ? "true" : "false", "false");
+
+  /* 7. Non-NANP international numbers are false. */
+  assert("a German mobile written without a prefix is false", Platform.Function.IsPhoneNumber("4917612345678") ? "true" : "false", "false");
+  assert("a German mobile with a + prefix is false", Platform.Function.IsPhoneNumber("+4917612345678") ? "true" : "false", "false");
+  assert("a German mobile with a 00 prefix is false", Platform.Function.IsPhoneNumber("004917612345678") ? "true" : "false", "false");
+  assert("a French number is false", Platform.Function.IsPhoneNumber("33123456789") ? "true" : "false", "false");
+  assert("a national leading 0 is false", Platform.Function.IsPhoneNumber("01761234567") ? "true" : "false", "false");
+
+  /* 8. DEV — the SSJS reference documents only generic validation, but the
+   *    runtime matches the AMPscript reference's published NANP result table
+   *    row for row. */
+  assert("DEV a Canadian number with spaces is true (SSJS docs: generic 'valid phone number'; AMPscript docs: true)", Platform.Function.IsPhoneNumber("647 555 0123") ? "true" : "false", "true");
+  assert("DEV a US number with dots is true (AMPscript docs: true)", Platform.Function.IsPhoneNumber("425.555.0185") ? "true" : "false", "true");
+  assert("DEV a Dominican Republic NANP number is true (AMPscript docs: true)", Platform.Function.IsPhoneNumber("(829) 555-0142") ? "true" : "false", "true");
+  assert("DEV a valid US number with a + prefix is false (AMPscript docs: false)", Platform.Function.IsPhoneNumber("+14255550142") ? "true" : "false", "false");
+  assert("DEV a UK landline is false because it is not NANP (AMPscript docs: false; SSJS docs imply true)", Platform.Function.IsPhoneNumber("0161 496 0009") ? "true" : "false", "false");
+  assert("DEV a South Korean number is false because it is not NANP (AMPscript docs: false; SSJS docs imply true)", Platform.Function.IsPhoneNumber("82 517 460 123") ? "true" : "false", "false");
+  assert("DEV the AMPscript usage example 6585550142 is true (AMPscript docs: true)", Platform.Function.IsPhoneNumber("6585550142") ? "true" : "false", "true");
+  assert("DEV the SSJS reference's own example 3175555555 is true", Platform.Function.IsPhoneNumber("3175555555") ? "true" : "false", "true");
+
+  /* 9. DEV — the documented 922/926 "known issue" is just the area-code rule. */
+  assert("DEV a 922 area code is true (AMPscript docs call this a known issue)", Platform.Function.IsPhoneNumber("9225551234") ? "true" : "false", "true");
+  assert("DEV a 926 area code is true (AMPscript docs call this a known issue)", Platform.Function.IsPhoneNumber("9265551234") ? "true" : "false", "true");
+  assert("DEV the neighbouring 921 area code is ALSO true, so 922/926 are not anomalous", Platform.Function.IsPhoneNumber("9215551234") ? "true" : "false", "true");
+
+  /* Shape check only — no assignment or reachability check. */
+  assert("OBSERVED the reserved-looking 211 area code is true - shape check only", Platform.Function.IsPhoneNumber("2115551234") ? "true" : "false", "true");
+  assert("OBSERVED the unassigned 200 area code is true - shape check only", Platform.Function.IsPhoneNumber("2005551234") ? "true" : "false", "true");
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples — the form-handler guard and the normalizeContact()
+   * helper.
+   *
+   * Proves the shape of both documented examples without performing their
+   * side effects (UpsertData is not exercised here — this script proves only
+   * the branch decision that gates it):
+   *   1. Example 1 line 1: Platform.Request.GetFormField("phone") is callable
+   *      on a CloudPage GET, and returns null when no such field was posted.
+   *   2. Example 1's guard "!Platform.Function.IsPhoneNumber(phone)" is SAFE
+   *      for that null: it does not throw, and it evaluates to true, so the
+   *      error branch — not the UpsertData branch — is taken when the form
+   *      field is absent. This is the whole reason the example is written
+   *      with the negated guard.
+   *   3. The same guard evaluates to false for a valid NANP number, so the
+   *      success branch is reachable and the example is not a constant.
+   *   4. The guard's operand is a genuine boolean, so "!" is a plain boolean
+   *      negation rather than a coercion of a string or null.
+   *   5. Example 2's normalizeContact() helper, reproduced verbatim, returns
+   *      { ok: true } for a valid NANP mobile and
+   *      { ok: false, msg: "Invalid mobile number" } for a malformed one, an
+   *      absent property, an empty string and a non-NANP international
+   *      number.
+   *   6. Because IsPhoneNumber answers false rather than throwing for
+   *      undefined, normalizeContact({}) — with no mobile property at all —
+   *      returns the error object instead of raising, so the helper needs no
+   *      separate presence check.
+   *
+   * SCOPE: evidence gathered on a CloudPage GET. UpsertData() from example 1
+   * is deliberately NOT invoked — it writes data and is not a claim about
+   * IsPhoneNumber.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* 1. Example 1 line 1. */
+  var phone = Platform.Request.GetFormField("phone");
+  assert("GetFormField('phone') returns null when the field was not posted", phone === null ? "true" : "false", "true");
+
+  /* 2 + 4. The guard is safe for that null and takes the error branch. */
+  var guardThrew = false;
+  var guardTookErrorBranch = false;
+  var guardOperandType = "";
+  try {
+      guardOperandType = typeof Platform.Function.IsPhoneNumber(phone);
+      if (!Platform.Function.IsPhoneNumber(phone)) { guardTookErrorBranch = true; }
+  } catch (ex) {
+      guardThrew = true;
+  }
+  assert("the example's guard does not throw on a null form field", guardThrew ? "true" : "false", "false");
+  assert("the guard's operand is a genuine boolean", String(guardOperandType), "boolean");
+  assert("a null form field takes the error branch, not the UpsertData branch", guardTookErrorBranch ? "true" : "false", "true");
+
+  /* 3. The success branch is reachable. */
+  var validTookErrorBranch = false;
+  if (!Platform.Function.IsPhoneNumber("2125551234")) { validTookErrorBranch = true; }
+  assert("a valid NANP number does NOT take the error branch", validTookErrorBranch ? "true" : "false", "false");
+
+  /* 5 + 6. Example 2's helper, verbatim. */
+  function normalizeContact(raw) {
+      if (!Platform.Function.IsPhoneNumber(raw.mobile)) {
+          return { ok: false, msg: "Invalid mobile number" };
+      }
+      return { ok: true };
+  }
+
+  assert("normalizeContact accepts a valid NANP mobile", normalizeContact({ mobile: "2125551234" }).ok === true ? "true" : "false", "true");
+  assert("normalizeContact accepts a punctuated NANP mobile", normalizeContact({ mobile: "(212) 555-1234" }).ok === true ? "true" : "false", "true");
+  assert("normalizeContact rejects a non-NANP international mobile", normalizeContact({ mobile: "+49 176 12345678" }).ok === false ? "true" : "false", "true");
+  assert("normalizeContact reports the documented message for a rejected mobile", String(normalizeContact({ mobile: "+49 176 12345678" }).msg), "Invalid mobile number");
+  assert("normalizeContact rejects an empty mobile without throwing", String(normalizeContact({ mobile: "" }).msg), "Invalid mobile number");
+  assert("normalizeContact rejects an absent mobile property without throwing", String(normalizeContact({}).msg), "Invalid mobile number");
+  assert("normalizeContact returns no msg property on the success path", normalizeContact({ mobile: "2125551234" }).msg === undefined ? "true" : "false", "true");
+  </script>

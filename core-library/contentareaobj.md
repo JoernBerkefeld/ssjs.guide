@@ -6,6 +6,7 @@ parent_url: /core-library/
 description: Legacy ContentAreaObj Core library (deprecated) — classic Content Areas; prefer Content Builder.
 requires_core_load: true
 verification: verified
+test_scripts: complete
 deprecated: true
 differs_from_docs: true
 type_mapping:
@@ -60,6 +61,8 @@ Platform.Load("core", "1.1.1");
 var area = ContentAreaObj.Init("myCA");
 ```
 
+{% include test-script.html bundle="core-library--contentareaobj" chapter="init" %}
+
 ---
 
 ### ContentAreaObj.Add {#add}
@@ -67,6 +70,8 @@ var area = ContentAreaObj.Init("myCA");
 Creates a new legacy Content Area with the specified properties and returns an initialized `ContentAreaObjInstance` bound to it.
 
 {% include differs-from-docs.html note="The official reference annotates `Add` as `@returns {Enum(\"OK\")}`, but runtime returns an **initialized `ContentAreaObjInstance`** (an object exposing `Update`/`Remove`, identical in shape to `Init`) — matching the doc's own H1 summary (\"returns an initialized object\"), not the `@returns` annotation." %}
+
+{% include test-script.html bundle="core-library--contentareaobj" chapter="add-returns-instance" label="Show test script — Add returns a working instance, never \"OK\"" %}
 
 #### Syntax
 
@@ -98,6 +103,8 @@ var exampleArea = {
 };
 var area = ContentAreaObj.Add(exampleArea);
 ```
+
+{% include test-script.html bundle="core-library--contentareaobj" chapter="add" %}
 
 ---
 
@@ -132,6 +139,8 @@ var results = ContentAreaObj.Retrieve({
 });
 ```
 
+{% include test-script.html bundle="core-library--contentareaobj" chapter="retrieve" %}
+
 ---
 
 ### &lt;ContentAreaObjInstance&gt;.Update {#instance-update}
@@ -152,7 +161,9 @@ Updates the initialized content area with the given properties.
 
 #### Return value
 
-`"OK"` on success.
+`"OK"` on success, `"Error"` on failure — the call returns a status string rather than throwing.
+
+{% include callout.html type="warning" content="**Calling `Update` on a key that does not exist is not a no-op.** It returns `\"Error\"` **and still creates an empty content area** under that external key, which you then have to `Remove` explicitly. (`<ContentAreaObjInstance>.Remove` creates nothing when it fails the same way.) Confirm the key resolves via `ContentAreaObj.Retrieve` before calling `Update`." %}
 
 #### Examples
 
@@ -161,6 +172,8 @@ Platform.Load("core", "1.1.1");
 var obj = ContentAreaObj.Init("myCA");
 var status = obj.Update({ Name: "Name Updated By SSJS" });
 ```
+
+{% include test-script.html bundle="core-library--contentareaobj" chapter="instance-update" %}
 
 ---
 
@@ -176,7 +189,7 @@ Removes the initialized content area.
 
 #### Return value
 
-`"OK"` on success.
+`"OK"` on success, `"Error"` on failure — the call returns a status string rather than throwing.
 
 #### Examples
 
@@ -185,3 +198,5 @@ Platform.Load("core", "1.1.1");
 var obj = ContentAreaObj.Init("myCA");
 var status = obj.Remove();
 ```
+
+{% include test-script.html bundle="core-library--contentareaobj" chapter="instance-remove" %}

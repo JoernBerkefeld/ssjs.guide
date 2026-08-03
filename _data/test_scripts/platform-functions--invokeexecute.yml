@@ -1,0 +1,360 @@
+# Test scripts for /platform-functions/invokeexecute/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the official Salesforce docs.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage on the MCDEV_Training_QA business unit.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# SOAP OBJECT UNDER TEST: an ExecuteRequest running the LogUnsubEvent verb.
+# Execute is the one SOAP verb that neither creates nor deletes a definition,
+# so the round trip is proven with a PAIRED CONTROL instead: the same call
+# shape against a subscriber this script creates itself (success — StatusCode
+# "OK", StatusMessage "Event posted", ErrorCode 0) versus a subscriber key
+# that was never created (failure — "Error" / "The Subscriber was not found"
+# / 12001), plus an unknown verb name and a parameterless request. Every
+# subscriber the scripts create is deleted again, so the business unit is
+# left clean.
+
+differs-from-docs: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Callout: differs-from-docs — the return value, the status array and the
+   * argument count.
+   *
+   * Proves:
+   *   1. DEVIATION — the call returns an ARRAY of result objects, not the
+   *      single object the official docs promise. typeof is "object" and the
+   *      value has a numeric length.
+   *   2. Each element of that array carries its own StatusCode (string),
+   *      StatusMessage (string) and ErrorCode (number).
+   *   3. DEVIATION — the valid signature is exactly TWO arguments
+   *      (apiObject, status). The third "options" argument the official docs
+   *      describe throws, and so do arity 0 and 1. There is no reachable
+   *      optional argument in either direction.
+   *   4. status IS a genuine out parameter, but the engine only writes into
+   *      slots the array ALREADY HAS. Passed as [0, 0] it receives the
+   *      OverallStatus string in status[0] and a RequestID GUID STRING in
+   *      status[1] — the docs' "RequestID" slot is therefore a string here,
+   *      not a number (unlike InvokeCreate / InvokeDelete, where status[1] is
+   *      a numeric error code).
+   *   5. Passed as an empty array [] the status parameter is never grown: it
+   *      stays at length 0 with both slots undefined. That is the behaviour
+   *      that makes the out parameter look inert unless it is pre-sized.
+   *   6. DISCRIMINATING CONTROL for 4 and 5: the two calls are otherwise
+   *      IDENTICAL — same verb, same parameters, same failure result. Only
+   *      the initial size of the status array differs, so the difference in
+   *      what the status array holds is attributable to that and nothing
+   *      else.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit). The page also
+   * lists automation availability; the automation context was not exercised.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* Build an ExecuteRequest with the given verb name and APIProperty parameters. */
+  function execObject(name, params) {
+      var o = Platform.Function.CreateObject("ExecuteRequest");
+      Platform.Function.SetObjectProperty(o, "Name", name);
+      for (var i = 0; params && i < params.length; i++) {
+          var p = Platform.Function.CreateObject("APIProperty");
+          Platform.Function.SetObjectProperty(p, "Name", params[i][0]);
+          Platform.Function.SetObjectProperty(p, "Value", params[i][1]);
+          Platform.Function.AddObjectArrayItem(o, "Parameters", p);
+      }
+      return o;
+  }
+  function unsubParams(subscriberKey) {
+      return [["SubscriberKey", subscriberKey], ["JobID", "0"], ["ListID", "0"], ["BatchID", "0"], ["Reason", "ssjs.guide test"]];
+  }
+
+  var neverCreated = "ssjsguide_id_exec_never";
+
+  /* 1 + 2 + 4. The documented 2-argument call with a PRE-SIZED status array. */
+  var sized = [0, 0];
+  var result = Platform.Function.InvokeExecute(execObject("LogUnsubEvent", unsubParams(neverCreated)), sized);
+  assert("DEV typeof InvokeExecute(...) is object - an ARRAY of results (docs: a single object)", String(typeof result), "object");
+  assert("DEV the return value is an array with one result element (docs: a single object)", result.length, 1);
+  assert("result[0].StatusCode is a string", String(typeof result[0].StatusCode), "string");
+  assert("result[0].StatusCode is 'Error' for a subscriber that was never created", String(result[0].StatusCode), "Error");
+  assert("result[0].StatusMessage carries the API's own message", String(result[0].StatusMessage), "The Subscriber was not found");
+  assert("result[0].ErrorCode is a number", String(typeof result[0].ErrorCode), "number");
+  assert("result[0].ErrorCode is the subscriber-not-found code 12001", result[0].ErrorCode, 12001);
+
+  assert("a PRE-SIZED status array keeps its length", sized.length, 2);
+  assert("status[0] receives the OverallStatus string", String(sized[0]), "Error");
+  assert("DEV status[1] receives a RequestID GUID STRING, not a number (InvokeCreate/InvokeDelete put a numeric code here)", String(typeof sized[1]), "string");
+  assert("the RequestID GUID has the canonical 36-character length", sized[1].length, 36);
+
+  /* 5 + 6. The SAME call with an EMPTY status array — never grown. */
+  var empty = [];
+  var result2 = Platform.Function.InvokeExecute(execObject("LogUnsubEvent", unsubParams(neverCreated)), empty);
+  assert("control: the identical call still returns one result element", result2.length, 1);
+  assert("control: the identical call still reports error code 12001", result2[0].ErrorCode, 12001);
+  assert("an EMPTY status array is never grown - it stays at length 0", empty.length, 0);
+  assert("status[0] of an empty status array is undefined", empty[0] === undefined ? "true" : "false", "true");
+  assert("status[1] of an empty status array is undefined", empty[1] === undefined ? "true" : "false", "true");
+
+  /* 3. Exactly two arguments — the docs' third argument is not reachable. */
+  assertThrows("arity 0 throws (the valid arity is 2)", function () {
+      return Platform.Function.InvokeExecute();
+  });
+  assertThrows("arity 1 throws (the valid arity is 2)", function () {
+      return Platform.Function.InvokeExecute(execObject("LogUnsubEvent", unsubParams(neverCreated)));
+  });
+  assertThrows("DEV arity 3 throws - the options argument the official docs describe is NOT reachable (the valid arity is 2)", function () {
+      var s = [0, 0];
+      return Platform.Function.InvokeExecute(execObject("LogUnsubEvent", unsubParams(neverCreated)), s, null);
+  });
+  </script>
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters — Platform.Function.InvokeExecute(apiObject, status)
+   *
+   * Proves, one parameter at a time:
+   *   1. apiObject must be a SOAP API object built with CreateObject and
+   *      populated with SetObjectProperty. Such an object is a .NET CLR host
+   *      object (typeof "clr"), and a call built that way succeeds.
+   *   2. A plain JavaScript object or a string as apiObject throws — the
+   *      parameter is not structurally typed, it must be an
+   *      ExactTarget.Integration.WSDL type.
+   *   3. A null apiObject is the one non-object that does NOT throw: no SOAP
+   *      call is made, the return value is a genuine null (not undefined, and
+   *      not an array) and the status array is left untouched. This mirrors
+   *      the same finding on /platform-functions/invokecreate/,
+   *      /platform-functions/invokedelete/ and
+   *      /platform-functions/invokeconfigure/.
+   *   4. status must be an array — a non-array throws.
+   *   5. status is an OUT parameter and must be PRE-SIZED: with [0, 0] the
+   *      call writes the OverallStatus string into status[0] and a RequestID
+   *      GUID string into status[1]; an empty array [] is left at length 0.
+   *   6. AddObjectArrayItem, used to attach the request's APIProperty
+   *      parameters, returns a genuine null.
+   *   7. The member exists: a successful 2-argument invocation is the only
+   *      reliable existence proof for a Platform.Function member (typeof
+   *      reports "clrmethodinfo" for every name, real or not, so it proves
+   *      nothing and is deliberately NOT asserted here).
+   *
+   * NOT ASSERTED: the values set on the apiObject cannot be read back from
+   * the object itself — it is a CLR host object and the engine blocks all
+   * introspection of it (see /platform-functions/createobject/). The values
+   * are proven indirectly by the API's own response.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function assertNoThrow(id, fn) {
+      var ok = true, msg = "ok";
+      try { fn(); } catch (ex) { ok = false; msg = ex.message; }
+      Platform.Response.Write((ok ? "PASS " : "FAIL ") + id + " -> [" + msg + "]\n");
+  }
+
+  var neverCreated = "ssjsguide_id_exec_never";
+
+  /* 1 + 6. apiObject is a CreateObject SOAP object — a CLR host object. */
+  var apiObject = Platform.Function.CreateObject("ExecuteRequest");
+  assert("typeof CreateObject('ExecuteRequest') is clr", String(typeof apiObject), "clr");
+  assertNoThrow("SetObjectProperty(apiObject, 'Name', 'LogUnsubEvent') succeeds", function () {
+      Platform.Function.SetObjectProperty(apiObject, "Name", "LogUnsubEvent");
+  });
+  var prop = Platform.Function.CreateObject("APIProperty");
+  Platform.Function.SetObjectProperty(prop, "Name", "SubscriberKey");
+  Platform.Function.SetObjectProperty(prop, "Value", neverCreated);
+  var added = Platform.Function.AddObjectArrayItem(apiObject, "Parameters", prop);
+  assert("AddObjectArrayItem returns a genuine null", added === null ? "true" : "false", "true");
+  assert("AddObjectArrayItem does NOT return undefined", added === undefined ? "true" : "false", "false");
+
+  /* 5 + 7. The documented 2-argument call with a pre-sized status array. */
+  var status = [0, 0];
+  var result = Platform.Function.InvokeExecute(apiObject, status);
+  assert("InvokeExecute(apiObject, status) returns an array of results", result.length, 1);
+  assert("result[0].StatusCode is the API's own answer to this payload", String(result[0].StatusCode), "Error");
+  assert("result[0].ErrorCode is the subscriber-not-found code 12001", result[0].ErrorCode, 12001);
+  assert("status is an OUT parameter: status[0] was written by the call", String(status[0]), "Error");
+  assert("status is an OUT parameter: status[1] received a RequestID GUID string", String(typeof status[1]), "string");
+  assert("the pre-sized status array keeps its length", status.length, 2);
+
+  /* 5. An empty status array is left untouched. */
+  var emptyStatus = [];
+  var apiObject2 = Platform.Function.CreateObject("ExecuteRequest");
+  Platform.Function.SetObjectProperty(apiObject2, "Name", "LogUnsubEvent");
+  Platform.Function.AddObjectArrayItem(apiObject2, "Parameters", prop);
+  Platform.Function.InvokeExecute(apiObject2, emptyStatus);
+  assert("an empty status array is left at length 0 - status must be PRE-SIZED", emptyStatus.length, 0);
+
+  /* 2. apiObject must be a real SOAP object. */
+  assertThrows("a plain JavaScript object as apiObject throws", function () {
+      var s = [0, 0];
+      return Platform.Function.InvokeExecute({}, s);
+  });
+  assertThrows("a string as apiObject throws", function () {
+      var s = [0, 0];
+      return Platform.Function.InvokeExecute("ExecuteRequest", s);
+  });
+
+  /* 3. null apiObject: no SOAP call is made — genuine null back, status untouched. */
+  var nullStatus = [0, 0];
+  var nullResult = Platform.Function.InvokeExecute(null, nullStatus);
+  assert("a null apiObject does NOT throw", nullResult === null ? "true" : "false", "true");
+  assert("a null apiObject returns a genuine null, not an array of results", String(typeof nullResult), "object");
+  assert("a null apiObject is not undefined", nullResult === undefined ? "true" : "false", "false");
+  assert("a null apiObject leaves status[0] untouched (no SOAP call was made)", nullStatus[0], 0);
+  assert("a null apiObject leaves status[1] untouched (no SOAP call was made)", nullStatus[1], 0);
+
+  /* 4. status must be an array. */
+  assertThrows("a non-array status throws", function () {
+      var o = Platform.Function.CreateObject("ExecuteRequest");
+      Platform.Function.SetObjectProperty(o, "Name", "LogUnsubEvent");
+      return Platform.Function.InvokeExecute(o, "notanarray");
+  });
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples — the CreateObject / SetObjectProperty /
+   * AddObjectArrayItem / InvokeExecute build-and-execute pattern, end to end.
+   *
+   * Execute is the one SOAP verb that neither creates nor deletes a
+   * definition, so "it really ran" cannot be proven by re-reading an object.
+   * The DISCRIMINATING CONTROL is therefore a pair of otherwise identical
+   * LogUnsubEvent calls that differ only in the target subscriber:
+   *   - against a subscriber this script CREATES itself the API answers
+   *     StatusCode "OK" / "Event posted" / ErrorCode 0;
+   *   - against a subscriber key that was NEVER created the same call answers
+   *     "Error" / "The Subscriber was not found" / 12001.
+   * A call that had silently done nothing could not distinguish the two.
+   *
+   * Proves:
+   *   1. The example's shape works end to end and returns an array whose
+   *      first element is result[0].
+   *   2. SUCCESS path: StatusCode "OK", StatusMessage "Event posted",
+   *      ErrorCode 0, and status[0] === "OK".
+   *   3. FAILURE path (the control): "Error" / "The Subscriber was not
+   *      found" / 12001 — the API rejecting a target, not the function
+   *      failing.
+   *   4. The example's recommended guard branches on
+   *      result[0].StatusCode !== "OK", which is false on the success path
+   *      and true on the failure path.
+   *   5. An ExecuteRequest with NO Parameters is rejected by the API itself
+   *      with "No Parameters were provided" and ErrorCode 402 — so the
+   *      Parameters collection built with AddObjectArrayItem is what makes
+   *      the documented example work.
+   *   6. An unknown verb name answers "Unable to find a handler for the
+   *      <name> method." with ErrorCode 0 — the request reached the endpoint
+   *      and was dispatched by name.
+   *   7. The script leaves nothing behind: the subscriber it created is
+   *      deleted again and the business unit is left clean.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  function execObject(name, params) {
+      var o = Platform.Function.CreateObject("ExecuteRequest");
+      Platform.Function.SetObjectProperty(o, "Name", name);
+      for (var i = 0; params && i < params.length; i++) {
+          var p = Platform.Function.CreateObject("APIProperty");
+          Platform.Function.SetObjectProperty(p, "Name", params[i][0]);
+          Platform.Function.SetObjectProperty(p, "Value", params[i][1]);
+          Platform.Function.AddObjectArrayItem(o, "Parameters", p);
+      }
+      return o;
+  }
+  function unsubParams(subscriberKey) {
+      return [["SubscriberKey", subscriberKey], ["JobID", "0"], ["ListID", "0"], ["BatchID", "0"], ["Reason", "ssjs.guide test"]];
+  }
+
+  var subKey = "ssjsguide_id_exec_sub";
+  var neverCreated = "ssjsguide_id_exec_never";
+
+  /* Setup — create a real subscriber so the success path has a valid target. */
+  var sub = Platform.Function.CreateObject("Subscriber");
+  Platform.Function.SetObjectProperty(sub, "SubscriberKey", subKey);
+  Platform.Function.SetObjectProperty(sub, "EmailAddress", "ssjsguide.exec@ssjs.guide");
+  var setupStatus = [0, 0];
+  assert("setup: InvokeCreate of the throwaway subscriber returns 'OK'", String(Platform.Function.InvokeCreate(sub, setupStatus, null)), "OK");
+
+  /* 1 + 2 + 4. The page's example shape, against the subscriber just created. */
+  var execObj = execObject("LogUnsubEvent", unsubParams(subKey));
+  var StatusAndRequestID = [0, 0];
+  var result = Platform.Function.InvokeExecute(execObj, StatusAndRequestID);
+  var firstResult = result[0];
+  assert("the example returns an array with one result element", result.length, 1);
+  assert("firstResult.StatusCode is 'OK' on the success path", String(firstResult.StatusCode), "OK");
+  assert("firstResult.StatusMessage is the API's success message", String(firstResult.StatusMessage), "Event posted");
+  assert("firstResult.ErrorCode is 0 on the success path", firstResult.ErrorCode, 0);
+  assert("StatusAndRequestID[0] receives the OverallStatus string 'OK'", String(StatusAndRequestID[0]), "OK");
+  assert("StatusAndRequestID[1] receives a RequestID GUID string", String(typeof StatusAndRequestID[1]), "string");
+  assert("the example's guard does NOT fire on the success path", firstResult.StatusCode !== "OK" ? "true" : "false", "false");
+
+  /* 3 + 4. CONTROL — the identical call against a key that was never created. */
+  var controlStatus = [0, 0];
+  var controlResult = Platform.Function.InvokeExecute(execObject("LogUnsubEvent", unsubParams(neverCreated)), controlStatus);
+  assert("control: the identical call against a never-created key returns 'Error'", String(controlResult[0].StatusCode), "Error");
+  assert("control: the API's own not-found message", String(controlResult[0].StatusMessage), "The Subscriber was not found");
+  assert("control: the subscriber-not-found SOAP error code is 12001", controlResult[0].ErrorCode, 12001);
+  assert("control: status[0] receives the OverallStatus string 'Error'", String(controlStatus[0]), "Error");
+  assert("the example's guard DOES fire on the failure path", controlResult[0].StatusCode !== "OK" ? "true" : "false", "true");
+
+  /* 5. A request without Parameters is rejected by the API. */
+  var noParamStatus = [0, 0];
+  var noParamResult = Platform.Function.InvokeExecute(execObject("LogUnsubEvent", null), noParamStatus);
+  assert("an ExecuteRequest without Parameters returns 'Error'", String(noParamResult[0].StatusCode), "Error");
+  assert("the API reports that no parameters were provided", String(noParamResult[0].StatusMessage), "No Parameters were provided");
+  assert("the no-parameters SOAP error code is 402", noParamResult[0].ErrorCode, 402);
+
+  /* 6. An unknown verb name is dispatched by name and rejected. */
+  var badVerbStatus = [0, 0];
+  var badVerbResult = Platform.Function.InvokeExecute(execObject("NotARealExecuteVerb", null), badVerbStatus);
+  assert("an unknown verb name returns 'Error'", String(badVerbResult[0].StatusCode), "Error");
+  assert("the API reports that it has no handler for the verb", String(badVerbResult[0].StatusMessage), "Unable to find a handler for the NotARealExecuteVerb method.");
+  assert("the unknown-verb answer carries ErrorCode 0", badVerbResult[0].ErrorCode, 0);
+
+  /* 7. Cleanup — the business unit is left clean. */
+  var delSub = Platform.Function.CreateObject("Subscriber");
+  Platform.Function.SetObjectProperty(delSub, "SubscriberKey", subKey);
+  var cleanupStatus = [0, 0];
+  assert("cleanup: the throwaway subscriber is deleted again", String(Platform.Function.InvokeDelete(delSub, cleanupStatus, null)), "OK");
+  assert("cleanup: the delete reports success code 0", cleanupStatus[1], 0);
+  </script>

@@ -1,0 +1,344 @@
+# Test scripts for /platform-functions/invokeconfigure/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the official Salesforce docs.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage on the MCDEV_Training_QA business unit.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# SOAP OBJECT UNDER TEST: PropertyDefinition (a subscriber attribute) is the
+# throwaway object these scripts configure. It answers the Configure verb, it
+# needs only a Name and a PropertyType, and it is cheap to create and delete.
+# SETUP/TEARDOWN PATTERN (reusable by the other Invoke* pages): build the
+# object with a small newAttribute() factory, "create" it, prove the effect
+# with a paired create/delete control, then "delete" it and prove it is gone.
+
+differs-from-docs: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Callout: differs-from-docs — the return value and the status array.
+   *
+   * Proves:
+   *   1. DEVIATION — the call returns a STRING, not the "@returns {object}
+   *      response object" the official docs promise. typeof is "string".
+   *   2. On success the returned string is the SOAP OverallStatus value "OK".
+   *   3. On failure the returned string is "Error" — the same call shape
+   *      against an attribute that does not exist.
+   *   4. status[0] receives the status MESSAGE as a string ("Success" on a
+   *      successful configure).
+   *   5. status[1] receives a NUMERIC error code — 0 on success, and a real
+   *      non-zero code (67021, PropertyDefinitionNameNotFound) on failure.
+   *      The docs describe this slot as a RequestID; at runtime it is a
+   *      number, not a request identifier string.
+   *   6. The valid signature is exactly FOUR arguments
+   *      (apiObject, action, status, options). Arity 0, 1, 2, 3 and 5 all
+   *      throw — there is no reachable optional argument in either direction.
+   *
+   * DISCRIMINATING CONTROL for points 3 and 5: the failing call is not a
+   * malformed call — it is the SAME shape as the successful one, differing
+   * only in that the named attribute does not exist. That is what makes
+   * "Error" + a non-zero code attributable to the API result rather than to a
+   * broken invocation.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit). The page also
+   * lists automation availability; the automation context was not exercised.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* Build a throwaway subscriber attribute definition. */
+  function newAttribute(attributeName) {
+      var attr = Platform.Function.CreateObject("PropertyDefinition");
+      Platform.Function.SetObjectProperty(attr, "Name", attributeName);
+      Platform.Function.SetObjectProperty(attr, "PropertyType", "string");
+      return attr;
+  }
+
+  var okName = "ssjsguide_cfg_dfd";
+
+  /* 1 + 2 + 4 + 5. The SUCCESS path. */
+  var okStatus = [0, 0];
+  var okResult = Platform.Function.InvokeConfigure(newAttribute(okName), "create", okStatus, null);
+  assert("DEV typeof InvokeConfigure(...) is string (docs: '@returns {object} response object')", String(typeof okResult), "string");
+  assert("DEV the return value is the OverallStatus string 'OK' (docs: a response object)", String(okResult), "OK");
+  assert("status[0] receives the status message on success", String(okStatus[0]), "Success");
+  assert("DEV status[1] receives a NUMBER, not a RequestID string (docs: 'status and RequestID')", String(typeof okStatus[1]), "number");
+  assert("status[1] is the error code 0 on success", okStatus[1], 0);
+  assert("the status array keeps its length", okStatus.length, 2);
+
+  /* 3 + 5. The FAILURE path — same call shape, attribute that does not exist. */
+  var errStatus = [0, 0];
+  var errResult = Platform.Function.InvokeConfigure(newAttribute("ssjsguide_cfg_never_existed"), "delete", errStatus, null);
+  assert("DEV the failure return value is the OverallStatus string 'Error' (docs: a response object)", String(errResult), "Error");
+  assert("status[0] receives the status message on failure", String(errStatus[0]), "PropertyDefinitionNameNotFound");
+  assert("status[1] is a numeric error code on failure", String(typeof errStatus[1]), "number");
+  assert("status[1] carries the real SOAP error code", errStatus[1], 67021);
+
+  /* 6. Exactly four arguments — no reachable optional argument. */
+  assertThrows("arity 0 throws (the valid arity is 4)", function () {
+      return Platform.Function.InvokeConfigure();
+  });
+  assertThrows("arity 1 throws (the valid arity is 4)", function () {
+      return Platform.Function.InvokeConfigure(newAttribute("ssjsguide_cfg_a1"));
+  });
+  assertThrows("arity 2 throws (the valid arity is 4)", function () {
+      return Platform.Function.InvokeConfigure(newAttribute("ssjsguide_cfg_a2"), "create");
+  });
+  assertThrows("arity 3 throws - options is NOT optional (the valid arity is 4)", function () {
+      var s = [0, 0];
+      return Platform.Function.InvokeConfigure(newAttribute("ssjsguide_cfg_a3"), "create", s);
+  });
+  assertThrows("arity 5 throws (the valid arity is 4)", function () {
+      var s = [0, 0];
+      return Platform.Function.InvokeConfigure(newAttribute("ssjsguide_cfg_a5"), "create", s, null, null);
+  });
+
+  /* Cleanup — remove the throwaway attribute created above. */
+  var cleanStatus = [0, 0];
+  assert("cleanup: deleting the created attribute returns 'OK'", String(Platform.Function.InvokeConfigure(newAttribute(okName), "delete", cleanStatus, null)), "OK");
+  assert("cleanup: status[0] reports success", String(cleanStatus[0]), "Success");
+  </script>
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters —
+   * Platform.Function.InvokeConfigure(apiObject, action, status, options)
+   *
+   * Proves, one parameter at a time:
+   *   1. apiObject must be a SOAP API object built with CreateObject and
+   *      populated with SetObjectProperty. Such an object is a .NET CLR host
+   *      object (typeof "clr"), and a call built that way succeeds.
+   *   2. A plain JavaScript object or a string as apiObject throws — the
+   *      parameter is not structurally typed, it must be an
+   *      ExactTarget.Integration.WSDL type.
+   *   3. A null apiObject is the one non-object that does NOT throw: no SOAP
+   *      call is made, the return value is a genuine null (not undefined, and
+   *      not an OverallStatus string) and the status array is left untouched.
+   *   4. action is a string naming the Configure action; "create" and
+   *      "delete" are both accepted and produce different, observable effects
+   *      (see the examples chapter for the create/delete control).
+   *   5. status must be an array and is an OUT parameter: it is mutated in
+   *      place by the call, so the caller reads status[0] / status[1] after
+   *      the call returns. Passing a non-array throws.
+   *   6. options is REQUIRED but may be null — the page's "can contain a null
+   *      value" wording. Omitting it entirely (arity 3) throws, which is what
+   *      makes "required, may be null" different from "optional".
+   *   7. The member exists: a successful 4-argument invocation is the only
+   *      reliable existence proof for a Platform.Function member (typeof
+   *      reports "clrmethodinfo" for every name, real or not, so it proves
+   *      nothing and is deliberately NOT asserted here).
+   *
+   * NOT ASSERTED: the values set on the apiObject cannot be read back from
+   * the object itself — it is a CLR host object and the engine blocks all
+   * introspection of it (see /platform-functions/createobject/). The values
+   * are proven indirectly by the API's own response, in the examples chapter.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function assertNoThrow(id, fn) {
+      var ok = true, msg = "ok";
+      try { fn(); } catch (ex) { ok = false; msg = ex.message; }
+      Platform.Response.Write((ok ? "PASS " : "FAIL ") + id + " -> [" + msg + "]\n");
+  }
+
+  /* Build a throwaway subscriber attribute definition. */
+  function newAttribute(attributeName) {
+      var attr = Platform.Function.CreateObject("PropertyDefinition");
+      Platform.Function.SetObjectProperty(attr, "Name", attributeName);
+      Platform.Function.SetObjectProperty(attr, "PropertyType", "string");
+      return attr;
+  }
+
+  var attrName = "ssjsguide_cfg_params";
+
+  /* 1. apiObject is a CreateObject SOAP object — a CLR host object. */
+  var apiObject = Platform.Function.CreateObject("PropertyDefinition");
+  assert("typeof CreateObject('PropertyDefinition') is clr", String(typeof apiObject), "clr");
+  assertNoThrow("SetObjectProperty(apiObject, 'Name', ...) succeeds", function () {
+      Platform.Function.SetObjectProperty(apiObject, "Name", attrName);
+  });
+  assertNoThrow("SetObjectProperty(apiObject, 'PropertyType', 'string') succeeds", function () {
+      Platform.Function.SetObjectProperty(apiObject, "PropertyType", "string");
+  });
+
+  /* 4 + 5 + 6 + 7. The documented 4-argument call with options = null. */
+  var status = [0, 0];
+  assert("InvokeConfigure(apiObject, 'create', status, null) returns 'OK'", String(Platform.Function.InvokeConfigure(apiObject, "create", status, null)), "OK");
+  assert("status is an OUT parameter: status[0] was written by the call", String(status[0]), "Success");
+  assert("status is an OUT parameter: status[1] was written by the call", status[1], 0);
+
+  /* 2. apiObject must be a real SOAP object. */
+  assertThrows("a plain JavaScript object as apiObject throws", function () {
+      var s = [0, 0];
+      return Platform.Function.InvokeConfigure({}, "create", s, null);
+  });
+  assertThrows("a string as apiObject throws", function () {
+      var s = [0, 0];
+      return Platform.Function.InvokeConfigure("PropertyDefinition", "create", s, null);
+  });
+
+  /* 3. null apiObject: no SOAP call is made — genuine null back, status untouched. */
+  var nullStatus = [0, 0];
+  var nullResult = Platform.Function.InvokeConfigure(null, "create", nullStatus, null);
+  assert("a null apiObject does NOT throw", nullResult === null ? "true" : "false", "true");
+  assert("a null apiObject returns a genuine null, not the OverallStatus string", String(typeof nullResult), "object");
+  assert("a null apiObject is not undefined", nullResult === undefined ? "true" : "false", "false");
+  assert("a null apiObject leaves status[0] untouched (no SOAP call was made)", nullStatus[0], 0);
+  assert("a null apiObject leaves status[1] untouched (no SOAP call was made)", nullStatus[1], 0);
+
+  /* 5. status must be an array. */
+  assertThrows("a non-array status throws", function () {
+      return Platform.Function.InvokeConfigure(newAttribute("ssjsguide_cfg_p1"), "create", "notanarray", null);
+  });
+
+  /* 6. options is required — omitting it is NOT the same as passing null. */
+  assertThrows("omitting options (arity 3) throws - options is required, not optional", function () {
+      var s = [0, 0];
+      return Platform.Function.InvokeConfigure(newAttribute("ssjsguide_cfg_p2"), "create", s);
+  });
+
+  /* Cleanup — remove the throwaway attribute created above. */
+  var cleanStatus = [0, 0];
+  assert("cleanup: deleting the created attribute returns 'OK'", String(Platform.Function.InvokeConfigure(newAttribute(attrName), "delete", cleanStatus, null)), "OK");
+  assert("cleanup: status[0] reports success", String(cleanStatus[0]), "Success");
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples — the CreateObject / SetObjectProperty /
+   * InvokeConfigure build-and-configure pattern, end to end.
+   *
+   * This script runs the page's example against a real, throwaway subscriber
+   * attribute that it creates and deletes itself. The values set on the
+   * apiObject CANNOT be read back from the object (it is a CLR host object —
+   * see /platform-functions/createobject/), so the only way to prove they
+   * landed is to make the API answer for them.
+   *
+   * Proves:
+   *   1. The example's shape works: CreateObject("PropertyDefinition") +
+   *      SetObjectProperty(Name / PropertyType) + InvokeConfigure with the
+   *      "create" action returns "OK" and writes "Success" into status[0].
+   *   2. ROUND-TRIP PROOF that the create really took effect — the
+   *      DISCRIMINATING CONTROL is a pair of otherwise identical "delete"
+   *      calls:
+   *        - deleting the attribute just created returns "OK" / "Success";
+   *        - deleting a name that was never created returns "Error" /
+   *          "PropertyDefinitionNameNotFound" with error code 67021.
+   *      A create that had silently done nothing would make the first delete
+   *      look like the second. It does not, so the attribute existed.
+   *   3. The status variables the example reads are exactly the two array
+   *      slots: status[0] is the message string, status[1] the numeric code.
+   *   4. The example leaves nothing behind: after the round-trip delete, a
+   *      second delete of the same name reports the not-found error.
+   *
+   * PAGE-EXAMPLE CORRECTION (recorded so it cannot silently regress): the
+   * example on this page previously configured a
+   * CreateObject("DataRetentionPolicyConfiguration") object. That SOAP type
+   * name does not resolve in this engine — CreateObject itself throws before
+   * InvokeConfigure is ever reached. That negative case is asserted below.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function assertNoThrow(id, fn) {
+      var ok = true, msg = "ok";
+      try { fn(); } catch (ex) { ok = false; msg = ex.message; }
+      Platform.Response.Write((ok ? "PASS " : "FAIL ") + id + " -> [" + msg + "]\n");
+  }
+
+  /* NEGATIVE — the SOAP type the example previously used does not resolve. */
+  assertThrows("CreateObject('DataRetentionPolicyConfiguration') throws - that SOAP type does not resolve", function () {
+      return Platform.Function.CreateObject("DataRetentionPolicyConfiguration");
+  });
+
+  var attributeName = "ssjsguide_cfg_example";
+  var neverCreated = "ssjsguide_cfg_control";
+
+  /* 1. The page's example, verbatim in shape. */
+  var configObj = Platform.Function.CreateObject("PropertyDefinition");
+  assert("typeof CreateObject('PropertyDefinition') is clr", String(typeof configObj), "clr");
+  assertNoThrow("SetObjectProperty(configObj, 'Name', ...) succeeds", function () {
+      Platform.Function.SetObjectProperty(configObj, "Name", attributeName);
+  });
+  assertNoThrow("SetObjectProperty(configObj, 'PropertyType', 'string') succeeds", function () {
+      Platform.Function.SetObjectProperty(configObj, "PropertyType", "string");
+  });
+
+  var StatusAndRequestID = [0, 0];
+  var result = Platform.Function.InvokeConfigure(configObj, "create", StatusAndRequestID, null);
+  assert("InvokeConfigure(configObj, 'create', StatusAndRequestID, null) returns 'OK'", String(result), "OK");
+
+  /* 3. The two status slots the example reads. */
+  var status = StatusAndRequestID[0];
+  var errorCode = StatusAndRequestID[1];
+  assert("status = StatusAndRequestID[0] is the message string", String(status), "Success");
+  assert("errorCode = StatusAndRequestID[1] is the numeric code 0 on success", errorCode, 0);
+
+  /* 2. CONTROL — the delete that must FAIL, on a name never created. */
+  var controlObj = Platform.Function.CreateObject("PropertyDefinition");
+  Platform.Function.SetObjectProperty(controlObj, "Name", neverCreated);
+  var controlStatus = [0, 0];
+  assert("control: deleting an attribute that was never created returns 'Error'", String(Platform.Function.InvokeConfigure(controlObj, "delete", controlStatus, null)), "Error");
+  assert("control: status[0] reports the name was not found", String(controlStatus[0]), "PropertyDefinitionNameNotFound");
+  assert("control: status[1] carries error code 67021", controlStatus[1], 67021);
+
+  /* 2. ROUND-TRIP — the delete that must SUCCEED, on the attribute created above. */
+  var deleteObj = Platform.Function.CreateObject("PropertyDefinition");
+  Platform.Function.SetObjectProperty(deleteObj, "Name", attributeName);
+  var deleteStatus = [0, 0];
+  assert("round-trip: deleting the attribute just created returns 'OK'", String(Platform.Function.InvokeConfigure(deleteObj, "delete", deleteStatus, null)), "OK");
+  assert("round-trip: status[0] reports success", String(deleteStatus[0]), "Success");
+  assert("round-trip: status[1] is 0 on success", deleteStatus[1], 0);
+
+  /* 4. Cleanup is complete — the attribute is gone. */
+  var afterObj = Platform.Function.CreateObject("PropertyDefinition");
+  Platform.Function.SetObjectProperty(afterObj, "Name", attributeName);
+  var afterStatus = [0, 0];
+  assert("cleanup verified: deleting it again now reports 'Error'", String(Platform.Function.InvokeConfigure(afterObj, "delete", afterStatus, null)), "Error");
+  assert("cleanup verified: status[0] reports the name is gone", String(afterStatus[0]), "PropertyDefinitionNameNotFound");
+  </script>

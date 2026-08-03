@@ -1,0 +1,443 @@
+# Test scripts for /platform-functions/contentblockbyid/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and the documented deviation from the official Salesforce docs.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# SCOPE: the evidence behind these scripts is CloudPage-only. The member's
+# real-world context — rendering a block inside an email send, and the
+# impression tracking that `regionName` feeds — was NOT exercised. Only the
+# call-level behaviour observable inside a single CloudPage request is proven.
+#
+# FIXTURE: a dedicated Content Builder HTML block exists in the QA business
+# unit for these probes — id 1469165, external key "ssjs-guide-test-block",
+# whose entire body is the single token SSJSGUIDE-TEST-BLOCK-OK. Asserting
+# against that short token keeps the output small: this function embeds the
+# asset's body into the page, so probing a large asset would flood the run.
+# The id 12345 is used as the "block does not exist" case.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# ENGINE NOTE: the CLR exception messages thrown by ContentBlockByID cannot be
+# inspected with .length / .indexOf / .substring — those operations abort the
+# whole CloudPage with HTTP 422. The messages may only be concatenated into
+# output verbatim, so these scripts assert "it throws" and PRINT the message
+# rather than matching it programmatically.
+#
+# HARNESS NOTE: `mcdev deploy` refuses any asset whose code references a
+# content block id that does not exist on the BU, so these scripts (which must
+# reference id 12345 to prove the missing-block behaviour) are deployed to the
+# validate-ssjs asset through the REST API instead.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters —
+   *   Platform.Function.ContentBlockByID(id[, regionName, stopOnError, fallbackContent])
+   *
+   * Proves:
+   *   1. The member resolves on Platform.Function (typeof "clrmethodinfo",
+   *      the engine's uniform marker for a host CLR method — it proves
+   *      nothing about existence, only invocation does).
+   *   2. `id` is required and the documented minimal 1-argument call returns
+   *      the asset's rendered body as a string (return_type: string,
+   *      min_args: 1).
+   *   3. TYPE-ACCEPTANCE (Number↔string): `id` is accepted as a number AND as
+   *      a numeric STRING with the SAME meaningful result (fixture body), and
+   *      also as a VARIABLE — the single-argument form has no literal
+   *      restriction. Dual acceptance widens the Parameters type to
+   *      string | number.
+   *   4. A non-existent id throws.
+   *   5. DEV the documented optional `regionName` (parameter 2) is
+   *      unreachable from SSJS: a plain STRING LITERAL is rejected with the
+   *      resolved-value error naming ImpressionRegionName / Ordinal 2 /
+   *      ResolvedValueParameter. A number, a boolean, the empty string, null
+   *      and a variable all fail the same way — so this is NOT a
+   *      literal-vs-variable restriction, the parameter cannot be supplied.
+   *   6. DEV because parameter 2 is rejected outright, the documented
+   *      `stopOnError` (parameter 3) and `fallbackContent` (parameter 4) are
+   *      UNREACHABLE from SSJS: arity 3 and arity 4 throw the same
+   *      ImpressionRegionName error, so neither stopOnError nor the fallback
+   *      string ever takes effect.
+   *   7. Arities outside the documented 1..4 range (0 and 5) throw the
+   *      overloaded "security descriptor" error.
+   *
+   * SCOPE: CloudPage only. Whether `regionName` would register an impression
+   * is not asserted — impression counts surface in Marketing Cloud tracking
+   * reports after a send is processed and are not observable from inside this
+   * request. (It is moot here in any case: the parameter cannot be supplied.)
+   *
+   * NOT ASSERTED: the exact text of the thrown messages. Any string operation
+   * on these CLR exception messages (.length / .indexOf / .substring) aborts
+   * the CloudPage with HTTP 422, so each message is printed verbatim next to
+   * its assertion for the reader instead of being matched programmatically.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. The member resolves as a host CLR method. */
+  assert("typeof Platform.Function.ContentBlockByID is clrmethodinfo", String(typeof Platform.Function.ContentBlockByID), "clrmethodinfo");
+
+  /* 2. The required numeric `id` alone renders the block and returns a string. */
+  var body = Platform.Function.ContentBlockByID(1469165);
+  assert("arity 1 with a real numeric id returns a string", String(typeof body), "string");
+  assert("arity 1 returns the fixture block's body", body, "SSJSGUIDE-TEST-BLOCK-OK");
+
+  /* 3. TYPE-ACCEPTANCE: number, numeric string and variable all accepted at arity 1 with the same body. */
+  var bodyAsNumber = Platform.Function.ContentBlockByID(1469165);
+  var bodyAsString = Platform.Function.ContentBlockByID("1469165");
+  assert("arity 1 accepts the id as a number", bodyAsNumber, "SSJSGUIDE-TEST-BLOCK-OK");
+  assert("arity 1 accepts the id as a numeric string", bodyAsString, "SSJSGUIDE-TEST-BLOCK-OK");
+  assert("TYPE-ACCEPT number and numeric-string id return the same body", bodyAsNumber === bodyAsString ? "true" : "false", "true");
+  var varId = 1469165;
+  assert("arity 1 accepts a VARIABLE id", Platform.Function.ContentBlockByID(varId), "SSJSGUIDE-TEST-BLOCK-OK");
+
+  /* 4. A non-existent id throws. */
+  assertThrows("arity 1 with a non-existent id throws", function () {
+      return Platform.Function.ContentBlockByID(12345);
+  });
+
+  /* 5. DEV regionName cannot be supplied at all — every shape is rejected. */
+  assertThrows("DEV arity 2 with a STRING LITERAL regionName throws (docs: optional impression region)", function () {
+      return Platform.Function.ContentBlockByID(1469165, "ssjsGuideRegion");
+  });
+  assertThrows("DEV arity 2 with a numeric regionName throws too", function () {
+      return Platform.Function.ContentBlockByID(1469165, 7);
+  });
+  assertThrows("DEV arity 2 with a boolean regionName throws too", function () {
+      return Platform.Function.ContentBlockByID(1469165, false);
+  });
+  assertThrows("DEV arity 2 with an empty-string regionName throws too", function () {
+      return Platform.Function.ContentBlockByID(1469165, "");
+  });
+  assertThrows("DEV arity 2 with a null regionName throws too", function () {
+      return Platform.Function.ContentBlockByID(1469165, null);
+  });
+  var varRegion = "ssjsGuideRegion";
+  assertThrows("DEV arity 2 with a VARIABLE regionName throws the same way (not a literal-vs-variable rule)", function () {
+      return Platform.Function.ContentBlockByID(1469165, varRegion);
+  });
+
+  /* 6. DEV stopOnError and fallbackContent are unreachable behind that rejection. */
+  assertThrows("DEV arity 3 stopOnError=true throws (docs: terminates on a missing block)", function () {
+      return Platform.Function.ContentBlockByID(12345, "ssjsGuideRegion", true);
+  });
+  assertThrows("DEV arity 3 stopOnError=false throws (docs: the call proceeds)", function () {
+      return Platform.Function.ContentBlockByID(12345, "ssjsGuideRegion", false);
+  });
+  assertThrows("DEV arity 4 fallbackContent never emitted, call throws (docs: fallback is displayed)", function () {
+      return Platform.Function.ContentBlockByID(12345, "ssjsGuideRegion", false, "FALLBACK-OK");
+  });
+  assertThrows("DEV arity 4 throws even when the block EXISTS", function () {
+      return Platform.Function.ContentBlockByID(1469165, "ssjsGuideRegion", false, "FALLBACK-OK");
+  });
+  assertThrows("DEV arity 3 with a null regionName throws as well", function () {
+      return Platform.Function.ContentBlockByID(1469165, null, false);
+  });
+
+  /* 7. Off-signature arities throw the overloaded security-descriptor error. */
+  assertThrows("arity 0 throws", function () {
+      return Platform.Function.ContentBlockByID();
+  });
+  assertThrows("arity 5 throws", function () {
+      return Platform.Function.ContentBlockByID(1469165, "ssjsGuideRegion", false, "FALLBACK-OK", "extra");
+  });
+  </script>
+
+only-one-argument-works: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs claim: the official Salesforce documentation shows
+   *   Platform.Function.ContentBlockByID(12345,"impressionRegion",false,"defaultContentHere")
+   * as ordinary working SSJS. At runtime ONLY the single-argument form works.
+   *
+   * Official docs: the 4-argument call returns the block's content, with
+   *                stopOnError:false letting a failed call proceed and
+   *                fallbackContent shown when nothing is returned.
+   * SFMC runtime:  arity 1     -> returns the block's body (works)
+   *                arity 2/3/4 -> "A ContentBlockByID function call includes
+   *                                an invalid parameter value. … must be a
+   *                                literal (constant) values."
+   *                                Parameter Name: ImpressionRegionName
+   *                                Parameter Ordinal: 2
+   *                                Parameter Type: ResolvedValueParameter
+   *                arity 0/5+  -> "Unable to retrieve security descriptor for
+   *                                this frame."
+   *                (each message is printed verbatim by its assertion below)
+   *
+   * Proves every part of the claim, and — crucially — CONTROLS for the two
+   * competing explanations:
+   *   1. The 1-argument form genuinely works, so the failure at arity 2+ is
+   *      not "the function is broken" and not "the block does not exist".
+   *   2. DEV arity 2 throws for a STRING LITERAL regionName in a plain
+   *      top-level call with no closure and no variable anywhere — so the
+   *      failure is not a literal-vs-variable rule and not an artefact of
+   *      wrapping the call in a test helper.
+   *   3. DEV every other regionName shape (number, boolean, empty string,
+   *      null, variable) fails identically, and arity 3 and 4 fail with the
+   *      SAME parameter-2 error, which is what makes stopOnError and
+   *      fallbackContent unreachable.
+   *   4. CONTROL: the AMPscript form of the same function, invoked through
+   *      Platform.Function.TreatAsContent, accepts ALL FOUR parameters and
+   *      returns content — proving the platform implements the documented
+   *      semantics and that the restriction is specific to the SSJS binding.
+   *   5. The sibling Platform.Function.ContentBlockByKey has the identical
+   *      restriction, so this is a family-wide SSJS binding limitation.
+   *   6. There is no bare-name Core escape hatch: typeof ContentBlockByID is
+   *      "undefined" after Platform.Load and invoking it throws
+   *      "Object expected: ContentBlockByID".
+   *
+   * SCOPE: CloudPage only — the same calls inside an email send were not
+   * exercised.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. The 1-argument form works — the function itself is not broken. */
+  assert("CONTROL arity 1 returns the block's body", Platform.Function.ContentBlockByID(1469165), "SSJSGUIDE-TEST-BLOCK-OK");
+
+  /* 2. DEV a top-level, closure-free, all-literal arity-2 call still throws. */
+  var topLevel2 = "did NOT throw";
+  try { Platform.Function.ContentBlockByID(1469165, "ssjsGuideRegion"); }
+  catch (exTop) { topLevel2 = "threw"; }
+  assert("DEV top-level all-literal arity 2 throws (docs: returns content)", topLevel2, "threw");
+  assertThrows("DEV arity 2 string literal regionName throws (message printed)", function () {
+      return Platform.Function.ContentBlockByID(1469165, "ssjsGuideRegion");
+  });
+
+  /* 3. DEV every regionName shape, and arity 3/4, fail the same way. */
+  assertThrows("DEV arity 2 numeric regionName throws", function () {
+      return Platform.Function.ContentBlockByID(1469165, 7);
+  });
+  assertThrows("DEV arity 2 boolean regionName throws", function () {
+      return Platform.Function.ContentBlockByID(1469165, false);
+  });
+  assertThrows("DEV arity 2 empty-string regionName throws", function () {
+      return Platform.Function.ContentBlockByID(1469165, "");
+  });
+  assertThrows("DEV arity 2 null regionName throws", function () {
+      return Platform.Function.ContentBlockByID(1469165, null);
+  });
+  var dynRegion = "ssjsGuideRegion";
+  assertThrows("DEV arity 2 variable regionName throws", function () {
+      return Platform.Function.ContentBlockByID(1469165, dynRegion);
+  });
+  assertThrows("DEV arity 3 stopOnError=true throws (docs: terminates the call)", function () {
+      return Platform.Function.ContentBlockByID(12345, "ssjsGuideRegion", true);
+  });
+  assertThrows("DEV arity 3 stopOnError=false throws (docs: the call proceeds)", function () {
+      return Platform.Function.ContentBlockByID(12345, "ssjsGuideRegion", false);
+  });
+  assertThrows("DEV arity 4 throws so fallbackContent is never emitted (docs: fallback shown)", function () {
+      return Platform.Function.ContentBlockByID(12345, "ssjsGuideRegion", false, "FALLBACK-OK");
+  });
+
+  /* 4. CONTROL — the AMPscript form implements the full documented signature. */
+  assert("CONTROL AMPscript arity 2 with a region returns the body", Platform.Function.TreatAsContent('%%=ContentBlockByID(1469165,"ssjsGuideRegion")=%%'), "SSJSGUIDE-TEST-BLOCK-OK");
+  assert("CONTROL AMPscript arity 4 returns fallbackContent for a missing block", Platform.Function.TreatAsContent('%%=ContentBlockByID(12345,"ssjsGuideRegion",false,"FALLBACK-OK")=%%'), "FALLBACK-OK");
+  assert("CONTROL AMPscript arity 4 ignores the fallback when the block exists", Platform.Function.TreatAsContent('%%=ContentBlockByID(1469165,"ssjsGuideRegion",false,"FALLBACK-OK")=%%'), "SSJSGUIDE-TEST-BLOCK-OK");
+  assert("CONTROL AMPscript arity 3 stopOnError=false yields the empty string", Platform.Function.TreatAsContent('%%=ContentBlockByID(12345,"ssjsGuideRegion",false)=%%'), "");
+  assertThrows("CONTROL AMPscript arity 3 stopOnError=true propagates the error", function () {
+      return Platform.Function.TreatAsContent('%%=ContentBlockByID(12345,"ssjsGuideRegion",true)=%%');
+  });
+
+  /* 5. The sibling ContentBlockByKey carries the identical restriction. */
+  assert("CONTROL ContentBlockByKey arity 1 works", Platform.Function.ContentBlockByKey("ssjs-guide-test-block"), "SSJSGUIDE-TEST-BLOCK-OK");
+  assertThrows("DEV ContentBlockByKey arity 2 throws the same ImpressionRegionName error", function () {
+      return Platform.Function.ContentBlockByKey("ssjs-guide-test-block", "ssjsGuideRegion");
+  });
+
+  /* 6. No bare-name Core escape hatch exists. */
+  assert("there is no bare-name ContentBlockByID global", String(typeof ContentBlockByID), "undefined");
+  assertThrows("invoking the bare name throws Object expected", function () {
+      return ContentBlockByID(1469165);
+  });
+
+  /* 7. Off-signature arities throw the security-descriptor error. */
+  assertThrows("arity 0 throws", function () {
+      return Platform.Function.ContentBlockByID();
+  });
+  assertThrows("arity 5 throws", function () {
+      return Platform.Function.ContentBlockByID(1469165, "ssjsGuideRegion", false, "FALLBACK-OK", "extra");
+  });
+  </script>
+
+description: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Description — renders a Content Builder block by numeric ID and
+   * returns it, ContentBlockByKey is the preferred alternative, this is the
+   * modern replacement for ContentArea, plus the runtime notes and the
+   * TreatAsContent workaround.
+   *
+   * Proves:
+   *   1. The function renders a CONTENT BUILDER asset: the value returned for
+   *      id 1469165 is exactly that asset's stored body, and it is a
+   *      non-empty string. The call RETURNS the content rather than emitting
+   *      it.
+   *   2. The identifier really is the numeric asset ID — passing the asset's
+   *      external KEY throws the security-descriptor error, which is what
+   *      distinguishes it from ContentBlockByKey.
+   *   3. The recommended alternative works and is interchangeable for this
+   *      asset: ContentBlockByKey("ssjs-guide-test-block") resolves as a host
+   *      method and returns the SAME body.
+   *   4. It is the working replacement for the deprecated ContentArea family:
+   *      Platform.Function.ContentArea throws where this returns content.
+   *   5. The runtime notes: a non-existent id throws, arity 0 and arity 5+
+   *      throw the security-descriptor error, and there is NO bare-name Core
+   *      form (typeof "undefined"; invoking it throws "Object expected").
+   *   6. The WORKAROUND section, end to end — every optional parameter that
+   *      SSJS rejects is reachable through the AMPscript form via
+   *      Platform.Function.TreatAsContent:
+   *        - a named impression region returns the body,
+   *        - fallbackContent is returned for a missing block,
+   *        - stopOnError:true propagates the error,
+   *        - stopOnError:false without a fallback yields the empty string.
+   *
+   * SCOPE: CloudPage only — rendering the same block inside an email send was
+   * not exercised, and whether the impression region is actually recorded is
+   * not observable from inside this request.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. It renders and RETURNS the Content Builder asset's stored body. */
+  var byId = Platform.Function.ContentBlockByID(1469165);
+  assert("the numeric id renders the Content Builder asset's body", byId, "SSJSGUIDE-TEST-BLOCK-OK");
+  assert("the returned value is a non-empty string", (typeof byId === "string" && byId !== "") ? "true" : "false", "true");
+
+  /* 2. The identifier is the numeric ID — the external key is not accepted. */
+  assertThrows("passing the external key to ContentBlockByID throws", function () {
+      return Platform.Function.ContentBlockByID("ssjs-guide-test-block");
+  });
+
+  /* 3. The preferred alternative resolves and returns the same body. */
+  assert("typeof Platform.Function.ContentBlockByKey is clrmethodinfo", String(typeof Platform.Function.ContentBlockByKey), "clrmethodinfo");
+  var byKey = Platform.Function.ContentBlockByKey("ssjs-guide-test-block");
+  assert("ContentBlockByKey returns the same body for the same asset", byKey, "SSJSGUIDE-TEST-BLOCK-OK");
+  assert("both forms agree", byId === byKey ? "true" : "false", "true");
+
+  /* 4. Unlike the deprecated ContentArea family, this one returns content. */
+  assertThrows("the deprecated Platform.Function.ContentArea throws where this works", function () {
+      return Platform.Function.ContentArea(1469165);
+  });
+
+  /* 5. The runtime notes. */
+  assertThrows("a non-existent id throws", function () {
+      return Platform.Function.ContentBlockByID(12345);
+  });
+  assertThrows("arity 0 throws the security-descriptor error", function () {
+      return Platform.Function.ContentBlockByID();
+  });
+  assertThrows("arity 5 throws the security-descriptor error", function () {
+      return Platform.Function.ContentBlockByID(1469165, "r", false, "fb", "extra");
+  });
+  assert("there is no bare-name Core form", String(typeof ContentBlockByID), "undefined");
+  assertThrows("invoking the bare name throws Object expected", function () {
+      return ContentBlockByID(1469165);
+  });
+
+  /* 6. The workaround — all four parameters reachable through AMPscript. */
+  assert("workaround: a named impression region returns the body", Platform.Function.TreatAsContent('%%=ContentBlockByID(1469165,"heroRegion")=%%'), "SSJSGUIDE-TEST-BLOCK-OK");
+  assert("workaround: fallbackContent is returned for a missing block", Platform.Function.TreatAsContent('%%=ContentBlockByID(12345,"heroRegion",false,"FALLBACK")=%%'), "FALLBACK");
+  assertThrows("workaround: stopOnError=true propagates the error", function () {
+      return Platform.Function.TreatAsContent('%%=ContentBlockByID(12345,"heroRegion",true)=%%');
+  });
+  assert("workaround: stopOnError=false with no fallback yields the empty string", Platform.Function.TreatAsContent('%%=ContentBlockByID(12345,"heroRegion",false)=%%'), "");
+  </script>
+
+example: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Example —
+   *   var blockHtml = Platform.Function.ContentBlockByID(1469165);
+   *   Write(blockHtml);
+   * plus the number / numeric-string / variable trio.
+   *
+   * Proves the documented example's shape:
+   *   1. The documented pattern works verbatim: the call assigns a string to
+   *      the variable and that string is the block's body.
+   *   2. The bare-name Write() global used by the example is available after
+   *      Platform.Load("core", "1.1.5") and emits its argument unchanged —
+   *      writing the block's body reproduces it exactly in the response.
+   *   3. All three documented single-argument shapes resolve the same asset:
+   *      a number literal, a numeric string, and a variable.
+   *   4. The call itself emits nothing — the content only reaches the page
+   *      because the example passes the returned value to Write().
+   *
+   * SCOPE: CloudPage only. Write() in an email-send context was not
+   * exercised.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS, except the single
+   * WRITE-PROBE line between the assertions, which IS the raw Write() output
+   * being proven in point 2 and reads
+   * WRITE-PROBE-START SSJSGUIDE-TEST-BLOCK-OK WRITE-PROBE-END.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* 1. The documented pattern. */
+  var blockHtml = Platform.Function.ContentBlockByID(1469165);
+  assert("the example's variable receives a string", String(typeof blockHtml), "string");
+  assert("the example's variable holds the block's body", blockHtml, "SSJSGUIDE-TEST-BLOCK-OK");
+
+  /* 2. The bare-name Write() global from the example is available and faithful. */
+  assert("typeof the bare-name Write is function after Platform.Load", String(typeof Write), "function");
+  Platform.Response.Write("WRITE-PROBE-START ");
+  Write(blockHtml);
+  Platform.Response.Write(" WRITE-PROBE-END\n");
+
+  /* 3. Number, numeric string and variable all resolve the same asset. */
+  var id = 1469165;
+  assert("number literal id resolves the asset", Platform.Function.ContentBlockByID(1469165), "SSJSGUIDE-TEST-BLOCK-OK");
+  assert("numeric string id resolves the asset", Platform.Function.ContentBlockByID("1469165"), "SSJSGUIDE-TEST-BLOCK-OK");
+  assert("variable id resolves the asset", Platform.Function.ContentBlockByID(id), "SSJSGUIDE-TEST-BLOCK-OK");
+
+  /* 4. The call returns the content rather than emitting it. */
+  var emitted = Platform.Function.ContentBlockByID(1469165);
+  assert("the call returns the content rather than emitting it", emitted, "SSJSGUIDE-TEST-BLOCK-OK");
+  </script>

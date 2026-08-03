@@ -1,0 +1,384 @@
+# Test scripts for /platform-functions/invokecreate/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the official Salesforce docs.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage on the MCDEV_Training_QA business unit.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# SOAP OBJECT UNDER TEST: a throwaway DataExtension. It answers the Create
+# verb (PropertyDefinition, used by the sibling InvokeConfigure scripts, only
+# answers Configure), it needs only CustomerKey + Name + one field, and it can
+# be removed again with InvokeDelete.
+# SETUP/TEARDOWN PATTERN (shared with the other Invoke* pages): build the
+# object with a small newDataExtension() factory, create it, prove the effect
+# with a PAIRED DELETE CONTROL — delete the created key (expect
+# OK / "Data Extension deleted." / 0) versus delete a key that was never
+# created (expect Error / not-found / 310007) — and finish with a second
+# delete proving the business unit was left clean.
+
+differs-from-docs: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Callout: differs-from-docs — the return value, the status array and the
+   * argument count.
+   *
+   * Proves:
+   *   1. DEVIATION — the call returns a STRING, not the object the official
+   *      docs promise. typeof is "string".
+   *   2. On success the returned string is the SOAP OverallStatus value "OK".
+   *   3. On failure the returned string is "Error" — proven with the SAME call
+   *      shape, differing only in that the object already exists.
+   *   4. status[0] receives the status MESSAGE as a string
+   *      ("Data Extension created." on a successful create).
+   *   5. status[1] receives a NUMERIC code — 0 on success and a real non-zero
+   *      SOAP error code (310007) on failure. The docs describe this slot as a
+   *      RequestID; at runtime it is a number, not a request-identifier string.
+   *      There are no separate statusMsgVar / errorCodeVar out-parameters.
+   *   6. The valid signature is exactly THREE arguments
+   *      (apiObject, status, options). Arity 0, 1, 2 and 4 all throw — there is
+   *      no reachable optional argument in either direction. The 4-argument
+   *      form was a real defect in an example on
+   *      /platform-functions/createobject/ and is asserted here as a negative
+   *      case so it cannot silently come back.
+   *
+   * DISCRIMINATING CONTROL for points 3 and 5: the failing call is not a
+   * malformed call — it is the same object shape as the successful one, sent a
+   * second time. That is what makes "Error" plus a non-zero code attributable
+   * to the API result rather than to a broken invocation.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit). The page also
+   * lists automation availability; the automation context was not exercised.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* Build a throwaway data extension definition. */
+  function newDataExtension(customerKey) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", customerKey);
+      Platform.Function.SetObjectProperty(de, "Name", customerKey);
+      var field = Platform.Function.CreateObject("DataExtensionField");
+      Platform.Function.SetObjectProperty(field, "Name", "Email");
+      Platform.Function.SetObjectProperty(field, "FieldType", "Text");
+      Platform.Function.SetObjectProperty(field, "MaxLength", "100");
+      Platform.Function.SetObjectProperty(field, "IsPrimaryKey", "true");
+      Platform.Function.SetObjectProperty(field, "IsRequired", "true");
+      Platform.Function.AddObjectArrayItem(de, "Fields", field);
+      return de;
+  }
+
+  var okKey = "ssjsguide_ic_dfd";
+
+  /* 1 + 2 + 4 + 5. The SUCCESS path. */
+  var okStatus = [0, 0];
+  var okResult = Platform.Function.InvokeCreate(newDataExtension(okKey), okStatus, null);
+  assert("DEV typeof InvokeCreate(...) is string (docs: the return value is an object)", String(typeof okResult), "string");
+  assert("DEV the return value is the OverallStatus string 'OK' (docs: a response object)", String(okResult), "OK");
+  assert("status[0] receives the status message on success", String(okStatus[0]), "Data Extension created.");
+  assert("DEV status[1] receives a NUMBER, not a RequestID string (docs: 'status and RequestID')", String(typeof okStatus[1]), "number");
+  assert("status[1] is the error code 0 on success", okStatus[1], 0);
+  assert("the status array keeps its length", okStatus.length, 2);
+
+  /* 3 + 5. The FAILURE path — same call shape, object that already exists. */
+  var errStatus = [0, 0];
+  var errResult = Platform.Function.InvokeCreate(newDataExtension(okKey), errStatus, null);
+  assert("DEV the failure return value is the OverallStatus string 'Error' (docs: a response object)", String(errResult), "Error");
+  assert("status[0] receives the status message on failure", String(errStatus[0]), "Updating an existing Data Extension definition is not allowed when doing an add-only operation. ");
+  assert("status[1] is a numeric error code on failure", String(typeof errStatus[1]), "number");
+  assert("status[1] carries the real SOAP error code", errStatus[1], 310007);
+
+  /* 6. Exactly three arguments — no reachable optional argument. */
+  assertThrows("arity 0 throws (the valid arity is 3)", function () {
+      return Platform.Function.InvokeCreate();
+  });
+  assertThrows("arity 1 throws (the valid arity is 3)", function () {
+      return Platform.Function.InvokeCreate(newDataExtension("ssjsguide_ic_a1"));
+  });
+  assertThrows("arity 2 throws - options is NOT optional (the valid arity is 3)", function () {
+      var s = [0, 0];
+      return Platform.Function.InvokeCreate(newDataExtension("ssjsguide_ic_a2"), s);
+  });
+  assertThrows("arity 4 throws - there are no statusMsgVar / errorCodeVar out-parameters (the valid arity is 3)", function () {
+      var s = [0, 0];
+      return Platform.Function.InvokeCreate(newDataExtension("ssjsguide_ic_a4"), s, null, null);
+  });
+
+  /* Cleanup — remove the throwaway data extension created above. */
+  var cleanObj = Platform.Function.CreateObject("DataExtension");
+  Platform.Function.SetObjectProperty(cleanObj, "CustomerKey", okKey);
+  var cleanStatus = [0, 0];
+  assert("cleanup: deleting the created data extension returns 'OK'", String(Platform.Function.InvokeDelete(cleanObj, cleanStatus, null)), "OK");
+  assert("cleanup: status[0] reports the deletion", String(cleanStatus[0]), "Data Extension deleted.");
+  </script>
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters —
+   * Platform.Function.InvokeCreate(apiObject, status, options)
+   *
+   * Proves, one parameter at a time:
+   *   1. apiObject must be a SOAP API object built with CreateObject and
+   *      populated with SetObjectProperty / AddObjectArrayItem. Such an object
+   *      is a .NET CLR host object (typeof "clr"), and a call built that way
+   *      succeeds.
+   *   2. A plain JavaScript object or a string as apiObject throws — the
+   *      parameter is not structurally typed, it must be an
+   *      ExactTarget.Integration.WSDL type.
+   *   3. A null apiObject is the one non-object that does NOT throw: no SOAP
+   *      call is made, the return value is a genuine null (not undefined, and
+   *      not an OverallStatus string) and the status array is left untouched.
+   *      This mirrors the same finding on
+   *      /platform-functions/invokeconfigure/.
+   *   4. status must be an array and is an OUT parameter: it is mutated in
+   *      place by the call, so the caller reads status[0] / status[1] after the
+   *      call returns. Passing a non-array throws.
+   *   5. options is REQUIRED but may be null — the page's "can contain a null
+   *      value" wording. Omitting it entirely (arity 2) throws, which is what
+   *      makes "required, may be null" different from "optional".
+   *   6. The member exists: a successful 3-argument invocation is the only
+   *      reliable existence proof for a Platform.Function member (typeof
+   *      reports "clrmethodinfo" for every name, real or not, so it proves
+   *      nothing and is deliberately NOT asserted here).
+   *
+   * NOT ASSERTED: the values set on the apiObject cannot be read back from the
+   * object itself — it is a CLR host object and the engine blocks all
+   * introspection of it (see /platform-functions/createobject/). The values are
+   * proven indirectly by the API's own response, in the examples chapter.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function assertNoThrow(id, fn) {
+      var ok = true, msg = "ok";
+      try { fn(); } catch (ex) { ok = false; msg = ex.message; }
+      Platform.Response.Write((ok ? "PASS " : "FAIL ") + id + " -> [" + msg + "]\n");
+  }
+
+  /* Build a throwaway data extension definition. */
+  function newDataExtension(customerKey) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", customerKey);
+      Platform.Function.SetObjectProperty(de, "Name", customerKey);
+      var field = Platform.Function.CreateObject("DataExtensionField");
+      Platform.Function.SetObjectProperty(field, "Name", "Email");
+      Platform.Function.SetObjectProperty(field, "FieldType", "Text");
+      Platform.Function.SetObjectProperty(field, "MaxLength", "100");
+      Platform.Function.SetObjectProperty(field, "IsPrimaryKey", "true");
+      Platform.Function.SetObjectProperty(field, "IsRequired", "true");
+      Platform.Function.AddObjectArrayItem(de, "Fields", field);
+      return de;
+  }
+
+  var deKey = "ssjsguide_ic_params";
+
+  /* 1. apiObject is a CreateObject SOAP object — a CLR host object. */
+  var apiObject = Platform.Function.CreateObject("DataExtension");
+  assert("typeof CreateObject('DataExtension') is clr", String(typeof apiObject), "clr");
+  assertNoThrow("SetObjectProperty(apiObject, 'CustomerKey', ...) succeeds", function () {
+      Platform.Function.SetObjectProperty(apiObject, "CustomerKey", deKey);
+  });
+  assertNoThrow("SetObjectProperty(apiObject, 'Name', ...) succeeds", function () {
+      Platform.Function.SetObjectProperty(apiObject, "Name", deKey);
+  });
+  var field = Platform.Function.CreateObject("DataExtensionField");
+  Platform.Function.SetObjectProperty(field, "Name", "Email");
+  Platform.Function.SetObjectProperty(field, "FieldType", "Text");
+  Platform.Function.SetObjectProperty(field, "MaxLength", "100");
+  Platform.Function.SetObjectProperty(field, "IsPrimaryKey", "true");
+  Platform.Function.SetObjectProperty(field, "IsRequired", "true");
+  assertNoThrow("AddObjectArrayItem(apiObject, 'Fields', field) succeeds", function () {
+      Platform.Function.AddObjectArrayItem(apiObject, "Fields", field);
+  });
+
+  /* 4 + 5 + 6. The documented 3-argument call with options = null. */
+  var status = [0, 0];
+  assert("InvokeCreate(apiObject, status, null) returns 'OK'", String(Platform.Function.InvokeCreate(apiObject, status, null)), "OK");
+  assert("status is an OUT parameter: status[0] was written by the call", String(status[0]), "Data Extension created.");
+  assert("status is an OUT parameter: status[1] was written by the call", status[1], 0);
+
+  /* 2. apiObject must be a real SOAP object. */
+  assertThrows("a plain JavaScript object as apiObject throws", function () {
+      var s = [0, 0];
+      return Platform.Function.InvokeCreate({}, s, null);
+  });
+  assertThrows("a string as apiObject throws", function () {
+      var s = [0, 0];
+      return Platform.Function.InvokeCreate("DataExtension", s, null);
+  });
+
+  /* 3. null apiObject: no SOAP call is made — genuine null back, status untouched. */
+  var nullStatus = [0, 0];
+  var nullResult = Platform.Function.InvokeCreate(null, nullStatus, null);
+  assert("a null apiObject does NOT throw", nullResult === null ? "true" : "false", "true");
+  assert("a null apiObject returns a genuine null, not the OverallStatus string", String(typeof nullResult), "object");
+  assert("a null apiObject is not undefined", nullResult === undefined ? "true" : "false", "false");
+  assert("a null apiObject leaves status[0] untouched (no SOAP call was made)", nullStatus[0], 0);
+  assert("a null apiObject leaves status[1] untouched (no SOAP call was made)", nullStatus[1], 0);
+
+  /* 4. status must be an array. */
+  assertThrows("a non-array status throws", function () {
+      return Platform.Function.InvokeCreate(newDataExtension("ssjsguide_ic_p1"), "notanarray", null);
+  });
+
+  /* 5. options is required — omitting it is NOT the same as passing null. */
+  assertThrows("omitting options (arity 2) throws - options is required, not optional", function () {
+      var s = [0, 0];
+      return Platform.Function.InvokeCreate(newDataExtension("ssjsguide_ic_p2"), s);
+  });
+
+  /* Cleanup — remove the throwaway data extension created above. */
+  var cleanObj = Platform.Function.CreateObject("DataExtension");
+  Platform.Function.SetObjectProperty(cleanObj, "CustomerKey", deKey);
+  var cleanStatus = [0, 0];
+  assert("cleanup: deleting the created data extension returns 'OK'", String(Platform.Function.InvokeDelete(cleanObj, cleanStatus, null)), "OK");
+  assert("cleanup: status[0] reports the deletion", String(cleanStatus[0]), "Data Extension deleted.");
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples — the CreateObject / SetObjectProperty / InvokeCreate
+   * build-and-create pattern, end to end, plus the status handling the
+   * example demonstrates.
+   *
+   * This script runs the page's example against a real, throwaway data
+   * extension that it creates and deletes itself. The values set on the
+   * apiObject CANNOT be read back from the object (it is a CLR host object —
+   * see /platform-functions/createobject/), so the only way to prove the
+   * create really took effect is to make the API answer for it.
+   *
+   * Proves:
+   *   1. The example's shape works: an apiObject built with CreateObject +
+   *      SetObjectProperty + AddObjectArrayItem, passed to InvokeCreate with a
+   *      [0, 0] status array and null options, returns "OK".
+   *   2. The two variables the example reads are exactly the two array slots:
+   *      status = StatusAndRequestID[0] is the message string, requestID =
+   *      StatusAndRequestID[1] the numeric code (0 on success).
+   *   3. The example's error branch — `if (status !== "OK")` — is NOT taken on
+   *      success, because status[0] is the message, not the OverallStatus
+   *      string. The value that equals "OK" is the RETURN VALUE. Asserted
+   *      explicitly, since the example's own guard reads the status slot.
+   *   4. ROUND-TRIP PROOF that the create really took effect — the
+   *      DISCRIMINATING CONTROL is a pair of otherwise identical delete calls:
+   *        - deleting the object just created returns "OK" /
+   *          "Data Extension deleted." / 0;
+   *        - deleting a key that was never created returns "Error" with SOAP
+   *          error code 310007.
+   *      A create that had silently done nothing would make the first delete
+   *      look like the second. It does not, so the object existed.
+   *   5. The example leaves nothing behind: after the round-trip delete, a
+   *      second delete of the same key reports the not-found error.
+   *   6. The page's "prefer WSProxy" note is backed by WSProxy being available
+   *      in this engine (Script.Util.WSProxy is a CLR host constructor).
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertNoThrow(id, fn) {
+      var ok = true, msg = "ok";
+      try { fn(); } catch (ex) { ok = false; msg = ex.message; }
+      Platform.Response.Write((ok ? "PASS " : "FAIL ") + id + " -> [" + msg + "]\n");
+  }
+
+  var deKey = "ssjsguide_ic_example";
+  var neverCreated = "ssjsguide_ic_control";
+
+  /* 1. The page's example, verbatim in shape. */
+  var deObject = Platform.Function.CreateObject("DataExtension");
+  assert("typeof CreateObject('DataExtension') is clr", String(typeof deObject), "clr");
+  assertNoThrow("SetObjectProperty(deObject, 'CustomerKey', ...) succeeds", function () {
+      Platform.Function.SetObjectProperty(deObject, "CustomerKey", deKey);
+  });
+  assertNoThrow("SetObjectProperty(deObject, 'Name', ...) succeeds", function () {
+      Platform.Function.SetObjectProperty(deObject, "Name", deKey);
+  });
+  var field = Platform.Function.CreateObject("DataExtensionField");
+  Platform.Function.SetObjectProperty(field, "Name", "Email");
+  Platform.Function.SetObjectProperty(field, "FieldType", "Text");
+  Platform.Function.SetObjectProperty(field, "MaxLength", "100");
+  Platform.Function.SetObjectProperty(field, "IsPrimaryKey", "true");
+  Platform.Function.SetObjectProperty(field, "IsRequired", "true");
+  assertNoThrow("AddObjectArrayItem(deObject, 'Fields', field) succeeds", function () {
+      Platform.Function.AddObjectArrayItem(deObject, "Fields", field);
+  });
+
+  var StatusAndRequestID = [0, 0];
+  var result = Platform.Function.InvokeCreate(deObject, StatusAndRequestID, null);
+  assert("InvokeCreate(deObject, StatusAndRequestID, null) returns 'OK'", String(result), "OK");
+
+  /* 2. The two status slots the example reads. */
+  var status = StatusAndRequestID[0];
+  var requestID = StatusAndRequestID[1];
+  assert("status = StatusAndRequestID[0] is the message string", String(status), "Data Extension created.");
+  assert("requestID = StatusAndRequestID[1] is the numeric code 0 on success", requestID, 0);
+
+  /* 3. The example's error branch is about the status slot, not the return value. */
+  assert("the example's guard: status !== 'OK' on a SUCCESSFUL create - the OverallStatus string is the RETURN value", status !== "OK" ? "true" : "false", "true");
+  assert("the value that equals 'OK' is the return value, not status[0]", result === "OK" ? "true" : "false", "true");
+
+  /* 4. CONTROL — the delete that must FAIL, on a key never created. */
+  var controlObj = Platform.Function.CreateObject("DataExtension");
+  Platform.Function.SetObjectProperty(controlObj, "CustomerKey", neverCreated);
+  var controlStatus = [0, 0];
+  assert("control: deleting a data extension that was never created returns 'Error'", String(Platform.Function.InvokeDelete(controlObj, controlStatus, null)), "Error");
+  assert("control: status[1] carries SOAP error code 310007", controlStatus[1], 310007);
+
+  /* 4. ROUND-TRIP — the delete that must SUCCEED, on the object created above. */
+  var deleteObj = Platform.Function.CreateObject("DataExtension");
+  Platform.Function.SetObjectProperty(deleteObj, "CustomerKey", deKey);
+  var deleteStatus = [0, 0];
+  assert("round-trip: deleting the data extension just created returns 'OK'", String(Platform.Function.InvokeDelete(deleteObj, deleteStatus, null)), "OK");
+  assert("round-trip: status[0] reports the deletion", String(deleteStatus[0]), "Data Extension deleted.");
+  assert("round-trip: status[1] is 0 on success", deleteStatus[1], 0);
+
+  /* 5. Cleanup is complete — the object is gone. */
+  var afterObj = Platform.Function.CreateObject("DataExtension");
+  Platform.Function.SetObjectProperty(afterObj, "CustomerKey", deKey);
+  var afterStatus = [0, 0];
+  assert("cleanup verified: deleting it again now reports 'Error'", String(Platform.Function.InvokeDelete(afterObj, afterStatus, null)), "Error");
+  assert("cleanup verified: status[1] carries SOAP error code 310007", afterStatus[1], 310007);
+
+  /* 6. The recommended alternative — WSProxy — exists in this engine. */
+  assert("Script.Util.WSProxy is a CLR host constructor", String(typeof Script.Util.WSProxy), "clr");
+  var proxy = new Script.Util.WSProxy();
+  assert("new Script.Util.WSProxy() yields a CLR instance", String(typeof proxy), "clr");
+  </script>

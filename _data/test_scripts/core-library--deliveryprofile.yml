@@ -1,0 +1,311 @@
+# Test scripts for /core-library/deliveryprofile/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and the documented deviation from the official Salesforce docs.
+#
+# FIXTURES: the Add / Update / Remove scripts create their own delivery
+# profile under a unique `ssjs-guide-ts-dp-*` external key, prove the effect,
+# and remove it again. Each script begins with an orphan-cleanup Remove so a
+# previously aborted run cannot contaminate the evidence. No pre-existing
+# delivery profile is ever targeted.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage GET on the QA business unit. Re-run them before changing any
+# claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# NORMALIZATION RULE: assert() compares with a plain === and does NOT coerce.
+# Engine-returned values are normalized at the call site with "" + value —
+# never with String(value), which yields a CLR string that fails === and
+# aborts the page when a string method is called on it.
+
+init: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: DeliveryProfile.Init(key)
+   *
+   * CloudPage GET context. Proves:
+   *   1. DeliveryProfile requires the Core load and is then an object exposing
+   *      exactly the two documented statics Init and Add.
+   *   2. The page's claim that there is NO DeliveryProfile.Retrieve in this
+   *      namespace — and no static Update or Remove either.
+   *   3. Init(key) returns a DeliveryProfileInstance: an object whose only
+   *      members are the two documented instance methods Update and Remove,
+   *      both typeof "function".
+   *   4. The instance exposes no Retrieve and no Add, matching the Methods
+   *      table.
+   *   5. The instance carries NO readable profile fields (CustomerKey, Name,
+   *      Description read back undefined) — Init binds a key, it does not
+   *      fetch the record.
+   *   6. The same stub is returned for a nonsense key, so Init alone never
+   *      confirms that a key resolves to a real delivery profile.
+   *   7. The exact example on the page runs.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW"; }
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  /* 1. Availability after the Core load. */
+  assert("typeof DeliveryProfile is object", typeOf(function () { return typeof DeliveryProfile; }), "object");
+  assert("typeof DeliveryProfile.Init is function", typeOf(function () { return typeof DeliveryProfile.Init; }), "function");
+  assert("typeof DeliveryProfile.Add is function", typeOf(function () { return typeof DeliveryProfile.Add; }), "function");
+
+  /* 2. There is no Retrieve in this namespace, and no static Update/Remove. */
+  assert("DeliveryProfile.Retrieve does not exist in this namespace", typeOf(function () { return typeof DeliveryProfile.Retrieve; }), "undefined");
+  assert("DeliveryProfile.Update is not a static", typeOf(function () { return typeof DeliveryProfile.Update; }), "undefined");
+  assert("DeliveryProfile.Remove is not a static", typeOf(function () { return typeof DeliveryProfile.Remove; }), "undefined");
+
+  /* 3. Shape of the returned DeliveryProfileInstance. */
+  var myProfile = DeliveryProfile.Init("ssjs-guide-ts-dp-init");
+  assert("typeof DeliveryProfile.Init(key) is object", typeof myProfile, "object");
+  assert("typeof instance.Update is function", typeof myProfile.Update, "function");
+  assert("typeof instance.Remove is function", typeof myProfile.Remove, "function");
+
+  /* 4. The instance exposes only the two documented methods. */
+  assert("instance has no Retrieve", typeof myProfile.Retrieve, "undefined");
+  assert("instance has no Add", typeof myProfile.Add, "undefined");
+  assert("instance exposes exactly Remove + Update", "" + Stringify(myProfile), '{"Remove":"function","Update":"function"}');
+
+  /* 5. Init binds a key; it does not fetch the record. */
+  assert("instance.CustomerKey is undefined (Init does not fetch)", typeof myProfile.CustomerKey, "undefined");
+  assert("instance.Name is undefined (Init does not fetch)", typeof myProfile.Name, "undefined");
+  assert("instance.Description is undefined (Init does not fetch)", typeof myProfile.Description, "undefined");
+
+  /* 6. A nonsense key yields an indistinguishable stub. */
+  var bogus = DeliveryProfile.Init("ssjs-guide-no-such-dp-zzz");
+  assert("Init(nonsense key) still returns an object", typeof bogus, "object");
+  assert("Init(nonsense key) exposes Update", typeof bogus.Update, "function");
+  assert("Init(nonsense key) exposes Remove", typeof bogus.Remove, "function");
+  assert("Init(nonsense key) stub is indistinguishable from the other one", ("" + Stringify(bogus)) === ("" + Stringify(myProfile)) ? "true" : "false", "true");
+
+  /* 7. The exact example on the page. */
+  assert("page example: Init('myDeliveryProfile') returns an instance", invocationResult(function () { return DeliveryProfile.Init("myDeliveryProfile"); }), "returned");
+  </script>
+
+add: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: DeliveryProfile.Add(properties)
+   *
+   * CloudPage GET context. Proves:
+   *   1. DeliveryProfile.Add is a function taking one properties object.
+   *   2. Add(properties) with Name / CustomerKey / Description /
+   *      SourceAddressType returns without throwing — the documented
+   *      success signal.
+   *   3. DEVIATION "DEV": the return value is a CLR object, NOT the string
+   *      "OK" the official docs describe. typeof is "clr", it stringifies to
+   *      the .NET type name ExactTarget.Integration.WSDL.DeliveryProfile.
+   *   4. DEVIATION "DEV": reading ANY property off the returned object throws
+   *      "Use of Common Language Runtime (CLR) is not allowed" — the
+   *      properties are not readable from SSJS (docs describe a readable
+   *      result), so the only usable success test is "it did not throw".
+   *   5. The workaround the page recommends: treat a non-throwing return as
+   *      success — proven by initializing the just-created key and updating
+   *      it successfully.
+   *   6. Negative cases: Add() with no argument, Add({}) with an empty object,
+   *      and a second Add re-using an existing CustomerKey all throw.
+   *
+   * FIXTURE: creates ssjs-guide-ts-dp-add and removes it again at the end.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function threwFragment(fn, fragment) {
+      try { fn(); return "did NOT throw"; } catch (ex) { return ("" + ex.message).indexOf(fragment) >= 0 ? "matched" : ("" + ex.message); }
+  }
+
+  var KEY = "ssjs-guide-ts-dp-add";
+
+  /* Orphan cleanup from a previously aborted run (returns "Error" if absent). */
+  DeliveryProfile.Init(KEY).Remove();
+
+  /* 1. Shape of the documented member. */
+  assert("typeof DeliveryProfile.Add is function", typeof DeliveryProfile.Add, "function");
+
+  /* 2. The documented payload is accepted. */
+  var newDP = {
+      Name: "SSJS Guide Test Delivery Profile",
+      CustomerKey: KEY,
+      Description: "An SSJS Added Profile",
+      SourceAddressType: "DefaultPrivateIPAddress"
+  };
+  var result = null;
+  assert("Add(properties) does not throw", invocationResult(function () { result = DeliveryProfile.Add(newDP); }), "returned");
+
+  /* 3. DEVIATION — a CLR object is returned, not the string "OK". */
+  assert("DEV typeof Add() result is clr (docs: string \"OK\")", typeof result, "clr");
+  assert("DEV Add() result is not the string OK (docs: \"OK\")", ("" + result) === "OK" ? "true" : "false", "false");
+  assert("DEV Add() result stringifies to its .NET type name (docs: \"OK\")", "" + result, "ExactTarget.Integration.WSDL.DeliveryProfile");
+  assert("DEV Stringify(Add() result) is the .NET type name (docs: \"OK\")", "" + Stringify(result), '"ExactTarget.Integration.WSDL.DeliveryProfile"');
+
+  /* 4. DEVIATION — its properties are not readable from SSJS. */
+  assert("DEV reading result.Name throws (docs imply a readable result)", invocationResult(function () { return result.Name; }), "threw");
+  assert("DEV reading result.Name reports the CLR restriction", threwFragment(function () { return result.Name; }, "Use of Common Language Runtime (CLR) is not allowed"), "matched");
+  assert("DEV reading result.CustomerKey throws (docs imply a readable result)", invocationResult(function () { return result.CustomerKey; }), "threw");
+  assert("DEV reading result.CustomerKey reports the CLR restriction", threwFragment(function () { return result.CustomerKey; }, "Use of Common Language Runtime (CLR) is not allowed"), "matched");
+
+  /* 5. Workaround — a non-throwing return really did create the profile. */
+  assert("workaround: the created key now updates successfully", "" + DeliveryProfile.Init(KEY).Update({ Description: "confirmed by test script" }), "OK");
+
+  /* 6. Negative cases. */
+  assert("Add() with no argument throws", invocationResult(function () { return DeliveryProfile.Add(); }), "threw");
+  assert("Add({}) with an empty object throws", invocationResult(function () { return DeliveryProfile.Add({}); }), "threw");
+  assert("Add() re-using an existing CustomerKey throws", invocationResult(function () { return DeliveryProfile.Add(newDP); }), "threw");
+
+  /* Fixture cleanup. */
+  assert("fixture cleanup removed the created profile", "" + DeliveryProfile.Init(KEY).Remove(), "OK");
+  </script>
+
+instance-update: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <DeliveryProfileInstance>.Update(properties)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Update is an instance method (typeof "function") on the object
+   *      returned by DeliveryProfile.Init.
+   *   2. Update(properties) returns the string "OK" on success — the
+   *      documented return value — and its typeof is "string".
+   *   3. The exact shape of the page example, Update({ Name: ... }), succeeds.
+   *   4. The change persists: a second Update on the same key also returns
+   *      "OK", so the instance stayed bound to a real record.
+   *   5. Negative case: Update on a key that does not resolve to a delivery
+   *      profile returns the plain string "Error" rather than throwing, so a
+   *      caller MUST test the return value and cannot rely on try/catch alone.
+   *
+   * FIXTURE: creates ssjs-guide-ts-dp-update and removes it again at the end.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  var KEY = "ssjs-guide-ts-dp-update";
+
+  /* Orphan cleanup, then create the fixture. */
+  DeliveryProfile.Init(KEY).Remove();
+  DeliveryProfile.Add({
+      Name: "SSJS Guide Test Delivery Profile",
+      CustomerKey: KEY,
+      Description: "An SSJS Added Profile",
+      SourceAddressType: "DefaultPrivateIPAddress"
+  });
+
+  var myProfile = DeliveryProfile.Init(KEY);
+
+  /* 1. Shape. */
+  assert("typeof instance.Update is function", typeof myProfile.Update, "function");
+
+  /* 2 + 3. The documented return value, using the page example's payload. */
+  var status = myProfile.Update({ Name: "SSJS Updated Delivery Profile" });
+  assert("page example: Update({Name}) returns \"OK\"", "" + status, "OK");
+  assert("Update returns a string", typeof status, "string");
+  assert("Update does not throw on success", invocationResult(function () { return myProfile.Update({ Description: "second update" }); }), "returned");
+
+  /* 4. The instance stays bound — a repeated update still succeeds. */
+  assert("a repeated Update on the same instance still returns \"OK\"", "" + myProfile.Update({ Description: "third update" }), "OK");
+  assert("a freshly initialized instance for the same key also returns \"OK\"", "" + DeliveryProfile.Init(KEY).Update({ Description: "fourth update" }), "OK");
+
+  /* 5. Negative case — a non-resolving key returns "Error", it does not throw. */
+  assert("Update on a nonexistent key returns \"Error\"", "" + DeliveryProfile.Init("ssjs-guide-no-such-dp-zzz").Update({ Name: "x" }), "Error");
+  assert("Update on a nonexistent key does NOT throw (test the return value)", invocationResult(function () { return DeliveryProfile.Init("ssjs-guide-no-such-dp-zzz").Update({ Name: "x" }); }), "returned");
+
+  /* Fixture cleanup. */
+  assert("fixture cleanup removed the created profile", "" + DeliveryProfile.Init(KEY).Remove(), "OK");
+  </script>
+
+instance-remove: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <DeliveryProfileInstance>.Remove()
+   *
+   * CloudPage GET context. Proves:
+   *   1. Remove is an instance method (typeof "function") on the object
+   *      returned by DeliveryProfile.Init and takes no arguments.
+   *   2. Remove() returns the string "OK" on success — the documented return
+   *      value — and its typeof is "string".
+   *   3. The deletion really happened: after a successful Remove, a further
+   *      Update on the same key no longer succeeds.
+   *   4. Negative case: Remove() on a key that does not resolve to a delivery
+   *      profile returns the plain string "Error" rather than throwing — so a
+   *      caller MUST test the return value and cannot rely on try/catch alone.
+   *      This is also why the other scripts in this bundle can call Remove
+   *      unconditionally as an orphan-cleanup preamble.
+   *
+   * FIXTURE: creates ssjs-guide-ts-dp-remove and deletes it as the assertion.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  var KEY = "ssjs-guide-ts-dp-remove";
+
+  /* Orphan cleanup, then create the fixture. */
+  DeliveryProfile.Init(KEY).Remove();
+  DeliveryProfile.Add({
+      Name: "SSJS Guide Test Delivery Profile",
+      CustomerKey: KEY,
+      Description: "An SSJS Added Profile",
+      SourceAddressType: "DefaultPrivateIPAddress"
+  });
+
+  var myProfile = DeliveryProfile.Init(KEY);
+
+  /* 1. Shape. */
+  assert("typeof instance.Remove is function", typeof myProfile.Remove, "function");
+
+  /* Control: the fixture exists before the Remove. */
+  assert("control: the fixture updates successfully before Remove", "" + myProfile.Update({ Description: "about to be removed" }), "OK");
+
+  /* 2. The documented return value, using the page example's shape. */
+  var status = myProfile.Remove();
+  assert("page example: Remove() returns \"OK\"", "" + status, "OK");
+  assert("Remove returns a string", typeof status, "string");
+
+  /* 3. The deletion really happened. */
+  assert("after Remove the key no longer updates", "" + DeliveryProfile.Init(KEY).Update({ Name: "x" }), "Error");
+  assert("after Remove a second Remove on the same key returns \"Error\"", "" + DeliveryProfile.Init(KEY).Remove(), "Error");
+
+  /* 4. Negative case — a non-resolving key returns "Error", it does not throw. */
+  assert("Remove on a nonexistent key returns \"Error\"", "" + DeliveryProfile.Init("ssjs-guide-no-such-dp-zzz").Remove(), "Error");
+  assert("Remove on a nonexistent key does NOT throw (test the return value)", invocationResult(function () { return DeliveryProfile.Init("ssjs-guide-no-such-dp-zzz").Remove(); }), "returned");
+  </script>

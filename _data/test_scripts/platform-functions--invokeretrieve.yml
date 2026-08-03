@@ -1,0 +1,398 @@
+# Test scripts for /platform-functions/invokeretrieve/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the official Salesforce docs.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage on the MCDEV_Training_QA business unit.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# SOAP OBJECT UNDER TEST: a DataExtensionObject[<key>] RetrieveRequest against
+# a throwaway Data Extension the script creates itself and fills with a known
+# row, so that the matched-rows branch and the no-rows branch can both be
+# proven by a real round trip rather than by presence alone. The Data
+# Extension is deleted again, so the business unit is left clean.
+
+differs-from-docs: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Callout: differs-from-docs — the return value, the null ambiguity and the
+   * status out-parameter.
+   *
+   * Proves:
+   *   1. On a retrieve that MATCHES rows the call returns an ARRAY of result
+   *      objects, and each element exposes a Properties collection of
+   *      Name / Value pairs.
+   *   2. DEVIATION — on a retrieve that matches NO rows the call returns a
+   *      genuine null (not an empty array, not undefined). The official docs
+   *      type the return value as an object array only and never mention the
+   *      null return.
+   *   3. DEVIATION — on a retrieve that ERRORS the call ALSO returns null, so
+   *      the return value alone cannot distinguish "no rows" from "failed".
+   *   4. The discriminator is status[0]: it reads "OK" on BOTH success paths
+   *      (rows and no rows) and starts with "Error: " when the retrieve
+   *      failed. This is the opposite defect shape to
+   *      /platform-functions/invokeperform/ and
+   *      /platform-functions/invokecreate/, where status[0] holds a status
+   *      MESSAGE and the RETURN value is what equals "OK". Never carry a
+   *      status-slot conclusion across verbs.
+   *   5. PAIRED CONTROL on the status out parameter — three otherwise
+   *      IDENTICAL, SUCCESSFUL retrieves differing only in the initial size
+   *      of the status array. A PRE-SIZED [0, 0] IS populated in both slots;
+   *      an EMPTY [] is never grown and stays at length 0; a [0, 0, 0] keeps
+   *      its third slot at its initial value because only two slots are ever
+   *      written. The engine writes only into slots the array ALREADY has.
+   *      This is the InvokeExecute / InvokePerform behaviour
+   *      (/platform-functions/invokeexecute/, /platform-functions/invokeperform/)
+   *      and NOT the InvokeExtract one (/platform-functions/invokeextract/),
+   *      where even a pre-sized array stays untouched because the call throws
+   *      first. An observation that status.length stays 0 is MEANINGLESS
+   *      unless the array was pre-sized.
+   *   6. status[1] receives a RequestID GUID STRING of the canonical
+   *      36-character length — the InvokeExecute slot shape, NOT the
+   *      InvokePerform one where status[1] is a NUMBER.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit). The page also
+   * lists automation availability; the automation context was not exercised.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var prox = new Script.Util.WSProxy();
+  var runId = String(Platform.Function.Now().getTime());
+  var deKey = "ssjsg_ir_diff_de_" + runId;
+
+  /* Setup — a throwaway Data Extension with one known row. */
+  var deRes = prox.createItem("DataExtension", {
+      CustomerKey: deKey, Name: deKey,
+      Fields: [{ Name: "SubscriberKey", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true }]
+  });
+  assert("setup: the throwaway Data Extension is created", String(deRes.Status), "OK");
+  Platform.Function.InsertData(deKey, ["SubscriberKey"], ["row1"]);
+
+  /* A RetrieveRequest against that Data Extension, filtered on one value. */
+  function req(value) {
+      var r = Platform.Function.CreateObject("RetrieveRequest");
+      Platform.Function.SetObjectProperty(r, "ObjectType", "DataExtensionObject[" + deKey + "]");
+      Platform.Function.AddObjectArrayItem(r, "Properties", "SubscriberKey");
+      var f = Platform.Function.CreateObject("SimpleFilterPart");
+      Platform.Function.SetObjectProperty(f, "Property", "SubscriberKey");
+      Platform.Function.SetObjectProperty(f, "SimpleOperator", "equals");
+      Platform.Function.AddObjectArrayItem(f, "Value", value);
+      Platform.Function.SetObjectProperty(r, "Filter", f);
+      return r;
+  }
+
+  /* 1 + 5 + 6. The documented call, PRE-SIZED [0, 0], matching one row. */
+  var sized = [0, 0];
+  var hits = Platform.Function.InvokeRetrieve(req("row1"), sized);
+  assert("a retrieve that matches rows returns an object, not a string", String(typeof hits), "object");
+  assert("a retrieve that matches rows does NOT return null", hits === null ? "true" : "false", "false");
+  assert("the returned array carries one element for the one matching row", hits.length, 1);
+  assert("each result element exposes its Properties collection", hits[0].Properties.length, 1);
+  assert("the Properties collection carries the requested column name", String(hits[0].Properties[0].Name), "SubscriberKey");
+  assert("the Properties collection carries the stored value", String(hits[0].Properties[0].Value), "row1");
+  assert("a PRE-SIZED status array keeps its length", sized.length, 2);
+  assert("DEV status[0] IS populated on the success path - it reads 'OK' (the page previously claimed status was inert)", String(sized[0]), "OK");
+  assert("status[0] is a string", String(typeof sized[0]), "string");
+  assert("status[1] receives a RequestID GUID STRING (InvokePerform puts a NUMBER here)", String(typeof sized[1]), "string");
+  assert("the RequestID GUID has the canonical 36-character length", String(sized[1]).length, 36);
+
+  /* 5. CONTROL — the SAME successful call with an EMPTY status array. */
+  var empty = [];
+  var hitsE = Platform.Function.InvokeRetrieve(req("row1"), empty);
+  assert("control: the identical call still returns the one matching row", hitsE.length, 1);
+  assert("control: an EMPTY status array is never grown - it stays at length 0", empty.length, 0);
+  assert("control: status[0] of an empty array is undefined", empty[0] === undefined ? "true" : "false", "true");
+  assert("control: status[1] of an empty array is undefined", empty[1] === undefined ? "true" : "false", "true");
+
+  /* 5. CONTROL — a 3-slot array: only two slots are ever written. */
+  var three = [0, 0, 0];
+  Platform.Function.InvokeRetrieve(req("row1"), three);
+  assert("control: a 3-slot status array keeps its length", three.length, 3);
+  assert("control: a 3-slot status array still receives the overall status", String(three[0]), "OK");
+  assert("control: only two slots are ever written - status[2] keeps its initial value", three[2], 0);
+
+  /* 2 + 4. A successful retrieve that matches NO rows. */
+  var noneStatus = [0, 0];
+  var none = Platform.Function.InvokeRetrieve(req("nosuchrow"), noneStatus);
+  assert("DEV a retrieve that matches NO rows returns a genuine null (docs: an object array)", none === null ? "true" : "false", "true");
+  assert("the no-rows null is not undefined", none === undefined ? "true" : "false", "false");
+  assert("typeof the no-rows null is object", String(typeof none), "object");
+  assert("the no-rows retrieve nonetheless SUCCEEDED - status[0] reads 'OK'", String(noneStatus[0]), "OK");
+  assert("the no-rows retrieve still received a RequestID GUID", String(noneStatus[1]).length, 36);
+
+  /* 3 + 4. A retrieve that ERRORS returns null too. */
+  var errStatus = [0, 0];
+  var errReq = Platform.Function.CreateObject("RetrieveRequest");
+  Platform.Function.SetObjectProperty(errReq, "ObjectType", "DataExtensionObject[ssjsg_no_such_de_" + runId + "]");
+  Platform.Function.AddObjectArrayItem(errReq, "Properties", "SubscriberKey");
+  var errResult = Platform.Function.InvokeRetrieve(errReq, errStatus);
+  assert("DEV a retrieve that ERRORS returns null too - the return value cannot tell error from no-rows apart", errResult === null ? "true" : "false", "true");
+  assert("the failing retrieve does NOT throw", String(typeof errResult), "object");
+  assert("status[0] IS the discriminator: it starts with 'Error: ' on the failure path", String(errStatus[0]).indexOf("Error: ") === 0 ? "true" : "false", "true");
+  assert("the failure message names the missing Data Extension", String(errStatus[0]).indexOf("Data extension does not exist") > 0 ? "true" : "false", "true");
+  assert("the failing retrieve still received a RequestID GUID", String(errStatus[1]).length, 36);
+
+  /* Cleanup — the business unit is left clean. */
+  assert("cleanup: the throwaway Data Extension is deleted again", String(prox.deleteItem("DataExtension", { CustomerKey: deKey }).Status), "OK");
+  </script>
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters — Platform.Function.InvokeRetrieve(apiObject, status)
+   *
+   * Proves, one parameter at a time:
+   *   1. apiObject is a SOAP object built with CreateObject and configured
+   *      with SetObjectProperty / AddObjectArrayItem. Such an object is a
+   *      .NET CLR host object (typeof "clr"); SetObjectProperty and
+   *      AddObjectArrayItem both return a genuine null, NOT undefined.
+   *   2. A plain JavaScript object or a string as apiObject throws — the
+   *      parameter is not structurally typed, it must be an
+   *      ExactTarget.Integration.WSDL type.
+   *   3. A null apiObject is the one non-object that does NOT throw: no SOAP
+   *      call is made, the return value is a genuine null (not undefined, not
+   *      an array) and the status array is left untouched. This mirrors the
+   *      same finding on /platform-functions/invokecreate/,
+   *      /platform-functions/invokedelete/, /platform-functions/invokeexecute/,
+   *      /platform-functions/invokeextract/, /platform-functions/invokeperform/
+   *      and /platform-functions/invokeconfigure/.
+   *   4. status must be an array — a non-array throws — and it is a genuine
+   *      OUT parameter that must be PRE-SIZED: with [0, 0] both documented
+   *      slots are filled (overall status string, RequestID GUID string).
+   *   5. ARITY — 2 arguments is the ONLY valid arity. 0, 1 and 3 all throw.
+   *      Never assume an options argument is reachable just because a sibling
+   *      verb has one: /platform-functions/invokeperform/ accepts 3 or 4.
+   *   6. An unresolvable ObjectType is REJECTED BY THE API, not by the
+   *      function: the call returns null without throwing and reports the
+   *      reason in status[0]. That is an example-payload problem, not a
+   *      function failure.
+   *
+   * NOT ASSERTED: the values set on the apiObject cannot be read back from
+   * the object itself — it is a CLR host object and the engine blocks all
+   * introspection of it (see /platform-functions/createobject/). They are
+   * proven indirectly by the API's own response.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. apiObject is a CreateObject SOAP object — a CLR host object. */
+  var apiObject = Platform.Function.CreateObject("RetrieveRequest");
+  assert("typeof CreateObject('RetrieveRequest') is clr", String(typeof apiObject), "clr");
+  var setResult = Platform.Function.SetObjectProperty(apiObject, "ObjectType", "Email");
+  assert("SetObjectProperty(apiObject, 'ObjectType', ...) returns a genuine null", setResult === null ? "true" : "false", "true");
+  assert("SetObjectProperty does NOT return undefined", setResult === undefined ? "true" : "false", "false");
+  var addResult = Platform.Function.AddObjectArrayItem(apiObject, "Properties", "Email.Name");
+  assert("AddObjectArrayItem(apiObject, 'Properties', ...) returns a genuine null", addResult === null ? "true" : "false", "true");
+  assert("AddObjectArrayItem does NOT return undefined", addResult === undefined ? "true" : "false", "false");
+
+  function req() {
+      var r = Platform.Function.CreateObject("RetrieveRequest");
+      Platform.Function.SetObjectProperty(r, "ObjectType", "Email");
+      Platform.Function.AddObjectArrayItem(r, "Properties", "Email.Name");
+      return r;
+  }
+
+  /* 4. The documented 2-argument call fills both status slots. */
+  var status = [0, 0];
+  Platform.Function.InvokeRetrieve(apiObject, status);
+  assert("status is an OUT parameter: status[0] received the overall status", String(status[0]), "OK");
+  assert("status is an OUT parameter: status[1] received a RequestID GUID string", String(status[1]).length, 36);
+  assert("the pre-sized status array keeps its length", status.length, 2);
+
+  /* 5. Arity outside 2 throws. */
+  assertThrows("arity 0 throws (the only valid arity is 2)", function () {
+      return Platform.Function.InvokeRetrieve();
+  });
+  assertThrows("arity 1 throws (the only valid arity is 2)", function () {
+      return Platform.Function.InvokeRetrieve(req());
+  });
+  assertThrows("DEV arity 3 throws - there is NO options argument on this verb (InvokePerform accepts 3 or 4)", function () {
+      var s = [0, 0];
+      return Platform.Function.InvokeRetrieve(req(), s, null);
+  });
+
+  /* 2. apiObject must be a real SOAP object. */
+  assertThrows("a plain JavaScript object as apiObject throws", function () {
+      var s = [0, 0];
+      return Platform.Function.InvokeRetrieve({}, s);
+  });
+  assertThrows("a string as apiObject throws", function () {
+      var s = [0, 0];
+      return Platform.Function.InvokeRetrieve("Email", s);
+  });
+
+  /* 3. null apiObject: no SOAP call is made — genuine null back, status untouched. */
+  var nullStatus = [0, 0];
+  var nullResult = Platform.Function.InvokeRetrieve(null, nullStatus);
+  assert("a null apiObject does NOT throw", nullResult === null ? "true" : "false", "true");
+  assert("a null apiObject returns a genuine null, not an array", String(typeof nullResult), "object");
+  assert("a null apiObject is not undefined", nullResult === undefined ? "true" : "false", "false");
+  assert("a null apiObject leaves status[0] untouched (no SOAP call was made)", nullStatus[0], 0);
+  assert("a null apiObject leaves status[1] untouched (no SOAP call was made)", nullStatus[1], 0);
+
+  /* 4. status must be an array. */
+  assertThrows("a non-array status throws", function () {
+      return Platform.Function.InvokeRetrieve(req(), "notanarray");
+  });
+
+  /* 6. An unresolvable ObjectType is rejected by the API, not by the function. */
+  var badType = Platform.Function.CreateObject("RetrieveRequest");
+  Platform.Function.SetObjectProperty(badType, "ObjectType", "NotARealSoapType");
+  Platform.Function.AddObjectArrayItem(badType, "Properties", "Name");
+  var badStatus = [0, 0];
+  var badResult = Platform.Function.InvokeRetrieve(badType, badStatus);
+  assert("an unresolvable ObjectType does NOT throw - it returns null", badResult === null ? "true" : "false", "true");
+  assert("the API reports the rejected ObjectType in status[0]", String(badStatus[0]), "Error: NotARealSoapType is not a valid ObjectType.");
+  assert("the rejected-ObjectType call still received a RequestID GUID", String(badStatus[1]).length, 36);
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples — the CreateObject / SetObjectProperty /
+   * AddObjectArrayItem / InvokeRetrieve build-and-retrieve pattern.
+   *
+   * Proves:
+   *   1. Every line of the page's example runs: CreateObject
+   *      ("RetrieveRequest"), SetObjectProperty for the ObjectType,
+   *      AddObjectArrayItem for the requested column, a SimpleFilterPart
+   *      configured with Property / SimpleOperator / Value, and the final
+   *      2-argument InvokeRetrieve with a [0, 0] status array. The call
+   *      succeeds — status[0] reads "OK".
+   *   2. A SimpleFilterPart's Value is a COLLECTION: the example uses
+   *      AddObjectArrayItem for it on purpose. SetObjectProperty on "Value"
+   *      throws, so the AddObjectArrayItem form is the working invocation.
+   *   3. The retrieve really ran — it is NOT a presence-only check.
+   *      DISCRIMINATING CONTROL against a throwaway Data Extension the script
+   *      creates itself and fills with one known row: the SAME call shape
+   *      returns a one-element array for the value that exists and a genuine
+   *      null for a value that does not, while status[0] reads "OK" both
+   *      times. A call that had silently done nothing could not distinguish
+   *      the two.
+   *   4. The example's guard is on status[0], not on the return value,
+   *      because null means EITHER "no rows" OR "the retrieve failed": on
+   *      the no-rows path status[0] !== "OK" is false, on the error path it
+   *      is true, and the return value is null in both. This is the OPPOSITE
+   *      of /platform-functions/invokeperform/, where the RETURN value is
+   *      what equals "OK" and a status[0] guard fires on every successful
+   *      call — never carry a guard shape across verbs.
+   *   5. The script leaves nothing behind: the throwaway Data Extension is
+   *      deleted again.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. The page's example, line by line. */
+  var RetrieveRequest = Platform.Function.CreateObject("RetrieveRequest");
+  assert("example line 1: CreateObject('RetrieveRequest') yields a CLR host object", String(typeof RetrieveRequest), "clr");
+  assert("example line 2: SetObjectProperty(RetrieveRequest, 'ObjectType', 'Email') returns a genuine null", Platform.Function.SetObjectProperty(RetrieveRequest, "ObjectType", "Email") === null ? "true" : "false", "true");
+  assert("example line 3: AddObjectArrayItem(RetrieveRequest, 'Properties', 'Email.Name') returns a genuine null", Platform.Function.AddObjectArrayItem(RetrieveRequest, "Properties", "Email.Name") === null ? "true" : "false", "true");
+
+  var filter = Platform.Function.CreateObject("SimpleFilterPart");
+  assert("example line 4: CreateObject('SimpleFilterPart') yields a CLR host object", String(typeof filter), "clr");
+  assert("example line 5: the filter's Property is a scalar - SetObjectProperty works", Platform.Function.SetObjectProperty(filter, "Property", "Status") === null ? "true" : "false", "true");
+  assert("example line 6: the filter's SimpleOperator is a scalar - SetObjectProperty works", Platform.Function.SetObjectProperty(filter, "SimpleOperator", "equals") === null ? "true" : "false", "true");
+  assert("example line 7: the filter's Value is a COLLECTION - AddObjectArrayItem works", Platform.Function.AddObjectArrayItem(filter, "Value", "Active") === null ? "true" : "false", "true");
+  assert("example line 8: the configured filter is attached to the request", Platform.Function.SetObjectProperty(RetrieveRequest, "Filter", filter) === null ? "true" : "false", "true");
+
+  var StatusAndRequestID = [0, 0];
+  var Emails = Platform.Function.InvokeRetrieve(RetrieveRequest, StatusAndRequestID);
+  assert("example line 9: the retrieve SUCCEEDS - status[0] reads 'OK'", String(StatusAndRequestID[0]), "OK");
+  assert("example line 9: the retrieve received a RequestID GUID", String(StatusAndRequestID[1]).length, 36);
+
+  /* 2. SetObjectProperty is NOT the way to set a collection-valued Value. */
+  var badFilter = Platform.Function.CreateObject("SimpleFilterPart");
+  Platform.Function.SetObjectProperty(badFilter, "Property", "Status");
+  Platform.Function.SetObjectProperty(badFilter, "SimpleOperator", "equals");
+  assertThrows("SetObjectProperty(filter, 'Value', ...) throws - Value is a collection, use AddObjectArrayItem", function () {
+      return Platform.Function.SetObjectProperty(badFilter, "Value", "Active");
+  });
+
+  /* 3 + 4. DISCRIMINATING CONTROL on a Data Extension the script owns. */
+  var prox = new Script.Util.WSProxy();
+  var runId = String(Platform.Function.Now().getTime());
+  var deKey = "ssjsg_ir_ex_de_" + runId;
+  assert("setup: the throwaway Data Extension is created", String(prox.createItem("DataExtension", {
+      CustomerKey: deKey, Name: deKey,
+      Fields: [{ Name: "SubscriberKey", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true }]
+  }).Status), "OK");
+  Platform.Function.InsertData(deKey, ["SubscriberKey"], ["row1"]);
+
+  function deReq(value) {
+      var r = Platform.Function.CreateObject("RetrieveRequest");
+      Platform.Function.SetObjectProperty(r, "ObjectType", "DataExtensionObject[" + deKey + "]");
+      Platform.Function.AddObjectArrayItem(r, "Properties", "SubscriberKey");
+      var f = Platform.Function.CreateObject("SimpleFilterPart");
+      Platform.Function.SetObjectProperty(f, "Property", "SubscriberKey");
+      Platform.Function.SetObjectProperty(f, "SimpleOperator", "equals");
+      Platform.Function.AddObjectArrayItem(f, "Value", value);
+      Platform.Function.SetObjectProperty(r, "Filter", f);
+      return r;
+  }
+
+  var hitStatus = [0, 0];
+  var hits = Platform.Function.InvokeRetrieve(deReq("row1"), hitStatus);
+  assert("control: the value that EXISTS comes back as a one-element array", hits.length, 1);
+  assert("control: the row carries the value the script stored", String(hits[0].Properties[0].Value), "row1");
+  assert("control: the matching retrieve reports status[0] 'OK'", String(hitStatus[0]), "OK");
+
+  var missStatus = [0, 0];
+  var miss = Platform.Function.InvokeRetrieve(deReq("nosuchrow"), missStatus);
+  assert("control: the value that does NOT exist comes back as a genuine null", miss === null ? "true" : "false", "true");
+  assert("control: the no-rows retrieve ALSO reports status[0] 'OK' - it did not fail", String(missStatus[0]), "OK");
+
+  var failStatus = [0, 0];
+  var failReq = Platform.Function.CreateObject("RetrieveRequest");
+  Platform.Function.SetObjectProperty(failReq, "ObjectType", "DataExtensionObject[ssjsg_no_such_de_" + runId + "]");
+  Platform.Function.AddObjectArrayItem(failReq, "Properties", "SubscriberKey");
+  var failResult = Platform.Function.InvokeRetrieve(failReq, failStatus);
+  assert("control: a FAILING retrieve returns null too - identical to the no-rows return value", failResult === null ? "true" : "false", "true");
+
+  /* 4. The example's guard separates the two null cases; a return-value guard cannot. */
+  assert("the example guard status[0] !== 'OK' does NOT fire on the no-rows path", missStatus[0] !== "OK" ? "true" : "false", "false");
+  assert("the example guard status[0] !== 'OK' DOES fire on the failure path", failStatus[0] !== "OK" ? "true" : "false", "true");
+  assert("a return-value guard could not tell the two apart - both returned null", (miss === null && failResult === null) ? "true" : "false", "true");
+
+  /* 5. Cleanup — the business unit is left clean. */
+  assert("cleanup: the throwaway Data Extension is deleted again", String(prox.deleteItem("DataExtension", { CustomerKey: deKey }).Status), "OK");
+  </script>

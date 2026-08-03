@@ -1,0 +1,399 @@
+# Test scripts for /platform-functions/setobjectproperty/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the official Salesforce docs.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage on the MCDEV_Training_QA business unit.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters — Platform.Function.SetObjectProperty(object, propertyName, value)
+   *
+   * Proves:
+   *   1. The member exists and is invocable: a successful 3-argument call on a
+   *      CreateObject object is the ONLY reliable existence proof for a
+   *      Platform.Function member (typeof reports "clrmethodinfo" for EVERY
+   *      name, real or not, so it proves nothing — asserted below purely as an
+   *      observed fact, never as existence evidence).
+   *   2. `object` must be a SOAP API object built with CreateObject: a plain
+   *      JavaScript object, a string, a number, null and undefined all throw.
+   *   3. `propertyName` must EXACTLY match a property on that object's SOAP
+   *      schema. The match is CASE SENSITIVE: "EmailAddress" works while
+   *      "emailaddress" and "EMAILADDRESS" throw. An unknown name, an empty
+   *      string, null, undefined and a non-string name all throw too.
+   *   4. `value` accepts a wide range of JavaScript types on a compatible
+   *      property: string, number, numeric string, boolean, boolean-ish
+   *      string, null, undefined, an array, a Date, and another CLR object
+   *      built with CreateObject (RetrieveRequest.Filter = SimpleFilterPart).
+   *      A number is even accepted on a string-typed property.
+   *   5. The schema still constrains the value where the property is an object
+   *      or array: a CLR object of the WRONG type on Filter throws, and an
+   *      array property (Subscriber.Attributes) cannot be assigned with
+   *      SetObjectProperty — that is AddObjectArrayItem's job.
+   *   6. Setting the same property twice is allowed and overwrites it.
+   *   7. Exactly 3 arguments: arity 0, 1, 2, 4 and 5 all throw.
+   *   8. The Platform.Function. prefix is REQUIRED. The bare name
+   *      SetObjectProperty(...) throws "Object expected: SetObjectProperty"
+   *      even after Platform.Load("core", "1.1.5").
+   *
+   * NOTE ON ERROR MESSAGES: every schema/target rejection reports the same
+   * overloaded string ("An error occurred when attempting to evaluate a
+   * SetObjectProperty function call."), and every wrong arity reports the
+   * unrelated but equally overloaded "Unable to retrieve security descriptor
+   * for this frame." Neither string identifies a cause on its own — they are
+   * asserted only to pin the observed behaviour.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit). The page also
+   * lists automation availability; the automation context was not exercised.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertNoThrow(id, fn) {
+      var ok = true, msg = "ok";
+      try { fn(); } catch (ex) { ok = false; msg = ex.message; }
+      Platform.Response.Write((ok ? "PASS " : "FAIL ") + id + " -> [" + msg + "]\n");
+  }
+  /* Caught messages are .NET strings and are never === a JS literal, so they
+     are compared by fragment instead. */
+  function assertRaises(id, fn, fragment) {
+      var msg = "NO-THROW";
+      try { fn(); } catch (ex) { msg = ex.message; }
+      var ok = String(msg).indexOf(fragment) !== -1;
+      Platform.Response.Write((ok ? "PASS " : "FAIL ") + id + " -> [" + msg + "]\n");
+  }
+  var EVAL_ERROR = "An error occurred when attempting to evaluate a SetObjectProperty function call.";
+  var ARITY_ERROR = "Unable to retrieve security descriptor for this frame.";
+
+  /* 1. Existence proof — a successful 3-argument call. */
+  var sub = Platform.Function.CreateObject("Subscriber");
+  assert("typeof CreateObject('Subscriber') is clr", String(typeof sub), "clr");
+  assertNoThrow("SetObjectProperty(sub, 'EmailAddress', string) succeeds (existence proof)", function () {
+      Platform.Function.SetObjectProperty(sub, "EmailAddress", "jane@example.com");
+  });
+  assert("typeof Platform.Function.SetObjectProperty is clrmethodinfo (NOT existence evidence)", String(typeof Platform.Function.SetObjectProperty), "clrmethodinfo");
+
+  /* 6. Setting the same property twice overwrites it. */
+  assertNoThrow("setting the same property a second time succeeds (overwrite)", function () {
+      Platform.Function.SetObjectProperty(sub, "EmailAddress", "john@example.com");
+  });
+
+  /* 2. `object` must be a CreateObject CLR object. */
+  assertRaises("plain JavaScript object as target throws", function () {
+      Platform.Function.SetObjectProperty({ EmailAddress: "" }, "EmailAddress", "x");
+  }, EVAL_ERROR);
+  assertRaises("string as target throws", function () {
+      Platform.Function.SetObjectProperty("notanobject", "EmailAddress", "x");
+  }, EVAL_ERROR);
+  assertRaises("number as target throws", function () {
+      Platform.Function.SetObjectProperty(5, "EmailAddress", "x");
+  }, EVAL_ERROR);
+  assertRaises("null as target throws", function () {
+      Platform.Function.SetObjectProperty(null, "EmailAddress", "x");
+  }, EVAL_ERROR);
+  assertRaises("undefined as target throws", function () {
+      Platform.Function.SetObjectProperty(undefined, "EmailAddress", "x");
+  }, EVAL_ERROR);
+
+  /* 3. `propertyName` must exactly match the SOAP schema — case sensitive. */
+  assertRaises("unknown propertyName throws", function () {
+      Platform.Function.SetObjectProperty(sub, "NotARealProperty", "x");
+  }, EVAL_ERROR);
+  assertRaises("lowercase 'emailaddress' throws — the match is CASE SENSITIVE", function () {
+      Platform.Function.SetObjectProperty(sub, "emailaddress", "x");
+  }, EVAL_ERROR);
+  assertRaises("uppercase 'EMAILADDRESS' throws — the match is CASE SENSITIVE", function () {
+      Platform.Function.SetObjectProperty(sub, "EMAILADDRESS", "x");
+  }, EVAL_ERROR);
+  assertRaises("empty-string propertyName throws", function () {
+      Platform.Function.SetObjectProperty(sub, "", "x");
+  }, EVAL_ERROR);
+  assertRaises("null propertyName throws", function () {
+      Platform.Function.SetObjectProperty(sub, null, "x");
+  }, EVAL_ERROR);
+  assertRaises("undefined propertyName throws", function () {
+      Platform.Function.SetObjectProperty(sub, undefined, "x");
+  }, EVAL_ERROR);
+  assertRaises("numeric propertyName throws", function () {
+      Platform.Function.SetObjectProperty(sub, 5, "x");
+  }, EVAL_ERROR);
+
+  /* 4. `value` accepts many JavaScript types on a compatible property. */
+  var fld = Platform.Function.CreateObject("DataExtensionField");
+  assertNoThrow("string value on a string property succeeds", function () {
+      Platform.Function.SetObjectProperty(fld, "Name", "Email");
+  });
+  assertNoThrow("number value on a numeric property succeeds", function () {
+      Platform.Function.SetObjectProperty(fld, "MaxLength", 100);
+  });
+  assertNoThrow("numeric-string value on a numeric property succeeds", function () {
+      Platform.Function.SetObjectProperty(fld, "MaxLength", "100");
+  });
+  assertNoThrow("boolean value on a boolean property succeeds", function () {
+      Platform.Function.SetObjectProperty(fld, "IsPrimaryKey", true);
+  });
+  assertNoThrow("boolean-ish string value on a boolean property succeeds", function () {
+      Platform.Function.SetObjectProperty(fld, "IsPrimaryKey", "true");
+  });
+  assertNoThrow("number value on a STRING property is coerced, not rejected", function () {
+      Platform.Function.SetObjectProperty(fld, "Name", 42);
+  });
+  assertNoThrow("null value is accepted", function () {
+      Platform.Function.SetObjectProperty(sub, "EmailAddress", null);
+  });
+  assertNoThrow("undefined value is accepted", function () {
+      Platform.Function.SetObjectProperty(sub, "EmailAddress", undefined);
+  });
+  assertNoThrow("array value is accepted on a scalar property", function () {
+      Platform.Function.SetObjectProperty(sub, "EmailAddress", ["a", "b"]);
+  });
+  assertNoThrow("Date value is accepted on a date property", function () {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CreatedDate", new Date());
+  });
+  assertNoThrow("a nested CLR object built with CreateObject is accepted", function () {
+      var rr = Platform.Function.CreateObject("RetrieveRequest");
+      var fp = Platform.Function.CreateObject("SimpleFilterPart");
+      Platform.Function.SetObjectProperty(fp, "Property", "CustomerKey");
+      Platform.Function.SetObjectProperty(fp, "SimpleOperator", "equals");
+      Platform.Function.SetObjectProperty(rr, "Filter", fp);
+  });
+
+  /* 5. Object- and array-typed properties are still schema constrained. */
+  assertRaises("a CLR object of the WRONG type on Filter throws", function () {
+      var rr2 = Platform.Function.CreateObject("RetrieveRequest");
+      Platform.Function.SetObjectProperty(rr2, "Filter", Platform.Function.CreateObject("Subscriber"));
+  }, EVAL_ERROR);
+  assertRaises("an ARRAY property cannot be assigned — use AddObjectArrayItem instead", function () {
+      Platform.Function.SetObjectProperty(sub, "Attributes", Platform.Function.CreateObject("Attribute"));
+  }, EVAL_ERROR);
+
+  /* 7. Exactly three arguments — every other arity throws. */
+  assertRaises("arity 0 throws", function () { Platform.Function.SetObjectProperty(); }, ARITY_ERROR);
+  assertRaises("arity 1 throws", function () { Platform.Function.SetObjectProperty(sub); }, ARITY_ERROR);
+  assertRaises("arity 2 throws", function () { Platform.Function.SetObjectProperty(sub, "EmailAddress"); }, ARITY_ERROR);
+  assertRaises("arity 4 throws", function () { Platform.Function.SetObjectProperty(sub, "EmailAddress", "x", 1); }, ARITY_ERROR);
+  assertRaises("arity 5 throws", function () { Platform.Function.SetObjectProperty(sub, "EmailAddress", "x", 1, 2); }, ARITY_ERROR);
+
+  /* 8. The Platform.Function. prefix is required. */
+  assertRaises("the bare name SetObjectProperty throws even after a Core load", function () {
+      SetObjectProperty(sub, "EmailAddress", "x");
+  }, "Object expected: SetObjectProperty");
+  </script>
+
+return-value: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Return Value — and the differs-from-docs claim.
+   *
+   * Official docs: the return is typed VOID (nothing is returned).
+   * SFMC runtime:  a genuine JavaScript null is returned on success.
+   *
+   * Proves:
+   *   1. DEV the return value is a genuine JavaScript null (docs: void):
+   *      typeof is "object", === null is true, === undefined is FALSE, and
+   *      String(result) is "null". The explicit undefined check matters — the
+   *      sibling AddObjectArrayItem page once wrongly claimed undefined.
+   *   2. DEV every call returns the same null, including an overwrite of an
+   *      already-set property, not just the first set.
+   *   3. The assigned property CANNOT be read back from SSJS. Every read path
+   *      documented in the page's table is asserted:
+   *        - dot access throws "Use of Common Language Runtime (CLR) is not allowed"
+   *        - bracket access throws the same message
+   *        - for..in enumeration yields ZERO keys
+   *        - Platform.Function.Stringify(object) returns only the QUOTED .NET
+   *          type name, never the values
+   *        - String(object) coerces to the same type name without quotes
+   *        - Platform.Function.GetObjectProperty does not exist: no arity in a
+   *          0..3 sweep ever returns a value (typeof is a worthless signal
+   *          here — it reports "clrmethodinfo" for every name, real or not).
+   *   4. An unreadable property is NOT an unset property — the recommended
+   *      workaround is to pass the populated object straight into the SOAP
+   *      call that consumes it. That round trip is proven in the Examples
+   *      chapter's script.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertRaises(id, fn, fragment) {
+      var msg = "NO-THROW";
+      try { fn(); } catch (ex) { msg = ex.message; }
+      var ok = String(msg).indexOf(fragment) !== -1;
+      Platform.Response.Write((ok ? "PASS " : "FAIL ") + id + " -> [" + msg + "]\n");
+  }
+  var CLR_BLOCKED = "Use of Common Language Runtime (CLR) is not allowed";
+
+  var sub = Platform.Function.CreateObject("Subscriber");
+
+  /* 1. DEVIATION — a genuine null, not the documented void. */
+  var r1 = Platform.Function.SetObjectProperty(sub, "EmailAddress", "jane@example.com");
+  assert("DEV typeof result is object (docs: the return is typed void)", String(typeof r1), "object");
+  assert("DEV result === null (docs: the return is typed void)", r1 === null ? "true" : "false", "true");
+  assert("DEV result === undefined is FALSE — it is null, not undefined", r1 === undefined ? "true" : "false", "false");
+  assert("DEV String(result) is 'null'", String(r1), "null");
+
+  /* 2. Every call returns the same null, including an overwrite. */
+  var r2 = Platform.Function.SetObjectProperty(sub, "SubscriberKey", "sub_jane");
+  assert("DEV a second, different property also returns null", r2 === null ? "true" : "false", "true");
+  var r3 = Platform.Function.SetObjectProperty(sub, "EmailAddress", "john@example.com");
+  assert("DEV overwriting an already-set property also returns null", r3 === null ? "true" : "false", "true");
+
+  /* 3. Every documented read path fails to expose the value. */
+  assertRaises("dot access on the CLR object throws", function () {
+      return sub.EmailAddress;
+  }, CLR_BLOCKED);
+  assertRaises("bracket access on the CLR object throws", function () {
+      return sub["EmailAddress"];
+  }, CLR_BLOCKED);
+  var keyCount = 0;
+  for (var k in sub) { keyCount = keyCount + 1; }
+  assert("for..in over the CLR object yields 0 keys", keyCount, 0);
+  assert("Stringify(object) returns only the quoted .NET type name", String(Platform.Function.Stringify(sub)), "\"ExactTarget.Integration.WSDL.Subscriber\"");
+  assert("String(object) coerces to the .NET type name, not the values", String(sub), "ExactTarget.Integration.WSDL.Subscriber");
+
+  /* 3. GetObjectProperty does not exist — sweep every plausible arity. No
+     arity may produce a value; each one must throw. */
+  function assertNoValue(id, fn) {
+      var outcome = "returned a value";
+      try {
+          var v = fn();
+          if (v === undefined) { outcome = "returned undefined"; }
+      } catch (ex) { outcome = "threw: " + ex.message; }
+      var ok = String(outcome).indexOf("threw: ") === 0;
+      Platform.Response.Write((ok ? "PASS " : "FAIL ") + id + " -> [" + outcome + "]\n");
+  }
+  assertNoValue("GetObjectProperty arity 0 never returns a value", function () {
+      return Platform.Function.GetObjectProperty();
+  });
+  assertNoValue("GetObjectProperty arity 1 never returns a value", function () {
+      return Platform.Function.GetObjectProperty(sub);
+  });
+  assertNoValue("GetObjectProperty arity 2 never returns a value", function () {
+      return Platform.Function.GetObjectProperty(sub, "EmailAddress");
+  });
+  assertNoValue("GetObjectProperty arity 3 never returns a value", function () {
+      return Platform.Function.GetObjectProperty(sub, "EmailAddress", "x");
+  });
+
+  /* 4. Unreadable is not unset — the object stays a usable CLR host object. */
+  assert("the populated object is still a CLR host object", String(typeof sub), "clr");
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples — populate a CreateObject object with SetObjectProperty
+   * and hand it to the SOAP call that consumes it.
+   *
+   * The page's example builds a Subscriber. Firing a real subscriber create is
+   * not a side-effect-free assertion, so this script proves the SAME pattern
+   * end to end against a THROWAWAY data extension that it creates, writes to,
+   * reads back and deletes itself.
+   *
+   * This round trip is the ONLY way to prove the assigned values actually
+   * landed: they cannot be read back off the CLR object (see the Return Value
+   * chapter). Unreadable is NOT unset — this script is the proof.
+   *
+   * Proves:
+   *   1. SetObjectProperty populates a DataExtension payload (CustomerKey,
+   *      Name) and its DataExtensionField (Name, FieldType, MaxLength,
+   *      IsPrimaryKey, IsRequired) — every set returns null.
+   *   2. InvokeCreate accepts the populated payload and returns "OK".
+   *   3. ROUND-TRIP PROOF — retrieving the data extension by the CustomerKey
+   *      that was set with SetObjectProperty finds exactly one match whose
+   *      CustomerKey and Name equal the assigned values. The property really
+   *      survived into the SOAP call.
+   *   4. The page's own two-property Subscriber shape (EmailAddress +
+   *      SubscriberKey) is exercised as a row-level round trip: the values set
+   *      on an APIProperty reach the created row and read back identically.
+   *   5. Cleanup — the throwaway data extension is deleted, leaving the
+   *      business unit as it was.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var deKey = "ssjsguide_setobjectproperty_example";
+
+  /* 1. Populate a DataExtension payload — every set returns null. */
+  var de = Platform.Function.CreateObject("DataExtension");
+  assert("SetObjectProperty(de, 'CustomerKey', ...) returns null", Platform.Function.SetObjectProperty(de, "CustomerKey", deKey) === null ? "true" : "false", "true");
+  assert("SetObjectProperty(de, 'Name', ...) returns null", Platform.Function.SetObjectProperty(de, "Name", deKey) === null ? "true" : "false", "true");
+
+  var field = Platform.Function.CreateObject("DataExtensionField");
+  assert("SetObjectProperty(field, 'Name', 'EmailAddress') returns null", Platform.Function.SetObjectProperty(field, "Name", "EmailAddress") === null ? "true" : "false", "true");
+  assert("SetObjectProperty(field, 'FieldType', 'Text') returns null", Platform.Function.SetObjectProperty(field, "FieldType", "Text") === null ? "true" : "false", "true");
+  assert("SetObjectProperty(field, 'MaxLength', '100') returns null", Platform.Function.SetObjectProperty(field, "MaxLength", "100") === null ? "true" : "false", "true");
+  assert("SetObjectProperty(field, 'IsPrimaryKey', 'true') returns null", Platform.Function.SetObjectProperty(field, "IsPrimaryKey", "true") === null ? "true" : "false", "true");
+  assert("SetObjectProperty(field, 'IsRequired', 'true') returns null", Platform.Function.SetObjectProperty(field, "IsRequired", "true") === null ? "true" : "false", "true");
+  Platform.Function.AddObjectArrayItem(de, "Fields", field);
+
+  /* 2. The populated payload is accepted by the SOAP call. */
+  var statusDE = [0, 0];
+  assert("InvokeCreate(de, status, null) returns 'OK'", String(Platform.Function.InvokeCreate(de, statusDE, null)), "OK");
+
+  /* 3. ROUND-TRIP PROOF — the assigned CustomerKey and Name really landed. */
+  var rrDE = Platform.Function.CreateObject("RetrieveRequest");
+  Platform.Function.SetObjectProperty(rrDE, "ObjectType", "DataExtension");
+  Platform.Function.AddObjectArrayItem(rrDE, "Properties", "CustomerKey");
+  Platform.Function.AddObjectArrayItem(rrDE, "Properties", "Name");
+  var filter = Platform.Function.CreateObject("SimpleFilterPart");
+  Platform.Function.SetObjectProperty(filter, "Property", "CustomerKey");
+  Platform.Function.SetObjectProperty(filter, "SimpleOperator", "equals");
+  Platform.Function.AddObjectArrayItem(filter, "Value", deKey);
+  Platform.Function.SetObjectProperty(rrDE, "Filter", filter);
+  var statusR1 = [0, 0];
+  var deRows = Platform.Function.InvokeRetrieve(rrDE, statusR1);
+  assert("the created data extension is retrievable (exactly 1 match)", deRows === null ? "null" : deRows.length, 1);
+  assert("round-trip: the CustomerKey set with SetObjectProperty landed", String(deRows[0].CustomerKey), deKey);
+  assert("round-trip: the Name set with SetObjectProperty landed", String(deRows[0].Name), deKey);
+
+  /* 4. The page's Subscriber-shaped example as a row-level round trip. */
+  var deObject = Platform.Function.CreateObject("DataExtensionObject");
+  assert("SetObjectProperty(deObject, 'CustomerKey', ...) returns null", Platform.Function.SetObjectProperty(deObject, "CustomerKey", deKey) === null ? "true" : "false", "true");
+  var prop = Platform.Function.CreateObject("APIProperty");
+  assert("SetObjectProperty(prop, 'Name', 'EmailAddress') returns null", Platform.Function.SetObjectProperty(prop, "Name", "EmailAddress") === null ? "true" : "false", "true");
+  assert("SetObjectProperty(prop, 'Value', 'new@example.com') returns null", Platform.Function.SetObjectProperty(prop, "Value", "new@example.com") === null ? "true" : "false", "true");
+  Platform.Function.AddObjectArrayItem(deObject, "Properties", prop);
+  var statusRow = [0, 0];
+  assert("InvokeCreate(deObject, status, null) returns 'OK'", String(Platform.Function.InvokeCreate(deObject, statusRow, null)), "OK");
+
+  var rrRow = Platform.Function.CreateObject("RetrieveRequest");
+  Platform.Function.SetObjectProperty(rrRow, "ObjectType", "DataExtensionObject[" + deKey + "]");
+  Platform.Function.AddObjectArrayItem(rrRow, "Properties", "EmailAddress");
+  var statusR2 = [0, 0];
+  var rows = Platform.Function.InvokeRetrieve(rrRow, statusR2);
+  assert("the created row is retrievable (exactly 1 row)", rows === null ? "null" : rows.length, 1);
+  assert("round-trip: the APIProperty Name set with SetObjectProperty reached the row", String(rows[0].Properties[0].Name), "EmailAddress");
+  assert("round-trip: the APIProperty Value set with SetObjectProperty reached the row", String(rows[0].Properties[0].Value), "new@example.com");
+
+  /* 5. Cleanup — remove the throwaway data extension. */
+  var del = Platform.Function.CreateObject("DataExtension");
+  Platform.Function.SetObjectProperty(del, "CustomerKey", deKey);
+  var statusDel = [0, 0];
+  assert("InvokeDelete removes the throwaway data extension", String(Platform.Function.InvokeDelete(del, statusDel, null)), "OK");
+  </script>

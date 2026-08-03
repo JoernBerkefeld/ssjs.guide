@@ -1,0 +1,768 @@
+# Test scripts for /platform-functions/lookup/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the official Salesforce docs.
+#
+# Lookup is a READ function, but a read is only meaningful against known data,
+# so every script builds its OWN throwaway data extension, seeds it with known
+# rows, reads them back with Lookup and drops the data extension again. Nothing
+# pre-existing is touched.
+#
+# HARNESS NOTE: within a single request the engine CACHES a data-extension
+# query — issuing the SAME Lookup(deName, returnField, field, value) twice
+# returns the FIRST result even after rows were written in between. This was
+# re-confirmed for Lookup itself during this run (a pre-insert Lookup that
+# returned null still returned null after the row was inserted, while a
+# DIFFERENT query shape found the new row immediately). Every script below
+# therefore issues each distinct query AT MOST ONCE, and never reads a row
+# whose absence it queried earlier.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage on the MCDEV_Training_QA business unit.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters —
+   * Platform.Function.Lookup(deName, returnField, whereFieldNames, whereFieldValues)
+   *
+   * Proves:
+   *   1. The member exists and the documented 4-argument call succeeds against
+   *      a real data extension that this script creates itself. Existence is
+   *      proven by CALLING it — `typeof Platform.Function.Lookup` reports the
+   *      phantom "clrmethodinfo", not "function".
+   *   2. deName resolves the data extension by its NAME. The data extension
+   *      built here deliberately has a Name that DIFFERS from its CustomerKey,
+   *      so the two are distinguishable, and the CustomerKey form throws.
+   *   3. returnField selects which column's value comes back — two different
+   *      returnField values against the SAME filter yield the two different
+   *      column values.
+   *   4. whereFieldNames accepts a plain STRING (single filter) and equally a
+   *      string ARRAY (multi-column AND logic); whereFieldValues is aligned to
+   *      it POSITIONALLY — a deliberately mis-aligned pair matches nothing.
+   *   5. The name/value pairing is enforced: unequal array lengths throw in
+   *      both directions.
+   *   6. Exactly four arguments are required (min_args 4 / max_args 4).
+   *      Arities 0, 1, 2, 3 and 5 all throw. Arity 6 — the AMPscript-style
+   *      "repeating name/value pairs" form — ALSO throws, so the SSJS
+   *      signature is NOT variadic despite the repeating-pair wording used in
+   *      the AMPscript documentation.
+   *   7. A returnField that does not exist throws, a filter column that does
+   *      not exist throws, and a data extension name that does not exist
+   *      throws.
+   *
+   * QUERY-CACHING CONSTRAINT: identical data-extension queries are cached
+   * within one request, so every distinct query below is issued only once and
+   * setup state is asserted through InsertData's own return count.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit). The page also
+   * lists email, automation and triggered-send availability; those execution
+   * contexts were NOT exercised here.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  function addField(de, name, len, isKey) {
+      var f = Platform.Function.CreateObject("DataExtensionField");
+      Platform.Function.SetObjectProperty(f, "Name", name);
+      Platform.Function.SetObjectProperty(f, "FieldType", "Text");
+      Platform.Function.SetObjectProperty(f, "MaxLength", len);
+      Platform.Function.SetObjectProperty(f, "IsPrimaryKey", isKey);
+      Platform.Function.SetObjectProperty(f, "IsRequired", isKey);
+      Platform.Function.AddObjectArrayItem(de, "Fields", f);
+  }
+  function createDE(name, key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      Platform.Function.SetObjectProperty(de, "Name", name);
+      addField(de, "Email", "100", "true");
+      addField(de, "Grp", "50", "false");
+      addField(de, "Val", "50", "false");
+      var st = [0, 0];
+      return String(Platform.Function.InvokeCreate(de, st, null));
+  }
+  function dropDE(key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      var st = [0, 0];
+      return String(Platform.Function.InvokeDelete(de, st, null));
+  }
+
+  var deName = "ssjsguide_lookup_params_name";
+  var deKey = "ssjsguide_lookup_params_key";
+
+  /* 2. The control that makes the Name-vs-key test discriminating. */
+  assert("control: the Name and the CustomerKey differ", deName === deKey ? "same" : "different", "different");
+
+  assert("setup: the throwaway data extension is created", createDE(deName, deKey), "OK");
+  assert("setup: row a inserted", Platform.Function.InsertData(deName, ["Email", "Grp", "Val"], ["a@example.com", "solo", "alpha"]), 1);
+  assert("setup: row b inserted", Platform.Function.InsertData(deName, ["Email", "Grp", "Val"], ["b@example.com", "dup", "beta"]), 1);
+  assert("setup: row c inserted", Platform.Function.InsertData(deName, ["Email", "Grp", "Val"], ["c@example.com", "dup", "gamma"]), 1);
+
+  /* 1. The documented 4-argument call works; typeof reports the phantom. */
+  assert("the documented 4-argument call returns the stored value", String(Platform.Function.Lookup(deName, "Val", "Email", "a@example.com")), "alpha");
+  assert("typeof Platform.Function.Lookup is the phantom clrmethodinfo, so existence is proven by calling", String(typeof Platform.Function.Lookup), "clrmethodinfo");
+
+  /* 3. returnField selects the column. */
+  assert("returnField selects the Grp column of the same row", String(Platform.Function.Lookup(deName, "Grp", "Email", "b@example.com")), "dup");
+
+  /* 4. whereFieldNames as a string and as an array; positional alignment. */
+  assert("whereFieldNames as a single-element ARRAY behaves like the string form", String(Platform.Function.Lookup(deName, "Val", ["Email"], ["c@example.com"])), "gamma");
+  assert("a two-column ARRAY filter applies AND logic", String(Platform.Function.Lookup(deName, "Val", ["Grp", "Email"], ["dup", "b@example.com"])), "beta");
+  assert("the arrays are POSITIONALLY aligned: swapping the values matches nothing", Platform.Function.Lookup(deName, "Val", ["Grp", "Email"], ["c@example.com", "dup"]) === null ? "null" : "not null", "null");
+
+  /* 5. The name/value pairing is enforced. */
+  assertThrows("more filter names than values throws", function () {
+      return Platform.Function.Lookup(deName, "Val", ["Grp", "Email"], ["dup"]);
+  });
+  assertThrows("more filter values than names throws", function () {
+      return Platform.Function.Lookup(deName, "Val", ["Grp"], ["dup", "b@example.com"]);
+  });
+
+  /* 6. Exactly four arguments — the signature is NOT variadic. */
+  assertThrows("arity 0 throws", function () { return Platform.Function.Lookup(); });
+  assertThrows("arity 1 throws", function () { return Platform.Function.Lookup(deName); });
+  assertThrows("arity 2 throws", function () { return Platform.Function.Lookup(deName, "Val"); });
+  assertThrows("arity 3 throws", function () { return Platform.Function.Lookup(deName, "Val", "Email"); });
+  assertThrows("arity 5 throws", function () { return Platform.Function.Lookup(deName, "Val", "Email", "a@example.com", "extra"); });
+  assertThrows("arity 6 throws: the AMPscript-style repeating name/value pair form is NOT accepted in SSJS", function () {
+      return Platform.Function.Lookup(deName, "Val", "Grp", "dup", "Email", "c@example.com");
+  });
+
+  /* 2 + 7. Bad identifiers all throw. */
+  assertThrows("DEV Lookup(<CustomerKey>, ...) throws (docs: deName is not restricted to the Name)", function () {
+      return Platform.Function.Lookup(deKey, "Val", "Email", "a@example.com");
+  });
+  assertThrows("a returnField that does not exist throws", function () {
+      return Platform.Function.Lookup(deName, "NoSuchColumn", "Email", "a@example.com");
+  });
+  assertThrows("a filter column that does not exist throws", function () {
+      return Platform.Function.Lookup(deName, "Val", "NoSuchColumn", "x");
+  });
+  assertThrows("a data extension name that does not exist throws", function () {
+      return Platform.Function.Lookup("ssjsguide_lookup_no_such_de", "Val", "Email", "x");
+  });
+
+  assert("cleanup: the throwaway data extension is deleted", dropDE(deKey), "OK");
+  </script>
+
+description: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Description
+   *
+   * Proves:
+   *   1. Lookup searches the data extension and returns the value of
+   *      returnField from a row where ALL filter conditions match.
+   *   2. When NO row matches it returns a genuine JavaScript null:
+   *      === null is true, typeof is "object", String() is "null".
+   *   3. That no-match value is NOT the empty string and NOT undefined —
+   *      the two things a caller is most likely to test for by mistake.
+   *   4. When MULTIPLE rows match, Lookup returns a SINGLE scalar value (not
+   *      an array) taken from one of the matching rows. Row ORDER is not
+   *      guaranteed, so the assertion checks membership in the set of matching
+   *      values rather than a fixed row — asserting a fixed row would encode a
+   *      guarantee the page explicitly withholds.
+   *   5. A multi-column AND filter that no single row satisfies returns null
+   *      even though each individual condition matches some row — proof the
+   *      conditions are ANDed, not ORed.
+   *   6. LookupOrderedRows is the documented alternative when order matters:
+   *      it returns an ARRAY and its first row is deterministic under an
+   *      explicit sort.
+   *
+   * QUERY-CACHING CONSTRAINT: identical data-extension queries are cached
+   * within one request, so every distinct query below is issued only once.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  function addField(de, name, len, isKey) {
+      var f = Platform.Function.CreateObject("DataExtensionField");
+      Platform.Function.SetObjectProperty(f, "Name", name);
+      Platform.Function.SetObjectProperty(f, "FieldType", "Text");
+      Platform.Function.SetObjectProperty(f, "MaxLength", len);
+      Platform.Function.SetObjectProperty(f, "IsPrimaryKey", isKey);
+      Platform.Function.SetObjectProperty(f, "IsRequired", isKey);
+      Platform.Function.AddObjectArrayItem(de, "Fields", f);
+  }
+  function createDE(name, key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      Platform.Function.SetObjectProperty(de, "Name", name);
+      addField(de, "Email", "100", "true");
+      addField(de, "Grp", "50", "false");
+      addField(de, "Val", "50", "false");
+      var st = [0, 0];
+      return String(Platform.Function.InvokeCreate(de, st, null));
+  }
+  function dropDE(key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      var st = [0, 0];
+      return String(Platform.Function.InvokeDelete(de, st, null));
+  }
+
+  var deName = "ssjsguide_lookup_desc_name";
+  var deKey = "ssjsguide_lookup_desc_key";
+
+  assert("setup: the throwaway data extension is created", createDE(deName, deKey), "OK");
+  assert("setup: row a inserted", Platform.Function.InsertData(deName, ["Email", "Grp", "Val"], ["a@example.com", "solo", "alpha"]), 1);
+  assert("setup: row b inserted", Platform.Function.InsertData(deName, ["Email", "Grp", "Val"], ["b@example.com", "dup", "beta"]), 1);
+  assert("setup: row c inserted", Platform.Function.InsertData(deName, ["Email", "Grp", "Val"], ["c@example.com", "dup", "gamma"]), 1);
+
+  /* 1. The happy path. */
+  assert("Lookup returns the returnField value of the matching row", String(Platform.Function.Lookup(deName, "Val", "Email", "a@example.com")), "alpha");
+
+  /* 2 + 3. No match returns a genuine JavaScript null. */
+  var none = Platform.Function.Lookup(deName, "Val", "Email", "nobody@example.com");
+  assert("no match returns a value that is === null", none === null ? "yes" : "no", "yes");
+  assert("no match has typeof object", String(typeof none), "object");
+  assert("no match stringifies to \"null\"", String(none), "null");
+  assert("no match is NOT the empty string", none === "" ? "empty string" : "not empty string", "not empty string");
+  assert("no match is NOT undefined", none === undefined ? "undefined" : "defined", "defined");
+
+  /* 4. Multiple matches yield ONE scalar from an unspecified row. */
+  var multi = Platform.Function.Lookup(deName, "Val", "Grp", "dup");
+  assert("a multi-row match returns a single scalar, not an array", String(typeof multi), "string");
+  assert("the returned scalar comes from one of the matching rows (row order is NOT guaranteed)", (multi === "beta" || multi === "gamma") ? "a matching row" : "unexpected", "a matching row");
+
+  /* 5. The filter conditions are ANDed, not ORed. */
+  assert("a two-column filter no single row satisfies returns null: the conditions are ANDed", Platform.Function.Lookup(deName, "Val", ["Grp", "Email"], ["dup", "a@example.com"]) === null ? "null" : "not null", "null");
+
+  /* 6. LookupOrderedRows is the ordered alternative. */
+  var ordered = Platform.Function.LookupOrderedRows(deName, 10, "Val DESC", "Grp", "dup");
+  assert("WORKAROUND LookupOrderedRows returns an array of the matching rows", ordered === null ? 0 : ordered.length, 2);
+  assert("WORKAROUND LookupOrderedRows makes the first row deterministic under an explicit sort", String(ordered[0]["Val"]), "gamma");
+
+  assert("cleanup: the throwaway data extension is deleted", dropDE(deKey), "OK");
+  </script>
+
+field-types: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Field type -> returned JavaScript type
+   *
+   * A throwaway data extension is created with ONE column of each valid
+   * data-extension field type, a single row is written to it, and every
+   * column is read back with Platform.Function.Lookup.
+   *
+   * Proves, row by row, the table on the page:
+   *   1. Text          -> string
+   *   2. EmailAddress  -> string
+   *   3. Locale        -> string   (e.g. "en-US")
+   *   4. Phone         -> string
+   *   5. Number        -> number   (a real number: arithmetic works, === 42)
+   *   6. Decimal       -> number   (=== 3.14, so the decimal part survives)
+   *   7. Boolean       -> boolean  (=== true, not the STRING "true")
+   *   8. Date          -> a real Date OBJECT: typeof "object", and
+   *      getFullYear() / getMonth() / getDate() / getTime() all work and
+   *      return numbers. It is NOT a formatted string.
+   *   9. DEV — the official docs type the whole return as `string`; every
+   *      non-Text row above contradicts that.
+   *  10. Only Lookup returns Date columns as a Date: the SAME column read via
+   *      Platform.Function.LookupRows comes back as an ISO-8601 STRING
+   *      ("2024-01-15T00:00:00.000"), which is what makes the Date behaviour
+   *      specific to Lookup rather than a general data-extension behaviour.
+   *
+   * QUERY-CACHING CONSTRAINT: identical data-extension queries are cached
+   * within one request. Every read below uses a DIFFERENT returnField, so no
+   * query is repeated; the Date column is read once into a variable and then
+   * inspected, rather than looked up again per assertion.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  function addField(de, name, type, len, scale, isKey) {
+      var f = Platform.Function.CreateObject("DataExtensionField");
+      Platform.Function.SetObjectProperty(f, "Name", name);
+      Platform.Function.SetObjectProperty(f, "FieldType", type);
+      if (len) { Platform.Function.SetObjectProperty(f, "MaxLength", len); }
+      if (scale) { Platform.Function.SetObjectProperty(f, "Scale", scale); }
+      if (isKey) {
+          Platform.Function.SetObjectProperty(f, "IsPrimaryKey", "true");
+          Platform.Function.SetObjectProperty(f, "IsRequired", "true");
+      }
+      Platform.Function.AddObjectArrayItem(de, "Fields", f);
+  }
+  function createDE(name, key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      Platform.Function.SetObjectProperty(de, "Name", name);
+      addField(de, "Id", "Text", "50", null, true);
+      addField(de, "TxtVal", "Text", "50", null, false);
+      addField(de, "EmailVal", "EmailAddress", "100", null, false);
+      addField(de, "LocaleVal", "Locale", null, null, false);
+      addField(de, "PhoneVal", "Phone", "50", null, false);
+      addField(de, "NumVal", "Number", null, null, false);
+      addField(de, "DecVal", "Decimal", "18", "2", false);
+      addField(de, "BoolVal", "Boolean", null, null, false);
+      addField(de, "DateVal", "Date", null, null, false);
+      var st = [0, 0];
+      return String(Platform.Function.InvokeCreate(de, st, null));
+  }
+  function dropDE(key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      var st = [0, 0];
+      return String(Platform.Function.InvokeDelete(de, st, null));
+  }
+
+  var deName = "ssjsguide_lookup_types_name";
+  var deKey = "ssjsguide_lookup_types_key";
+
+  assert("setup: the throwaway data extension is created with one column of each field type", createDE(deName, deKey), "OK");
+  assert("setup: the typed row is inserted", Platform.Function.InsertData(deName,
+      ["Id", "TxtVal", "EmailVal", "LocaleVal", "PhoneVal", "NumVal", "DecVal", "BoolVal", "DateVal"],
+      ["1", "text", "x@example.com", "en-US", "1234567890", "42", "3.14", "true", "2024-01-15"]), 1);
+
+  /* 1-4. The string-typed columns. */
+  var txt = Platform.Function.Lookup(deName, "TxtVal", "Id", "1");
+  assert("Text returns typeof string", String(typeof txt), "string");
+  assert("Text returns the stored value", String(txt), "text");
+
+  var mail = Platform.Function.Lookup(deName, "EmailVal", "Id", "1");
+  assert("EmailAddress returns typeof string", String(typeof mail), "string");
+  assert("EmailAddress returns the stored value", String(mail), "x@example.com");
+
+  var loc = Platform.Function.Lookup(deName, "LocaleVal", "Id", "1");
+  assert("Locale returns typeof string", String(typeof loc), "string");
+  assert("Locale returns the stored value", String(loc), "en-US");
+
+  var phone = Platform.Function.Lookup(deName, "PhoneVal", "Id", "1");
+  assert("Phone returns typeof string", String(typeof phone), "string");
+
+  /* 5 + 6. The numeric columns are real numbers, not strings. */
+  var num = Platform.Function.Lookup(deName, "NumVal", "Id", "1");
+  assert("DEV Number returns typeof number (docs: the return is typed as string)", String(typeof num), "number");
+  assert("DEV Number is the number 42, not the string \"42\"", num === 42 ? "number 42" : "not the number 42", "number 42");
+  assert("DEV Number supports arithmetic: value + 1", num + 1, 43);
+
+  var dec = Platform.Function.Lookup(deName, "DecVal", "Id", "1");
+  assert("DEV Decimal returns typeof number (docs: the return is typed as string)", String(typeof dec), "number");
+  assert("DEV Decimal keeps its fractional part", dec === 3.14 ? "3.14" : "not 3.14", "3.14");
+
+  /* 7. The boolean column is a real boolean. */
+  var bool = Platform.Function.Lookup(deName, "BoolVal", "Id", "1");
+  assert("DEV Boolean returns typeof boolean (docs: the return is typed as string)", String(typeof bool), "boolean");
+  assert("DEV Boolean is the boolean true, not the string \"true\"", bool === true ? "boolean true" : "not the boolean true", "boolean true");
+
+  /* 8. The date column is a real Date object. */
+  var dt = Platform.Function.Lookup(deName, "DateVal", "Id", "1");
+  assert("DEV Date returns typeof object (docs: the return is typed as string)", String(typeof dt), "object");
+  assert("DEV Date is NOT a string", dt === "2024-01-15" ? "a string" : "not a string", "not a string");
+  assert("Date getFullYear() works and returns the stored year", dt.getFullYear(), 2024);
+  assert("Date getMonth() works and is zero-based (January -> 0)", dt.getMonth(), 0);
+  assert("Date getDate() works and returns the stored day", dt.getDate(), 15);
+  assert("Date getTime() returns a number, so it is a real Date object", String(typeof dt.getTime()), "number");
+
+  /* 10. Only Lookup returns a Date — LookupRows returns an ISO-8601 string. */
+  var rows = Platform.Function.LookupRows(deName, "Id", "1");
+  assert("control: LookupRows found the same row", rows === null ? 0 : rows.length, 1);
+  assert("only Lookup returns a Date object: LookupRows returns the same column as a string", String(typeof rows[0]["DateVal"]), "string");
+  assert("LookupRows returns the Date column in ISO-8601 form", String(rows[0]["DateVal"]), "2024-01-15T00:00:00.000");
+
+  assert("cleanup: the throwaway data extension is deleted", dropDE(deKey), "OK");
+  </script>
+
+empty-returns: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Three distinct empty-ish returns
+   *
+   * A throwaway data extension is created with three columns that are
+   * deliberately populated differently in one row:
+   *   NullCol  — omitted from the INSERT entirely, so it is a database NULL
+   *   BlankCol — written as an explicit empty string ""
+   *   FullCol  — written with real content
+   * plus a fourth situation: a filter that matches NO row at all.
+   *
+   * Proves, row by row, the table on the page:
+   *   1. NO MATCHING ROW -> a genuine JavaScript null: typeof "object",
+   *      === null true, == null true, falsy, String() is "null".
+   *   2. EMPTY/NULL FIELD -> a CLR null: typeof is the SFMC-only "clr",
+   *      === null is FALSE, and String() is the empty string.
+   *   3. THE CLR NULL THROWS ON COERCION — this is the correction this run
+   *      produced. `value == null` throws "Value cannot be null." and using
+   *      the value in a boolean context (if (value) / !value) throws
+   *      "Object cannot be cast from DBNull to other types." An earlier
+   *      revision of this page recommended exactly those two guards; both are
+   *      unsafe and the page now says so.
+   *   4. The CLR null is NOT the empty string and NOT undefined either, so no
+   *      strict comparison at all identifies it.
+   *   5. A column explicitly written as "" is a DIFFERENT case: it comes back
+   *      as an ordinary JavaScript string, === null false, == null false,
+   *      falsy, and it does NOT throw. Only a never-populated column produces
+   *      the CLR null.
+   *   6. WORKAROUND — the only guard that survives all four situations is to
+   *      coerce with String() FIRST and test the resulting string against ""
+   *      and "null". Asserted for every one of the four situations.
+   *   7. A populated column returns its value normally, so the guard does not
+   *      produce false positives.
+   *
+   * QUERY-CACHING CONSTRAINT: identical data-extension queries are cached
+   * within one request. Every read below uses a DIFFERENT returnField or a
+   * different filter value, and each result is captured ONCE into a variable
+   * and then inspected repeatedly rather than looked up again.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  function addField(de, name, len, isKey) {
+      var f = Platform.Function.CreateObject("DataExtensionField");
+      Platform.Function.SetObjectProperty(f, "Name", name);
+      Platform.Function.SetObjectProperty(f, "FieldType", "Text");
+      Platform.Function.SetObjectProperty(f, "MaxLength", len);
+      Platform.Function.SetObjectProperty(f, "IsPrimaryKey", isKey);
+      Platform.Function.SetObjectProperty(f, "IsRequired", isKey);
+      Platform.Function.AddObjectArrayItem(de, "Fields", f);
+  }
+  function createDE(name, key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      Platform.Function.SetObjectProperty(de, "Name", name);
+      addField(de, "Id", "50", "true");
+      addField(de, "NullCol", "50", "false");
+      addField(de, "BlankCol", "50", "false");
+      addField(de, "FullCol", "50", "false");
+      var st = [0, 0];
+      return String(Platform.Function.InvokeCreate(de, st, null));
+  }
+  function dropDE(key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      var st = [0, 0];
+      return String(Platform.Function.InvokeDelete(de, st, null));
+  }
+
+  var deName = "ssjsguide_lookup_empty_name";
+  var deKey = "ssjsguide_lookup_empty_key";
+
+  assert("setup: the throwaway data extension is created", createDE(deName, deKey), "OK");
+  /* NullCol is deliberately OMITTED so it stays a database NULL. */
+  assert("setup: the row is inserted with NullCol omitted and BlankCol set to an empty string",
+      Platform.Function.InsertData(deName, ["Id", "BlankCol", "FullCol"], ["1", "", "here"]), 1);
+
+  /* 1. Situation A — no matching row. */
+  var miss = Platform.Function.Lookup(deName, "FullCol", "Id", "no-such-id");
+  assert("no matching row: typeof is object", String(typeof miss), "object");
+  assert("no matching row: === null is true", miss === null ? "yes" : "no", "yes");
+  assert("no matching row: == null is true", miss == null ? "yes" : "no", "yes");
+  assert("no matching row: it is falsy", miss ? "truthy" : "falsy", "falsy");
+  assert("no matching row: String() is \"null\"", String(miss), "null");
+
+  /* 2 + 3 + 4. Situation B — the row exists but the column is a database NULL. */
+  var clr = Platform.Function.Lookup(deName, "NullCol", "Id", "1");
+  assert("an empty/NULL field: typeof is the SFMC-only \"clr\"", String(typeof clr), "clr");
+  assert("an empty/NULL field: === null is FALSE, so a strict null check does NOT catch it", clr === null ? "yes" : "no", "no");
+  assert("an empty/NULL field: it is not the empty string either", clr === "" ? "yes" : "no", "no");
+  assert("an empty/NULL field: it is not undefined either", clr === undefined ? "yes" : "no", "no");
+  assert("an empty/NULL field: String() yields the empty string", String(clr), "");
+  assertThrows("DEV a loose == null on the CLR null THROWS (an earlier revision of this page recommended it as the guard)", function () {
+      return clr == null ? "y" : "n";
+  });
+  assertThrows("DEV a truthiness test on the CLR null THROWS (an earlier revision of this page recommended it as the guard)", function () {
+      return clr ? "truthy" : "falsy";
+  });
+
+  /* 5. Situation C — a column explicitly written as "" is an ordinary string. */
+  var blank = Platform.Function.Lookup(deName, "BlankCol", "Id", "1");
+  assert("a column written as an empty string comes back as an ordinary string, not a CLR null", String(typeof blank), "string");
+  assert("that empty string is === null false", blank === null ? "yes" : "no", "no");
+  assert("that empty string is == null false", blank == null ? "yes" : "no", "no");
+  assert("that empty string is falsy and does NOT throw", blank ? "truthy" : "falsy", "falsy");
+  assert("that empty string stringifies to the empty string", String(blank), "");
+
+  /* 7. Situation D — a populated column. */
+  var full = Platform.Function.Lookup(deName, "FullCol", "Id", "1");
+  assert("a populated column returns its native value", String(full), "here");
+  assert("a populated column has its native typeof", String(typeof full), "string");
+
+  /* 6. WORKAROUND — String() first, then compare. Works for all four. */
+  function isEmptyish(v) {
+      var s = String(v);
+      return s === "" || s === "null";
+  }
+  assert("WORKAROUND String()-first guard catches the no-match null", isEmptyish(miss) ? "empty" : "has value", "empty");
+  assert("WORKAROUND String()-first guard catches the CLR null without throwing", isEmptyish(clr) ? "empty" : "has value", "empty");
+  assert("WORKAROUND String()-first guard catches the explicit empty string", isEmptyish(blank) ? "empty" : "has value", "empty");
+  assert("WORKAROUND String()-first guard does NOT fire on a populated column", isEmptyish(full) ? "empty" : "has value", "has value");
+
+  assert("cleanup: the throwaway data extension is deleted", dropDE(deKey), "OK");
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples — basic lookup, multi-filter lookup, the null-safe
+   * pattern, and the Data-Extension-Name-not-external-key example.
+   *
+   * Each example on the page is executed in shape against a throwaway data
+   * extension this script creates and drops. The email-context example is NOT
+   * exercised as an email send (a CloudPage supplies no subscriber context);
+   * only its Lookup call shape and its `||` default idiom are asserted.
+   *
+   * Proves:
+   *   1. BASIC LOOKUP — Lookup(de, "EmailAddress", "SubscriberKey", key)
+   *      returns the stored address, so the example's `if (email)` branch is
+   *      taken; for an unknown key it returns null and the else branch runs.
+   *   2. MULTI-FILTER LOOKUP — Lookup(de, "Phone", ["FirstName","LastName"],
+   *      [first, last]) applies AND logic and returns the phone number of the
+   *      row matching BOTH columns, not of a row matching only one.
+   *   3. NULL-SAFE PATTERN — a simple truthiness check on the result covers
+   *      the no-match case, because a no-match result is a genuine JS null and
+   *      is therefore falsy. This is safe for the NO-MATCH case ONLY — see the
+   *      empty-returns chapter, where the same truthiness test THROWS on a
+   *      row whose field is NULL.
+   *   4. DE-NAME-NOT-EXTERNAL-KEY — the DE built here has a Name that DIFFERS
+   *      from its CustomerKey; the Name form returns the value while the
+   *      CustomerKey form throws.
+   *   5. The `||` default idiom from the email example works on a no-match
+   *      result: null || "Standard" yields "Standard", and leaves a real
+   *      value untouched.
+   *
+   * QUERY-CACHING CONSTRAINT: identical data-extension queries are cached
+   * within one request, so every distinct query below is issued only once.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  function addField(de, name, len, isKey) {
+      var f = Platform.Function.CreateObject("DataExtensionField");
+      Platform.Function.SetObjectProperty(f, "Name", name);
+      Platform.Function.SetObjectProperty(f, "FieldType", "Text");
+      Platform.Function.SetObjectProperty(f, "MaxLength", len);
+      Platform.Function.SetObjectProperty(f, "IsPrimaryKey", isKey);
+      Platform.Function.SetObjectProperty(f, "IsRequired", isKey);
+      Platform.Function.AddObjectArrayItem(de, "Fields", f);
+  }
+  function createDE(name, key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      Platform.Function.SetObjectProperty(de, "Name", name);
+      addField(de, "SubscriberKey", "50", "true");
+      addField(de, "EmailAddress", "100", "false");
+      addField(de, "FirstName", "50", "false");
+      addField(de, "LastName", "50", "false");
+      addField(de, "Phone", "50", "false");
+      addField(de, "Tier", "50", "false");
+      var st = [0, 0];
+      return String(Platform.Function.InvokeCreate(de, st, null));
+  }
+  function dropDE(key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      var st = [0, 0];
+      return String(Platform.Function.InvokeDelete(de, st, null));
+  }
+
+  var deName = "ssjsguide_lookup_examples_name";
+  var deKey = "ssjsguide_lookup_examples_key";
+
+  assert("control: the Name and the CustomerKey differ", deName === deKey ? "same" : "different", "different");
+  assert("setup: the throwaway data extension is created", createDE(deName, deKey), "OK");
+  assert("setup: subscriber sub-1 inserted", Platform.Function.InsertData(deName,
+      ["SubscriberKey", "EmailAddress", "FirstName", "LastName", "Phone", "Tier"],
+      ["sub-1", "one@example.com", "Carolyn", "Baumgartner", "555-0001", "Gold"]), 1);
+  assert("setup: subscriber sub-2 inserted with the same FirstName but a different LastName", Platform.Function.InsertData(deName,
+      ["SubscriberKey", "EmailAddress", "FirstName", "LastName", "Phone", "Tier"],
+      ["sub-2", "two@example.com", "Carolyn", "Other", "555-0002", "Silver"]), 1);
+
+  /* 1. Basic lookup — both branches of the example's if/else. */
+  var email = Platform.Function.Lookup(deName, "EmailAddress", "SubscriberKey", "sub-1");
+  assert("basic lookup: the stored address comes back", String(email), "one@example.com");
+  assert("basic lookup: the example's `if (email)` branch is taken", email ? "found" : "not found", "found");
+
+  var missingEmail = Platform.Function.Lookup(deName, "EmailAddress", "SubscriberKey", "sub-unknown");
+  assert("basic lookup: an unknown key returns a genuine JavaScript null", missingEmail === null ? "null" : "not null", "null");
+  assert("basic lookup: the example's else branch is taken for an unknown key", missingEmail ? "found" : "not found", "not found");
+
+  /* 2. Multi-filter lookup — AND logic across two columns. */
+  var phone = Platform.Function.Lookup(deName, "Phone", ["FirstName", "LastName"], ["Carolyn", "Baumgartner"]);
+  assert("multi-filter lookup: the row matching BOTH columns is selected", String(phone), "555-0001");
+  assert("multi-filter lookup: a first name shared by two rows does not select the wrong one", String(phone) === "555-0002" ? "wrong row" : "right row", "right row");
+
+  /* 3. Null-safe pattern — the page's third example. */
+  var status = Platform.Function.Lookup(deName, "Tier", "SubscriberKey", "sub-2");
+  assert("null-safe pattern: an existing row yields a truthy value", status ? "truthy" : "falsy", "truthy");
+  assert("null-safe pattern: that value is the stored one", String(status), "Silver");
+  var missingStatus = Platform.Function.Lookup(deName, "Tier", "SubscriberKey", "sub-nobody");
+  assert("null-safe pattern: a no-match result is falsy, so `if (!status)` catches it", missingStatus ? "truthy" : "falsy", "falsy");
+
+  /* 5. The || default idiom from the email example. */
+  assert("the || default idiom turns a no-match null into the fallback", String(missingStatus || "Standard"), "Standard");
+  assert("the || default idiom leaves a real value alone", String(status || "Standard"), "Silver");
+
+  /* 4. Data Extension Name, not external key. */
+  assert("the Name form returns the value", String(Platform.Function.Lookup(deName, "Tier", "SubscriberKey", "sub-1")), "Gold");
+  assertThrows("DEV the CustomerKey / external key form throws (docs: deName is not restricted to the Name)", function () {
+      return Platform.Function.Lookup(deKey, "Tier", "SubscriberKey", "sub-1");
+  });
+
+  assert("cleanup: the throwaway data extension is deleted", dropDE(deKey), "OK");
+  </script>
+
+common-mistakes: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Common Mistakes
+   *
+   * Proves each mistake the chapter names is really a mistake, and that the
+   * suggested correction really works:
+   *   1. EXPECTING AN EMPTY STRING — a no-match result is NOT === "" (so the
+   *      "wrong" check `result === ""` never fires), while the recommended
+   *      `!result` check does.
+   *   2. PASSING THE EXTERNAL KEY — the CustomerKey form throws, and the Name
+   *      form on the very same row succeeds, so the failure is about the
+   *      identifier and not about the data.
+   *   3. USING LOOKUP FOR MULTIPLE ROWS — Lookup returns ONE scalar even when
+   *      several rows match, whereas LookupRows returns an array of all of
+   *      them. Both are asserted against the same seeded rows.
+   *   4. CASE SENSITIVITY — runtime-probed on this business unit: the data
+   *      extension name, the returnField name and the filter-column name are
+   *      all matched case-INSENSITIVELY, and so is the filter VALUE for a Text
+   *      column. This is why the page words the caveat as configuration-
+   *      dependent rather than as a fixed rule — a differently configured
+   *      tenant may collate differently, which is exactly why a caller should
+   *      not rely on either behaviour.
+   *
+   * QUERY-CACHING CONSTRAINT: identical data-extension queries are cached
+   * within one request, so every distinct query below is issued only once.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit). The case-
+   * sensitivity assertions describe THIS tenant's collation only.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  function addField(de, name, len, isKey) {
+      var f = Platform.Function.CreateObject("DataExtensionField");
+      Platform.Function.SetObjectProperty(f, "Name", name);
+      Platform.Function.SetObjectProperty(f, "FieldType", "Text");
+      Platform.Function.SetObjectProperty(f, "MaxLength", len);
+      Platform.Function.SetObjectProperty(f, "IsPrimaryKey", isKey);
+      Platform.Function.SetObjectProperty(f, "IsRequired", isKey);
+      Platform.Function.AddObjectArrayItem(de, "Fields", f);
+  }
+  function createDE(name, key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      Platform.Function.SetObjectProperty(de, "Name", name);
+      addField(de, "Email", "100", "true");
+      addField(de, "Grp", "50", "false");
+      addField(de, "Val", "50", "false");
+      var st = [0, 0];
+      return String(Platform.Function.InvokeCreate(de, st, null));
+  }
+  function dropDE(key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      var st = [0, 0];
+      return String(Platform.Function.InvokeDelete(de, st, null));
+  }
+
+  var deName = "ssjsguide_lookup_mistakes_name";
+  var deKey = "ssjsguide_lookup_mistakes_key";
+
+  assert("control: the Name and the CustomerKey differ", deName === deKey ? "same" : "different", "different");
+  assert("setup: the throwaway data extension is created", createDE(deName, deKey), "OK");
+  assert("setup: row a inserted", Platform.Function.InsertData(deName, ["Email", "Grp", "Val"], ["a@example.com", "solo", "alpha"]), 1);
+  assert("setup: row b inserted", Platform.Function.InsertData(deName, ["Email", "Grp", "Val"], ["b@example.com", "dup", "beta"]), 1);
+  assert("setup: row c inserted", Platform.Function.InsertData(deName, ["Email", "Grp", "Val"], ["c@example.com", "dup", "gamma"]), 1);
+
+  /* 1. Expecting "" instead of null. */
+  var result = Platform.Function.Lookup(deName, "Val", "Email", "nobody@example.com");
+  assert("MISTAKE `result === \"\"` is FALSE on a no-match, so that branch never fires", result === "" ? "fires" : "never fires", "never fires");
+  assert("CORRECTION `!result` is TRUE on a no-match", !result ? "fires" : "never fires", "fires");
+
+  /* 2. Passing the external key instead of the Name. */
+  assertThrows("MISTAKE passing the external key / CustomerKey throws", function () {
+      return Platform.Function.Lookup(deKey, "Val", "Email", "a@example.com");
+  });
+  assert("CORRECTION the same call with the Name succeeds", String(Platform.Function.Lookup(deName, "Val", "Email", "a@example.com")), "alpha");
+
+  /* 3. Using Lookup where LookupRows is needed. */
+  var one = Platform.Function.Lookup(deName, "Val", "Grp", "dup");
+  assert("MISTAKE Lookup returns a single scalar even though two rows match", String(typeof one), "string");
+  assert("MISTAKE that scalar is just one of the matching values", (one === "beta" || one === "gamma") ? "one value" : "unexpected", "one value");
+  var many = Platform.Function.LookupRows(deName, "Grp", "dup");
+  assert("CORRECTION LookupRows returns BOTH matching rows", many === null ? 0 : many.length, 2);
+
+  /* 4. Case sensitivity — this tenant's observed collation. */
+  assert("this tenant matches the data extension NAME case-insensitively", String(Platform.Function.Lookup(deName.toUpperCase(), "Val", "Email", "b@example.com")), "beta");
+  assert("this tenant matches the returnField name case-insensitively", String(Platform.Function.Lookup(deName, "VAL", "Email", "c@example.com")), "gamma");
+  assert("this tenant matches the filter COLUMN name case-insensitively", String(Platform.Function.Lookup(deName, "Grp", "email", "a@example.com")), "solo");
+  assert("this tenant matches a Text filter VALUE case-insensitively", String(Platform.Function.Lookup(deName, "Email", "Val", "ALPHA")), "a@example.com");
+
+  assert("cleanup: the throwaway data extension is deleted", dropDE(deKey), "OK");
+  </script>

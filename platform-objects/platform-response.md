@@ -5,6 +5,7 @@ parent: Platform Objects
 parent_url: /platform-objects/
 description: Control the HTTP response from CloudPages and JSON Code Resources — set status codes, content types, cookies, response headers, and perform redirects.
 verification: verified
+test_scripts: complete
 ---
 
 `Platform.Response` lets you control the HTTP response sent back to the browser. Useful for REST-style CloudPage APIs, redirects, cookie management, and setting response headers and content type.
@@ -16,18 +17,18 @@ Does not require `Platform.Load`.
 | Method | Returns | Description |
 |--------|---------|-------------|
 | [`Platform.Response.Write(content)`](#write) | void | Write content to the HTTP response output |
-| [`Platform.Response.SetResponseHeader(headerName, value)`](#setresponseheader) | void | Set a response header |
-| [`Platform.Response.RemoveResponseHeader(headerName)`](#removeresponseheader) | void | Remove a response header |
-| [`Platform.Response.SetCookie(name, value [, expires [, secure]])`](#setcookie) | void | Set a response cookie |
-| [`Platform.Response.RemoveCookie(name)`](#removecookie) | void | Remove a cookie |
+| [`Platform.Response.SetResponseHeader(headerName, value)`](#setresponseheader) | null | Set a response header |
+| [`Platform.Response.RemoveResponseHeader(headerName)`](#removeresponseheader) | null | Remove a response header |
+| [`Platform.Response.SetCookie(name, value [, expires [, secure]])`](#setcookie) | null | Set a response cookie |
+| [`Platform.Response.RemoveCookie(name)`](#removecookie) | null | Attempt to remove a cookie |
 | [`Platform.Response.Redirect(url[, movedPermanently])`](#redirect) | void | Redirect the browser |
 
 ## Properties
 
 | Property | Type | Description |
 |----------|------|-------------|
-| [`Platform.Response.ContentType`](#contenttype) | write-only | Sets the `Content-Type` of the HTTP response — reading it throws |
-| [`Platform.Response.CharacterSet`](#characterset) | write-only | Sets the character set of the HTTP response — reading it throws |
+| [`Platform.Response.ContentType`](#contenttype) | setter with opaque read | Sets the `Content-Type`; reads do not return the configured string |
+| [`Platform.Response.CharacterSet`](#characterset) | setter with opaque read | Sets the character set; reads do not return the configured string |
 
 ---
 
@@ -41,7 +42,7 @@ Platform.Response.ContentType = "application/json";
 
 Sets the `Content-Type` header of the HTTP response. Set this before writing any output.
 
-{% include differs-from-docs.html note="The docs present `ContentType` as a readable property, but at runtime it is **write-only**. Assignment works and is reflected in the HTTP `Content-Type` header, yet *every* read throws a null-reference error — both as the very first statement of the script and after output has been written. Calling it as a function throws as well. Track the value in your own variable if you need to read it back." %}
+{% include differs-from-docs.html note="The property does not provide a useful JavaScript string getter. Assignment works and is reflected in the HTTP `Content-Type` header, but reading or calling it exposes an opaque platform value rather than the configured MIME type. Track the value in your own variable if you need to read it back." %}
 
 #### Examples
 
@@ -56,13 +57,15 @@ Platform.Response.Write("plain text response");
 ```
 
 ```javascript
-// ❌ throws — the property cannot be read back
+// Does not return "application/json"; the runtime exposes an opaque platform value
 var current = Platform.Response.ContentType;
 
 // ✅ keep your own copy instead
 var contentType = "application/json";
 Platform.Response.ContentType = contentType;
 ```
+
+{% include test-script.html bundle="platform-objects--platform-response" chapter="contenttype" %}
 
 ---
 
@@ -76,7 +79,7 @@ Platform.Response.CharacterSet = "UTF-8";
 
 Sets the character set of the HTTP response.
 
-{% include differs-from-docs.html note="Like [`ContentType`](#contenttype), this property is **write-only** at runtime. Assignment works and shows up as the `charset` of the HTTP `Content-Type` header, but every read throws a null-reference error, and calling it as a function throws too." %}
+{% include differs-from-docs.html note="Like [`ContentType`](#contenttype), assignment works and appears as the `charset` parameter in the HTTP `Content-Type` header, but reading or calling the property exposes an opaque platform value rather than the configured character-set string. Keep your own copy if you need it later." %}
 
 #### Examples
 
@@ -85,6 +88,8 @@ Platform.Response.ContentType = "application/json";
 Platform.Response.CharacterSet = "UTF-8";
 Platform.Response.Write(Stringify(data));
 ```
+
+{% include test-script.html bundle="platform-objects--platform-response" chapter="characterset" %}
 
 ---
 
@@ -119,6 +124,8 @@ var rows = DataExtension.Init("MyDE").Rows.Retrieve();
 Platform.Response.Write(Stringify(rows));
 ```
 
+{% include test-script.html bundle="platform-objects--platform-response" chapter="write" %}
+
 ---
 
 ### Platform.Response.SetResponseHeader {#setresponseheader}
@@ -149,6 +156,12 @@ Platform.Response.SetResponseHeader("X-Content-Type-Options", "nosniff");
 Platform.Response.SetResponseHeader("X-Frame-Options", "DENY");
 ```
 
+The method returns JavaScript `null`. It is falsy, compares strictly equal to `null`, and has no properties or methods to inspect. Ignore the return value and use the raw HTTP header as the result.
+
+{% include differs-from-docs.html note="The official reference declares a void return, but the CloudPage runtime returns JavaScript `null`." %}
+
+{% include test-script.html bundle="platform-objects--platform-response" chapter="setresponseheader" %}
+
 ---
 
 ### Platform.Response.RemoveResponseHeader {#removeresponseheader}
@@ -171,6 +184,12 @@ Removes a previously set HTTP response header.
 Platform.Response.RemoveResponseHeader("X-Powered-By");
 ```
 
+The method returns JavaScript `null`. It is falsy and has no caller-facing API. Ignore it and verify that the named header is absent from the raw HTTP response.
+
+{% include differs-from-docs.html note="The official reference declares a void return, but the CloudPage runtime returns JavaScript `null`." %}
+
+{% include test-script.html bundle="platform-objects--platform-response" chapter="removeresponseheader" %}
+
 ---
 
 ### Platform.Response.SetCookie {#setcookie}
@@ -187,7 +206,7 @@ Sets a cookie in the response.
 |------|------|----------|-------------|
 | `name` | string | Yes | Cookie name |
 | `value` | string | Yes | Cookie value |
-| `expires` | string | No | Expiration datetime string |
+| `expires` | string or Date | No | Expiration datetime string or JavaScript `Date` object |
 | `secure` | boolean | No | Send only over HTTPS |
 
 #### Examples
@@ -218,9 +237,15 @@ var expiry = formatDate(
 ) + " GMT";
 Platform.Response.SetCookie("rememberMe", userId, expiry, true);
 
-// Clear a cookie (set expired date)
-Platform.Response.SetCookie("sessionToken", "", "Thu, 01 Jan 1970 00:00:00 GMT");
+// Clear a cookie by sending an empty value with a past Date
+Platform.Response.SetCookie("sessionToken", "", new Date(1970, 0, 1), true);
 ```
+
+Each call returns JavaScript `null`. It is falsy and carries no cookie details. Ignore the return value and inspect the raw `Set-Cookie` header for the name, value, expiry, and `secure` attribute.
+
+{% include differs-from-docs.html note="The official reference declares a void return, but the CloudPage runtime returns JavaScript `null`." %}
+
+{% include test-script.html bundle="platform-objects--platform-response" chapter="setcookie" %}
 
 ---
 
@@ -230,7 +255,7 @@ Platform.Response.SetCookie("sessionToken", "", "Thu, 01 Jan 1970 00:00:00 GMT")
 Platform.Response.RemoveCookie(name)
 ```
 
-Removes a cookie from the client browser by setting its expiration to a past date.
+Attempts to remove a browser cookie from a CloudPage response. In the tested published CloudPage GET, the method returned `null` but emitted no `Set-Cookie` deletion header, even when the request contained the named cookie. It is therefore ineffective for its intended CloudPage use in the tested runtime.
 
 #### Parameters
 
@@ -241,8 +266,20 @@ Removes a cookie from the client browser by setting its expiration to a past dat
 #### Examples
 
 ```javascript
+// RemoveCookie returned null but emitted no deletion header in the tested runtime
 Platform.Response.RemoveCookie("sessionToken");
+
+// Proven workaround: emit an expired cookie with the same name and path
+Platform.Response.SetCookie("sessionToken", "", new Date(1970, 0, 1), true);
 ```
+
+The method returns JavaScript `null`, which is falsy and contains no deletion result. Use `SetCookie(name, "", pastDate, secure)` instead: a JavaScript `Date` in the past emitted an empty, expired `Set-Cookie` header with `path=/`, and a cookie-jar client omitted the cookie on the next request.
+
+`Platform.Request.GetCookieValue()` reads the incoming request. It can still return the old value during the request that sends the deletion header; confirm removal on a subsequent request.
+
+{% include differs-from-docs.html note="The official reference says the method expires the cookie and declares a void return. In a published CloudPage GET with the named cookie present, the method returned JavaScript `null` and emitted no `Set-Cookie` header. The proven CloudPage workaround is `SetCookie(name, \"\", new Date(1970, 0, 1), true)`, which emitted an empty cookie with a past expiry and removed it from the next cookie-jar request." %}
+
+{% include test-script.html bundle="platform-objects--platform-response" chapter="removecookie" %}
 
 ---
 
@@ -284,6 +321,8 @@ if (!isLoggedIn) {
 ```
 
 {% include callout.html type="warning" content="`Redirect()` ends the script on the spot — nothing after the call executes, and any output written before it is thrown away. Do not rely on cleanup code placed after a redirect, and do not expect a `try`/`catch` around it to regain control. Use a 301 only when browsers should stop re-checking the original URL." %}
+
+{% include test-script.html bundle="platform-objects--platform-response" chapter="redirect" %}
 
 ## See Also
 

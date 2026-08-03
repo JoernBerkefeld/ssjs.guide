@@ -1,0 +1,383 @@
+# Test scripts for /platform-functions/parsejson/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every documented claim — positive, negative,
+# and every runtime deviation from strict JSON or the official reference.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating independent expressions can interleave evaluation in the
+# Jint engine and pair labels with the wrong values.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters
+   *
+   * Proves:
+   *   1. Exactly one argument is accepted; zero or two arguments throw.
+   *   2. A string argument is accepted and produces an object.
+   *   3. DEVIATION: number and boolean scalars are accepted rather than
+   *      rejected as the official string|string[] type implies. Numbers match
+   *      the numeric string form; booleans yield CLR "True"/"False".
+   *   4. DEVIATION: null and undefined return null rather than being rejected.
+   *   5. DEVIATION: arrays and plain objects throw even though the official
+   *      docs explicitly advertise a string-array argument.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var parsed = Platform.Function.ParseJSON('{"a":1}');
+  assert("one string argument returns an object", String(typeof parsed), "object");
+  assert("the parsed object exposes its property", String(parsed.a), "1");
+
+  assertThrows("ParseJSON() with zero arguments throws", function () {
+      return Platform.Function.ParseJSON();
+  });
+  assertThrows("ParseJSON(value, extra) with two arguments throws", function () {
+      return Platform.Function.ParseJSON('{"a":1}', "extra");
+  });
+  assertThrows("DEV an array argument throws (official docs: string[] accepted)", function () {
+      return Platform.Function.ParseJSON(["a", "b"]);
+  });
+  assertThrows("DEV a plain object argument throws (official docs: object-like input implied)", function () {
+      return Platform.Function.ParseJSON({ a: 1 });
+  });
+
+  var numberArg = Platform.Function.ParseJSON(42);
+  assert("DEV a number argument is coerced (official docs: string|string[])", String(typeof numberArg), "string");
+  assert("DEV the coerced number is returned as text", String(numberArg), "42");
+  var trueArg = Platform.Function.ParseJSON(true);
+  assert("DEV true is accepted and returns CLR capital True", "" + trueArg, "True");
+  assert("DEV true result typeof is string", typeof trueArg, "string");
+  var falseArg = Platform.Function.ParseJSON(false);
+  assert("DEV false is accepted and returns CLR capital False", "" + falseArg, "False");
+  assert("DEV false result typeof is string", typeof falseArg, "string");
+  assert("DEV null argument returns null (official docs: string|string[])", Platform.Function.ParseJSON(null) === null ? "true" : "false", "true");
+  var undef;
+  assert("DEV undefined argument returns null (official docs: string|string[])", Platform.Function.ParseJSON(undef) === null ? "true" : "false", "true");
+  </script>
+
+parameter-type-deviation: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs claim: the official docs allow string or string[], but
+   * runtime accepts one scalar argument and rejects arrays/plain objects.
+   *
+   * Proves:
+   *   1. A JSON string is the supported normal form.
+   *   2. DEV — an array and a plain object throw.
+   *   3. TYPE ACCEPTANCE: a number argument is accepted with the same
+   *      meaningful result as the equivalent JSON string form
+   *      (ParseJSON(42) matches ParseJSON("42")).
+   *   4. TYPE ACCEPTANCE: boolean args are accepted (no throw) but convert
+   *      to CLR strings "True"/"False" (typeof string) — DEV vs JSON-text
+   *      form ParseJSON("true")/"false" which return lowercase "true"/"false".
+   *   5. DEV — null/undefined return null.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  assert("a JSON string parses successfully", String(Platform.Function.ParseJSON('{"a":1}').a), "1");
+  assertThrows("DEV string[] throws (official docs: accepted)", function () {
+      return Platform.Function.ParseJSON(["a", "b"]);
+  });
+  assertThrows("DEV a plain object throws (official docs imply object input)", function () {
+      return Platform.Function.ParseJSON({ a: 1 });
+  });
+
+  var fromString = Platform.Function.ParseJSON("42");
+  var fromNumber = Platform.Function.ParseJSON(42);
+  assert("documented string form ParseJSON(\"42\") returns text 42", "" + fromString, "42");
+  assert("counterpart number form ParseJSON(42) returns text 42", "" + fromNumber, "42");
+  assert("number and string forms share the same meaningful result", ("" + fromNumber) === ("" + fromString) ? "true" : "false", "true");
+
+  var fromTrueStr = Platform.Function.ParseJSON("true");
+  var fromTrueBool = Platform.Function.ParseJSON(true);
+  var fromFalseStr = Platform.Function.ParseJSON("false");
+  var fromFalseBool = Platform.Function.ParseJSON(false);
+  assert("boolean true is accepted without throwing", typeof fromTrueBool, "string");
+  assert("boolean false is accepted without throwing", typeof fromFalseBool, "string");
+  assert("DEV ParseJSON(true) returns CLR capital True (not boolean)", "" + fromTrueBool, "True");
+  assert("DEV ParseJSON(false) returns CLR capital False (not boolean)", "" + fromFalseBool, "False");
+  assert("DEV ParseJSON(true) is not the boolean primitive true", fromTrueBool === true ? "true" : "false", "false");
+  assert("DEV ParseJSON(false) is not the boolean primitive false", fromFalseBool === false ? "true" : "false", "false");
+  assert("JSON-text form ParseJSON(\"true\") returns lowercase true string", "" + fromTrueStr, "true");
+  assert("JSON-text form ParseJSON(\"false\") returns lowercase false string", "" + fromFalseStr, "false");
+  assert("DEV ParseJSON(true) differs from ParseJSON(\"true\")", ("" + fromTrueBool) === ("" + fromTrueStr) ? "true" : "false", "false");
+  assert("DEV ParseJSON(false) differs from ParseJSON(\"false\")", ("" + fromFalseBool) === ("" + fromFalseStr) ? "true" : "false", "false");
+
+  assert("DEV null returns null (official docs: string|string[])", Platform.Function.ParseJSON(null) === null ? "true" : "false", "true");
+  var undef;
+  assert("DEV undefined returns null (official docs: string|string[])", Platform.Function.ParseJSON(undef) === null ? "true" : "false", "true");
+  </script>
+
+return-value: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Return value
+   *
+   * Proves:
+   *   1. Object and nested JSON values become native property-accessible
+   *      objects; numbers, booleans and null inside them are deserialised.
+   *   2. A top-level array has length/index access but instanceof Array is
+   *      false in this host engine.
+   *   3. DEVIATION: top-level scalar JSON values are returned unchanged as
+   *      strings rather than as primitives or the documented object|object[].
+   *   4. Empty, whitespace-only, null-argument and undefined-argument input
+   *      return genuine JS null.
+   *   5. Malformed structural input returns null without throwing.
+   *   6. DEVIATION from strict JSON: trailing content/commas, single-quoted
+   *      keys and unquoted keys are accepted.
+   *   7. Leading BOM is not skipped; that input is returned as a string.
+   *   8. Duplicate keys keep the final value; unsafe integers lose precision.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var obj = Platform.Function.ParseJSON('{"name":"Jane","score":95,"active":true,"none":null,"nested":{"items":[1,-2.5,602],"unicode":"é"}}');
+  assert("object JSON returns typeof object", String(typeof obj), "object");
+  assert("object string property is readable", String(obj.name), "Jane");
+  assert("object numeric property is a number", String(typeof obj.score), "number");
+  assert("object numeric property has the expected value", String(obj.score), "95");
+  assert("object boolean property is deserialised", obj.active ? "true" : "false", "true");
+  assert("object null property is genuine null", obj.none === null ? "true" : "false", "true");
+  assert("nested array length is preserved", String(obj.nested.items.length), "3");
+  assert("nested decimal is deserialised", String(obj.nested.items[1]), "-2.5");
+  assert("nested Unicode is preserved", String(obj.nested.unicode), "é");
+
+  var arr = Platform.Function.ParseJSON('["red",2,true,null,{"x":3}]');
+  assert("array JSON returns typeof object", String(typeof arr), "object");
+  assert("array length is preserved", String(arr.length), "5");
+  assert("array index access works", String(arr[0]), "red");
+  assert("array numeric element is a number", String(typeof arr[1]), "number");
+  assert("array null element is genuine null", arr[3] === null ? "true" : "false", "true");
+  assert("array nested-object access works", String(arr[4].x), "3");
+  assert("host array instanceof Array is false", arr instanceof Array ? "true" : "false", "false");
+
+  var scalarString = Platform.Function.ParseJSON('"hello"');
+  assert("DEV string scalar remains a string (docs: object|object[])", String(typeof scalarString), "string");
+  assert("DEV string scalar preserves its quotes", String(scalarString), '"hello"');
+  assert("DEV number scalar remains text (docs: object|object[])", String(Platform.Function.ParseJSON("42")), "42");
+  assert("DEV true scalar remains text (docs: object|object[])", String(Platform.Function.ParseJSON("true")), "true");
+  assert("DEV false scalar remains text (docs: object|object[])", String(Platform.Function.ParseJSON("false")), "false");
+  assert("DEV null scalar remains text (docs: object|object[])", String(Platform.Function.ParseJSON("null")), "null");
+  assert("decimal scalar preserves its source text", String(Platform.Function.ParseJSON("-12.50")), "-12.50");
+  assert("exponent scalar preserves its source text", String(Platform.Function.ParseJSON("6.02e23")), "6.02e23");
+
+  assert("empty input returns null", Platform.Function.ParseJSON("") === null ? "true" : "false", "true");
+  assert("whitespace-only input returns null", Platform.Function.ParseJSON("   ") === null ? "true" : "false", "true");
+  assert("malformed structural input returns null", Platform.Function.ParseJSON("{not json") === null ? "true" : "false", "true");
+  assert("null argument returns null", Platform.Function.ParseJSON(null) === null ? "true" : "false", "true");
+  var undef;
+  assert("undefined argument returns null", Platform.Function.ParseJSON(undef) === null ? "true" : "false", "true");
+
+  assert("DEV trailing content is ignored (strict JSON: syntax error)", String(Platform.Function.ParseJSON('{"a":1} x').a), "1");
+  assert("DEV trailing object comma is accepted (strict JSON: syntax error)", String(Platform.Function.ParseJSON('{"a":1,}').a), "1");
+  assert("DEV trailing array comma is accepted (strict JSON: syntax error)", String(Platform.Function.ParseJSON('[1,2,]').length), "2");
+  assert("DEV single-quoted key is accepted (strict JSON: syntax error)", String(Platform.Function.ParseJSON("{'a':1}").a), "1");
+  assert("DEV unquoted key is accepted (strict JSON: syntax error)", String(Platform.Function.ParseJSON('{a:1}').a), "1");
+
+  var bomResult = Platform.Function.ParseJSON(String.fromCharCode(65279) + '{"a":1}');
+  assert("leading BOM input returns a string", String(typeof bomResult), "string");
+  assert("leading BOM input is not deserialised", String(typeof bomResult.a), "undefined");
+  assert("duplicate object keys keep the final value", String(Platform.Function.ParseJSON('{"k":1,"k":2}').k), "2");
+  var precision = Platform.Function.ParseJSON('{"safe":9007199254740991,"unsafe":9007199254740993}');
+  assert("safe integer remains distinct", precision.safe === precision.unsafe ? "true" : "false", "false");
+  assert("unsafe integer rounds to 9007199254740992", precision.unsafe === 9007199254740992 ? "true" : "false", "true");
+  </script>
+
+return-type-deviation: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs claim: the documented object|object[] return is
+   * incomplete and the parser is more permissive than strict JSON.
+   *
+   * Proves:
+   *   1. Objects and arrays are returned as host objects.
+   *   2. DEV — scalar JSON values are returned as strings.
+   *   3. DEV — empty/malformed structural input returns null without throwing.
+   *   4. DEV — several non-standard JSON extensions are accepted.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  assert("object JSON returns an object", String(typeof Platform.Function.ParseJSON('{"a":1}')), "object");
+  assert("array JSON returns a host object", String(typeof Platform.Function.ParseJSON('[1,2]')), "object");
+  assert("DEV number JSON returns string (official docs: object|object[])", String(typeof Platform.Function.ParseJSON("42")), "string");
+  assert("DEV null JSON returns string (official docs: object|object[])", String(Platform.Function.ParseJSON("null")), "null");
+  assert("DEV malformed structural JSON returns null (official docs: object|object[])", Platform.Function.ParseJSON("{not json") === null ? "true" : "false", "true");
+  assert("DEV empty input returns null (official docs: object|object[])", Platform.Function.ParseJSON("") === null ? "true" : "false", "true");
+  assert("DEV trailing content is accepted (strict JSON: syntax error)", String(Platform.Function.ParseJSON('{"a":1} trailing').a), "1");
+  assert("DEV trailing comma is accepted (strict JSON: syntax error)", String(Platform.Function.ParseJSON('[1,2,]').length), "2");
+  assert("DEV single quotes are accepted (strict JSON: syntax error)", String(Platform.Function.ParseJSON("{'a':1}").a), "1");
+  assert("DEV unquoted keys are accepted (strict JSON: syntax error)", String(Platform.Function.ParseJSON('{a:1}').a), "1");
+  </script>
+
+description: |
+  <script runat="server">
+  /*
+   * Chapter: Description
+   *
+   * Proves:
+   *   1. The qualified Platform.Function form works before any Core load, so
+   *      Platform.Load("core") is not required for this API.
+   *   2. The native JSON object is unavailable in this engine.
+   *   3. Wrong arity throws, while invalid/empty input is handled by return
+   *      values and must be checked for null.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var beforeLoad = Platform.Function.ParseJSON('{"a":1}');
+  assert("qualified ParseJSON works without Platform.Load", String(beforeLoad.a), "1");
+  assert("native JSON object is unavailable", String(typeof JSON), "undefined");
+  assert("invalid structural input returns null", Platform.Function.ParseJSON("{not json") === null ? "true" : "false", "true");
+  assert("empty input returns null", Platform.Function.ParseJSON("") === null ? "true" : "false", "true");
+  assertThrows("wrong arity with zero arguments throws", function () {
+      return Platform.Function.ParseJSON();
+  });
+  assertThrows("wrong arity with two arguments throws", function () {
+      return Platform.Function.ParseJSON('{"a":1}', "extra");
+  });
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples
+   *
+   * Proves:
+   *   1. The documented object example exposes Jane and score 95.
+   *   2. The recommended null guard handles invalid input.
+   *   3. The HTTP-response pattern works with an independently known fixed
+   *      JSON literal converted through String(...).
+   *   4. The stored-config fallback expression works.
+   *   5. Array parsing supports length and indexed iteration.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var json = '{"name":"Jane","score":95,"active":true}';
+  var obj = Platform.Function.ParseJSON(json + "");
+  assert("example object name is Jane", String(obj.name), "Jane");
+  assert("example object score is 95", String(obj.score), "95");
+  assert("example object active is true", obj.active ? "true" : "false", "true");
+
+  var invalid = Platform.Function.ParseJSON("{not json");
+  assert("recommended null guard detects invalid input", invalid === null ? "true" : "false", "true");
+
+  var responseBody = String('{"title":"Status","results":[{"name":"A"},{"name":"B"}]}');
+  var data = Platform.Function.ParseJSON(responseBody + "");
+  assert("fixed HTTP-style literal parses to an object", String(typeof data), "object");
+  assert("fixed HTTP-style literal title is Status", String(data.title), "Status");
+  assert("fixed HTTP-style results length is 2", String(data.results.length), "2");
+  assert("fixed HTTP-style second name is B", String(data.results[1].name), "B");
+
+  var config = Platform.Function.ParseJSON('{"endpoint":"/custom","timeout":45}');
+  var endpoint = config && config.endpoint || "/api/v1";
+  var timeout = config && config.timeout || 30;
+  assert("stored-config endpoint uses parsed value", String(endpoint), "/custom");
+  assert("stored-config timeout uses parsed value", String(timeout), "45");
+  var missingConfig = Platform.Function.ParseJSON("");
+  var fallbackEndpoint = missingConfig && missingConfig.endpoint || "/api/v1";
+  assert("stored-config fallback works after null parse", String(fallbackEndpoint), "/api/v1");
+
+  var colors = Platform.Function.ParseJSON('["red","green","blue"]');
+  assert("array example length is 3", String(colors.length), "3");
+  assert("array example first value is red", String(colors[0]), "red");
+  assert("array example last value is blue", String(colors[2]), "blue");
+  </script>
+
+common-mistakes: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Common Mistakes
+   *
+   * Proves:
+   *   1. Passing an array/plain object throws; passing a JSON array string works.
+   *   2. Empty and malformed structural input return null and need a guard.
+   *   3. Scalar JSON values remain strings rather than primitive values.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  assertThrows("passing an array argument throws", function () {
+      return Platform.Function.ParseJSON(["a", "b"]);
+  });
+  assertThrows("passing a plain object argument throws", function () {
+      return Platform.Function.ParseJSON({ a: 1 });
+  });
+  var parsedArray = Platform.Function.ParseJSON('["a","b"]');
+  assert("passing a JSON array string works", String(parsedArray.length), "2");
+  assert("the parsed JSON array is indexable", String(parsedArray[1]), "b");
+
+  assert("empty input returns null for the guard", Platform.Function.ParseJSON("") === null ? "true" : "false", "true");
+  assert("malformed structural input returns null for the guard", Platform.Function.ParseJSON("{not json") === null ? "true" : "false", "true");
+  assert("number scalar remains a string", String(typeof Platform.Function.ParseJSON("42")), "string");
+  assert("number scalar keeps text 42", String(Platform.Function.ParseJSON("42")), "42");
+  assert("true scalar remains a string", String(typeof Platform.Function.ParseJSON("true")), "string");
+  assert("true scalar keeps lowercase text", String(Platform.Function.ParseJSON("true")), "true");
+  </script>

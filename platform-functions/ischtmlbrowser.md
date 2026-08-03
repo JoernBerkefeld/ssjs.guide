@@ -14,6 +14,7 @@ return_type: boolean
 min_args: 1
 max_args: 1
 verification: verified
+test_scripts: complete
 ---
 
 ## Parameters
@@ -21,6 +22,8 @@ verification: verified
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `userAgentString` | string | Yes | User-agent value to evaluate |
+
+{% include test-script.html bundle="platform-functions--ischtmlbrowser" chapter="parameters" %}
 
 ## Example
 
@@ -31,3 +34,5 @@ Platform.Response.Write(
     Platform.Function.IsCHTMLBrowser(Platform.Request.UserAgent)
 );
 ```
+
+{% include test-script.html bundle="platform-functions--ischtmlbrowser" chapter="example" %}

@@ -1,0 +1,360 @@
+# Test scripts for /platform-functions/invokeextract/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the official Salesforce docs.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage on the MCDEV_Training_QA business unit.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# SOAP OBJECT UNDER TEST: an ExtractRequest carrying an ExtractParameter
+# collection. Unlike every other Invoke* verb, NO successful InvokeExtract
+# invocation exists from a CloudPage: the Extract verb resolves a Data
+# Extract definition by its internal GUID inside the Automation runtime, so
+# an inline SSJS invoke always throws a catchable exception. The scripts
+# therefore assert the throw as the documented behaviour and prove that the
+# object-building half of the pattern (CreateObject / SetObjectProperty /
+# AddObjectArrayItem) works, plus the full arity and argument-type matrix.
+# Nothing is created on the business unit, so there is nothing to clean up.
+
+differs-from-docs: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Callout: differs-from-docs — the argument count, the status array and
+   * the unreproducible OverallStatus string return.
+   *
+   * Proves:
+   *   1. DEVIATION — the valid signature is exactly TWO arguments
+   *      (apiObject, statusArray). The optional third "options" argument
+   *      the official docs describe throws, and so do arity 0 and 1. There
+   *      is no reachable optional argument in either direction.
+   *   2. DEVIATION — the documented OverallStatus string return cannot be
+   *      reproduced from a CloudPage: the invoke throws a CATCHABLE
+   *      exception instead of returning a string. The exception message is
+   *      printed verbatim rather than sliced (string operations on a CLR
+   *      exception message abort the whole CloudPage with HTTP 422).
+   *   3. statusArray is left UNCHANGED by the call. Both halves of the
+   *      PAIRED CONTROL are asserted: a PRE-SIZED [0, 0] array still holds
+   *      [0, 0] afterwards, and an EMPTY [] array is still at length 0.
+   *      NOTE the interpretation carefully — on /platform-functions/invokeexecute/
+   *      a pre-sized array IS populated while an empty one is not, so
+   *      "unchanged" there means "not pre-sized". Here the pre-sized array
+   *      is unchanged TOO, because the call throws before any SOAP response
+   *      exists to write back. The control therefore proves the array is
+   *      untouched for a reason specific to this verb, not because of the
+   *      slot-growing behaviour.
+   *   4. The failure is not caused by a malformed payload: an ExtractRequest
+   *      WITH parameters and a bare ExtractRequest with no parameters at all
+   *      both throw the same way.
+   *
+   * NOT ASSERTED: which .NET exception type is thrown. The engine surfaces
+   * only the generic "An error occurred when attempting to evaluate an
+   * InvokeExtract function call.  See inner exception for details." wrapper;
+   * the inner NullReferenceException is not observable from SSJS.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit). The page also
+   * lists automation availability; the automation context — the very context
+   * in which the Extract verb is designed to resolve a definition — was not
+   * exercised.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* Build an ExtractRequest with the given ExtractParameter name/value pairs. */
+  function extractObject(params) {
+      var o = Platform.Function.CreateObject("ExtractRequest");
+      for (var i = 0; params && i < params.length; i++) {
+          var p = Platform.Function.CreateObject("ExtractParameter");
+          Platform.Function.SetObjectProperty(p, "Name", params[i][0]);
+          Platform.Function.SetObjectProperty(p, "Value", params[i][1]);
+          Platform.Function.AddObjectArrayItem(o, "Parameters", p);
+      }
+      return o;
+  }
+  function extractParams() {
+      return [["CustomerKey", "ssjsguide_no_such_extract"]];
+  }
+
+  /* 1. Exactly two arguments — the docs' third argument is not reachable. */
+  assertThrows("arity 0 throws (the valid arity is 2)", function () {
+      return Platform.Function.InvokeExtract();
+  });
+  assertThrows("arity 1 throws (the valid arity is 2)", function () {
+      return Platform.Function.InvokeExtract(extractObject(extractParams()));
+  });
+  assertThrows("DEV arity 3 throws - the options argument the official docs describe is NOT reachable (the valid arity is 2)", function () {
+      var s = [0, 0];
+      return Platform.Function.InvokeExtract(extractObject(extractParams()), s, null);
+  });
+
+  /* 2 + 3. The documented 2-argument call with a PRE-SIZED status array. */
+  var sized = [0, 0];
+  assertThrows("DEV the documented 2-argument call throws instead of returning the OverallStatus string the official docs promise", function () {
+      return Platform.Function.InvokeExtract(extractObject(extractParams()), sized);
+  });
+  assert("the throw is CATCHABLE - the page keeps rendering after it", "rendered", "rendered");
+  assert("a PRE-SIZED statusArray keeps its length", sized.length, 2);
+  assert("statusArray[0] is left unchanged - the call threw before any SOAP response existed", sized[0], 0);
+  assert("statusArray[1] is left unchanged - do not read a RequestID from it", sized[1], 0);
+
+  /* 3. CONTROL — the SAME call with an EMPTY status array. */
+  var empty = [];
+  assertThrows("control: the identical call with an EMPTY statusArray throws the same way", function () {
+      return Platform.Function.InvokeExtract(extractObject(extractParams()), empty);
+  });
+  assert("control: an EMPTY statusArray is never grown - it stays at length 0", empty.length, 0);
+  assert("control: statusArray[0] of an empty array is undefined", empty[0] === undefined ? "true" : "false", "true");
+  assert("control: statusArray[1] of an empty array is undefined", empty[1] === undefined ? "true" : "false", "true");
+
+  /* 4. A bare request without Parameters fails identically. */
+  var bare = [0, 0];
+  assertThrows("a bare ExtractRequest with no Parameters throws the same way - the payload shape is not what fails", function () {
+      return Platform.Function.InvokeExtract(Platform.Function.CreateObject("ExtractRequest"), bare);
+  });
+  assert("the bare-request call also leaves statusArray[0] unchanged", bare[0], 0);
+  assert("the bare-request call also leaves statusArray[1] unchanged", bare[1], 0);
+  </script>
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters — Platform.Function.InvokeExtract(apiObject, statusArray)
+   *
+   * Proves, one parameter at a time:
+   *   1. apiObject is an ExtractRequest built with CreateObject. That object
+   *      — and the ExtractParameter and ExtractOptions types the chapter
+   *      names — are .NET CLR host objects (typeof "clr").
+   *   2. Only Parameters and Options are writable. SetObjectProperty on
+   *      Name, CustomerKey, RequestID, Fields and ExtractType each throws,
+   *      while Options accepts an ExtractOptions object and Parameters
+   *      accepts ExtractParameter items via AddObjectArrayItem.
+   *   3. An ExtractParameter's own Name and Value ARE writable.
+   *   4. SetObjectProperty and AddObjectArrayItem both return a genuine
+   *      null, not undefined.
+   *   5. A plain JavaScript object or a string as apiObject throws — the
+   *      parameter is not structurally typed, it must be an
+   *      ExactTarget.Integration.WSDL type.
+   *   6. A null apiObject is the one non-object that does NOT throw: no SOAP
+   *      call is made, the return value is a genuine null (not undefined,
+   *      not a status string) and statusArray is left untouched. This
+   *      mirrors the same finding on /platform-functions/invokecreate/,
+   *      /platform-functions/invokedelete/,
+   *      /platform-functions/invokeexecute/ and
+   *      /platform-functions/invokeconfigure/.
+   *   7. statusArray must be an array — a non-array throws.
+   *   8. statusArray stays unchanged: with the documented [0, 0] shape both
+   *      slots still read 0 after the call.
+   *
+   * NOT ASSERTED: the inner exception text the chapter quotes for the
+   * read-only properties ("Invalid property name"). The engine surfaces only
+   * the generic SetObjectProperty wrapper message; the inner exception is
+   * not observable from SSJS, so only the throw itself is asserted.
+   *
+   * NOT ASSERTED: the values set on the apiObject cannot be read back from
+   * the object itself — it is a CLR host object and the engine blocks all
+   * introspection of it (see /platform-functions/createobject/).
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. The three SOAP types the chapter names are CLR host objects. */
+  var req = Platform.Function.CreateObject("ExtractRequest");
+  assert("typeof CreateObject('ExtractRequest') is clr", String(typeof req), "clr");
+  assert("typeof CreateObject('ExtractParameter') is clr", String(typeof Platform.Function.CreateObject("ExtractParameter")), "clr");
+  assert("typeof CreateObject('ExtractOptions') is clr", String(typeof Platform.Function.CreateObject("ExtractOptions")), "clr");
+
+  /* 2. The read-only properties the chapter lists all reject SetObjectProperty. */
+  assertThrows("SetObjectProperty(req, 'Name', ...) throws - Name is not writable", function () {
+      return Platform.Function.SetObjectProperty(req, "Name", "MyExtract");
+  });
+  assertThrows("SetObjectProperty(req, 'CustomerKey', ...) throws - CustomerKey is not writable", function () {
+      return Platform.Function.SetObjectProperty(req, "CustomerKey", "MyExtractDef");
+  });
+  assertThrows("SetObjectProperty(req, 'RequestID', ...) throws - RequestID is not writable", function () {
+      return Platform.Function.SetObjectProperty(req, "RequestID", "00000000-0000-0000-0000-000000000000");
+  });
+  assertThrows("SetObjectProperty(req, 'Fields', ...) throws - Fields is not writable", function () {
+      return Platform.Function.SetObjectProperty(req, "Fields", "a");
+  });
+  assertThrows("SetObjectProperty(req, 'ExtractType', ...) throws - ExtractType is not writable", function () {
+      return Platform.Function.SetObjectProperty(req, "ExtractType", "a");
+  });
+
+  /* 2 + 4. Options IS writable and returns a genuine null. */
+  var optionsResult = Platform.Function.SetObjectProperty(req, "Options", Platform.Function.CreateObject("ExtractOptions"));
+  assert("SetObjectProperty(req, 'Options', ExtractOptions) does NOT throw - Options is writable", optionsResult === null ? "true" : "false", "true");
+  assert("SetObjectProperty returns a genuine null, not undefined", optionsResult === undefined ? "true" : "false", "false");
+
+  /* 3 + 4. An ExtractParameter's Name and Value are writable. */
+  var param = Platform.Function.CreateObject("ExtractParameter");
+  var nameResult = Platform.Function.SetObjectProperty(param, "Name", "CustomerKey");
+  assert("SetObjectProperty(param, 'Name', ...) succeeds and returns a genuine null", nameResult === null ? "true" : "false", "true");
+  var valueResult = Platform.Function.SetObjectProperty(param, "Value", "ssjsguide_no_such_extract");
+  assert("SetObjectProperty(param, 'Value', ...) succeeds and returns a genuine null", valueResult === null ? "true" : "false", "true");
+
+  /* 2 + 4. Parameters is writable via AddObjectArrayItem. */
+  var added = Platform.Function.AddObjectArrayItem(req, "Parameters", param);
+  assert("AddObjectArrayItem(req, 'Parameters', param) returns a genuine null - Parameters is writable", added === null ? "true" : "false", "true");
+  assert("AddObjectArrayItem does NOT return undefined", added === undefined ? "true" : "false", "false");
+
+  /* 5. apiObject must be a real SOAP object. */
+  assertThrows("a plain JavaScript object as apiObject throws", function () {
+      var s = [0, 0];
+      return Platform.Function.InvokeExtract({}, s);
+  });
+  assertThrows("a string as apiObject throws", function () {
+      var s = [0, 0];
+      return Platform.Function.InvokeExtract("ExtractRequest", s);
+  });
+
+  /* 6. null apiObject: no SOAP call is made — genuine null back, statusArray untouched. */
+  var nullStatus = [0, 0];
+  var nullResult = Platform.Function.InvokeExtract(null, nullStatus);
+  assert("a null apiObject does NOT throw", nullResult === null ? "true" : "false", "true");
+  assert("a null apiObject returns a genuine null, not a status string", String(typeof nullResult), "object");
+  assert("a null apiObject is not undefined", nullResult === undefined ? "true" : "false", "false");
+  assert("a null apiObject leaves statusArray[0] untouched (no SOAP call was made)", nullStatus[0], 0);
+  assert("a null apiObject leaves statusArray[1] untouched (no SOAP call was made)", nullStatus[1], 0);
+
+  /* 7. statusArray must be an array. */
+  assertThrows("a non-array statusArray throws", function () {
+      return Platform.Function.InvokeExtract(req, "notanarray");
+  });
+
+  /* 8. The documented [0, 0] shape stays unchanged. */
+  var status = [0, 0];
+  assertThrows("the 2-argument call with the fully built ExtractRequest throws (see the differs-from-docs callout)", function () {
+      return Platform.Function.InvokeExtract(req, status);
+  });
+  assert("statusArray keeps its length", status.length, 2);
+  assert("statusArray[0] is unchanged", status[0], 0);
+  assert("statusArray[1] is unchanged - do not read a RequestID from it", status[1], 0);
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples — the CreateObject / SetObjectProperty /
+   * AddObjectArrayItem / InvokeExtract build-and-invoke pattern, end to end.
+   *
+   * Proves:
+   *   1. Every object-building line of the page's example runs without
+   *      throwing: CreateObject("ExtractRequest"), CreateObject
+   *      ("ExtractParameter"), SetObjectProperty for the parameter's Name
+   *      and Value, and AddObjectArrayItem for the request's Parameters.
+   *   2. The final InvokeExtract line of the example throws a CATCHABLE
+   *      exception rather than returning a result — exactly as the
+   *      differs-from-docs callout at the top of the page states. The
+   *      message is printed verbatim rather than sliced (string operations
+   *      on a CLR exception message abort the whole CloudPage with HTTP
+   *      422).
+   *   3. The example's `var statusArr = [0, 0]` is left unchanged by the
+   *      call, which is why the example's comment says not to read a
+   *      RequestID from it.
+   *   4. The failure is attributable to the Extract verb, not to the
+   *      example's payload: swapping the CustomerKey parameter for a Name
+   *      parameter, and dropping the Parameters collection entirely, both
+   *      throw identically.
+   *   5. Nothing is created on the business unit by any of this, so there is
+   *      nothing to clean up — an Extract that had partially succeeded would
+   *      have produced an export request.
+   *
+   * NOT ASSERTED: a successful extract. The Extract SOAP verb resolves a
+   * saved Data Extract definition by its internal GUID inside the Automation
+   * runtime; referencing the business unit's real, saved definitions from an
+   * inline SSJS invoke throws just the same. That is a CONCRETE
+   * environmental blocker documented on the page, not a script defect.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function assertNoThrow(id, fn) {
+      var ok = true, msg = "ok";
+      try { fn(); } catch (ex) { ok = false; msg = ex.message; }
+      Platform.Response.Write((ok ? "PASS " : "FAIL ") + id + " -> [" + msg + "]\n");
+  }
+
+  /* 1. The example's build-up, line by line. */
+  var req = Platform.Function.CreateObject("ExtractRequest");
+  assert("example line 1: CreateObject('ExtractRequest') yields a CLR host object", String(typeof req), "clr");
+  var param = Platform.Function.CreateObject("ExtractParameter");
+  assert("example line 2: CreateObject('ExtractParameter') yields a CLR host object", String(typeof param), "clr");
+  assertNoThrow("example line 3: SetObjectProperty(param, 'Name', 'CustomerKey') succeeds", function () {
+      Platform.Function.SetObjectProperty(param, "Name", "CustomerKey");
+  });
+  assertNoThrow("example line 4: SetObjectProperty(param, 'Value', ...) succeeds", function () {
+      Platform.Function.SetObjectProperty(param, "Value", "ssjsguide_no_such_extract");
+  });
+  assertNoThrow("example line 5: AddObjectArrayItem(req, 'Parameters', param) succeeds", function () {
+      Platform.Function.AddObjectArrayItem(req, "Parameters", param);
+  });
+
+  /* 2 + 3. The example's final invoke throws; statusArr is left unchanged. */
+  var statusArr = [0, 0];
+  assertThrows("example line 6: InvokeExtract(req, statusArr) throws instead of returning a result string", function () {
+      return Platform.Function.InvokeExtract(req, statusArr);
+  });
+  assert("the throw is CATCHABLE - the page keeps rendering after it", "rendered", "rendered");
+  assert("the example's statusArr keeps its length", statusArr.length, 2);
+  assert("the example's statusArr[0] is unchanged", statusArr[0], 0);
+  assert("the example's statusArr[1] is unchanged - do not read a RequestID from it", statusArr[1], 0);
+
+  /* 4. The payload shape is not what fails. */
+  var byNameStatus = [0, 0];
+  assertThrows("a Name parameter instead of CustomerKey throws identically", function () {
+      var o = Platform.Function.CreateObject("ExtractRequest");
+      var p = Platform.Function.CreateObject("ExtractParameter");
+      Platform.Function.SetObjectProperty(p, "Name", "Name");
+      Platform.Function.SetObjectProperty(p, "Value", "ssjsguide_no_such_extract");
+      Platform.Function.AddObjectArrayItem(o, "Parameters", p);
+      return Platform.Function.InvokeExtract(o, byNameStatus);
+  });
+  var bareStatus = [0, 0];
+  assertThrows("an ExtractRequest with NO Parameters at all throws identically", function () {
+      return Platform.Function.InvokeExtract(Platform.Function.CreateObject("ExtractRequest"), bareStatus);
+  });
+  assert("the bare-request call also leaves its statusArray[0] unchanged", bareStatus[0], 0);
+  assert("the bare-request call also leaves its statusArray[1] unchanged", bareStatus[1], 0);
+  </script>

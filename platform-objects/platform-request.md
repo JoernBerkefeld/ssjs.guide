@@ -6,6 +6,7 @@ parent_url: /platform-objects/
 description: Read HTTP request data including query string parameters, POST body, form data, request headers, and cookies.
 verification: verified
 differs_from_docs: true
+test_scripts: complete
 ---
 
 `Platform.Request` provides methods to inspect every aspect of the incoming HTTP request in CloudPage, JSON Resource, and Triggered Send contexts.
@@ -30,7 +31,9 @@ Does not require `Platform.Load`.
 | [`Platform.Request.RequestURL`](#requesturl) | string | Full resolved URL of the current page |
 | [`Platform.Request.UserAgent`](#useragent) | string | User-agent string of the requesting browser |
 
-All properties return `null` (or `false` for boolean properties) when no valid request object exists or the value is absent.
+On a CloudPage GET, these are CLR-backed request values rather than ordinary JavaScript primitives. Convert string properties with `String(...)` before strict comparison; test `HasSSL` and `IsSSL` directly in conditions. `UserAgent` and `ReferrerURL` throw when their corresponding headers are absent, so prefer `GetRequestHeader(...)` when the header is optional.
+
+{% include test-script.html bundle="platform-objects--platform-request" chapter="properties" %}
 
 ## Methods
 
@@ -43,6 +46,8 @@ All properties return `null` (or `false` for boolean properties) when no valid r
 | [`GetRequestHeader(name)`](#getrequestheader) | string | Read a request header |
 | [`GetUserLanguages()`](#getuserlanguages) ⚠️ | string | Read the browser `Accept-Language` header value — `GetUserLanguages()` as called is **not defined at runtime** (the engine does not resolve it; throws at every arity tried); use `GetRequestHeader("Accept-Language")` |
 
+{% include test-script.html bundle="platform-objects--platform-request" chapter="methods" %}
+
 ---
 
 ### Platform.Request.GetQueryStringParameter {#getquerystringparameter}
@@ -51,7 +56,7 @@ All properties return `null` (or `false` for boolean properties) when no valid r
 Platform.Request.GetQueryStringParameter(parameterName)
 ```
 
-Returns the value of a URL query string parameter. Returns **`null`** if the parameter is not present (runtime-verified — the official docs' claim of an empty string is incorrect).
+Returns the value of a URL query string parameter. Returns **`null`** if the parameter is not present (runtime-verified — the official docs' claim of an empty string is incorrect). An explicitly empty value returns `""`; repeated values are returned as one comma-joined string in URL order. Parameter names are case-insensitive, `+` and percent-encoded spaces decode to spaces, percent escapes decode once, and UTF-8 escapes decode to Unicode characters.
 
 #### Parameters
 
@@ -76,7 +81,7 @@ var missing = Platform.Request.GetQueryStringParameter("foo"); // null
 Platform.Request.GetFormField(fieldName)
 ```
 
-Reads a field from either a GET query string or POST form body (application/x-www-form-urlencoded or multipart/form-data). Returns **`null`** when the field is absent.
+Reads a submitted form field from a POST form body (`application/x-www-form-urlencoded` or `multipart/form-data`). On a plain CloudPage GET it does **not** fall back to query parameters; it returns **`null`** even when the same name is present in the URL.
 
 #### Examples
 
@@ -93,7 +98,7 @@ var firstName = Platform.Request.GetFormField("firstName");
 Platform.Request.GetPostData([encoding])
 ```
 
-Returns the raw POST body as a string. Typically used for JSON or XML payloads sent with content-type `application/json`.
+Returns the raw POST body as a string. Typically used for JSON or XML payloads sent with content-type `application/json`. On a GET request, both the first and subsequent reads return an empty string.
 
 When `encoding` is omitted, the platform default applies (often a legacy Windows code page). Pass an encoding name such as `"UTF-8"` when the client sends UTF-8.
 
@@ -199,7 +204,7 @@ if (!sessionId) {
 Platform.Request.RequestURL
 ```
 
-Returns the full URL of the current CloudPage as it was resolved, including CloudPages URL encryption parameters.
+Returns the absolute URL of the current CloudPage, including the query string. The value is a CLR string, so convert it with `String(...)` before strict comparison.
 
 #### Examples
 
@@ -250,7 +255,7 @@ Write("Request from: " + ip);
 Platform.Request.HasSSL
 ```
 
-Returns `true` if the current request supports SSL (HTTPS), `false` otherwise.
+Returns a CLR boolean that is truthy when the request uses HTTPS. Test it directly in a condition; strict comparison with JavaScript `true` does not match.
 
 #### Examples
 
@@ -268,7 +273,7 @@ if (!Platform.Request.HasSSL) {
 Platform.Request.IsSSL
 ```
 
-Returns `true` if the current request was made over an SSL (HTTPS) connection. Alias of `HasSSL`.
+Returns the same CLR boolean value as `HasSSL`. Test it directly in a condition rather than with strict equality.
 
 ---
 
@@ -278,7 +283,7 @@ Returns `true` if the current request was made over an SSL (HTTPS) connection. A
 Platform.Request.Method
 ```
 
-Returns the HTTP method of the current request — `"GET"` or `"POST"`.
+Returns the HTTP method of the current request as a CLR string. Convert it before strict comparison: `String(Platform.Request.Method) === "GET"`.
 
 #### Examples
 
@@ -298,7 +303,7 @@ if (method === "POST") {
 Platform.Request.QueryString
 ```
 
-Returns the full raw query string of the request URL (everything after `?`). Use `GetQueryStringParameter(name)` to read individual values.
+Returns the full raw query string of the request URL **including the leading `?`**. The CLR string preserves the encoded form; use `GetQueryStringParameter(name)` for decoded values.
 
 #### Examples
 
@@ -315,7 +320,7 @@ var qs = Platform.Request.QueryString;
 Platform.Request.ReferrerURL
 ```
 
-Returns the URL of the referring web address (the HTTP `Referer` header value). Returns `null` when no referrer is present.
+Returns the HTTP `Referer` header as a CLR string. If that header is absent, reading this property throws a null-reference error; use `GetRequestHeader("Referer")` when the referrer is optional.
 
 #### Examples
 
@@ -334,7 +339,7 @@ if (referrer) {
 Platform.Request.UserAgent
 ```
 
-Returns the user-agent string from the HTTP request. Use with [`Platform.Function.IsCHTMLBrowser()`](/platform-functions/ischtmlbrowser/) to detect browser types.
+Returns the `User-Agent` header as a CLR string. If the header is absent, reading this property throws a null-reference error; use `GetRequestHeader("User-Agent")` for an optional read. Use the populated value with [`Platform.Function.IsCHTMLBrowser()`](/platform-functions/ischtmlbrowser/) to detect browser types.
 
 #### Examples
 
@@ -348,7 +353,7 @@ var isCHTML = Platform.Function.IsCHTMLBrowser(ua);
 ## Complete Request Handler Pattern
 
 ```javascript
-var method = Platform.Request.Method;
+var method = String(Platform.Request.Method);
 
 if (method === "GET") {
     var id = Platform.Request.GetQueryStringParameter("id");
@@ -371,6 +376,8 @@ if (method === "GET") {
     }
 }
 ```
+
+{% include test-script.html bundle="platform-objects--platform-request" chapter="complete-request-handler-pattern" %}
 
 ## See Also
 

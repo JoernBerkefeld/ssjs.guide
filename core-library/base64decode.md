@@ -15,6 +15,7 @@ availability:
 requires_core_load: true
 verification: verified
 differs_from_docs: false
+test_scripts: complete
 syntax: "Base64Decode(encodedString)"
 return_type: string
 min_args: 1
@@ -27,11 +28,15 @@ max_args: 1
 |------|------|----------|-------------|
 | `encodedString` | string | Yes | Base64 encoded string to decode |
 
+{% include test-script.html bundle="core-library--base64decode" chapter="parameters" %}
+
 ## Description
 
 Decodes a Base64 encoded string back to plain text. Requires `Platform.Load("core", "1.1.5")` before use.
 
 This is the single-argument bare-name form. It does not support a `charset` parameter — use [`Platform.Function.Base64Decode(encodedString, charset)`](/platform-functions/base64decode/) when charset control is needed.
+
+{% include test-script.html bundle="core-library--base64decode" chapter="description" %}
 
 ## Example
 
@@ -41,6 +46,8 @@ var encoded = 'VGhpcyB3YXMgYSBCYXNlNjQgZW5jb2RlZCBzdHJpbmcu';
 var decoded = Base64Decode(encoded);
 Write(decoded); // "This was a Base64 encoded string."
 ```
+
+{% include test-script.html bundle="core-library--base64decode" chapter="example" %}
 
 ## See Also
 

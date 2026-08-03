@@ -1,0 +1,138 @@
+# Test scripts for /platform-objects/platform-recipient/
+#
+# One key per behavior chapter on the page. Each script is a self-contained
+# SSJS CloudPage snippet that asserts every claim observable in CloudPage GET
+# context and labels send-context-only claims as non-assertions.
+#
+# All scripts were last run green (every assertion line PASS) against a live
+# SFMC CloudPage GET. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values — that manufactures phantom "deviations".
+
+methods: |
+  <script runat="server">
+  /*
+   * Chapter: Methods
+   *
+   * CloudPage GET context. Proves:
+   *   1. Platform.Recipient is available without Platform.Load.
+   *   2. GetAttributeValue is callable without Platform.Load and returns a
+   *      string-shaped empty value when no recipient is bound.
+   *   3. Wrong-case member invocations throw rather than behaving like the
+   *      documented case; proxy typeof values alone are not existence proof.
+   *   4. The bare Recipient name is unavailable before and after Core loads.
+   *
+   * EXPECTED OUTPUT: every assertion line starts with PASS. A FAIL means the
+   * runtime no longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function runChapter(id, fn) {
+      Platform.Response.Write("START " + id + "\n");
+      try { fn(); } catch (ex) { Platform.Response.Write("FAIL " + id + " chapter threw -> [" + String(ex.message) + "]\n"); }
+      Platform.Response.Write("DONE " + id + "\n");
+  }
+  function typeOf(fn) {
+      try { return fn(); } catch (ex) { return "THREW: " + String(ex.message); }
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  runChapter("methods", function () {
+      assert("CloudPage GET: typeof Platform.Recipient is clr without Platform.Load", typeOf(function () { return typeof Platform.Recipient; }), "clr");
+      assert("CloudPage GET: typeof GetAttributeValue is clrmethodinfo without Platform.Load", typeOf(function () { return typeof Platform.Recipient.GetAttributeValue; }), "clrmethodinfo");
+      var noLoadValue = Platform.Recipient.GetAttributeValue("EmailAddress");
+      assert("CloudPage GET: GetAttributeValue is callable without Platform.Load", typeof noLoadValue, "string");
+      assert("CloudPage GET: no bound recipient returns empty string without Platform.Load", noLoadValue, "");
+      assert("CloudPage GET: lowercase platform object invocation throws", invocationResult(function () { return Platform.recipient.GetAttributeValue("EmailAddress"); }), "threw");
+      assert("CloudPage GET: lowercase method invocation throws", invocationResult(function () { return Platform.Recipient.getAttributeValue("EmailAddress"); }), "threw");
+      assert("CloudPage GET: bare Recipient is undefined before Platform.Load", typeOf(function () { return typeof Recipient; }), "undefined");
+      Platform.Load("core", "1.1.5");
+      assert("DEV CloudPage GET: bare Recipient remains undefined after Platform.Load (older docs: Recipient global)", typeOf(function () { return typeof Recipient; }), "undefined");
+  });
+  </script>
+
+getattributevalue: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Platform.Recipient.GetAttributeValue
+   *
+   * CloudPage GET context. Proves:
+   *   1. The documented Platform.Recipient call accepts an attribute name and
+   *      returns a string-shaped value.
+   *   2. Common subscriber/contact and sendable-DE names are empty because a
+   *      plain CloudPage GET has no bound send recipient.
+   *   3. Attribute.GetValue is the loaded-Core equivalent in this context.
+   *   4. The actual email-send values are NOT ASSERTABLE on a CloudPage GET;
+   *      they require an email, triggered-send, or journey-send context.
+   *
+   * EXPECTED OUTPUT: every assertion line starts with PASS. A FAIL means the
+   * runtime no longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function runChapter(id, fn) {
+      Platform.Response.Write("START " + id + "\n");
+      try { fn(); } catch (ex) { Platform.Response.Write("FAIL " + id + " chapter threw -> [" + String(ex.message) + "]\n"); }
+      Platform.Response.Write("DONE " + id + "\n");
+  }
+
+  runChapter("getattributevalue", function () {
+      var email = Platform.Recipient.GetAttributeValue("EmailAddress");
+      var firstName = Platform.Recipient.GetAttributeValue("FirstName");
+      var subscriberKey = Platform.Recipient.GetAttributeValue("_subscriberkey");
+      assert("CloudPage GET: EmailAddress result type is string", typeof email, "string");
+      assert("CloudPage GET: EmailAddress is empty without a bound recipient", email, "");
+      assert("CloudPage GET: FirstName is empty without a bound recipient", firstName, "");
+      assert("CloudPage GET: _subscriberkey is empty without a bound recipient", subscriberKey, "");
+      assert("CloudPage GET: Attribute.GetValue EmailAddress result type is string", typeof Attribute.GetValue("EmailAddress"), "string");
+      assert("workaround CloudPage GET: Attribute.GetValue matches Platform.Recipient", Attribute.GetValue("EmailAddress"), email);
+  });
+  </script>
+
+notes: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Notes
+   *
+   * CloudPage GET context. Proves:
+   *   1. Platform.Recipient.GetAttributeValue does not throw when no recipient
+   *      is bound; it returns an empty string.
+   *   2. Platform.Request.GetQueryStringParameter is the working CloudPage API
+   *      for URL parameters, independently of recipient context.
+   *   3. Population during email, triggered-send, or journey-send processing is
+   *      NOT ASSERTABLE in a plain CloudPage GET and remains context-blocked.
+   *
+   * EXPECTED OUTPUT: every assertion line starts with PASS. A FAIL means the
+   * runtime no longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function runChapter(id, fn) {
+      Platform.Response.Write("START " + id + "\n");
+      try { fn(); } catch (ex) { Platform.Response.Write("FAIL " + id + " chapter threw -> [" + String(ex.message) + "]\n"); }
+      Platform.Response.Write("DONE " + id + "\n");
+  }
+
+  runChapter("notes", function () {
+      var recipientValue = Platform.Recipient.GetAttributeValue("EmailAddress");
+      var queryValue = Platform.Request.GetQueryStringParameter("recipientProbe");
+      assert("CloudPage GET: recipient access returns instead of throwing", typeof recipientValue, "string");
+      assert("CloudPage GET: recipient access is empty without send context", recipientValue, "");
+      assert("CloudPage GET: Platform.Request reads the URL parameter", queryValue, "query-control");
+  });
+  </script>

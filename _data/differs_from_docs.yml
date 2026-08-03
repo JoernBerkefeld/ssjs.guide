@@ -30,6 +30,32 @@
     } catch (e2) { Platform.Response.Write("ERROR: " + Platform.Function.Stringify(e2) + "\n"); }
     </script>
 
+- name: "Platform.Variable.GetValue / SetValue"
+  url: "/platform-objects/platform-variable/#getvalue"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformAMPscriptVariableFunctions.html"
+  tagline: "typed scalar bridge, null absence/return, optional @ prefix"
+  part: "sfmc"
+  category: "Platform Objects"
+  object: "Platform.Variable"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "getvalue"
+  body: |
+    The official member pages describe string values, require an `@` prefix, and document `SetValue` as void. On a published CloudPage GET, the prefix is optional, names are case-insensitive, numbers and booleans retain their SSJS type between server-side blocks, a never-set variable returns JavaScript `null`, and `SetValue` also returns JavaScript `null`. The variable state is limited to the current request.
+
+- name: "Platform.Response"
+  url: "/platform-objects/platform-response/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformClientBrowserRemoveCookie.html"
+  tagline: "null returns, opaque property reads, and ineffective RemoveCookie"
+  part: "sfmc"
+  category: "Platform Objects"
+  object: "Platform.Response"
+  severity: "high"
+  discrepancy: "A4"
+  anchor: "platform-response-runtime-differences"
+  body: |
+    Response mutators including `SetResponseHeader`, `RemoveResponseHeader`, `SetCookie`, and `RemoveCookie` return JavaScript `null`, not `void`. `ContentType` and `CharacterSet` assignments work, but reads and calls expose opaque CLR values instead of the configured strings. In a published CloudPage GET with the named request cookie present, `RemoveCookie` emitted no deletion header. Use `SetCookie(name, "", new Date(1970, 0, 1), true)` to emit an expired cookie; the removal takes effect on a subsequent browser request.
+
 - name: "HTTPHeader (bare-name global)"
   url: "/core-library/httpheader/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_utilitiesHTTPHeaderObject.html"
@@ -250,41 +276,356 @@
     } catch (e) { Platform.Response.Write("ERROR: " + Platform.Function.Stringify(e) + "\n"); }
     </script>
 
-- name: "Platform.Function.BeginImpressionRegion"
-  url: "/platform-functions/beginimpressionregion/"
-  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformContentBeginImpressionRegion.html"
-  tagline: "name must be a literal"
+- name: "Platform.Function.ContentArea"
+  url: "/platform-functions/contentarea/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformContentContentArea.html"
+  tagline: "no SSJS call shape works"
   part: "sfmc"
   category: "Platform Functions"
   object: "Platform.Function"
   severity: "medium"
   discrepancy: "A7"
-  anchor: "platform-function-beginimpressionregion-name-must-be-a-literal"
+  anchor: "platform-function-contentarea-no-working-call-shape"
   body: |
-    The region name must be a **compile-time literal**. Passing a variable is rejected at runtime with a resolved-value (`ResolvedValueParameter`) error (`OMM_FUNC_SYNTAX_ERR`, `ExactTarget.OMM.InvalidFunctionException`). The official docs describe the argument as an ordinary string and do not mention this literal-only restriction. Note: impression regions are a **send/email-tracking** feature — on a plain CloudPage GET even the literal form throws the same `ResolvedValueParameter` error because there is no impression-tracking context; test the literal-vs-variable distinction in an email/send context.
+    **No arity returns a value.** The docs present `ContentArea(id, regionName, stopOnError, fallbackContent)` as an ordinary callable returning the area's rendered markup, with `stopOnError: false` letting a failed call proceed and `fallbackContent` displayed when nothing comes back. At runtime:
 
-    **Core-library equivalent:** [`BeginImpressionRegion()`](/core-library/beginimpressionregion/) is the bare-name Core form (available after `Platform.Load("core", ...)`) — it shares the same literal-only restriction and is likewise unusable from SSJS.
+    - **Arity 1** throws `An error occurred when attempting to evaluate an ContentArea function call.` — for a bogus id *and* for the numeric id of a Content Area that a WSProxy `retrieve` proved exists in the same business unit, so a missing area is not the cause.
+    - **Arity 2–4** throw a *different*, resolved-value error (`… must be a literal (constant) values.`, `Parameter Name: ImpressionRegionName`, `Parameter Ordinal: 2`, `Parameter Type: ResolvedValueParameter`) for every `regionName` shape — string literal, concatenation, variable, empty string and `null` alike. Because parameter 2 is rejected outright, **`stopOnError` and `fallbackContent` are unreachable and the fallback string is never emitted**.
+    - **Arity 0 and 5+** throw the overloaded `Unable to retrieve security descriptor for this frame.`
+
+    **Core-library equivalent:** [`ContentArea()`](/core-library/contentarea/) is a genuine function after `Platform.Load("core", …)` (`typeof` is `"function"`, not the phantom `"clrmethodinfo"`), but it is no escape hatch — arity 1 and 2 throw identically, and its arity 3–5 forms throw the security-descriptor error, so its `errorMsg` parameter is unreachable too.
+
+    Classic Content Areas are deprecated; use [`Platform.Function.ContentBlockByID()`](/platform-functions/contentblockbyid/) instead.
   testScript: |
     <script runat="server">
     Platform.Load("core","1.1.5");
-    // Region name must be a compile-time LITERAL; a variable is rejected at runtime.
-    // First: literal argument.
-    try {
-      Platform.Function.BeginImpressionRegion("MyRegion");
-      Platform.Function.EndImpressionRegion();
-      Platform.Response.Write("literal region: OK\n");
-    } catch (e) { Platform.Response.Write("literal ERROR: " + Platform.Function.Stringify(e) + "\n"); }
-    // OBSERVED (CloudPage GET): even the LITERAL throws ResolvedValueParameter/OMM_FUNC_SYNTAX_ERR
-    // because there is no impression-tracking (send) context here.
-    // Second: variable argument.
-    try {
-      var regionName = "MyRegion";
-      Platform.Function.BeginImpressionRegion(regionName);
-      Platform.Response.Write("variable region: unexpectedly OK\n");
-    } catch (e) {
-      Platform.Response.Write("variable region ERROR (expected): " + Platform.Function.Stringify(e) + "\n");
+    // NOTE: these CLR exception messages cannot be inspected with .length /
+    // .indexOf / .substring - those abort the CloudPage with HTTP 422.
+    function attempt(id, fn) {
+      try { fn(); Platform.Response.Write(id + ": did NOT throw\n"); }
+      catch (e) { Platform.Response.Write(id + ": threw: " + e.message + "\n"); }
     }
-    // OBSERVED: variable throws the same ResolvedValueParameter error, confirming the literal-only rule.
+    // Resolve a Content Area that genuinely exists in this business unit.
+    var realId = 0;
+    var prox = new Script.Util.WSProxy();
+    var res = prox.retrieve("ContentArea", ["ID","Name"], null);
+    if (res.Results && res.Results.length > 0) { realId = res.Results[0].ID; }
+    Platform.Response.Write("a real Content Area id exists: " + (realId > 0) + "\n");
+    attempt("arity 1, real existing id", function () { return Platform.Function.ContentArea(realId); });
+    attempt("arity 1, bogus id", function () { return Platform.Function.ContentArea(123456); });
+    // OBSERVED: both throw "An error occurred when attempting to evaluate an ContentArea function call."
+    attempt("arity 2, regionName literal", function () { return Platform.Function.ContentArea(123456, "impressionRegion"); });
+    attempt("arity 2, regionName null", function () { return Platform.Function.ContentArea(123456, null); });
+    attempt("arity 3, stopOnError false", function () { return Platform.Function.ContentArea(123456, "impressionRegion", false); });
+    attempt("arity 4, with fallbackContent", function () { return Platform.Function.ContentArea(123456, "impressionRegion", false, "FALLBACK"); });
+    // OBSERVED: all four throw the ImpressionRegionName / ResolvedValueParameter error,
+    // so stopOnError and fallbackContent never take effect.
+    attempt("arity 0", function () { return Platform.Function.ContentArea(); });
+    attempt("arity 5", function () { return Platform.Function.ContentArea(123456, "reg", false, "fb", "extra"); });
+    // OBSERVED: both throw "Unable to retrieve security descriptor for this frame."
+    attempt("bare-name arity 1", function () { return ContentArea(123456); });
+    // OBSERVED: throws identically - the Core form is no escape hatch.
+    </script>
+
+- name: "Platform.Function.ContentAreaByName"
+  url: "/platform-functions/contentareabyname/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformContentContentAreaByName.html"
+  tagline: "no SSJS call shape works"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "medium"
+  discrepancy: "A7"
+  anchor: "platform-function-contentareabyname-no-working-call-shape"
+  body: |
+    **No arity returns a value.** The docs present `ContentAreaByName(name, regionName, stopOnError, fallbackContent)` as an ordinary callable returning the area's rendered markup, with `stopOnError: false` letting a failed call proceed and `fallbackContent` displayed when nothing comes back. At runtime:
+
+    - **Arity 1** throws `An error occurred when attempting to evaluate a ContentAreaByName function call.` for every name shape — folder-path notation, a bare name and the empty string alike — while a WSProxy `retrieve` of the `ContentArea` SOAP object proves an area exists in the same business unit, so an empty account is not the cause.
+    - **Arity 2–4** throw a *different*, resolved-value error (`… must be a literal (constant) values.`, `Parameter Name: ImpressionRegionName`, `Parameter Ordinal: 2`, `Parameter Type: ResolvedValueParameter`) for every `regionName` shape — string literal, concatenation, variable, empty string and `null` alike. Because parameter 2 is rejected outright, **`stopOnError` and `fallbackContent` are unreachable and the fallback string is never emitted**.
+    - **Arity 0 and 5+** throw the overloaded `Unable to retrieve security descriptor for this frame.`
+
+    **Core-library equivalent:** [`ContentAreaByName()`](/core-library/contentareabyname/) is a genuine function after `Platform.Load("core", …)` (`typeof` is `"function"`, not the phantom `"clrmethodinfo"`), but it is no escape hatch — arity 1 and 2 throw identically, and its arity 3–5 forms throw the security-descriptor error, so its `errorMsg` parameter is unreachable too.
+
+    Classic Content Areas are deprecated; use [`Platform.Function.ContentBlockByName()`](/platform-functions/contentblockbyname/) instead.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core","1.1.5");
+    // NOTE: these CLR exception messages cannot be inspected with .length /
+    // .indexOf / .substring - those abort the CloudPage with HTTP 422.
+    function attempt(id, fn) {
+      try { fn(); Platform.Response.Write(id + ": did NOT throw\n"); }
+      catch (e) { Platform.Response.Write(id + ": threw: " + e.message + "\n"); }
+    }
+    // A Content Area genuinely exists in this business unit.
+    var prox = new Script.Util.WSProxy();
+    var res = prox.retrieve("ContentArea", ["ID","Name"], null);
+    var found = res.Results && res.Results.length > 0;
+    Platform.Response.Write("a real Content Area exists: " + found + "\n");
+    attempt("arity 1, folder-path name", function () { return Platform.Function.ContentAreaByName("My Content\\myContentArea"); });
+    attempt("arity 1, bare name", function () { return Platform.Function.ContentAreaByName("myContentArea"); });
+    attempt("arity 1, empty string", function () { return Platform.Function.ContentAreaByName(""); });
+    // OBSERVED: all three throw "An error occurred when attempting to evaluate a ContentAreaByName function call."
+    attempt("arity 2, regionName literal", function () { return Platform.Function.ContentAreaByName("My Content\\myContentArea", "impressionRegion"); });
+    attempt("arity 2, regionName null", function () { return Platform.Function.ContentAreaByName("My Content\\myContentArea", null); });
+    attempt("arity 3, stopOnError false", function () { return Platform.Function.ContentAreaByName("My Content\\myContentArea", "impressionRegion", false); });
+    attempt("arity 4, with fallbackContent", function () { return Platform.Function.ContentAreaByName("My Content\\myContentArea", "impressionRegion", false, "FALLBACK"); });
+    // OBSERVED: all four throw the ImpressionRegionName / ResolvedValueParameter error,
+    // so stopOnError and fallbackContent never take effect.
+    attempt("arity 0", function () { return Platform.Function.ContentAreaByName(); });
+    attempt("arity 5", function () { return Platform.Function.ContentAreaByName("a", "reg", false, "fb", "extra"); });
+    // OBSERVED: both throw "Unable to retrieve security descriptor for this frame."
+    attempt("bare-name arity 1", function () { return ContentAreaByName("My Content\\myContentArea"); });
+    attempt("bare-name arity 3, string errorMsg", function () { return ContentAreaByName("My Content\\myContentArea", "impressionRegion", "err"); });
+    // OBSERVED: throws identically - the Core form is no escape hatch.
+    </script>
+
+- name: "Platform.Function.ContentBlockByID"
+  url: "/platform-functions/contentblockbyid/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformContentContentBlockByID.html"
+  tagline: "only the single-argument form works from SSJS"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "medium"
+  discrepancy: "A7"
+  anchor: "platform-function-contentblockbyid-only-one-argument-works"
+  body: |
+    **Only the 1-argument form works from SSJS.** The docs show `Platform.Function.ContentBlockByID(12345,"impressionRegion",false,"defaultContentHere")` as ordinary working SSJS. At runtime:
+
+    - **Arity 1** works and returns the block's rendered body. The `id` may be a number, a numeric string or a variable — there is no literal restriction on the single-argument form.
+    - **Arity 2–4** throw `A ContentBlockByID function call includes an invalid parameter value. … must be a literal (constant) values.` naming `Parameter Name: ImpressionRegionName`, `Parameter Ordinal: 2`, `Parameter Type: ResolvedValueParameter` — for a **string literal**, a number, a boolean, the empty string, `null` and a variable alike. This is therefore **not** a literal-vs-variable rule: the second parameter cannot be supplied from SSJS at all, which makes `stopOnError` and `fallbackContent` unreachable and the fallback string is never emitted.
+    - **Arity 0 and 5+** throw the overloaded `Unable to retrieve security descriptor for this frame.`, as does passing the asset's **external key** instead of its numeric id.
+    - **No bare-name Core form exists:** `typeof ContentBlockByID` is `"undefined"` even after `Platform.Load("core", …)`, and invoking it throws `Object expected: ContentBlockByID`.
+
+    **The platform is not at fault — the SSJS binding is.** The AMPscript function of the same name honours all four parameters. Invoked through `Platform.Function.TreatAsContent()` in the very same request, a named impression region returns the body, `fallbackContent` is returned for a missing block, `stopOnError: true` propagates the error and `stopOnError: false` without a fallback yields the empty string. Use that as the **workaround** whenever an optional parameter is needed.
+
+    The sibling [`Platform.Function.ContentBlockByKey()`](/platform-functions/contentblockbykey/) carries the identical restriction, so this is a family-wide SSJS binding limitation rather than a quirk of the ID form.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core","1.1.5");
+    // NOTE: these CLR exception messages cannot be inspected with .length /
+    // .indexOf / .substring - those abort the CloudPage with HTTP 422.
+    // FIXTURE: id 1469165 is a Content Builder HTML block whose whole body is
+    // the token SSJSGUIDE-TEST-BLOCK-OK; id 12345 does not exist.
+    function attempt(id, fn) {
+      try { Platform.Response.Write(id + ": returned [" + fn() + "]\n"); }
+      catch (e) { Platform.Response.Write(id + ": threw: " + e.message + "\n"); }
+    }
+    attempt("arity 1, real id", function () { return Platform.Function.ContentBlockByID(1469165); });
+    attempt("arity 1, numeric string id", function () { return Platform.Function.ContentBlockByID("1469165"); });
+    // OBSERVED: both return SSJSGUIDE-TEST-BLOCK-OK - the 1-argument form works.
+    attempt("arity 2, regionName STRING LITERAL", function () { return Platform.Function.ContentBlockByID(1469165, "heroRegion"); });
+    attempt("arity 2, regionName variable", function () { var r = "heroRegion"; return Platform.Function.ContentBlockByID(1469165, r); });
+    attempt("arity 2, regionName null", function () { return Platform.Function.ContentBlockByID(1469165, null); });
+    attempt("arity 3, stopOnError false", function () { return Platform.Function.ContentBlockByID(12345, "heroRegion", false); });
+    attempt("arity 4, with fallbackContent", function () { return Platform.Function.ContentBlockByID(12345, "heroRegion", false, "FALLBACK"); });
+    // OBSERVED: all five throw the ImpressionRegionName / Ordinal 2 /
+    // ResolvedValueParameter error - a literal fails exactly like a variable.
+    attempt("arity 0", function () { return Platform.Function.ContentBlockByID(); });
+    attempt("arity 5", function () { return Platform.Function.ContentBlockByID(1469165, "r", false, "fb", "extra"); });
+    attempt("external key instead of id", function () { return Platform.Function.ContentBlockByID("ssjs-guide-test-block"); });
+    // OBSERVED: all three throw "Unable to retrieve security descriptor for this frame."
+    Platform.Response.Write("typeof bare-name ContentBlockByID: " + (typeof ContentBlockByID) + "\n");
+    // OBSERVED: undefined - there is no Core global.
+    // CONTROL: the AMPscript form honours every optional parameter.
+    attempt("AMPscript arity 2 with a region", function () { return Platform.Function.TreatAsContent('%%=ContentBlockByID(1469165,"heroRegion")=%%'); });
+    attempt("AMPscript arity 4 fallback, missing block", function () { return Platform.Function.TreatAsContent('%%=ContentBlockByID(12345,"heroRegion",false,"FALLBACK")=%%'); });
+    attempt("AMPscript arity 3 stopOnError false", function () { return Platform.Function.TreatAsContent('%%=ContentBlockByID(12345,"heroRegion",false)=%%'); });
+    // OBSERVED: SSJSGUIDE-TEST-BLOCK-OK / FALLBACK / empty string - the
+    // documented semantics are implemented, just not reachable from SSJS.
+    </script>
+
+- name: "Platform.Function.ContentBlockByKey"
+  url: "/platform-functions/contentblockbykey/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformContentContentBlockByKey.html"
+  tagline: "only the single-argument form works from SSJS"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "medium"
+  discrepancy: "A7"
+  anchor: "platform-function-contentblockbykey-only-one-argument-works"
+  body: |
+    **Only the 1-argument form works from SSJS.** The docs show `Platform.Function.ContentBlockByKey("myExternalKey","impressionRegion",false,"defaultContentHere")` as ordinary working SSJS. At runtime:
+
+    - **Arity 1** works and returns the block's rendered body. The key may be a string literal or a variable — there is no literal restriction on the single-argument form.
+    - **Arity 2–4** throw `A ContentBlockByKey function call includes an invalid parameter value. … must be a literal (constant) values.` naming `Parameter Name: ImpressionRegionName`, `Parameter Ordinal: 2`, `Parameter Type: ResolvedValueParameter` — for a **string literal**, a number, a boolean, the empty string, `null` and a variable alike. This is therefore **not** a literal-vs-variable rule: the second parameter cannot be supplied from SSJS at all, which makes `stopOnError` and `fallbackContent` unreachable and the fallback string is never emitted.
+    - **A key that does not exist throws** `An error occurred when attempting to evaluate a ContentBlockByKey function call.` — it does **not** return the empty string, so a missing block must be guarded with `try/catch`. Passing the asset's **numeric ID** instead of its key throws the same evaluation error.
+    - **Arity 0 and 5+** throw the overloaded `Unable to retrieve security descriptor for this frame.`
+    - **No bare-name Core form exists:** `typeof ContentBlockByKey` is `"undefined"` even after `Platform.Load("core", …)`, and invoking it throws `Object expected: ContentBlockByKey`.
+
+    **The platform is not at fault — the SSJS binding is.** The AMPscript function of the same name honours all four parameters. Invoked through `Platform.Function.TreatAsContent()` in the very same request, a named impression region returns the body, `fallbackContent` is returned for a missing block, `stopOnError: true` propagates the error and `stopOnError: false` without a fallback yields the empty string. Use that as the **workaround** whenever an optional parameter is needed.
+
+    The siblings [`Platform.Function.ContentBlockByID()`](/platform-functions/contentblockbyid/) and `Platform.Function.ContentBlockByName()` carry the identical restriction, so this is a family-wide SSJS binding limitation.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core","1.1.5");
+    // NOTE: these CLR exception messages cannot be inspected with .length /
+    // .indexOf / .substring - those abort the CloudPage with HTTP 422.
+    // FIXTURE: key ssjs-guide-test-block is a Content Builder HTML block whose
+    // whole body is the token SSJSGUIDE-TEST-BLOCK-OK; the xyz key does not exist.
+    function attempt(id, fn) {
+      try { Platform.Response.Write(id + ": returned [" + fn() + "]\n"); }
+      catch (e) { Platform.Response.Write(id + ": threw: " + e.message + "\n"); }
+    }
+    attempt("arity 1, real key", function () { return Platform.Function.ContentBlockByKey("ssjs-guide-test-block"); });
+    attempt("arity 1, variable key", function () { var k = "ssjs-guide-test-block"; return Platform.Function.ContentBlockByKey(k); });
+    // OBSERVED: both return SSJSGUIDE-TEST-BLOCK-OK - the 1-argument form works.
+    attempt("arity 2, regionName STRING LITERAL", function () { return Platform.Function.ContentBlockByKey("ssjs-guide-test-block", "heroRegion"); });
+    attempt("arity 2, regionName variable", function () { var r = "heroRegion"; return Platform.Function.ContentBlockByKey("ssjs-guide-test-block", r); });
+    attempt("arity 2, regionName null", function () { return Platform.Function.ContentBlockByKey("ssjs-guide-test-block", null); });
+    attempt("arity 3, stopOnError false", function () { return Platform.Function.ContentBlockByKey("ssjs-guide-no-such-block-xyz", "heroRegion", false); });
+    attempt("arity 4, with fallbackContent", function () { return Platform.Function.ContentBlockByKey("ssjs-guide-no-such-block-xyz", "heroRegion", false, "FALLBACK"); });
+    // OBSERVED: all five throw the ImpressionRegionName / Ordinal 2 /
+    // ResolvedValueParameter error - a literal fails exactly like a variable.
+    attempt("arity 1, missing key", function () { return Platform.Function.ContentBlockByKey("ssjs-guide-no-such-block-xyz"); });
+    attempt("numeric id instead of key", function () { return Platform.Function.ContentBlockByKey(1469165); });
+    // OBSERVED: both throw "An error occurred when attempting to evaluate a
+    // ContentBlockByKey function call." - a missing block is NOT an empty string.
+    attempt("arity 0", function () { return Platform.Function.ContentBlockByKey(); });
+    attempt("arity 5", function () { return Platform.Function.ContentBlockByKey("ssjs-guide-test-block", "r", false, "fb", "extra"); });
+    // OBSERVED: both throw "Unable to retrieve security descriptor for this frame."
+    Platform.Response.Write("typeof bare-name ContentBlockByKey: " + (typeof ContentBlockByKey) + "\n");
+    // OBSERVED: undefined - there is no Core global.
+    // CONTROL: the AMPscript form honours every optional parameter.
+    attempt("AMPscript arity 2 with a region", function () { return Platform.Function.TreatAsContent('%%=ContentBlockByKey("ssjs-guide-test-block","heroRegion")=%%'); });
+    attempt("AMPscript arity 4 fallback, missing block", function () { return Platform.Function.TreatAsContent('%%=ContentBlockByKey("ssjs-guide-no-such-block-xyz","heroRegion",false,"FALLBACK")=%%'); });
+    attempt("AMPscript arity 3 stopOnError false", function () { return Platform.Function.TreatAsContent('%%=ContentBlockByKey("ssjs-guide-no-such-block-xyz","heroRegion",false)=%%'); });
+    // OBSERVED: SSJSGUIDE-TEST-BLOCK-OK / FALLBACK / empty string - the
+    // documented semantics are implemented, just not reachable from SSJS.
+    </script>
+
+- name: "Platform.Function.ContentBlockByName"
+  url: "/platform-functions/contentblockbyname/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformContentContentBlockByName.html"
+  tagline: "only the single-argument form works, and folder paths need a backslash"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "medium"
+  discrepancy: "A7"
+  anchor: "platform-function-contentblockbyname-only-one-argument-works"
+  body: |
+    **Only the 1-argument form works from SSJS.** The docs show `Platform.Function.ContentBlockByName(pathAndName, regionName, stopOnError, fallbackContent, statusVariable)` as ordinary working SSJS. At runtime:
+
+    - **Arity 1** works and returns the block's rendered body. The name may be a string literal or a variable — there is no literal restriction on the single-argument form.
+    - **Arity 2–4** throw `A ContentBlockByName function call includes an invalid parameter value. … must be a literal (constant) values.` naming `Parameter Name: ImpressionRegionName`, `Parameter Ordinal: 2`, `Parameter Type: ResolvedValueParameter` — for a **string literal**, a number, a boolean, the empty string, `null` and a variable alike. This is therefore **not** a literal-vs-variable rule: the second parameter cannot be supplied from SSJS at all, which makes `stopOnError` and `fallbackContent` unreachable.
+    - **Arity 0 and 5+** throw the overloaded `Unable to retrieve security descriptor for this frame.` — so the documented fifth parameter `statusVariable` is unreachable for a *different* reason: the call never even reaches the parameter check.
+    - **A name that does not exist throws** `An error occurred when attempting to evaluate a ContentBlockByName function call.` — it does **not** return the empty string. Passing the asset's numeric ID throws the same evaluation error.
+    - **No bare-name Core form exists:** `typeof ContentBlockByName` is `"undefined"` even after `Platform.Load("core", …)`, and invoking it throws `Object expected: ContentBlockByName`.
+
+    **The folder-path separator is a backslash, not a forward slash.** A bare name resolves the asset at any folder depth — the path is only needed to disambiguate a name reused across folders. When a path *is* supplied it must use `\`: `"Content Builder\My Folder\My Block"` resolves, while `"Content Builder/My Folder/My Block"` throws. Both the fully-qualified path from the `Content Builder` root and a partial path (immediate folder plus name) resolve, and a path naming the wrong folder throws — so the path really is matched rather than ignored.
+
+    **SSJS authoring caveat:** a string literal whose *last* character is a backslash (`"Content Builder\\" + folder`) aborts the whole CloudPage with HTTP 422 before any line runs — it is not a catchable throw. Keep the separator in the middle of a literal, or build it with `String.fromCharCode(92)`.
+
+    **The platform is not at fault — the SSJS binding is.** The AMPscript function of the same name honours all five parameters. Invoked through `Platform.Function.TreatAsContent()` in the very same request, a named impression region returns the body, `fallbackContent` is returned for a missing block, `stopOnError: true` propagates the error, `stopOnError: false` without a fallback yields the empty string, and the 5-argument `statusVariable` form returns the body. Use that as the **workaround** whenever an optional parameter is needed.
+
+    The siblings [`Platform.Function.ContentBlockByID()`](/platform-functions/contentblockbyid/) and [`Platform.Function.ContentBlockByKey()`](/platform-functions/contentblockbykey/) carry the identical single-argument restriction, so this is a family-wide SSJS binding limitation.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core","1.1.5");
+    // NOTE: these CLR exception messages cannot be inspected with .length /
+    // .indexOf / .substring - those abort the CloudPage with HTTP 422.
+    // NOTE: a string literal ENDING in a backslash also aborts the page, so the
+    // separator is built with String.fromCharCode(92).
+    // FIXTURES: "ssjs-guide-test-block" sits in the Content Builder root,
+    // "ssjs-guide-folder-block" one folder deep under "ssjs-guide-tests"; the
+    // xyz name does not exist.
+    var SEP = String.fromCharCode(92);
+    function attempt(id, fn) {
+      try { Platform.Response.Write(id + ": returned [" + fn() + "]\n"); }
+      catch (e) { Platform.Response.Write(id + ": threw: " + e.message + "\n"); }
+    }
+    attempt("arity 1, bare name", function () { return Platform.Function.ContentBlockByName("ssjs-guide-test-block"); });
+    attempt("arity 1, bare name of a block one folder deep", function () { return Platform.Function.ContentBlockByName("ssjs-guide-folder-block"); });
+    // OBSERVED: SSJSGUIDE-TEST-BLOCK-OK / SSJSGUIDE-FOLDER-BLOCK-OK - a bare
+    // name resolves the asset regardless of folder depth.
+    attempt("BACKSLASH path, fully qualified", function () { return Platform.Function.ContentBlockByName("Content Builder" + SEP + "ssjs-guide-tests" + SEP + "ssjs-guide-folder-block"); });
+    attempt("BACKSLASH path, partial", function () { return Platform.Function.ContentBlockByName("ssjs-guide-tests" + SEP + "ssjs-guide-folder-block"); });
+    // OBSERVED: both return SSJSGUIDE-FOLDER-BLOCK-OK.
+    attempt("FORWARD-SLASH path", function () { return Platform.Function.ContentBlockByName("ssjs-guide-tests/ssjs-guide-folder-block"); });
+    attempt("BACKSLASH path naming the WRONG folder", function () { return Platform.Function.ContentBlockByName("Content Builder" + SEP + "ssjs-guide-tests" + SEP + "ssjs-guide-test-block"); });
+    attempt("arity 1, missing name", function () { return Platform.Function.ContentBlockByName("ssjs-guide-no-such-block-xyz"); });
+    attempt("numeric id instead of name", function () { return Platform.Function.ContentBlockByName(1469165); });
+    // OBSERVED: all four throw "An error occurred when attempting to evaluate a
+    // ContentBlockByName function call." - a forward slash does NOT work, and a
+    // missing block is NOT an empty string.
+    attempt("arity 2, regionName STRING LITERAL", function () { return Platform.Function.ContentBlockByName("ssjs-guide-test-block", "heroRegion"); });
+    attempt("arity 2, regionName variable", function () { var r = "heroRegion"; return Platform.Function.ContentBlockByName("ssjs-guide-test-block", r); });
+    attempt("arity 2, regionName null", function () { return Platform.Function.ContentBlockByName("ssjs-guide-test-block", null); });
+    attempt("arity 3, stopOnError false", function () { return Platform.Function.ContentBlockByName("ssjs-guide-no-such-block-xyz", "heroRegion", false); });
+    attempt("arity 4, with fallbackContent", function () { return Platform.Function.ContentBlockByName("ssjs-guide-no-such-block-xyz", "heroRegion", false, "FALLBACK"); });
+    // OBSERVED: all five throw the ImpressionRegionName / Ordinal 2 /
+    // ResolvedValueParameter error - a literal fails exactly like a variable.
+    attempt("arity 0", function () { return Platform.Function.ContentBlockByName(); });
+    attempt("arity 5, with statusVariable", function () { return Platform.Function.ContentBlockByName("ssjs-guide-test-block", "r", false, "fb", "statusVar"); });
+    // OBSERVED: both throw "Unable to retrieve security descriptor for this frame."
+    Platform.Response.Write("typeof bare-name ContentBlockByName: " + (typeof ContentBlockByName) + "\n");
+    // OBSERVED: undefined - there is no Core global.
+    // CONTROL: the AMPscript form honours every optional parameter.
+    attempt("AMPscript arity 2 with a region", function () { return Platform.Function.TreatAsContent('%%=ContentBlockByName("ssjs-guide-test-block","heroRegion")=%%'); });
+    attempt("AMPscript arity 4 fallback, missing block", function () { return Platform.Function.TreatAsContent('%%=ContentBlockByName("ssjs-guide-no-such-block-xyz","heroRegion",false,"FALLBACK")=%%'); });
+    attempt("AMPscript arity 3 stopOnError false", function () { return Platform.Function.TreatAsContent('%%=ContentBlockByName("ssjs-guide-no-such-block-xyz","heroRegion",false)=%%'); });
+    attempt("AMPscript arity 5 with a statusVariable", function () { return Platform.Function.TreatAsContent('%%[ var @s ]%%%%=ContentBlockByName("ssjs-guide-test-block","heroRegion",false,"FALLBACK",@s)=%%'); });
+    // OBSERVED: SSJSGUIDE-TEST-BLOCK-OK / FALLBACK / empty string /
+    // SSJSGUIDE-TEST-BLOCK-OK - the documented semantics are implemented, just
+    // not reachable from SSJS.
+    </script>
+
+- name: "Platform.Function.BeginImpressionRegion"
+  url: "/platform-functions/beginimpressionregion/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformContentBeginImpressionRegion.html"
+  tagline: "unusable from SSJS"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "medium"
+  discrepancy: "A7"
+  anchor: "platform-function-beginimpressionregion-unusable-from-ssjs"
+  body: |
+    **No SSJS call shape works.** Every invocation is rejected at runtime with a resolved-value (`ResolvedValueParameter`) error (`OMM_FUNC_SYNTAX_ERR`, `ExactTarget.OMM.InvalidFunctionException`) — a compile-time string literal, a number literal, a string concatenation, the empty string and a variable all fail identically. The official docs present it as an ordinary callable function taking a string region name and mention none of this.
+
+    **Why:** the AMPscript parser requires the region name to be a **literal token**. An SSJS argument always reaches the function as a computed value (`Parameter Type: ResolvedValueParameter`) and is rejected before its content is examined, which is why even a compile-time literal fails from SSJS. The rule is real and observable inside AMPscript too: `BeginImpressionRegion(@r)` throws with `Parameter Type: ResolvedVariableParameter`, and a nested function call (`BeginImpressionRegion(Concat(...))`) is rejected as well, while an AMPscript string literal is accepted.
+
+    An earlier reading attributed the CloudPage failures to a missing send/impression-tracking context. That explanation is disproven: the AMPscript literal form runs without error on a plain CloudPage GET in the same request in which every SSJS shape throws.
+
+    **Scope of the evidence — CloudPage only.** Every result above was obtained from plain CloudPage `GET` requests. No measurement was taken inside a real email send, although impression regions are chiefly a send-tracking feature — so the send-time behaviour remains untested and could differ.
+
+    The **equivalent AMPscript literal call succeeds in the very same content**, so the feature itself works and only the SSJS binding is blocked — impression regions are effectively an AMPscript-only feature. From an SSJS context the workaround is to emit the AMPscript form through [`Platform.Function.TreatAsContent()`](/platform-functions/treatascontent/), which does not throw. A dynamic name still works if it is spliced into the AMPscript *source string*, because the parser then sees a literal.
+
+    **Core-library equivalent:** [`BeginImpressionRegion()`](/core-library/beginimpressionregion/) is the bare-name Core form (available after `Platform.Load("core", ...)`) — it throws the same error, so it is no escape hatch.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core","1.1.5");
+    // NOTE: the CLR exception message cannot be inspected with .length / .indexOf /
+    // .substring - those abort the CloudPage with HTTP 422. Print it verbatim only.
+    function attempt(id, fn) {
+      try { fn(); Platform.Response.Write(id + ": did NOT throw\n"); }
+      catch (e) { Platform.Response.Write(id + ": threw: " + e.message + "\n"); }
+    }
+    // Every SSJS argument shape is rejected - literal included.
+    attempt("string literal", function () { return Platform.Function.BeginImpressionRegion("MyRegion"); });
+    attempt("concatenation", function () { return Platform.Function.BeginImpressionRegion("My" + "Region"); });
+    var regionName = "MyRegion";
+    attempt("variable", function () { return Platform.Function.BeginImpressionRegion(regionName); });
+    attempt("bare-name Core form", function () { return BeginImpressionRegion("MyRegion"); });
+    // OBSERVED: all four throw the identical ResolvedValueParameter error.
+    // The AMPscript route succeeds in the same request.
+    attempt("TreatAsContent AMPscript form", function () {
+      return Platform.Function.TreatAsContent('%%[BeginImpressionRegion("MyRegion")]%%');
+    });
+    // OBSERVED: did NOT throw - the feature works, only the SSJS binding is blocked.
+    // The literal-only rule lives in the AMPscript parser: an AMPscript variable
+    // is rejected as ResolvedVariableParameter, a spliced-in name is accepted.
+    attempt("AMPscript variable argument", function () {
+      return Platform.Function.TreatAsContent('%%[ var @r set @r = "MyRegion" BeginImpressionRegion(@r) ]%%');
+    });
+    // OBSERVED: threw - inner exception reports Parameter Type: ResolvedVariableParameter.
+    var dyn = "built-at-runtime";
+    attempt("JS-built name spliced into the AMPscript source", function () {
+      return Platform.Function.TreatAsContent('%%[ BeginImpressionRegion("' + dyn + '") ]%%');
+    });
+    // OBSERVED: did NOT throw - the parser sees a literal, so a dynamic name is possible.
     </script>
 
 - name: "Platform.Function.EndImpressionRegion"
@@ -325,7 +666,7 @@
 - name: "Platform.Function.AddObjectArrayItem"
   url: "/platform-functions/addobjectarrayitem/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformAPIAddObjectArrayItem.html"
-  tagline: "returns nothing"
+  tagline: "returns null (not the documented object[])"
   part: "sfmc"
   category: "Platform Functions"
   object: "Platform.Function"
@@ -420,13 +761,14 @@
 
     There are **three distinct empty-ish returns** — a strict `=== null` check catches only one of them:
 
-    | Situation | Value | `typeof` | `=== null` | `String()` |
-    |---|---|---|---|---|
-    | No matching row | genuine JS `null` | `object` | `true` | `"null"` |
-    | Row exists, field is empty/NULL | CLR null | `"clr"` | **`false`** | `""` |
-    | Field is populated | native value | native | `false` | value |
+    | Situation | Value | `typeof` | `=== null` | `== null` | truthiness | `String()` |
+    |---|---|---|---|---|---|---|
+    | No matching row | genuine JS `null` | `object` | `true` | `false` | falsy | `"null"` |
+    | Row exists, field is empty/NULL | CLR null | `"clr"` | **`false`** | **throws** | **throws** | `""` |
+    | Row exists, field holds `""` | empty string | `string` | `false` | `false` | falsy | `""` |
+    | Field is populated | native value | native | `false` | `false` | truthy | value |
 
-    The empty/NULL-field case is the trap: it is **not** `=== null` and its `typeof` is the SFMC-only `"clr"`. Guard empty fields with a loose `== null` (which is `true` for both null forms) or a `String()`/truthiness coercion — never a strict `=== null`.
+    The empty/NULL-field case is the trap: it is **not** `=== null`, its `typeof` is the SFMC-only `"clr"`, and **every coercion of it throws** — `value == null` throws "Value cannot be null." and a boolean context (`if (value)`) throws "Object cannot be cast from DBNull to other types." Neither a loose `== null` nor a truthiness check is a safe guard; coerce with `String()` first and test the resulting string against `""` and `"null"`.
   testScript: |
     <script runat="server">
     Platform.Load("core","1.1.5");
@@ -461,7 +803,7 @@
   body: |
     Reference: [LookupRows](/platform-functions/lookuprows/) · [LookupOrderedRows](/platform-functions/lookuporderedrows/)
 
-    Both return **`null`** (not an empty array `[]`) when no row matches — guard before reading `.length`. Each returned row object also carries two undocumented **system fields**: `_CustomObjectKey` (a `number`) and `_CreatedDate` (a `string`). When rows do match, the collection is a **genuine JavaScript `Array`** (`object[]`): `Array.isArray()` returns `true` and its **own** `.push`/`.slice`/`.sort` methods work — but `instanceof Array` is unreliable in the SFMC engine (it returns `false` even for a plain array literal), so test with the `Array.isArray` polyfill rather than `instanceof`. Note that **borrowed** `Array.prototype` methods fail on it: `Array.prototype.slice.call(rows)` throws *"Index was outside the bounds of the array."* — call the array's own `rows.slice(...)` instead.
+    Both return **`null`** (not an empty array `[]`) when no row matches — guard before reading `.length`. Each returned row object also carries two undocumented **system fields**: `_CustomObjectKey` (a `number`) and `_CreatedDate` (a `string`). `LookupOrderedRows` additionally normalizes a NULL Text field in a returned row to an ordinary empty `string`: strict and loose null comparisons are false, a truthiness test is safely falsy, and `String()` yields `""`; this differs from scalar `Lookup`, whose NULL field is a hazardous CLR null. When rows do match, the collection is a **genuine JavaScript `Array`** (`object[]`): `Array.isArray()` returns `true` and its **own** `.push`/`.slice`/`.sort` methods work — but `instanceof Array` is unreliable in the SFMC engine (it returns `false` even for a plain array literal), so test with the `Array.isArray` polyfill rather than `instanceof`. Note that **borrowed** `Array.prototype` methods fail on it: `Array.prototype.slice.call(rows)` throws *"Index was outside the bounds of the array."* — call the array's own `rows.slice(...)` instead.
   testScript: |
     <script runat="server">
     Platform.Load("core","1.1.5");
@@ -527,7 +869,7 @@
 - name: "Platform.Function.UpsertData"
   url: "/platform-functions/upsertdata/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformDataExtensionUpsertData.html"
-  tagline: "no flat/variadic signature"
+  tagline: "requires arrays for every filter and field name/value argument"
   part: "sfmc"
   category: "Platform Functions"
   object: "Platform.Function"
@@ -535,33 +877,101 @@
   discrepancy: "A3"
   anchor: "platform-function-upsertdata-no-flat-variadic-signature"
   body: |
-    The official docs show a flat/variadic form (`UpsertData(deName, field1, value1, …, filterField, filterValue)`). That form is **not supported** — it throws at runtime. Only the array-based five-argument signature (`deName`, `whereFieldNames`, `whereFieldValues`, `fieldNames`, `fieldValues`) works.
+    The official reference permits scalar strings for a single `whereFieldNames` / `whereFieldValues` pair, and also shows a flat/variadic form (`UpsertData(deName, field1, value1, …, filterField, filterValue)`). Neither works at runtime. Only the array-based five-argument signature is accepted: `whereFieldNames`, `whereFieldValues`, `fieldNames` and `fieldValues` must all be nonempty, positionally aligned arrays, and every scalar position throws. Wrap single columns and values in one-element arrays. The Data Extension is also resolved by **Name** only — passing the external key / CustomerKey throws.
   testScript: |
     <script runat="server">
-    Platform.Load("core","1.1.5");
-    // Only the array-based 5-arg signature works; the flat/variadic form throws.
-    // WRITE OPERATION: requires a writable DE "TestDE" and permissions. Illustrative only.
-    try {
-      // Correct: deName, whereFieldNames[], whereFieldValues[], fieldNames[], fieldValues[].
-      var count = Platform.Function.UpsertData("TestDE",
-        ["SubscriberKey"], ["cp-demo-1"],
-        ["SomeTextField"], ["updated"]);
-      // OBSERVED (fixture SSJSGUIDE_TYPES): array form executes and returns a Number
-      // (affected-row count) — it did NOT raise the argument/signature error the flat form does.
-      Platform.Response.Write("UpsertData (array form) rows: " + count + "\n");
-    } catch (e) { Platform.Response.Write("array-form ERROR: " + Platform.Function.Stringify(e) + "\n"); }
-    try {
-      // Flat/variadic form from the docs — throws at runtime (CONFIRMED).
-      Platform.Function.UpsertData("TestDE", "SomeTextField", "x", "SubscriberKey", "cp-demo-1");
-      Platform.Response.Write("flat form: unexpectedly OK\n");
-    } catch (e) {
-      // RUNTIME-PROVEN: the flat/variadic form is genuinely UNSUPPORTED — an arity sweep of
-      // 3, 4, 5, 6 and 7 args (plus a mixed array-where/flat-field shape) were ALL rejected with
-      // "Unable to retrieve security descriptor for this frame" and wrote no rows. Here that throw
-      // IS valid proof of rejection: it is the engine's generic unaccepted-signature (arity) signal,
-      // NOT a security/auth/CloudPage-context error. Only the array form (above) is accepted.
-      Platform.Response.Write("flat-form ERROR (expected): " + Platform.Function.Stringify(e) + "\n");
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
     }
+    function assertThrows(id, fn) {
+        var threw = false, msg = "";
+        try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+        Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+    }
+    function addField(de, name, len, isKey) {
+        var field = Platform.Function.CreateObject("DataExtensionField");
+        Platform.Function.SetObjectProperty(field, "Name", name);
+        Platform.Function.SetObjectProperty(field, "FieldType", "Text");
+        Platform.Function.SetObjectProperty(field, "MaxLength", len);
+        Platform.Function.SetObjectProperty(field, "IsPrimaryKey", isKey ? "true" : "false");
+        Platform.Function.SetObjectProperty(field, "IsRequired", isKey ? "true" : "false");
+        Platform.Function.AddObjectArrayItem(de, "Fields", field);
+    }
+    function createDE(name, key) {
+        var de = Platform.Function.CreateObject("DataExtension");
+        Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+        Platform.Function.SetObjectProperty(de, "Name", name);
+        addField(de, "Id", "50", true); addField(de, "Txt", "100", false);
+        var status = [0, 0]; return String(Platform.Function.InvokeCreate(de, status, null));
+    }
+    function dropDE(key) {
+        var de = Platform.Function.CreateObject("DataExtension");
+        Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+        var status = [0, 0]; return String(Platform.Function.InvokeDelete(de, status, null));
+    }
+    var deName = "ssjsg_up_arr_2247_name", deKey = "ssjsg_up_arr_2247_key";
+    assert("setup: throwaway DE created", createDE(deName, deKey), "OK");
+    assert("control: Name and CustomerKey differ", deName === deKey ? "same" : "different", "different");
+    // Every scalar position is rejected with the engine's generic unaccepted-signature signal.
+    assertThrows("DEV scalar whereFieldNames throws (docs: string or string[])", function () { return Platform.Function.UpsertData(deName, "Id", ["a"], ["Txt"], ["wrong"]); });
+    assertThrows("DEV scalar whereFieldValues throws (docs: string or array)", function () { return Platform.Function.UpsertData(deName, ["Id"], "a", ["Txt"], ["wrong"]); });
+    assertThrows("scalar fieldNames throws", function () { return Platform.Function.UpsertData(deName, ["Id"], ["a"], "Txt", ["wrong"]); });
+    assertThrows("scalar fieldValues throws", function () { return Platform.Function.UpsertData(deName, ["Id"], ["a"], ["Txt"], "wrong"); });
+    assertThrows("DEV the CustomerKey form throws (docs: data extension name)", function () { return Platform.Function.UpsertData(deKey, ["Id"], ["a"], ["Txt"], ["wrong"]); });
+    // The workaround: one-element arrays in all four positions.
+    assert("workaround: one-element arrays insert a new row", Platform.Function.UpsertData(deName, ["Id"], ["a"], ["Txt"], ["inserted"]), 1);
+    assert("workaround: one-element arrays update the existing row", Platform.Function.UpsertData(deName, ["Id"], ["a"], ["Txt"], ["updated"]), 1);
+    assert("the workaround update committed", String(Platform.Function.Lookup(deName, "Id", "Txt", "updated")), "a");
+    assert("cleanup: throwaway DE deleted", dropDE(deKey), "OK");
+    </script>
+
+- name: "Platform.Function.HTTPPost"
+  url: "/platform-functions/httppost/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformContentSyndicationHTTPPost.html"
+  tagline: "only 3 or 6 arguments; error statuses throw instead of being returned"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "high"
+  discrepancy: "A3"
+  anchor: "platform-function-httppost-only-3-or-6-arguments-error-statuses-throw"
+  body: |
+    Two corrections. **Arity:** the docs list `headerNames`, `headerValues` and `response` as independently optional, but the argument count is a discontinuous overload — only a 3-argument call or the full 6-argument call work. Passing 4 or 5 arguments throws `Unable to retrieve security descriptor for this frame.` **Error statuses:** the docs present the return value as the HTTP status code of whatever the server answered (their own example branches on `statusCode == 200`), but only a successful status is ever returned. A 4xx or 5xx response throws `An error occurred when attempting to evaluate a HTTPPost function call.` instead, so a failing status can never be read from the return value — wrap the call in `try`/`catch`. The `response` out-parameter also stays empty even on success; use `HTTP.Post`, whose `Response[0]` carries the body.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core", "1.1.5");
+    var CT = "application/json";
+    var PAYLOAD = "{\"a\":1}";
+    // Arity: only 3 and 6 arguments are accepted.
+    try {
+      var three = Platform.Function.HTTPPost("https://postman-echo.com/post", CT, PAYLOAD);
+      Platform.Response.Write("arity 3 => " + three + "\n"); // OBSERVED: 200
+    } catch (e) { Platform.Response.Write("arity 3 ERROR: " + Platform.Function.Stringify(e) + "\n"); }
+    try {
+      Platform.Function.HTTPPost("https://postman-echo.com/post", CT, PAYLOAD, ["x-test"]);
+      Platform.Response.Write("arity 4: unexpectedly OK\n");
+    } catch (e) {
+      // OBSERVED: "Unable to retrieve security descriptor for this frame." - the engine's
+      // generic unaccepted-signature (arity) signal, NOT a security/auth error.
+      Platform.Response.Write("arity 4 ERROR (expected): " + Platform.Function.Stringify(e) + "\n");
+    }
+    // Error statuses throw. CONTROL: the same host returns a success status normally.
+    try {
+      Platform.Response.Write("status 201 => " + Platform.Function.HTTPPost("https://httpbin.org/status/201", CT, PAYLOAD) + "\n");
+    } catch (e) { Platform.Response.Write("201 ERROR: " + Platform.Function.Stringify(e) + "\n"); }
+    try {
+      Platform.Function.HTTPPost("https://httpbin.org/status/404", CT, PAYLOAD);
+      Platform.Response.Write("status 404: unexpectedly returned\n");
+    } catch (e) {
+      // OBSERVED: "An error occurred when attempting to evaluate a HTTPPost function call."
+      Platform.Response.Write("status 404 ERROR (expected): " + Platform.Function.Stringify(e) + "\n");
+    }
+    // The response out-parameter stays empty even on a successful call.
+    try {
+      var response = [];
+      Platform.Function.HTTPPost("https://postman-echo.com/post", CT, PAYLOAD, null, null, response);
+      Platform.Response.Write("response.length => " + response.length + "\n"); // OBSERVED: 0
+    } catch (e) { Platform.Response.Write("out-param ERROR: " + Platform.Function.Stringify(e) + "\n"); }
     </script>
 
 - name: "Data Extension functions"
@@ -953,7 +1363,7 @@
 - name: "Platform.Function.IsPhoneNumber"
   url: "/platform-functions/isphonenumber/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformUtilityIsPhoneNumber.html"
-  tagline: "digits-only, no leading zero, no spaces"
+  tagline: "NANP numbers only; punctuation ignored, + rejected"
   part: "sfmc"
   category: "Platform Functions"
   object: "Platform.Function"
@@ -961,15 +1371,22 @@
   discrepancy: "A7"
   anchor: "platform-function-isphonenumber-north-american-nanp-format-only"
   body: |
-    The official docs describe generic "valid phone number" validation, but the function actually enforces the **North American Numbering Plan (NANP)** format — it is not a generic "digits, no leading zero" check. A value passes **only** when it is exactly **10 digits** (an **optional leading `1`** US country code is allowed, making 11), the **area code's first digit is `2`–`9`**, and the **exchange (central-office) code's first digit is `2`–`9`**. Spaces, dashes, parentheses, a `+`, a `00` prefix, and any leading `0` all return `false`, and so does any number whose area or exchange begins with `0` or `1`. `2342345678` and `12342345678` return `true`; `0342345678`, `1342345678` (bad area code), `2340345678`, `2341345678` (bad exchange), `22342345678` (bad leading digit), and `15551234567` (exchange `123` starts with `1`) all return `false`. The return value is a `boolean`; calling with no argument throws, `null` returns `false`, and a numeric argument is coerced and validated. Only NANP-shaped North American numbers pass, so this is **not** a general international phone-number validator.
+    The SSJS reference page describes generic "valid phone number" validation and never mentions the **North American Numbering Plan (NANP)**, but that is exactly what the function enforces. A value passes **only** when its digits form exactly **10 digits** (an **optional leading `1`** US country code is allowed, making 11), the **area code's first digit is `2`–`9`**, and the **exchange (central-office) code's first digit is `2`–`9`**.
+
+    **Punctuation is ignored, not rejected.** Spaces, dots, hyphens and parentheses are stripped before validation, so `"647 555 0123"`, `"425.555.0185"`, `"(829) 555-0142"` and `"1-212-555-1234"` all return `true`, and leading/trailing whitespace is tolerated. Every *other* character makes the value `false`, including a `+` prefix (`"+14255550142"` is `false` even though `"14255550142"` is `true`), `/` and `_` separators, letters, and a trailing extension such as `"2125551234x99"`.
+
+    Non-NANP international numbers return `false` regardless of formatting — `"0161 496 0009"` (UK), `"82 517 460 123"` (South Korea) and `"4917612345678"` (Germany) all fail. So does any number whose area or exchange begins with `0` or `1`: `2342345678` and `12342345678` return `true`, while `0342345678`, `1342345678` (bad area code), `2340345678`, `2341345678` (bad exchange), `22342345678` (bad leading digit) and `15551234567` (exchange `123` starts with `1`) all return `false`. The return value is a `boolean`; calling with no argument throws, an array argument throws, `null` and `undefined` return `false`, and a numeric argument is coerced and validated. This is a **shape** check only — unassigned area codes such as `200` still return `true` — and it is **not** a general international phone-number validator.
+
+    The **AMPscript** reference for the same function documents the NANP behaviour correctly; only the SSJS reference page is misleading.
 
     **Core-library equivalent:** [`IsPhoneNumber()`](/core-library/isphonenumber/) is the bare-name Core form (available after `Platform.Load("core", ...)`) and applies the identical NANP validation.
   testScript: |
     <script runat="server">
     // OBSERVED: IsPhoneNumber enforces NANP: optional leading US "1" + 10 digits, area-code
     // OBSERVED: and exchange first digit must be 2-9. 2342345678/12342345678 => true;
-    // OBSERVED: 0342345678, 1342345678, 2340345678, 2341345678, 22342345678, 15551234567 => false.
-    // OBSERVED: no spaces/dashes/+/00/leading-0; returns boolean; no-arg throws; null => false.
+      // OBSERVED: 0342345678, 1342345678, 2340345678, 2341345678, 22342345678, 15551234567 => false.
+    // OBSERVED: spaces/dots/dashes/parentheses are IGNORED; + and 00 prefixes and any other
+    // OBSERVED: character => false; returns boolean; no-arg throws; null => false.
     Platform.Load("core","1.1.5");
     /**
      * Print a labelled IsPhoneNumber result.
@@ -995,10 +1412,14 @@
       checkPhone("11 no lead-1", "22342345678");
       // OBSERVED: old claim example (exchange 123 starts with 1) -> false.
       checkPhone("old claim '15551234567'", "15551234567");
-      // OBSERVED: spaces -> false; + prefix -> false; 00 prefix -> false; leading 0 -> false.
-      checkPhone("with spaces", "1 555 123 4567");
+      // OBSERVED: punctuation is IGNORED on a valid NANP number -> true.
+      checkPhone("with spaces", "212 555 1234");
+      checkPhone("with dots", "425.555.0185");
+      checkPhone("with parentheses", "(829) 555-0142");
+      // OBSERVED: + prefix -> false; 00 prefix -> false; non-NANP -> false.
       checkPhone("plus prefix", "+12342345678");
       checkPhone("00 prefix", "0012342345678");
+      checkPhone("UK landline", "0161 496 0009");
     } catch (e) { Platform.Response.Write("ERROR: " + Platform.Function.Stringify(e) + "\n"); }
     </script>
 
@@ -1091,9 +1512,9 @@
     </script>
 
 - name: "Platform.Function.Now"
-  url: "/platform-functions/now/"
+  url: "/platform-functions/now/#return-value"
   officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformDateTimeNow.html"
-  tagline: "returns a Date object, not a string"
+  tagline: "returns a Date object; String, Write, and Stringify use different renderings"
   part: "sfmc"
   category: "Platform Functions"
   object: "Platform.Function"
@@ -1101,50 +1522,67 @@
   discrepancy: "A1"
   anchor: "platform-function-now-returns-a-date-object-not-a-string"
   body: |
-    The official docs describe the return as an RFC 2822-compliant date-time **string**, but at runtime the call returns a genuine **`Date` object** (`typeof "object"`, `Object.prototype.toString` reports `[object Date]`, and `getFullYear()` / `getMonth()` / `getTime()` all work). It only appears as the RFC 2822-style value (e.g. `Sun, 19 Jul 2026 21:09:23 GMT-06:00`) when coerced to a string during output. The time is in the account timezone (Central, `GMT-06:00`), not UTC. The optional `useContextTime` argument is truly optional (`Now()`, `Now(false)`, and `Now(true)` all work and all return `object`); outside a send context `Now(true)` equals `Now(false)`.
+    The official reference types the result as an RFC 2822 date-time string. The runtime instead returns a genuine `Date` object with working getters and epoch access. A captured value is a stable snapshot, while separate calls can advance. Serialize deliberately: `String()` or concatenation gives an RFC-like value, `Platform.Response.Write()` uses the account's locale-style representation, and `Stringify()` gives a quoted ISO-like value. Raw string methods and `toISOString()` are unavailable.
+
+    The optional `useContextTime` argument is accepted. On a CloudPage, which has no triggering send or activity timestamp, `Now(true)` remains close to the current request clock; that control does not replace testing inside a triggered context.
 
     **Core-library equivalent:** [`Now()`](/core-library/now/) is the bare-name Core form (available after `Platform.Load("core", ...)`) and returns the same genuine `Date` object.
   testScript: |
     <script runat="server">
-    Platform.Load("core","1.1.5");
-    // OBSERVED: CONFIRMED - Now() returns a genuine Date object (typeof "object", [object Date],
-    // getFullYear/getMonth/getTime work); string-coerces to "Sun, 19 Jul 2026 21:09:23 GMT-06:00"
-    // (RFC 2822-style, Central GMT-06:00, not UTC); Now()/Now(false)/Now(true) all return object
-    // and Now(true) == Now(false) outside a send context.
-    /**
-     * Print a labelled value.
-     * @param {string} label - description
-     * @param {string} value - value to print
-     * @returns {void}
+    Platform.Load("core", "1.1.5");
+
+    /*
+     * Differs-from-docs claim: the official docs type Now() as an RFC 2822
+     * string, but the runtime returns a Date object that only becomes text when
+     * explicitly coerced or written.
+     *
+     * Salesforce docs: a date-time string is returned.
+     * SFMC Jint:       a Date object is returned; String() is RFC-like,
+     *                  Platform.Response.Write() is locale-style, and
+     *                  Stringify() is quoted ISO-like.
+     *
+     * Proves both halves of the claim:
+     *   1. DEV — the raw value has Date identity and Date methods, while direct
+     *      string methods throw.
+     *   2. The recommended explicit serialization workarounds produce strings.
+     *
+     * EXPECTED OUTPUT: every line starts with PASS.
      */
-    function pre(label, value) {
-      Platform.Response.Write(label + ": " + value + "\n");
+
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
     }
-    try {
-      // B1: return type / Date-ness of Now().
-      var n = Platform.Function.Now();
-      pre("B1 typeof", (typeof n));
-      pre("B1 toString tag", Object.prototype.toString.call(n));
-      pre("B1 getFullYear()", n.getFullYear());
-      pre("B1 getMonth()", n.getMonth());
-      pre("B1 getTime()", n.getTime());
-      pre("B1 string coercion", "" + n);
-      pre("B1 Stringify", Platform.Function.Stringify(n));
-    } catch (e) { pre("B1 THREW", Platform.Function.Stringify(e)); }
-    try {
-      // B2: optional useContextTime argument. Now(), Now(false), Now(true) should all work.
-      pre("B2 Now() typeof", (typeof Platform.Function.Now()));
-      pre("B2 Now(false) typeof", (typeof Platform.Function.Now(false)));
-      pre("B2 Now(true) typeof", (typeof Platform.Function.Now(true)));
-      pre("B2 Now(false) str", "" + Platform.Function.Now(false));
-      pre("B2 Now(true) str", "" + Platform.Function.Now(true));
-    } catch (e) { pre("B2 THREW", Platform.Function.Stringify(e)); }
+    function assertThrows(id, fn) {
+        var threw = false, msg = "";
+        try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+        Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+    }
+
+    var result = Platform.Function.Now();
+    var stringForm = String(result);
+    var stringified = String(Stringify(result));
+
+    /* 1. The raw result is a Date, not a string. */
+    assert("DEV typeof Now() is object (official docs: string)", String(typeof result), "object");
+    assert("DEV the raw object tag is [object Date] (official docs: string)", String(Object.prototype.toString.call(result)), "[object Date]");
+    assert("DEV .constructor === Date (official docs: string)", result.constructor === Date ? "true" : "false", "true");
+    assert("DEV getTime() works on the raw return (official docs: string)", String(typeof result.getTime()), "number");
+    assertThrows("DEV .indexOf() throws on the raw return (official docs: string)", function () {
+        return result.indexOf(String(result.getFullYear()));
+    });
+
+    /* 2. Explicit serialization produces strings in distinct forms. */
+    assert("workaround String(result) returns a string", String(typeof stringForm), "string");
+    assert("workaround String(result) contains the result year", stringForm.indexOf(String(result.getFullYear())) >= 0 ? "true" : "false", "true");
+    assert("workaround Stringify(result) returns a string", String(typeof stringified), "string");
+    assert("workaround Stringify(result) has an ISO-like T separator", stringified.substring(11, 12), "T");
+    assert("String() and Stringify() are distinct serialization forms", stringForm === stringified ? "true" : "false", "false");
     </script>
 
 - name: "Platform.Function.ParseJSON"
   url: "/platform-functions/parsejson/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformUtilityParseJSON.html"
-  tagline: "string-only argument, returns string/null for scalars & invalid input"
+  tagline: "scalar-only argument; permissive JSON-like grammar and broader returns"
   part: "sfmc"
   category: "Platform Functions"
   object: "Platform.Function"
@@ -1152,46 +1590,42 @@
   discrepancy: "A3"
   anchor: "platform-function-parsejson-string-only-argument-returns-string-null-for-scalars-invalid-input"
   body: |
-    The official docs are wrong on two counts:
+    The official signature and return type are incomplete:
 
-    1. They type the argument as `string or string[]` and describe passing an "array of strings". At runtime passing an array — or any non-string object — throws `System.InvalidOperationException` (*"Unable to retrieve security descriptor for this frame."*). Only a **single string argument** is accepted (calling with no argument at all throws the same error). Non-string **scalar** arguments (number, boolean) are coerced to their string form (e.g. `ParseJSON(true)` returns the string `"True"`).
-    2. They give the return type as `object|object[]`. That is incomplete: JSON objects/arrays deserialise as expected, but a **scalar** JSON value (`'"hello"'` → the string `"hello"` *with quotes preserved*, `'42'` → the string `"42"`, `'true'` → the string `"true"`) is returned **as a string**. Only **empty**, **whitespace-only**, `null`-argument, and `undefined`-argument input returns a genuine JS **`null`** — it does **not** throw. **Invalid/malformed JSON (e.g. `"not json {"`) is NOT null**: the runtime returns the **input string unchanged** (typeof `string`). The literal string `"null"` likewise returns the **string** `"null"`, not JS `null`. So the return union is `object|object[]|string|null` — invalid input returns the raw string rather than `null`.
+    1. The docs type the argument as `string|string[]`, but an array — or any non-string object — throws `System.InvalidOperationException` (*"Unable to retrieve security descriptor for this frame."*). The function accepts exactly one scalar argument: a number matches the equivalent numeric string; a boolean is accepted but returns the CLR strings `"True"` / `"False"` (not JSON boolean primitives and not equal to `ParseJSON("true")` / `"false"`); `null` and `undefined` return null.
+    2. The documented `object|object[]` return omits two runtime outcomes. A top-level scalar JSON value (`'"hello"'`, `'42'`, `'true'`, `'null'`) is returned unchanged as a **string**. Empty, whitespace-only, null-argument, undefined-argument, and malformed structural input such as `"{not json"` return genuine JS **`null`** without throwing.
+    3. The parser is more permissive than strict JSON. It accepts trailing content after an object, trailing commas, single-quoted keys, and unquoted keys. A leading Unicode BOM is not skipped and leaves the input as a string. Do not use successful `ParseJSON` output as proof that source text is standards-compliant JSON.
   testScript: |
     <script runat="server">
-    Platform.Load("core","1.1.5");
-    // ParseJSON: SINGLE STRING arg only (object/array/no-arg throw). Objects/arrays deserialise; scalars
-    // returned as-is (string); invalid input returns the raw string; empty/whitespace/null/undefined -> null.
-    try {
-      // Object JSON deserialises as expected.
-      var obj = Platform.Function.ParseJSON('{"a":1,"b":"two"}');
-      Platform.Response.Write("object typeof=" + (typeof obj) + " a=" + obj.a + " b=" + obj.b + "\n");
-      // OBSERVED: object typeof=object a=1 b=two
-    } catch (e) { Platform.Response.Write("object ERROR: " + Platform.Function.Stringify(e) + "\n"); }
-    try {
-      // Scalar STRING JSON returned as a string (quotes preserved).
-      var scalar = Platform.Function.ParseJSON('"hello"');
-      Platform.Response.Write("scalar typeof=" + (typeof scalar) + " value=" + scalar + "\n");
-      // OBSERVED: scalar typeof=string value="hello"  (the surrounding quotes are preserved)
-    } catch (e) { Platform.Response.Write("scalar ERROR: " + Platform.Function.Stringify(e) + "\n"); }
-    try {
-      // INVALID JSON is NOT null: it returns the input string unchanged.
-      var bad = Platform.Function.ParseJSON("not json {");
-      Platform.Response.Write("invalid typeof=" + (typeof bad) + " ===null=" + (bad === null) + " value=" + bad + "\n");
-      // OBSERVED: invalid typeof=string ===null=false value=not json {  (claim "invalid -> null" is WRONG)
-    } catch (e) { Platform.Response.Write("invalid ERROR: " + Platform.Function.Stringify(e) + "\n"); }
-    try {
-      // Empty / null-arg / undefined-arg genuinely return JS null.
-      Platform.Response.Write("empty ===null=" + (Platform.Function.ParseJSON("") === null) + "\n");
-      Platform.Response.Write("nullArg ===null=" + (Platform.Function.ParseJSON(null) === null) + "\n");
-      Platform.Response.Write("undefArg ===null=" + (Platform.Function.ParseJSON(undefined) === null) + "\n");
-      // OBSERVED: empty ===null=true ; nullArg ===null=true ; undefArg ===null=true
-    } catch (e) { Platform.Response.Write("null-cases ERROR: " + Platform.Function.Stringify(e) + "\n"); }
-    try {
-      // Passing an object/array throws the generic unknown-member/wrong-arity error.
-      Platform.Function.ParseJSON({ a: 1 });
-      Platform.Response.Write("object-arg: unexpectedly OK\n");
-    } catch (e) { Platform.Response.Write("object-arg ERROR (expected): " + Platform.Function.Stringify(e) + "\n"); }
-    // OBSERVED: object/array arg throws "Unable to retrieve security descriptor for this frame." (System.InvalidOperationException); live-verified 2026-07-20
+    Platform.Load("core", "1.1.5");
+
+    /*
+     * Platform.Function.ParseJSON differs from the official signature and
+     * return type, and accepts several non-standard JSON extensions.
+     * EXPECTED OUTPUT: every line starts with PASS.
+     */
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+    }
+    function assertThrows(id, fn) {
+        var threw = false, msg = "";
+        try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+        Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+    }
+
+    assert("object JSON is deserialised", String(Platform.Function.ParseJSON('{"a":1}').a), "1");
+    assertThrows("DEV string[] throws (official docs: accepted)", function () {
+        return Platform.Function.ParseJSON(["a", "b"]);
+    });
+    assert("DEV number argument is coerced (official docs: string|string[])", String(Platform.Function.ParseJSON(42)), "42");
+    assert("DEV boolean true returns CLR True (official docs: string|string[])", String(Platform.Function.ParseJSON(true)), "True");
+    assert("DEV boolean false returns CLR False (official docs: string|string[])", String(Platform.Function.ParseJSON(false)), "False");
+    assert("DEV scalar JSON returns string (official docs: object|object[])", String(typeof Platform.Function.ParseJSON("42")), "string");
+    assert("DEV malformed structural input returns null", Platform.Function.ParseJSON("{not json") === null ? "true" : "false", "true");
+    assert("DEV trailing content is accepted (strict JSON: syntax error)", String(Platform.Function.ParseJSON('{"a":1} trailing').a), "1");
+    assert("DEV trailing comma is accepted (strict JSON: syntax error)", String(Platform.Function.ParseJSON('[1,2,]').length), "2");
+    assert("DEV single quotes are accepted (strict JSON: syntax error)", String(Platform.Function.ParseJSON("{'a':1}").a), "1");
+    assert("DEV unquoted keys are accepted (strict JSON: syntax error)", String(Platform.Function.ParseJSON('{a:1}').a), "1");
     </script>
 
 - name: "Platform.Function.RaiseError"
@@ -1267,6 +1701,116 @@
     try { var e1 = Platform.Function.RedirectTo(""); Platform.Response.Write("empty: typeof=" + (typeof e1) + " isEmpty=" + (e1 === "") + "\n"); } catch (ex1) { Platform.Response.Write("empty THREW -> " + ex1.message + "\n"); }
     try { var e2 = Platform.Function.RedirectTo("not a url at all"); Platform.Response.Write("nonurl: typeof=" + (typeof e2) + " val=[" + e2 + "]\n"); } catch (ex2) { Platform.Response.Write("nonurl THREW -> " + ex2.message + "\n"); }
     // OBSERVED (live 2026-07-20): RedirectTo("https://example.com/next") returned typeof "string" with ret === url (verbatim); execution continued with NO HTTP redirect on the CloudPage; empty string returned "" and non-URL string returned unchanged, neither throwing nor redirecting. CLAIM CONFIRMED (docs say @returns {void}; runtime returns the URL string and does not redirect from SSJS).
+    </script>
+
+- name: "Platform.Function.Stringify"
+  url: "/platform-functions/stringify/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformUtilityStringify.html"
+  tagline: "NaN and both infinities serialize wrongly, with the infinity signs inverted"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "high"
+  discrepancy: "A7"
+  anchor: "platform-function-stringify-nan-and-infinity-serialize-wrongly-with-inverted-signs"
+  body: |
+    The official page promises a "JSON string value" and says the function "works only with known JSON objects and types", without naming a single failure mode. Runtime verification shows the .NET serializer behind it produces output that is **silently wrong, and in some cases not valid JSON at all**.
+
+    1. **`NaN` and both infinities are corrupted.** `NaN` serializes to the single character `U+221E` (the infinity sign). Worse, the infinity **signs are inverted**: positive `Infinity` serializes to `-∞` and negative `Infinity` to `∞`. `JSON.stringify` emits `null` for all three. Confirmed via two independent constructions (`1/0` and `Number.POSITIVE_INFINITY`), and the corruption survives inside an object, so a single stray `NaN` silently poisons a whole payload. Guard the value before serializing.
+    2. **Two cases emit invalid JSON.** A control character such as `U+0001` is written raw where the spec requires `\u0001`, and a double quote inside a **key** is not escaped — `{ 'a"b': 1 }` serializes to `{"a"b":1}`.
+    3. **Array elements are separated by a comma plus CRLF**, so array output spans multiple lines and is never byte-identical to a compact serializer. Object output is compact. This matters whenever a payload is compared, hashed, or signed.
+    4. **Numbers use the .NET round-trip exponent form**, not the JavaScript form — `9.00719925474099E+15`, `6.02E+23`, `1E-07`. That text is not valid JSON number syntax, so `ParseJSON` hands it back as a string rather than a number.
+    5. **Non-serializable members are not omitted.** An `undefined` property becomes `null` (`JSON.stringify` drops it), and a **function**-valued member becomes the string `"function"` in both objects and arrays.
+    6. **Argument handling differs between the two forms.** The qualified `Platform.Function.Stringify` throws on zero arguments and on a second argument, while the bare-name Core `Stringify` returns `"null"` for zero arguments and silently ignores an extra one. Neither form has a `replacer` or `space` parameter.
+
+    A circular reference does **not** throw — the repeated node is emitted as `null`.
+  testScript: |
+    <script runat="server">
+    // Platform.Function.Stringify emits corrupted NaN/Infinity and, in two cases, invalid JSON.
+    // EXPECTED OUTPUT: every line starts with PASS.
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+    }
+    function codes(s) {
+        var out = [];
+        for (var i = 0; i < s.length; i++) { out.push(s.charCodeAt(i)); }
+        return out.join(" ");
+    }
+
+    assert("DEV NaN serializes to U+221E (JSON.stringify: null)", codes(Platform.Function.Stringify(0 / 0)), "8734");
+    assert("DEV positive Infinity gets a MINUS sign (JSON.stringify: null)", codes(Platform.Function.Stringify(1 / 0)), "45 8734");
+    assert("DEV negative Infinity gets NO sign (JSON.stringify: null)", codes(Platform.Function.Stringify(0 - 1 / 0)), "8734");
+    assert("DEV Number.POSITIVE_INFINITY reproduces the inversion", codes(Platform.Function.Stringify(Number.POSITIVE_INFINITY)), "45 8734");
+    assert("DEV a control character is emitted raw (JSON spec: \\u0001)", codes(Platform.Function.Stringify(String.fromCharCode(1))), "34 1 34");
+    assert("DEV a quote inside a KEY is not escaped", codes(Platform.Function.Stringify({ 'a\"b': 1 })), "123 34 97 34 98 34 58 49 125");
+    assert("DEV array elements are separated by comma+CRLF (compact JSON: comma)", codes(Platform.Function.Stringify([1, 2])), "91 49 44 13 10 50 93");
+    assert("object output is compact by contrast", Platform.Function.Stringify({ a: 1, b: 2 }), '{\"a\":1,\"b\":2}');
+    assert("DEV a large integer uses the .NET exponent form (JS: 9007199254740991)", Platform.Function.Stringify(9007199254740991), "9.00719925474099E+15");
+    assert("DEV that exponent text does not round trip as a number", String(typeof Platform.Function.ParseJSON(Platform.Function.Stringify(6.02e23))), "string");
+    var undef;
+    assert("DEV an undefined property becomes null (JSON.stringify: omitted)", Platform.Function.Stringify({ a: 1, b: undef }), '{\"a\":1,\"b\":null}');
+    assert("DEV a function property becomes the string function", Platform.Function.Stringify({ a: 1, b: function () { return 1; } }), '{\"a\":1,\"b\":\"function\"}');
+    var circA = { name: "a" };
+    circA.self = circA;
+    assert("a circular reference does not throw; the repeat becomes null", Platform.Function.Stringify(circA), '{\"name\":\"a\",\"self\":null}');
+    // OBSERVED (live 2026-07-31): every line PASS on the QA CloudPage.
+    </script>
+
+- name: "Platform.Function.UrlEncode"
+  url: "/platform-functions/urlencode/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformHTTPUrlEncode.html"
+  tagline: "the reserved set differs, and only the query string is encoded"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "medium"
+  discrepancy: "A7"
+  anchor: "platform-function-urlencode-the-reserved-set-differs-and-only-the-query-string-is-encoded"
+  body: |
+    The official docs name one reserved set — `! # $ & ' ( ) * + , / : ; = ? @ [ ]` — and state that with `encodeReservedKeywords` set to `true`, "all reserved characters in the URL are converted to percent-encoded values". Runtime testing shows three deviations.
+
+    **The reserved set is wrong in both directions.** `!`, `(`, `)` and `*` are documented as reserved but are **never** encoded, while `"`, `%`, `<`, `>`, `\`, `` ` ``, `^`, `{`, `|`, `}` and `~` **are** encoded despite not being listed. The real rule is a passthrough set: alphanumerics plus `- _ . ! * ( )` survive; everything else in printable ASCII is escaped.
+
+    **Only the query string is processed.** Neither mode touches anything before the first `?` — a space in the path stays a literal space — and a value containing no `?` at all is returned completely unchanged in both modes. That is what "the value must be a complete URL" means in practice, and it is why an arbitrary string cannot be encoded with this function at all.
+
+    **Escapes use lowercase hex** (`%3d`, not `%3D`), and non-ASCII input is only encoded in `true` mode, as lowercase UTF-8 byte escapes.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core","1.1.5");
+    // The reserved set differs from the docs in BOTH directions, and only the
+    // query string is ever processed.
+    // Percent signs are built from a fragment and printed via a token so that no
+    // literal double-percent sequence reaches the CloudPage pre-processor.
+    function P(hex) { return "%" + hex; }
+    function san(s) {
+        var str = "" + s, out = "";
+        for (var i = 0; i < str.length; i++) {
+            var ch = str.charAt(i), code = str.charCodeAt(i);
+            if (ch === "%") { out = out + "{pct}"; }
+            else if (code < 32 || code > 126) { out = out + "{u" + code + "}"; }
+            else { out = out + ch; }
+        }
+        return out;
+    }
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + san(actual) + "]\n");
+    }
+    var HEAD = "http://x.com?q" + P("3d");
+    // Documented as reserved, but never encoded.
+    assert("DEV [!] is NOT encoded (docs: reserved)", Platform.Function.UrlEncode("http://x.com?q=!end", true), HEAD + "!end");
+    assert("DEV [(] is NOT encoded (docs: reserved)", Platform.Function.UrlEncode("http://x.com?q=(end", true), HEAD + "(end");
+    assert("DEV [)] is NOT encoded (docs: reserved)", Platform.Function.UrlEncode("http://x.com?q=)end", true), HEAD + ")end");
+    assert("DEV [*] is NOT encoded (docs: reserved)", Platform.Function.UrlEncode("http://x.com?q=*end", true), HEAD + "*end");
+    // Encoded although the docs do not list them as reserved.
+    assert("DEV [~] IS encoded (docs: not reserved)", Platform.Function.UrlEncode("http://x.com?q=~end", true), HEAD + P("7e") + "end");
+    assert("DEV [<] IS encoded (docs: not reserved)", Platform.Function.UrlEncode("http://x.com?q=<end", true), HEAD + P("3c") + "end");
+    assert("DEV [|] IS encoded (docs: not reserved)", Platform.Function.UrlEncode("http://x.com?q=|end", true), HEAD + P("7c") + "end");
+    // Only the query string is processed.
+    assert("DEV a space in the PATH is never encoded", Platform.Function.UrlEncode("http://x.com/a b?c=d e", true), "http://x.com/a b?c" + P("3d") + "d+e");
+    assert("DEV a value with no question mark is unchanged", Platform.Function.UrlEncode("hello world", true), "hello world");
+    // Lowercase hex escapes.
+    assert("DEV escapes use lowercase hex (spec style: uppercase)", Platform.Function.UrlEncode("http://x.com?q==end", true), HEAD + P("3d") + "end");
+    // OBSERVED (live 2026-08-01): every line PASS on the QA CloudPage.
     </script>
 
 - name: "Platform.Response.Redirect"
@@ -1866,6 +2410,32 @@
         // OBSERVED: typeof=string value="Error" (does NOT throw)
     } catch (e) {
         pre("B2 THREW -> " + Platform.Function.Stringify(e));
+    }
+    </script>
+
+- name: "&lt;DataExtensionInstance&gt;.Fields.Retrieve"
+  url: "/core-library/dataextension-fields/#instance-fields-retrieve"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_dataExtensionFieldsRetrieve.html"
+  tagline: "field metadata also carries an undocumented ObjectID"
+  part: "sfmc"
+  category: "Core Library"
+  object: "DataExtensionInstance"
+  severity: "low"
+  discrepancy: "A5"
+  anchor: "dataextensioninstance-fields-retrieve"
+  body: |
+    The official reference's example response lists only `Name`, `FieldType`, `IsPrimaryKey`, `MaxLength`, `Ordinal` and `DefaultValue`. At runtime every field object also carries an `ObjectID` (a non-empty string), which is the identifier needed to address the column through the SOAP API. The returned collection is also host-backed rather than a genuine JS `Array`: it reports as `[object Array]` and exposes `.length` and `.push`, but `instanceof Array` is `false`, so guard with a `.length` check.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core", "1.1.5");
+    // OBSERVED (live CloudPage): every field object exposes a non-empty string ObjectID
+    // in addition to the six properties the official example response documents.
+    function pre(t) { Platform.Response.Write(t + "\n"); }
+    var fields = DataExtension.Init("yourDataExtensionKey").Fields.Retrieve();
+    pre("instanceof Array = " + (fields instanceof Array));          // OBSERVED: false
+    pre("toString = " + Object.prototype.toString.call(fields));     // OBSERVED: [object Array]
+    for (var i = 0; i < fields.length; i++) {
+        pre(("" + fields[i].Name) + " ObjectID typeof = " + (typeof fields[i].ObjectID)); // OBSERVED: string
     }
     </script>
 
@@ -2598,7 +3168,7 @@
   anchor: "dataextensioninstance-rows-retrieve-lookup"
   body: |
     1. `<DataExtensionInstance>.Rows.Retrieve()` **without a filter DOES work on CloudPages** and returns a host array — the widely-repeated "returns empty on CloudPages" bug does not occur. (When the DE is empty it returns a length-0 host array, not a throw.)
-    2. `Retrieve` returns **every field value as a string** (even Number/Boolean/Date columns); `Lookup` returns **typed values**.
+    2. `Retrieve` returns **every field value as a string** (even Number/Boolean/Date columns); `Lookup` returns **typed values** — except Date columns, which `Lookup` returns as an **ISO-8601 string** (e.g. `"2024-01-15T00:00:00.000"`), not a `Date` object.
     3. On no match, `Retrieve` (called with a `SimpleFilter` object) returns an **empty array** (`.length === 0`) while `Lookup` returns **`null`** (`=== null` true, `[object Object]`, no `.length`). Passing a positional `(field, op, value)` filter to `Retrieve` instead throws "There was an error retrieving the rows." — use the `SimpleFilter` object form.
     4. Both `Retrieve` and `Lookup` (match) results are **host arrays**: `Object.prototype.toString` reports `[object Array]` and `.length` / index access work, but `instanceof Array` is `false`.
   testScript: |
@@ -2942,7 +3512,7 @@
   discrepancy: "A1"
   anchor: "datetime-systemdatetolocaldate-localdatetosystemdate"
   body: |
-    The official docs type the Core-library `DateTime` conversion methods as returning a `string`, but at runtime `DateTime.SystemDateToLocalDate(...)` and `DateTime.LocalDateToSystemDate(...)` return genuine **`Date` objects** (`typeof "object"`, `Object.prototype.toString` reports `[object Date]`, `.constructor === Date`, and `getFullYear()` / `getHours()` / `getTime()` all work — identical to `new Date()`; only `instanceof Date` is false, due to the engine-wide `instanceof`-on-builtins bug, so test with `.constructor === Date`). They also coerce transparently to a string via `String(value)`, `"" + value`, or `Write(value)`. Separately, `DateTime.TimeZone.Retrieve()` rows are CLR objects that `Stringify()` **cannot** serialize — enumerate their fields with `for..in` instead.
+    The official docs type the Core-library `DateTime` conversion methods as returning a `string`, but at runtime `DateTime.SystemDateToLocalDate(...)` and `DateTime.LocalDateToSystemDate(...)` return genuine **`Date` objects** (`typeof "object"`, `Object.prototype.toString` reports `[object Date]`, `.constructor === Date`, and `getFullYear()` / `getHours()` / `getTime()` all work — identical to `new Date()`; only `instanceof Date` is false, due to the engine-wide `instanceof`-on-builtins bug, so test with `.constructor === Date`). They also coerce transparently to a string via `String(value)`, `"" + value`, or `Write(value)`.
   testScript: |
     <script runat="server">
     Platform.Load("core", "1.1.5");
@@ -3009,7 +3579,7 @@
   discrepancy: "A3"
   anchor: "datetime-timezone-retrieve"
   body: |
-    The official docs present `filter` as a required argument. At runtime it is **optional** — `DateTime.TimeZone.Retrieve()` with no argument returns the full time-zone list, each row carrying `ID` (number) and `Name` (string). A filter that matches nothing returns an **empty collection** rather than `null`, so `.length` can be read unconditionally, but a *malformed* filter (a plain string, or an object missing the `Property` / `SimpleOperator` / `Value` trio) raises a time-zone retrieval error instead of returning an empty list. The returned value is a **CLR collection, not a JavaScript array**: it is indexable and exposes `.length`, but `instanceof Array` is `false`, array methods such as `push` are absent, and `Stringify()` cannot serialize the rows. `Platform.Load("core", ...)` is genuinely required — before the load `DateTime` is `undefined` and the call throws.
+    The official docs present `filter` as a required argument. At runtime it is **optional** — `DateTime.TimeZone.Retrieve()` with no argument returns the full time-zone list, each row carrying `ID` (number) and `Name` (string). A filter that matches nothing returns an **empty collection** rather than `null`, so `.length` can be read unconditionally, but a *malformed* filter (a plain string, or an object missing the `Property` / `SimpleOperator` / `Value` trio) raises a time-zone retrieval error instead of returning an empty list. The returned value behaves as a JavaScript array: it is indexable, exposes `.length`, reports `[object Array]`, carries array methods such as `push` and `slice`, and serializes normally through `Stringify()`; only `instanceof Array` is `false`, which is the engine-wide `instanceof`-on-builtins bug rather than anything specific to this method. `Platform.Load("core", ...)` is genuinely required — before the load `DateTime` is `undefined` and the call throws.
   testScript: |
     <script runat="server">
     Platform.Load("core", "1.1.5");
@@ -4742,4 +5312,203 @@
     Platform.Response.Write("decodeURIComponent('a+b'): " + decodeURIComponent("a+b") + "\n");   // a b
     Platform.Response.Write("decodeURIComponent('%2B'): " + decodeURIComponent("%2B") + "\n");   // + (workaround)
     Platform.Response.Write("roundtrip: " + decodeURIComponent(encodeURIComponent("a b/c?d=1")) + "\n");
+    </script>
+
+- name: "Platform.Function.UpdateData"
+  url: "/platform-functions/updatedata/#parameters"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformDataExtensionUpdateData.html"
+  tagline: "requires arrays for every filter and update name/value argument"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "medium"
+  discrepancy: "A7"
+  anchor: "parameters"
+  body: |
+    The official reference allows scalar strings for a single filter column and value. At runtime, `UpdateData` accepts only the five-argument array form: `whereFieldNames`, `whereFieldValues`, `fieldNames`, and `fieldValues` must all be nonempty, positionally aligned arrays. Scalar forms throw; wrap single columns and values in one-element arrays.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core", "1.1.5");
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+    }
+    function assertThrows(id, fn) {
+        var threw = false, msg = "";
+        try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+        Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+    }
+    function addField(de, name, len, isKey) {
+        var field = Platform.Function.CreateObject("DataExtensionField");
+        Platform.Function.SetObjectProperty(field, "Name", name); Platform.Function.SetObjectProperty(field, "FieldType", "Text");
+        Platform.Function.SetObjectProperty(field, "MaxLength", len); Platform.Function.SetObjectProperty(field, "IsPrimaryKey", isKey);
+        Platform.Function.SetObjectProperty(field, "IsRequired", isKey); Platform.Function.AddObjectArrayItem(de, "Fields", field);
+    }
+    function createDE(name, key) {
+        var de = Platform.Function.CreateObject("DataExtension"); Platform.Function.SetObjectProperty(de, "CustomerKey", key); Platform.Function.SetObjectProperty(de, "Name", name);
+        addField(de, "Id", "50", "true"); addField(de, "Txt", "50", "false"); var status = [0, 0]; return String(Platform.Function.InvokeCreate(de, status, null));
+    }
+    function dropDE(key) {
+        var de = Platform.Function.CreateObject("DataExtension"); Platform.Function.SetObjectProperty(de, "CustomerKey", key); var status = [0, 0]; return String(Platform.Function.InvokeDelete(de, status, null));
+    }
+    var deName = "ssjsg_ud_arrays_2138_name", deKey = "ssjsg_ud_arrays_2138_key";
+    assert("setup: throwaway DE created", createDE(deName, deKey), "OK");
+    assert("setup: row inserted", Platform.Function.InsertData(deName, ["Id", "Txt"], ["a", "seed"]), 1);
+    assertThrows("DEV scalar whereFieldNames/whereFieldValues throw (docs: strings accepted)", function () { return Platform.Function.UpdateData(deName, "Id", "a", ["Txt"], ["wrong"]); });
+    assertThrows("DEV scalar fieldNames/fieldValues throw (docs: arrays required)", function () { return Platform.Function.UpdateData(deName, ["Id"], ["a"], "Txt", "wrong"); });
+    assert("workaround one-element arrays are accepted", Platform.Function.UpdateData(deName, ["Id"], ["a"], ["Txt"], ["right"]), 1);
+    assert("workaround array-form update commits", String(Platform.Function.Lookup(deName, "Txt", "Id", "a")), "right");
+    assert("cleanup: throwaway DE deleted", dropDE(deKey), "OK");
+    </script>
+
+- name: "Platform.Function.UpdateDE"
+  url: "/platform-functions/updatede/#parameters"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformDataExtensionUpdateDE.html"
+  tagline: "requires arrays, returns null, and commits on CloudPages"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "high"
+  discrepancy: "A7"
+  anchor: "parameters"
+  body: |
+    The official reference permits scalar strings for a single filter and reports an affected-row count in email contexts. The tested runtime requires nonempty, aligned arrays for all four filter/update name/value arguments and returns genuine JavaScript `null` for zero, one, or multiple matches. The qualified function also executes and commits on CloudPages. Use one-element arrays for a single column, and use `UpdateData` when the numeric affected-row count is required.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core", "1.1.5");
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+    }
+    function assertThrows(id, fn) {
+        var threw = false, msg = "";
+        try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+        Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+    }
+    function addField(de, name, len, isKey) {
+        var field = Platform.Function.CreateObject("DataExtensionField");
+        Platform.Function.SetObjectProperty(field, "Name", name); Platform.Function.SetObjectProperty(field, "FieldType", "Text");
+        Platform.Function.SetObjectProperty(field, "MaxLength", len); Platform.Function.SetObjectProperty(field, "IsPrimaryKey", isKey);
+        Platform.Function.SetObjectProperty(field, "IsRequired", isKey); Platform.Function.AddObjectArrayItem(de, "Fields", field);
+    }
+    function createDE(name, key) {
+        var de = Platform.Function.CreateObject("DataExtension"); Platform.Function.SetObjectProperty(de, "CustomerKey", key); Platform.Function.SetObjectProperty(de, "Name", name);
+        addField(de, "Id", "50", "true"); addField(de, "Txt", "50", "false"); var status = [0, 0]; return String(Platform.Function.InvokeCreate(de, status, null));
+    }
+    function dropDE(key) {
+        var de = Platform.Function.CreateObject("DataExtension"); Platform.Function.SetObjectProperty(de, "CustomerKey", key); var status = [0, 0]; return String(Platform.Function.InvokeDelete(de, status, null));
+    }
+    var deName = "ssjsg_ude_diff_2202_name", deKey = "ssjsg_ude_diff_2202_key";
+    assert("setup: throwaway DE created", createDE(deName, deKey), "OK");
+    assert("setup: row inserted", Platform.Function.InsertData(deName, ["Id", "Txt"], ["a", "seed"]), 1);
+    assertThrows("DEV scalar filter strings throw (docs: accepted)", function () { return Platform.Function.UpdateDE(deName, "Id", "a", ["Txt"], ["wrong"]); });
+    var result = Platform.Function.UpdateDE(deName, ["Id"], ["a"], ["Txt"], ["right"]);
+    assert("DEV array-form return is genuine null (docs: count)", result === null ? "null" : "not null", "null");
+    assert("DEV CloudPage update commits (docs: email only)", String(Platform.Function.Lookup(deName, "Txt", "Id", "a")), "right");
+    assert("cleanup: throwaway DE deleted", dropDE(deKey), "OK");
+    </script>
+
+- name: "Platform.Function.UpsertDE"
+  url: "/platform-functions/upsertde/#parameters"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformDataExtensionUpsertDE.html"
+  tagline: "requires arrays, returns null, and commits on CloudPages"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "high"
+  discrepancy: "A7"
+  anchor: "parameters"
+  body: |
+    The official reference types `whereFieldNames` as `string or string[]` and `whereFieldValues` as `string or array`, documents a numeric count of upserted rows as the return value, and presents `UpsertDE` as a sendable-context function. All three are wrong at runtime. Every scalar argument position throws *"Unable to retrieve security descriptor for this frame."*, so all four filter and field name/value arguments must be nonempty, positionally aligned arrays. The insert, single-match update and multiple-match update branches each return genuine JavaScript `null`. The call also executes and commits on a CloudPage. Wrap single columns and values in one-element arrays, and use `UpsertData` when the numeric affected-row count is required.
+  testScript: |
+    <script runat="server">
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+    }
+    function assertThrows(id, fn) {
+        var threw = false, msg = "";
+        try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+        Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+    }
+    function addField(de, name, len, isKey) {
+        var field = Platform.Function.CreateObject("DataExtensionField");
+        Platform.Function.SetObjectProperty(field, "Name", name); Platform.Function.SetObjectProperty(field, "FieldType", "Text");
+        Platform.Function.SetObjectProperty(field, "MaxLength", len); Platform.Function.SetObjectProperty(field, "IsPrimaryKey", isKey);
+        Platform.Function.SetObjectProperty(field, "IsRequired", isKey); Platform.Function.AddObjectArrayItem(de, "Fields", field);
+    }
+    function createDE(name, key) {
+        var de = Platform.Function.CreateObject("DataExtension"); Platform.Function.SetObjectProperty(de, "CustomerKey", key); Platform.Function.SetObjectProperty(de, "Name", name);
+        addField(de, "Id", "50", "true"); addField(de, "Txt", "50", "false"); var status = [0, 0]; return String(Platform.Function.InvokeCreate(de, status, null));
+    }
+    function dropDE(key) {
+        var de = Platform.Function.CreateObject("DataExtension"); Platform.Function.SetObjectProperty(de, "CustomerKey", key); var status = [0, 0]; return String(Platform.Function.InvokeDelete(de, status, null));
+    }
+    function isNull(value) { return value === null ? "null" : "not null"; }
+    var deName = "ssjsg_upde_diff_2358_name", deKey = "ssjsg_upde_diff_2358_key";
+    assert("setup: throwaway DE created", createDE(deName, deKey), "OK");
+    // Every scalar position is rejected with the engine's generic unaccepted-signature signal.
+    assertThrows("DEV scalar whereFieldNames throws (docs: string or string[])", function () { return Platform.Function.UpsertDE(deName, "Id", ["a"], ["Txt"], ["wrong"]); });
+    assertThrows("DEV scalar whereFieldValues throws (docs: string or array)", function () { return Platform.Function.UpsertDE(deName, ["Id"], "a", ["Txt"], ["wrong"]); });
+    assertThrows("scalar fieldNames throws", function () { return Platform.Function.UpsertDE(deName, ["Id"], ["a"], "Txt", ["wrong"]); });
+    assertThrows("scalar fieldValues throws", function () { return Platform.Function.UpsertDE(deName, ["Id"], ["a"], ["Txt"], "wrong"); });
+    // The workaround: one-element arrays in all four positions. Both branches return null.
+    assert("DEV the insert branch returns genuine null (docs: count of upserted rows)", isNull(Platform.Function.UpsertDE(deName, ["Id"], ["a"], ["Txt"], ["inserted"])), "null");
+    assert("DEV the update branch returns genuine null (docs: count of upserted rows)", isNull(Platform.Function.UpsertDE(deName, ["Id"], ["a"], ["Txt"], ["updated"])), "null");
+    assert("DEV the CloudPage upsert commits (docs: sendable contexts)", String(Platform.Function.Lookup(deName, "Id", "Txt", "updated")), "a");
+    assert("WORKAROUND UpsertData returns the numeric affected-row count", Platform.Function.UpsertData(deName, ["Id"], ["b"], ["Txt"], ["counted"]), 1);
+    assert("cleanup: throwaway DE deleted", dropDE(deKey), "OK");
+    </script>
+
+- name: "Platform.Load"
+  url: "/platform-objects/platform-load/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_syntaxGuide.html"
+  tagline: "returns null (not void); an empty/null library name is accepted silently"
+  part: "sfmc"
+  category: "Platform Objects"
+  object: "Platform"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "platform-load-returns-null-not-void-empty-library-name-accepted"
+  body: |
+    Two things about `Platform.Load` differ from the way it is documented:
+
+    1. It is described as a `void` function, but it **returns the literal `null`** - `typeof` is `"object"` and `result === null` is `true`. Never test the result to decide whether a load succeeded; a rejected load *throws* instead.
+    2. `libraryName` is documented as **Required**, yet an empty string and `null` are both accepted **silently**: the call succeeds, becomes a no-op, and the Core aliases simply never appear. A typo that evaluates to `""` or `null` is swallowed rather than reported. `libraryName` is also matched case-insensitively (`"Core"`, `"CORE"`).
+
+    Version handling is looser than the single documented `"1.1.5"` too. Accepted: `"1"`, `"1.0"`, `"1.1"`, `"1.0.0"` and every revision `"1.1.0"` through `"1.1.6"`. Rejected (throws): `"1.1.7"` and above, `"1.2"`, `"1.3"`, `"0"`, `"2"`. As an undocumented quirk, `32767` acts as a "newest" sentinel in the minor and revision slots (`"1.32767"`, `"1.1.32767"` load) but not in the major slot. A rejected load is inert - it throws, changes nothing, and never aborts the page - and loading Core twice in one request is idempotent.
+  testScript: |
+    <script runat="server">
+    /* No Platform.Load at the top - Platform.* is available without it, and the
+       load itself is what is under test. */
+    function show(id, value) { Platform.Response.Write(id + " -> [" + value + "]\n"); }
+
+    // 1. The return value is the literal null, not undefined - despite the docs saying void.
+    var result = Platform.Load("core", "1.1.5");
+    show("typeof Platform.Load(...)", typeof result);          // OBSERVED: object
+    show("result === null", result === null);                  // OBSERVED: true
+    show("result === undefined", result === undefined);        // OBSERVED: false
+
+    // 2. libraryName is documented as Required, but "" and null are accepted silently.
+    try { Platform.Load("", "1.1.5"); show("empty libraryName", "no throw"); }
+    catch (e1) { show("empty libraryName", "threw: " + e1.message); }   // OBSERVED: no throw
+    try { Platform.Load(null, "1.1.5"); show("null libraryName", "no throw"); }
+    catch (e2) { show("null libraryName", "threw: " + e2.message); }    // OBSERVED: no throw
+    // ... while an unknown name DOES throw, echoing the parsed version numbers.
+    try { Platform.Load("bogus", "1.1.5"); show("unknown libraryName", "no throw"); }
+    catch (e3) { show("unknown libraryName", "threw"); }                // OBSERVED: threw
+
+    // 3. Version strings other than "1.1.5" are accepted, and 32767 is a "newest" sentinel.
+    function tryVersion(ver) {
+        try { Platform.Load("core", ver); return "ok"; } catch (ex) { return "throw"; }
+    }
+    show("version \"1\"", tryVersion("1"));                    // OBSERVED: ok
+    show("version \"1.1.6\"", tryVersion("1.1.6"));            // OBSERVED: ok
+    show("version \"1.1.7\"", tryVersion("1.1.7"));            // OBSERVED: throw
+    show("version \"1.2\"", tryVersion("1.2"));                // OBSERVED: throw
+    show("version \"1.1.32767\"", tryVersion("1.1.32767"));    // OBSERVED: ok (sentinel)
+    show("version \"32767\"", tryVersion("32767"));            // OBSERVED: throw (no sentinel in major slot)
+
+    // 4. A rejected load is inert and a repeat load is idempotent - Core still works.
+    // A bare-name typeof must be evaluated INSIDE a function: at the top level of a
+    // script block a not-yet-defined name is a parse-time risk that aborts the page.
+    function typeOf(fn) { try { return fn(); } catch (ex) { return "THREW"; } }
+    show("Core still usable after the failures", typeOf(function () { return typeof Stringify; }));  // OBSERVED: function
     </script>

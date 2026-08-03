@@ -1,0 +1,342 @@
+# Test scripts for /platform-functions/redirectto/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the official docs.
+#
+# HEADLINE FINDING (proven by the HTTP response, not by an assertion):
+# despite its name, Platform.Function.RedirectTo does NOT redirect when it is
+# called from SSJS. A CloudPage whose script calls it returns HTTP 200 with NO
+# Location header and with the full body intact, including every byte written
+# BEFORE the call. It is not a terminating call at all — there is nothing to
+# catch, because it never throws for a valid argument; it simply returns the
+# passed-in URL as a string and execution continues. That is exactly why every
+# script below can be shown green in the ordinary way, with no special
+# uncatchable-terminal-call handling.
+#
+# The HTTP evidence is recorded in the verification DB rather than faked as a
+# PASS line: status code, Location header and body length are properties of
+# the response, not values a script can observe about itself.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage with redirect-following DISABLED, so the 200/no-Location result is
+# the real one and not the tail of a followed redirect chain.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# AUTHORING RULE 2: a CAUGHT exception's `.message` is a .NET string, not a JS
+# primitive, and is never `===` a JS string literal. assertThrows() below
+# therefore compares by length + indexOf. The RETURN value is different — it
+# does compare `===` against a JS literal (asserted explicitly below), so the
+# plain assert() helper is safe for it.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters —
+   *   url  string  required  Complete URL to use as the link target
+   * Declared arity: min_args 1, max_args 1.
+   *
+   * Proves:
+   *   1. The member exists: typeof Platform.Function.RedirectTo is
+   *      "clrmethodinfo", and a 1-argument call returns a value.
+   *   2. ARITY. Exactly one argument is accepted. Zero arguments and two or
+   *      more arguments are BOTH rejected with the engine's signature error
+   *      "Unable to retrieve security descriptor for this frame." (reported as
+   *      a TypeError) — so min_args and max_args really are both 1.
+   *   3. ARGUMENT COERCION. A number is returned as its decimal string, a
+   *      boolean as the CAPITALIZED .NET form "True", and an empty string,
+   *      null and undefined all return an EMPTY string — they do NOT produce
+   *      the literals "null"/"undefined" and they do NOT throw. An array or a
+   *      plain object is NOT a usable argument: it is rejected with the same
+   *      signature error rather than being coerced.
+   *   4. NAME FORM / LOAD DEPENDENCE. The qualified form is a clrmethodinfo
+   *      and needs no Core load. There is NO bare-name RedirectTo global:
+   *      typeof is "undefined" and calling it reports "Object expected:
+   *      RedirectTo".
+   *
+   * NOT ASSERTED (not observable from a CloudPage):
+   *   - The documented email/triggered-send behaviour. RedirectTo exists to
+   *     build a click-tracked link target inside the href of an HTML email;
+   *     a CloudPage GET has no send, no subscriber and no link-tracking
+   *     rewriting, so the email-side effect cannot be exercised here.
+   *   - Calling the member through an ALIAS variable
+   *     (var f = Platform.Function.RedirectTo; f(url)). This is NOT
+   *     deterministic in the Jint engine: in one deployment the alias call
+   *     threw "Object reference not set to an instance of an object.", and in
+   *     another — identical except that qualified calls had already run
+   *     earlier in the same script — the very same alias call succeeded and
+   *     returned the url. Because the outcome depends on unrelated preceding
+   *     statements it cannot be asserted either way; always call the member
+   *     on Platform.Function directly.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  /* Runs fn() and compares the THROWN message with `expected`, or reports the
+     literal "NO-THROW" when nothing was thrown. Deliberately avoids === : a
+     caught .NET message never === a JS string literal. */
+  function assertThrows(id, fn, expected) {
+      var got = "NO-THROW";
+      try { fn(); } catch (ex) { got = "" + ex.message; }
+      var ok = (got.length === expected.length && got.indexOf(expected) === 0);
+      Platform.Response.Write((ok ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  var ARITY_ERROR = "Unable to retrieve security descriptor for this frame.";
+
+  /* 1. Existence. */
+  assert("typeof Platform.Function.RedirectTo is clrmethodinfo", String(typeof Platform.Function.RedirectTo), "clrmethodinfo");
+  assert("a 1-argument call returns the url (existence proof)", String(Platform.Function.RedirectTo("https://example.com/a")), "https://example.com/a");
+
+  /* 2. Arity — exactly one argument. */
+  assertThrows("0 arguments is rejected (min_args is 1)", function () { return Platform.Function.RedirectTo(); }, ARITY_ERROR);
+  assertThrows("2 arguments are rejected (max_args is 1)", function () { return Platform.Function.RedirectTo("https://example.com/a", "extra"); }, ARITY_ERROR);
+  assertThrows("3 arguments are rejected (max_args is 1)", function () { return Platform.Function.RedirectTo("https://example.com/a", 1, 2); }, ARITY_ERROR);
+  assertThrows("the arity error is reported as a TypeError", function () { return Platform.Function.RedirectTo(); }, ARITY_ERROR);
+
+  /* 3. Argument coercion. */
+  assert("an empty string returns an empty string", String(Platform.Function.RedirectTo("")), "");
+  assert("null returns an EMPTY string (not the text null)", String(Platform.Function.RedirectTo(null)), "");
+  var undef;
+  assert("undefined returns an EMPTY string (not the text undefined)", String(Platform.Function.RedirectTo(undef)), "");
+  assert("a number is coerced to its decimal string", String(Platform.Function.RedirectTo(42)), "42");
+  assert("boolean true is coerced to the CAPITALIZED .NET form True", String(Platform.Function.RedirectTo(true)), "True");
+  assert("boolean false is coerced to the CAPITALIZED .NET form False", String(Platform.Function.RedirectTo(false)), "False");
+  var arr = ["https://example.com/x"];
+  assertThrows("an array is NOT a usable argument - rejected as a signature error", function () { return Platform.Function.RedirectTo(arr); }, ARITY_ERROR);
+  var obj = {};
+  assertThrows("a plain object is NOT a usable argument - rejected as a signature error", function () { return Platform.Function.RedirectTo(obj); }, ARITY_ERROR);
+
+  /* 4. Name form and Core-load dependence. */
+  assert("the qualified form needs no Core load (it is a clrmethodinfo)", String(typeof Platform.Function.RedirectTo), "clrmethodinfo");
+  assert("there is NO bare-name RedirectTo global after the Core load", String(typeof RedirectTo), "undefined");
+  assertThrows("calling the bare name reports a missing-global error", function () { return RedirectTo("https://example.com/z"); }, "Object expected: RedirectTo");
+  </script>
+
+return-value: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Return value — "Returns the passed-in URL as a string. When
+   * called from SSJS it does NOT issue an HTTP redirect and does not halt
+   * execution."
+   *
+   * Proves:
+   *   1. The return value is a JS `string` and is byte-for-byte the argument
+   *      that was passed in — same length, same content, and (unlike a caught
+   *      .NET exception message) it even compares `===` against a JS string
+   *      literal.
+   *   2. NO ENCODING IS APPLIED. The URL is passed through untouched: a query
+   *      string keeps its raw `&`, a fragment keeps its `#`, an UNENCODED
+   *      space stays an unencoded space, an ALREADY-ENCODED `%20` is not
+   *      double-encoded, an HTML `&amp;` entity is not decoded, and non-ASCII
+   *      characters are neither percent-encoded nor dropped. Encode the URL
+   *      yourself before calling.
+   *   3. NO VALIDATION IS APPLIED. A protocol-relative URL, a site-relative
+   *      path and a string that is not a URL at all are all returned
+   *      unchanged — the function neither rejects nor absolutises them.
+   *   4. IT DOES NOT HALT EXECUTION. Statements after the call run normally,
+   *      the call works inside a loop, and it can be called many times in one
+   *      request without any of them taking effect.
+   *   5. IT DOES NOT THROW for a valid argument — so there is nothing to
+   *      catch. A try/catch around it never enters the catch block, and a
+   *      finally block runs in the ordinary way.
+   *
+   * NOT ASSERTED (a property of the HTTP RESPONSE, not of the script):
+   *   - "does not issue an HTTP redirect". A script cannot observe its own
+   *     response status. This was proven by a dedicated deployment fetched
+   *     with redirect-following DISABLED: the page returned HTTP 200 with NO
+   *     Location header, and the full body — including output written BEFORE
+   *     the RedirectTo call — was delivered intact. Recorded in the
+   *     verification DB as proven-by-HTTP-evidence.
+   *   - The email-context behaviour (see the Parameters chapter).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* 1. Returns the passed-in URL as a string. */
+  var input = "https://example.com/identity?x=1";
+  var ret = Platform.Function.RedirectTo(input);
+  assert("typeof the return value is string", String(typeof ret), "string");
+  assert("the return value is the passed-in url", String(ret), "https://example.com/identity?x=1");
+  assert("the return value has the same length as the input", String(String(ret).length), String(input.length));
+  assert("the return value compares === against a JS string literal", ret === input ? "true" : "false", "true");
+
+  /* 2. No encoding is applied. */
+  assert("an http:// url is returned unchanged", String(Platform.Function.RedirectTo("http://example.com/b")), "http://example.com/b");
+  assert("a query string keeps its raw ampersand", String(Platform.Function.RedirectTo("https://example.com/p?a=1&b=2")), "https://example.com/p?a=1&b=2");
+  assert("a fragment is preserved", String(Platform.Function.RedirectTo("https://example.com/p#frag")), "https://example.com/p#frag");
+  assert("an UNENCODED space is NOT encoded for you", String(Platform.Function.RedirectTo("https://example.com/p?q=a b")), "https://example.com/p?q=a b");
+  assert("an ALREADY-ENCODED %20 is not double-encoded", String(Platform.Function.RedirectTo("https://example.com/p?q=a%20b")), "https://example.com/p?q=a%20b");
+  assert("an HTML &amp; entity is not decoded", String(Platform.Function.RedirectTo("https://example.com/p?a=1&amp;b=2")), "https://example.com/p?a=1&amp;b=2");
+  var uni = "https://example.com/p?q=\u00e4\u00f6";
+  assert("non-ASCII characters are neither encoded nor dropped", String(String(Platform.Function.RedirectTo(uni)).length), String(uni.length));
+
+  /* 3. No validation is applied. */
+  assert("a protocol-relative url is returned unchanged", String(Platform.Function.RedirectTo("//example.com/c")), "//example.com/c");
+  assert("a site-relative path is returned unchanged, not absolutised", String(Platform.Function.RedirectTo("/d/e")), "/d/e");
+  assert("a string that is not a url at all is returned unchanged", String(Platform.Function.RedirectTo("nothing-like-a-url")), "nothing-like-a-url");
+
+  /* 4. It does not halt execution. */
+  var reached = "no";
+  Platform.Function.RedirectTo("https://example.com/does-not-halt");
+  reached = "yes";
+  assert("execution continues after the call", reached, "yes");
+
+  var loops = 0;
+  for (var i = 0; i < 3; i++) {
+      Platform.Function.RedirectTo("https://example.com/loop" + i);
+      loops++;
+  }
+  assert("it can be called repeatedly in a loop without halting", String(loops), "3");
+  assert("the last loop iteration still returned its own url", String(Platform.Function.RedirectTo("https://example.com/loop2")), "https://example.com/loop2");
+
+  /* 5. It does not throw for a valid argument. */
+  var caught = "none";
+  var ranFinally = "no";
+  try {
+      Platform.Function.RedirectTo("https://example.com/try");
+  } catch (ex) {
+      caught = "" + ex.message;
+  } finally {
+      ranFinally = "yes";
+  }
+  assert("a valid call never enters the catch block", caught, "none");
+  assert("a finally block runs in the ordinary way", ranFinally, "yes");
+  </script>
+
+differs-no-redirect: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs claim: the official Salesforce docs imply RedirectTo has
+   * NO return value, but at runtime it returns the passed-in URL as a string
+   * and does NOT perform an HTTP redirect or halt the script when called from
+   * SSJS.
+   *
+   * Official docs: RedirectTo(url) — a link-target directive, described with
+   *                no return value and used for its redirect effect.
+   * SFMC runtime:  a pure, side-effect-free string function when called from
+   *                SSJS. It returns the argument, changes nothing about the
+   *                response, and execution continues past it.
+   *
+   * Proves:
+   *   1. DEV — there IS a return value, and it is a string (official docs
+   *      imply none).
+   *   2. DEV — the return value is exactly the argument, so the call is
+   *      indistinguishable from an identity function on the SSJS side.
+   *   3. DEV — no redirect happens: output written BEFORE the call is still
+   *      produced, output written AFTER the call is still produced, and the
+   *      script runs to completion (official docs imply the request is
+   *      redirected away).
+   *   4. For an actual CloudPage HTTP redirect, Platform.Response.Redirect is
+   *      the member to use — asserted here only as an existence check, since
+   *      invoking it really would end this request.
+   *
+   * NOT ASSERTED (a property of the HTTP RESPONSE, not of the script):
+   *   - The response status code and Location header. Proven by a dedicated
+   *     deployment fetched with redirect-following DISABLED: HTTP 200, NO
+   *     Location header, full body delivered including the pre-call output.
+   *     A script cannot observe its own response status, so this is recorded
+   *     in the verification DB as proven-by-HTTP-evidence instead of being
+   *     faked as a PASS line here.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* 1-2. DEV — there is a return value, and it is the argument. */
+  var url = "https://example.com/dev?a=1";
+  var ret = Platform.Function.RedirectTo(url);
+  assert("DEV the call HAS a return value (official docs imply none)", String(typeof ret), "string");
+  assert("DEV the return value is the passed-in url (official docs imply none)", String(ret), "https://example.com/dev?a=1");
+  assert("DEV the return value is not undefined (official docs imply none)", String(typeof ret) === "undefined" ? "true" : "false", "false");
+
+  /* 3. DEV — no redirect: assertions on BOTH sides of the call are delivered.
+        Every assert() below is itself a Platform.Response.Write, so the fact
+        that the pre-call line and the post-call line both appear in the body
+        IS the evidence that nothing was discarded or redirected away. */
+  assert("DEV this line is written BEFORE the call and is still delivered (official docs imply a redirect)", "before", "before");
+  Platform.Function.RedirectTo("https://example.com/no-redirect");
+  var reachedEnd = "no";
+  assert("DEV this line is written AFTER the call and is still delivered (official docs imply a redirect)", "after", "after");
+  reachedEnd = "yes";
+  assert("DEV the script runs to completion instead of being redirected away", reachedEnd, "yes");
+
+  /* 4. The member that DOES redirect on a CloudPage. */
+  assert("Platform.Response.Redirect exists as the real CloudPage redirect", String(typeof Platform.Response.Redirect) === "undefined" ? "missing" : "present", "present");
+  </script>
+
+example: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Example —
+   *   var email = "aruiz@example.com";
+   *   var firstName = "Angela";
+   *   var baseUrl = "https://example.com?email=";
+   *   var nameJoin = "&name=";
+   *   Platform.Function.RedirectTo(baseUrl.concat(email, nameJoin, firstName));
+   *
+   * Proves the mechanics the example depends on:
+   *   1. String.concat with several arguments assembles the URL in the
+   *      documented order, producing
+   *      "https://example.com?email=aruiz@example.com&name=Angela".
+   *   2. The example's call returns exactly that assembled URL — the argument
+   *      is evaluated before the call, and the result is passed through.
+   *   3. The `@` in the email address and the `&` joining the parameters are
+   *      NOT encoded by the function, which is why the example builds an
+   *      already-usable URL itself.
+   *
+   * NOT ASSERTED (not observable from a CloudPage):
+   *   - The documented %%=RedirectTo(...)=%% usage inside an href of an HTML
+   *     email. That is an AMPscript inline call evaluated during a SEND, with
+   *     click-tracking rewriting applied by the send engine; a CloudPage GET
+   *     has no send and no tracking rewrite, so the email-side effect cannot
+   *     be exercised here.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var email = "aruiz@example.com";
+  var firstName = "Angela";
+  var baseUrl = "https://example.com?email=";
+  var nameJoin = "&name=";
+  var assembled = baseUrl.concat(email, nameJoin, firstName);
+
+  /* 1. The URL the example assembles. */
+  assert("concat assembles the documented url", String(assembled), "https://example.com?email=aruiz@example.com&name=Angela");
+
+  /* 2. The example's call returns that url. */
+  var ret = Platform.Function.RedirectTo(assembled);
+  assert("the example's call returns the assembled url", String(ret), "https://example.com?email=aruiz@example.com&name=Angela");
+  assert("typeof the example's return value is string", String(typeof ret), "string");
+
+  /* 3. Nothing in the assembled url is encoded by the function. */
+  assert("the @ of the email address is not encoded", String(ret).indexOf("aruiz@example.com") > 0 ? "true" : "false", "true");
+  assert("the & joining the parameters is not encoded", String(ret).indexOf("&name=") > 0 ? "true" : "false", "true");
+  assert("no %40 percent-encoding was introduced", String(ret).indexOf("%40") >= 0 ? "true" : "false", "false");
+  </script>

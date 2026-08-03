@@ -5,6 +5,7 @@ parent: Core Library
 parent_url: /core-library/
 description: Core library namespace for account-level settings and account tracking retrieval.
 verification: verified
+test_scripts: complete
 differs_from_docs: true
 requires_core_load: true
 type_mapping:
@@ -51,6 +52,8 @@ Account.Init(key)
 
 {% include differs-from-docs.html note="Proven at runtime: Account.Init returns the same Update-only stub regardless of the key passed — a CustomerKey GUID, a numeric MID, a Name, or a nonsense key all yield an identical stub — so Init alone does not confirm whether a key resolves to a real account." %}
 
+{% include test-script.html bundle="core-library--account" chapter="init" label="Show test script — the same Update-only stub is returned for any key" %}
+
 #### Examples
 
 ```javascript
@@ -58,6 +61,8 @@ Platform.Load("core", "1.1.5");
 var myAccount = Account.Init("MyCustomerKey");
 var status = myAccount.Update({ FromName: "Demo From Name" });
 ```
+
+{% include test-script.html bundle="core-library--account" chapter="init" %}
 
 ---
 
@@ -79,13 +84,15 @@ Account.Retrieve(filter)
 
 #### Return value
 
-`object[]` — on a match, an array-like collection of account rows. Proven at runtime, a match exposes `.length` and `.push` and stringifies as a JSON array (length `1`), but it is **not** an `instanceof Array` in this engine, so guard with a truthy `.length` check rather than truthiness of the object itself. On no match the call returns a distinct empty object that stringifies as `[]` and has **no** `.length`, **no** `.push` and no enumerable keys.
+`object[]` — on a match, an array-like collection of account rows. Proven at runtime, a match exposes `.length` and `.push` and stringifies as a JSON array (length `1`), but it is **not** an `instanceof Array` in this engine, so guard with a `.length` check before indexing. On no match the call returns the same array-like shape with `.length` of `0`; it still exposes `.push`, stringifies as `[]` and has no enumerable keys.
 
 Proven at runtime, `Account.Retrieve` resolves **only the running session's own account**. Filtering it by `Property: "Name"` (equals the account name), `"ID"` (equals the account ID as either a numeric or a string form, or `greaterThan 0`), or `"CustomerKey"` (equals the account CustomerKey) each returns the running business unit's own row. Filtering for any **other** (child) business unit — by `Name`, by `ID`, or by `CustomerKey` (whether a GUID or a plain-string key) — returns the empty `[]` shape, as do the unrecognized properties `"MID"`, `"AccountID"` and `"BusinessUnitID"`.
 
 A matched row is the full Account SOAP object. Observed fields include `Name`, `ID`, `CustomerKey`, `AccountType`, `ParentID`, `BrandID`, `PrivateLabelID`, `ReportingParentID`, `Email`, `FromName`, `BusinessName`, `Phone`, `Address`, `Fax`, `City`, `State`, `Zip`, `Country`, `IsActive`, `IsTestAccount`, `OrgID`, `DBID`, `ParentName`, `CustomerID`, `DeletedDate`, `EditionID`, `Children`, `Subscription`, `PrivateLabels`, `BusinessRules`, `AccountUsers`, `InheritAddress`, `IsTrialAccount`, `Locale`, `ParentAccount`, `TimeZone` (a nested object with `ID`/`Name`/`CustomerKey`), `Roles`, `StackID`, `SalesForceID`, `LanguageLocale`, `IndustryCode`, `Edition`, `SalesforceOrgID`, `AccountState`, `SubscriptionRestrictionFlags`, `Client`, `PartnerKey`, `PartnerProperties`, `CreatedDate`, `ModifiedDate`, `ObjectID`, `Owner`, `CorrelationID`, `ObjectState` and `IsPlatformObject`, plus a `*Specified` boolean companion for many numeric/date fields (for example `IDSpecified`, `ParentIDSpecified`, `CreatedDateSpecified`).
 
-{% include differs-from-docs.html note="Proven at runtime: Account.Retrieve resolves only the running session's own account (via Name, ID as numeric or string, or CustomerKey). Requests for other business units returned a zero-length collection for every property and value tried, including child BUs by Name, ID, and CustomerKey. The properties MID, AccountID and BusinessUnitID are not recognized. The no-match return is not a real array — it stringifies as [] but has no .length or .push — so guard with a truthy .length check before indexing." %}
+{% include differs-from-docs.html note="Proven at runtime: Account.Retrieve resolves only the running session's own account (via Name, ID as numeric or string, or CustomerKey). Requests for other business units returned a zero-length collection for every property and value tried, including child BUs by Name, ID, and CustomerKey. The properties MID, AccountID and BusinessUnitID are not recognized. Neither the matched nor the empty collection is an instanceof Array in this engine, so guard with a .length check before indexing." %}
+
+{% include test-script.html bundle="core-library--account" chapter="retrieve" label="Show test script — only the own account resolves; the collection is not a real Array" %}
 
 #### Examples
 
@@ -97,6 +104,8 @@ if (getAcct && getAcct.length) {
     Platform.Response.Write(getAcct[0].Name);
 }
 ```
+
+{% include test-script.html bundle="core-library--account" chapter="retrieve" %}
 
 ---
 
@@ -124,6 +133,8 @@ Updates the account represented by the instance. If `properties` includes `TimeZ
 
 {% include differs-from-docs.html note="Proven at runtime on the running session's own account (resolved via Account.Init(<self CustomerKey GUID>)): <AccountInstance>.Update returned typeof \"string\" value \"Error\" for every real single-field payload tried — CustomerKey, FromName, BusinessName, a CustomerKey-only object, an empty object {}, and an ID+CustomerKey object — and none of these writes persisted on re-read by ID (CustomerKey, FromName and BusinessName all kept their original values). CustomerKey was tested as a known-updatable field and still returned \"Error\" without persisting. The only object exposing an Update method is the Account.Init(...) stub; rows returned by Account.Retrieve have no Update method (typeof row.Update is \"undefined\", and calling it throws a Jint \"Object expected: Update\"). A Description payload throws the plain string \"Error Updating Account.\" (Description is not a real SOAP Account field). The \"OK\" success return was not reproduced." %}
 
+{% include test-script.html bundle="core-library--account" chapter="instance-update" label="Show test script — every payload returns \"Error\" or throws, and nothing persists" %}
+
 #### Examples
 
 ```javascript
@@ -131,6 +142,8 @@ Platform.Load("core", "1.1.5");
 var myAccount = Account.Init("MyCustomerKey");
 var status = myAccount.Update({ FromName: "Demo From Name" });
 ```
+
+{% include test-script.html bundle="core-library--account" chapter="instance-update" %}
 
 ---
 
@@ -168,6 +181,8 @@ var acctTracking = Account.Tracking.Retrieve({
     Value: "MyAccount"
 });
 ```
+
+{% include test-script.html bundle="core-library--account" chapter="tracking-retrieve" %}
 
 ## See also
 

@@ -6,18 +6,21 @@ parent_url: /platform-objects/
 description: The AMPscript–SSJS variable bridge. Read and write AMPscript variables from within SSJS script blocks.
 verification: verified
 differs_from_docs: true
+test_scripts: complete
 ---
 
-`Platform.Variable` provides two methods for bridging between AMPscript and SSJS execution contexts. Any variable set in AMPscript can be read in SSJS, and vice versa.
+`Platform.Variable` bridges AMPscript and SSJS variables within the current page request. A value written by one language is available to server-side blocks that execute later in the document; values do not persist into a later request.
 
-Does not require `Platform.Load`. The bare-name `Variable` alias, however, only exists **after** `Platform.Load("core", "1.1.5")`.
+`Platform.Variable` does not require `Platform.Load`. The bare-name `Variable` alias is available after `Platform.Load("core", "1.1.5")` and shares the same variable state.
 
 ## Methods
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `Platform.Variable.GetValue(name)` | string | Reads the value of an AMPscript variable |
-| `Platform.Variable.SetValue(name, value)` | void | Writes a value to an AMPscript variable |
+| `Platform.Variable.GetValue(name)` | string, number, boolean, or null | Reads an AMPscript variable in the current request |
+| `Platform.Variable.SetValue(name, value)` | null | Writes an AMPscript variable in the current request |
+
+{% include test-script.html bundle="platform-objects--platform-variable" chapter="methods" %}
 
 ---
 
@@ -33,19 +36,24 @@ Platform.Variable.GetValue(variableName)
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `variableName` | string | Yes | AMPscript variable name. The leading `@` is optional — it is added automatically |
+| `variableName` | string | Yes | AMPscript variable name; the leading `@` is optional |
+
+Variable names are case-insensitive. When both `@name` and `@NAME` are assigned, the later assignment is the value returned through either spelling.
 
 ### Return Value
 
-Returns the variable's value as a string. Returns **`null`** (typeof `"object"`) when the variable was never set — not an empty string. A variable explicitly set to `""` returns `""`, so you can distinguish "never set" (`null`) from "set to empty" (`""`).
+Returns the value in its current SSJS scalar type. AMPscript numeric values are numbers, SSJS booleans remain booleans in later SSJS blocks, and strings remain strings. A variable that was never set returns JavaScript `null` (`typeof "object"`); a variable explicitly set to `""` returns an empty string.
+
+{% include differs-from-docs.html note="The official docs describe a string return, but the runtime preserves number and boolean values and returns JavaScript null for a variable that was never set." %}
 
 ### Examples
 
 ```javascript
-// Read an AMPscript variable
 var email = Platform.Variable.GetValue("@email");
-var firstName = Platform.Variable.GetValue("@firstName");
+var firstName = Platform.Variable.GetValue("firstName");
 ```
+
+{% include test-script.html bundle="platform-objects--platform-variable" chapter="getvalue" %}
 
 ---
 
@@ -61,44 +69,50 @@ Platform.Variable.SetValue(variableName, value)
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `variableName` | string | Yes | AMPscript variable name. The leading `@` is optional — it is added automatically |
-| `value` | any | Yes | Value to assign |
+| `variableName` | string | Yes | AMPscript variable name; the leading `@` is optional |
+| `value` | string, number, boolean, null, or undefined | Yes | Scalar value to assign |
+
+### Return Value
+
+Returns JavaScript `null`. Strings, numbers, booleans, and empty strings retain their SSJS scalar type when read by a later SSJS block. Values assigned as `null` or `undefined` read back as `null`. A later AMPscript block sees numbers and booleans through AMPscript's display representation and sees null-like values as empty.
+
+{% include differs-from-docs.html note="The official docs document a string input and void return, but the runtime accepts SSJS scalar values and returns JavaScript null." %}
 
 ### Examples
 
 ```javascript
 Platform.Variable.SetValue("@result", "processed");
-Platform.Variable.SetValue("@count", rows.length);
+Platform.Variable.SetValue("count", rows.length);
 Platform.Variable.SetValue("@jsonPayload", Stringify(data));
 ```
 
-After `SetValue`, the variable is accessible in subsequent AMPscript expressions on the same page:
+After `SetValue`, a later AMPscript block on the same page can read the variable:
 
 ```html
 %%[ /* AMPscript reading the value set above */ ]%%
 Your result: %%=v(@result)=%%
 ```
 
+{% include test-script.html bundle="platform-objects--platform-variable" chapter="setvalue" %}
+
 ---
 
 ## Common Patterns
 
-### Pass SSJS computation to AMPscript rendering
+### Pass SSJS computation to later AMPscript rendering
 
 ```javascript
-// Compute in SSJS
 var score = computeLeadScore(subscriberKey);
 Platform.Variable.SetValue("@leadScore", score);
 ```
 
 ```html
-%%[ /* Use in AMPscript conditional block */ ]%%
 %%[ IF @leadScore > 80 THEN ]%%
   <strong>High priority lead</strong>
 %%[ ENDIF ]%%
 ```
 
-### Read AMPscript personalization in SSJS
+### Read an earlier AMPscript value in SSJS
 
 ```html
 %%[
@@ -108,19 +122,24 @@ Platform.Variable.SetValue("@leadScore", score);
 <script runat="server">
   var subKey = Platform.Variable.GetValue("@subKey");
   var email = Platform.Variable.GetValue("@email");
-  // use subKey and email in SSJS logic
 </script>
 ```
 
-### Safe encoding via AMPscript
+Personalization strings such as `_subscriberkey` and `emailaddr` depend on send or subscriber context. `Platform.Variable` only transfers whatever value the earlier AMPscript block produced; it does not create that context on a plain CloudPage GET.
 
-```javascript
-Variable.SetValue("@rawInput", userInput);
-Platform.Function.TreatAsContent("%%[SET @encoded = URLEncode(@rawInput, 1, 1)]%%");
-var encoded = Variable.GetValue("@encoded");
+### Cross multiple server-side blocks
+
+```html
+<script runat="server">
+  Platform.Variable.SetValue("@rawInput", userInput);
+</script>
+%%[ SET @encoded = URLEncode(@rawInput, 1, 1) ]%%
+<script runat="server">
+  var encoded = Platform.Variable.GetValue("@encoded");
+</script>
 ```
 
-{% include callout.html type="note" content="The global `Variable` object is an alias for `Platform.Variable`. Both `Variable.GetValue()` and `Platform.Variable.GetValue()` are equivalent." %}
+{% include test-script.html bundle="platform-objects--platform-variable" chapter="common-patterns" %}
 
 ## See Also
 

@@ -15,6 +15,7 @@ min_args: 5
 max_args: 5
 verification: verified
 differs_from_docs: true
+test_scripts: complete
 ---
 
 ## Parameters
@@ -22,10 +23,12 @@ differs_from_docs: true
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `deName` | string | Yes | Data Extension **Name** (the external key / CustomerKey is **not** accepted — runtime-verified) |
-| `count` | number | Yes | Maximum number of rows to return; values below 1 return up to 2,000 |
+| `count` | string \| number | Yes | Maximum number of rows to return; values below 1 return up to 2,000 |
 | `orderBy` | string | Yes | Sort expression using `"ColumnName ASC"` or `"ColumnName DESC"` syntax (e.g. `"LastName ASC, FirstName ASC"`) |
 | `whereFieldNames` | string\|string[] | Yes | Filter field name, or an array of field names connected with AND logic |
 | `whereFieldValues` | string\|array | Yes | Filter field value matching `whereFieldNames`; must be an array of equal length when `whereFieldNames` is an array |
+
+{% include test-script.html bundle="platform-functions--lookuporderedrows" chapter="parameters" %}
 
 ## Description
 
@@ -34,9 +37,9 @@ differs_from_docs: true
 - Only the top N rows (e.g., most recent 10 orders)
 - Pagination patterns
 
-{% include differs-from-docs.html note="At runtime `LookupOrderedRows` returns `null` (not an empty array `[]`) when no row matches — guard before reading `.length`. Each matched row also carries undocumented system fields `_CustomObjectKey` (number) and `_CreatedDate` (string), and the DE is resolved by **Name** only." %}
+{% include differs-from-docs.html note="At runtime `LookupOrderedRows` returns `null` (not an empty array `[]`) when no row matches — guard before reading `.length`. Each matched row also carries undocumented system fields `_CustomObjectKey` (number) and `_CreatedDate` (string), and the DE is resolved by **Name** only. A NULL Text field in a returned row is normalized to an ordinary empty string rather than the hazardous CLR null returned by scalar `Lookup`." %}
 
-Also like `LookupRows`, most fields are returned as their **typed/native JS value** (Number and Decimal columns come back as `number`, Boolean columns as `boolean`) — useful when you need those types without manual casting. **Date columns are the exception:** they come back as an ISO-8601 `string` (e.g. `"2024-01-15T00:00:00.000"`), **not** a `Date` object — unlike [`Lookup`](/platform-functions/lookup/), which returns a real `Date` (runtime-verified). This still contrasts with `DataExtension.Rows.Retrieve()`, which stringifies **every** field, including Number/Boolean (but gives you an empty array `[]` instead of `null` on no match).
+Also like `LookupRows`, most fields are returned as their **typed/native JS value** (Number and Decimal columns come back as `number`, Boolean columns as `boolean`) — useful when you need those types without manual casting. **Date columns are the exception:** they come back as an ISO-8601 `string` (e.g. `"2024-01-15T00:00:00.000"`), **not** a `Date` object — unlike [`Lookup`](/platform-functions/lookup/), which returns a real `Date` (runtime-verified). A NULL Text field in a returned row is normalized to an ordinary empty `string`: strict and loose null comparisons are false, a truthiness test is safely falsy, and `String()` yields `""`. This differs from scalar `Lookup`, whose NULL field is a hazardous CLR null. This still contrasts with `DataExtension.Rows.Retrieve()`, which stringifies **every** field, including Number/Boolean (but gives you an empty array `[]` instead of `null` on no match).
 
 ### Field type → returned JavaScript type (runtime-verified)
 
@@ -54,6 +57,8 @@ Result of probing a Data Extension containing one column of each valid [field ty
 | Date | `string` | ISO-8601 string (e.g. `"2024-01-15T00:00:00.000"`) — **not** a `Date` |
 
 Identical to [`LookupRows`](/platform-functions/lookuprows/): Date columns are stringified, unlike [`Lookup`](/platform-functions/lookup/) which returns a real `Date`.
+
+{% include test-script.html bundle="platform-functions--lookuporderedrows" chapter="description" label="Show test script — row shape, ordering, field types, nulls, and query caching" %}
 
 ## Examples
 
@@ -108,6 +113,8 @@ var rows = Platform.Function.LookupOrderedRows(
     ["English", "Silver"]
 );
 ```
+
+{% include test-script.html bundle="platform-functions--lookuporderedrows" chapter="examples" %}
 
 ## See Also
 

@@ -1,0 +1,379 @@
+# Test scripts for /platform-functions/insertde/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the official Salesforce docs.
+#
+# InsertDE is a WRITE function that returns NO row count, so neither
+# presence-only nor throws-only evidence would prove anything. Every script
+# therefore builds its OWN throwaway data extension, writes known rows with
+# InsertDE and proves the insert by reading the stored FIELD VALUES back — not
+# merely a row count. Each script removes its data extension again at the end.
+#
+# HARNESS NOTE (proven in the sibling InsertData / DeleteData / DeleteDE runs):
+# within a single request the engine CACHES a data-extension query — issuing
+# the SAME LookupRows(deName, field, value) twice returns the FIRST result even
+# after rows changed in between. That is a caching artefact, not a failed
+# write. Every verification query below is therefore issued AT MOST ONCE per
+# script.
+#
+# ENGINE NOTE: `typeof` on a Platform function reports "clrmethodinfo", not
+# "function", so existence is proven by CALLING the member rather than by a
+# typeof probe. String operations on a CLR exception message abort the whole
+# page with HTTP 422, so thrown messages are printed verbatim and never sliced.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage on the MCDEV_Training_QA business unit.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters —
+   * Platform.Function.InsertDE(deName, fieldNames, fieldValues)
+   *
+   * Proves:
+   *   1. The member exists and the documented 3-argument call succeeds against
+   *      a real data extension that this script creates itself.
+   *   2. deName resolves the data extension by its NAME. The data extension
+   *      built here deliberately has a Name that DIFFERS from its CustomerKey,
+   *      so the two identifiers are distinguishable; the CustomerKey form
+   *      throws and writes nothing.
+   *   3. fieldNames is an array of column names and fieldValues an array of
+   *      values ALIGNED TO IT by position — proven by reading each written
+   *      value back from the column it was paired with.
+   *   4. A partial column list is allowed: columns omitted from fieldNames are
+   *      simply not populated.
+   *   5. Exactly three arguments are required (min_args 3 / max_args 3):
+   *      arity 0, 1, 2 and 4 all throw. The name/value pairing is enforced as
+   *      well — unequal array lengths throw in BOTH directions (more names
+   *      than values, more values than names).
+   *   6. THE INSERT REALLY COMMITS: the written rows are read back afterwards
+   *      with Platform.Function.Lookup / LookupRows and the stored FIELD
+   *      VALUES match what was written. InsertDE returns no count, so
+   *      read-back is the ONLY evidence available.
+   *   7. A fieldNames entry naming a column that does not exist throws, and a
+   *      data extension name that does not exist throws — and neither writes
+   *      anything.
+   *
+   * QUERY-CACHING CONSTRAINT: identical data-extension queries are cached
+   * within one request, so each verification query below is issued only once.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit). The page also
+   * lists email, automation and triggered-send availability; those execution
+   * contexts were NOT exercised here.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* Build a throwaway data extension whose Name differs from its CustomerKey. */
+  function addField(de, name, len, isKey) {
+      var f = Platform.Function.CreateObject("DataExtensionField");
+      Platform.Function.SetObjectProperty(f, "Name", name);
+      Platform.Function.SetObjectProperty(f, "FieldType", "Text");
+      Platform.Function.SetObjectProperty(f, "MaxLength", len);
+      Platform.Function.SetObjectProperty(f, "IsPrimaryKey", isKey);
+      Platform.Function.SetObjectProperty(f, "IsRequired", isKey);
+      Platform.Function.AddObjectArrayItem(de, "Fields", f);
+  }
+  function createDE(name, key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      Platform.Function.SetObjectProperty(de, "Name", name);
+      addField(de, "Email", "100", "true");
+      addField(de, "Status", "50", "false");
+      addField(de, "Active", "10", "false");
+      var st = [0, 0];
+      return String(Platform.Function.InvokeCreate(de, st, null));
+  }
+  function dropDE(key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      var st = [0, 0];
+      return String(Platform.Function.InvokeDelete(de, st, null));
+  }
+  function rowCount(deName, field, value) {
+      var rows = Platform.Function.LookupRows(deName, field, value);
+      return rows === null ? 0 : rows.length;
+  }
+
+  var deName = "ssjsguide_insertde_params_name";
+  var deKey = "ssjsguide_insertde_params_key";
+
+  assert("setup: the throwaway data extension is created", createDE(deName, deKey), "OK");
+
+  /* 2. The control that makes the Name-vs-key test discriminating. */
+  assert("control: the Name and the CustomerKey differ", deName === deKey ? "same" : "different", "different");
+
+  /* 1 + 3. The documented 3-argument call. */
+  var res = Platform.Function.InsertDE(deName, ["Email", "Status", "Active"], ["a@example.com", "expired", "0"]);
+  assert("the documented 3-argument call does not throw and yields null", res === null ? "null" : "not null", "null");
+
+  /* 4. A partial column list is allowed. */
+  var partial = Platform.Function.InsertDE(deName, ["Email"], ["b@example.com"]);
+  assert("a partial column list is accepted and also yields null", partial === null ? "null" : "not null", "null");
+
+  /* 2. The CustomerKey is not accepted — it throws instead of inserting. */
+  assertThrows("DEV InsertDE(<CustomerKey>, ...) throws (docs: deName is not restricted to the Name)", function () {
+      return Platform.Function.InsertDE(deKey, ["Email", "Status"], ["viakey@example.com", "viakey"]);
+  });
+
+  /* 5. Exactly three arguments, and the name/value arrays must be aligned. */
+  assertThrows("arity 0 throws", function () { return Platform.Function.InsertDE(); });
+  assertThrows("arity 1 throws", function () { return Platform.Function.InsertDE(deName); });
+  assertThrows("arity 2 throws", function () { return Platform.Function.InsertDE(deName, ["Email"]); });
+  assertThrows("arity 4 throws", function () { return Platform.Function.InsertDE(deName, ["Email"], ["z@example.com"], "extra"); });
+  assertThrows("more names than values throws - the arrays must be aligned pairs", function () {
+      return Platform.Function.InsertDE(deName, ["Email", "Status"], ["m1@example.com"]);
+  });
+  assertThrows("more values than names throws - the arrays must be aligned pairs", function () {
+      return Platform.Function.InsertDE(deName, ["Email"], ["m2@example.com", "expired"]);
+  });
+
+  /* 7. Bad column name and bad data extension name both throw. */
+  assertThrows("a column name that does not exist throws", function () {
+      return Platform.Function.InsertDE(deName, ["NoSuchColumn"], ["x"]);
+  });
+  assertThrows("a data extension name that does not exist throws", function () {
+      return Platform.Function.InsertDE("ssjsguide_insertde_no_such_de", ["Email"], ["x@example.com"]);
+  });
+
+  /* 6. Read the stored FIELD VALUES back — each query issued exactly once. */
+  assert("the insert really committed: row a's Status column holds what was written", String(Platform.Function.Lookup(deName, "Status", "Email", "a@example.com")), "expired");
+  assert("the arrays are positionally aligned: row a's Active column holds the third value", String(Platform.Function.Lookup(deName, "Active", "Email", "a@example.com")), "0");
+  assert("the partial insert committed: row b exists", rowCount(deName, "Email", "b@example.com"), 1);
+  assert("the omitted column was left unpopulated: row b's Status holds an empty value", String(Platform.Function.Lookup(deName, "Status", "Email", "b@example.com")), "");
+  assert("the rejected CustomerKey call and the failed negative cases wrote nothing: exactly 1 'expired' row exists", rowCount(deName, "Status", "expired"), 1);
+  assert("the rejected CustomerKey call wrote no row of its own", rowCount(deName, "Email", "viakey@example.com"), 0);
+
+  /* Cleanup. */
+  assert("cleanup: the throwaway data extension is deleted", dropDE(deKey), "OK");
+  </script>
+
+description: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Description
+   *
+   * Proves every claim the Description chapter makes:
+   *   1. InsertDE ADDS A NEW ROW to a data extension — proven by reading the
+   *      written field values back, because the call itself reports nothing.
+   *   2. It performs the SAME insert as InsertData: the identical call shape,
+   *      applied to two equivalent rows, stores each of them. The only
+   *      difference is the return value.
+   *   3. DEV — it returns a genuine JavaScript null (=== null is true), NOT a
+   *      row count and NOT undefined. typeof that null is "object", which is
+   *      the ordinary JavaScript typeof-null result, so typeof alone cannot
+   *      distinguish it from an object — the === null check is the real
+   *      evidence.
+   *   4. Like InsertData, InsertDE never updates silently: a second insert
+   *      with the same primary key THROWS, and the existing row keeps its
+   *      original column values.
+   *   5. WORKAROUND — InsertData is preferred outside email because it returns
+   *      a real number for the very same operation. Asserted side by side in
+   *      this script.
+   *
+   * QUERY-CACHING CONSTRAINT: identical data-extension queries are cached
+   * within one request, so every verification query below is issued only once.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit). The email,
+   * automation and triggered-send contexts listed on the page were NOT
+   * exercised.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  function addField(de, name, len, isKey) {
+      var f = Platform.Function.CreateObject("DataExtensionField");
+      Platform.Function.SetObjectProperty(f, "Name", name);
+      Platform.Function.SetObjectProperty(f, "FieldType", "Text");
+      Platform.Function.SetObjectProperty(f, "MaxLength", len);
+      Platform.Function.SetObjectProperty(f, "IsPrimaryKey", isKey);
+      Platform.Function.SetObjectProperty(f, "IsRequired", isKey);
+      Platform.Function.AddObjectArrayItem(de, "Fields", f);
+  }
+  function createDE(name, key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      Platform.Function.SetObjectProperty(de, "Name", name);
+      addField(de, "Email", "100", "true");
+      addField(de, "Status", "50", "false");
+      var st = [0, 0];
+      return String(Platform.Function.InvokeCreate(de, st, null));
+  }
+  function dropDE(key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      var st = [0, 0];
+      return String(Platform.Function.InvokeDelete(de, st, null));
+  }
+  function rowCount(deName, field, value) {
+      var rows = Platform.Function.LookupRows(deName, field, value);
+      return rows === null ? 0 : rows.length;
+  }
+
+  var deName = "ssjsguide_insertde_desc_name";
+  var deKey = "ssjsguide_insertde_desc_key";
+
+  assert("setup: the throwaway data extension is created", createDE(deName, deKey), "OK");
+
+  /* 1 + 3. The insert itself and its return value. */
+  var res = Platform.Function.InsertDE(deName, ["Email", "Status"], ["d1@example.com", "original"]);
+  assert("DEV InsertDE returns a genuine JavaScript null, not a row count (docs: no return value documented for CloudPages)", res === null ? "null" : "not null", "null");
+  assert("DEV InsertDE's return value is NOT undefined", res === undefined ? "undefined" : "defined", "defined");
+  assert("InsertDE's null is not a number", String(typeof res) === "number" ? "number" : "not a number", "not a number");
+  assert("typeof InsertDE(...) is object — the ordinary JavaScript typeof of null", String(typeof res), "object");
+
+  /* 4. A duplicate primary key throws — InsertDE never updates silently. */
+  assertThrows("inserting a duplicate primary key throws", function () {
+      return Platform.Function.InsertDE(deName, ["Email", "Status"], ["d1@example.com", "duplicate"]);
+  });
+
+  /* 2 + 5. The same insert via InsertData returns a number instead. */
+  var inserted = Platform.Function.InsertData(deName, ["Email", "Status"], ["d2@example.com", "viainsertdata"]);
+  assert("WORKAROUND InsertData performs the same insert but returns a number", String(typeof inserted), "number");
+  assert("WORKAROUND InsertData reports the affected-row count InsertDE withholds", inserted, 1);
+
+  /* 1 + 2 + 4. Read the rows back — each query issued exactly once. */
+  assert("the InsertDE row really committed: row d1's Status column holds what was written", String(Platform.Function.Lookup(deName, "Status", "Email", "d1@example.com")), "original");
+  assert("the InsertData row committed too", String(Platform.Function.Lookup(deName, "Status", "Email", "d2@example.com")), "viainsertdata");
+  assert("the rejected duplicate wrote no second row", rowCount(deName, "Email", "d1@example.com"), 1);
+  assert("the rejected duplicate value was never stored", rowCount(deName, "Status", "duplicate"), 0);
+
+  assert("cleanup: the throwaway data extension is deleted", dropDE(deKey), "OK");
+  </script>
+
+runs-on-cloudpages: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs claim, all three halves of it:
+   *
+   *   a) The official docs restrict InsertDE to EMAIL contexts. At runtime it
+   *      nevertheless EXECUTES and COMMITS its insert on a CloudPage — this
+   *      whole script runs on a CloudPage, and the written row is proven
+   *      present, with its field value intact, afterwards.
+   *   b) It returns null, NOT the affected-row count that InsertData returns
+   *      for the identical operation. Both are called side by side here.
+   *   c) It resolves the data extension by NAME only, not by the external key
+   *      / CustomerKey.
+   *
+   * THE CONTROL THAT MAKES (c) DISCRIMINATING: the throwaway data extension
+   * built here has a Name that is DIFFERENT from its CustomerKey. If the
+   * engine accepted either identifier, the CustomerKey call would write the
+   * row. It does not — it throws, and the read-back proves no such row exists,
+   * while the identical call using the Name stores the row successfully.
+   *
+   * QUERY-CACHING CONSTRAINT: identical data-extension queries are cached
+   * within one request, so every verification query below is issued only once.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit). The email context
+   * in which the official docs place InsertDE was NOT exercised — the claim
+   * proven here is that the CloudPage context works too, not that the email
+   * context differs.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  function addField(de, name, len, isKey) {
+      var f = Platform.Function.CreateObject("DataExtensionField");
+      Platform.Function.SetObjectProperty(f, "Name", name);
+      Platform.Function.SetObjectProperty(f, "FieldType", "Text");
+      Platform.Function.SetObjectProperty(f, "MaxLength", len);
+      Platform.Function.SetObjectProperty(f, "IsPrimaryKey", isKey);
+      Platform.Function.SetObjectProperty(f, "IsRequired", isKey);
+      Platform.Function.AddObjectArrayItem(de, "Fields", f);
+  }
+  function createDE(name, key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      Platform.Function.SetObjectProperty(de, "Name", name);
+      addField(de, "Email", "100", "true");
+      addField(de, "Status", "50", "false");
+      var st = [0, 0];
+      return String(Platform.Function.InvokeCreate(de, st, null));
+  }
+  function dropDE(key) {
+      var de = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(de, "CustomerKey", key);
+      var st = [0, 0];
+      return String(Platform.Function.InvokeDelete(de, st, null));
+  }
+  function rowCount(deName, field, value) {
+      var rows = Platform.Function.LookupRows(deName, field, value);
+      return rows === null ? 0 : rows.length;
+  }
+
+  var deName = "ssjsguide_insertde_cp_name";
+  var deKey = "ssjsguide_insertde_cp_key";
+
+  /* c) The control: Name and CustomerKey are different strings. */
+  assert("control: the Name and the CustomerKey differ", deName === deKey ? "same" : "different", "different");
+
+  assert("setup: the throwaway data extension is created", createDE(deName, deKey), "OK");
+
+  /* c) The CustomerKey form throws instead of inserting. */
+  assertThrows("DEV InsertDE(<CustomerKey>, ...) throws (docs: deName is not restricted to the Name)", function () {
+      return Platform.Function.InsertDE(deKey, ["Email", "Status"], ["keytest@example.com", "viakey"]);
+  });
+
+  /* a) + b) InsertDE executes on a CloudPage and returns null, not a count. */
+  var res = Platform.Function.InsertDE(deName, ["Email", "Status"], ["cptest@example.com", "viainsertde"]);
+  assert("DEV InsertDE runs on a CloudPage without throwing (docs: email contexts only)", res === null ? "null" : "not null", "null");
+  assert("DEV InsertDE returns null, not the affected-row count InsertData gives", String(typeof res) === "number" ? "number" : "not a number", "not a number");
+  assert("DEV InsertDE's return value is NOT undefined either", res === undefined ? "undefined" : "defined", "defined");
+
+  /* b) The identical operation through InsertData reports a number. */
+  var inserted = Platform.Function.InsertData(deName, ["Email", "Status"], ["dataform@example.com", "viainsertdata"]);
+  assert("WORKAROUND InsertData returns the count for the identical operation", inserted, 1);
+
+  /* c) The same row the CustomerKey call could not write is written by the
+     Name form. */
+  var byName = Platform.Function.InsertDE(deName, ["Email", "Status"], ["keytest@example.com", "vianame"]);
+  assert("DEV InsertDE(<Name>, ...) accepts the very call the CustomerKey form rejected", byName === null ? "null" : "not null", "null");
+
+  /* a) + c) Read back — each query issued exactly once. */
+  assert("DEV InsertDE COMMITS its insert on a CloudPage (docs: email contexts only)", String(Platform.Function.Lookup(deName, "Status", "Email", "cptest@example.com")), "viainsertde");
+  assert("DEV the row written through the Name form holds the Name-form value, not the CustomerKey one", String(Platform.Function.Lookup(deName, "Status", "Email", "keytest@example.com")), "vianame");
+  assert("DEV the rejected CustomerKey call stored nothing", rowCount(deName, "Status", "viakey"), 0);
+  assert("the InsertData row committed as well", rowCount(deName, "Email", "dataform@example.com"), 1);
+
+  assert("cleanup: the throwaway data extension is deleted", dropDE(deKey), "OK");
+  </script>

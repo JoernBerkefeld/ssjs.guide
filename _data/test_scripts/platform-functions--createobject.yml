@@ -1,0 +1,299 @@
+# Test scripts for /platform-functions/createobject/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the official Salesforce docs.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage on the MCDEV_Training_QA business unit.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters — Platform.Function.CreateObject(objectType)
+   *
+   * Proves:
+   *   1. The member exists and a 1-argument call with a real SOAP type name
+   *      succeeds — that successful call is the only reliable existence proof
+   *      for a Platform.Function member.
+   *   2. The return value is a .NET CLR host object: typeof is "clr", NOT the
+   *      plain-JS "object" the official docs' "@returns {object}" implies.
+   *      Marked DEV.
+   *   3. Every documented example type name resolves: DataExtensionObject,
+   *      Subscriber, APIProperty, DataExtension, RetrieveRequest.
+   *   4. The CLR host object is NOT introspectable from SSJS (marked DEV,
+   *      because the docs say nothing about this):
+   *        - String(obj) and Platform.Function.Stringify(obj) return only the
+   *          .NET type name, e.g. "ExactTarget.Integration.WSDL.Subscriber",
+   *          never the field values;
+   *        - dot access and bracket access both throw
+   *          "Use of Common Language Runtime (CLR) is not allowed";
+   *        - for..in enumeration yields ZERO keys.
+   *      A property that was set successfully but cannot be read back is NOT
+   *      a failed set — see the round-trip proof in the examples chapter.
+   *   5. Each call returns a NEW, independent instance (a === b is false for
+   *      two calls with the same type name).
+   *   6. Exactly one argument is required: arity 0 and arity 2 both throw.
+   *   7. objectType must be a real SOAP type name given as a string: an
+   *      unknown name, an empty string, a number and null all throw.
+   *   8. The result is a valid apiObject for the members that consume it —
+   *      SetObjectProperty and AddObjectArrayItem both accept it.
+   *   9. The page's "prefer WSProxy" note is backed by WSProxy being available
+   *      in this engine (Script.Util.WSProxy is a CLR host constructor).
+   *
+   * NOT ASSERTED: the exact values assigned to a CreateObject object cannot be
+   * observed on the object itself (point 4 proves why). They are proven
+   * indirectly, by round-tripping the object through a real SOAP call — see
+   * the examples chapter.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit). The page also
+   * lists automation availability; the automation context was not exercised.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function assertNoThrow(id, fn) {
+      var ok = true, msg = "ok";
+      try { fn(); } catch (ex) { ok = false; msg = ex.message; }
+      Platform.Response.Write((ok ? "PASS " : "FAIL ") + id + " -> [" + msg + "]\n");
+  }
+
+  /* 1 + 3. Every documented type name resolves with a 1-argument call. */
+  var deObject = Platform.Function.CreateObject("DataExtensionObject");
+  assertNoThrow("CreateObject('DataExtensionObject') succeeds", function () {
+      return Platform.Function.CreateObject("DataExtensionObject");
+  });
+  var sub = Platform.Function.CreateObject("Subscriber");
+  assertNoThrow("CreateObject('Subscriber') succeeds", function () {
+      return Platform.Function.CreateObject("Subscriber");
+  });
+  var apiProp = Platform.Function.CreateObject("APIProperty");
+  assertNoThrow("CreateObject('APIProperty') succeeds", function () {
+      return Platform.Function.CreateObject("APIProperty");
+  });
+  assertNoThrow("CreateObject('DataExtension') succeeds", function () {
+      return Platform.Function.CreateObject("DataExtension");
+  });
+  assertNoThrow("CreateObject('RetrieveRequest') succeeds", function () {
+      return Platform.Function.CreateObject("RetrieveRequest");
+  });
+
+  /* 2. DEVIATION — the result is a CLR host object, not a plain JS object. */
+  assert("DEV typeof CreateObject('DataExtensionObject') is clr (docs: '@returns {object}')", String(typeof deObject), "clr");
+  assert("DEV typeof CreateObject('Subscriber') is clr (docs: '@returns {object}')", String(typeof sub), "clr");
+  assert("DEV typeof CreateObject('APIProperty') is clr (docs: '@returns {object}')", String(typeof apiProp), "clr");
+
+  /* 4. DEVIATION — the CLR host object exposes only its .NET type name. */
+  assert("DEV String(CreateObject('Subscriber')) is the .NET type name only", String(sub), "ExactTarget.Integration.WSDL.Subscriber");
+  assert("DEV String(CreateObject('DataExtensionObject')) is the .NET type name only", String(deObject), "ExactTarget.Integration.WSDL.DataExtensionObject");
+  assert("DEV String(CreateObject('APIProperty')) is the .NET type name only", String(apiProp), "ExactTarget.Integration.WSDL.APIProperty");
+  assert("DEV Stringify(CreateObject('Subscriber')) is the quoted type name, not the fields", String(Platform.Function.Stringify(sub)), "\"ExactTarget.Integration.WSDL.Subscriber\"");
+
+  /* 4. A property that WAS set is still unreadable — that is CLR policy, not a failed set. */
+  var readable = Platform.Function.CreateObject("Subscriber");
+  assertNoThrow("SetObjectProperty(readable, 'EmailAddress', ...) succeeds", function () {
+      Platform.Function.SetObjectProperty(readable, "EmailAddress", "jane@example.com");
+  });
+  assertThrows("DEV dot access on the CLR object throws (docs: silent on introspection)", function () {
+      return readable.EmailAddress;
+  });
+  assertThrows("DEV bracket access on the CLR object throws (docs: silent on introspection)", function () {
+      return readable["EmailAddress"];
+  });
+  var keyCount = 0;
+  for (var k in readable) { keyCount = keyCount + 1; }
+  assert("DEV for..in over the CLR object yields 0 keys (docs: silent on introspection)", keyCount, 0);
+  assert("DEV String() of the populated object still shows only the type name", String(readable), "ExactTarget.Integration.WSDL.Subscriber");
+
+  /* 5. Each call yields a NEW instance. */
+  var a = Platform.Function.CreateObject("Subscriber");
+  var b = Platform.Function.CreateObject("Subscriber");
+  assert("two CreateObject calls yield distinct instances", a === b ? "true" : "false", "false");
+
+  /* 6. Exactly one argument. */
+  assertThrows("arity 0 throws", function () { return Platform.Function.CreateObject(); });
+  assertThrows("arity 2 throws", function () { return Platform.Function.CreateObject("Subscriber", "extra"); });
+
+  /* 7. objectType must be a real SOAP type name, given as a string. */
+  assertThrows("unknown objectType throws", function () { return Platform.Function.CreateObject("NotARealSoapType"); });
+  assertThrows("empty string objectType throws", function () { return Platform.Function.CreateObject(""); });
+  assertThrows("numeric objectType throws", function () { return Platform.Function.CreateObject(5); });
+  assertThrows("null objectType throws", function () { return Platform.Function.CreateObject(null); });
+
+  /* 8. The result is a usable apiObject for the consuming members. */
+  var rr = Platform.Function.CreateObject("RetrieveRequest");
+  assertNoThrow("the result is accepted by SetObjectProperty", function () {
+      Platform.Function.SetObjectProperty(rr, "ObjectType", "DataFolder");
+  });
+  assertNoThrow("the result is accepted by AddObjectArrayItem", function () {
+      Platform.Function.AddObjectArrayItem(rr, "Properties", "ID");
+  });
+  assert("the mutated object is still a CLR host object", String(typeof rr), "clr");
+
+  /* 9. The recommended alternative — WSProxy — exists in this engine. */
+  assert("Script.Util.WSProxy is a CLR host constructor", String(typeof Script.Util.WSProxy), "clr");
+  var proxy = new Script.Util.WSProxy();
+  assert("new Script.Util.WSProxy() yields a CLR instance", String(typeof proxy), "clr");
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples — the CreateObject / SetObjectProperty /
+   * AddObjectArrayItem / InvokeCreate build-and-send pattern.
+   *
+   * This script runs the page's example END TO END against a real, throwaway
+   * data extension that it creates and deletes itself, because the values set
+   * on a CreateObject object CANNOT be read back from the object (it is a CLR
+   * host object — see the parameters chapter). Round-tripping the object
+   * through the SOAP call that consumes it is the only way to prove the values
+   * actually landed.
+   *
+   * Proves:
+   *   1. A DataExtension is itself built with CreateObject +
+   *      SetObjectProperty + AddObjectArrayItem and created via InvokeCreate,
+   *      which returns "OK".
+   *   2. The example's own shape works: CreateObject("DataExtensionObject") +
+   *      SetObjectProperty(CustomerKey) + an APIProperty item appended with
+   *      AddObjectArrayItem + InvokeCreate returns "OK" and writes
+   *      "Created DataExtensionObject" into status[0].
+   *   3. ROUND-TRIP PROOF — the values set on the CLR objects really were
+   *      carried into the SOAP call: retrieving the data extension's rows
+   *      afterwards yields exactly one row whose Email property equals
+   *      "test@example.com" and whose property name is "Email". The values are
+   *      unreadable on the object, but demonstrably present in the payload.
+   *   4. The page's own DataExtension-level round-trip: a DE created from a
+   *      CreateObject payload can be retrieved back by CustomerKey and Name.
+   *   5. Cleanup: the same pattern with InvokeDelete removes the throwaway
+   *      artefacts, leaving the business unit as it was.
+   *
+   * NOTE ON THE SIGNATURE: InvokeCreate takes exactly THREE arguments
+   * (apiObject, status, options). The four-argument form
+   * InvokeCreate(obj, status, code, message) throws
+   * "Unable to retrieve security descriptor for this frame." — asserted below
+   * as a negative case so the corrected example cannot silently regress.
+   *
+   * SCOPE: CloudPage only (MCDEV_Training_QA business unit).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function assertNoThrow(id, fn) {
+      var ok = true, msg = "ok";
+      try { fn(); } catch (ex) { ok = false; msg = ex.message; }
+      Platform.Response.Write((ok ? "PASS " : "FAIL ") + id + " -> [" + msg + "]\n");
+  }
+
+  var deKey = "ssjsguide_createobject_example";
+
+  /* 1. Build and create a throwaway data extension with the same pattern. */
+  var de = Platform.Function.CreateObject("DataExtension");
+  assert("typeof CreateObject('DataExtension') is clr", String(typeof de), "clr");
+  assertNoThrow("SetObjectProperty(de, 'CustomerKey', ...) succeeds", function () {
+      Platform.Function.SetObjectProperty(de, "CustomerKey", deKey);
+  });
+  assertNoThrow("SetObjectProperty(de, 'Name', ...) succeeds", function () {
+      Platform.Function.SetObjectProperty(de, "Name", deKey);
+  });
+  var field = Platform.Function.CreateObject("DataExtensionField");
+  assert("typeof CreateObject('DataExtensionField') is clr", String(typeof field), "clr");
+  Platform.Function.SetObjectProperty(field, "Name", "Email");
+  Platform.Function.SetObjectProperty(field, "FieldType", "Text");
+  Platform.Function.SetObjectProperty(field, "MaxLength", "100");
+  Platform.Function.SetObjectProperty(field, "IsPrimaryKey", "true");
+  Platform.Function.SetObjectProperty(field, "IsRequired", "true");
+  assertNoThrow("AddObjectArrayItem(de, 'Fields', field) succeeds", function () {
+      Platform.Function.AddObjectArrayItem(de, "Fields", field);
+  });
+  var statusDE = [0, 0];
+  assert("InvokeCreate(de, status, null) returns 'OK'", String(Platform.Function.InvokeCreate(de, statusDE, null)), "OK");
+  assert("status[0] reports the data extension was created", String(statusDE[0]), "Data Extension created.");
+
+  /* 4. Round-trip the DE itself: the CustomerKey and Name really landed. */
+  var rrDE = Platform.Function.CreateObject("RetrieveRequest");
+  Platform.Function.SetObjectProperty(rrDE, "ObjectType", "DataExtension");
+  Platform.Function.AddObjectArrayItem(rrDE, "Properties", "CustomerKey");
+  Platform.Function.AddObjectArrayItem(rrDE, "Properties", "Name");
+  var filter = Platform.Function.CreateObject("SimpleFilterPart");
+  Platform.Function.SetObjectProperty(filter, "Property", "CustomerKey");
+  Platform.Function.SetObjectProperty(filter, "SimpleOperator", "equals");
+  Platform.Function.AddObjectArrayItem(filter, "Value", deKey);
+  Platform.Function.SetObjectProperty(rrDE, "Filter", filter);
+  var statusR1 = [0, 0];
+  var deRows = Platform.Function.InvokeRetrieve(rrDE, statusR1);
+  assert("the created data extension is retrievable (exactly 1 match)", deRows === null ? "null" : deRows.length, 1);
+  assert("round-trip: the CustomerKey set on the CLR object landed", String(deRows[0].CustomerKey), deKey);
+  assert("round-trip: the Name set on the CLR object landed", String(deRows[0].Name), deKey);
+
+  /* 2. The page's example, verbatim in shape. */
+  var deObject = Platform.Function.CreateObject("DataExtensionObject");
+  assert("typeof CreateObject('DataExtensionObject') is clr", String(typeof deObject), "clr");
+  assertNoThrow("SetObjectProperty(deObject, 'CustomerKey', ...) succeeds", function () {
+      Platform.Function.SetObjectProperty(deObject, "CustomerKey", deKey);
+  });
+  var fieldProps = Platform.Function.CreateObject("APIProperty");
+  assert("typeof CreateObject('APIProperty') is clr", String(typeof fieldProps), "clr");
+  assertNoThrow("SetObjectProperty(fieldProps, 'Name', 'Email') succeeds", function () {
+      Platform.Function.SetObjectProperty(fieldProps, "Name", "Email");
+  });
+  assertNoThrow("SetObjectProperty(fieldProps, 'Value', 'test@example.com') succeeds", function () {
+      Platform.Function.SetObjectProperty(fieldProps, "Value", "test@example.com");
+  });
+  assertNoThrow("AddObjectArrayItem(deObject, 'Properties', fieldProps) succeeds", function () {
+      Platform.Function.AddObjectArrayItem(deObject, "Properties", fieldProps);
+  });
+  var StatusAndRequestID = [0, 0];
+  assert("InvokeCreate(deObject, StatusAndRequestID, null) returns 'OK'", String(Platform.Function.InvokeCreate(deObject, StatusAndRequestID, null)), "OK");
+  assert("StatusAndRequestID[0] reports the row was created", String(StatusAndRequestID[0]), "Created DataExtensionObject");
+
+  /* 3. ROUND-TRIP PROOF — the APIProperty name/value really reached the row. */
+  var rrRow = Platform.Function.CreateObject("RetrieveRequest");
+  Platform.Function.SetObjectProperty(rrRow, "ObjectType", "DataExtensionObject[" + deKey + "]");
+  Platform.Function.AddObjectArrayItem(rrRow, "Properties", "Email");
+  var statusR2 = [0, 0];
+  var rows = Platform.Function.InvokeRetrieve(rrRow, statusR2);
+  assert("the created row is retrievable (exactly 1 row)", rows === null ? "null" : rows.length, 1);
+  assert("round-trip: the APIProperty Name reached the row", String(rows[0].Properties[0].Name), "Email");
+  assert("round-trip: the APIProperty Value reached the row", String(rows[0].Properties[0].Value), "test@example.com");
+
+  /* NEGATIVE — the 4-argument InvokeCreate form is invalid. */
+  var badObject = Platform.Function.CreateObject("DataExtensionObject");
+  Platform.Function.SetObjectProperty(badObject, "CustomerKey", deKey);
+  assertThrows("InvokeCreate with 4 arguments throws (the valid arity is 3)", function () {
+      var s = "", c = "", m = "";
+      return Platform.Function.InvokeCreate(badObject, s, c, m);
+  });
+
+  /* 5. Cleanup — remove the throwaway data extension. */
+  var del = Platform.Function.CreateObject("DataExtension");
+  Platform.Function.SetObjectProperty(del, "CustomerKey", deKey);
+  var statusDel = [0, 0];
+  assert("InvokeDelete removes the throwaway data extension", String(Platform.Function.InvokeDelete(del, statusDel, null)), "OK");
+  assert("status[0] reports the data extension was deleted", String(statusDel[0]), "Data Extension deleted.");
+  </script>

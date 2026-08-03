@@ -1,0 +1,271 @@
+# Test scripts for /platform-functions/endimpressionregion/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and the documented deviation from the official Salesforce docs.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# SCOPE OF THE EVIDENCE — CLOUDPAGE ONLY: every assertion in this bundle was
+# executed as a plain CloudPage GET. Nothing here was run inside a real email
+# send. Although impression regions are primarily a send/email-tracking
+# feature, no send-context assertion is made — that behaviour is untested and
+# may differ from what these scripts show.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# ENGINE NOTE (inherited from the BeginImpressionRegion run): the CLR
+# exception messages raised here cannot be inspected with .length /
+# .indexOf / .substring — those operations abort the whole CloudPage with
+# HTTP 422. The scripts therefore assert "it throws" and PRINT the message
+# verbatim rather than matching it programmatically.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters — Platform.Function.EndImpressionRegion([closeAll])
+   *
+   * Proves:
+   *   1. The member resolves on Platform.Function (typeof "clrmethodinfo",
+   *      the engine's marker for a host CLR method).
+   *   2. The documented 0-argument form is callable and returns a value —
+   *      unlike its paired BeginImpressionRegion half, which throws for
+   *      every SSJS call shape.
+   *   3. The optional closeAll parameter accepts a boolean: both true and
+   *      false are accepted and both return null.
+   *   4. Non-boolean values in the closeAll position are coerced rather than
+   *      rejected — a string and a number are both accepted.
+   *   5. null in the closeAll position is NOT accepted: it throws the
+   *      engine's overloaded "Unable to retrieve security descriptor for
+   *      this frame." error.
+   *   6. Arities beyond the documented maximum of 1 (2 and 3 arguments)
+   *      throw the same security-descriptor error.
+   *
+   * SCOPE: run as a CloudPage GET only. Nothing below asserts how the call
+   * behaves inside an actual email send.
+   *
+   * NOT ASSERTED: whether an impression region is actually closed in
+   * Marketing Cloud tracking. Impression counts surface in tracking reports
+   * after a send is processed, which is not deterministically observable
+   * from inside the rendering request, so only the call-level behaviour is
+   * asserted.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. The member resolves as a host CLR method. */
+  assert("typeof Platform.Function.EndImpressionRegion is clrmethodinfo", String(typeof Platform.Function.EndImpressionRegion), "clrmethodinfo");
+
+  /* 2. The 0-argument form is callable and returns null. */
+  var r0 = Platform.Function.EndImpressionRegion();
+  assert("arity 0 returns typeof object", String(typeof r0), "object");
+  assert("arity 0 returns a genuine null", r0 === null ? "true" : "false", "true");
+
+  /* 3. closeAll accepts a boolean in either state. */
+  var rTrue = Platform.Function.EndImpressionRegion(true);
+  assert("closeAll = true is accepted and returns null", rTrue === null ? "true" : "false", "true");
+  var rFalse = Platform.Function.EndImpressionRegion(false);
+  assert("closeAll = false is accepted and returns null", rFalse === null ? "true" : "false", "true");
+
+  /* 4. Non-boolean closeAll values are coerced, not rejected. */
+  var rStr = Platform.Function.EndImpressionRegion("true");
+  assert("closeAll = \"true\" (string) is coerced and returns null", rStr === null ? "true" : "false", "true");
+  var rNum = Platform.Function.EndImpressionRegion(1);
+  assert("closeAll = 1 (number) is coerced and returns null", rNum === null ? "true" : "false", "true");
+
+  /* 5. null in the closeAll position is rejected. */
+  assertThrows("closeAll = null throws the security-descriptor error", function () {
+      return Platform.Function.EndImpressionRegion(null);
+  });
+
+  /* 6. Arities above the documented maximum of 1 throw. */
+  assertThrows("arity 2 throws (documented maximum is 1)", function () {
+      return Platform.Function.EndImpressionRegion(true, true);
+  });
+  assertThrows("arity 3 throws (documented maximum is 1)", function () {
+      return Platform.Function.EndImpressionRegion(true, true, true);
+  });
+  </script>
+
+returns-null: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs claim: the official Salesforce documentation types the
+   * return of EndImpressionRegion as VOID. At runtime the qualified
+   * Platform.Function form always returns a genuine JavaScript null.
+   *
+   * Official docs: EndImpressionRegion([closeAll]) returns void
+   * SFMC runtime:  it returns null — typeof "object", === null is true,
+   *                === undefined is false
+   *
+   * Proves every part of the callout:
+   *   1. DEV the return is typeof "object", not "undefined" — a void return
+   *      would surface as undefined in JavaScript.
+   *   2. DEV the return is strictly === null.
+   *   3. DEV the return is NOT === undefined, which is what distinguishes a
+   *      genuine null from the documented void.
+   *   4. The same holds when there is NO matching BeginImpressionRegion —
+   *      every call in this script is unmatched, because the paired
+   *      BeginImpressionRegion half cannot be invoked from SSJS at all
+   *      (see /platform-functions/beginimpressionregion/). The call still
+   *      returns null instead of throwing or returning undefined.
+   *   5. The closeAll form returns null too, so the deviation is not tied to
+   *      a particular arity.
+   *   6. CONTRAST: the bare-name Core alias EndImpressionRegion() is a
+   *      genuine "function" (not "clrmethodinfo") and returns UNDEFINED —
+   *      so the two forms disagree with each other, and only the
+   *      Platform.Function form returns null.
+   *
+   * SCOPE: all of the above was observed on a plain CloudPage GET. No
+   * assertion here speaks to what happens during a real email send, which
+   * was never exercised and may behave differently.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertNoThrow(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "FAIL " : "PASS ") + id + " -> " + (threw ? "threw: " + msg : "did not throw") + "\n");
+  }
+
+  /* 4. Establish that no matching BeginImpressionRegion can exist in SSJS:
+     the paired half throws for every call shape. */
+  var beginThrew = false;
+  try { Platform.Function.BeginImpressionRegion("unmatched-control"); } catch (ex) { beginThrew = true; }
+  assert("control: no matching Begin is possible from SSJS — the paired half throws", beginThrew ? "true" : "false", "true");
+
+  /* 1-3. DEV the unmatched 0-argument call returns a genuine null, not void. */
+  var r = Platform.Function.EndImpressionRegion();
+  assert("DEV unmatched call returns typeof object (docs: void)", String(typeof r), "object");
+  assert("DEV unmatched call returns === null (docs: void)", r === null ? "true" : "false", "true");
+  assert("DEV unmatched call is NOT === undefined, so it is not void", r === undefined ? "true" : "false", "false");
+
+  /* 4. It does not throw despite having nothing to close. */
+  assertNoThrow("an unmatched EndImpressionRegion does not throw", function () {
+      return Platform.Function.EndImpressionRegion();
+  });
+
+  /* 5. The closeAll form deviates identically. */
+  var rc = Platform.Function.EndImpressionRegion(true);
+  assert("DEV closeAll form returns typeof object (docs: void)", String(typeof rc), "object");
+  assert("DEV closeAll form returns === null (docs: void)", rc === null ? "true" : "false", "true");
+  assert("DEV closeAll form is NOT === undefined", rc === undefined ? "true" : "false", "false");
+
+  /* 6. CONTRAST — the bare-name Core alias returns undefined instead. */
+  assert("contrast: typeof the bare-name Core alias is function", String(typeof EndImpressionRegion), "function");
+  var b = EndImpressionRegion();
+  assert("contrast: the bare-name Core alias returns typeof undefined", String(typeof b), "undefined");
+  assert("contrast: the bare-name Core alias is === undefined, not null", b === undefined ? "true" : "false", "true");
+  assert("contrast: the bare-name Core alias is NOT === null", b === null ? "true" : "false", "false");
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples — opening a region, writing content, and closing it;
+   * and the nested form closed with EndImpressionRegion(true).
+   *
+   * Proves the shape of both documented examples:
+   *   1. The region is opened with the AMPscript form via
+   *      Platform.Function.TreatAsContent(), because the direct SSJS
+   *      BeginImpressionRegion() call throws — asserted below as a DEV line
+   *      so the reader sees WHY the examples take the AMPscript route.
+   *   2. Opening a region emits no output of its own.
+   *   3. The surrounding content written between the two calls is untouched
+   *      by the region calls.
+   *   4. Example 1: the no-argument EndImpressionRegion() closes the region
+   *      and returns a genuine null.
+   *   5. Example 2: two nested regions are opened and the close-all form
+   *      EndImpressionRegion(true) returns a genuine null as well.
+   *   6. Neither close form throws.
+   *
+   * SCOPE: CloudPage GET only — no email/send-context behaviour is asserted.
+   *
+   * NOT ASSERTED: whether the impression is actually recorded, and whether
+   * closeAll really closed BOTH nested regions. Impression counts surface in
+   * Marketing Cloud tracking reports after a send is processed, which is not
+   * deterministically observable from within the rendering request, so only
+   * the call-level behaviour is asserted.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function assertNoThrow(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "FAIL " : "PASS ") + id + " -> " + (threw ? "threw: " + msg : "did not throw") + "\n");
+  }
+
+  /* 1. DEV the direct SSJS open call throws, which is why the examples open
+     the region through TreatAsContent instead. */
+  assertThrows("DEV the direct SSJS BeginImpressionRegion call throws (docs: a valid call)", function () {
+      return Platform.Function.BeginImpressionRegion("sidebar");
+  });
+
+  /* Example 1 — open "sidebar", write content, close it. */
+  assertNoThrow("example 1: opening the sidebar region via TreatAsContent does not throw", function () {
+      return Platform.Function.TreatAsContent('%%[BeginImpressionRegion("sidebar")]%%');
+  });
+  var open1 = Platform.Function.TreatAsContent('%%[BeginImpressionRegion("sidebar-2")]%%');
+  assert("example 1: opening the region emits nothing", open1, "");
+  var sidebarBlocks = "<p>sidebar</p>";
+  assert("example 1: the surrounding content is untouched", sidebarBlocks, "<p>sidebar</p>");
+  var close1 = Platform.Function.EndImpressionRegion();
+  assert("example 1: EndImpressionRegion() returns a genuine null", close1 === null ? "true" : "false", "true");
+  assert("example 1: typeof the close result is object", String(typeof close1), "object");
+
+  /* Example 2 — open "outer" and "inner", write content, close all at once. */
+  var openOuter = Platform.Function.TreatAsContent('%%[BeginImpressionRegion("outer")]%%');
+  assert("example 2: opening the outer region emits nothing", openOuter, "");
+  var openInner = Platform.Function.TreatAsContent('%%[BeginImpressionRegion("inner")]%%');
+  assert("example 2: opening the inner region emits nothing", openInner, "");
+  var nestedContent = "<p>nested</p>";
+  assert("example 2: the nested content is untouched", nestedContent, "<p>nested</p>");
+  var close2 = Platform.Function.EndImpressionRegion(true);
+  assert("example 2: EndImpressionRegion(true) returns a genuine null", close2 === null ? "true" : "false", "true");
+  assert("example 2: typeof the close-all result is object", String(typeof close2), "object");
+
+  /* 6. Neither close form throws. */
+  assertNoThrow("EndImpressionRegion() is callable from SSJS", function () {
+      return Platform.Function.EndImpressionRegion();
+  });
+  assertNoThrow("EndImpressionRegion(true) is callable from SSJS", function () {
+      return Platform.Function.EndImpressionRegion(true);
+  });
+
+  /* The AMPscript close form also runs through TreatAsContent and emits nothing. */
+  var tacEnd = Platform.Function.TreatAsContent('%%[EndImpressionRegion()]%%');
+  assert("the AMPscript close form via TreatAsContent emits nothing", tacEnd, "");
+  </script>

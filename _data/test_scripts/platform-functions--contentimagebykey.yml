@@ -1,0 +1,357 @@
+# Test scripts for /platform-functions/contentimagebykey/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive and
+# negative.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# SCOPE: the evidence behind these scripts is CloudPage-only. The member's
+# real-world context — emitting the img tag inside an email send, and how a
+# mail client resolves the generated src URL — was NOT exercised. Only the
+# call-level behaviour observable inside a single CloudPage request is proven.
+#
+# FIXTURES: two real image assets in the QA business unit, addressed here by
+# their EXTERNAL KEY —
+#   sfdcmarketingcloud-518005426   png "sfdcmarketingcloud.png"  (id 1133955)
+#   copado-logo.png-518005426      png "copado-logo.png"         (id 1201143)
+# Their ids appear in the generated tag as thid="<id>", which is what the
+# assertions match on. The keys "no-such-image-key-xyz" and
+# "no-such-fallback-key-xyz" are used as the "image does not exist" cases, and
+# "ssjs-guide-test-block" is an HTML block (not an image) used to prove the key
+# must reference an image asset.
+#
+# OUTPUT NOTE: this function returns a full <img …> tag roughly 190 characters
+# long. Dumping it for every assertion would flood the run, so the assertions
+# compare short DERIVED values (typeof, the leading "<img ", and the thid
+# marker) instead of the whole tag.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# ENGINE NOTE: the CLR exception messages thrown by ContentImageByKey cannot be
+# inspected with .length / .indexOf / .substring — those operations abort the
+# whole CloudPage with HTTP 422. The messages may only be concatenated into
+# output verbatim, so these scripts assert "it throws" and PRINT the message
+# rather than matching it programmatically. (String operations on the RETURNED
+# img tag are fine — that is an ordinary JS string.)
+#
+# HARNESS NOTE: `mcdev deploy` refuses any asset whose code references a
+# content asset id/key that does not exist on the BU, so these scripts (which
+# must reference a missing key to prove the fallback behaviour) are deployed to
+# the validate-ssjs asset through the REST API instead — see
+# mcdev-ssjs-validation/_tmp-run-rest.mjs.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters —
+   *   Platform.Function.ContentImageByKey(key[, fallbackKey])
+   *
+   * Proves:
+   *   1. The member resolves on Platform.Function (typeof "clrmethodinfo",
+   *      the engine's uniform marker for a host CLR method — it proves
+   *      nothing about existence, only invocation does).
+   *   2. `key` is required and the documented minimal 1-argument call resolves
+   *      the image (min_args: 1).
+   *   3. The `key` is accepted as a string literal and as a VARIABLE.
+   *   4. `fallbackKey` is genuinely OPTIONAL and genuinely REACHABLE from
+   *      SSJS: the documented 2-argument call works. This is worth stating
+   *      explicitly because the sibling ContentBlockBy* family rejects every
+   *      2nd argument from SSJS — ContentImageByKey does NOT share that
+   *      restriction.
+   *   5. `fallbackKey` is only used when the primary cannot be resolved: with a
+   *      resolvable primary the fallback is ignored, with a missing primary
+   *      the fallback image is returned instead.
+   *   6. `fallbackKey` is accepted as a literal and as a variable.
+   *   7. `key` must reference an existing IMAGE asset: a non-existent key
+   *      throws, and so does the key of a non-image (HTML block) asset.
+   *   8. When BOTH the primary and the fallback are missing, the call throws —
+   *      the fallback does not suppress the error.
+   *   9. A null `fallbackKey` is TOLERATED rather than rejected: with a
+   *      resolvable primary the call still returns the primary image (unlike
+   *      the ById form, where a null fallbackId throws). It only throws once
+   *      the primary itself cannot be resolved — i.e. null behaves like "no
+   *      usable fallback", not like a bad argument.
+   *  10. The identifier must be the EXTERNAL KEY — the mirror image of the
+   *      ContentImageByID restriction. Passing the numeric asset id (as a
+   *      number and as a numeric string) to the ByKey form does NOT resolve
+   *      the asset.
+   *  11. Arities outside the documented 1..2 range (0 and 3) throw the same
+   *      security-descriptor error (min_args: 1, max_args: 2).
+   *
+   * SCOPE: CloudPage only — the same calls inside an email send were not
+   * exercised.
+   *
+   * NOT ASSERTED: the exact text of the thrown messages. Any string operation
+   * on these CLR exception messages (.length / .indexOf / .substring) aborts
+   * the CloudPage with HTTP 422, so each message is printed verbatim next to
+   * its assertion for the reader instead of being matched programmatically.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  /* The returned tag is ~190 chars — reduce it to the asset it points at. */
+  function thid(tag) {
+      return String(tag).indexOf('thid="1133955"') > -1 ? "IMG-1133955"
+           : String(tag).indexOf('thid="1201143"') > -1 ? "IMG-1201143"
+           : "OTHER";
+  }
+
+  var KEY = "sfdcmarketingcloud-518005426";   /* png, asset id 1133955 */
+  var KEY2 = "copado-logo.png-518005426";     /* png, asset id 1201143 */
+  var MISSING = "no-such-image-key-xyz";
+
+  /* 1. The member resolves as a host CLR method. */
+  assert("typeof Platform.Function.ContentImageByKey is clrmethodinfo", String(typeof Platform.Function.ContentImageByKey), "clrmethodinfo");
+
+  /* 2. The required key alone resolves the image. */
+  assert("arity 1 with a real image key resolves that image", thid(Platform.Function.ContentImageByKey("sfdcmarketingcloud-518005426")), "IMG-1133955");
+
+  /* 3. A literal and a variable are both accepted for `key`. */
+  assert("arity 1 accepts a VARIABLE key", thid(Platform.Function.ContentImageByKey(KEY)), "IMG-1133955");
+
+  /* 4. The documented optional fallbackKey IS reachable from SSJS. */
+  assert("arity 2 with fallbackKey works from SSJS (unlike the ContentBlockBy* family)", thid(Platform.Function.ContentImageByKey(KEY, KEY2)), "IMG-1133955");
+
+  /* 5. The fallback is used only when the primary cannot be resolved. */
+  assert("a resolvable primary IGNORES the fallback", thid(Platform.Function.ContentImageByKey(KEY, KEY2)), "IMG-1133955");
+  assert("a missing primary RETURNS the fallback image", thid(Platform.Function.ContentImageByKey(MISSING, KEY2)), "IMG-1201143");
+
+  /* 6. fallbackKey accepts a literal and a variable. */
+  assert("fallbackKey as a literal is accepted", thid(Platform.Function.ContentImageByKey(MISSING, "sfdcmarketingcloud-518005426")), "IMG-1133955");
+  var varFallback = KEY;
+  assert("fallbackKey as a VARIABLE is accepted", thid(Platform.Function.ContentImageByKey(MISSING, varFallback)), "IMG-1133955");
+
+  /* 7. The key must reference an existing IMAGE asset. */
+  assertThrows("arity 1 with a non-existent key throws", function () {
+      return Platform.Function.ContentImageByKey(MISSING);
+  });
+  assertThrows("the key of a non-image asset (an HTML block) throws", function () {
+      return Platform.Function.ContentImageByKey("ssjs-guide-test-block");
+  });
+
+  /* 8. A missing fallback does not rescue a missing primary. */
+  assertThrows("both primary and fallback missing throws", function () {
+      return Platform.Function.ContentImageByKey(MISSING, "no-such-fallback-key-xyz");
+  });
+
+  /* 9. A null fallbackKey is tolerated while the primary resolves, and only
+   *    matters once the primary does not. */
+  assert("a null fallbackKey is tolerated when the primary resolves", thid(Platform.Function.ContentImageByKey(KEY, null)), "IMG-1133955");
+  assertThrows("a null fallbackKey cannot rescue a missing primary", function () {
+      return Platform.Function.ContentImageByKey(MISSING, null);
+  });
+
+  /* 10. The identifier must be the external KEY, not the numeric asset id —
+   *     the mirror image of ContentImageByID rejecting the key. */
+  assertThrows("the numeric asset id as a NUMBER is not accepted by the ByKey form", function () {
+      return Platform.Function.ContentImageByKey(1133955);
+  });
+  assertThrows("the numeric asset id as a STRING is not accepted by the ByKey form", function () {
+      return Platform.Function.ContentImageByKey("1133955");
+  });
+
+  /* 11. Off-signature arities throw the overloaded security-descriptor error. */
+  assertThrows("arity 0 throws", function () {
+      return Platform.Function.ContentImageByKey();
+  });
+  assertThrows("arity 3 throws", function () {
+      return Platform.Function.ContentImageByKey(KEY, KEY2, "extra");
+  });
+  </script>
+
+return-value: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Return value — "A string containing an `img` tag (including
+   * typical attributes such as `src`, `alt`, and `title` as provided by the
+   * platform)."
+   *
+   * Proves:
+   *   1. The return type is a STRING (return_type: string), and a non-empty
+   *      one.
+   *   2. The string IS an img element: it starts with "<img " and ends with
+   *      ">".
+   *   3. It carries the documented typical attributes — src=, alt= and title=
+   *      are all present.
+   *   4. The `src` is a real platform-hosted image URL (https://), not a
+   *      relative path or a placeholder.
+   *   5. The tag identifies the requested asset: it contains thid="<id>" for
+   *      the asset the key names, which is how the other chapters' short
+   *      assertions distinguish one image from another.
+   *   6. The value is RETURNED, not emitted: the call alone puts nothing on
+   *      the page; the content only appears when the result is passed to
+   *      Write(). A probe line delimits the raw Write() output.
+   *   7. The sibling Platform.Function.ContentImageByID returns the IDENTICAL
+   *      tag for the same asset, addressed by its numeric id.
+   *   8. There is no bare-name Core form: typeof ContentImageByKey is
+   *      "undefined" even after Platform.Load("core", "1.1.5"), and invoking
+   *      the bare name throws "Object expected: ContentImageByKey".
+   *
+   * SCOPE: CloudPage only. Whether the generated src URL renders in an email
+   * client, and the tag's behaviour inside an email send, were not exercised.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS, except the single
+   * WRITE-PROBE line between the assertions, which IS the raw Write() output
+   * being proven in point 6.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function has(tag, needle) {
+      return String(tag).indexOf(needle) > -1 ? "true" : "false";
+  }
+
+  var KEY = "sfdcmarketingcloud-518005426";
+
+  /* 1. It returns a non-empty string. */
+  var tag = Platform.Function.ContentImageByKey(KEY);
+  assert("the return value is a string", String(typeof tag), "string");
+  assert("the returned string is non-empty", tag.length > 0 ? "true" : "false", "true");
+
+  /* 2. The string is an img element. */
+  assert("the returned string starts with an img tag", tag.substring(0, 5), "<img ");
+  assert("the returned string ends with the tag close", tag.substring(tag.length - 1), ">");
+
+  /* 3. The documented typical attributes are present. */
+  assert("the tag carries a src attribute", has(tag, "src="), "true");
+  assert("the tag carries an alt attribute", has(tag, "alt="), "true");
+  assert("the tag carries a title attribute", has(tag, "title="), "true");
+
+  /* 4. The src points at a platform-hosted https URL. */
+  assert("the src is an https platform URL", has(tag, 'src="https://'), "true");
+
+  /* 5. The tag identifies the asset the key names. */
+  assert("the tag names the keyed asset", has(tag, 'thid="1133955"'), "true");
+
+  /* 6. The value is returned, not emitted. */
+  Platform.Response.Write("WRITE-PROBE-START ");
+  Write(tag);
+  Platform.Response.Write(" WRITE-PROBE-END\n");
+  assert("typeof the bare-name Write is function after Platform.Load", String(typeof Write), "function");
+  var returned = Platform.Function.ContentImageByKey(KEY);
+  assert("the call returns the tag rather than emitting it", has(returned, 'thid="1133955"'), "true");
+
+  /* 7. The sibling ContentImageByID returns the identical tag for the same asset. */
+  assert("typeof Platform.Function.ContentImageByID is clrmethodinfo", String(typeof Platform.Function.ContentImageByID), "clrmethodinfo");
+  var byId = Platform.Function.ContentImageByID(1133955);
+  assert("ContentImageByID returns the tag for the same asset", has(byId, 'thid="1133955"'), "true");
+  assert("both forms return the identical tag", byId === tag ? "true" : "false", "true");
+
+  /* 8. No bare-name Core form exists. */
+  assert("there is no bare-name ContentImageByKey global", String(typeof ContentImageByKey), "undefined");
+  assertThrows("invoking the bare name throws Object expected", function () {
+      return ContentImageByKey(KEY);
+  });
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples —
+   *   var hero = Platform.Function.ContentImageByKey("hero-2026-campaign");
+   *   Write(hero);
+   * and
+   *   var thumb = Platform.Function.ContentImageByKey("product-thumb", "product-thumb-default");
+   *   Write(thumb);
+   *
+   * The page's example keys are placeholders, so this script runs the same two
+   * SHAPES against the QA business unit's real fixture images:
+   *   sfdcmarketingcloud-518005426  (stands in for "hero-2026-campaign" /
+   *                                  "product-thumb")
+   *   copado-logo.png-518005426     (stands in for "product-thumb-default")
+   *
+   * Proves:
+   *   1. Example 1's shape works verbatim: the 1-argument call assigns a
+   *      string to the variable and that string is the asset's img tag.
+   *   2. The bare-name Write() global used by both examples is available
+   *      after Platform.Load("core", "1.1.5") and emits its argument
+   *      unchanged.
+   *   3. Example 2's shape works: the 2-argument call with a fallback key is
+   *      accepted and assigns the primary image's tag when the primary
+   *      resolves.
+   *   4. Example 2's stated PURPOSE holds — when the primary cannot be
+   *      resolved the SECOND key is what comes back, which is the only
+   *      observable difference between the two example shapes.
+   *   5. Using the page's literal placeholder keys ("hero-2026-campaign",
+   *      "product-thumb" / "product-thumb-default" — none of which exist on
+   *      this business unit) throws, confirming they are placeholders and
+   *      that both keys must reference real image assets.
+   *
+   * SCOPE: CloudPage only. Write() in an email-send context was not
+   * exercised.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS, except the two WRITE-PROBE
+   * lines between the assertions, which ARE the raw Write() output being
+   * proven in point 2.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function thid(tag) {
+      return String(tag).indexOf('thid="1133955"') > -1 ? "IMG-1133955"
+           : String(tag).indexOf('thid="1201143"') > -1 ? "IMG-1201143"
+           : "OTHER";
+  }
+
+  /* 1. Example 1 — the single-argument form. */
+  var hero = Platform.Function.ContentImageByKey("sfdcmarketingcloud-518005426");
+  assert("example 1: the variable receives a string", String(typeof hero), "string");
+  assert("example 1: the variable holds that image's tag", thid(hero), "IMG-1133955");
+
+  /* 2. The bare-name Write() global from the examples is available and faithful. */
+  assert("typeof the bare-name Write is function after Platform.Load", String(typeof Write), "function");
+  Platform.Response.Write("WRITE-PROBE-1-START ");
+  Write(hero.substring(0, 5));
+  Platform.Response.Write(" WRITE-PROBE-1-END\n");
+
+  /* 3. Example 2 — the two-argument form with a fallback key. */
+  var thumb = Platform.Function.ContentImageByKey("sfdcmarketingcloud-518005426", "copado-logo.png-518005426");
+  assert("example 2: the two-argument form returns a string", String(typeof thumb), "string");
+  assert("example 2: the resolvable primary wins over the fallback", thid(thumb), "IMG-1133955");
+  Platform.Response.Write("WRITE-PROBE-2-START ");
+  Write(thumb.substring(0, 5));
+  Platform.Response.Write(" WRITE-PROBE-2-END\n");
+
+  /* 4. Example 2's purpose — the fallback replaces an unresolvable primary. */
+  assert("example 2: an unresolvable primary yields the FALLBACK image", thid(Platform.Function.ContentImageByKey("no-such-image-key-xyz", "copado-logo.png-518005426")), "IMG-1201143");
+
+  /* 5. The page's literal placeholder keys do not exist. */
+  assertThrows("the page's placeholder key hero-2026-campaign does not resolve", function () {
+      return Platform.Function.ContentImageByKey("hero-2026-campaign");
+  });
+  assertThrows("the page's placeholder pair product-thumb / product-thumb-default does not resolve", function () {
+      return Platform.Function.ContentImageByKey("product-thumb", "product-thumb-default");
+  });
+  </script>
