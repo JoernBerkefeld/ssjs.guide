@@ -8,6 +8,7 @@ verification: verified
 deprecated: true
 requires_core_load: true
 differs_from_docs: true
+test_scripts: complete
 type_mapping:
   ssjs: "Portfolio"
   soap: "Portfolio"
@@ -64,6 +65,8 @@ Platform.Load("core", "1.1.5");
 var portObj = Portfolio.Init("myPortfolioCK");
 ```
 
+{% include test-script.html bundle="core-library--portfolio" chapter="init" %}
+
 ---
 
 ### Portfolio.Add {#add}
@@ -90,6 +93,8 @@ Portfolio.Add(properties)
 
 {% include differs-from-docs.html note="The docs say failures throw — they do NOT. Calling `Add()` with no argument returns the plain string `\"Error\"` instead of throwing, so always compare the return value against `\"OK\"` rather than relying on `try`/`catch`." %}
 
+{% include test-script.html bundle="core-library--portfolio" chapter="add-returns-error" label="Show test script — Add returns Error instead of throwing" %}
+
 {% include callout.html type="info" content="Runtime-verified: a payload of `DisplayName` + `CustomerKey` + `CategoryID` + `FileName` + `FileLocation` creates the item and returns `\"OK\"`. `CategoryID` must reference an existing media / portfolio folder, and `FileLocation` must be a reachable URL whose file type matches the `FileName` extension — a mismatched extension makes the call return `\"Error\"`. A surplus second argument is accepted and ignored, and re-adding the same `CustomerKey` returns `\"OK\"` without creating a duplicate." %}
 
 #### Examples
@@ -105,6 +110,8 @@ var newPortfolio = {
 };
 var status = Portfolio.Add(newPortfolio);
 ```
+
+{% include test-script.html bundle="core-library--portfolio" chapter="add" %}
 
 ---
 
@@ -132,6 +139,8 @@ Portfolio.Retrieve([filter])
 
 {% include differs-from-docs.html note="The returned collection is array-**like** but not a real JavaScript array: `instanceof Array` is `false` even though `.length`, `.push` and `.slice` are present and index access works. Avoid `instanceof` checks and iterate with a classic `for` loop over `.length`. The `filter` argument is also optional in practice — calling `Retrieve()` with no argument returns every item — but passing a non-object (for example a string) throws `Error Retrieving Portfolios`." %}
 
+{% include test-script.html bundle="core-library--portfolio" chapter="retrieve-array-like" label="Show test script — Retrieve is array-like, filter optional" %}
+
 {% include callout.html type="info" content="A filter that matches nothing yields a zero-length collection rather than `null`, so test `.length` instead of truthiness. Each item is a SOAP `Portfolio` object exposing `Source`, `CategoryID`, `FileName`, `DisplayName`, `Description`, `FileSizeKB`, `FileURL`, `ThumbURL`, `Client`, `CreatedDate`, `ModifiedDate`, `ID`, `ObjectID`, `CustomerKey` and the matching `*Specified` booleans." %}
 
 #### Examples
@@ -144,6 +153,8 @@ var portObjArr = Portfolio.Retrieve({
     Value: "PortfolioObjectKey"
 });
 ```
+
+{% include test-script.html bundle="core-library--portfolio" chapter="retrieve" %}
 
 ---
 
@@ -171,6 +182,8 @@ Updates the initialized portfolio item with the given properties.
 
 {% include differs-from-docs.html note="**This method does not work at runtime.** The docs describe a working update, but no invocation shape was found that mutates the stored record — every attempt either returned the string `\"Error\"` or threw `Error Updating Portfolio`, while `Init`, `Add`, `Retrieve` and `Remove` all succeed on the very same item. Attempts covered instances from `Init(CustomerKey)` and `Init(ObjectID)`, single-field payloads (`{DisplayName}`, `{Description}`), payloads repeating the identifying fields (`{CustomerKey, DisplayName, CategoryID}`), payloads carrying the `ObjectID`, the full `Add`-shaped payload including `FileName` + `FileLocation`, an array-wrapped payload, and a no-op update writing the current `DisplayName` back onto a pre-existing (non-probe) item. There is no static `Portfolio.Update` either — that identifier is `undefined`." %}
 
+{% include test-script.html bundle="core-library--portfolio" chapter="instance-update-nonfunctional" label="Show test script — Update has no working invocation" %}
+
 {% include callout.html type="warning" content="To change a portfolio item, [`Remove`](#instance-remove) it and [`Add`](#add) it again, or use the Content Builder Asset REST endpoints. See [Known Bugs](/engine-limitations/known-bugs/#portfolioinstance-update-no-working-invocation)." %}
 
 #### Examples
@@ -181,6 +194,8 @@ var portObj = Portfolio.Init("myPortfolioCK");
 // returns "Error" — see the note above
 var status = portObj.Update({ DisplayName: "Updated SSJS Image" });
 ```
+
+{% include test-script.html bundle="core-library--portfolio" chapter="instance-update" %}
 
 ---
 
@@ -200,7 +215,9 @@ Removes the initialized portfolio item.
 
 `"OK"` on success. On failure the Core library returns the string `"Error"` (it does **not** throw).
 
-{% include differs-from-docs.html note="The return value is not a reliable success signal. Deleting an existing item does return `\"OK\"`, but so does calling `Remove()` again on the already-deleted item, or on an instance built from a key that never existed — the docs' `\"OK\"`-or-throw contract does not hold. Confirm deletion with a follow-up [`Retrieve`](#retrieve) rather than trusting the return value. A surplus argument is accepted and ignored." %}
+{% include differs-from-docs.html note="The return value is not a reliable success signal. Deleting an existing item does return `\"OK\"`, and so does calling `Remove()` again on the already-deleted item — the docs' `\"OK\"`-or-throw contract does not hold. An instance built from a key that never existed returns the plain string `\"Error\"` (it does **not** throw). Confirm deletion with a follow-up [`Retrieve`](#retrieve) rather than trusting the return value. A surplus argument is accepted and ignored." %}
+
+{% include test-script.html bundle="core-library--portfolio" chapter="instance-remove-ok-unreliable" label="Show test script — Remove OK is unreliable" %}
 
 #### Examples
 
@@ -209,3 +226,5 @@ Platform.Load("core", "1.1.5");
 var portObj = Portfolio.Init("myPortfolioCK");
 var status = portObj.Remove();
 ```
+
+{% include test-script.html bundle="core-library--portfolio" chapter="instance-remove" %}

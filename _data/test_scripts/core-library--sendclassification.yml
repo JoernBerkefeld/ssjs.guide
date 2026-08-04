@@ -1,0 +1,364 @@
+# Test scripts for /core-library/sendclassification/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and the documented deviation from the official Salesforce docs.
+#
+# FIXTURES: write chapters create a SendClassification under a unique
+# `ssjs-guide-ts-sc-*` external key, prove the effect, and Remove it again.
+# Each script begins with an orphan-cleanup Remove so a previously aborted
+# run cannot contaminate the evidence. Profile keys used are the owned BU
+# fixtures `ssjs-senderprofile` + `ssjs-deliveryprofile` (same keys the page
+# / ssjs-data cite). Fresh SenderProfile.Add fixtures are NOT SC-eligible
+# unless the FromAddress is a BU-verified sender — do not delete the shared
+# profile fixtures. No non-fixture SendClassification is ever targeted.
+#
+# NON-ASSERTABLE:
+#   - Creating a throwaway SenderProfile that SendClassification.Add will
+#     accept (requires a BU-valid FromAddress / SAP domain). Scripts reuse
+#     the owned `ssjs-senderprofile` key instead.
+#   - GUI / SOAP send-time enforcement of the classification pairing beyond
+#     Core Add/Update accepting resolvable profile keys (CloudPage GET only).
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# NORMALIZATION RULE: assert() compares with a plain === and does NOT coerce.
+# Engine-returned values are normalized at the call site with "" + value —
+# never with String(value), which yields a CLR string that fails === and
+# aborts the page when a string method is called on it.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage GET on the QA business unit. Re-run them before changing any
+# claim on the page.
+
+init: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: SendClassification.Init(key)
+   *
+   * CloudPage GET context. Proves:
+   *   1. SendClassification requires the Core load and exposes statics Init,
+   *      Add, and Retrieve; Update/Remove are instance-only.
+   *   2. Init(key) returns a SendClassificationInstance whose members are
+   *      Update and Remove (both typeof "function").
+   *   3. Init binds a key; it does not fetch readable fields (CustomerKey /
+   *      Name / Description undefined on the stub).
+   *   4. A nonsense key still returns an indistinguishable stub.
+   *   5. The exact page example shape runs (Init returns an object).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW"; }
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  assert("typeof SendClassification is object", typeOf(function () { return typeof SendClassification; }), "object");
+  assert("typeof SendClassification.Init is function", typeOf(function () { return typeof SendClassification.Init; }), "function");
+  assert("typeof SendClassification.Add is function", typeOf(function () { return typeof SendClassification.Add; }), "function");
+  assert("typeof SendClassification.Retrieve is function", typeOf(function () { return typeof SendClassification.Retrieve; }), "function");
+  assert("SendClassification.Update is not a static", typeOf(function () { return typeof SendClassification.Update; }), "undefined");
+  assert("SendClassification.Remove is not a static", typeOf(function () { return typeof SendClassification.Remove; }), "undefined");
+
+  var sc = SendClassification.Init("ssjs-guide-ts-sc-init");
+  assert("typeof SendClassification.Init(key) is object", typeof sc, "object");
+  assert("typeof instance.Update is function", typeof sc.Update, "function");
+  assert("typeof instance.Remove is function", typeof sc.Remove, "function");
+  assert("instance has no Add", typeof sc.Add, "undefined");
+  assert("instance has no Retrieve", typeof sc.Retrieve, "undefined");
+  assert("instance exposes exactly Remove + Update", "" + Stringify(sc), '{"Remove":"function","Update":"function"}');
+  assert("instance.CustomerKey is undefined (Init does not fetch)", typeof sc.CustomerKey, "undefined");
+  assert("instance.Name is undefined (Init does not fetch)", typeof sc.Name, "undefined");
+  assert("instance.Description is undefined (Init does not fetch)", typeof sc.Description, "undefined");
+
+  var bogus = SendClassification.Init("ssjs-guide-no-such-sc-zzz");
+  assert("Init(nonsense key) still returns an object", typeof bogus, "object");
+  assert("Init(nonsense key) stub matches Init(fixture key)", ("" + Stringify(bogus)) === ("" + Stringify(sc)) ? "true" : "false", "true");
+  assert("page example: Init('mySendClassification') returns an instance", invocationResult(function () { return SendClassification.Init("mySendClassification"); }), "returned");
+  </script>
+
+add: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: SendClassification.Add(properties)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Add is a function taking one properties object.
+   *   2. Add with CustomerKey / Name / Description / SenderProfileKey /
+   *      DeliveryProfileKey (resolvable owned keys) does not throw.
+   *   3. DEVIATION "DEV": return is a CLR object, NOT the string "OK"
+   *      (docs imply "OK"). typeof is "clr"; it stringifies to
+   *      ExactTarget.Integration.WSDL.SenderProfile.
+   *   4. DEVIATION "DEV": for..in yields no keys; reading a property throws
+   *      "Use of Common Language Runtime (CLR) is not allowed".
+   *   5. Workaround: non-throwing return + Retrieve immediately after Add
+   *      returns the new record.
+   *   6. Negatives: Add() / Add({}) / unresolvable profile key / duplicate
+   *      CustomerKey throw.
+   *
+   * FIXTURE: ssjs-guide-ts-sc-add + owned ssjs-senderprofile /
+   * ssjs-deliveryprofile. EXPECTED OUTPUT: every line PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function threwFragment(fn, fragment) {
+      try { fn(); return "did NOT throw"; } catch (ex) { return ("" + ex.message).indexOf(fragment) >= 0 ? "matched" : ("" + ex.message); }
+  }
+
+  var SP_KEY = "ssjs-senderprofile";
+  var DP_KEY = "ssjs-deliveryprofile";
+  var SC_KEY = "ssjs-guide-ts-sc-add";
+
+  SendClassification.Init(SC_KEY).Remove();
+  SendClassification.Init("ssjs-guide-ts-sc-add-bad").Remove();
+
+  assert("typeof SendClassification.Add is function", typeof SendClassification.Add, "function");
+
+  var newSC = {
+      CustomerKey: SC_KEY,
+      Name: "SSJS Guide TS SC Add",
+      Description: "Test SSJS description",
+      SenderProfileKey: SP_KEY,
+      DeliveryProfileKey: DP_KEY
+  };
+  var result = null;
+  assert("Add(properties) does not throw", invocationResult(function () { result = SendClassification.Add(newSC); }), "returned");
+
+  assert("DEV typeof Add() result is clr (docs: string \"OK\")", typeof result, "clr");
+  assert("DEV Add() result is not the string OK (docs: \"OK\")", ("" + result) === "OK" ? "true" : "false", "false");
+  assert("DEV Add() result stringifies to ExactTarget.Integration.WSDL.SenderProfile (docs: \"OK\")", "" + result, "ExactTarget.Integration.WSDL.SenderProfile");
+  assert("DEV Stringify(Add() result) is the .NET type name (docs: \"OK\")", "" + Stringify(result), '"ExactTarget.Integration.WSDL.SenderProfile"');
+
+  var enumCount = 0;
+  for (var k in result) { enumCount++; }
+  assert("DEV for..in on Add() result yields no keys (docs imply readable)", "" + enumCount, "0");
+  assert("DEV reading result.CustomerKey throws (docs imply readable)", invocationResult(function () { return result.CustomerKey; }), "threw");
+  assert("DEV reading result.CustomerKey reports the CLR restriction", threwFragment(function () { return result.CustomerKey; }, "Use of Common Language Runtime (CLR) is not allowed"), "matched");
+  assert("DEV reading result.Name throws (docs imply readable)", invocationResult(function () { return result.Name; }), "threw");
+
+  var created = SendClassification.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: SC_KEY });
+  assert("workaround: Retrieve after Add returns the new record", (created && created.length === 1) ? "true" : "false", "true");
+  assert("workaround: retrieved CustomerKey matches", "" + created[0].CustomerKey, SC_KEY);
+
+  assert("Add() with no argument throws", invocationResult(function () { return SendClassification.Add(); }), "threw");
+  assert("Add({}) with an empty object throws", invocationResult(function () { return SendClassification.Add({}); }), "threw");
+  assert("Add with unresolvable profile keys throws", invocationResult(function () {
+      return SendClassification.Add({
+          CustomerKey: "ssjs-guide-ts-sc-add-bad",
+          Name: "bad",
+          Description: "bad",
+          SenderProfileKey: "ssjs-guide-no-such-sp-zzz",
+          DeliveryProfileKey: "ssjs-guide-no-such-dp-zzz"
+      });
+  }), "threw");
+  assert("Add() re-using an existing CustomerKey throws", invocationResult(function () { return SendClassification.Add(newSC); }), "threw");
+
+  assert("fixture SC removed", "" + SendClassification.Init(SC_KEY).Remove(), "OK");
+  assert("SC orphan count 0", "" + SendClassification.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: SC_KEY }).length, "0");
+  </script>
+
+retrieve: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: SendClassification.Retrieve(filter)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Retrieve is a function taking one PascalCase WSProxy-style filter.
+   *   2. A matched filter returns an array with length 1 and readable
+   *      CustomerKey / Name.
+   *   3. An empty / nonsense filter returns an empty array (length 0).
+   *   4. The page example shape (Property CustomerKey equals) works.
+   *
+   * FIXTURE: ssjs-guide-ts-sc-ret + owned profile keys.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var SP_KEY = "ssjs-senderprofile";
+  var DP_KEY = "ssjs-deliveryprofile";
+  var SC_KEY = "ssjs-guide-ts-sc-ret";
+
+  SendClassification.Init(SC_KEY).Remove();
+
+  SendClassification.Add({
+      CustomerKey: SC_KEY,
+      Name: "SSJS Guide TS SC Ret",
+      Description: "retrieve fixture",
+      SenderProfileKey: SP_KEY,
+      DeliveryProfileKey: DP_KEY
+  });
+
+  assert("typeof SendClassification.Retrieve is function", typeof SendClassification.Retrieve, "function");
+
+  var results = SendClassification.Retrieve({
+      Property: "CustomerKey",
+      SimpleOperator: "equals",
+      Value: SC_KEY
+  });
+  assert("matched Retrieve reports as object", typeof results, "object");
+  assert("matched Retrieve has length", typeof results.length, "number");
+  assert("matched Retrieve length is 1", "" + results.length, "1");
+  assert("matched row CustomerKey", "" + results[0].CustomerKey, SC_KEY);
+  assert("matched row Name", "" + results[0].Name, "SSJS Guide TS SC Ret");
+
+  var empty = SendClassification.Retrieve({
+      Property: "CustomerKey",
+      SimpleOperator: "equals",
+      Value: "ssjs-guide-no-such-sc-zzz"
+  });
+  assert("empty Retrieve length is 0", "" + empty.length, "0");
+
+  assert("fixture SC removed", "" + SendClassification.Init(SC_KEY).Remove(), "OK");
+  assert("SC orphan count 0", "" + SendClassification.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: SC_KEY }).length, "0");
+  </script>
+
+instance-update: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <SendClassificationInstance>.Update(properties)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Update is an instance method (typeof "function").
+   *   2. Update with Name + SenderProfileKey + DeliveryProfileKey returns
+   *      "OK" (typeof string) and Description change persists via Retrieve.
+   *   3. Update() with no arguments returns "Error" (not a throw).
+   *   4. Update with unresolvable profile keys returns "Error" (not a throw).
+   *   5. Both profile keys are required for success (page claim).
+   *
+   * FIXTURE: ssjs-guide-ts-sc-upd + owned profile keys.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  var SP_KEY = "ssjs-senderprofile";
+  var DP_KEY = "ssjs-deliveryprofile";
+  var SC_KEY = "ssjs-guide-ts-sc-upd";
+
+  SendClassification.Init(SC_KEY).Remove();
+
+  SendClassification.Add({
+      CustomerKey: SC_KEY,
+      Name: "SSJS Guide TS SC Upd",
+      Description: "before update",
+      SenderProfileKey: SP_KEY,
+      DeliveryProfileKey: DP_KEY
+  });
+
+  var sc = SendClassification.Init(SC_KEY);
+  assert("typeof instance.Update is function", typeof sc.Update, "function");
+
+  var status = sc.Update({
+      Name: "Updated Send Classification",
+      Description: "after update",
+      SenderProfileKey: SP_KEY,
+      DeliveryProfileKey: DP_KEY
+  });
+  assert("Update with both profile keys returns \"OK\"", "" + status, "OK");
+  assert("Update returns a string", typeof status, "string");
+
+  var after = SendClassification.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: SC_KEY });
+  assert("Retrieve after Update finds the record", (after && after.length === 1) ? "true" : "false", "true");
+  assert("Description persisted after Update", "" + after[0].Description, "after update");
+  assert("Name persisted after Update", "" + after[0].Name, "Updated Send Classification");
+
+  assert("Update() with no arguments returns \"Error\"", "" + sc.Update(), "Error");
+  assert("Update() with no arguments does NOT throw", invocationResult(function () { return sc.Update(); }), "returned");
+  assert("Update with unresolvable profile keys returns \"Error\"", "" + sc.Update({
+      Name: "x",
+      SenderProfileKey: "ssjs-guide-no-such-sp-zzz",
+      DeliveryProfileKey: "ssjs-guide-no-such-dp-zzz"
+  }), "Error");
+  assert("Update with unresolvable keys does NOT throw", invocationResult(function () {
+      return sc.Update({
+          Name: "x",
+          SenderProfileKey: "ssjs-guide-no-such-sp-zzz",
+          DeliveryProfileKey: "ssjs-guide-no-such-dp-zzz"
+      });
+  }), "returned");
+
+  assert("fixture SC removed", "" + SendClassification.Init(SC_KEY).Remove(), "OK");
+  assert("SC orphan count 0", "" + SendClassification.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: SC_KEY }).length, "0");
+  </script>
+
+instance-remove: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <SendClassificationInstance>.Remove()
+   *
+   * CloudPage GET context. Proves:
+   *   1. Remove is an instance method (typeof "function") taking no args.
+   *   2. Remove() returns "OK" (typeof string) on success.
+   *   3. Follow-up Retrieve returns an empty array (hard delete, not soft).
+   *   4. Remove on a nonexistent init'd key returns "Error" (not a throw).
+   *
+   * FIXTURE: ssjs-guide-ts-sc-rm + owned profile keys.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  var SP_KEY = "ssjs-senderprofile";
+  var DP_KEY = "ssjs-deliveryprofile";
+  var SC_KEY = "ssjs-guide-ts-sc-rm";
+
+  SendClassification.Init(SC_KEY).Remove();
+
+  SendClassification.Add({
+      CustomerKey: SC_KEY,
+      Name: "SSJS Guide TS SC Rm",
+      Description: "about to be removed",
+      SenderProfileKey: SP_KEY,
+      DeliveryProfileKey: DP_KEY
+  });
+
+  var sc = SendClassification.Init(SC_KEY);
+  assert("typeof instance.Remove is function", typeof sc.Remove, "function");
+  assert("control: fixture is Retrievable before Remove", "" + SendClassification.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: SC_KEY }).length, "1");
+
+  var status = sc.Remove();
+  assert("Remove() returns \"OK\"", "" + status, "OK");
+  assert("Remove returns a string", typeof status, "string");
+  assert("Retrieve after Remove is empty", "" + SendClassification.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: SC_KEY }).length, "0");
+  assert("second Remove on same key returns \"Error\"", "" + SendClassification.Init(SC_KEY).Remove(), "Error");
+
+  assert("Remove on nonexistent key returns \"Error\"", "" + SendClassification.Init("ssjs-guide-no-such-sc-zzz").Remove(), "Error");
+  assert("Remove on nonexistent key does NOT throw", invocationResult(function () { return SendClassification.Init("ssjs-guide-no-such-sc-zzz").Remove(); }), "returned");
+  </script>

@@ -1,0 +1,223 @@
+# Test scripts for /core-library/request/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes - positive,
+# negative, and documented distinctions from Platform.Request.
+#
+# FETCH WITH QUERY: deploy then GET
+#   …/hovt2pwtcq3?probeParam=hello&42=numeric
+# so GetQueryStringParameter present-key and numeric-name asserts are meaningful.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# NORMALIZATION RULE: assert() compares with a plain === and does NOT coerce.
+# Engine-returned values and caught .message values are normalized at the
+# call site with "" + value - never with String(value).
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage GET on the QA business unit. Re-run them before changing any
+# claim on the page.
+
+description: |
+  <script runat="server">
+  /*
+   * Chapter: Description - Core Request object (distinct from Platform.Request)
+   *
+   * Proves:
+   *   1. Before Platform.Load the bare Request is undefined; invoking a
+   *      method throws. typeof is resolved inside a thunk.
+   *   2. Platform.Request exists without Platform.Load (not an alias).
+   *   3. After Platform.Load("core", "1.1.5") Request is an object;
+   *      URL / GetQueryStringParameter / GetFormField are Jint functions;
+   *      Method / PagePath / ApplicationID / PackageID / ApplicationBaseURL
+   *      are CLR-backed members (typeof "clr").
+   *   4. Request.URL() returns a non-empty JS string containing the CloudPage
+   *      slug; Request.Method() normalizes to "GET" on a CloudPage GET.
+   *   5. PagePath / ApplicationID / PackageID / ApplicationBaseURL invoke
+   *      cleanly and return empty strings outside their populating context.
+   *   6. GetQueryStringParameter("probeParam") returns "hello" when the
+   *      request URL includes ?probeParam=hello; absent key returns null.
+   *   7. GetFormField returns null on a plain GET even when probeParam is
+   *      present in the query string (does not read GET query parameters).
+   *   8. DEV vs Platform.Request CLR getters: zero-arg and surplus-arg
+   *      calls on Core getters return null / ignore the extra arg rather
+   *      than throwing (Jint functions, not CLR arity enforcement).
+   *
+   * NON-ASSERTABLE:
+   *   - Non-empty PagePath / ApplicationID / PackageID / ApplicationBaseURL
+   *     (those contexts are not populated on this CloudPage GET).
+   *   - Populated POST form fields for GetFormField (GET-only probe).
+   *   - Exact full URL host beyond containing the published slug.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+
+  assert("before load typeof Request is undefined", typeOfThunk(function () { return typeof Request; }), "undefined");
+  assertThrows("before load Request.URL throws", function () { return Request.URL(); });
+  assert("Platform.Request exists without load", typeOfThunk(function () { return typeof Platform.Request; }), "clr");
+
+  Platform.Load("core", "1.1.5");
+  assert("after load typeof Request is object", typeOfThunk(function () { return typeof Request; }), "object");
+  assert("typeof Request.URL is function", typeOfThunk(function () { return typeof Request.URL; }), "function");
+  assert("typeof Request.PagePath is clr", typeOfThunk(function () { return typeof Request.PagePath; }), "clr");
+  assert("typeof Request.Method is clr", typeOfThunk(function () { return typeof Request.Method; }), "clr");
+  assert("typeof Request.ApplicationID is clr", typeOfThunk(function () { return typeof Request.ApplicationID; }), "clr");
+  assert("typeof Request.PackageID is clr", typeOfThunk(function () { return typeof Request.PackageID; }), "clr");
+  assert("typeof Request.ApplicationBaseURL is clr", typeOfThunk(function () { return typeof Request.ApplicationBaseURL; }), "clr");
+  assert("typeof Request.GetQueryStringParameter is function", typeOfThunk(function () { return typeof Request.GetQueryStringParameter; }), "function");
+  assert("typeof Request.GetFormField is function", typeOfThunk(function () { return typeof Request.GetFormField; }), "function");
+
+  var url = Request.URL();
+  assert("URL typeof is string", "" + (typeof url), "string");
+  assert("URL is non-empty", url && url.length > 0 ? "true" : "false", "true");
+  assert("URL contains published CloudPage slug", ("" + url).indexOf("hovt2pwtcq3") >= 0 ? "true" : "false", "true");
+
+  var method = Request.Method();
+  assert("Method return typeof is clr", "" + (typeof method), "clr");
+  assert("Method normalizes to GET on CloudPage GET", "" + method, "GET");
+
+  var pagePath = Request.PagePath();
+  assert("PagePath return typeof is clr", "" + (typeof pagePath), "clr");
+  assert("PagePath is empty outside populating context", "" + pagePath, "");
+
+  var appId = Request.ApplicationID();
+  assert("ApplicationID return typeof is clr", "" + (typeof appId), "clr");
+  assert("ApplicationID is empty outside populating context", "" + appId, "");
+
+  var packageId = Request.PackageID();
+  assert("PackageID return typeof is clr", "" + (typeof packageId), "clr");
+  assert("PackageID is empty outside populating context", "" + packageId, "");
+
+  var baseUrl = Request.ApplicationBaseURL();
+  assert("ApplicationBaseURL return typeof is clr", "" + (typeof baseUrl), "clr");
+  assert("ApplicationBaseURL is empty outside populating context", "" + baseUrl, "");
+
+  var present = Request.GetQueryStringParameter("probeParam");
+  assert("GetQueryStringParameter present key is hello", "" + present, "hello");
+  assert("GetQueryStringParameter present typeof is string", "" + (typeof present), "string");
+
+  var absentQs = Request.GetQueryStringParameter("absentProbeParam");
+  assert("GetQueryStringParameter absent key is strict null", absentQs === null ? "null" : "other", "null");
+  assert("GetQueryStringParameter absent is falsy", absentQs ? "truthy" : "falsy", "falsy");
+
+  var formPresent = Request.GetFormField("probeParam");
+  assert("GetFormField does not read GET query (null despite probeParam)", formPresent === null ? "null" : "other", "null");
+
+  var formAbsent = Request.GetFormField("absentFormField");
+  assert("GetFormField absent key is strict null", formAbsent === null ? "null" : "other", "null");
+
+  var zeroQs = Request.GetQueryStringParameter();
+  assert("DEV zero-arg GetQueryStringParameter returns null (CLR Platform.Request throws)", zeroQs === null ? "null" : "other", "null");
+  var surplusQs = Request.GetQueryStringParameter("probeParam", "extra");
+  assert("DEV surplus-arg GetQueryStringParameter ignores extra (returns hello)", "" + surplusQs, "hello");
+
+  var zeroForm = Request.GetFormField();
+  assert("DEV zero-arg GetFormField returns null (CLR Platform.Request throws)", zeroForm === null ? "null" : "other", "null");
+  var surplusForm = Request.GetFormField("absentFormField", "extra");
+  assert("DEV surplus-arg GetFormField ignores extra (absent still null)", surplusForm === null ? "null" : "other", "null");
+  </script>
+
+members: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Members - return shapes for every Request member
+   *
+   * Proves:
+   *   1. URL / GetQueryStringParameter / GetFormField are functions;
+   *      Method / PagePath / ApplicationID / PackageID / ApplicationBaseURL
+   *      are CLR members.
+   *   2. Zero-arg context methods return the documented CloudPage GET values
+   *      (URL with slug; Method GET; four context fields empty).
+   *   3. GetQueryStringParameter returns string for present / null for absent.
+   *   4. GetFormField returns null on GET even when the query has the key.
+   *   5. TYPE-ACCEPTANCE name (string): numeric name Accepted when the
+   *      query contains 42=numeric (same result as "42").
+   *
+   * NON-ASSERTABLE: POST-populated form fields; non-empty Application*
+   * / PagePath / PackageID values outside their contexts.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+
+  assert("members: Request.URL is function", typeOfThunk(function () { return typeof Request.URL; }), "function");
+  assert("members: Request.PagePath is clr", typeOfThunk(function () { return typeof Request.PagePath; }), "clr");
+  assert("members: Request.Method is clr", typeOfThunk(function () { return typeof Request.Method; }), "clr");
+  assert("members: Request.ApplicationID is clr", typeOfThunk(function () { return typeof Request.ApplicationID; }), "clr");
+  assert("members: Request.PackageID is clr", typeOfThunk(function () { return typeof Request.PackageID; }), "clr");
+  assert("members: Request.ApplicationBaseURL is clr", typeOfThunk(function () { return typeof Request.ApplicationBaseURL; }), "clr");
+  assert("members: Request.GetQueryStringParameter is function", typeOfThunk(function () { return typeof Request.GetQueryStringParameter; }), "function");
+  assert("members: Request.GetFormField is function", typeOfThunk(function () { return typeof Request.GetFormField; }), "function");
+
+  assert("members: URL returns string with slug", ("" + Request.URL()).indexOf("hovt2pwtcq3") >= 0 ? "true" : "false", "true");
+  assert("members: Method returns GET", "" + Request.Method(), "GET");
+  assert("members: PagePath returns empty string", "" + Request.PagePath(), "");
+  assert("members: ApplicationID returns empty string", "" + Request.ApplicationID(), "");
+  assert("members: PackageID returns empty string", "" + Request.PackageID(), "");
+  assert("members: ApplicationBaseURL returns empty string", "" + Request.ApplicationBaseURL(), "");
+
+  assert("members: GetQueryStringParameter(probeParam) is hello", "" + Request.GetQueryStringParameter("probeParam"), "hello");
+  assert("members: GetQueryStringParameter(absent) is null", Request.GetQueryStringParameter("absentProbeParam") === null ? "null" : "other", "null");
+
+  assert("members: GetFormField(probeParam) is null on GET", Request.GetFormField("probeParam") === null ? "null" : "other", "null");
+  assert("members: GetFormField(absent) is null", Request.GetFormField("absentFormField") === null ? "null" : "other", "null");
+
+  var fromNum = Request.GetQueryStringParameter(42);
+  var fromStr = Request.GetQueryStringParameter("42");
+  assert("TYPE-ACCEPTANCE numeric name GetQueryStringParameter(42)", "" + fromNum, "numeric");
+  assert("TYPE-ACCEPTANCE string name GetQueryStringParameter(\"42\")", "" + fromStr, "numeric");
+  assert("TYPE-ACCEPTANCE number and string name paths match", ("" + fromNum) === ("" + fromStr) ? "true" : "false", "true");
+  </script>
+
+example: |
+  <script runat="server">
+  /*
+   * Chapter: Example - Platform.Load then Request.URL / Request.Method
+   *
+   * Proves:
+   *   1. The documented example shape runs: after Platform.Load("core","1.1.5")
+   *      Request.URL() and Request.Method() return usable values.
+   *   2. Concatenating Method + URL (as in the example Write) yields a
+   *      string that starts with "GET " and contains the CloudPage slug.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  Platform.Load("core", "1.1.5");
+
+  var requestURL = Request.URL();
+  var requestMethod = Request.Method();
+  assert("example Method is GET", "" + requestMethod, "GET");
+  assert("example URL contains slug", ("" + requestURL).indexOf("hovt2pwtcq3") >= 0 ? "true" : "false", "true");
+
+  var line = requestMethod + " " + requestURL;
+  assert("example concat starts with GET space", line.indexOf("GET ") === 0 ? "true" : "false", "true");
+  assert("example concat contains slug", line.indexOf("hovt2pwtcq3") >= 0 ? "true" : "false", "true");
+  </script>

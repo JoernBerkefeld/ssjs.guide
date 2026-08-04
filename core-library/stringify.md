@@ -15,6 +15,7 @@ availability:
   triggered_send: true
 verification: verified
 differs_from_docs: false
+test_scripts: complete
 syntax: "Stringify(value)"
 return_type: string
 min_args: 1
@@ -27,6 +28,8 @@ max_args: 1
 |------|------|----------|-------------|
 | `value` | any | Yes | The object or value to serialize to JSON. |
 
+{% include test-script.html bundle="core-library--stringify" chapter="parameters" %}
+
 ## Description
 
 `Stringify()` is a global SSJS function that converts any JavaScript value to its JSON string representation. It is the SSJS equivalent of `JSON.stringify()`, which is not available in the SFMC SSJS engine.
@@ -37,6 +40,8 @@ max_args: 1
 
 Use `Stringify` when you want to store, log, or send JSON data.
 Use `String()` when you need to convert the CLR response content from `Script.Util.HttpRequest.send()` before parsing it with `ParseJSON`.
+
+{% include test-script.html bundle="core-library--stringify" chapter="description" %}
 
 ## Examples
 
@@ -109,6 +114,8 @@ req.postData = requestBody;
 var resp = req.send();
 ```
 
+{% include test-script.html bundle="core-library--stringify" chapter="examples" %}
+
 ## Common Mistakes
 
 **Using Stringify instead of String for HTTP responses:**
@@ -124,13 +131,19 @@ var body = String(resp.content);
 var data = Platform.Function.ParseJSON(body + "");
 ```
 
-**Circular reference objects:** `Stringify` may fail or produce incorrect output for objects with circular references. Flatten the data structure first.
+**Circular reference objects:** `Stringify` does not throw on a circular reference — the repeated node becomes `null`. Flatten the structure first if you need the full graph.
+
+Not every host object is opaque to `Stringify`: for example, rows from [`DateTime.TimeZone.Retrieve`](/core-library/datetime/#timezone-retrieve) serialize to JSON objects with `ID` and `Name`. Prefer `String()` specifically for CLR HTTP response content before `ParseJSON`.
+
+{% include test-script.html bundle="core-library--stringify" chapter="common-mistakes" %}
 
 ## Platform.Function variant
 
-`Platform.Function.Stringify()` is functionally identical to this global form but does **not** require `Platform.Load("core", "1.1.5")`. Prefer it when you do not already have a `Platform.Load` call in scope.
+`Platform.Function.Stringify()` produces the same JSON text for a given value and does **not** require `Platform.Load("core", "1.1.5")`. Prefer it when you do not already have a `Platform.Load` call in scope, or when you want stricter argument checking: the qualified form throws on zero or surplus arguments, while the bare-name form returns `"null"` for zero args and silently ignores an extra arg.
 
 See [Platform.Function.Stringify](/platform-functions/stringify/) for the qualified variant.
+
+{% include test-script.html bundle="core-library--stringify" chapter="platform-function-variant" %}
 
 ## See Also
 

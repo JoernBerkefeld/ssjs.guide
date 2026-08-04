@@ -1,0 +1,606 @@
+# Test scripts for /core-library/email/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and the documented deviation from the official Salesforce docs.
+#
+# FIXTURES: write chapters create their own classic email under a unique
+# `ssjs-guide-ts-email-*` external key, prove the effect, and remove it again.
+# Each script begins with an orphan-cleanup Remove / Retrieve re-count so a
+# previously aborted run cannot leave ghosts. No pre-existing email is ever
+# targeted for mutation.
+#
+# NON-ASSERTABLE / OUT OF SCOPE:
+#   - Real send delivery and inbox polling — not required by any chapter claim;
+#     classic Email CRUD/Validate/CheckContent are structural only. No send was
+#     performed by these scripts.
+#   - Exact ValidationMessages Message/Description text — tenant and content
+#     dependent; scripts assert shape (array of {Location,Message,Description})
+#     and that Fail yields length >= 1.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# NORMALIZATION RULE: assert() compares with a plain === and does NOT coerce.
+# Engine-returned values are normalized at the call site with "" + value —
+# never with String(value), which yields a CLR string that fails === and
+# aborts the page when a string method is called on it.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage GET on the QA business unit. Re-run them before changing any
+# claim on the page.
+
+init: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Email.Init(key)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Email requires the Core load and is then an object exposing the
+   *      documented statics Init, Add and Retrieve.
+   *   2. There is no static Update / Remove / Validate / CheckContent on the
+   *      Email namespace — those are instance methods only.
+   *   3. Init(key) returns an EmailInstance: an object whose members are the
+   *      four documented instance methods Update, Remove, Validate and
+   *      CheckContent, each typeof "function".
+   *   4. The instance carries NO readable email fields (CustomerKey, Name,
+   *      ID, Subject read back undefined) — Init binds a key, it does not
+   *      fetch the record. Read fields via Email.Retrieve (workaround).
+   *   5. The same stub is returned for a nonsense key, so Init alone never
+   *      confirms that a key resolves to a real email.
+   *   6. The exact example shape on the page (Init("myEmail")) runs.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW"; }
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  /* 1. Availability after the Core load. */
+  assert("typeof Email is object", typeOf(function () { return typeof Email; }), "object");
+  assert("typeof Email.Init is function", typeOf(function () { return typeof Email.Init; }), "function");
+  assert("typeof Email.Add is function", typeOf(function () { return typeof Email.Add; }), "function");
+  assert("typeof Email.Retrieve is function", typeOf(function () { return typeof Email.Retrieve; }), "function");
+
+  /* 2. Instance-only methods are not statics. */
+  assert("Email.Update is not a static", typeOf(function () { return typeof Email.Update; }), "undefined");
+  assert("Email.Remove is not a static", typeOf(function () { return typeof Email.Remove; }), "undefined");
+  assert("Email.Validate is not a static", typeOf(function () { return typeof Email.Validate; }), "undefined");
+  assert("Email.CheckContent is not a static", typeOf(function () { return typeof Email.CheckContent; }), "undefined");
+
+  /* 3. Shape of the returned EmailInstance. */
+  var myEmail = Email.Init("ssjs-guide-ts-email-init");
+  assert("typeof Email.Init(key) is object", typeof myEmail, "object");
+  assert("typeof instance.Update is function", typeof myEmail.Update, "function");
+  assert("typeof instance.Remove is function", typeof myEmail.Remove, "function");
+  assert("typeof instance.Validate is function", typeof myEmail.Validate, "function");
+  assert("typeof instance.CheckContent is function", typeof myEmail.CheckContent, "function");
+  assert("instance exposes exactly Remove+Update+CheckContent+Validate", "" + Stringify(myEmail), '{"Remove":"function","Update":"function","CheckContent":"function","Validate":"function"}');
+
+  /* 4. Init binds a key; it does not fetch the record. */
+  assert("instance.CustomerKey is undefined (Init does not fetch)", typeof myEmail.CustomerKey, "undefined");
+  assert("instance.Name is undefined (Init does not fetch)", typeof myEmail.Name, "undefined");
+  assert("instance.ID is undefined (Init does not fetch)", typeof myEmail.ID, "undefined");
+  assert("instance.Subject is undefined (Init does not fetch)", typeof myEmail.Subject, "undefined");
+
+  /* 5. A nonsense key yields an indistinguishable stub. */
+  var bogus = Email.Init("ssjs-guide-no-such-email-zzz");
+  assert("Init(nonsense key) still returns an object", typeof bogus, "object");
+  assert("Init(nonsense key) exposes Update", typeof bogus.Update, "function");
+  assert("Init(nonsense key) stub is indistinguishable from the other one", ("" + Stringify(bogus)) === ("" + Stringify(myEmail)) ? "true" : "false", "true");
+
+  /* 6. The exact example on the page. */
+  assert("page example: Init('myEmail') returns an instance", invocationResult(function () { return Email.Init("myEmail"); }), "returned");
+  </script>
+
+add: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Email.Add(properties)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Email.Add is a function taking one properties object.
+   *   2. Add(properties) with the page example fields (CustomerKey, Name,
+   *      HTMLBody, TextBody, Subject, EmailType, CharacterSet) creates a
+   *      retrievable classic email.
+   *   3. Unlike most Core Add methods, the return value is an EmailInstance
+   *      (object exposing Update/Remove/Validate/CheckContent), NOT the
+   *      string "OK" — matching the page Return value section.
+   *   4. The returned instance is usable immediately: Update on it returns
+   *      "OK".
+   *   5. Negative cases: Add() with no argument and Add({}) both throw.
+   *
+   * FIXTURE: creates ssjs-guide-ts-email-add and removes it again at the end.
+   * Cleanup is verified by re-counting Retrieve rows (ghost-record rule).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function countByKey(key) {
+      var rows = Email.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+
+  var KEY = "ssjs-guide-ts-email-add";
+
+  /* Orphan cleanup from a previously aborted run. */
+  Email.Init(KEY).Remove();
+  assert("precondition: no email under the probe key", "" + countByKey(KEY), "0");
+
+  /* 1. Shape of the documented member. */
+  assert("typeof Email.Add is function", typeof Email.Add, "function");
+
+  /* 2 + 3. Documented payload is accepted and returns an EmailInstance. */
+  var newMail = {
+      CustomerKey: KEY,
+      Name: "SSJS Guide TS Email Add",
+      HTMLBody: "<b>This is a test email</b>",
+      TextBody: "This is a test email",
+      Subject: "Test Email Subject",
+      EmailType: "HTML",
+      CharacterSet: "US-ASCII"
+  };
+  var myEmail = null;
+  assert("Add(properties) does not throw", invocationResult(function () { myEmail = Email.Add(newMail); }), "returned");
+  assert("typeof Add() result is object (page: EmailInstance, not \"OK\")", typeof myEmail, "object");
+  assert("Add() result is not the string OK", myEmail === "OK" ? "true" : "false", "false");
+  assert("returned instance exposes Update", typeof myEmail.Update, "function");
+  assert("returned instance exposes Remove", typeof myEmail.Remove, "function");
+  assert("returned instance exposes Validate", typeof myEmail.Validate, "function");
+  assert("returned instance exposes CheckContent", typeof myEmail.CheckContent, "function");
+  assert("returned instance has the Init shape", "" + Stringify(myEmail), '{"Remove":"function","Update":"function","CheckContent":"function","Validate":"function"}');
+  assert("the email exists after Add", "" + countByKey(KEY), "1");
+
+  /* 4. The returned instance is bound. */
+  assert("Update on the Add() instance returns \"OK\"", "" + myEmail.Update({ Subject: "Confirmed by test script" }), "OK");
+
+  /* 5. Negative cases. */
+  assert("Add() with no argument throws", invocationResult(function () { return Email.Add(); }), "threw");
+  assert("Add({}) with an empty object throws", invocationResult(function () { return Email.Add({}); }), "threw");
+
+  /* Fixture cleanup — re-count, never assume. */
+  assert("fixture cleanup removed the created email", "" + Email.Init(KEY).Remove(), "OK");
+  assert("cleanup re-count is 0", "" + countByKey(KEY), "0");
+  </script>
+
+retrieve: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Email.Retrieve(filter)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Retrieve is a function taking one PascalCase WSProxy-style filter.
+   *   2. On a match the result reports as [object Array], exposes .length and
+   *      .push, and Stringify serializes it as a JSON array.
+   *   3. instanceof Array is FALSE — the engine-wide host-array quirk; guard
+   *      with a truthy .length check (do NOT add a one-off Email callout).
+   *   4. On no match the SAME array-like shape is returned with .length 0
+   *      and Stringify "[]" — not null / undefined.
+   *   5. A matched row exposes readable CustomerKey, Name, ID and Subject.
+   *   6. The documented filter shape resolves by CustomerKey.
+   *
+   * FIXTURE: creates ssjs-guide-ts-email-retrieve and removes it at the end.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function countByKey(key) {
+      var rows = Email.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+
+  var KEY = "ssjs-guide-ts-email-retrieve";
+  Email.Init(KEY).Remove();
+  Email.Add({
+      CustomerKey: KEY,
+      Name: "SSJS Guide TS Email Retrieve",
+      HTMLBody: "<b>retrieve probe</b>",
+      TextBody: "retrieve probe",
+      Subject: "Retrieve Subject",
+      EmailType: "HTML",
+      CharacterSet: "US-ASCII"
+  });
+
+  /* 1. Availability. */
+  assert("typeof Email.Retrieve is function", typeof Email.Retrieve, "function");
+
+  /* 2 + 3 + 5 + 6. Matched collection shape and row fields. */
+  var rows = Email.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: KEY });
+  assert("typeof the matched result is object", typeof rows, "object");
+  assert("the matched result reports as [object Array]", Object.prototype.toString.call(rows), "[object Array]");
+  assert("the matched result exposes a numeric .length", typeof rows.length, "number");
+  assert("the matched result has exactly one row", "" + rows.length, "1");
+  assert("the matched result exposes .push", typeof rows.push, "function");
+  assert("instanceof Array is false (engine-wide host-array quirk)", rows instanceof Array ? "true" : "false", "false");
+  assert("matched row CustomerKey equals the filter value", "" + rows[0].CustomerKey, KEY);
+  assert("matched row Name is a string", typeof rows[0].Name, "string");
+  assert("matched row ID is a number", typeof rows[0].ID, "number");
+  assert("matched row Subject is a string", typeof rows[0].Subject, "string");
+
+  /* 4. Empty match shape. */
+  var empty = Email.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: "ssjs-guide-no-such-email-zzz" });
+  assert("empty result reports as [object Array]", Object.prototype.toString.call(empty), "[object Array]");
+  assert("empty result length is 0", "" + empty.length, "0");
+  assert("empty result Stringify is []", "" + Stringify(empty), "[]");
+  assert("workaround: guard with rows && rows.length before indexing", (rows && rows.length) ? "true" : "false", "true");
+
+  assert("fixture cleanup removed the created email", "" + Email.Init(KEY).Remove(), "OK");
+  assert("cleanup re-count is 0", "" + countByKey(KEY), "0");
+  </script>
+
+instance-update: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <EmailInstance>.Update(properties)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Update is an instance method (typeof "function") on Email.Init.
+   *   2. Update(properties) returns the string "OK" on success.
+   *   3. The page example shape Update({ Name, Subject }) succeeds.
+   *   4. The change persists: a repeated Update on the same key returns "OK".
+   *   5. Negative case: Update on a nonexistent key returns "Error" (does
+   *      not throw) — callers must test the return value.
+   *
+   * FIXTURE: creates ssjs-guide-ts-email-update and removes it at the end.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function countByKey(key) {
+      var rows = Email.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+
+  var KEY = "ssjs-guide-ts-email-update";
+  Email.Init(KEY).Remove();
+  Email.Add({
+      CustomerKey: KEY,
+      Name: "SSJS Guide TS Email Update",
+      HTMLBody: "<b>update probe</b>",
+      TextBody: "update probe",
+      Subject: "Update Subject",
+      EmailType: "HTML",
+      CharacterSet: "US-ASCII"
+  });
+
+  var myEmail = Email.Init(KEY);
+
+  /* 1. Shape. */
+  assert("typeof instance.Update is function", typeof myEmail.Update, "function");
+
+  /* 2 + 3. Documented return value with the page example payload. */
+  var status = myEmail.Update({ Name: "Updated Name", Subject: "Updated Email Subject" });
+  assert("page example: Update({Name,Subject}) returns \"OK\"", "" + status, "OK");
+  assert("Update returns a string", typeof status, "string");
+
+  /* 4. Instance stays bound. */
+  assert("a repeated Update on the same instance still returns \"OK\"", "" + myEmail.Update({ Subject: "second update" }), "OK");
+  assert("a freshly initialized instance for the same key also returns \"OK\"", "" + Email.Init(KEY).Update({ Subject: "third update" }), "OK");
+
+  /* 5. Negative case — nonexistent key returns Error, does not throw. */
+  assert("Update on a nonexistent key returns \"Error\"", "" + Email.Init("ssjs-guide-no-such-email-zzz").Update({ Name: "x" }), "Error");
+  assert("Update on a nonexistent key does NOT throw", invocationResult(function () { return Email.Init("ssjs-guide-no-such-email-zzz").Update({ Name: "x" }); }), "returned");
+
+  assert("fixture cleanup removed the created email", "" + Email.Init(KEY).Remove(), "OK");
+  assert("cleanup re-count is 0", "" + countByKey(KEY), "0");
+  </script>
+
+instance-remove: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <EmailInstance>.Remove()
+   *
+   * CloudPage GET context. Proves:
+   *   1. Remove is an instance method (typeof "function") and takes no args.
+   *   2. Remove() returns the string "OK" on success.
+   *   3. The deletion really happened: after Remove, Retrieve count is 0 and
+   *      a further Update on the same key returns "Error".
+   *   4. Negative case: Remove() on a nonexistent key returns "Error" rather
+   *      than throwing — which is why other scripts can call Remove as an
+   *      unconditional orphan-cleanup preamble.
+   *
+   * FIXTURE: creates ssjs-guide-ts-email-remove and deletes it as the assert.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function countByKey(key) {
+      var rows = Email.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+
+  var KEY = "ssjs-guide-ts-email-remove";
+  Email.Init(KEY).Remove();
+  Email.Add({
+      CustomerKey: KEY,
+      Name: "SSJS Guide TS Email Remove",
+      HTMLBody: "<b>remove probe</b>",
+      TextBody: "remove probe",
+      Subject: "Remove Subject",
+      EmailType: "HTML",
+      CharacterSet: "US-ASCII"
+  });
+
+  var myEmail = Email.Init(KEY);
+
+  /* 1. Shape. */
+  assert("typeof instance.Remove is function", typeof myEmail.Remove, "function");
+
+  /* Control: the fixture exists before Remove. */
+  assert("control: fixture count is 1 before Remove", "" + countByKey(KEY), "1");
+  assert("control: the fixture updates successfully before Remove", "" + myEmail.Update({ Subject: "about to be removed" }), "OK");
+
+  /* 2. Documented return value. */
+  var status = myEmail.Remove();
+  assert("page example: Remove() returns \"OK\"", "" + status, "OK");
+  assert("Remove returns a string", typeof status, "string");
+
+  /* 3. Deletion really happened (re-count). */
+  assert("after Remove the Retrieve count is 0", "" + countByKey(KEY), "0");
+  assert("after Remove a further Update returns \"Error\"", "" + Email.Init(KEY).Update({ Name: "x" }), "Error");
+  assert("after Remove a second Remove returns \"Error\"", "" + Email.Init(KEY).Remove(), "Error");
+
+  /* 4. Negative case. */
+  assert("Remove on a nonexistent key returns \"Error\"", "" + Email.Init("ssjs-guide-no-such-email-zzz").Remove(), "Error");
+  assert("Remove on a nonexistent key does NOT throw", invocationResult(function () { return Email.Init("ssjs-guide-no-such-email-zzz").Remove(); }), "returned");
+  </script>
+
+instance-validate: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <EmailInstance>.Validate()
+   *
+   * CloudPage GET context. Proves:
+   *   1. Validate is an instance method (typeof "function").
+   *   2. Validate() returns an object with a nested Task.
+   *   3. DEV: Task.ValidationStatus is a string (e.g. "Pass" / "Fail"), NOT
+   *      a boolean — official docs type it as boolean.
+   *   4. DEV: Task.ValidationMessages is NOT a single string. On Pass it is
+   *      null; on Fail it is an array of {Location, Message, Description}
+   *      objects — official docs type it as a string.
+   *   5. A clean fixture yields ValidationStatus "Pass" with Messages null.
+   *   6. A fixture with an unclosed AMPscript block yields "Fail" and a
+   *      non-empty ValidationMessages array whose first entry exposes
+   *      Location / Message / Description.
+   *   7. Init with a numeric ID throws (opaque "Error Validating Email");
+   *      initialize with the CustomerKey string to get the Task back.
+   *
+   * FIXTURES: ssjs-guide-ts-email-val-pass / ssjs-guide-ts-email-val-fail.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function threwFragment(fn, fragment) {
+      try { fn(); return "did NOT throw"; } catch (ex) {
+          var m = (typeof ex === "string") ? ("" + ex) : ("" + (ex && ex.message));
+          return m.indexOf(fragment) >= 0 ? "matched" : m;
+      }
+  }
+  function countByKey(key) {
+      var rows = Email.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+
+  var KEY_PASS = "ssjs-guide-ts-email-val-pass";
+  var KEY_FAIL = "ssjs-guide-ts-email-val-fail";
+  Email.Init(KEY_PASS).Remove();
+  Email.Init(KEY_FAIL).Remove();
+
+  Email.Add({
+      CustomerKey: KEY_PASS,
+      Name: "SSJS Guide TS Email Val Pass",
+      HTMLBody: "<b>validate pass probe</b>",
+      TextBody: "validate pass probe",
+      Subject: "Validate Pass Subject",
+      EmailType: "HTML",
+      CharacterSet: "US-ASCII"
+  });
+  Email.Add({
+      CustomerKey: KEY_FAIL,
+      Name: "SSJS Guide TS Email Val Fail",
+      HTMLBody: "<b>broken " + "%" + "%[</b>",
+      TextBody: "broken",
+      Subject: "Validate Fail Subject",
+      EmailType: "HTML",
+      CharacterSet: "US-ASCII"
+  });
+
+  var myEmail = Email.Init(KEY_PASS);
+
+  /* 1. Shape. */
+  assert("typeof instance.Validate is function", typeof myEmail.Validate, "function");
+
+  /* 2 + 3 + 4 + 5. Pass path. */
+  var pass = myEmail.Validate();
+  assert("Validate() returns an object", typeof pass, "object");
+  assert("Validate() result exposes Task", typeof pass.Task, "object");
+  assert("DEV typeof Task.ValidationStatus is string (docs: boolean)", typeof pass.Task.ValidationStatus, "string");
+  assert("DEV ValidationStatus is not a boolean (docs: boolean)", typeof pass.Task.ValidationStatus === "boolean" ? "true" : "false", "false");
+  assert("Pass fixture ValidationStatus is \"Pass\"", "" + pass.Task.ValidationStatus, "Pass");
+  assert("DEV Pass ValidationMessages is null (docs: string)", pass.Task.ValidationMessages === null ? "true" : "false", "true");
+
+  /* 6. Fail path. */
+  var fail = Email.Init(KEY_FAIL).Validate();
+  assert("Fail fixture ValidationStatus is \"Fail\"", "" + fail.Task.ValidationStatus, "Fail");
+  assert("DEV typeof Fail ValidationMessages is object (docs: string)", typeof fail.Task.ValidationMessages, "object");
+  assert("DEV Fail ValidationMessages reports as [object Array] (docs: string)", Object.prototype.toString.call(fail.Task.ValidationMessages), "[object Array]");
+  assert("Fail ValidationMessages length >= 1", fail.Task.ValidationMessages.length >= 1 ? "true" : "false", "true");
+  assert("Fail message entry exposes Location string", typeof fail.Task.ValidationMessages[0].Location, "string");
+  assert("Fail message entry exposes Message string", typeof fail.Task.ValidationMessages[0].Message, "string");
+  assert("Fail message entry exposes Description string", typeof fail.Task.ValidationMessages[0].Description, "string");
+
+  /* 7. Numeric ID Init cannot Validate. */
+  var passRows = Email.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: KEY_PASS });
+  var numericId = passRows[0].ID;
+  assert("Validate after Init(numeric ID) throws", invocationResult(function () { return Email.Init(numericId).Validate(); }), "threw");
+  assert("Validate after Init(numeric ID) reports Error Validating Email", threwFragment(function () { return Email.Init(numericId).Validate(); }, "Error Validating Email"), "matched");
+
+  assert("cleanup removed pass fixture", "" + Email.Init(KEY_PASS).Remove(), "OK");
+  assert("cleanup removed fail fixture", "" + Email.Init(KEY_FAIL).Remove(), "OK");
+  assert("cleanup re-count pass is 0", "" + countByKey(KEY_PASS), "0");
+  assert("cleanup re-count fail is 0", "" + countByKey(KEY_FAIL), "0");
+  </script>
+
+validation-status-is-string: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs: <EmailInstance>.Validate()
+   *
+   * Official docs type Task.ValidationStatus as a boolean and
+   * Task.ValidationMessages as a string. At runtime:
+   *   - ValidationStatus is a string ("Pass" / "Fail")
+   *   - ValidationMessages is null on Pass, or an array of
+   *     {Location, Message, Description} on Fail
+   *
+   * Proves every part of the callout:
+   *   1. DEV typeof ValidationStatus is "string" (docs: boolean).
+   *   2. DEV a boolean comparison against true/false is the wrong guard.
+   *   3. DEV ValidationMessages on Fail is an array, not a string.
+   *   4. Workaround: compare ValidationStatus to string literals.
+   *
+   * FIXTURE: ssjs-guide-ts-email-val-dev (broken AMPscript → Fail).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function countByKey(key) {
+      var rows = Email.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+
+  var KEY = "ssjs-guide-ts-email-val-dev";
+  Email.Init(KEY).Remove();
+  Email.Add({
+      CustomerKey: KEY,
+      Name: "SSJS Guide TS Email Val Dev",
+      HTMLBody: "<b>broken " + "%" + "%[</b>",
+      TextBody: "broken",
+      Subject: "Validate Differs Subject",
+      EmailType: "HTML",
+      CharacterSet: "US-ASCII"
+  });
+
+  var results = Email.Init(KEY).Validate();
+
+  assert("DEV typeof Task.ValidationStatus is string (docs: boolean)", typeof results.Task.ValidationStatus, "string");
+  assert("DEV ValidationStatus === true is false (docs imply boolean)", results.Task.ValidationStatus === true ? "true" : "false", "false");
+  assert("DEV ValidationStatus === false is false (docs imply boolean)", results.Task.ValidationStatus === false ? "true" : "false", "false");
+  assert("DEV ValidationStatus value is the string Fail", "" + results.Task.ValidationStatus, "Fail");
+  assert("DEV typeof ValidationMessages is object not string (docs: string)", typeof results.Task.ValidationMessages, "object");
+  assert("DEV ValidationMessages is an array (docs: string)", Object.prototype.toString.call(results.Task.ValidationMessages), "[object Array]");
+  assert("workaround: string compare ValidationStatus == \"Fail\"", ("" + results.Task.ValidationStatus) === "Fail" ? "true" : "false", "true");
+
+  assert("fixture cleanup removed the created email", "" + Email.Init(KEY).Remove(), "OK");
+  assert("cleanup re-count is 0", "" + countByKey(KEY), "0");
+  </script>
+
+instance-checkcontent: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <EmailInstance>.CheckContent()
+   *
+   * CloudPage GET context. Proves:
+   *   1. CheckContent is an instance method (typeof "function").
+   *   2. CheckContent() returns an object with a nested Task.
+   *   3. Task.CheckPassed is a boolean.
+   *   4. Task.ResultMessage is a string.
+   *   5. The page example shape (Write CheckPassed / ResultMessage) is
+   *      readable on a clean fixture.
+   *
+   * FIXTURE: creates ssjs-guide-ts-email-check and removes it at the end.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function countByKey(key) {
+      var rows = Email.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+
+  var KEY = "ssjs-guide-ts-email-check";
+  Email.Init(KEY).Remove();
+  Email.Add({
+      CustomerKey: KEY,
+      Name: "SSJS Guide TS Email Check",
+      HTMLBody: "<b>check content probe</b>",
+      TextBody: "check content probe",
+      Subject: "Check Content Subject",
+      EmailType: "HTML",
+      CharacterSet: "US-ASCII"
+  });
+
+  var myEmail = Email.Init(KEY);
+
+  /* 1. Shape. */
+  assert("typeof instance.CheckContent is function", typeof myEmail.CheckContent, "function");
+
+  /* 2 + 3 + 4 + 5. Return shape. */
+  var results = myEmail.CheckContent();
+  assert("CheckContent() returns an object", typeof results, "object");
+  assert("CheckContent() result exposes Task", typeof results.Task, "object");
+  assert("typeof Task.CheckPassed is boolean", typeof results.Task.CheckPassed, "boolean");
+  assert("typeof Task.ResultMessage is string", typeof results.Task.ResultMessage, "string");
+  assert("page example: CheckPassed is readable (boolean true on clean fixture)", results.Task.CheckPassed === true ? "true" : "false", "true");
+  assert("page example: ResultMessage is readable (string)", typeof ("" + results.Task.ResultMessage), "string");
+
+  assert("fixture cleanup removed the created email", "" + Email.Init(KEY).Remove(), "OK");
+  assert("cleanup re-count is 0", "" + countByKey(KEY), "0");
+  </script>

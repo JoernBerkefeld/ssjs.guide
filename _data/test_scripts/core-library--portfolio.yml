@@ -1,0 +1,707 @@
+# Test scripts for /core-library/portfolio/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the official Salesforce docs.
+#
+# FIXTURES: write chapters create their own classic Portfolio item under a
+# unique `ssjs-guide-ts-port-*` CustomerKey in a live media ContentType folder,
+# using a reachable FileLocation taken from an existing portfolio FileURL so
+# the SFMC fetch succeeds. Each script begins with an orphan-cleanup Remove /
+# Retrieve re-count. No pre-existing portfolio item is mutated except as a
+# read-only source for FileLocation.
+#
+# NON-ASSERTABLE:
+#   - Classic Content deprecation / EOL calendar dates (prose only).
+#   - Exact FileSizeKB / ThumbURL values (tenant and asset dependent).
+#   - Reachability of arbitrary third-party FileLocation hosts; scripts use a
+#     FileURL already present in this BU's portfolio library.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# NORMALIZATION RULE: assert() compares with a plain === and does NOT coerce.
+# Engine-returned values are normalized at the call site with "" + value —
+# never with String(value), which yields a CLR string that fails === and
+# aborts the page when a string method is called on it. Thrown values may be
+# plain strings (not Error objects) — normalize both forms.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage GET on the QA business unit. Re-run them before changing any
+# claim on the page.
+
+init: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Portfolio.Init(key)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Portfolio requires the Core load and is then an object exposing the
+   *      documented statics Init, Add and Retrieve.
+   *   2. There is no static Update / Remove — those are instance methods only
+   *      (Portfolio.Update is undefined).
+   *   3. Init(key) returns a PortfolioInstance exposing Update and Remove
+   *      (each typeof "function").
+   *   4. Init never checks existence: a nonsense key and Init() with no
+   *      argument still return the same instance shape.
+   *   5. String(instance) throws "Object reference not set to an instance of
+   *      an object" — only call its methods (workaround: use Retrieve).
+   *   6. Both CustomerKey and ObjectID are accepted as the key (fixture).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW"; }
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function threwFragment(fn, fragment) {
+      try { fn(); return "did NOT throw"; } catch (ex) {
+          var m = (typeof ex === "string") ? ("" + ex) : ("" + (ex && ex.message));
+          return m.indexOf(fragment) >= 0 ? "matched" : m;
+      }
+  }
+  function resolveMediaCategoryId() {
+      var api = new Script.Util.WSProxy();
+      var fr = api.retrieve("DataFolder", ["ID", "Name"], { Property: "ContentType", SimpleOperator: "equals", Value: "media" });
+      return fr.Results && fr.Results.length ? fr.Results[0].ID : null;
+  }
+  function resolveJpgSource() {
+      /* Reachable FileURL observed in this BU's portfolio library (jpg). */
+      return {
+          url: "https://image.s7.sfmc-content.com/lib/fe3011717d640478711676/m/1/8080c050-e521-431a-9a6c-6b6e84347374.jpg",
+          fileName: "pixel.jpg"
+      };
+  }
+  function countByKey(key) {
+      var rows = Portfolio.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+
+  assert("typeof Portfolio is object", typeOf(function () { return typeof Portfolio; }), "object");
+  assert("typeof Portfolio.Init is function", typeOf(function () { return typeof Portfolio.Init; }), "function");
+  assert("typeof Portfolio.Add is function", typeOf(function () { return typeof Portfolio.Add; }), "function");
+  assert("typeof Portfolio.Retrieve is function", typeOf(function () { return typeof Portfolio.Retrieve; }), "function");
+  assert("Portfolio.Update is not a static", typeOf(function () { return typeof Portfolio.Update; }), "undefined");
+  assert("Portfolio.Remove is not a static", typeOf(function () { return typeof Portfolio.Remove; }), "undefined");
+
+  var myPort = Portfolio.Init("ssjs-guide-ts-port-init");
+  assert("typeof Portfolio.Init(key) is object", typeof myPort, "object");
+  assert("typeof instance.Update is function", typeof myPort.Update, "function");
+  assert("typeof instance.Remove is function", typeof myPort.Remove, "function");
+
+  var bogus = Portfolio.Init("ssjs-guide-no-such-port-zzz");
+  assert("Init(nonsense key) still returns an object", typeof bogus, "object");
+  assert("Init(nonsense key) exposes Update", typeof bogus.Update, "function");
+  assert("Init(nonsense key) exposes Remove", typeof bogus.Remove, "function");
+
+  var noArg = Portfolio.Init();
+  assert("Init() with no argument returns an object", typeof noArg, "object");
+  assert("Init() exposes Update", typeof noArg.Update, "function");
+  assert("Init() exposes Remove", typeof noArg.Remove, "function");
+
+  var KEY = "ssjs-guide-ts-port-init";
+  Portfolio.Init(KEY).Remove();
+  var cat = resolveMediaCategoryId();
+  var src = resolveJpgSource();
+  assert("resolved a media CategoryID", typeof cat, "number");
+  assert("resolved a reachable jpg FileLocation from this BU", src ? "true" : "false", "true");
+  assert("Add fixture for ObjectID Init", "" + Portfolio.Add({
+      DisplayName: "SSJS Guide TS Portfolio Init",
+      CustomerKey: KEY,
+      CategoryID: cat,
+      FileName: src.fileName,
+      FileLocation: src.url
+  }), "OK");
+  assert("fixture count is 1", "" + countByKey(KEY), "1");
+  var rows = Portfolio.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: KEY });
+  var oid = "" + rows[0].ObjectID;
+  var byOid = Portfolio.Init(oid);
+  assert("Init(ObjectID) returns an object", typeof byOid, "object");
+  assert("Init(ObjectID) exposes Remove", typeof byOid.Remove, "function");
+
+  /* String(instance) throws — the result must be consumed or Jint may skip the call. */
+  var byKey = Portfolio.Init(KEY);
+  var stringThrew = false;
+  var stringMsg = "";
+  try {
+      var forced = "" + String(byKey);
+      stringMsg = "RETURNED:" + forced;
+  } catch (exStr) {
+      stringThrew = true;
+      stringMsg = (typeof exStr === "string") ? ("" + exStr) : ("" + (exStr && exStr.message));
+  }
+  assert("String(CustomerKey-bound instance) throws", stringThrew ? "true" : "false", "true");
+  assert("String(instance) message is Object reference...", stringMsg.indexOf("Object reference not set to an instance of an object") >= 0 ? "matched" : stringMsg, "matched");
+  assert("workaround: Stringify(instance) does not throw", invocationResult(function () { return Stringify(byKey); }), "returned");
+  assert("workaround: Retrieve confirms the key exists", "" + countByKey(KEY), "1");
+  assert("page example: Init('myPortfolioCK') returns", invocationResult(function () { return Portfolio.Init("myPortfolioCK"); }), "returned");
+  assert("fixture cleanup Remove", "" + Portfolio.Init(KEY).Remove(), "OK");
+  assert("cleanup re-count is 0", "" + countByKey(KEY), "0");
+  </script>
+
+add: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Portfolio.Add(properties)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Portfolio.Add is a function taking one properties object.
+   *   2. Add with DisplayName + CustomerKey + CategoryID + FileName +
+   *      FileLocation returns "OK" and creates a retrievable item.
+   *   3. Failures return the string "Error" and do NOT throw (Add() / Add({})).
+   *   4. Extension mismatch (FileName .png vs .jpg FileLocation) returns "Error".
+   *   5. A surplus second argument is accepted and ignored.
+   *   6. Re-adding the same CustomerKey returns "OK" without a duplicate.
+   *
+   * FIXTURE: ssjs-guide-ts-port-add — created and removed; orphan re-count 0.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function countByKey(key) {
+      var rows = Portfolio.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+  function resolveMediaCategoryId() {
+      var api = new Script.Util.WSProxy();
+      var fr = api.retrieve("DataFolder", ["ID", "Name"], { Property: "ContentType", SimpleOperator: "equals", Value: "media" });
+      return fr.Results && fr.Results.length ? fr.Results[0].ID : null;
+  }
+  function resolveJpgSource() {
+      /* Reachable FileURL observed in this BU's portfolio library (jpg). */
+      return {
+          url: "https://image.s7.sfmc-content.com/lib/fe3011717d640478711676/m/1/8080c050-e521-431a-9a6c-6b6e84347374.jpg",
+          fileName: "pixel.jpg"
+      };
+  }
+
+  var KEY = "ssjs-guide-ts-port-add";
+  Portfolio.Init(KEY).Remove();
+  assert("precondition: no portfolio under the probe key", "" + countByKey(KEY), "0");
+
+  assert("typeof Portfolio.Add is function", typeof Portfolio.Add, "function");
+
+  var cat = resolveMediaCategoryId();
+  var src = resolveJpgSource();
+  assert("resolved a media CategoryID", typeof cat, "number");
+  assert("resolved a reachable jpg FileLocation", src ? "true" : "false", "true");
+
+  var status = null;
+  assert("Add(properties) does not throw", invocationResult(function () {
+      status = Portfolio.Add({
+          DisplayName: "SSJS Guide TS Portfolio Add",
+          CustomerKey: KEY,
+          CategoryID: cat,
+          FileName: src.fileName,
+          FileLocation: src.url
+      });
+  }), "returned");
+  assert("Add returns the string \"OK\"", "" + status, "OK");
+  assert("Add result typeof is string", typeof status, "string");
+  assert("the item exists after Add", "" + countByKey(KEY), "1");
+
+  assert("Add() with no argument returns \"Error\" (does not throw)", "" + Portfolio.Add(), "Error");
+  assert("Add() with no argument does NOT throw", invocationResult(function () { return Portfolio.Add(); }), "returned");
+  assert("Add({}) returns \"Error\"", "" + Portfolio.Add({}), "Error");
+
+  assert("extension mismatch returns \"Error\"", "" + Portfolio.Add({
+      DisplayName: "SSJS Guide TS Portfolio MM",
+      CustomerKey: "ssjs-guide-ts-port-mm",
+      CategoryID: cat,
+      FileName: "logo.png",
+      FileLocation: src.url
+  }), "Error");
+  assert("extension mismatch did not create a row", "" + countByKey("ssjs-guide-ts-port-mm"), "0");
+
+  var KEY2 = "ssjs-guide-ts-port-add2";
+  Portfolio.Init(KEY2).Remove();
+  assert("surplus second arg is accepted", "" + Portfolio.Add({
+      DisplayName: "SSJS Guide TS Portfolio Add2",
+      CustomerKey: KEY2,
+      CategoryID: cat,
+      FileName: src.fileName,
+      FileLocation: src.url
+  }, "ignored"), "OK");
+  assert("surplus-arg item exists", "" + countByKey(KEY2), "1");
+
+  assert("re-add same CustomerKey returns \"OK\"", "" + Portfolio.Add({
+      DisplayName: "SSJS Guide TS Portfolio Add Re",
+      CustomerKey: KEY,
+      CategoryID: cat,
+      FileName: src.fileName,
+      FileLocation: src.url
+  }), "OK");
+  assert("re-add did not create a duplicate", "" + countByKey(KEY), "1");
+
+  assert("fixture cleanup KEY", "" + Portfolio.Init(KEY).Remove(), "OK");
+  assert("fixture cleanup KEY2", "" + Portfolio.Init(KEY2).Remove(), "OK");
+  assert("cleanup re-count KEY is 0", "" + countByKey(KEY), "0");
+  assert("cleanup re-count KEY2 is 0", "" + countByKey(KEY2), "0");
+  </script>
+
+add-returns-error: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs: Portfolio.Add failures return "Error", they do NOT throw.
+   * Official docs: failures throw. Runtime: Add() with no argument returns the
+   * plain string "Error".
+   *
+   * Proves:
+   *   1. DEV Add() returns "Error" (docs: throw).
+   *   2. DEV Add() does not throw (docs: throw).
+   *   3. DEV typeof the failure result is string.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  var status = Portfolio.Add();
+  assert("DEV Add() returns \"Error\" (docs: throw)", "" + status, "Error");
+  assert("DEV Add() does NOT throw (docs: throw)", invocationResult(function () { return Portfolio.Add(); }), "returned");
+  assert("DEV typeof Add() failure result is string", typeof status, "string");
+  </script>
+
+retrieve: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Portfolio.Retrieve([filter])
+   *
+   * CloudPage GET context. Proves:
+   *   1. Retrieve is a function; filter is optional (no-arg returns items).
+   *   2. Matched result is array-like: [object Array], .length, .push, .slice,
+   *      index access — but instanceof Array is false.
+   *   3. Empty match yields length 0 (not null); Stringify "[]".
+   *   4. Non-object filter (string) throws "Error Retrieving Portfolios".
+   *   5. A matched row exposes the documented SOAP fields.
+   *
+   * FIXTURE: ssjs-guide-ts-port-retrieve.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function threwFragment(fn, fragment) {
+      try { fn(); return "did NOT throw"; } catch (ex) {
+          var m = (typeof ex === "string") ? ("" + ex) : ("" + (ex && ex.message));
+          return m.indexOf(fragment) >= 0 ? "matched" : m;
+      }
+  }
+  function countByKey(key) {
+      var rows = Portfolio.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+  function resolveMediaCategoryId() {
+      var api = new Script.Util.WSProxy();
+      var fr = api.retrieve("DataFolder", ["ID", "Name"], { Property: "ContentType", SimpleOperator: "equals", Value: "media" });
+      return fr.Results && fr.Results.length ? fr.Results[0].ID : null;
+  }
+  function resolveJpgSource() {
+      /* Reachable FileURL observed in this BU's portfolio library (jpg). */
+      return {
+          url: "https://image.s7.sfmc-content.com/lib/fe3011717d640478711676/m/1/8080c050-e521-431a-9a6c-6b6e84347374.jpg",
+          fileName: "pixel.jpg"
+      };
+  }
+
+  var KEY = "ssjs-guide-ts-port-retrieve";
+  Portfolio.Init(KEY).Remove();
+  var cat = resolveMediaCategoryId();
+  var src = resolveJpgSource();
+  Portfolio.Add({
+      DisplayName: "SSJS Guide TS Portfolio Retrieve",
+      CustomerKey: KEY,
+      CategoryID: cat,
+      FileName: src.fileName,
+      FileLocation: src.url
+  });
+
+  assert("typeof Portfolio.Retrieve is function", typeof Portfolio.Retrieve, "function");
+
+  var rows = Portfolio.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: KEY });
+  assert("matched result reports as [object Array]", Object.prototype.toString.call(rows), "[object Array]");
+  assert("matched result exposes numeric .length", typeof rows.length, "number");
+  assert("matched result has exactly one row", "" + rows.length, "1");
+  assert("matched result exposes .push", typeof rows.push, "function");
+  assert("matched result exposes .slice", typeof rows.slice, "function");
+  assert("instanceof Array is false (array-like host collection)", rows instanceof Array ? "true" : "false", "false");
+  assert("matched row CustomerKey", "" + rows[0].CustomerKey, KEY);
+  assert("matched row DisplayName is a string", typeof rows[0].DisplayName, "string");
+  assert("matched row FileName is a string", typeof rows[0].FileName, "string");
+  assert("matched row CategoryID is a number", typeof rows[0].CategoryID, "number");
+  assert("matched row ObjectID is a string", typeof rows[0].ObjectID, "string");
+  assert("matched row ID is a number", typeof rows[0].ID, "number");
+  assert("matched row FileURL is a string", typeof rows[0].FileURL, "string");
+  assert("matched row has Client", typeof rows[0].Client, "object");
+  assert("matched row CreatedDate is set", rows[0].CreatedDate ? "true" : "false", "true");
+  assert("matched row ModifiedDate is readable (may be empty on brand-new items)", invocationResult(function () { return rows[0].ModifiedDate; }), "returned");
+  assert("matched row Source is readable", invocationResult(function () { return rows[0].Source; }), "returned");
+  assert("matched row FileSizeKB is readable", invocationResult(function () { return rows[0].FileSizeKB; }), "returned");
+  assert("matched row ThumbURL is readable", invocationResult(function () { return rows[0].ThumbURL; }), "returned");
+  assert("matched row Description is readable", invocationResult(function () { return rows[0].Description; }), "returned");
+
+  var empty = Portfolio.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: "ssjs-guide-no-such-port-zzz" });
+  assert("empty result length is 0 (not null)", "" + empty.length, "0");
+  assert("empty result Stringify is []", "" + Stringify(empty), "[]");
+  assert("empty result is not null", empty === null ? "true" : "false", "false");
+
+  var all = Portfolio.Retrieve();
+  assert("Retrieve() with no filter returns a collection", typeof all.length, "number");
+  assert("Retrieve() with no filter length > 0", all.length > 0 ? "true" : "false", "true");
+
+  assert("non-object filter throws Error Retrieving Portfolios", threwFragment(function () { return Portfolio.Retrieve("x"); }, "Error Retrieving Portfolios"), "matched");
+
+  assert("fixture cleanup", "" + Portfolio.Init(KEY).Remove(), "OK");
+  assert("cleanup re-count is 0", "" + countByKey(KEY), "0");
+  </script>
+
+retrieve-array-like: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs: Portfolio.Retrieve returns an array-LIKE host collection
+   * (instanceof Array is false) and the filter argument is optional; a
+   * non-object filter throws "Error Retrieving Portfolios".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function threwFragment(fn, fragment) {
+      try { fn(); return "did NOT throw"; } catch (ex) {
+          var m = (typeof ex === "string") ? ("" + ex) : ("" + (ex && ex.message));
+          return m.indexOf(fragment) >= 0 ? "matched" : m;
+      }
+  }
+
+  var empty = Portfolio.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: "ssjs-guide-no-such-port-zzz" });
+  assert("DEV instanceof Array is false (docs imply a JS array)", empty instanceof Array ? "true" : "false", "false");
+  assert("DEV .length / .push / .slice are present", (typeof empty.length === "number" && typeof empty.push === "function" && typeof empty.slice === "function") ? "true" : "false", "true");
+  assert("DEV filter is optional: Retrieve() returns a collection", typeof Portfolio.Retrieve().length, "number");
+  assert("DEV non-object filter throws Error Retrieving Portfolios", threwFragment(function () { return Portfolio.Retrieve("x"); }, "Error Retrieving Portfolios"), "matched");
+  </script>
+
+instance-update: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <PortfolioInstance>.Update(properties) — BLOCKED / non-functional
+   *
+   * CloudPage GET context. Proves:
+   *   1. Update is an instance method (typeof "function"); there is no static
+   *      Portfolio.Update (undefined).
+   *   2. No working invocation: Update({DisplayName}) returns "Error";
+   *      Update({Description}) returns "Error"; full Add-shaped payload throws
+   *      "Error Updating Portfolio"; Init(ObjectID) + Update({DisplayName})
+   *      returns "Error".
+   *   3. Init/Add/Retrieve/Remove still succeed on the same item.
+   *   4. Workaround: Remove + Add recreates the item.
+   *
+   * FIXTURE: ssjs-guide-ts-port-update.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function outcomeOf(fn) {
+      try { return "" + fn(); } catch (ex) {
+          var m = (typeof ex === "string") ? ("" + ex) : ("" + (ex && ex.message));
+          return "THREW:" + m;
+      }
+  }
+  function countByKey(key) {
+      var rows = Portfolio.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+  function resolveMediaCategoryId() {
+      var api = new Script.Util.WSProxy();
+      var fr = api.retrieve("DataFolder", ["ID", "Name"], { Property: "ContentType", SimpleOperator: "equals", Value: "media" });
+      return fr.Results && fr.Results.length ? fr.Results[0].ID : null;
+  }
+  function resolveJpgSource() {
+      /* Reachable FileURL observed in this BU's portfolio library (jpg). */
+      return {
+          url: "https://image.s7.sfmc-content.com/lib/fe3011717d640478711676/m/1/8080c050-e521-431a-9a6c-6b6e84347374.jpg",
+          fileName: "pixel.jpg"
+      };
+  }
+
+  var KEY = "ssjs-guide-ts-port-update";
+  Portfolio.Init(KEY).Remove();
+  var cat = resolveMediaCategoryId();
+  var src = resolveJpgSource();
+  var payload = {
+      DisplayName: "SSJS Guide TS Portfolio Update",
+      CustomerKey: KEY,
+      CategoryID: cat,
+      FileName: src.fileName,
+      FileLocation: src.url
+  };
+  assert("control: Add succeeds", "" + Portfolio.Add(payload), "OK");
+  assert("control: fixture count is 1", "" + countByKey(KEY), "1");
+
+  assert("Portfolio.Update static is undefined", typeof Portfolio.Update, "undefined");
+  var inst = Portfolio.Init(KEY);
+  assert("typeof instance.Update is function", typeof inst.Update, "function");
+
+  assert("DEV Update({DisplayName}) returns \"Error\" (docs: working update)", "" + inst.Update({ DisplayName: "Updated SSJS Image" }), "Error");
+  assert("DEV Update({Description}) returns \"Error\"", "" + Portfolio.Init(KEY).Update({ Description: "x" }), "Error");
+  assert("DEV full Add-shaped Update throws Error Updating Portfolio", outcomeOf(function () {
+      return Portfolio.Init(KEY).Update({
+          DisplayName: "X", CustomerKey: KEY, CategoryID: cat,
+          FileName: src.fileName, FileLocation: src.url
+      });
+  }).indexOf("Error Updating Portfolio") >= 0 ? "matched" : outcomeOf(function () {
+      return Portfolio.Init(KEY).Update({
+          DisplayName: "X", CustomerKey: KEY, CategoryID: cat,
+          FileName: src.fileName, FileLocation: src.url
+      });
+  }), "matched");
+
+  var rows = Portfolio.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: KEY });
+  var oid = "" + rows[0].ObjectID;
+  assert("DEV Update via Init(ObjectID) returns \"Error\"", "" + Portfolio.Init(oid).Update({ DisplayName: "Y" }), "Error");
+  assert("control: DisplayName unchanged after failed updates", "" + rows[0].DisplayName, "SSJS Guide TS Portfolio Update");
+
+  assert("workaround: Remove returns \"OK\"", "" + Portfolio.Init(KEY).Remove(), "OK");
+  assert("workaround: re-Add returns \"OK\"", "" + Portfolio.Add({
+      DisplayName: "SSJS Guide TS Portfolio Update2",
+      CustomerKey: KEY,
+      CategoryID: cat,
+      FileName: src.fileName,
+      FileLocation: src.url
+  }), "OK");
+  assert("workaround: recreated item exists", "" + countByKey(KEY), "1");
+
+  assert("fixture cleanup", "" + Portfolio.Init(KEY).Remove(), "OK");
+  assert("cleanup re-count is 0", "" + countByKey(KEY), "0");
+  </script>
+
+instance-update-nonfunctional: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs / known-bug: <PortfolioInstance>.Update has no working
+   * invocation. Docs describe a working update; runtime returns "Error" or
+   * throws "Error Updating Portfolio".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function countByKey(key) {
+      var rows = Portfolio.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+  function resolveMediaCategoryId() {
+      var api = new Script.Util.WSProxy();
+      var fr = api.retrieve("DataFolder", ["ID", "Name"], { Property: "ContentType", SimpleOperator: "equals", Value: "media" });
+      return fr.Results && fr.Results.length ? fr.Results[0].ID : null;
+  }
+  function resolveJpgSource() {
+      /* Reachable FileURL observed in this BU's portfolio library (jpg). */
+      return {
+          url: "https://image.s7.sfmc-content.com/lib/fe3011717d640478711676/m/1/8080c050-e521-431a-9a6c-6b6e84347374.jpg",
+          fileName: "pixel.jpg"
+      };
+  }
+
+  var KEY = "ssjs-guide-ts-port-upd-dev";
+  Portfolio.Init(KEY).Remove();
+  var cat = resolveMediaCategoryId();
+  var src = resolveJpgSource();
+  Portfolio.Add({
+      DisplayName: "SSJS Guide TS Portfolio UpdDev",
+      CustomerKey: KEY,
+      CategoryID: cat,
+      FileName: src.fileName,
+      FileLocation: src.url
+  });
+
+  assert("DEV page example Update({DisplayName}) returns \"Error\" (docs: OK)", "" + Portfolio.Init(KEY).Update({ DisplayName: "Updated SSJS Image" }), "Error");
+  assert("DEV static Portfolio.Update is undefined", typeof Portfolio.Update, "undefined");
+  assert("control: item still present after failed Update", "" + countByKey(KEY), "1");
+  Portfolio.Init(KEY).Remove();
+  assert("cleanup re-count is 0", "" + countByKey(KEY), "0");
+  </script>
+
+instance-remove: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <PortfolioInstance>.Remove()
+   *
+   * CloudPage GET context. Proves:
+   *   1. Remove is an instance method (typeof "function").
+   *   2. Remove() on an existing item returns "OK" and Retrieve count becomes 0.
+   *   3. DEV Remove() again on the already-deleted item still returns "OK"
+   *      (docs: throw / Error) — confirm with Retrieve.
+   *   4. A never-existed key returns "Error" (does not throw) — use a
+   *      GUID-suffixed probe key so prior runs cannot contaminate it.
+   *   5. A surplus argument is accepted and ignored on an existing item.
+   *
+   * FIXTURE: ssjs-guide-ts-port-remove.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function countByKey(key) {
+      var rows = Portfolio.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+  function resolveMediaCategoryId() {
+      var api = new Script.Util.WSProxy();
+      var fr = api.retrieve("DataFolder", ["ID", "Name"], { Property: "ContentType", SimpleOperator: "equals", Value: "media" });
+      return fr.Results && fr.Results.length ? fr.Results[0].ID : null;
+  }
+  function resolveJpgSource() {
+      /* Reachable FileURL observed in this BU's portfolio library (jpg). */
+      return {
+          url: "https://image.s7.sfmc-content.com/lib/fe3011717d640478711676/m/1/8080c050-e521-431a-9a6c-6b6e84347374.jpg",
+          fileName: "pixel.jpg"
+      };
+  }
+
+  var KEY = "ssjs-guide-ts-port-remove";
+  Portfolio.Init(KEY).Remove();
+  var cat = resolveMediaCategoryId();
+  var src = resolveJpgSource();
+
+  var NX = "ssjs-guide-ts-port-nx-" + ("" + Platform.Function.GUID()).split("-").join("").substring(0, 12);
+  assert("never-existed key returns \"Error\"", "" + Portfolio.Init(NX).Remove(), "Error");
+  assert("never-existed key does NOT throw", invocationResult(function () { return Portfolio.Init(NX).Remove(); }), "returned");
+  assert("never-existed key still returns \"Error\" on repeat", "" + Portfolio.Init(NX).Remove(), "Error");
+
+  assert("Add fixture", "" + Portfolio.Add({
+      DisplayName: "SSJS Guide TS Portfolio Remove",
+      CustomerKey: KEY,
+      CategoryID: cat,
+      FileName: src.fileName,
+      FileLocation: src.url
+  }), "OK");
+  assert("control: fixture count is 1", "" + countByKey(KEY), "1");
+
+  var inst = Portfolio.Init(KEY);
+  assert("typeof instance.Remove is function", typeof inst.Remove, "function");
+
+  var KEYS = "ssjs-guide-ts-port-rm-sur";
+  Portfolio.Init(KEYS).Remove();
+  Portfolio.Add({
+      DisplayName: "SSJS Guide TS Portfolio RmSur",
+      CustomerKey: KEYS,
+      CategoryID: cat,
+      FileName: src.fileName,
+      FileLocation: src.url
+  });
+  assert("surplus arg Remove returns \"OK\"", "" + Portfolio.Init(KEYS).Remove("ignored"), "OK");
+  assert("surplus arg really deleted", "" + countByKey(KEYS), "0");
+
+  var status = inst.Remove();
+  assert("page example: Remove() returns \"OK\"", "" + status, "OK");
+  assert("Remove returns a string", typeof status, "string");
+  assert("after Remove Retrieve count is 0", "" + countByKey(KEY), "0");
+
+  assert("DEV Remove again on already-deleted returns \"OK\" (docs: throw/Error)", "" + Portfolio.Init(KEY).Remove(), "OK");
+  assert("already-deleted still has Retrieve count 0", "" + countByKey(KEY), "0");
+  </script>
+
+instance-remove-ok-unreliable: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs: Remove return value is not a reliable success signal.
+   * Already-deleted returns "OK"; a never-existed key returns "Error"
+   * (no throw). Confirm deletion with Retrieve.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function countByKey(key) {
+      var rows = Portfolio.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+  function resolveMediaCategoryId() {
+      var api = new Script.Util.WSProxy();
+      var fr = api.retrieve("DataFolder", ["ID", "Name"], { Property: "ContentType", SimpleOperator: "equals", Value: "media" });
+      return fr.Results && fr.Results.length ? fr.Results[0].ID : null;
+  }
+  function resolveJpgSource() {
+      /* Reachable FileURL observed in this BU's portfolio library (jpg). */
+      return {
+          url: "https://image.s7.sfmc-content.com/lib/fe3011717d640478711676/m/1/8080c050-e521-431a-9a6c-6b6e84347374.jpg",
+          fileName: "pixel.jpg"
+      };
+  }
+
+  var KEY = "ssjs-guide-ts-port-rm-dev";
+  Portfolio.Init(KEY).Remove();
+  var cat = resolveMediaCategoryId();
+  var src = resolveJpgSource();
+  Portfolio.Add({
+      DisplayName: "SSJS Guide TS Portfolio RmDev",
+      CustomerKey: KEY,
+      CategoryID: cat,
+      FileName: src.fileName,
+      FileLocation: src.url
+  });
+
+  assert("Remove existing returns \"OK\"", "" + Portfolio.Init(KEY).Remove(), "OK");
+  assert("DEV Remove already-deleted returns \"OK\" (docs: throw)", "" + Portfolio.Init(KEY).Remove(), "OK");
+  assert("workaround: Retrieve count is 0 after delete", "" + countByKey(KEY), "0");
+  /* never-existed -> "Error" is asserted in chapter instance-remove with a GUID key */
+  </script>

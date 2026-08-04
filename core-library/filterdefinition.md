@@ -7,6 +7,7 @@ description: Core library FilterDefinition — create and manage data filter def
 verification: verified
 requires_core_load: true
 differs_from_docs: true
+test_scripts: complete
 type_mapping:
   ssjs: "FilterDefinition"
   soap: "FilterDefinition"
@@ -14,7 +15,7 @@ type_mapping:
   gui: "Data Filter"
 ---
 
-`FilterDefinition` manages **filter definitions** used for audiences and queries. For a simple (single-property) filter, supply a `Filter` field with `{Property, SimpleOperator, Value}` plus a top-level `DataSource: { Type: "DataExtension", CustomerKey }`. Complex, multi-condition filters (`{LeftOperand, LogicalOperator, RightOperand}`) are not supported by the Core `Add()` method and must be built via `Platform.Function.CreateObject("ComplexFilterPart"…)` + `InvokeCreate`, or via a SOAP create over `HTTP.Post`.
+`FilterDefinition` manages **filter definitions** used for audiences and queries. The read path (`Init`, `Retrieve`) is verified working. No working invocation of the write methods (`Add`, `Update`, `Remove`) was found in our CloudPage tests — they return the string `"Error"` or throw raw error strings regardless of payload shape. Create and manage filter definitions via mcdev (`dataFilter`), the REST endpoint `/email/v1/filters/filterdefinition/`, or a SOAP create instead.
 
 {% include callout.html type="warning" content="Requires `Platform.Load(\"core\", \"1.1.5\")` before use." %}
 
@@ -59,6 +60,8 @@ Platform.Load("core", "1");
 var fd = FilterDefinition.Init("myFilterDef");
 ```
 
+{% include test-script.html bundle="core-library--filterdefinition" chapter="init" %}
+
 ---
 
 ### FilterDefinition.Add {#add}
@@ -83,9 +86,9 @@ FilterDefinition.Add(properties)
 
 #### Return value
 
-`"OK"` on success — confirmed working at runtime with the simple-filter shape (`Filter: {Property, SimpleOperator, Value}` + a top-level `DataSource: {Type, CustomerKey}`). An unsupported complex/multi-condition payload throws the raw string `"Error adding FilterDefinition"` instead.
+Documented as `"OK"` on success. At runtime no working invocation was found: the documented simple-filter payload returns the string `"Error"` and creates nothing; a `DataFilter` property (instead of `Filter`) throws the raw string `"Error adding FilterDefinition"`.
 
-{% include differs-from-docs.html note="Runtime-verified against a real, owned source DE (`SSJSGUIDE_TYPES`) on the QA BU. `Add` is CONFIRMED WORKING at runtime with the SIMPLE-filter shape: a `Filter` field with `{Property, SimpleOperator, Value}` plus a top-level `DataSource: { Type: \"DataExtension\", CustomerKey }`. In that shape `FilterDefinition.Add()` creates the object and returns the string \"OK\". COMPLEX/multi-condition filters (conditions joined by `LeftOperand`/`LogicalOperator`/`RightOperand`, i.e. a `DataFilter`/`ComplexFilterPart` shape) are NOT supported by this Core method: at runtime `FilterDefinition.Add()` throws a raw string thrown value — `typeof e === \"string\"` with `String(e) === \"Error adding FilterDefinition\"` (no `.message`, `.description`, or `.name`). Build complex filters via `Platform.Function.CreateObject(\"SimpleFilterPart\"/\"ComplexFilterPart\"/\"FilterDefinition\")` + `SetObjectProperty` + `InvokeCreate(filterDef, result, null)`, or via a hand-rolled SOAP create over `HTTP.Post`. Confirmed discrepancy vs docs: the return/throw contract is shape-dependent. For a valid simple-filter payload `Add()` returns the string \"OK\"; for an unsupported complex shape it throws the plain string \"Error adding FilterDefinition\" rather than returning \"OK\" or throwing an Error object as the docs imply. Note: `Add` is a STATIC method on `FilterDefinition`; the instance returned by `Init()` exposes only `Update` and `Remove`." %}
+{% include differs-from-docs.html note="No working invocation of `FilterDefinition.Add` was found on the QA CloudPage, even with payloads modelled on the working mcdev/REST implementation. With the owned source DE `SSJSGUIDE_TYPES` present, the documented simple-filter payload (`Filter: {Property, SimpleOperator, Value}` + `DataSource: {Type, CustomerKey}`) returns the plain string \"Error\" (`typeof === \"string\"`) and does not create a retrievable definition. The same \"Error\" return was observed with `CategoryID`, a capitalized `Equals` operator, a field-ObjectID `Property`, a `DataSource` given by ObjectID, a full `DataSource` object, and the docs' `SubscriberList` shape. REST-style payloads derived from the working mcdev `dataFilter` create call (`key`/`name`/`categoryId`/`filterDefinitionXml`/`derivedFromType`/`derivedFromObjectId`, and a PascalCase `FilterDefinitionXml` variant) THROW the raw string \"Error adding FilterDefinition\", as does any payload containing a `DataFilter` property. A LeftOperand/LogicalOperator/RightOperand complex `Filter` also returns \"Error\" (does not throw). The `Platform.Function.CreateObject(\"FilterDefinition\")` + `InvokeCreate` SOAP path fails in this context too (`Error` / \"The user does not have permission to perform this operation.\"). Filters can still be created outside Core, e.g. mcdev `dataFilter` deploy or the REST endpoint `/email/v1/filters/filterdefinition/` (create expects `key`, `name`, `categoryId`, `description`, `filterDefinitionXml`, `derivedFromType: 2`, `derivedFromObjectId`). The official docs imply Add returns \"OK\" or throws; the success path could not be reproduced. Note: `Add` is a STATIC method on `FilterDefinition`; the instance returned by `Init()` exposes only `Update` and `Remove`." %}
 
 #### Examples
 
@@ -99,6 +102,8 @@ var newFD = {
 };
 var status = FilterDefinition.Add(newFD);
 ```
+
+{% include test-script.html bundle="core-library--filterdefinition" chapter="add" %}
 
 ---
 
@@ -135,6 +140,8 @@ var results = FilterDefinition.Retrieve({
 });
 ```
 
+{% include test-script.html bundle="core-library--filterdefinition" chapter="retrieve" %}
+
 ---
 
 ### &lt;FilterDefinitionInstance&gt;.Update {#instance-update}
@@ -169,6 +176,8 @@ var fd = FilterDefinition.Init("ssjs-datafilter-test");
 var status = fd.Update({ Description: "Updated description" });
 ```
 
+{% include test-script.html bundle="core-library--filterdefinition" chapter="instance-update" %}
+
 ---
 
 ### &lt;FilterDefinitionInstance&gt;.Remove {#instance-remove}
@@ -196,6 +205,8 @@ Platform.Load("core", "1.1.5");
 var myFD = FilterDefinition.Init("ssjs-datafilter-test");
 myFD.Remove();
 ```
+
+{% include test-script.html bundle="core-library--filterdefinition" chapter="instance-remove" %}
 
 ## See also
 

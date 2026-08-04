@@ -7,6 +7,7 @@ description: Core library QueryDefinition — SQL query activities (add, retriev
 verification: verified
 requires_core_load: true
 differs_from_docs: true
+test_scripts: complete
 type_mapping:
   ssjs: "QueryDefinition"
   soap: "QueryDefinition"
@@ -58,11 +59,17 @@ Platform.Load("core", "1");
 var qd = QueryDefinition.Init("myQueryDef");
 ```
 
+{% include test-script.html bundle="core-library--querydefinition" chapter="init" %}
+
 ---
 
 ### QueryDefinition.Add {#add}
 
+{% include method-status.html status="verified" differs=true %}
+
 Creates a new Query Activity. Optional `CategoryID` places the query in a folder.
+
+{% include callout.html type="warning" content="With `TargetUpdateType: \"Overwrite\"`, the target Data Extension must **not** appear in the `QueryText` FROM clause — the official sample selects from the same DE used as `Target` and returns `\"Error\"` at runtime. Use a different source DE for Overwrite, or use `TargetUpdateType: \"Update\"` when reading and writing the same DE (the target DE must have at least one non-primary-key field)." %}
 
 #### Syntax
 
@@ -78,7 +85,11 @@ QueryDefinition.Add(properties)
 
 #### Return value
 
-`"OK"` on success.
+`"OK"` on success. On failure the Core library returns the string `"Error"` (it does **not** throw).
+
+{% include differs-from-docs.html note="The official docs say failures throw. Runtime-verified: invalid payloads return the plain string `\"Error\"` instead of throwing — including the docs' Overwrite sample that SELECTs from the same Data Extension used as `Target`. Always compare the return value against `\"OK\"`." %}
+
+{% include test-script.html bundle="core-library--querydefinition" chapter="add-returns-error" label="Show test script — Add failures return Error" %}
 
 #### Examples
 
@@ -90,10 +101,12 @@ var queryDef = {
     TargetUpdateType: "Overwrite",
     TargetType: "DE",
     Target: { Name: "Example Target DE", CustomerKey: "example_target_de" },
-    QueryText: "SELECT SubKey, Email, Name FROM [Example Target DE] where FavoriteItemID=77"
+    QueryText: "SELECT Pk FROM [SSJSGUIDE_TYPES]"
 };
 var status = QueryDefinition.Add(queryDef);
 ```
+
+{% include test-script.html bundle="core-library--querydefinition" chapter="add" %}
 
 ---
 
@@ -129,9 +142,13 @@ var result = QueryDefinition.Retrieve({
 Write(Stringify(result));
 ```
 
+{% include test-script.html bundle="core-library--querydefinition" chapter="retrieve" %}
+
 ---
 
 ### &lt;QueryDefinitionInstance&gt;.Update {#instance-update}
+
+{% include method-status.html status="verified" differs=true %}
 
 Updates attributes on the initialized query definition, including `QueryText`.
 
@@ -149,7 +166,11 @@ Updates attributes on the initialized query definition, including `QueryText`.
 
 #### Return value
 
-`"OK"` on success.
+`"OK"` on success. On failure the Core library returns the string `"Error"` (it does **not** throw).
+
+{% include differs-from-docs.html note="The official docs say failures throw. Runtime-verified: Update on a key that does not resolve returns the plain string `\"Error\"` instead of throwing. Always compare the return value against `\"OK\"`." %}
+
+{% include test-script.html bundle="core-library--querydefinition" chapter="update-returns-error" label="Show test script — Update failures return Error" %}
 
 #### Examples
 
@@ -158,13 +179,17 @@ Platform.Load("core", "1.1.5");
 var qd = QueryDefinition.Init("myQueryDef");
 var status = qd.Update({
     Name: "Updated Query Definition Name",
-    QueryText: "SELECT SubKey, Email, Name FROM [Example Target DE] where FavoriteItemID=12"
+    QueryText: "SELECT Pk FROM [SSJSGUIDE_TYPES]"
 });
 ```
+
+{% include test-script.html bundle="core-library--querydefinition" chapter="instance-update" %}
 
 ---
 
 ### &lt;QueryDefinitionInstance&gt;.Remove {#instance-remove}
+
+{% include method-status.html status="verified" differs=true %}
 
 Deletes the query definition bound to this instance.
 
@@ -176,7 +201,11 @@ Deletes the query definition bound to this instance.
 
 #### Return value
 
-`"OK"` on success.
+`"OK"` on success. On failure the Core library returns the string `"Error"` (it does **not** throw).
+
+{% include differs-from-docs.html note="The official docs say failures throw. Runtime-verified: Remove on a key that never existed returns the plain string `\"Error\"` instead of throwing. Confirm deletion with a follow-up Retrieve." %}
+
+{% include test-script.html bundle="core-library--querydefinition" chapter="remove-returns-error" label="Show test script — Remove failures return Error" %}
 
 #### Examples
 
@@ -185,6 +214,8 @@ Platform.Load("core", "1.1.5");
 var qd = QueryDefinition.Init("myQueryDef");
 var status = qd.Remove();
 ```
+
+{% include test-script.html bundle="core-library--querydefinition" chapter="instance-remove" %}
 
 ---
 
@@ -208,9 +239,11 @@ Runs the SQL and writes results to the configured target Data Extension. Use **`
 
 #### Return value
 
-`string` — `"QueryDefinition perform called successfully"` when the run is accepted; throws on failure.
+`string` — `"QueryDefinition perform called successfully"` when the run is accepted. On failure returns an Exception string (does **not** throw).
 
-{% include differs-from-docs.html note="The official docs (and older versions of this page) say `Perform` returns `\"OK\"`. Runtime-verified on a live CloudPage: it returns the string `\"QueryDefinition perform called successfully\"`. The call queues the query asynchronously and returns immediately — the string only confirms acceptance, not completion. Detect failure via a thrown error, not by string-matching `\"OK\"`." %}
+{% include differs-from-docs.html note="The official docs annotate Perform as `@returns {Enum(\"OK\")}` and say failures throw. Runtime-verified on a live CloudPage: it returns the string `\"QueryDefinition perform called successfully\"` (not `\"OK\"`) when the run is accepted. The call queues the query asynchronously and returns immediately — the string only confirms acceptance, not completion. On an invalid / non-existent key it does **not** throw: it returns a failure string of the form `\"Exception occurred during [Schedule::Start] ErrorID = <number>\"`. Detect failure by inspecting the returned string, not by string-matching `\"OK\"` and not by relying on try/catch." %}
+
+{% include test-script.html bundle="core-library--querydefinition" chapter="perform-returns-status" label="Show test script — Perform status string (not OK / not throw)" %}
 
 #### Examples
 
@@ -220,6 +253,8 @@ var qd = QueryDefinition.Init("MY_QUERY_KEY");
 var result = qd.Perform("start");
 Write(Stringify(result)); // "QueryDefinition perform called successfully"
 ```
+
+{% include test-script.html bundle="core-library--querydefinition" chapter="instance-perform" %}
 
 ## See also
 

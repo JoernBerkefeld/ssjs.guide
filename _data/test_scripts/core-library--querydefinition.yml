@@ -1,0 +1,762 @@
+# Test scripts for /core-library/querydefinition/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the official Salesforce docs.
+#
+# FIXTURES: write chapters create a target DE under `ssjs-guide-ts-qd-de`
+# (Pk + Val — Update-type requires a non-primary-key field) and
+# QueryDefinitions under unique `ssjs-guide-ts-qd-*` CustomerKeys.
+# Source rows come from the owned fixture DE `SSJSGUIDE_TYPES` (Overwrite
+# cannot SELECT from the target DE). Each script begins with orphan cleanup
+# and ends with Remove + DE delete. Core Retrieve ignores Inactive
+# soft-deletes; WSProxy like still lists them — orphan asserts use Core.
+# No non-fixture QueryDefinition is mutated.
+#
+# NON-ASSERTABLE:
+#   - Async query completion / target-DE row contents after Perform (queued).
+#   - Exact Exception ErrorID numbers (tenant/run dependent).
+#   - Creating QueryDefinitions outside Core (mcdev / SOAP) — not a Core claim.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# NORMALIZATION RULE: assert() compares with a plain === and does NOT coerce.
+# Engine-returned values are normalized at the call site with "" + value —
+# never with String(value), which yields a CLR string that fails === and
+# aborts the page when a string method is called on it.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage GET on the QA business unit. Re-run them before changing any
+# claim on the page.
+
+init: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: QueryDefinition.Init(key)
+   *
+   * CloudPage GET context. Proves:
+   *   1. QueryDefinition requires the Core load and is then an object exposing
+   *      the documented statics Init, Add and Retrieve.
+   *   2. There is no static Update / Remove / Perform — those are instance
+   *      methods only.
+   *   3. Init(key) returns a QueryDefinitionInstance exposing Update, Remove
+   *      and Perform (each typeof "function").
+   *   4. The instance carries no readable definition fields (CustomerKey /
+   *      Name read back undefined) — Init binds a key, it does not fetch.
+   *   5. A nonsense key yields an indistinguishable stub.
+   *   6. The page example Init("myQueryDef") returns without throwing.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW"; }
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  assert("typeof QueryDefinition is object", typeOf(function () { return typeof QueryDefinition; }), "object");
+  assert("typeof QueryDefinition.Init is function", typeOf(function () { return typeof QueryDefinition.Init; }), "function");
+  assert("typeof QueryDefinition.Add is function", typeOf(function () { return typeof QueryDefinition.Add; }), "function");
+  assert("typeof QueryDefinition.Retrieve is function", typeOf(function () { return typeof QueryDefinition.Retrieve; }), "function");
+  assert("QueryDefinition.Update is not a static", typeOf(function () { return typeof QueryDefinition.Update; }), "undefined");
+  assert("QueryDefinition.Remove is not a static", typeOf(function () { return typeof QueryDefinition.Remove; }), "undefined");
+  assert("QueryDefinition.Perform is not a static", typeOf(function () { return typeof QueryDefinition.Perform; }), "undefined");
+
+  var qd = QueryDefinition.Init("ssjs-guide-ts-qd-init");
+  assert("typeof QueryDefinition.Init(key) is object", typeof qd, "object");
+  assert("typeof instance.Update is function", typeof qd.Update, "function");
+  assert("typeof instance.Remove is function", typeof qd.Remove, "function");
+  assert("typeof instance.Perform is function", typeof qd.Perform, "function");
+  assert("instance has no Add", typeof qd.Add, "undefined");
+  assert("instance has no Retrieve", typeof qd.Retrieve, "undefined");
+  assert("instance exposes Update+Remove+Perform (+GetObjectDetails)", "" + Stringify(qd), '{"GetObjectDetails":"function","Perform":"function","Remove":"function","Update":"function"}');
+  assert("instance.CustomerKey is undefined (Init does not fetch)", typeof qd.CustomerKey, "undefined");
+  assert("instance.Name is undefined (Init does not fetch)", typeof qd.Name, "undefined");
+
+  var bogus = QueryDefinition.Init("ssjs-guide-no-such-qd-zzz");
+  assert("Init(nonsense key) still returns an object", typeof bogus, "object");
+  assert("Init(nonsense key) stub is indistinguishable", ("" + Stringify(bogus)) === ("" + Stringify(qd)) ? "true" : "false", "true");
+  assert("page example: Init('myQueryDef') returns", invocationResult(function () { return QueryDefinition.Init("myQueryDef"); }), "returned");
+  </script>
+
+add: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: QueryDefinition.Add(properties)
+   *
+   * CloudPage GET context. Proves:
+   *   1. QueryDefinition.Add is a function taking one properties object.
+   *   2. Overwrite targeting a DE that also appears in QueryText returns
+   *      "Error" and creates no row (docs sample shape).
+   *   3. Overwrite from a different source DE (SSJSGUIDE_TYPES → fixture
+   *      target) returns "OK" and creates a retrievable definition.
+   *   4. TargetUpdateType "Update" with the same DE in FROM and Target
+   *      also returns "OK".
+   *   5. Add result typeof is string on both success and the Error path.
+   *   6. Orphan re-count for ssjs-guide-ts-qd% is 0 after cleanup.
+   *
+   * FIXTURES: ssjs-guide-ts-qd-de target DE; source SSJSGUIDE_TYPES.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function countByKey(key) {
+      var rows = QueryDefinition.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+  function resolveQueryCategoryId() {
+      var api = new Script.Util.WSProxy();
+      var fr = api.retrieve("DataFolder", ["ID"], { Property: "ContentType", SimpleOperator: "equals", Value: "queryactivity" });
+      return fr.Results && fr.Results.length ? fr.Results[0].ID : null;
+  }
+  function ensureTargetDe(key, name) {
+      var rows = DataExtension.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      if (rows && rows.length) return;
+      DataExtension.Add({
+          Name: name,
+          CustomerKey: key,
+          Fields: [
+              { Name: "Pk", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true },
+              { Name: "Val", FieldType: "Text", MaxLength: 50, IsRequired: false }
+          ]
+      });
+  }
+  function deleteDe(key) {
+      var props = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(props, "CustomerKey", key);
+      var st = [0, 0, 0];
+      return Platform.Function.InvokeDelete(props, st, null);
+  }
+  function countActiveByPrefix(prefix) {
+      /* Core Retrieve ignores Inactive soft-deletes; WSProxy like still lists them. */
+      var rows = QueryDefinition.Retrieve({ Property: "CustomerKey", SimpleOperator: "like", Value: prefix + "%" });
+      return rows && rows.length ? rows.length : 0;
+  }
+  function cleanupQdPrefix(prefix) {
+      var rows = QueryDefinition.Retrieve({ Property: "CustomerKey", SimpleOperator: "like", Value: prefix + "%" });
+      for (var i = 0; i < (rows ? rows.length : 0); i++) {
+          QueryDefinition.Init("" + rows[i].CustomerKey).Remove();
+      }
+  }
+
+  var PREFIX = "ssjs-guide-ts-qd";
+  var DE_KEY = PREFIX + "-de";
+  var DE_NAME = "SSJS Guide TS QD Target";
+  var SRC = "SSJSGUIDE_TYPES";
+  var KEY_BAD = PREFIX + "-add-bad";
+  var KEY_OK = PREFIX + "-add-ok";
+  var KEY_UPD = PREFIX + "-add-upd";
+
+  cleanupQdPrefix(PREFIX);
+  ensureTargetDe(DE_KEY, DE_NAME);
+  var cat = resolveQueryCategoryId();
+  assert("resolved a queryactivity CategoryID", typeof cat, "number");
+
+  assert("typeof QueryDefinition.Add is function", typeof QueryDefinition.Add, "function");
+
+  var bad = null;
+  assert("Overwrite+same-DE Add does not throw", invocationResult(function () {
+      bad = QueryDefinition.Add({
+          Name: "SSJS Guide TS QD Add Bad",
+          CustomerKey: KEY_BAD,
+          CategoryID: cat,
+          TargetUpdateType: "Overwrite",
+          TargetType: "DE",
+          Target: { Name: DE_NAME, CustomerKey: DE_KEY },
+          QueryText: "SELECT Pk, Val FROM [" + DE_NAME + "]"
+      });
+  }), "returned");
+  assert("DEV Overwrite+same-DE Add returns \"Error\" (docs sample implies \"OK\")", "" + bad, "Error");
+  assert("Overwrite+same-DE Add creates no row", "" + countByKey(KEY_BAD), "0");
+
+  var ok = null;
+  assert("Overwrite+diff-source Add does not throw", invocationResult(function () {
+      ok = QueryDefinition.Add({
+          Name: "SSJS Guide TS QD Add Ok",
+          CustomerKey: KEY_OK,
+          CategoryID: cat,
+          TargetUpdateType: "Overwrite",
+          TargetType: "DE",
+          Target: { Name: DE_NAME, CustomerKey: DE_KEY },
+          QueryText: "SELECT Pk FROM [" + SRC + "]"
+      });
+  }), "returned");
+  assert("Overwrite+diff-source Add returns \"OK\"", "" + ok, "OK");
+  assert("Add success typeof is string", typeof ok, "string");
+  assert("the definition exists after Add", "" + countByKey(KEY_OK), "1");
+
+  assert("Update-type+same-DE Add returns \"OK\"", "" + QueryDefinition.Add({
+      Name: "SSJS Guide TS QD Add Upd",
+      CustomerKey: KEY_UPD,
+      CategoryID: cat,
+      TargetUpdateType: "Update",
+      TargetType: "DE",
+      Target: { Name: DE_NAME, CustomerKey: DE_KEY },
+      QueryText: "SELECT Pk, Val FROM [" + DE_NAME + "]"
+  }), "OK");
+  assert("Update-type definition exists", "" + countByKey(KEY_UPD), "1");
+
+  assert("fixture cleanup KEY_OK", "" + QueryDefinition.Init(KEY_OK).Remove(), "OK");
+  assert("fixture cleanup KEY_UPD", "" + QueryDefinition.Init(KEY_UPD).Remove(), "OK");
+  assert("cleanup re-count KEY_OK is 0", "" + countByKey(KEY_OK), "0");
+  assert("cleanup re-count KEY_UPD is 0", "" + countByKey(KEY_UPD), "0");
+  assert("active orphan re-count ssjs-guide-ts-qd% is 0", "" + countActiveByPrefix(PREFIX), "0");
+  deleteDe(DE_KEY);
+  </script>
+
+add-returns-error: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs: QueryDefinition.Add failures return "Error", they do
+   * NOT throw. Official docs: failures throw. Runtime: Overwrite selecting
+   * from the target DE returns the plain string "Error".
+   *
+   * Proves:
+   *   1. DEV Add returns "Error" (docs: throw).
+   *   2. DEV Add does not throw (docs: throw).
+   *   3. DEV typeof the failure result is string.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function resolveQueryCategoryId() {
+      var api = new Script.Util.WSProxy();
+      var fr = api.retrieve("DataFolder", ["ID"], { Property: "ContentType", SimpleOperator: "equals", Value: "queryactivity" });
+      return fr.Results && fr.Results.length ? fr.Results[0].ID : null;
+  }
+  function ensureTargetDe(key, name) {
+      var rows = DataExtension.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      if (rows && rows.length) return;
+      DataExtension.Add({
+          Name: name,
+          CustomerKey: key,
+          Fields: [
+              { Name: "Pk", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true },
+              { Name: "Val", FieldType: "Text", MaxLength: 50, IsRequired: false }
+          ]
+      });
+  }
+  function deleteDe(key) {
+      var props = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(props, "CustomerKey", key);
+      var st = [0, 0, 0];
+      return Platform.Function.InvokeDelete(props, st, null);
+  }
+
+  var DE_KEY = "ssjs-guide-ts-qd-de";
+  var DE_NAME = "SSJS Guide TS QD Target";
+  var KEY = "ssjs-guide-ts-qd-add-err";
+  QueryDefinition.Init(KEY).Remove();
+  ensureTargetDe(DE_KEY, DE_NAME);
+  var cat = resolveQueryCategoryId();
+
+  var status = null;
+  assert("DEV Add failure does NOT throw (docs: throw)", invocationResult(function () {
+      status = QueryDefinition.Add({
+          Name: "SSJS Guide TS QD Add Err",
+          CustomerKey: KEY,
+          CategoryID: cat,
+          TargetUpdateType: "Overwrite",
+          TargetType: "DE",
+          Target: { Name: DE_NAME, CustomerKey: DE_KEY },
+          QueryText: "SELECT Pk, Val FROM [" + DE_NAME + "]"
+      });
+  }), "returned");
+  assert("DEV Add failure returns \"Error\" (docs: throw)", "" + status, "Error");
+  assert("DEV typeof Add failure result is string", typeof status, "string");
+  deleteDe(DE_KEY);
+  </script>
+
+retrieve: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: QueryDefinition.Retrieve(filter)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Retrieve is a function taking one PascalCase WSProxy-style filter.
+   *   2. On a match the result reports as [object Array], exposes .length,
+   *      and instanceof Array is false (engine-wide host-array quirk).
+   *   3. A matched row exposes readable CustomerKey / Name / ObjectID and
+   *      nested DataExtensionTarget.
+   *   4. On no match the same array-like shape is returned with length 0
+   *      and Stringify "[]".
+   *
+   * FIXTURE: creates ssjs-guide-ts-qd-ret and removes it at the end.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function resolveQueryCategoryId() {
+      var api = new Script.Util.WSProxy();
+      var fr = api.retrieve("DataFolder", ["ID"], { Property: "ContentType", SimpleOperator: "equals", Value: "queryactivity" });
+      return fr.Results && fr.Results.length ? fr.Results[0].ID : null;
+  }
+  function ensureTargetDe(key, name) {
+      var rows = DataExtension.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      if (rows && rows.length) return;
+      DataExtension.Add({
+          Name: name,
+          CustomerKey: key,
+          Fields: [
+              { Name: "Pk", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true },
+              { Name: "Val", FieldType: "Text", MaxLength: 50, IsRequired: false }
+          ]
+      });
+  }
+  function deleteDe(key) {
+      var props = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(props, "CustomerKey", key);
+      var st = [0, 0, 0];
+      return Platform.Function.InvokeDelete(props, st, null);
+  }
+
+  var DE_KEY = "ssjs-guide-ts-qd-de";
+  var DE_NAME = "SSJS Guide TS QD Target";
+  var KEY = "ssjs-guide-ts-qd-ret";
+  var SRC = "SSJSGUIDE_TYPES";
+  QueryDefinition.Init(KEY).Remove();
+  ensureTargetDe(DE_KEY, DE_NAME);
+  var cat = resolveQueryCategoryId();
+  assert("Add fixture for Retrieve", "" + QueryDefinition.Add({
+      Name: "SSJS Guide TS QD Ret",
+      CustomerKey: KEY,
+      CategoryID: cat,
+      TargetUpdateType: "Overwrite",
+      TargetType: "DE",
+      Target: { Name: DE_NAME, CustomerKey: DE_KEY },
+      QueryText: "SELECT Pk FROM [" + SRC + "]"
+  }), "OK");
+
+  assert("typeof QueryDefinition.Retrieve is function", typeof QueryDefinition.Retrieve, "function");
+
+  var rows = QueryDefinition.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: KEY });
+  assert("typeof the matched result is object", typeof rows, "object");
+  assert("the matched result reports as [object Array]", Object.prototype.toString.call(rows), "[object Array]");
+  assert("the matched result exposes a numeric .length", typeof rows.length, "number");
+  assert("the matched result has exactly one row", "" + rows.length, "1");
+  assert("instanceof Array is false (engine-wide host-array quirk)", rows instanceof Array ? "true" : "false", "false");
+  assert("matched row CustomerKey equals the filter value", "" + rows[0].CustomerKey, KEY);
+  assert("matched row Name is a string", typeof rows[0].Name, "string");
+  assert("matched row ObjectID is a string", typeof rows[0].ObjectID, "string");
+  assert("matched row exposes DataExtensionTarget object", typeof rows[0].DataExtensionTarget, "object");
+  assert("DataExtensionTarget.CustomerKey is the target DE", "" + rows[0].DataExtensionTarget.CustomerKey, DE_KEY);
+
+  var empty = QueryDefinition.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: "ssjs-guide-no-such-qd-zzz" });
+  assert("empty result reports as [object Array]", Object.prototype.toString.call(empty), "[object Array]");
+  assert("empty result length is 0", "" + empty.length, "0");
+  assert("empty result Stringify is []", "" + Stringify(empty), "[]");
+  assert("workaround: guard with rows && rows.length before indexing", (rows && rows.length) ? "true" : "false", "true");
+
+  assert("fixture cleanup", "" + QueryDefinition.Init(KEY).Remove(), "OK");
+  deleteDe(DE_KEY);
+  </script>
+
+instance-update: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <QueryDefinitionInstance>.Update(properties)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Update is an instance method (typeof "function") on Init.
+   *   2. Update(properties) returns the string "OK" on success.
+   *   3. The change persists: Retrieve shows the new Name / QueryText.
+   *   4. Update on a missing key returns "Error" (covered in the differs
+   *      chapter; happy-path chapter keeps the success path).
+   *
+   * FIXTURE: ssjs-guide-ts-qd-upd.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function resolveQueryCategoryId() {
+      var api = new Script.Util.WSProxy();
+      var fr = api.retrieve("DataFolder", ["ID"], { Property: "ContentType", SimpleOperator: "equals", Value: "queryactivity" });
+      return fr.Results && fr.Results.length ? fr.Results[0].ID : null;
+  }
+  function ensureTargetDe(key, name) {
+      var rows = DataExtension.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      if (rows && rows.length) return;
+      DataExtension.Add({
+          Name: name,
+          CustomerKey: key,
+          Fields: [
+              { Name: "Pk", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true },
+              { Name: "Val", FieldType: "Text", MaxLength: 50, IsRequired: false }
+          ]
+      });
+  }
+  function deleteDe(key) {
+      var props = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(props, "CustomerKey", key);
+      var st = [0, 0, 0];
+      return Platform.Function.InvokeDelete(props, st, null);
+  }
+
+  var DE_KEY = "ssjs-guide-ts-qd-de";
+  var DE_NAME = "SSJS Guide TS QD Target";
+  var KEY = "ssjs-guide-ts-qd-upd";
+  var SRC = "SSJSGUIDE_TYPES";
+  QueryDefinition.Init(KEY).Remove();
+  ensureTargetDe(DE_KEY, DE_NAME);
+  var cat = resolveQueryCategoryId();
+  assert("Add fixture for Update", "" + QueryDefinition.Add({
+      Name: "SSJS Guide TS QD Upd",
+      CustomerKey: KEY,
+      CategoryID: cat,
+      TargetUpdateType: "Overwrite",
+      TargetType: "DE",
+      Target: { Name: DE_NAME, CustomerKey: DE_KEY },
+      QueryText: "SELECT Pk FROM [" + SRC + "]"
+  }), "OK");
+
+  var qd = QueryDefinition.Init(KEY);
+  assert("typeof instance.Update is function", typeof qd.Update, "function");
+  assert("Update returns \"OK\"", "" + qd.Update({
+      Name: "SSJS Guide TS QD Upd Renamed",
+      QueryText: "SELECT Pk FROM [" + SRC + "] WHERE Pk IS NOT NULL"
+  }), "OK");
+  assert("Update result typeof is string", typeof qd.Update({ Name: "SSJS Guide TS QD Upd Renamed 2" }), "string");
+
+  var after = QueryDefinition.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: KEY });
+  assert("Retrieve after Update still finds one row", "" + after.length, "1");
+  assert("Name persisted after Update", "" + after[0].Name, "SSJS Guide TS QD Upd Renamed 2");
+  assert("QueryText persisted after first Update", ("" + after[0].QueryText).indexOf("WHERE Pk IS NOT NULL") >= 0 ? "matched" : ("" + after[0].QueryText), "matched");
+
+  assert("fixture cleanup", "" + QueryDefinition.Init(KEY).Remove(), "OK");
+  deleteDe(DE_KEY);
+  </script>
+
+update-returns-error: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs: <QueryDefinitionInstance>.Update failures return
+   * "Error", they do NOT throw.
+   *
+   * Proves:
+   *   1. DEV Update on a missing key returns "Error" (docs: throw).
+   *   2. DEV Update on a missing key does not throw.
+   *   3. DEV typeof the failure result is string.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  var status = null;
+  assert("DEV Update(missing) does NOT throw (docs: throw)", invocationResult(function () {
+      status = QueryDefinition.Init("ssjs-guide-no-such-qd-zzz").Update({ Name: "nope" });
+  }), "returned");
+  assert("DEV Update(missing) returns \"Error\" (docs: throw)", "" + status, "Error");
+  assert("DEV typeof Update failure result is string", typeof status, "string");
+  </script>
+
+instance-remove: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <QueryDefinitionInstance>.Remove()
+   *
+   * CloudPage GET context. Proves:
+   *   1. Remove is an instance method (typeof "function") and takes no args.
+   *   2. Remove() returns the string "OK" on success.
+   *   3. A follow-up Retrieve no longer finds the key.
+   *   4. Orphan re-count for ssjs-guide-ts-qd% is 0 after cleanup.
+   *
+   * FIXTURE: ssjs-guide-ts-qd-rm.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function countByKey(key) {
+      var rows = QueryDefinition.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+  function resolveQueryCategoryId() {
+      var api = new Script.Util.WSProxy();
+      var fr = api.retrieve("DataFolder", ["ID"], { Property: "ContentType", SimpleOperator: "equals", Value: "queryactivity" });
+      return fr.Results && fr.Results.length ? fr.Results[0].ID : null;
+  }
+  function ensureTargetDe(key, name) {
+      var rows = DataExtension.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      if (rows && rows.length) return;
+      DataExtension.Add({
+          Name: name,
+          CustomerKey: key,
+          Fields: [
+              { Name: "Pk", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true },
+              { Name: "Val", FieldType: "Text", MaxLength: 50, IsRequired: false }
+          ]
+      });
+  }
+  function deleteDe(key) {
+      var props = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(props, "CustomerKey", key);
+      var st = [0, 0, 0];
+      return Platform.Function.InvokeDelete(props, st, null);
+  }
+
+  var DE_KEY = "ssjs-guide-ts-qd-de";
+  var DE_NAME = "SSJS Guide TS QD Target";
+  var KEY = "ssjs-guide-ts-qd-rm";
+  var SRC = "SSJSGUIDE_TYPES";
+  QueryDefinition.Init(KEY).Remove();
+  ensureTargetDe(DE_KEY, DE_NAME);
+  var cat = resolveQueryCategoryId();
+  assert("Add fixture for Remove", "" + QueryDefinition.Add({
+      Name: "SSJS Guide TS QD Rm",
+      CustomerKey: KEY,
+      CategoryID: cat,
+      TargetUpdateType: "Overwrite",
+      TargetType: "DE",
+      Target: { Name: DE_NAME, CustomerKey: DE_KEY },
+      QueryText: "SELECT Pk FROM [" + SRC + "]"
+  }), "OK");
+  assert("precondition: fixture exists", "" + countByKey(KEY), "1");
+
+  var qd = QueryDefinition.Init(KEY);
+  assert("typeof instance.Remove is function", typeof qd.Remove, "function");
+  assert("Remove returns \"OK\"", "" + qd.Remove(), "OK");
+  assert("after Remove the key is gone", "" + countByKey(KEY), "0");
+
+  /* Core Retrieve ignores Inactive soft-deletes left by Remove. */
+  var activeLeft = QueryDefinition.Retrieve({ Property: "CustomerKey", SimpleOperator: "like", Value: "ssjs-guide-ts-qd%" });
+  assert("active orphan re-count ssjs-guide-ts-qd% is 0", "" + (activeLeft && activeLeft.length ? activeLeft.length : 0), "0");
+  deleteDe(DE_KEY);
+  </script>
+
+remove-returns-error: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs: <QueryDefinitionInstance>.Remove failures return
+   * "Error", they do NOT throw.
+   *
+   * Proves:
+   *   1. DEV Remove on a missing key returns "Error" (docs: throw).
+   *   2. DEV Remove on a missing key does not throw.
+   *   3. DEV typeof the failure result is string.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  var status = null;
+  assert("DEV Remove(missing) does NOT throw (docs: throw)", invocationResult(function () {
+      status = QueryDefinition.Init("ssjs-guide-no-such-qd-zzz").Remove();
+  }), "returned");
+  assert("DEV Remove(missing) returns \"Error\" (docs: throw)", "" + status, "Error");
+  assert("DEV typeof Remove failure result is string", typeof status, "string");
+  </script>
+
+instance-perform: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <QueryDefinitionInstance>.Perform(action)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Perform is an instance method (typeof "function").
+   *   2. Perform("start") on a valid fixture returns
+   *      "QueryDefinition perform called successfully".
+   *   3. The success result typeof is string and is NOT "OK".
+   *   4. The call returns without waiting for query completion (async
+   *      acceptance only — NON-ASSERTABLE: DE row contents after run).
+   *
+   * FIXTURE: ssjs-guide-ts-qd-perf.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function resolveQueryCategoryId() {
+      var api = new Script.Util.WSProxy();
+      var fr = api.retrieve("DataFolder", ["ID"], { Property: "ContentType", SimpleOperator: "equals", Value: "queryactivity" });
+      return fr.Results && fr.Results.length ? fr.Results[0].ID : null;
+  }
+  function ensureTargetDe(key, name) {
+      var rows = DataExtension.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      if (rows && rows.length) return;
+      DataExtension.Add({
+          Name: name,
+          CustomerKey: key,
+          Fields: [
+              { Name: "Pk", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true },
+              { Name: "Val", FieldType: "Text", MaxLength: 50, IsRequired: false }
+          ]
+      });
+  }
+  function deleteDe(key) {
+      var props = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(props, "CustomerKey", key);
+      var st = [0, 0, 0];
+      return Platform.Function.InvokeDelete(props, st, null);
+  }
+
+  var DE_KEY = "ssjs-guide-ts-qd-de";
+  var DE_NAME = "SSJS Guide TS QD Target";
+  var KEY = "ssjs-guide-ts-qd-perf";
+  var SRC = "SSJSGUIDE_TYPES";
+  QueryDefinition.Init(KEY).Remove();
+  ensureTargetDe(DE_KEY, DE_NAME);
+  var cat = resolveQueryCategoryId();
+  assert("Add fixture for Perform", "" + QueryDefinition.Add({
+      Name: "SSJS Guide TS QD Perf",
+      CustomerKey: KEY,
+      CategoryID: cat,
+      TargetUpdateType: "Overwrite",
+      TargetType: "DE",
+      Target: { Name: DE_NAME, CustomerKey: DE_KEY },
+      QueryText: "SELECT Pk FROM [" + SRC + "]"
+  }), "OK");
+
+  var qd = QueryDefinition.Init(KEY);
+  assert("typeof instance.Perform is function", typeof qd.Perform, "function");
+  var result = qd.Perform("start");
+  assert("DEV Perform returns success string (docs: \"OK\")", "" + result, "QueryDefinition perform called successfully");
+  assert("Perform result typeof is string", typeof result, "string");
+  assert("DEV Perform result is not \"OK\" (docs: \"OK\")", ("" + result) === "OK" ? "true" : "false", "false");
+
+  assert("fixture cleanup", "" + QueryDefinition.Init(KEY).Remove(), "OK");
+  deleteDe(DE_KEY);
+  </script>
+
+perform-returns-status: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs: <QueryDefinitionInstance>.Perform(action)
+   *
+   * Official docs: returns Enum("OK") and failures throw.
+   * Runtime:
+   *   - success → "QueryDefinition perform called successfully"
+   *   - missing key → Exception string, does NOT throw
+   *
+   * Proves:
+   *   1. DEV success string is not "OK".
+   *   2. DEV failure does not throw.
+   *   3. DEV failure string contains "Exception occurred during [Schedule::Start]".
+   *   4. Workaround: inspect the returned string, do not rely on try/catch.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function resolveQueryCategoryId() {
+      var api = new Script.Util.WSProxy();
+      var fr = api.retrieve("DataFolder", ["ID"], { Property: "ContentType", SimpleOperator: "equals", Value: "queryactivity" });
+      return fr.Results && fr.Results.length ? fr.Results[0].ID : null;
+  }
+  function ensureTargetDe(key, name) {
+      var rows = DataExtension.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      if (rows && rows.length) return;
+      DataExtension.Add({
+          Name: name,
+          CustomerKey: key,
+          Fields: [
+              { Name: "Pk", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true },
+              { Name: "Val", FieldType: "Text", MaxLength: 50, IsRequired: false }
+          ]
+      });
+  }
+  function deleteDe(key) {
+      var props = Platform.Function.CreateObject("DataExtension");
+      Platform.Function.SetObjectProperty(props, "CustomerKey", key);
+      var st = [0, 0, 0];
+      return Platform.Function.InvokeDelete(props, st, null);
+  }
+
+  var DE_KEY = "ssjs-guide-ts-qd-de";
+  var DE_NAME = "SSJS Guide TS QD Target";
+  var KEY = "ssjs-guide-ts-qd-perf-dev";
+  var SRC = "SSJSGUIDE_TYPES";
+  QueryDefinition.Init(KEY).Remove();
+  ensureTargetDe(DE_KEY, DE_NAME);
+  var cat = resolveQueryCategoryId();
+  assert("Add fixture for Perform differs", "" + QueryDefinition.Add({
+      Name: "SSJS Guide TS QD Perf Dev",
+      CustomerKey: KEY,
+      CategoryID: cat,
+      TargetUpdateType: "Overwrite",
+      TargetType: "DE",
+      Target: { Name: DE_NAME, CustomerKey: DE_KEY },
+      QueryText: "SELECT Pk FROM [" + SRC + "]"
+  }), "OK");
+
+  var ok = QueryDefinition.Init(KEY).Perform("start");
+  assert("DEV success is not \"OK\" (docs: \"OK\")", ("" + ok) === "OK" ? "true" : "false", "false");
+  assert("DEV success is QueryDefinition perform called successfully", "" + ok, "QueryDefinition perform called successfully");
+
+  var fail = null;
+  assert("DEV Perform(missing) does NOT throw (docs: throw)", invocationResult(function () {
+      fail = QueryDefinition.Init("ssjs-guide-no-such-qd-zzz").Perform("start");
+  }), "returned");
+  assert("DEV typeof Perform failure is string", typeof fail, "string");
+  assert("DEV failure contains Schedule::Start Exception", ("" + fail).indexOf("Exception occurred during [Schedule::Start]") >= 0 ? "matched" : ("" + fail), "matched");
+  assert("workaround: failure is not the success string", ("" + fail) === "QueryDefinition perform called successfully" ? "true" : "false", "false");
+
+  assert("fixture cleanup", "" + QueryDefinition.Init(KEY).Remove(), "OK");
+  deleteDe(DE_KEY);
+  </script>

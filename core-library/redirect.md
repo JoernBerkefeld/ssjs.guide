@@ -15,6 +15,7 @@ availability:
 requires_core_load: true
 verification: verified
 differs_from_docs: false
+test_scripts: complete
 syntax: "Redirect(url, movedPermanently)"
 return_type: void
 min_args: 2
@@ -28,11 +29,15 @@ max_args: 2
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `url` | string | Yes | The address to send the browser to. |
-| `movedPermanently` | boolean | Yes | `true` issues an HTTP `301 Moved Permanently` redirect; `false` issues an HTTP `302 Found` ("Moved Temporarily") redirect. Use `false` unless you are certain the move is permanent — browsers cache `301` responses aggressively and may skip re-checking the original URL. |
+| `movedPermanently` | string \| boolean \| number | Yes | `true` / `1` / `"true"` issue an HTTP `301 Moved Permanently` redirect; `false` / `0` / `"false"` issue an HTTP `302 Found` ("Moved Temporarily") redirect. Use a temporary redirect unless you are certain the move is permanent — browsers cache `301` responses aggressively and may skip re-checking the original URL. |
+
+{% include test-script.html bundle="core-library--redirect" chapter="parameters" %}
 
 ## Description
 
 `Redirect(url, movedPermanently)` sends the visitor's browser to another URL. Runtime testing proves the bare name **is** injected by `Platform.Load("core", ...)` and performs the redirect. It exists only **after** the load has run, so call `Platform.Load` first; once loaded it works in that scope and inside nested helper-function bodies that close over it. Its sibling [`Platform.Response.Redirect()`](/platform-objects/platform-response/#redirect) works in any scope and requires no `Platform.Load`.
+
+{% include test-script.html bundle="core-library--redirect" chapter="description" %}
 
 ## Examples
 
@@ -62,6 +67,8 @@ try {
 ```
 
 Keep redirects out of `try` blocks, or guard the `catch` so it does not perform its own redirect.
+
+{% include test-script.html bundle="core-library--redirect" chapter="examples" %}
 
 ## See Also
 

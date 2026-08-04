@@ -5,6 +5,7 @@ parent: Core Library
 parent_url: /core-library/
 description: Core library object for managing All Subscribers list entries — add, retrieve, upsert, update, remove, unsubscribe, and retrieve attributes and lists.
 verification: verified
+test_scripts: complete
 differs_from_docs: true
 requires_core_load: true
 type_mapping:
@@ -62,6 +63,8 @@ Platform.Load("core", "1");
 var sub = Subscriber.Init("mySubscriber");
 ```
 
+{% include test-script.html bundle="core-library--subscriber" chapter="init" %}
+
 ---
 
 ### Subscriber.Add {#add}
@@ -100,6 +103,8 @@ var newSubscriber = {
 var status = Subscriber.Add(newSubscriber);
 ```
 
+{% include test-script.html bundle="core-library--subscriber" chapter="add" %}
+
 ---
 
 ### Subscriber.Retrieve {#retrieve}
@@ -128,6 +133,8 @@ Subscriber.Retrieve(filter)
 Platform.Load("core", "1.1.5");
 var results = Subscriber.Retrieve({ Property: "SubscriberKey", SimpleOperator: "equals", Value: "MySubscriberKey" });
 ```
+
+{% include test-script.html bundle="core-library--subscriber" chapter="retrieve" %}
 
 ---
 
@@ -167,6 +174,8 @@ var result = subObj.Upsert({
 });
 ```
 
+{% include test-script.html bundle="core-library--subscriber" chapter="instance-upsert" %}
+
 ---
 
 ### &lt;SubscriberInstance&gt;.Statistics {#instance-statistics}
@@ -192,6 +201,8 @@ Platform.Load("core", "1.1.5");
 var subObj = Subscriber.Init("test@example.com");
 var stats = subObj.Statistics();
 ```
+
+{% include test-script.html bundle="core-library--subscriber" chapter="instance-statistics" %}
 
 ---
 
@@ -225,6 +236,8 @@ var subObj = Subscriber.Init("SubKey");
 var status = subObj.Update({ EmailTypePreference: "HTML", Attributes: { "First Name": "Test", "Last Name": "User" } });
 ```
 
+{% include test-script.html bundle="core-library--subscriber" chapter="instance-update" %}
+
 ---
 
 ### &lt;SubscriberInstance&gt;.Remove {#instance-remove}
@@ -250,6 +263,8 @@ Platform.Load("core", "1.1.5");
 var subObj = Subscriber.Init("SubKey");
 var status = subObj.Remove();
 ```
+
+{% include test-script.html bundle="core-library--subscriber" chapter="instance-remove" %}
 
 ---
 
@@ -277,6 +292,8 @@ var subObj = Subscriber.Init("SubKey");
 var status = subObj.Unsubscribe();
 ```
 
+{% include test-script.html bundle="core-library--subscriber" chapter="instance-unsubscribe" %}
+
 ---
 
 ### &lt;SubscriberInstance&gt;.Attributes.Retrieve {#instance-attributes-retrieve}
@@ -301,6 +318,8 @@ var subObj = Subscriber.Init("SubKey");
 var attributes = subObj.Attributes.Retrieve();
 ```
 
+{% include test-script.html bundle="core-library--subscriber" chapter="instance-attributes-retrieve" %}
+
 ---
 
 ### &lt;SubscriberInstance&gt;.Lists.Retrieve {#instance-lists-retrieve}
@@ -324,6 +343,8 @@ Platform.Load("core", "1.1.5");
 var subObj = Subscriber.Init("SubKey");
 var listArray = subObj.Lists.Retrieve();
 ```
+
+{% include test-script.html bundle="core-library--subscriber" chapter="instance-lists-retrieve" %}
 
 ## Notes
 

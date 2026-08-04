@@ -5,6 +5,7 @@ parent: Core Library
 parent_url: /core-library/
 description: Core library Folder — create, query, update, and remove folders; bind instances by key or folder ID.
 verification: verified
+test_scripts: complete
 requires_core_load: true
 type_mapping:
   ssjs: "Folder"
@@ -60,6 +61,8 @@ var myIDFolder = Folder.Init();
 myIDFolder.SetID(12345);
 ```
 
+{% include test-script.html bundle="core-library--folder" chapter="init" %}
+
 ---
 
 ### Folder.Add {#add}
@@ -99,6 +102,8 @@ var newFolder = {
 var status = Folder.Add(newFolder);
 ```
 
+{% include test-script.html bundle="core-library--folder" chapter="add" %}
+
 ---
 
 ### Folder.Retrieve {#retrieve}
@@ -133,6 +138,8 @@ var folders = Folder.Retrieve({
 Write(Stringify(folders));
 ```
 
+{% include test-script.html bundle="core-library--folder" chapter="retrieve" %}
+
 ---
 
 ### &lt;FolderInstance&gt;.Update {#instance-update}
@@ -163,6 +170,8 @@ var myFolder = Folder.Init("myFolder");
 var status = myFolder.Update({ Name: "Updated Folder Name" });
 ```
 
+{% include test-script.html bundle="core-library--folder" chapter="instance-update" %}
+
 ---
 
 ### &lt;FolderInstance&gt;.Remove {#instance-remove}
@@ -187,6 +196,8 @@ var myFolder = Folder.Init("myFolder");
 myFolder.Remove();
 ```
 
+{% include test-script.html bundle="core-library--folder" chapter="instance-remove" %}
+
 ---
 
 ### &lt;FolderInstance&gt;.SetID {#instance-setid}
@@ -203,7 +214,7 @@ Binds the instance to a folder by numeric ID. Use after `Folder.Init()` with no 
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `id` | number | Yes | Folder ID |
+| `id` | string \| number | Yes | Folder ID |
 
 #### Return value
 
@@ -216,3 +227,5 @@ Platform.Load("core", "1.1.5");
 var myIDFolder = Folder.Init();
 myIDFolder.SetID(12345);
 ```
+
+{% include test-script.html bundle="core-library--folder" chapter="instance-setid" %}

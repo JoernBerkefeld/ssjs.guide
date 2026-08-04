@@ -1,0 +1,591 @@
+# Test scripts for /core-library/send/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and the documented deviations from the official Salesforce docs.
+#
+# FIXTURES: write chapters create a classic email + empty publication list under
+# unique `ssjs-guide-ts-send-*` keys (NO list subscribers — Add still returns
+# "OK" and leaves Status=Scheduled so CancelSend can run without delivering
+# mail). Scripts CancelSend + Remove the created send, then remove email/list.
+# Canceled Send rows remain Retrievable (API soft-cancel) — that is asserted,
+# not treated as fixture leakage of email/list orphans.
+#
+# NON-ASSERTABLE:
+#   - FromAddress in options succeeding — requires a BU-valid From address;
+#     arbitrary addresses throw. Scripts assert FromName / Subject / SendDate.
+#   - Tracking row *content* after a real recipient send — empty-list probes
+#     assert array shape / empty filters only. Inbox delivery is out of scope
+#     for published scripts (reader-safe).
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# NORMALIZATION RULE: assert() compares with a plain === and does NOT coerce.
+# Engine-returned values are normalized at the call site with "" + value —
+# never with String(value), which yields a CLR string that fails === and
+# aborts the page when a string method is called on it.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage GET on the QA business unit. Re-run them before changing any
+# claim on the page.
+
+init: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Send.Init(id)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Send requires the Core load and exposes statics Init, Add, Retrieve,
+   *      RetrieveLists, and Tracking.Retrieve; Remove/CancelSend are instance-only.
+   *   2. Init(id) returns a SendInstance whose members are CancelSend, Remove,
+   *      and Tracking (with Clicks.Retrieve + TotalByInterval.Retrieve).
+   *   3. Init binds an id; it does not fetch readable send fields (ID/Status
+   *      undefined on the stub).
+   *   4. id accepts number and numeric string (same stub shape).
+   *   5. A nonsense id still returns an indistinguishable stub.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW"; }
+  }
+
+  assert("typeof Send is object", typeOf(function () { return typeof Send; }), "object");
+  assert("typeof Send.Init is function", typeOf(function () { return typeof Send.Init; }), "function");
+  assert("typeof Send.Add is function", typeOf(function () { return typeof Send.Add; }), "function");
+  assert("typeof Send.Retrieve is function", typeOf(function () { return typeof Send.Retrieve; }), "function");
+  assert("typeof Send.RetrieveLists is function", typeOf(function () { return typeof Send.RetrieveLists; }), "function");
+  assert("typeof Send.Tracking.Retrieve is function", typeOf(function () { return typeof Send.Tracking.Retrieve; }), "function");
+  assert("Send.Remove is not a static", typeOf(function () { return typeof Send.Remove; }), "undefined");
+  assert("Send.CancelSend is not a static", typeOf(function () { return typeof Send.CancelSend; }), "undefined");
+
+  var s = Send.Init(1);
+  assert("typeof Send.Init(1) is object", typeof s, "object");
+  assert("typeof instance.CancelSend is function", typeof s.CancelSend, "function");
+  assert("typeof instance.Remove is function", typeof s.Remove, "function");
+  assert("typeof instance.Tracking is object", typeof s.Tracking, "object");
+  assert("typeof Tracking.Clicks.Retrieve is function", typeof s.Tracking.Clicks.Retrieve, "function");
+  assert("typeof Tracking.TotalByInterval.Retrieve is function", typeof s.Tracking.TotalByInterval.Retrieve, "function");
+  assert("instance exposes CancelSend+Remove+Tracking", "" + Stringify(s), '{"CancelSend":"function","Remove":"function","Tracking":{"Clicks":{"Retrieve":"function"},"TotalByInterval":{"Retrieve":"function"}}}');
+  assert("instance.ID is undefined (Init does not fetch)", typeof s.ID, "undefined");
+  assert("instance.Status is undefined (Init does not fetch)", typeof s.Status, "undefined");
+
+  var sStr = Send.Init("1");
+  assert("Init(numeric string) returns object", typeof sStr, "object");
+  assert("Init(number) and Init(string) stubs match", ("" + Stringify(s)) === ("" + Stringify(sStr)) ? "true" : "false", "true");
+
+  var bogus = Send.Init(999999991);
+  assert("Init(nonsense id) still returns object", typeof bogus, "object");
+  assert("Init(nonsense id) stub matches Init(1)", ("" + Stringify(bogus)) === ("" + Stringify(s)) ? "true" : "false", "true");
+  </script>
+
+add: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Send.Add(emailKey, listIds[, options])
+   *
+   * CloudPage GET context. Proves:
+   *   1. Add is a static function.
+   *   2. Add(emailKey, [listIdNum]) against a classic email + empty list returns
+   *      "OK" and creates a Retrievable send with Status Scheduled (no
+   *      subscribers — no inbox delivery). Canceled rows from prior runs may
+   *      still appear in Retrieve; assert that a Scheduled row exists.
+   *   3. listIds accepts number[] elements (coerce with +id) — same success path.
+   *   4. listIds accepts string[] elements (numeric strings) — same success path.
+   *   5. listIds accepts a mixed [number, numeric-string] array (same list twice).
+   *   6. options.Subject and options.FromName are accepted; options.SendDate
+   *      (future) is accepted.
+   *   7. Negatives: Add() / Add(emailKey only) / Add(unknown emailKey, list)
+   *      throw; Add(email, unknown listId) still returns "OK".
+   *
+   * NON-ASSERTABLE: FromAddress success (BU-valid sender required; arbitrary
+   * addresses throw).
+   *
+   * FIXTURE: ssjs-guide-ts-send-add + empty list; CancelSend+Remove send;
+   * remove email/list. EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function nukeSends(emailName) {
+      var rows = Send.Retrieve({ Property: "EmailName", SimpleOperator: "equals", Value: emailName });
+      var i;
+      if (!rows) { return; }
+      for (i = 0; i < rows.length; i++) {
+          try { Send.Init(rows[i].ID).CancelSend(); } catch (e0) {}
+          try { Send.Init(rows[i].ID).Remove(); } catch (e1) {}
+      }
+  }
+
+  var EMAIL_KEY = "ssjs-guide-ts-send-add";
+  var LIST_KEY = "ssjs-guide-ts-send-add-list";
+  var EMAIL_NAME = "SSJS Guide TS Send Add";
+  nukeSends(EMAIL_NAME);
+  try { Email.Init(EMAIL_KEY).Remove(); } catch (e2) {}
+  try { List.Init(LIST_KEY).Remove(); } catch (e3) {}
+
+  Email.Add({
+      CustomerKey: EMAIL_KEY,
+      Name: EMAIL_NAME,
+      HTMLBody: "<b>send add probe</b>",
+      TextBody: "send add probe",
+      Subject: "SSJS Guide Send Add",
+      EmailType: "HTML",
+      CharacterSet: "US-ASCII"
+  });
+  List.Add({ CustomerKey: LIST_KEY, Name: "SSJS Guide TS Send Add List", Type: "Public" });
+  var listIdRaw = List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: LIST_KEY })[0].ID;
+  var listIdNum = +listIdRaw;
+  var listIdStr = "" + listIdRaw;
+
+  assert("typeof Send.Add is function", typeof Send.Add, "function");
+  assert("listId coerce to number is finite", (typeof listIdNum === "number" && isFinite(listIdNum)) ? "true" : "false", "true");
+  assert("listId coerce to string is non-empty", (typeof listIdStr === "string" && listIdStr.length > 0) ? "true" : "false", "true");
+
+  assert("Add with number[] listIds returns \"OK\"", "" + Send.Add(EMAIL_KEY, [listIdNum]), "OK");
+
+  var created = Send.Retrieve({ Property: "EmailName", SimpleOperator: "equals", Value: EMAIL_NAME });
+  assert("created send is Retrievable", (created && created.length >= 1) ? "true" : "false", "true");
+  var hasScheduled = "false";
+  var si;
+  if (created) {
+      for (si = 0; si < created.length; si++) {
+          if (("" + created[si].Status) === "Scheduled") { hasScheduled = "true"; break; }
+      }
+  }
+  assert("created send includes Scheduled status", hasScheduled, "true");
+
+  assert("Add with string[] listIds (numeric-string) returns \"OK\"", "" + Send.Add(EMAIL_KEY, [listIdStr]), "OK");
+  assert("Add with mixed [number, numeric-string] listIds returns \"OK\"", "" + Send.Add(EMAIL_KEY, [listIdNum, listIdStr]), "OK");
+  assert("Add options Subject returns \"OK\"", "" + Send.Add(EMAIL_KEY, [listIdNum], { Subject: "SSJS Guide Send Add Opt" }), "OK");
+  assert("Add options FromName returns \"OK\"", "" + Send.Add(EMAIL_KEY, [listIdNum], { FromName: "SSJS Guide Probe" }), "OK");
+  assert("Add options SendDate future returns \"OK\"", "" + Send.Add(EMAIL_KEY, [listIdNum], { SendDate: "08-03-2030 12:00:00" }), "OK");
+
+  assert("Add() with no args throws", invocationResult(function () { return Send.Add(); }), "threw");
+  assert("Add(emailKey only) throws", invocationResult(function () { return Send.Add(EMAIL_KEY); }), "threw");
+  assert("Add(unknown emailKey, list) throws", invocationResult(function () { return Send.Add("ssjs-guide-no-such-email-zzz", [listIdNum]); }), "threw");
+  assert("Add(email, unknown listId) returns \"OK\"", "" + Send.Add(EMAIL_KEY, [999999991]), "OK");
+
+  nukeSends(EMAIL_NAME);
+  nukeSends("SSJS Guide Send Add Opt");
+  assert("fixture email removed", "" + Email.Init(EMAIL_KEY).Remove(), "OK");
+  assert("fixture list removed", "" + List.Init(LIST_KEY).Remove(), "OK");
+  assert("email orphan count 0", "" + Email.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: EMAIL_KEY }).length, "0");
+  assert("list orphan count 0", "" + List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: LIST_KEY }).length, "0");
+  </script>
+
+retrieve: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Send.Retrieve(filter)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Retrieve is a function taking one PascalCase WSProxy-style filter.
+   *   2. Matched / empty results report as [object Array] with .length;
+   *      instanceof Array is false (engine-wide host-array quirk).
+   *   3. A matched row exposes readable ID and Status.
+   *
+   * FIXTURE: empty-list send under ssjs-guide-ts-send-ret; Cancel+Remove after.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var EMAIL_KEY = "ssjs-guide-ts-send-ret";
+  var LIST_KEY = "ssjs-guide-ts-send-ret-list";
+  var EMAIL_NAME = "SSJS Guide TS Send Ret";
+  try { Email.Init(EMAIL_KEY).Remove(); } catch (e0) {}
+  try { List.Init(LIST_KEY).Remove(); } catch (e1) {}
+  Email.Add({
+      CustomerKey: EMAIL_KEY,
+      Name: EMAIL_NAME,
+      HTMLBody: "<b>ret</b>",
+      TextBody: "ret",
+      Subject: "SSJS Guide Send Ret",
+      EmailType: "HTML",
+      CharacterSet: "US-ASCII"
+  });
+  List.Add({ CustomerKey: LIST_KEY, Name: "SSJS Guide TS Send Ret List", Type: "Public" });
+  var listId = List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: LIST_KEY })[0].ID;
+  Send.Add(EMAIL_KEY, [listId]);
+
+  assert("typeof Send.Retrieve is function", typeof Send.Retrieve, "function");
+  var rows = Send.Retrieve({ Property: "EmailName", SimpleOperator: "equals", Value: EMAIL_NAME });
+  assert("matched result reports as [object Array]", Object.prototype.toString.call(rows), "[object Array]");
+  assert("matched result length >= 1", (rows && rows.length >= 1) ? "true" : "false", "true");
+  assert("instanceof Array is false (host-array quirk)", rows instanceof Array ? "true" : "false", "false");
+  assert("matched row ID is a number", typeof rows[0].ID, "number");
+  assert("matched row Status is a string", typeof rows[0].Status, "string");
+
+  var empty = Send.Retrieve({ Property: "ID", SimpleOperator: "equals", Value: 999999991 });
+  assert("empty result reports as [object Array]", Object.prototype.toString.call(empty), "[object Array]");
+  assert("empty result length is 0", "" + empty.length, "0");
+  assert("empty result Stringify is []", "" + Stringify(empty), "[]");
+
+  try { Send.Init(rows[0].ID).CancelSend(); } catch (e2) {}
+  try { Send.Init(rows[0].ID).Remove(); } catch (e3) {}
+  Email.Init(EMAIL_KEY).Remove();
+  List.Init(LIST_KEY).Remove();
+  </script>
+
+retrievelists: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Send.RetrieveLists(filter)
+   *
+   * CloudPage GET context. Proves:
+   *   1. RetrieveLists is a function; filter on SendID returns list objects
+   *      for the targeted send (array-like, length >= 1 when a real send exists).
+   *   2. Empty / nonsense SendID returns an empty array-like result.
+   *
+   * FIXTURE: empty-list send; cleanup Cancel+Remove + email/list remove.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var EMAIL_KEY = "ssjs-guide-ts-send-lists";
+  var LIST_KEY = "ssjs-guide-ts-send-lists-list";
+  var EMAIL_NAME = "SSJS Guide TS Send Lists";
+  try { Email.Init(EMAIL_KEY).Remove(); } catch (e0) {}
+  try { List.Init(LIST_KEY).Remove(); } catch (e1) {}
+  Email.Add({
+      CustomerKey: EMAIL_KEY,
+      Name: EMAIL_NAME,
+      HTMLBody: "<b>lists</b>",
+      TextBody: "lists",
+      Subject: "SSJS Guide Send Lists",
+      EmailType: "HTML",
+      CharacterSet: "US-ASCII"
+  });
+  List.Add({ CustomerKey: LIST_KEY, Name: "SSJS Guide TS Send Lists List", Type: "Public" });
+  var listId = List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: LIST_KEY })[0].ID;
+  Send.Add(EMAIL_KEY, [listId]);
+  var sendId = Send.Retrieve({ Property: "EmailName", SimpleOperator: "equals", Value: EMAIL_NAME })[0].ID;
+
+  assert("typeof Send.RetrieveLists is function", typeof Send.RetrieveLists, "function");
+  var lists = Send.RetrieveLists({ Property: "SendID", SimpleOperator: "equals", Value: sendId });
+  assert("matched RetrieveLists reports as [object Array]", Object.prototype.toString.call(lists), "[object Array]");
+  assert("matched RetrieveLists length is 1", "" + lists.length, "1");
+  assert("matched list ID equals fixture listId", "" + lists[0].List.ID, "" + listId);
+
+  var empty = Send.RetrieveLists({ Property: "SendID", SimpleOperator: "equals", Value: 999999991 });
+  assert("empty RetrieveLists length is 0", "" + empty.length, "0");
+
+  try { Send.Init(sendId).CancelSend(); } catch (e2) {}
+  try { Send.Init(sendId).Remove(); } catch (e3) {}
+  Email.Init(EMAIL_KEY).Remove();
+  List.Init(LIST_KEY).Remove();
+  </script>
+
+instance-remove: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <SendInstance>.Remove()
+   *
+   * CloudPage GET context. Proves:
+   *   1. Remove is an instance method.
+   *   2. Remove() returns "OK".
+   *   3. DEV: the send remains Retrievable with Status "Canceled" (not a hard
+   *      delete — official docs / older prose: deletes the record).
+   *   4. Remove on a missing ID returns "Error" and does NOT throw.
+   *
+   * FIXTURE: empty-list send under ssjs-guide-ts-send-rm.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  var EMAIL_KEY = "ssjs-guide-ts-send-rm";
+  var LIST_KEY = "ssjs-guide-ts-send-rm-list";
+  var EMAIL_NAME = "SSJS Guide TS Send Rm";
+  try { Email.Init(EMAIL_KEY).Remove(); } catch (e0) {}
+  try { List.Init(LIST_KEY).Remove(); } catch (e1) {}
+  Email.Add({
+      CustomerKey: EMAIL_KEY,
+      Name: EMAIL_NAME,
+      HTMLBody: "<b>rm</b>",
+      TextBody: "rm",
+      Subject: "SSJS Guide Send Rm",
+      EmailType: "HTML",
+      CharacterSet: "US-ASCII"
+  });
+  List.Add({ CustomerKey: LIST_KEY, Name: "SSJS Guide TS Send Rm List", Type: "Public" });
+  var listId = List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: LIST_KEY })[0].ID;
+  Send.Add(EMAIL_KEY, [listId]);
+  var sendId = Send.Retrieve({ Property: "EmailName", SimpleOperator: "equals", Value: EMAIL_NAME })[0].ID;
+  try { Send.Init(sendId).CancelSend(); } catch (e2) {}
+
+  var inst = Send.Init(sendId);
+  assert("typeof instance.Remove is function", typeof inst.Remove, "function");
+  assert("Remove() returns \"OK\"", "" + inst.Remove(), "OK");
+
+  var after = Send.Retrieve({ Property: "ID", SimpleOperator: "equals", Value: sendId });
+  assert("DEV Remove leaves row Retrievable (docs: deletes)", "" + after.length, "1");
+  assert("DEV Remove sets Status to Canceled (docs: deletes)", "" + after[0].Status, "Canceled");
+
+  assert("Remove(missing) returns \"Error\"", "" + Send.Init(999999991).Remove(), "Error");
+  assert("Remove(missing) does NOT throw", invocationResult(function () { return Send.Init(999999991).Remove(); }), "returned");
+
+  Email.Init(EMAIL_KEY).Remove();
+  List.Init(LIST_KEY).Remove();
+  </script>
+
+instance-cancelsend: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <SendInstance>.CancelSend()
+   *
+   * CloudPage GET context. Proves:
+   *   1. CancelSend is an instance method.
+   *   2. DEV: success returns the literal string "status" (docs: "OK").
+   *   3. DEV: failure returns an error string and does NOT throw (docs: throws).
+   *
+   * FIXTURE: empty-list Scheduled send; Remove after CancelSend.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  var EMAIL_KEY = "ssjs-guide-ts-send-cancel";
+  var LIST_KEY = "ssjs-guide-ts-send-cancel-list";
+  var EMAIL_NAME = "SSJS Guide TS Send Cancel";
+  try { Email.Init(EMAIL_KEY).Remove(); } catch (e0) {}
+  try { List.Init(LIST_KEY).Remove(); } catch (e1) {}
+  Email.Add({
+      CustomerKey: EMAIL_KEY,
+      Name: EMAIL_NAME,
+      HTMLBody: "<b>cancel</b>",
+      TextBody: "cancel",
+      Subject: "SSJS Guide Send Cancel",
+      EmailType: "HTML",
+      CharacterSet: "US-ASCII"
+  });
+  List.Add({ CustomerKey: LIST_KEY, Name: "SSJS Guide TS Send Cancel List", Type: "Public" });
+  var listId = List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: LIST_KEY })[0].ID;
+  Send.Add(EMAIL_KEY, [listId]);
+  var sendId = Send.Retrieve({ Property: "EmailName", SimpleOperator: "equals", Value: EMAIL_NAME })[0].ID;
+
+  var inst = Send.Init(sendId);
+  assert("typeof instance.CancelSend is function", typeof inst.CancelSend, "function");
+  assert("DEV CancelSend() returns \"status\" (docs: \"OK\")", "" + inst.CancelSend(), "status");
+  assert("CancelSend success does NOT throw", invocationResult(function () { return Send.Init(sendId).CancelSend(); }), "returned");
+
+  var miss = "" + Send.Init(999999991).CancelSend();
+  assert("DEV CancelSend(missing) returns error string (docs: throws)", miss.indexOf("not found") >= 0 ? "matched" : miss, "matched");
+  assert("DEV CancelSend(missing) does NOT throw (docs: throws)", invocationResult(function () { return Send.Init(999999991).CancelSend(); }), "returned");
+
+  try { Send.Init(sendId).Remove(); } catch (e2) {}
+  Email.Init(EMAIL_KEY).Remove();
+  List.Init(LIST_KEY).Remove();
+  </script>
+
+cancelsend-returns-status: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs: CancelSend success token is "status", not "OK".
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var EMAIL_KEY = "ssjs-guide-ts-send-cstat";
+  var LIST_KEY = "ssjs-guide-ts-send-cstat-list";
+  var EMAIL_NAME = "SSJS Guide TS Send CStat";
+  try { Email.Init(EMAIL_KEY).Remove(); } catch (e0) {}
+  try { List.Init(LIST_KEY).Remove(); } catch (e1) {}
+  Email.Add({
+      CustomerKey: EMAIL_KEY,
+      Name: EMAIL_NAME,
+      HTMLBody: "<b>cstat</b>",
+      TextBody: "cstat",
+      Subject: "SSJS Guide Send CStat",
+      EmailType: "HTML",
+      CharacterSet: "US-ASCII"
+  });
+  List.Add({ CustomerKey: LIST_KEY, Name: "SSJS Guide TS Send CStat List", Type: "Public" });
+  var listId = List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: LIST_KEY })[0].ID;
+  Send.Add(EMAIL_KEY, [listId]);
+  var sendId = Send.Retrieve({ Property: "EmailName", SimpleOperator: "equals", Value: EMAIL_NAME })[0].ID;
+
+  assert("DEV CancelSend success token is \"status\" (docs: \"OK\")", "" + Send.Init(sendId).CancelSend(), "status");
+  assert("success token is not \"OK\"", ("" + Send.Init(sendId).CancelSend()) === "OK" ? "true" : "false", "false");
+
+  try { Send.Init(sendId).Remove(); } catch (e2) {}
+  Email.Init(EMAIL_KEY).Remove();
+  List.Init(LIST_KEY).Remove();
+  </script>
+
+tracking-retrieve: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Send.Tracking.Retrieve(filter)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Static Tracking.Retrieve exists (no Init required).
+   *   2. Empty filter match returns [object Array] length 0.
+   *
+   * NON-ASSERTABLE: non-empty tracking row field shape after a real recipient
+   * send (published scripts stay reader-safe / no spam).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW"; }
+  }
+
+  assert("typeof Send.Tracking.Retrieve is function", typeOf(function () { return typeof Send.Tracking.Retrieve; }), "function");
+  var rows = Send.Tracking.Retrieve({ Property: "SendID", SimpleOperator: "equals", Value: 999999991 });
+  assert("empty Tracking.Retrieve reports as [object Array]", Object.prototype.toString.call(rows), "[object Array]");
+  assert("empty Tracking.Retrieve length is 0", "" + rows.length, "0");
+  assert("empty Tracking.Retrieve Stringify is []", "" + Stringify(rows), "[]");
+  </script>
+
+instance-tracking-clicks-retrieve: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <SendInstance>.Tracking.Clicks.Retrieve(filter)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Working member is Tracking.Clicks.Retrieve (function).
+   *   2. DEV: Tracking.ClickRetrieve is undefined (docs name).
+   *   3. Empty filter returns [object Array] length 0.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var s = Send.Init(1);
+  assert("typeof Tracking.Clicks.Retrieve is function", typeof s.Tracking.Clicks.Retrieve, "function");
+  assert("DEV Tracking.ClickRetrieve is undefined (docs name)", typeof s.Tracking.ClickRetrieve, "undefined");
+  var rows = s.Tracking.Clicks.Retrieve({ Property: "ID", SimpleOperator: "equals", Value: 999999991 });
+  assert("empty Clicks.Retrieve reports as [object Array]", Object.prototype.toString.call(rows), "[object Array]");
+  assert("empty Clicks.Retrieve length is 0", "" + rows.length, "0");
+  </script>
+
+clicks-retrieve-name: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs: docs ClickRetrieve vs runtime Clicks.Retrieve.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var s = Send.Init(1);
+  assert("DEV ClickRetrieve is undefined (docs name)", typeof s.Tracking.ClickRetrieve, "undefined");
+  assert("working member is Clicks.Retrieve", typeof s.Tracking.Clicks.Retrieve, "function");
+  </script>
+
+instance-tracking-totalbyinterval-retrieve: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <SendInstance>.Tracking.TotalByInterval.Retrieve(...)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Working member is Tracking.TotalByInterval.Retrieve.
+   *   2. DEV: Tracking.TotalByIntervalRetrieve is undefined (docs name).
+   *   3. Page example shape (type/start/end/groupBy) returns [object Array].
+   *   4. startDate/endDate accept Date as well as MM-DD-YYYY strings (same
+   *      length for an identical window).
+   *   5. groupBy "hour" is accepted.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var s = Send.Init(1);
+  assert("typeof TotalByInterval.Retrieve is function", typeof s.Tracking.TotalByInterval.Retrieve, "function");
+  assert("DEV TotalByIntervalRetrieve is undefined (docs name)", typeof s.Tracking.TotalByIntervalRetrieve, "undefined");
+
+  var byString = s.Tracking.TotalByInterval.Retrieve("Click", "07-01-2010", "07-31-2010", "day");
+  assert("string dates result reports as [object Array]", Object.prototype.toString.call(byString), "[object Array]");
+  assert("string dates result length > 0", (byString && byString.length > 0) ? "true" : "false", "true");
+
+  var byDate = s.Tracking.TotalByInterval.Retrieve("Click", new Date(2010, 6, 1), new Date(2010, 6, 31), "day");
+  assert("Date dates result reports as [object Array]", Object.prototype.toString.call(byDate), "[object Array]");
+  assert("Date dates length matches string dates", "" + byDate.length, "" + byString.length);
+
+  var byHour = s.Tracking.TotalByInterval.Retrieve("Open", "07-01-2010", "07-31-2010", "hour");
+  assert("groupBy hour returns [object Array]", Object.prototype.toString.call(byHour), "[object Array]");
+  assert("groupBy hour length > 0", (byHour && byHour.length > 0) ? "true" : "false", "true");
+  </script>
+
+totalbyinterval-retrieve-name: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs: docs TotalByIntervalRetrieve vs runtime TotalByInterval.Retrieve.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var s = Send.Init(1);
+  assert("DEV TotalByIntervalRetrieve is undefined (docs name)", typeof s.Tracking.TotalByIntervalRetrieve, "undefined");
+  assert("working member is TotalByInterval.Retrieve", typeof s.Tracking.TotalByInterval.Retrieve, "function");
+  </script>

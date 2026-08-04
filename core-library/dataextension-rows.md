@@ -7,11 +7,12 @@ description: Row-level CRUD methods on a DataExtension object. Retrieve, Add, Up
 verification: verified
 requires_core_load: true
 differs_from_docs: true
+test_scripts: complete
 ---
 
 `DataExtension.Rows` is the primary interface for reading and writing Data Extension rows via the Core library. Access it through a `DataExtension.Init()` object.
 
-{% include callout.html type="warning" content="Requires `Platform.Load(\"core\", \"1.1.5\")` and `DataExtension.Init()` before use." %}
+{% include callout.html type="warning" content="Requires `Platform.Load(\"core\", \"1.1.5\")` and `DataExtension.Init()` before use. Always pass the External Key (`CustomerKey`) to `Init` — display Name binding is defective when Name and CustomerKey differ." %}
 
 ## Methods
 
@@ -19,7 +20,7 @@ differs_from_docs: true
 |--------|---------|-------------|
 | [`<DataExtensionInstance>.Rows.Retrieve([filter])`](#instance-rows-retrieve) | object[] | Retrieve rows, optionally filtered |
 | [`<DataExtensionInstance>.Rows.Add(rowData)`](#instance-rows-add) | number | Insert new row(s) |
-| [`<DataExtensionInstance>.Rows.Lookup(searchFieldNames, searchValues[, limit[, orderByFieldName]])`](#instance-rows-lookup) | object[] | Look up rows by column values |
+| [`<DataExtensionInstance>.Rows.Lookup(searchFieldNames, searchValues[, limit[, orderByFieldName]])`](#instance-rows-lookup) | object[] \| null | Look up rows by column values |
 | [`<DataExtensionInstance>.Rows.Update(rowData, whereFieldNames, whereValues)`](#instance-rows-update) | number | Update existing rows |
 | [`<DataExtensionInstance>.Rows.Remove(columnNames, columnValues)`](#instance-rows-remove) | number | Delete rows matching column values |
 
@@ -69,7 +70,7 @@ var filter = {
 
 #### Return value
 
-`object[]` — row objects with properties matching DE column names. **All field values are returned as strings** (even Number/Boolean/Date columns) — unlike `Lookup`, which returns typed values. On no match, returns an empty array (`length === 0`), not `null` — an ergonomic advantage: you can iterate the result directly without a null-guard. If you need typed/native values instead of strings, use [`Platform.Function.LookupRows`](/platform-functions/lookuprows/) or [`Platform.Function.LookupOrderedRows`](/platform-functions/lookuporderedrows/).
+`object[]` — row objects with properties matching DE column names. **All field values are returned as strings** (even Number/Boolean/Date columns) — unlike `Lookup`, which returns typed values for Number/Boolean/Decimal (Date is an ISO-8601 string exception — see Lookup). On no match, returns an empty array (`length === 0`), not `null` — an ergonomic advantage: you can iterate the result directly without a null-guard. If you need typed/native values instead of strings, use [`Platform.Function.LookupRows`](/platform-functions/lookuprows/) or [`Platform.Function.LookupOrderedRows`](/platform-functions/lookuporderedrows/).
 
 ##### Field type → returned JavaScript type (runtime-verified)
 
@@ -113,6 +114,8 @@ for (var i = 0; i < active.length; i++) {
 }
 ```
 
+{% include test-script.html bundle="core-library--dataextension-rows" chapter="instance-rows-retrieve" %}
+
 ---
 
 ### &lt;DataExtensionInstance&gt;.Rows.Add {#instance-rows-add}
@@ -129,7 +132,7 @@ Adds one or more rows to the previously initialized data extension.
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `rowData` | array | Yes | Array of row objects (or a single row object). Each object's keys must match data extension field names. |
+| `rowData` | array \| object | Yes | Array of row objects, or a single row object. Each object's keys must match data extension field names. |
 
 #### Return value
 
@@ -149,13 +152,15 @@ var birthdayDE = DataExtension.Init("birthdayDE");
 birthdayDE.Rows.Add(arrContacts);
 ```
 
+{% include test-script.html bundle="core-library--dataextension-rows" chapter="instance-rows-add" %}
+
 ---
 
 ### &lt;DataExtensionInstance&gt;.Rows.Lookup {#instance-rows-lookup}
 
 Returns rows where the specified columns equal the specified values (AND-joined). Optionally limits results and orders by a field.
 
-{% include callout.html type="note" content="When initializing a data extension for `Lookup()` from an email message, you must use the data extension Name; on landing pages, either Name or external key works — make them identical to be safe." %}
+{% include callout.html type="note" content="When initializing a data extension for `Lookup()` from an email message, you must use the data extension Name; on landing pages, either Name or external key works — make them identical to be safe. Prefer External Key on CloudPages (Name binding is defective when Name and CustomerKey differ)." %}
 
 #### Syntax
 
@@ -167,16 +172,16 @@ Returns rows where the specified columns equal the specified values (AND-joined)
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `searchFieldNames` | array | Yes | Array of column names to match against |
-| `searchValues` | array | Yes | Array of values to match (one per column, in order) |
-| `limit` | number | No | Maximum number of rows to return |
+| `searchFieldNames` | string[] | Yes | Array of column names to match against |
+| `searchValues` | array | Yes | Array of values to match (one per column, in order). Heterogeneous simple values; Number columns accept a number or a numeric string. |
+| `limit` | number \| string | No | Maximum number of rows to return |
 | `orderByFieldName` | string | No | Field to order results by |
 
 #### Return value
 
-`object[]` — rows with **typed values** (Number/Boolean/Date columns come back as their native types). On no match, returns `null` (not an empty array).
+`object[] | null` — rows with **typed values** for Number/Decimal/Boolean. **Date columns are the exception:** they come back as an ISO-8601 string (e.g. `"2024-01-15T00:00:00.000"`), not a `Date` object — the same behaviour as [`Platform.Function.LookupRows`](/platform-functions/lookuprows/). On no match, returns `null` (not an empty array).
 
-{% include differs-from-docs.html note="Runtime-verified on a CloudPage: `Lookup()` returns typed values (unlike `Retrieve`, which returns every field as a string) and returns `null` on no match. The result is a host array (`instanceof Array` is `false`, but `.length` and index access work)." %}
+{% include differs-from-docs.html note="Runtime-verified on a CloudPage: `Lookup()` returns typed Number/Decimal/Boolean values (unlike `Retrieve`, which returns every field as a string). Date columns come back as an ISO-8601 string (e.g. `\"2024-01-15T00:00:00.000\"`), NOT a `Date` object — matching `Platform.Function.LookupRows`. On no match it returns `null`. The result is a host array (`instanceof Array` is `false`, but `.length` and index access work)." %}
 
 #### Examples
 
@@ -185,6 +190,8 @@ Platform.Load("core", "1.1.5");
 var testDE = DataExtension.Init("testDE");
 var data = testDE.Rows.Lookup(["Age"], [25], 2, "LastName");
 ```
+
+{% include test-script.html bundle="core-library--dataextension-rows" chapter="instance-rows-lookup" %}
 
 ---
 
@@ -203,8 +210,8 @@ Updates the columns of rows where `whereFieldNames` equal `whereValues` (AND-joi
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `rowData` | object | Yes | Object whose keys are columns to update and values are the new values |
-| `whereFieldNames` | array | Yes | Array of column names to match against |
-| `whereValues` | array | Yes | Array of values to match (one per column, in order) |
+| `whereFieldNames` | string[] | Yes | Array of column names to match against |
+| `whereValues` | array | Yes | Array of values to match (one per column, in order). Heterogeneous simple values; Number columns accept a number or a numeric string. |
 
 #### Return value
 
@@ -220,6 +227,8 @@ var dataExt = DataExtension.Init("NTO Customer List");
 var fieldsToUpdate = { StateProvince: "QC", PreferredActivity: "Sailing" };
 var result = dataExt.Rows.Update(fieldsToUpdate, ["MemberId", "Country"], [9868600, "CA"]);
 ```
+
+{% include test-script.html bundle="core-library--dataextension-rows" chapter="instance-rows-update" %}
 
 ---
 
@@ -237,8 +246,8 @@ Deletes rows from the previously initialized data extension where the specified 
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `columnNames` | array | Yes | Array of column names to match against |
-| `columnValues` | array | Yes | Array of values to match (one per column, in order) |
+| `columnNames` | string[] | Yes | Array of column names to match against |
+| `columnValues` | array | Yes | Array of values to match (one per column, in order). Heterogeneous simple values; Number columns accept a number or a numeric string. |
 
 #### Return value
 
@@ -251,6 +260,8 @@ Platform.Load("Core", "1.1.5");
 var memberDE = DataExtension.Init("MembershipRewards");
 var result = memberDE.Rows.Remove(["Area"], ["Kensington"]);
 ```
+
+{% include test-script.html bundle="core-library--dataextension-rows" chapter="instance-rows-remove" %}
 
 ## Complete CRUD Pattern
 

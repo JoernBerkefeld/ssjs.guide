@@ -1,0 +1,222 @@
+# Test scripts for /core-library/httpheader/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the official Salesforce docs.
+#
+# HEADER SIDE EFFECTS: SetValue/Remove mutate outbound response headers.
+# Body PASS/FAIL lines only prove return values and inbound GetValue reads.
+# Exact outbound header strings (including content-length protection and
+# boolean CLR "True"/"False") require raw HTTP ResponseHeaders inspection —
+# those are NON-ASSERTABLE in the body and are recorded in the verification DB.
+# Scripts only SetValue custom X-* names (plus Host/content-length for the
+# protection claims) and never touch Content-Type, so the PASS text body stays intact.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# NORMALIZATION RULE: assert() compares with a plain === and does NOT coerce.
+# Engine-returned values are normalized at the call site with "" + value —
+# never with String(value), which yields a CLR string that fails === and
+# aborts the page when a string method is called on it.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage GET on the QA business unit. Re-run them before changing any
+# claim on the page.
+
+methods: |
+  <script runat="server">
+  /*
+   * Chapter: Methods — Core load gate and HTTPHeader surface
+   *
+   * Proves:
+   *   1. Before Platform.Load the bare name is undefined; invoking a method throws.
+   *   2. After Platform.Load("core", "1.1.5") HTTPHeader is an object and
+   *      GetValue / SetValue / Remove are functions.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+
+  assert("before load typeof HTTPHeader is undefined", typeOfThunk(function () { return typeof HTTPHeader; }), "undefined");
+  assertThrows("before load HTTPHeader.GetValue throws", function () { return HTTPHeader.GetValue("Host"); });
+
+  Platform.Load("core", "1.1.5");
+  assert("after load typeof HTTPHeader is object", typeOfThunk(function () { return typeof HTTPHeader; }), "object");
+  assert("typeof HTTPHeader.GetValue is function", typeOfThunk(function () { return typeof HTTPHeader.GetValue; }), "function");
+  assert("typeof HTTPHeader.SetValue is function", typeOfThunk(function () { return typeof HTTPHeader.SetValue; }), "function");
+  assert("typeof HTTPHeader.Remove is function", typeOfThunk(function () { return typeof HTTPHeader.Remove; }), "function");
+  </script>
+
+getvalue: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: HTTPHeader.GetValue(name)
+   *
+   * Proves:
+   *   1. GetValue("Host") returns a non-empty JavaScript string (inbound Host).
+   *   2. Header names are case-insensitive (Host vs host).
+   *   3. An absent inbound header returns strict null.
+   *   4. DEV: GetValue after SetValue of the same custom name is still null
+   *      (official docs imply one shared header collection).
+   *
+   * NON-ASSERTABLE: User-Agent presence — WebClient probes often omit it, so
+   * absence is a client artefact, not proof the API cannot read it.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var host = HTTPHeader.GetValue("Host");
+  assert("GetValue Host typeof is string", "" + (typeof host), "string");
+  assert("GetValue Host is non-empty", host && host.length > 0 ? "true" : "false", "true");
+  assert("GetValue Host equals lowercase host", HTTPHeader.GetValue("host") === host ? "true" : "false", "true");
+
+  var absent = HTTPHeader.GetValue("X-Absent-HttpHeader-Ts");
+  assert("absent header is strict null", absent === null ? "null" : "other", "null");
+  assert("absent header is falsy", absent ? "truthy" : "falsy", "falsy");
+
+  HTTPHeader.SetValue("X-GetValue-Readback", "should-not-read");
+  var readBack = HTTPHeader.GetValue("X-GetValue-Readback");
+  assert("DEV GetValue after SetValue is null (official docs: shared collection)", readBack === null ? "null" : "other", "null");
+  </script>
+
+setvalue: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: HTTPHeader.SetValue(name, value)
+   *
+   * Proves:
+   *   1. SetValue returns undefined (void-like; typeof "undefined").
+   *   2. A string value call does not throw.
+   *   3. TYPE-ACCEPTANCE: number value is Accepted (call succeeds).
+   *   4. TYPE-ACCEPTANCE: boolean value is Accepted (call succeeds) —
+   *      BUG: raw ResponseHeaders show CLR "True"/"False" (not lowercase).
+   *   5. DEV: SetValue("Host", ...) does not throw (official docs: host
+   *      cannot be changed). Outbound Host emission is NON-ASSERTABLE here.
+   *   6. SetValue("content-length", ...) does not throw; protection of the
+   *      real Content-Length is NON-ASSERTABLE in the body (raw headers).
+   *
+   * NON-ASSERTABLE in body: exact outbound header strings for custom / Host /
+   * Content-Length / boolean CLR capitalization — prove via ResponseHeaders.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var retStr = HTTPHeader.SetValue("X-SetValue-Str", "example");
+  assert("SetValue string returns undefined", retStr === undefined ? "undefined" : "other", "undefined");
+  assert("SetValue string typeof is undefined", "" + (typeof retStr), "undefined");
+
+  var retNum = HTTPHeader.SetValue("X-SetValue-Num", 42);
+  assert("number value SetValue returns undefined", retNum === undefined ? "undefined" : "other", "undefined");
+
+  var retTrue = HTTPHeader.SetValue("X-SetValue-BoolT", true);
+  var retFalse = HTTPHeader.SetValue("X-SetValue-BoolF", false);
+  assert("BUG boolean true SetValue accepted (outbound CLR True)", retTrue === undefined ? "undefined" : "other", "undefined");
+  assert("BUG boolean false SetValue accepted (outbound CLR False)", retFalse === undefined ? "undefined" : "other", "undefined");
+
+  var retHost = HTTPHeader.SetValue("Host", "ssjs-guide-host-probe");
+  assert("DEV SetValue Host does not throw (official docs: cannot change host)", retHost === undefined ? "undefined" : "other", "undefined");
+
+  var retCL = HTTPHeader.SetValue("content-length", "1");
+  assert("SetValue content-length does not throw", retCL === undefined ? "undefined" : "other", "undefined");
+
+  var afterSet = HTTPHeader.GetValue("X-SetValue-Str");
+  assert("GetValue still null after SetValue string", afterSet === null ? "null" : "other", "null");
+  </script>
+
+remove: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: HTTPHeader.Remove(headerName)
+   *
+   * Proves:
+   *   1. DEV: Remove returns undefined, not the "OK" string official docs claim.
+   *   2. Remove on a just-set custom name and on an never-set name both return undefined.
+   *
+   * NON-ASSERTABLE in body: that the outbound header is absent after Remove —
+   * prove via raw ResponseHeaders (X-Keep present after Set, absent after Remove).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  HTTPHeader.SetValue("X-Remove-Probe", "temp");
+  var removed = HTTPHeader.Remove("X-Remove-Probe");
+  assert("DEV Remove returns undefined (official docs: OK)", removed === undefined ? "undefined" : "other", "undefined");
+  assert("DEV Remove typeof is undefined (official docs: OK)", "" + (typeof removed), "undefined");
+
+  var removedAbsent = HTTPHeader.Remove("X-Remove-Never-Set");
+  assert("Remove absent name returns undefined", removedAbsent === undefined ? "undefined" : "other", "undefined");
+  </script>
+
+differs-inbound-outbound: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs: separate inbound/outbound collections + Remove undefined
+   * + Host not protected (content-length is).
+   *
+   * Proves:
+   *   1. DEV: GetValue after SetValue is null (official docs: one header bag).
+   *   2. GetValue("Host") still returns the inbound CloudPage host string.
+   *   3. DEV: Remove returns undefined (official docs: "OK").
+   *   4. DEV: SetValue("Host", ...) succeeds (official docs: host cannot be changed).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  HTTPHeader.SetValue("X-Custom-Test", "hello");
+  var readBack = HTTPHeader.GetValue("X-Custom-Test");
+  assert("DEV GetValue after SetValue is null (official docs: shared collection)", readBack === null ? "null" : "other", "null");
+
+  var host = HTTPHeader.GetValue("Host");
+  assert("GetValue Host is a string", "" + (typeof host), "string");
+  assert("GetValue Host is non-empty", host && host.length > 0 ? "true" : "false", "true");
+
+  var removed = HTTPHeader.Remove("X-Custom-Test");
+  assert("DEV Remove returns undefined (official docs: OK)", removed === undefined ? "undefined" : "other", "undefined");
+  assert("DEV Remove typeof is undefined", "" + (typeof removed), "undefined");
+
+  var hostSet = HTTPHeader.SetValue("Host", "differs-host-probe");
+  assert("DEV SetValue Host succeeds (official docs: cannot change host)", hostSet === undefined ? "undefined" : "other", "undefined");
+  </script>

@@ -1,0 +1,487 @@
+# Test scripts for /core-library/folder/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every in-scope type-acceptance counterpart.
+#
+# FIXTURES: write chapters create their own Content Builder / Email Studio
+# folder under a unique `ssjs-guide-ts-folder-*` CustomerKey as a child of an
+# AllowChildren email ContentType folder resolved at runtime. Each script
+# begins with an orphan-cleanup Remove and ends with a re-count. No
+# pre-existing folder is ever targeted for mutation (the email_default /
+# "my emails" parent is read-only).
+#
+# NON-ASSERTABLE:
+#   - Exact ParentFolder.Name values across tenants — scripts prove the
+#     documented filter shape with a live parent Name resolved from Retrieve,
+#     not a hard-coded marketing-folder name from the page example.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# NORMALIZATION RULE: assert() compares with a plain === and does NOT coerce.
+# Engine-returned values are normalized at the call site with "" + value —
+# never with String(value), which yields a CLR string that fails === and
+# aborts the page when a string method is called on it.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage GET on the QA business unit. Re-run them before changing any
+# claim on the page.
+
+init: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Folder.Init([key])
+   *
+   * CloudPage GET context. Proves:
+   *   1. Folder requires the Core load and is then an object exposing the
+   *      documented statics Init, Add and Retrieve.
+   *   2. There is no static Update / Remove / SetID — those are instance
+   *      methods only.
+   *   3. Init(key) returns a FolderInstance whose members are SetID, Remove
+   *      and Update (each typeof "function").
+   *   4. Init() with no key returns the same instance shape (SetID available).
+   *   5. The instance carries NO readable folder fields (CustomerKey, Name,
+   *      ID read back undefined) — Init binds a key, it does not fetch.
+   *   6. A nonsense key yields an indistinguishable stub.
+   *   7. The page example shapes Init("myFolder") and Init() return.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW"; }
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  assert("typeof Folder is object", typeOf(function () { return typeof Folder; }), "object");
+  assert("typeof Folder.Init is function", typeOf(function () { return typeof Folder.Init; }), "function");
+  assert("typeof Folder.Add is function", typeOf(function () { return typeof Folder.Add; }), "function");
+  assert("typeof Folder.Retrieve is function", typeOf(function () { return typeof Folder.Retrieve; }), "function");
+  assert("Folder.Update is not a static", typeOf(function () { return typeof Folder.Update; }), "undefined");
+  assert("Folder.Remove is not a static", typeOf(function () { return typeof Folder.Remove; }), "undefined");
+  assert("Folder.SetID is not a static", typeOf(function () { return typeof Folder.SetID; }), "undefined");
+
+  var myFolder = Folder.Init("ssjs-guide-ts-folder-init");
+  assert("typeof Folder.Init(key) is object", typeof myFolder, "object");
+  assert("typeof instance.SetID is function", typeof myFolder.SetID, "function");
+  assert("typeof instance.Update is function", typeof myFolder.Update, "function");
+  assert("typeof instance.Remove is function", typeof myFolder.Remove, "function");
+  assert("instance has no Add", typeof myFolder.Add, "undefined");
+  assert("instance has no Retrieve", typeof myFolder.Retrieve, "undefined");
+  assert("instance exposes exactly SetID+Remove+Update", "" + Stringify(myFolder), '{"SetID":"function","Remove":"function","Update":"function"}');
+
+  var noKey = Folder.Init();
+  assert("typeof Folder.Init() is object", typeof noKey, "object");
+  assert("Init() exposes SetID", typeof noKey.SetID, "function");
+  assert("Init() exposes Update", typeof noKey.Update, "function");
+  assert("Init() exposes Remove", typeof noKey.Remove, "function");
+  assert("Init() shape matches Init(key)", ("" + Stringify(noKey)) === ("" + Stringify(myFolder)) ? "true" : "false", "true");
+
+  assert("instance.CustomerKey is undefined (Init does not fetch)", typeof myFolder.CustomerKey, "undefined");
+  assert("instance.Name is undefined (Init does not fetch)", typeof myFolder.Name, "undefined");
+  assert("instance.ID is undefined (Init does not fetch)", typeof myFolder.ID, "undefined");
+
+  var bogus = Folder.Init("ssjs-guide-no-such-folder-zzz");
+  assert("Init(nonsense key) still returns an object", typeof bogus, "object");
+  assert("Init(nonsense key) stub is indistinguishable", ("" + Stringify(bogus)) === ("" + Stringify(myFolder)) ? "true" : "false", "true");
+  assert("page example: Init('myFolder') returns", invocationResult(function () { return Folder.Init("myFolder"); }), "returned");
+  assert("page example: Init() returns", invocationResult(function () { return Folder.Init(); }), "returned");
+  </script>
+
+add: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Folder.Add(properties)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Folder.Add is a function taking one properties object.
+   *   2. Add(properties) with the page field set (Name, CustomerKey,
+   *      Description, ContentType, IsActive, IsEditable, AllowChildren,
+   *      ParentFolderID) returns the string "OK" and creates a retrievable
+   *      folder.
+   *   3. Negative cases: Add() with no argument and Add({}) both throw.
+   *   4. Init instance has no Add (Add is static).
+   *
+   * FIXTURE: creates ssjs-guide-ts-folder-add under a live AllowChildren
+   * email ContentType parent, then removes it. Cleanup re-count is 0.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function countByKey(key) {
+      var rows = Folder.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+  function findEmailParentId() {
+      var parents = Folder.Retrieve({ Property: "ContentType", SimpleOperator: "equals", Value: "email" });
+      var i;
+      for (i = 0; i < (parents && parents.length ? parents.length : 0); i++) {
+          if (parents[i].AllowChildren === true || ("" + parents[i].AllowChildren) === "true") {
+              return parents[i].ID;
+          }
+      }
+      return parents && parents.length ? parents[0].ID : null;
+  }
+
+  var KEY = "ssjs-guide-ts-folder-add";
+  Folder.Init(KEY).Remove();
+  assert("precondition: no folder under the probe key", "" + countByKey(KEY), "0");
+
+  assert("typeof Folder.Add is function", typeof Folder.Add, "function");
+  assert("Init instance has no Add (Add is static)", typeof Folder.Init(KEY).Add, "undefined");
+
+  var parentId = findEmailParentId();
+  assert("resolved an AllowChildren email parent ID", typeof parentId, "number");
+
+  var status = null;
+  assert("Add(properties) does not throw", invocationResult(function () {
+      status = Folder.Add({
+          Name: "SSJS Guide TS Folder Add",
+          CustomerKey: KEY,
+          Description: "Test added",
+          ContentType: "email",
+          IsActive: "true",
+          IsEditable: "true",
+          AllowChildren: "false",
+          ParentFolderID: parentId
+      });
+  }), "returned");
+  assert("Add returns the string \"OK\"", "" + status, "OK");
+  assert("Add result typeof is string", typeof status, "string");
+  assert("the folder exists after Add", "" + countByKey(KEY), "1");
+
+  assert("Add() with no argument throws", invocationResult(function () { return Folder.Add(); }), "threw");
+  assert("Add({}) with an empty object throws", invocationResult(function () { return Folder.Add({}); }), "threw");
+
+  assert("fixture cleanup removed the created folder", "" + Folder.Init(KEY).Remove(), "OK");
+  assert("cleanup re-count is 0", "" + countByKey(KEY), "0");
+  </script>
+
+retrieve: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Folder.Retrieve(filter)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Retrieve is a function taking one PascalCase WSProxy-style filter.
+   *   2. On a match the result reports as [object Array], exposes .length,
+   *      and is not a JS Array (instanceof Array is false).
+   *   3. A matched row exposes readable CustomerKey, Name, ID, ContentType.
+   *   4. On no match the same array-like shape is returned with length 0
+   *      and Stringify "[]".
+   *   5. Dot-notation ParentFolder.Name filter (page example shape) returns
+   *      the same array-like result.
+   *   6. The documented CustomerKey filter resolves the owned fixture.
+   *
+   * FIXTURE: creates ssjs-guide-ts-folder-retrieve and removes it at the end.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function countByKey(key) {
+      var rows = Folder.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+  function findEmailParent() {
+      var parents = Folder.Retrieve({ Property: "ContentType", SimpleOperator: "equals", Value: "email" });
+      var i;
+      for (i = 0; i < (parents && parents.length ? parents.length : 0); i++) {
+          if (parents[i].AllowChildren === true || ("" + parents[i].AllowChildren) === "true") {
+              return parents[i];
+          }
+      }
+      return parents && parents.length ? parents[0] : null;
+  }
+
+  var KEY = "ssjs-guide-ts-folder-retrieve";
+  Folder.Init(KEY).Remove();
+  var parent = findEmailParent();
+  Folder.Add({
+      Name: "SSJS Guide TS Folder Retrieve",
+      CustomerKey: KEY,
+      Description: "retrieve probe",
+      ContentType: "email",
+      IsActive: "true",
+      IsEditable: "true",
+      AllowChildren: "false",
+      ParentFolderID: parent.ID
+  });
+
+  assert("typeof Folder.Retrieve is function", typeof Folder.Retrieve, "function");
+
+  var rows = Folder.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: KEY });
+  assert("typeof the matched result is object", typeof rows, "object");
+  assert("the matched result reports as [object Array]", Object.prototype.toString.call(rows), "[object Array]");
+  assert("the matched result exposes a numeric .length", typeof rows.length, "number");
+  assert("the matched result has exactly one row", "" + rows.length, "1");
+  assert("instanceof Array is false (engine-wide host-array quirk)", rows instanceof Array ? "true" : "false", "false");
+  assert("matched row CustomerKey equals the filter value", "" + rows[0].CustomerKey, KEY);
+  assert("matched row Name is a string", typeof rows[0].Name, "string");
+  assert("matched row ID is a number", typeof rows[0].ID, "number");
+  assert("matched row ContentType is a string", typeof rows[0].ContentType, "string");
+
+  var empty = Folder.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: "ssjs-guide-no-such-folder-zzz" });
+  assert("empty result reports as [object Array]", Object.prototype.toString.call(empty), "[object Array]");
+  assert("empty result length is 0", "" + empty.length, "0");
+  assert("empty result Stringify is []", "" + Stringify(empty), "[]");
+  assert("workaround: guard with rows && rows.length before indexing", (rows && rows.length) ? "true" : "false", "true");
+
+  var byParentName = Folder.Retrieve({
+      Property: "ParentFolder.Name",
+      SimpleOperator: "equals",
+      Value: parent.Name
+  });
+  assert("ParentFolder.Name filter reports as [object Array]", Object.prototype.toString.call(byParentName), "[object Array]");
+  assert("ParentFolder.Name filter exposes numeric .length", typeof byParentName.length, "number");
+  assert("ParentFolder.Name filter finds at least the fixture", byParentName.length >= 1 ? "true" : "false", "true");
+
+  assert("fixture cleanup removed the created folder", "" + Folder.Init(KEY).Remove(), "OK");
+  assert("cleanup re-count is 0", "" + countByKey(KEY), "0");
+  </script>
+
+instance-update: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <FolderInstance>.Update(properties)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Update is an instance method (typeof "function") on Folder.Init.
+   *   2. Update(properties) returns the string "OK" on success.
+   *   3. The page example shape Update({ Name }) succeeds.
+   *   4. The change persists: a repeated Update on the same key returns "OK".
+   *   5. Negative case: Update on a nonexistent key returns "Error" (does
+   *      not throw) — callers must test the return value.
+   *
+   * FIXTURE: creates ssjs-guide-ts-folder-update and removes it at the end.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function countByKey(key) {
+      var rows = Folder.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+  function findEmailParentId() {
+      var parents = Folder.Retrieve({ Property: "ContentType", SimpleOperator: "equals", Value: "email" });
+      var i;
+      for (i = 0; i < (parents && parents.length ? parents.length : 0); i++) {
+          if (parents[i].AllowChildren === true || ("" + parents[i].AllowChildren) === "true") {
+              return parents[i].ID;
+          }
+      }
+      return parents && parents.length ? parents[0].ID : null;
+  }
+
+  var KEY = "ssjs-guide-ts-folder-update";
+  Folder.Init(KEY).Remove();
+  Folder.Add({
+      Name: "SSJS Guide TS Folder Update",
+      CustomerKey: KEY,
+      Description: "update probe",
+      ContentType: "email",
+      IsActive: "true",
+      IsEditable: "true",
+      AllowChildren: "false",
+      ParentFolderID: findEmailParentId()
+  });
+
+  var myFolder = Folder.Init(KEY);
+  assert("typeof instance.Update is function", typeof myFolder.Update, "function");
+
+  var status = myFolder.Update({ Name: "Updated Folder Name" });
+  assert("page example: Update({Name}) returns \"OK\"", "" + status, "OK");
+  assert("Update returns a string", typeof status, "string");
+  assert("a repeated Update on the same instance still returns \"OK\"", "" + myFolder.Update({ Description: "second update" }), "OK");
+  assert("a freshly initialized instance for the same key also returns \"OK\"", "" + Folder.Init(KEY).Update({ Description: "third update" }), "OK");
+
+  assert("Update on a nonexistent key returns \"Error\"", "" + Folder.Init("ssjs-guide-no-such-folder-zzz").Update({ Name: "x" }), "Error");
+  assert("Update on a nonexistent key does NOT throw", invocationResult(function () { return Folder.Init("ssjs-guide-no-such-folder-zzz").Update({ Name: "x" }); }), "returned");
+
+  assert("fixture cleanup removed the created folder", "" + Folder.Init(KEY).Remove(), "OK");
+  assert("cleanup re-count is 0", "" + countByKey(KEY), "0");
+  </script>
+
+instance-remove: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <FolderInstance>.Remove()
+   *
+   * CloudPage GET context. Proves:
+   *   1. Remove is an instance method (typeof "function") and takes no args.
+   *   2. Remove() returns the string "OK" on success.
+   *   3. The deletion really happened: after Remove, Retrieve count is 0 and
+   *      a further Update on the same key returns "Error".
+   *   4. Negative case: Remove() on a nonexistent key returns "Error" rather
+   *      than throwing — which is why other scripts can call Remove as an
+   *      unconditional orphan-cleanup preamble.
+   *
+   * FIXTURE: creates ssjs-guide-ts-folder-remove and deletes it as the assert.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function countByKey(key) {
+      var rows = Folder.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+  function findEmailParentId() {
+      var parents = Folder.Retrieve({ Property: "ContentType", SimpleOperator: "equals", Value: "email" });
+      var i;
+      for (i = 0; i < (parents && parents.length ? parents.length : 0); i++) {
+          if (parents[i].AllowChildren === true || ("" + parents[i].AllowChildren) === "true") {
+              return parents[i].ID;
+          }
+      }
+      return parents && parents.length ? parents[0].ID : null;
+  }
+
+  var KEY = "ssjs-guide-ts-folder-remove";
+  Folder.Init(KEY).Remove();
+  Folder.Add({
+      Name: "SSJS Guide TS Folder Remove",
+      CustomerKey: KEY,
+      Description: "remove probe",
+      ContentType: "email",
+      IsActive: "true",
+      IsEditable: "true",
+      AllowChildren: "false",
+      ParentFolderID: findEmailParentId()
+  });
+
+  var myFolder = Folder.Init(KEY);
+  assert("typeof instance.Remove is function", typeof myFolder.Remove, "function");
+  assert("control: fixture count is 1 before Remove", "" + countByKey(KEY), "1");
+  assert("control: the fixture updates successfully before Remove", "" + myFolder.Update({ Description: "about to be removed" }), "OK");
+
+  var status = myFolder.Remove();
+  assert("page example: Remove() returns \"OK\"", "" + status, "OK");
+  assert("Remove returns a string", typeof status, "string");
+  assert("after Remove the Retrieve count is 0", "" + countByKey(KEY), "0");
+  assert("after Remove a further Update returns \"Error\"", "" + Folder.Init(KEY).Update({ Name: "x" }), "Error");
+  assert("after Remove a second Remove returns \"Error\"", "" + Folder.Init(KEY).Remove(), "Error");
+
+  assert("Remove on a nonexistent key returns \"Error\"", "" + Folder.Init("ssjs-guide-no-such-folder-zzz").Remove(), "Error");
+  assert("Remove on a nonexistent key does NOT throw", invocationResult(function () { return Folder.Init("ssjs-guide-no-such-folder-zzz").Remove(); }), "returned");
+  </script>
+
+instance-setid: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <FolderInstance>.SetID(id)
+   *
+   * CloudPage GET context. Proves:
+   *   1. SetID is an instance method on Folder.Init() / Init(key).
+   *   2. After Folder.Init() with no key, SetID(numeric id) binds the
+   *      instance so a subsequent Update returns "OK".
+   *   3. Type-acceptance: id also accepts a numeric string with the same
+   *      meaningful result (widen: number → string | number).
+   *   4. The page example shape Init(); SetID(id) runs without throwing.
+   *   5. SetID alone does not fetch readable fields onto the instance.
+   *
+   * FIXTURE: creates ssjs-guide-ts-folder-setid and removes it at the end.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function countByKey(key) {
+      var rows = Folder.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+  function findEmailParentId() {
+      var parents = Folder.Retrieve({ Property: "ContentType", SimpleOperator: "equals", Value: "email" });
+      var i;
+      for (i = 0; i < (parents && parents.length ? parents.length : 0); i++) {
+          if (parents[i].AllowChildren === true || ("" + parents[i].AllowChildren) === "true") {
+              return parents[i].ID;
+          }
+      }
+      return parents && parents.length ? parents[0].ID : null;
+  }
+
+  var KEY = "ssjs-guide-ts-folder-setid";
+  Folder.Init(KEY).Remove();
+  Folder.Add({
+      Name: "SSJS Guide TS Folder SetID",
+      CustomerKey: KEY,
+      Description: "setid probe",
+      ContentType: "email",
+      IsActive: "true",
+      IsEditable: "true",
+      AllowChildren: "false",
+      ParentFolderID: findEmailParentId()
+  });
+
+  var created = Folder.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: KEY });
+  var folderId = created[0].ID;
+  assert("fixture ID is a number", typeof folderId, "number");
+
+  var byId = Folder.Init();
+  assert("typeof instance.SetID is function", typeof byId.SetID, "function");
+  assert("page example: SetID(number) does not throw", invocationResult(function () { byId.SetID(folderId); }), "returned");
+  assert("SetID does not fetch Name onto the instance", typeof byId.Name, "undefined");
+  assert("Update after SetID(number) returns \"OK\"", "" + byId.Update({ Description: "via-setid-number" }), "OK");
+
+  var byStr = Folder.Init();
+  assert("SetID(numeric string) does not throw", invocationResult(function () { byStr.SetID("" + folderId); }), "returned");
+  assert("Update after SetID(numeric string) returns \"OK\"", "" + byStr.Update({ Description: "via-setid-string" }), "OK");
+
+  assert("fixture cleanup removed the created folder", "" + Folder.Init(KEY).Remove(), "OK");
+  assert("cleanup re-count is 0", "" + countByKey(KEY), "0");
+
+  var orphanLen = 0;
+  try {
+      var api = new Script.Util.WSProxy();
+      var orphans = api.retrieve("DataFolder", ["CustomerKey"], {
+          Property: "CustomerKey", SimpleOperator: "like", Value: "ssjs-guide-ts-folder%"
+      });
+      orphanLen = orphans.Results ? orphans.Results.length : 0;
+  } catch (exO) { orphanLen = -1; }
+  assert("orphan re-count ssjs-guide-ts-folder% is 0", "" + orphanLen, "0");
+  </script>

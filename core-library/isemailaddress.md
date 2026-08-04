@@ -13,6 +13,7 @@ availability:
 requires_core_load: true
 verification: verified
 differs_from_docs: false
+test_scripts: complete
 syntax: "IsEmailAddress(value)"
 return_type: boolean
 min_args: 1
@@ -25,15 +26,21 @@ max_args: 1
 |------|------|----------|-------------|
 | `value` | string | Yes | The string to validate as an email address. |
 
+{% include test-script.html bundle="core-library--isemailaddress" chapter="parameters" %}
+
 ## Description
 
 `IsEmailAddress()` is the bare-name Core-library form of [`Platform.Function.IsEmailAddress()`](/platform-functions/isemailaddress/). It requires `Platform.Load("core", "1.1.5")` before use — the bare name is `undefined` until the load has run.
 
-It behaves **identically** to `Platform.Function.IsEmailAddress()`: same argument, same boolean return. Use the qualified [`Platform.Function.IsEmailAddress()`](/platform-functions/isemailaddress/) form when you do not already have a `Platform.Load` call in scope.
+For the documented one-argument form it returns the same boolean as `Platform.Function.IsEmailAddress()`. Calling with no arguments returns `false` (does not throw); surplus arguments are silently ignored. The qualified form throws on those arities. Prefer [`Platform.Function.IsEmailAddress()`](/platform-functions/isemailaddress/) when you do not already have a `Platform.Load` call in scope.
+
+{% include test-script.html bundle="core-library--isemailaddress" chapter="description" %}
 
 ## Return value
 
 Returns a `boolean` — `true` for a valid email address format, `false` otherwise.
+
+{% include test-script.html bundle="core-library--isemailaddress" chapter="return-value" %}
 
 ## Example
 
@@ -43,6 +50,8 @@ if (IsEmailAddress(emailInput)) {
     Write("Valid email");
 }
 ```
+
+{% include test-script.html bundle="core-library--isemailaddress" chapter="example" %}
 
 ## See Also
 

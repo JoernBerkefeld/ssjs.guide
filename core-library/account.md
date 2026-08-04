@@ -52,8 +52,6 @@ Account.Init(key)
 
 {% include differs-from-docs.html note="Proven at runtime: Account.Init returns the same Update-only stub regardless of the key passed — a CustomerKey GUID, a numeric MID, a Name, or a nonsense key all yield an identical stub — so Init alone does not confirm whether a key resolves to a real account." %}
 
-{% include test-script.html bundle="core-library--account" chapter="init" label="Show test script — the same Update-only stub is returned for any key" %}
-
 #### Examples
 
 ```javascript
@@ -91,8 +89,6 @@ Proven at runtime, `Account.Retrieve` resolves **only the running session's own 
 A matched row is the full Account SOAP object. Observed fields include `Name`, `ID`, `CustomerKey`, `AccountType`, `ParentID`, `BrandID`, `PrivateLabelID`, `ReportingParentID`, `Email`, `FromName`, `BusinessName`, `Phone`, `Address`, `Fax`, `City`, `State`, `Zip`, `Country`, `IsActive`, `IsTestAccount`, `OrgID`, `DBID`, `ParentName`, `CustomerID`, `DeletedDate`, `EditionID`, `Children`, `Subscription`, `PrivateLabels`, `BusinessRules`, `AccountUsers`, `InheritAddress`, `IsTrialAccount`, `Locale`, `ParentAccount`, `TimeZone` (a nested object with `ID`/`Name`/`CustomerKey`), `Roles`, `StackID`, `SalesForceID`, `LanguageLocale`, `IndustryCode`, `Edition`, `SalesforceOrgID`, `AccountState`, `SubscriptionRestrictionFlags`, `Client`, `PartnerKey`, `PartnerProperties`, `CreatedDate`, `ModifiedDate`, `ObjectID`, `Owner`, `CorrelationID`, `ObjectState` and `IsPlatformObject`, plus a `*Specified` boolean companion for many numeric/date fields (for example `IDSpecified`, `ParentIDSpecified`, `CreatedDateSpecified`).
 
 {% include differs-from-docs.html note="Proven at runtime: Account.Retrieve resolves only the running session's own account (via Name, ID as numeric or string, or CustomerKey). Requests for other business units returned a zero-length collection for every property and value tried, including child BUs by Name, ID, and CustomerKey. The properties MID, AccountID and BusinessUnitID are not recognized. Neither the matched nor the empty collection is an instanceof Array in this engine, so guard with a .length check before indexing." %}
-
-{% include test-script.html bundle="core-library--account" chapter="retrieve" label="Show test script — only the own account resolves; the collection is not a real Array" %}
 
 #### Examples
 
@@ -132,8 +128,6 @@ Updates the account represented by the instance. If `properties` includes `TimeZ
 `string`. On failure the call **returns** the plain string `"Error"`; for one payload shape it instead **throws** the plain string `"Error Updating Account."` — proven at runtime; which one occurs depends on the payload. The documented success return is the string `"OK"`, but a success return was not reproduced at runtime in this project, and set→re-read cycles on the running BU showed no change persisted. Because it can throw a plain string (not an `Error` instance, so the caught value has no `.message`), wrap the call in `try`/`catch` and treat any non-`"OK"` return — and any throw — as failure.
 
 {% include differs-from-docs.html note="Proven at runtime on the running session's own account (resolved via Account.Init(<self CustomerKey GUID>)): <AccountInstance>.Update returned typeof \"string\" value \"Error\" for every real single-field payload tried — CustomerKey, FromName, BusinessName, a CustomerKey-only object, an empty object {}, and an ID+CustomerKey object — and none of these writes persisted on re-read by ID (CustomerKey, FromName and BusinessName all kept their original values). CustomerKey was tested as a known-updatable field and still returned \"Error\" without persisting. The only object exposing an Update method is the Account.Init(...) stub; rows returned by Account.Retrieve have no Update method (typeof row.Update is \"undefined\", and calling it throws a Jint \"Object expected: Update\"). A Description payload throws the plain string \"Error Updating Account.\" (Description is not a real SOAP Account field). The \"OK\" success return was not reproduced." %}
-
-{% include test-script.html bundle="core-library--account" chapter="instance-update" label="Show test script — every payload returns \"Error\" or throws, and nothing persists" %}
 
 #### Examples
 

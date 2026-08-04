@@ -74,8 +74,6 @@ Returns field metadata for all columns in this Data Extension.
 
 {% include differs-from-docs.html note="The official reference's example response lists only `Name`, `FieldType`, `IsPrimaryKey`, `MaxLength`, `Ordinal` and `DefaultValue`. At runtime each field object also carries an `ObjectID` (string)." %}
 
-{% include test-script.html bundle="core-library--dataextension-fields" chapter="instance-fields-retrieve" label="Show test script — field metadata also includes ObjectID" %}
-
 #### Syntax
 
 ```javascript

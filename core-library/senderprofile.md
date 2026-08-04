@@ -5,6 +5,7 @@ parent: Core Library
 parent_url: /core-library/
 description: Core library SenderProfile — from-name / from-address profiles (Core library has no Retrieve here).
 verification: verified
+test_scripts: complete
 requires_core_load: true
 differs_from_docs: true
 type_mapping:
@@ -58,6 +59,8 @@ Platform.Load("core", "1");
 var myProfile = SenderProfile.Init("mySenderProfile");
 ```
 
+{% include test-script.html bundle="core-library--senderprofile" chapter="init" %}
+
 ---
 
 ### SenderProfile.Add {#add}
@@ -96,6 +99,8 @@ var newSP = {
 var status = SenderProfile.Add(newSP); // CLR object, not "OK"
 ```
 
+{% include test-script.html bundle="core-library--senderprofile" chapter="add" %}
+
 ---
 
 ### &lt;SenderProfileInstance&gt;.Update {#instance-update}
@@ -126,6 +131,8 @@ var myProfile = SenderProfile.Init("mySenderProfile");
 var status = myProfile.Update({ Name: "SSJS Updated Sender Profile" });
 ```
 
+{% include test-script.html bundle="core-library--senderprofile" chapter="instance-update" %}
+
 ---
 
 ### &lt;SenderProfileInstance&gt;.Remove {#instance-remove}
@@ -149,6 +156,8 @@ Platform.Load("core", "1.1.5");
 var myProfile = SenderProfile.Init("mySenderProfile");
 var status = myProfile.Remove();
 ```
+
+{% include test-script.html bundle="core-library--senderprofile" chapter="instance-remove" %}
 
 ## See also
 

@@ -83,8 +83,6 @@ DeliveryProfile.Add(properties)
 
 {% include differs-from-docs.html note="Runtime-verified on a CloudPage: `Add()` returns a CLR object (`ExactTarget.Integration.WSDL.DeliveryProfile`), not the string `\"OK\"`. Reading a property off it throws *\"Use of Common Language Runtime (CLR) is not allowed\"*. Treat any non-throwing return as success." %}
 
-{% include test-script.html bundle="core-library--deliveryprofile" chapter="add" label="Show test script — Add returns an unreadable CLR object, not \"OK\"" %}
-
 #### Examples
 
 ```javascript

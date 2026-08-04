@@ -22,7 +22,7 @@ test_scripts: complete
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `closeAll` | boolean | No | When `true`, closes every nested impression region still open |
+| `closeAll` | string \| boolean \| number | No | When `true`, closes every nested impression region still open |
 
 {% include test-script.html bundle="platform-functions--endimpressionregion" chapter="parameters" %}
 

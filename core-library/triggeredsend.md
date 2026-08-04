@@ -5,6 +5,7 @@ parent: Core Library
 parent_url: /core-library/
 description: Core library object for creating, managing, and sending Triggered Send Definitions (TSD) from SSJS.
 verification: verified
+test_scripts: complete
 differs_from_docs: true
 requires_core_load: true
 type_mapping:
@@ -63,6 +64,8 @@ Platform.Load("core", "1");
 var triggeredSend = TriggeredSend.Init("support");
 ```
 
+{% include test-script.html bundle="core-library--triggeredsend" chapter="init" %}
+
 ---
 
 ### TriggeredSend.Add {#add}
@@ -97,7 +100,7 @@ No working invocation exists. The method always throws the string `Error adding 
 |---|---|---|
 | Any nested object (`Email`, `List`, `SendClassification`) | `An error occurred when attempting to evaluate a SetObjectProperty function call.  See inner exception for details.` | `undefined` / `2` |
 | Flat scalar properties only | `Error adding TSD.` | `17014` / `2` |
-| A string, or two arguments | `Invalid cast from 'Char' to 'Double'.` | — |
+| A string, or two arguments | `Error adding TSD.` | — |
 
 Payload shapes swept, all failing: nested SOAP shape (`Email: {ID}`, `List: {ID}`, `SendClassification: {CustomerKey}` or `{ObjectID}`), the documented flat shape (`EmailID`, `ListID`, `SendClassificationID`), dotted keys (`"Email.ID"`), scalar-only payloads, typed Core Library objects (`Email.Init()`, `List.Init()`, `SendClassification.Init()`), and the CLR object returned by `TriggeredSend.Retrieve` with its `CustomerKey` mutated.
 
@@ -146,6 +149,8 @@ var tsd = TriggeredSend.Add(newTSD); // throws "Error adding TSD."
 
 See also [Known Bugs](/engine-limitations/known-bugs/#triggeredsend-add-no-working-invocation) and [Differs from Official Docs](/engine-limitations/differs-from-docs/#triggeredsend-add).
 
+{% include test-script.html bundle="core-library--triggeredsend" chapter="add" %}
+
 ---
 
 ### TriggeredSend.Retrieve {#retrieve}
@@ -174,6 +179,8 @@ TriggeredSend.Retrieve(filter)
 Platform.Load("core", "1.1.5");
 var results = TriggeredSend.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: "ssjs_tsd_key" });
 ```
+
+{% include test-script.html bundle="core-library--triggeredsend" chapter="retrieve" %}
 
 ---
 
@@ -223,6 +230,8 @@ var status = tsd.Update({ Name: "Updated TSD Name" }); // "OK"
 tsd.Start();                                        // reactivate
 ```
 
+{% include test-script.html bundle="core-library--triggeredsend" chapter="instance-update" %}
+
 ---
 
 ### &lt;TriggeredSendInstance&gt;.Start {#instance-start}
@@ -253,6 +262,8 @@ var ts = TriggeredSend.Init("MY_TRIGGERED_SEND_KEY");
 var result = ts.Start(); // "OK" -> status is now Active
 ```
 
+{% include test-script.html bundle="core-library--triggeredsend" chapter="instance-start" %}
+
 ---
 
 ### &lt;TriggeredSendInstance&gt;.Pause {#instance-pause}
@@ -282,6 +293,8 @@ Platform.Load("core", "1.1.5");
 var ts = TriggeredSend.Init("MY_TRIGGERED_SEND_KEY");
 var status = ts.Pause(); // "OK" -> status is now Inactive
 ```
+
+{% include test-script.html bundle="core-library--triggeredsend" chapter="instance-pause" %}
 
 ---
 
@@ -316,6 +329,8 @@ ts.Publish(); // "OK" - status still New
 ts.Start();   // "OK" - status now Active
 ```
 
+{% include test-script.html bundle="core-library--triggeredsend" chapter="instance-publish" %}
+
 ---
 
 ### &lt;TriggeredSendInstance&gt;.Send {#instance-send}
@@ -343,6 +358,8 @@ Sends an email using the previously initialized triggered send definition. On fa
 {% include differs-from-docs.html note="The official docs imply the definition must be active, but a send against an Inactive definition still returned \"OK\" with LastMessage \"Created TriggeredSend\"." %}
 
 {% include differs-from-docs.html note="The official docs describe failures as errors, but an invalid address returns the string \"Error\" instead of throwing." %}
+
+{% include test-script.html bundle="core-library--triggeredsend" chapter="send-returns-error-string" label="Show test script — invalid Send returns \"Error\"" %}
 
 #### Return value
 
@@ -390,6 +407,8 @@ Platform.Response.ContentType = "application/json";
 Write(Stringify({ status: status, order: order.orderNumber }));
 ```
 
+{% include test-script.html bundle="core-library--triggeredsend" chapter="instance-send" %}
+
 ## Notes
 
 ### Triggered Send Definition status
@@ -430,6 +449,8 @@ var tsd = TriggeredSend.Init("MyTSDKey");
 var tsdTracking = tsd.Tracking.Retrieve();
 ```
 
+{% include test-script.html bundle="core-library--triggeredsend" chapter="instance-tracking-retrieve" %}
+
 ---
 
 ### &lt;TriggeredSendInstance&gt;.Tracking.Clicks.Retrieve {#instance-tracking-clicks-retrieve}
@@ -460,6 +481,8 @@ var tsd = TriggeredSend.Init("MyTSDKey");
 var results = tsd.Tracking.Clicks.Retrieve({ Property: "SendUrlID", SimpleOperator: "equals", Value: 12345 });
 ```
 
+{% include test-script.html bundle="core-library--triggeredsend" chapter="instance-tracking-clicks-retrieve" %}
+
 ---
 
 ### &lt;TriggeredSendInstance&gt;.Tracking.TotalByInterval.Retrieve {#instance-tracking-totalbyinterval-retrieve}
@@ -477,8 +500,8 @@ Returns aggregated tracking data for the previously initialized triggered send. 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `type` | string | Yes | Type of data: `"Send"`, `"Open"`, `"Click"`, `"Bounce"`, `"Unsubscribe"` |
-| `startDate` | string | Yes | Start date of the data period (MM-DD-YYYY) |
-| `endDate` | string | Yes | End date of the data period (MM-DD-YYYY) |
+| `startDate` | string \| Date | Yes | Start date of the data period (MM-DD-YYYY string or `Date`) |
+| `endDate` | string \| Date | Yes | End date of the data period (MM-DD-YYYY string or `Date`) |
 | `groupBy` | string | Yes | Interval used to aggregate: `"day"` or `"hour"` |
 
 #### Return value
@@ -492,6 +515,8 @@ Platform.Load("core", "1.1.5");
 var tsd = TriggeredSend.Init("MyTSDKey");
 var results = tsd.Tracking.TotalByInterval.Retrieve("Click", "07-01-2010", "07-31-2010", "day");
 ```
+
+{% include test-script.html bundle="core-library--triggeredsend" chapter="instance-tracking-totalbyinterval-retrieve" %}
 
 ## See Also
 

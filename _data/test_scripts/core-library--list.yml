@@ -1,0 +1,287 @@
+# Test scripts for /core-library/list/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and the documented Remove failure token ("Error", not a throw).
+#
+# FIXTURES: write chapters create their own publication list under a unique
+# `ssjs-guide-ts-list-*` external key, prove the effect, and remove it again.
+# Each script begins with an orphan-cleanup Remove / Retrieve re-count so a
+# previously aborted run cannot leave ghosts. No pre-existing list is ever
+# targeted for mutation.
+#
+# NON-ASSERTABLE / OUT OF SCOPE:
+#   - List.Subscribers.* membership operations — covered on the dedicated
+#     /core-library/list-subscribers/ page; this page only proves the
+#     Subscribers namespace is present on the Init stub.
+#   - The subscribe / unsubscribe form-handler pattern — uses form fields and
+#     Subscribers.Upsert / Unsubscribe; not a Core List method claim here.
+#   - ListInstance.Update — present on the runtime stub but not documented on
+#     this page or in official List docs; not asserted as a page claim.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# NORMALIZATION RULE: assert() compares with a plain === and does NOT coerce.
+# Engine-returned values are normalized at the call site with "" + value —
+# never with String(value), which yields a CLR string that fails === and
+# aborts the page when a string method is called on it.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage GET on the QA business unit. Re-run them before changing any
+# claim on the page.
+
+init: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: List.Init(key)
+   *
+   * CloudPage GET context. Proves:
+   *   1. List requires the Core load and is then an object exposing the
+   *      documented statics Init, Add and Retrieve.
+   *   2. There is no static Update / Remove — those are instance methods.
+   *   3. Init(key) returns a ListInstance: an object whose documented members
+   *      are Remove (function) and Subscribers (object with Add / Retrieve /
+   *      Update / Upsert / Unsubscribe / Tracking.Retrieve).
+   *   4. The instance carries NO readable list fields (CustomerKey / Name /
+   *      ListName / ID read back undefined) — Init binds a key, it does not
+   *      fetch the record.
+   *   5. A nonsense key yields an indistinguishable stub.
+   *   6. The page example shape Init("myList") returns without throwing.
+   *
+   * NON-ASSERTABLE here: Subscribers method behaviour (dedicated page).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW"; }
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  assert("typeof List is object", typeOf(function () { return typeof List; }), "object");
+  assert("typeof List.Init is function", typeOf(function () { return typeof List.Init; }), "function");
+  assert("typeof List.Add is function", typeOf(function () { return typeof List.Add; }), "function");
+  assert("typeof List.Retrieve is function", typeOf(function () { return typeof List.Retrieve; }), "function");
+  assert("List.Update is not a static", typeOf(function () { return typeof List.Update; }), "undefined");
+  assert("List.Remove is not a static", typeOf(function () { return typeof List.Remove; }), "undefined");
+
+  var myList = List.Init("ssjs-guide-ts-list-init");
+  assert("typeof List.Init(key) is object", typeof myList, "object");
+  assert("typeof instance.Remove is function", typeof myList.Remove, "function");
+  assert("typeof instance.Subscribers is object", typeof myList.Subscribers, "object");
+  assert("typeof Subscribers.Add is function", typeof myList.Subscribers.Add, "function");
+  assert("typeof Subscribers.Retrieve is function", typeof myList.Subscribers.Retrieve, "function");
+  assert("typeof Subscribers.Update is function", typeof myList.Subscribers.Update, "function");
+  assert("typeof Subscribers.Upsert is function", typeof myList.Subscribers.Upsert, "function");
+  assert("typeof Subscribers.Unsubscribe is function", typeof myList.Subscribers.Unsubscribe, "function");
+  assert("typeof Subscribers.Tracking.Retrieve is function", typeof myList.Subscribers.Tracking.Retrieve, "function");
+  assert("instance has no Add (Add is static)", typeof myList.Add, "undefined");
+  assert("instance has no Retrieve (Retrieve is static)", typeof myList.Retrieve, "undefined");
+
+  assert("instance.CustomerKey is undefined (Init does not fetch)", typeof myList.CustomerKey, "undefined");
+  assert("instance.Name is undefined (Init does not fetch)", typeof myList.Name, "undefined");
+  assert("instance.ListName is undefined (Init does not fetch)", typeof myList.ListName, "undefined");
+  assert("instance.ID is undefined (Init does not fetch)", typeof myList.ID, "undefined");
+
+  var bogus = List.Init("ssjs-guide-no-such-list-zzz");
+  assert("Init(nonsense key) still returns an object", typeof bogus, "object");
+  assert("Init(nonsense key) exposes Remove", typeof bogus.Remove, "function");
+  assert("Init(nonsense key) exposes Subscribers", typeof bogus.Subscribers, "object");
+  assert("Init(nonsense key) stub is indistinguishable", ("" + Stringify(bogus)) === ("" + Stringify(myList)) ? "true" : "false", "true");
+  assert("page example: Init('myList') returns", invocationResult(function () { return List.Init("myList"); }), "returned");
+  </script>
+
+add: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: List.Add(properties)
+   *
+   * CloudPage GET context. Proves:
+   *   1. List.Add is a function taking one properties object.
+   *   2. Add(properties) with the page example fields (CustomerKey, Name,
+   *      Description) creates a retrievable publication list.
+   *   3. Unlike most Core Add methods, the return value is a ListInstance
+   *      (object exposing Remove + Subscribers), NOT the string "OK" —
+   *      matching the page Return value section.
+   *   4. The returned instance is usable immediately: Remove on it returns
+   *      "OK" after a control Retrieve proves the row exists (cleanup path
+   *      recreates then removes again for the final re-count).
+   *   5. Negative cases: Add() with no argument, Add({}), and re-using an
+   *      existing CustomerKey all throw.
+   *
+   * FIXTURE: creates ssjs-guide-ts-list-add and removes it again at the end.
+   * Cleanup is verified by re-counting Retrieve rows (ghost-record rule).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function countByKey(key) {
+      var rows = List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+
+  var KEY = "ssjs-guide-ts-list-add";
+  List.Init(KEY).Remove();
+  assert("precondition: no list under the probe key", "" + countByKey(KEY), "0");
+
+  assert("typeof List.Add is function", typeof List.Add, "function");
+  assert("Init instance has no Add (Add is static)", typeof List.Init(KEY).Add, "undefined");
+
+  var props = {
+      CustomerKey: KEY,
+      Name: "SSJS Guide TS List Add",
+      Description: "desc"
+  };
+  var myList = null;
+  assert("Add(properties) does not throw", invocationResult(function () { myList = List.Add(props); }), "returned");
+  assert("typeof Add() result is object (page: ListInstance, not \"OK\")", typeof myList, "object");
+  assert("Add() result is not the string OK", myList === "OK" ? "true" : "false", "false");
+  assert("returned instance exposes Remove", typeof myList.Remove, "function");
+  assert("returned instance exposes Subscribers", typeof myList.Subscribers, "object");
+  assert("the list exists after Add", "" + countByKey(KEY), "1");
+
+  assert("Add() with no argument throws", invocationResult(function () { return List.Add(); }), "threw");
+  assert("Add({}) with an empty object throws", invocationResult(function () { return List.Add({}); }), "threw");
+  assert("Add() re-using an existing CustomerKey throws", invocationResult(function () { return List.Add(props); }), "threw");
+
+  assert("fixture cleanup removed the created list", "" + List.Init(KEY).Remove(), "OK");
+  assert("cleanup re-count is 0", "" + countByKey(KEY), "0");
+  </script>
+
+retrieve: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: List.Retrieve(filter)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Retrieve is a function taking one PascalCase WSProxy-style filter.
+   *   2. On a match the result reports as [object Array], exposes .length,
+   *      and is not a JS Array (instanceof Array is false).
+   *   3. A matched row exposes readable CustomerKey, ListName, ID, Description.
+   *   4. On no match the same array-like shape is returned with length 0
+   *      and Stringify "[]".
+   *   5. The page example filter Property "ListName" resolves the owned
+   *      fixture; CustomerKey filter also resolves it.
+   *
+   * FIXTURE: creates ssjs-guide-ts-list-retrieve and removes it at the end.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function countByKey(key) {
+      var rows = List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+
+  var KEY = "ssjs-guide-ts-list-retrieve";
+  var NAME = "SSJS Guide TS List Retrieve";
+  List.Init(KEY).Remove();
+  List.Add({ CustomerKey: KEY, Name: NAME, Description: "retrieve probe" });
+
+  assert("typeof List.Retrieve is function", typeof List.Retrieve, "function");
+
+  var rows = List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: KEY });
+  assert("typeof the matched result is object", typeof rows, "object");
+  assert("the matched result reports as [object Array]", Object.prototype.toString.call(rows), "[object Array]");
+  assert("the matched result exposes a numeric .length", typeof rows.length, "number");
+  assert("the matched result has exactly one row", "" + rows.length, "1");
+  assert("instanceof Array is false (engine-wide host-array quirk)", rows instanceof Array ? "true" : "false", "false");
+  assert("matched row CustomerKey equals the filter value", "" + rows[0].CustomerKey, KEY);
+  assert("matched row ListName is a string", typeof rows[0].ListName, "string");
+  assert("matched row ListName equals Name used at Add", "" + rows[0].ListName, NAME);
+  assert("matched row ID is a number", typeof rows[0].ID, "number");
+  assert("matched row Description is a string", typeof rows[0].Description, "string");
+
+  var byName = List.Retrieve({ Property: "ListName", SimpleOperator: "equals", Value: NAME });
+  assert("page example: ListName filter finds the fixture", "" + (byName && byName.length ? byName.length : 0), "1");
+  assert("page example: ListName row CustomerKey matches", "" + byName[0].CustomerKey, KEY);
+
+  var empty = List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: "ssjs-guide-no-such-list-zzz" });
+  assert("empty result reports as [object Array]", Object.prototype.toString.call(empty), "[object Array]");
+  assert("empty result length is 0", "" + empty.length, "0");
+  assert("empty result Stringify is []", "" + Stringify(empty), "[]");
+  assert("workaround: guard with rows && rows.length before indexing", (rows && rows.length) ? "true" : "false", "true");
+
+  assert("fixture cleanup removed the created list", "" + List.Init(KEY).Remove(), "OK");
+  assert("cleanup re-count is 0", "" + countByKey(KEY), "0");
+  </script>
+
+instance-remove: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <ListInstance>.Remove()
+   *
+   * CloudPage GET context. Proves:
+   *   1. Remove is an instance method (typeof "function") and takes no args.
+   *   2. Remove() returns the string "OK" on success.
+   *   3. The deletion really happened: after Remove, Retrieve count is 0.
+   *   4. DEV: Remove() on a nonexistent key returns the plain string "Error"
+   *      rather than throwing (official docs / earlier guide prose: throws).
+   *      Callers MUST test the return value; try/catch alone is not enough.
+   *      This is also why other scripts can call Remove as an unconditional
+   *      orphan-cleanup preamble.
+   *
+   * FIXTURE: creates ssjs-guide-ts-list-remove and deletes it as the assert.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function countByKey(key) {
+      var rows = List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+
+  var KEY = "ssjs-guide-ts-list-remove";
+  List.Init(KEY).Remove();
+  List.Add({
+      CustomerKey: KEY,
+      Name: "SSJS Guide TS List Remove",
+      Description: "remove probe"
+  });
+
+  var myList = List.Init(KEY);
+
+  assert("typeof instance.Remove is function", typeof myList.Remove, "function");
+  assert("control: fixture count is 1 before Remove", "" + countByKey(KEY), "1");
+
+  var status = myList.Remove();
+  assert("page example: Remove() returns \"OK\"", "" + status, "OK");
+  assert("Remove returns a string", typeof status, "string");
+
+  assert("after Remove the Retrieve count is 0", "" + countByKey(KEY), "0");
+  assert("after Remove a second Remove returns \"Error\"", "" + List.Init(KEY).Remove(), "Error");
+
+  assert("DEV Remove on a nonexistent key returns \"Error\" (docs: throws)", "" + List.Init("ssjs-guide-no-such-list-zzz").Remove(), "Error");
+  assert("DEV Remove on a nonexistent key does NOT throw (docs: throws)", invocationResult(function () { return List.Init("ssjs-guide-no-such-list-zzz").Remove(); }), "returned");
+  </script>

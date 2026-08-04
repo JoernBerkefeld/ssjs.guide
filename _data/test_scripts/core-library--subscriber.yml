@@ -1,0 +1,519 @@
+# Test scripts for /core-library/subscriber/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and the documented deviations (static Upsert / Statistics are
+# undefined; Add returns "Error" for spam-blocked domains).
+#
+# FIXTURES: write chapters create throwaway All Subscribers rows under unique
+# `ssjs-guide-ts-sub-*` SubscriberKeys with matching
+# `ssjs.guide.ts.sub.*@gmail.com` addresses (avoid @example.com —
+# TriggeredSpamFilter / ErrorCode 12002). Each script begins with orphan
+# cleanup (Init.Remove) and ends with Remove + Retrieve re-count. Soft-delete
+# / ghost-record warning: Core Retrieve length 0 proves cleanup for these
+# fixtures; do not delete non-fixture production subscribers.
+#
+# NON-ASSERTABLE:
+#   - Statistics field values after a real send (no send performed); scripts
+#     assert object shape / typeof only.
+#   - Specific profile Attribute Name/Value pairs (tenant attribute catalog
+#     varies); Attributes.Retrieve asserts array-like shape only.
+#   - Exact Lists.Retrieve membership content beyond array-like shape;
+#     a brand-new All Subscribers row may return length 0 (no publication
+#     list membership yet).
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# NORMALIZATION RULE: assert() compares with a plain === and does NOT coerce.
+# Engine-returned values are normalized at the call site with "" + value —
+# never with String(value), which yields a CLR string that fails === and
+# aborts the page when a string method is called on it.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage GET on the QA business unit. Re-run them before changing any
+# claim on the page.
+
+init: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Subscriber.Init(key)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Subscriber requires the Core load and is then an object exposing
+   *      the documented statics Init, Add and Retrieve.
+   *   2. DEV: static Upsert / Statistics are undefined (docs: static) —
+   *      those live on the Init instance (covered in their chapters).
+   *   3. Init(key) returns a SubscriberInstance object exposing Upsert,
+   *      Statistics, Update, Remove, Unsubscribe, Attributes.Retrieve and
+   *      Lists.Retrieve.
+   *   4. The instance carries NO readable subscriber fields (SubscriberKey /
+   *      EmailAddress / Status read back undefined) — Init binds a key.
+   *   5. A nonsense key yields an indistinguishable stub.
+   *   6. The page example shape Init("mySubscriber") returns without throwing.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW"; }
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  assert("typeof Subscriber is object", typeOf(function () { return typeof Subscriber; }), "object");
+  assert("typeof Subscriber.Init is function", typeOf(function () { return typeof Subscriber.Init; }), "function");
+  assert("typeof Subscriber.Add is function", typeOf(function () { return typeof Subscriber.Add; }), "function");
+  assert("typeof Subscriber.Retrieve is function", typeOf(function () { return typeof Subscriber.Retrieve; }), "function");
+  assert("DEV Subscriber.Upsert is not a static (docs: static)", typeOf(function () { return typeof Subscriber.Upsert; }), "undefined");
+  assert("DEV Subscriber.Statistics is not a static (docs: static)", typeOf(function () { return typeof Subscriber.Statistics; }), "undefined");
+  assert("Subscriber.Update is not a static", typeOf(function () { return typeof Subscriber.Update; }), "undefined");
+  assert("Subscriber.Remove is not a static", typeOf(function () { return typeof Subscriber.Remove; }), "undefined");
+  assert("Subscriber.Unsubscribe is not a static", typeOf(function () { return typeof Subscriber.Unsubscribe; }), "undefined");
+
+  var sub = Subscriber.Init("ssjs-guide-ts-sub-init");
+  assert("typeof Subscriber.Init(key) is object", typeof sub, "object");
+  assert("typeof instance.Upsert is function", typeof sub.Upsert, "function");
+  assert("typeof instance.Statistics is function", typeof sub.Statistics, "function");
+  assert("typeof instance.Update is function", typeof sub.Update, "function");
+  assert("typeof instance.Remove is function", typeof sub.Remove, "function");
+  assert("typeof instance.Unsubscribe is function", typeof sub.Unsubscribe, "function");
+  assert("typeof instance.Attributes is object", typeof sub.Attributes, "object");
+  assert("typeof Attributes.Retrieve is function", typeof sub.Attributes.Retrieve, "function");
+  assert("typeof instance.Lists is object", typeof sub.Lists, "object");
+  assert("typeof Lists.Retrieve is function", typeof sub.Lists.Retrieve, "function");
+  assert("instance has no Add (Add is static)", typeof sub.Add, "undefined");
+  assert("instance has no Retrieve (Retrieve is static)", typeof sub.Retrieve, "undefined");
+
+  assert("instance.SubscriberKey is undefined (Init does not fetch)", typeof sub.SubscriberKey, "undefined");
+  assert("instance.EmailAddress is undefined (Init does not fetch)", typeof sub.EmailAddress, "undefined");
+  assert("instance.Status is undefined (Init does not fetch)", typeof sub.Status, "undefined");
+
+  var bogus = Subscriber.Init("ssjs-guide-no-such-sub-zzz");
+  assert("Init(nonsense key) still returns an object", typeof bogus, "object");
+  assert("Init(nonsense key) exposes Upsert", typeof bogus.Upsert, "function");
+  assert("Init(nonsense key) stub is indistinguishable", ("" + Stringify(bogus)) === ("" + Stringify(sub)) ? "true" : "false", "true");
+  assert("page example: Init('mySubscriber') returns", invocationResult(function () { return Subscriber.Init("mySubscriber"); }), "returned");
+  </script>
+
+add: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Subscriber.Add(properties)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Add is a function taking one properties object.
+   *   2. Add({EmailAddress, SubscriberKey}) with a deliverable @gmail.com
+   *      address returns "OK" and the row is retrievable afterwards.
+   *   3. Add with a spam-blocked @example.com address returns "Error"
+   *      (TriggeredSpamFilter) and does not create a retrievable row.
+   *   4. Negative: Add() / Add({}) return "Error" without throwing.
+   *
+   * FIXTURE: ssjs.guide.ts.sub.add@gmail.com / ssjs-guide-ts-sub-add.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function nukeSub(sk) { try { Subscriber.Init(sk).Remove(); } catch (e0) {} }
+  function countByKey(sk) {
+      var rows = Subscriber.Retrieve({ Property: "SubscriberKey", SimpleOperator: "equals", Value: sk });
+      return rows && rows.length ? rows.length : 0;
+  }
+
+  var SK = "ssjs-guide-ts-sub-add";
+  var EMAIL = "ssjs.guide.ts.sub.add@gmail.com";
+  var SPAM_SK = "ssjs-guide-ts-sub-add-spam";
+  var SPAM_EMAIL = "ssjs.guide.ts.sub.add@example.com";
+
+  nukeSub(SK);
+  nukeSub(SPAM_SK);
+  assert("precondition: no fixture under gmail key", "" + countByKey(SK), "0");
+
+  assert("typeof Subscriber.Add is function", typeof Subscriber.Add, "function");
+  assert("Add(gmail) returns \"OK\"", "" + Subscriber.Add({ EmailAddress: EMAIL, SubscriberKey: SK }), "OK");
+  assert("row exists after Add", "" + countByKey(SK), "1");
+  var rows = Subscriber.Retrieve({ Property: "SubscriberKey", SimpleOperator: "equals", Value: SK });
+  assert("row EmailAddress matches", "" + rows[0].EmailAddress, EMAIL);
+  assert("row SubscriberKey matches", "" + rows[0].SubscriberKey, SK);
+
+  assert("Add(example.com) returns \"Error\" (TriggeredSpamFilter)", "" + Subscriber.Add({ EmailAddress: SPAM_EMAIL, SubscriberKey: SPAM_SK }), "Error");
+  assert("Add(example.com) does NOT throw", invocationResult(function () { return Subscriber.Add({ EmailAddress: SPAM_EMAIL, SubscriberKey: SPAM_SK }); }), "returned");
+  assert("spam Add created no retrievable row", "" + countByKey(SPAM_SK), "0");
+
+  assert("DEV Add() returns \"Error\"", "" + Subscriber.Add(), "Error");
+  assert("DEV Add() does NOT throw", invocationResult(function () { return Subscriber.Add(); }), "returned");
+  assert("DEV Add({}) returns \"Error\"", "" + Subscriber.Add({}), "Error");
+  assert("DEV Add({}) does NOT throw", invocationResult(function () { return Subscriber.Add({}); }), "returned");
+
+  assert("fixture cleanup Remove returns \"OK\"", "" + Subscriber.Init(SK).Remove(), "OK");
+  assert("cleanup re-count is 0", "" + countByKey(SK), "0");
+  </script>
+
+retrieve: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Subscriber.Retrieve(filter)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Retrieve is a function taking one PascalCase WSProxy-style filter.
+   *   2. On a match the result reports as [object Array] with .length;
+   *      instanceof Array is false (engine-wide host-array quirk).
+   *   3. SubscriberKey filter finds the fixture row fields.
+   *   4. Empty match returns length 0 / Stringify "[]".
+   *
+   * FIXTURE: ssjs-guide-ts-sub-ret / ssjs.guide.ts.sub.ret@gmail.com.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function nukeSub(sk) { try { Subscriber.Init(sk).Remove(); } catch (e0) {} }
+  function countByKey(sk) {
+      var rows = Subscriber.Retrieve({ Property: "SubscriberKey", SimpleOperator: "equals", Value: sk });
+      return rows && rows.length ? rows.length : 0;
+  }
+
+  var SK = "ssjs-guide-ts-sub-ret";
+  var EMAIL = "ssjs.guide.ts.sub.ret@gmail.com";
+  nukeSub(SK);
+  Subscriber.Add({ EmailAddress: EMAIL, SubscriberKey: SK });
+
+  assert("typeof Subscriber.Retrieve is function", typeof Subscriber.Retrieve, "function");
+
+  var rows = Subscriber.Retrieve({ Property: "SubscriberKey", SimpleOperator: "equals", Value: SK });
+  assert("matched result reports as [object Array]", Object.prototype.toString.call(rows), "[object Array]");
+  assert("matched result length is 1", "" + rows.length, "1");
+  assert("instanceof Array is false (host-array quirk)", rows instanceof Array ? "true" : "false", "false");
+  assert("matched row SubscriberKey", "" + rows[0].SubscriberKey, SK);
+  assert("matched row EmailAddress", "" + rows[0].EmailAddress, EMAIL);
+  assert("matched row Status is a string", typeof rows[0].Status, "string");
+
+  var empty = Subscriber.Retrieve({ Property: "SubscriberKey", SimpleOperator: "equals", Value: "ssjs-guide-no-such-sub-zzz" });
+  assert("empty result reports as [object Array]", Object.prototype.toString.call(empty), "[object Array]");
+  assert("empty result length is 0", "" + empty.length, "0");
+  assert("empty result Stringify is []", "" + Stringify(empty), "[]");
+
+  assert("fixture cleanup Remove returns \"OK\"", "" + Subscriber.Init(SK).Remove(), "OK");
+  assert("cleanup re-count is 0", "" + countByKey(SK), "0");
+  </script>
+
+instance-upsert: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <SubscriberInstance>.Upsert(properties)
+   *
+   * CloudPage GET context. Proves:
+   *   1. DEV: static Subscriber.Upsert is undefined (docs: static).
+   *   2. Upsert is a function on the Init instance.
+   *   3. Init(key).Upsert({EmailAddress, SubscriberKey}) returns "OK" and
+   *      the subscriber is retrievable by key afterwards.
+   *   4. A second Upsert on the same key also returns "OK" (update path).
+   *
+   * FIXTURE: ssjs-guide-ts-sub-ups / ssjs.guide.ts.sub.ups@gmail.com.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function nukeSub(sk) { try { Subscriber.Init(sk).Remove(); } catch (e0) {} }
+  function countByKey(sk) {
+      var rows = Subscriber.Retrieve({ Property: "SubscriberKey", SimpleOperator: "equals", Value: sk });
+      return rows && rows.length ? rows.length : 0;
+  }
+
+  var SK = "ssjs-guide-ts-sub-ups";
+  var EMAIL = "ssjs.guide.ts.sub.ups@gmail.com";
+  nukeSub(SK);
+
+  assert("DEV typeof Subscriber.Upsert is undefined (docs: static)", typeof Subscriber.Upsert, "undefined");
+  var sub = Subscriber.Init(SK);
+  assert("typeof instance.Upsert is function", typeof sub.Upsert, "function");
+  assert("Upsert(properties) returns \"OK\"", "" + sub.Upsert({ EmailAddress: EMAIL, SubscriberKey: SK }), "OK");
+  assert("row exists after Upsert", "" + countByKey(SK), "1");
+  var rows = Subscriber.Retrieve({ Property: "SubscriberKey", SimpleOperator: "equals", Value: SK });
+  assert("row EmailAddress matches after Upsert", "" + rows[0].EmailAddress, EMAIL);
+  assert("second Upsert returns \"OK\"", "" + Subscriber.Init(SK).Upsert({ EmailAddress: EMAIL, SubscriberKey: SK }), "OK");
+
+  assert("fixture cleanup Remove returns \"OK\"", "" + Subscriber.Init(SK).Remove(), "OK");
+  assert("cleanup re-count is 0", "" + countByKey(SK), "0");
+  </script>
+
+instance-statistics: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <SubscriberInstance>.Statistics()
+   *
+   * CloudPage GET context. Proves:
+   *   1. DEV: static Subscriber.Statistics is undefined (docs: static).
+   *   2. Statistics is a function on the Init instance (no args).
+   *   3. Statistics() returns a single object (typeof "object"), not an array.
+   *
+   * NON-ASSERTABLE: send/open/click/bounce/unsub counters after a real send
+   * (no send performed; published scripts stay reader-safe).
+   *
+   * FIXTURE: ssjs-guide-ts-sub-stats / ssjs.guide.ts.sub.stats@gmail.com.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function nukeSub(sk) { try { Subscriber.Init(sk).Remove(); } catch (e0) {} }
+  function countByKey(sk) {
+      var rows = Subscriber.Retrieve({ Property: "SubscriberKey", SimpleOperator: "equals", Value: sk });
+      return rows && rows.length ? rows.length : 0;
+  }
+
+  var SK = "ssjs-guide-ts-sub-stats";
+  var EMAIL = "ssjs.guide.ts.sub.stats@gmail.com";
+  nukeSub(SK);
+  Subscriber.Add({ EmailAddress: EMAIL, SubscriberKey: SK });
+
+  assert("DEV typeof Subscriber.Statistics is undefined (docs: static)", typeof Subscriber.Statistics, "undefined");
+  var sub = Subscriber.Init(SK);
+  assert("typeof instance.Statistics is function", typeof sub.Statistics, "function");
+  var stats = sub.Statistics();
+  assert("Statistics() typeof is object", typeof stats, "object");
+  assert("Statistics() is not an array (page: single object)", Object.prototype.toString.call(stats) === "[object Array]" ? "true" : "false", "false");
+  assert("Statistics() is not null", stats === null ? "true" : "false", "false");
+
+  assert("fixture cleanup Remove returns \"OK\"", "" + Subscriber.Init(SK).Remove(), "OK");
+  assert("cleanup re-count is 0", "" + countByKey(SK), "0");
+  </script>
+
+instance-update: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <SubscriberInstance>.Update(properties)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Update is a function on the Init instance.
+   *   2. Zero-argument Update() returns "OK" on an existing subscriber.
+   *   3. Update({EmailAddress}) returns "OK".
+   *   4. Update with EmailTypePreference returns "OK".
+   *
+   * FIXTURE: ssjs-guide-ts-sub-upd / ssjs.guide.ts.sub.upd@gmail.com.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function nukeSub(sk) { try { Subscriber.Init(sk).Remove(); } catch (e0) {} }
+  function countByKey(sk) {
+      var rows = Subscriber.Retrieve({ Property: "SubscriberKey", SimpleOperator: "equals", Value: sk });
+      return rows && rows.length ? rows.length : 0;
+  }
+
+  var SK = "ssjs-guide-ts-sub-upd";
+  var EMAIL = "ssjs.guide.ts.sub.upd@gmail.com";
+  nukeSub(SK);
+  Subscriber.Add({ EmailAddress: EMAIL, SubscriberKey: SK });
+  var sub = Subscriber.Init(SK);
+
+  assert("typeof instance.Update is function", typeof sub.Update, "function");
+  assert("Update() zero-arg returns \"OK\"", "" + sub.Update(), "OK");
+  assert("Update({EmailAddress}) returns \"OK\"", "" + sub.Update({ EmailAddress: EMAIL }), "OK");
+  assert("Update({EmailTypePreference:HTML}) returns \"OK\"", "" + sub.Update({ EmailTypePreference: "HTML" }), "OK");
+  assert("row still exists after Update", "" + countByKey(SK), "1");
+
+  assert("fixture cleanup Remove returns \"OK\"", "" + Subscriber.Init(SK).Remove(), "OK");
+  assert("cleanup re-count is 0", "" + countByKey(SK), "0");
+  </script>
+
+instance-remove: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <SubscriberInstance>.Remove()
+   *
+   * CloudPage GET context. Proves:
+   *   1. Remove is a function on the Init instance.
+   *   2. Remove() returns "OK" on an existing subscriber.
+   *   3. Follow-up Retrieve by that key returns zero rows.
+   *   4. Remove on a missing key returns "Error" without throwing
+   *      (safe orphan-cleanup preamble).
+   *
+   * FIXTURE: ssjs-guide-ts-sub-rm / ssjs.guide.ts.sub.rm@gmail.com.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function nukeSub(sk) { try { Subscriber.Init(sk).Remove(); } catch (e0) {} }
+  function countByKey(sk) {
+      var rows = Subscriber.Retrieve({ Property: "SubscriberKey", SimpleOperator: "equals", Value: sk });
+      return rows && rows.length ? rows.length : 0;
+  }
+
+  var SK = "ssjs-guide-ts-sub-rm";
+  var EMAIL = "ssjs.guide.ts.sub.rm@gmail.com";
+  nukeSub(SK);
+  Subscriber.Add({ EmailAddress: EMAIL, SubscriberKey: SK });
+  assert("precondition: fixture row exists", "" + countByKey(SK), "1");
+
+  var sub = Subscriber.Init(SK);
+  assert("typeof instance.Remove is function", typeof sub.Remove, "function");
+  assert("Remove() returns \"OK\"", "" + sub.Remove(), "OK");
+  assert("Retrieve length is 0 after Remove", "" + countByKey(SK), "0");
+
+  assert("Remove(missing) returns \"Error\"", "" + Subscriber.Init("ssjs-guide-no-such-sub-zzz").Remove(), "Error");
+  assert("Remove(missing) does NOT throw", invocationResult(function () { return Subscriber.Init("ssjs-guide-no-such-sub-zzz").Remove(); }), "returned");
+  </script>
+
+instance-unsubscribe: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <SubscriberInstance>.Unsubscribe()
+   *
+   * CloudPage GET context. Proves:
+   *   1. Unsubscribe is a function on the Init instance.
+   *   2. Unsubscribe() returns "OK".
+   *   3. Follow-up Retrieve shows Status "Unsubscribed" — the row remains
+   *      (not deleted), matching All Subscribers unsubscribe semantics.
+   *
+   * FIXTURE: ssjs-guide-ts-sub-unsub / ssjs.guide.ts.sub.unsub@gmail.com.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function nukeSub(sk) { try { Subscriber.Init(sk).Remove(); } catch (e0) {} }
+  function countByKey(sk) {
+      var rows = Subscriber.Retrieve({ Property: "SubscriberKey", SimpleOperator: "equals", Value: sk });
+      return rows && rows.length ? rows.length : 0;
+  }
+
+  var SK = "ssjs-guide-ts-sub-unsub";
+  var EMAIL = "ssjs.guide.ts.sub.unsub@gmail.com";
+  nukeSub(SK);
+  Subscriber.Add({ EmailAddress: EMAIL, SubscriberKey: SK });
+
+  var sub = Subscriber.Init(SK);
+  assert("typeof instance.Unsubscribe is function", typeof sub.Unsubscribe, "function");
+  assert("Unsubscribe() returns \"OK\"", "" + sub.Unsubscribe(), "OK");
+  var after = Subscriber.Retrieve({ Property: "SubscriberKey", SimpleOperator: "equals", Value: SK });
+  assert("row still present after Unsubscribe", "" + after.length, "1");
+  assert("Status is Unsubscribed after Unsubscribe", "" + after[0].Status, "Unsubscribed");
+
+  assert("fixture cleanup Remove returns \"OK\"", "" + Subscriber.Init(SK).Remove(), "OK");
+  assert("cleanup re-count is 0", "" + countByKey(SK), "0");
+  </script>
+
+instance-attributes-retrieve: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <SubscriberInstance>.Attributes.Retrieve()
+   *
+   * CloudPage GET context. Proves:
+   *   1. Attributes.Retrieve is a function on the Init instance.
+   *   2. It returns an array-like ([object Array]) of attribute objects.
+   *
+   * NON-ASSERTABLE: exact Attribute Name/Value catalog (tenant-specific).
+   *
+   * FIXTURE: ssjs-guide-ts-sub-attr / ssjs.guide.ts.sub.attr@gmail.com.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function nukeSub(sk) { try { Subscriber.Init(sk).Remove(); } catch (e0) {} }
+  function countByKey(sk) {
+      var rows = Subscriber.Retrieve({ Property: "SubscriberKey", SimpleOperator: "equals", Value: sk });
+      return rows && rows.length ? rows.length : 0;
+  }
+
+  var SK = "ssjs-guide-ts-sub-attr";
+  var EMAIL = "ssjs.guide.ts.sub.attr@gmail.com";
+  nukeSub(SK);
+  Subscriber.Add({ EmailAddress: EMAIL, SubscriberKey: SK });
+
+  var sub = Subscriber.Init(SK);
+  assert("typeof Attributes.Retrieve is function", typeof sub.Attributes.Retrieve, "function");
+  var attrs = sub.Attributes.Retrieve();
+  assert("Attributes.Retrieve reports as [object Array]", Object.prototype.toString.call(attrs), "[object Array]");
+  assert("Attributes.Retrieve exposes numeric .length", typeof attrs.length, "number");
+  assert("instanceof Array is false (host-array quirk)", attrs instanceof Array ? "true" : "false", "false");
+
+  assert("fixture cleanup Remove returns \"OK\"", "" + Subscriber.Init(SK).Remove(), "OK");
+  assert("cleanup re-count is 0", "" + countByKey(SK), "0");
+  </script>
+
+instance-lists-retrieve: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <SubscriberInstance>.Lists.Retrieve()
+   *
+   * CloudPage GET context. Proves:
+   *   1. Lists.Retrieve is a function on the Init instance.
+   *   2. It returns an array-like ([object Array]) of list memberships
+   *      (may be empty for a brand-new All Subscribers row with no
+   *      publication-list membership).
+   *
+   * FIXTURE: ssjs-guide-ts-sub-lists / ssjs.guide.ts.sub.lists@gmail.com.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function nukeSub(sk) { try { Subscriber.Init(sk).Remove(); } catch (e0) {} }
+  function countByKey(sk) {
+      var rows = Subscriber.Retrieve({ Property: "SubscriberKey", SimpleOperator: "equals", Value: sk });
+      return rows && rows.length ? rows.length : 0;
+  }
+
+  var SK = "ssjs-guide-ts-sub-lists";
+  var EMAIL = "ssjs.guide.ts.sub.lists@gmail.com";
+  nukeSub(SK);
+  Subscriber.Add({ EmailAddress: EMAIL, SubscriberKey: SK });
+
+  var sub = Subscriber.Init(SK);
+  assert("typeof Lists.Retrieve is function", typeof sub.Lists.Retrieve, "function");
+  var lists = sub.Lists.Retrieve();
+  assert("Lists.Retrieve reports as [object Array]", Object.prototype.toString.call(lists), "[object Array]");
+  assert("Lists.Retrieve exposes numeric .length", typeof lists.length, "number");
+  assert("Lists.Retrieve Stringify is a JSON array", ("" + Stringify(lists)).charAt(0), "[");
+  assert("instanceof Array is false (host-array quirk)", lists instanceof Array ? "true" : "false", "false");
+
+  assert("fixture cleanup Remove returns \"OK\"", "" + Subscriber.Init(SK).Remove(), "OK");
+  assert("cleanup re-count is 0", "" + countByKey(SK), "0");
+  </script>

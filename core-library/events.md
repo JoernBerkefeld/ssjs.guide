@@ -6,6 +6,7 @@ parent_url: /core-library/
 description: SOAP-style tracking event namespaces — each exposes Retrieve(filter) for send metrics (bounce, click, open, sent, unsub, not-sent, forward, survey).
 verification: verified
 requires_core_load: true
+test_scripts: complete
 ---
 
 These Core library objects expose **tracking rows** for email sends. Each namespace implements **`Retrieve(filter)`** with a WSProxy-style filter (for example `{ Property, SimpleOperator, Value }` on `SendID`, subscriber keys, or job fields appropriate to your query).
@@ -64,6 +65,8 @@ var filter = { Property: "SendID", SimpleOperator: "equals", Value: sendID };
 var bounces = BounceEvent.Retrieve(filter);
 ```
 
+{% include test-script.html bundle="core-library--events" chapter="bounce-event" %}
+
 ---
 
 ## ClickEvent {#click-event}
@@ -101,6 +104,8 @@ var sendID = 12345;
 var filter = { Property: "SendID", SimpleOperator: "equals", Value: sendID };
 var clicks = ClickEvent.Retrieve(filter);
 ```
+
+{% include test-script.html bundle="core-library--events" chapter="click-event" %}
 
 ---
 
@@ -140,6 +145,8 @@ var filter = { Property: "SendID", SimpleOperator: "equals", Value: sendID };
 var opens = OpenEvent.Retrieve(filter);
 ```
 
+{% include test-script.html bundle="core-library--events" chapter="open-event" %}
+
 ---
 
 ## SentEvent {#sent-event}
@@ -177,6 +184,8 @@ var sendID = 12345;
 var filter = { Property: "SendID", SimpleOperator: "equals", Value: sendID };
 var sent = SentEvent.Retrieve(filter);
 ```
+
+{% include test-script.html bundle="core-library--events" chapter="sent-event" %}
 
 ---
 
@@ -216,6 +225,8 @@ var filter = { Property: "SendID", SimpleOperator: "equals", Value: sendID };
 var unsubs = UnsubEvent.Retrieve(filter);
 ```
 
+{% include test-script.html bundle="core-library--events" chapter="unsub-event" %}
+
 ---
 
 ## NotSentEvent {#not-sent-event}
@@ -253,6 +264,8 @@ var sendID = 12345;
 var filter = { Property: "SendID", SimpleOperator: "equals", Value: sendID };
 var notSent = NotSentEvent.Retrieve(filter);
 ```
+
+{% include test-script.html bundle="core-library--events" chapter="not-sent-event" %}
 
 ---
 
@@ -292,6 +305,8 @@ var filter = { Property: "SendID", SimpleOperator: "equals", Value: sendID };
 var forwards = ForwardedEmailEvent.Retrieve(filter);
 ```
 
+{% include test-script.html bundle="core-library--events" chapter="forwarded-email-event" %}
+
 ---
 
 ## ForwardedEmailOptInEvent {#forwarded-email-opt-in-event}
@@ -330,6 +345,8 @@ var filter = { Property: "SendID", SimpleOperator: "equals", Value: sendID };
 var optIns = ForwardedEmailOptInEvent.Retrieve(filter);
 ```
 
+{% include test-script.html bundle="core-library--events" chapter="forwarded-email-opt-in-event" %}
+
 ---
 
 ## SurveyEvent {#survey-event}
@@ -367,6 +384,8 @@ var sendID = 12345;
 var filter = { Property: "SendID", SimpleOperator: "equals", Value: sendID };
 var surveys = SurveyEvent.Retrieve(filter);
 ```
+
+{% include test-script.html bundle="core-library--events" chapter="survey-event" %}
 
 ## See also
 

@@ -1,0 +1,258 @@
+# Test scripts for /core-library/now/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the official Salesforce docs.
+#
+# TIME-SENSITIVITY: Now() is TIME- AND CONTEXT-DEPENDENT. Never assert an
+# absolute wall-clock timestamp. Assert shape, format/parseability, relative
+# ordering, bounded deltas, and round-trip identity instead.
+#
+# SCOPE: CloudPage GET only. Now(true) has no triggering-send timestamp here,
+# so scripts prove acceptance and request-clock proximity — not triggered-
+# context selection. NON-ASSERTABLE on CloudPage.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# CLR STRING RULE: engine-returned values and caught .message values are
+# normalized with `"" + value`, never with String(value).
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters — Now([useContextTime])
+   *
+   * Proves:
+   *   1. Zero-argument, false, and true forms each return a Date snapshot.
+   *   2. On a CloudPage, Now(true)/Now(false)/omitted are all within one
+   *      second of the request clock (context control, not "true is ignored
+   *      in sends").
+   *   3. TYPE-ACCEPTANCE: useContextTime also accepts number 0/1 and the
+   *      strings "true"/"false", each returning a Date within one second of
+   *      the request clock (same meaningful CloudPage result as boolean).
+   *   4. DEV: surplus arity (2+) is silently IGNORED on the bare form
+   *      (still returns a Date). Platform.Function.Now throws on arity 2+.
+   *      Documented contract remains max_args 1.
+   *
+   * NON-ASSERTABLE: triggered-send context selection for Now(true) when the
+   * initiation timestamp differs from current time — no triggering send on
+   * this CloudPage. NON-ASSERTABLE.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var omitted = Now();
+  var explicitFalse = Now(false);
+  var explicitTrue = Now(true);
+  var requestClock = new Date();
+  assert("zero-argument Now() returns a Date", omitted.constructor === Date ? "true" : "false", "true");
+  assert("Now(false) returns a Date", explicitFalse.constructor === Date ? "true" : "false", "true");
+  assert("Now(true) returns a Date", explicitTrue.constructor === Date ? "true" : "false", "true");
+  assert("omitted and false forms are within one second", Math.abs(explicitFalse.getTime() - omitted.getTime()) <= 1000 ? "true" : "false", "true");
+  assert("CloudPage control: Now(true) is within one second of the request clock", Math.abs(explicitTrue.getTime() - requestClock.getTime()) <= 1000 ? "true" : "false", "true");
+
+  var from0 = Now(0);
+  var from1 = Now(1);
+  assert("counterpart number 0 returns a Date", from0.constructor === Date ? "true" : "false", "true");
+  assert("counterpart number 1 returns a Date", from1.constructor === Date ? "true" : "false", "true");
+  assert("number 0 path within one second of omitted", Math.abs(from0.getTime() - omitted.getTime()) <= 1000 ? "true" : "false", "true");
+  assert("number 1 path within one second of request clock", Math.abs(from1.getTime() - requestClock.getTime()) <= 1000 ? "true" : "false", "true");
+
+  var fromFalseStr = Now("false");
+  var fromTrueStr = Now("true");
+  assert("counterpart string \"false\" returns a Date", fromFalseStr.constructor === Date ? "true" : "false", "true");
+  assert("counterpart string \"true\" returns a Date", fromTrueStr.constructor === Date ? "true" : "false", "true");
+  assert("string \"false\" path within one second of request clock", Math.abs(fromFalseStr.getTime() - requestClock.getTime()) <= 1000 ? "true" : "false", "true");
+  assert("string \"true\" path within one second of request clock", Math.abs(fromTrueStr.getTime() - requestClock.getTime()) <= 1000 ? "true" : "false", "true");
+
+  var surplus2 = Now(false, "extra");
+  var surplus3 = Now(false, "extra", "more");
+  assert("DEV surplus arity 2 ignored - still Date (PF throws)", surplus2.constructor === Date ? "true" : "false", "true");
+  assert("DEV surplus arity 3 ignored - still Date (PF throws)", surplus3.constructor === Date ? "true" : "false", "true");
+  assert("DEV surplus arity 2 still near request clock (PF throws)", Math.abs(surplus2.getTime() - requestClock.getTime()) <= 1000 ? "true" : "false", "true");
+  assertThrows("Platform.Function.Now arity 2 throws", function () {
+      return Platform.Function.Now(false, "extra");
+  });
+  assertThrows("Platform.Function.Now arity 3 throws", function () {
+      return Platform.Function.Now(false, "extra", "more");
+  });
+  </script>
+
+description: |
+  <script runat="server">
+  /*
+   * Chapter: Description — bare-name Core form of Platform.Function.Now.
+   *
+   * Proves:
+   *   1. Before Platform.Load the bare name Now is undefined; invoking it
+   *      throws. typeof is resolved inside a thunk so an unbound global
+   *      cannot abort the page.
+   *   2. Platform.Function.Now works without Platform.Load.
+   *   3. After Platform.Load("core", "1.1.5") Now is a function and a
+   *      successful call is the existence proof.
+   *   4. Bare and qualified forms return equivalent Date snapshots within
+   *      one second (including the true parameter form).
+   *   5. DEV: surplus arguments are silently IGNORED on the bare form;
+   *      Platform.Function.Now throws on arity 2+. Documented max_args
+   *      remains 1. (Page previously claimed identical behaviour.)
+   *
+   * NON-ASSERTABLE: triggered-send Now(true) selection — CloudPage GET has
+   * no initiation timestamp. NON-ASSERTABLE.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+
+  assert("before load typeof Now is undefined", typeOfThunk(function () { return typeof Now; }), "undefined");
+  assertThrows("before load Now() throws", function () { return Now(); });
+  var qualifiedBefore = Platform.Function.Now();
+  assert("Platform.Function.Now works before Platform.Load", qualifiedBefore.constructor === Date ? "true" : "false", "true");
+
+  Platform.Load("core", "1.1.5");
+  assert("after load typeof Now is function", typeOfThunk(function () { return typeof Now; }), "function");
+
+  var bareCurrent = Now();
+  var qualifiedCurrent = Platform.Function.Now();
+  assert("bare-name Now() returns a Date", bareCurrent.constructor === Date ? "true" : "false", "true");
+  assert("bare and qualified current-time forms are within one second", Math.abs(bareCurrent.getTime() - qualifiedCurrent.getTime()) <= 1000 ? "true" : "false", "true");
+  assert("bare and qualified true forms are within one second", Math.abs(Now(true).getTime() - Platform.Function.Now(true).getTime()) <= 1000 ? "true" : "false", "true");
+
+  var withExtra = Now(false, "x");
+  assert("DEV surplus 1 extra arg ignored - still Date (PF throws)", withExtra.constructor === Date ? "true" : "false", "true");
+  assertThrows("Platform.Function.Now(false, \"x\") throws", function () {
+      return Platform.Function.Now(false, "x");
+  });
+  </script>
+
+return-value: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Return value — Date object identity and accessors.
+   * Also covers the differs-from-docs claim (Date object, not an RFC string):
+   * .indexOf throws on the raw Date; raw Date !== its concat string.
+   *
+   * Proves:
+   *   1. DEV: returns a genuine Date object, not the RFC 2822 string the
+   *      official docs declare — typeof object, [object Date] tag,
+   *      .constructor === Date; .indexOf throws on the raw return;
+   *      raw value !== its "" + concat form.
+   *   2. Date accessors work: getFullYear, getMonth, getTime; valueOf
+   *      agrees with getTime.
+   *   3. ANOMALY: instanceof Date is false (engine-wide); .constructor ===
+   *      Date is the workaround (also false for new Date()).
+   *   4. Concatenation ("" + value) yields a non-empty RFC-like string that
+   *      contains the Date's year.
+   *   5. A captured Now() snapshot is stable; a separate later call is
+   *      monotonic and stays near new Date().
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var captured = Now();
+
+  assert("DEV typeof Now() is object (official docs: string)", "" + (typeof captured), "object");
+  assert("DEV Object.prototype.toString reports [object Date] (official docs: string)", "" + Object.prototype.toString.call(captured), "[object Date]");
+  assert("DEV .constructor === Date (official docs: string)", captured.constructor === Date ? "true" : "false", "true");
+  assert("DEV raw value is not a string (official docs: string)", (typeof captured === "string") ? "true" : "false", "false");
+  assertThrows("DEV .indexOf() throws on the raw return (official docs: string)", function () {
+      return captured.indexOf("" + captured.getFullYear());
+  });
+
+  assert("getFullYear() returns a number", "" + (typeof captured.getFullYear()), "number");
+  assert("getMonth() returns a number", "" + (typeof captured.getMonth()), "number");
+  assert("getTime() returns a number", "" + (typeof captured.getTime()), "number");
+  assert("valueOf() agrees with getTime()", captured.valueOf() === captured.getTime() ? "true" : "false", "true");
+  assert("getMilliseconds() is in 0..999", captured.getMilliseconds() >= 0 && captured.getMilliseconds() <= 999 ? "true" : "false", "true");
+
+  assert("ANOMALY Now() instanceof Date is false", captured instanceof Date ? "true" : "false", "false");
+  assert("ANOMALY new Date() instanceof Date is likewise false", new Date() instanceof Date ? "true" : "false", "false");
+  assert("workaround Now().constructor === Date", captured.constructor === Date ? "true" : "false", "true");
+  assert("workaround new Date().constructor === Date", new Date().constructor === Date ? "true" : "false", "true");
+
+  var concatForm = "" + captured;
+  assert("concatenation yields a non-empty string", concatForm.length > 0 ? "true" : "false", "true");
+  assert("concat form includes the Date object's year", concatForm.indexOf("" + captured.getFullYear()) >= 0 ? "true" : "false", "true");
+  assert("raw result is not strictly equal to its concat form", captured === concatForm ? "true" : "false", "false");
+
+  var capturedMs = captured.getTime();
+  var controlStart = new Date().getTime();
+  var controlNow = controlStart;
+  while (controlNow - controlStart < 40) {
+      controlNow = new Date().getTime();
+  }
+  var later = Now();
+  assert("a captured Now() value remains stable after the control clock advances", captured.getTime(), capturedMs);
+  assert("the new Date() control advanced by at least 40 ms", controlNow - controlStart >= 40 ? "true" : "false", "true");
+  assert("a separate later Now() call is monotonic", later.getTime() >= capturedMs ? "true" : "false", "true");
+  assert("the separate later Now() call remains close to new Date()", Math.abs(later.getTime() - new Date().getTime()) <= 1000 ? "true" : "false", "true");
+  </script>
+
+example: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Example — Platform.Load then var current = Now(); Write(current.getFullYear());
+   *
+   * Proves:
+   *   1. The documented example pattern yields a Date (not a preformatted
+   *      string) whose getFullYear() returns a number.
+   *   2. The year is a 4-digit number in a plausible modern range (no
+   *      absolute timestamp literal).
+   *   3. "" + current is a non-empty RFC-like form containing that year.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var current = Now();
+  assert("example current is a Date", current.constructor === Date ? "true" : "false", "true");
+  assert("example typeof current.getFullYear() is number", "" + (typeof current.getFullYear()), "number");
+  var year = current.getFullYear();
+  assert("example getFullYear() is a 4-digit year", (year >= 1000 && year <= 9999) ? "true" : "false", "true");
+  var written = "" + current;
+  assert("example concat form is non-empty", written.length > 0 ? "true" : "false", "true");
+  assert("example concat form includes getFullYear()", written.indexOf("" + year) >= 0 ? "true" : "false", "true");
+  </script>

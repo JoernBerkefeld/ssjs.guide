@@ -13,6 +13,7 @@ type_mapping:
   soap: "Send"
   mcdev: "-"
   gui: "User-Initiated Email"
+test_scripts: complete
 ---
 
 {% include callout.html type="warning" content="**Deprecated.** `Send` is a legacy **Classic Content** / **Classic Email Studio** feature. Salesforce retired classic content creation and editing (Classic Content reached end of life on 24 Apr 2023), and **Content Builder** is now the single cross-channel content repository. SOAP-era Send integrations only operate on the old Classic tools — prefer **Content Builder** assets (Asset REST endpoints) for new development." %}
@@ -31,7 +32,7 @@ The `Send` namespace covers **user-initiated sends**: creating sends from an ema
 | [`Send.Add(emailKey, listIds[, options])`](#add) | string | Create a send |
 | [`Send.Retrieve(filter)`](#retrieve) | object[] | Query sends |
 | [`Send.RetrieveLists(filter)`](#retrievelists) | object[] | Lists targeted by matching sends |
-| [`<SendInstance>.Remove()`](#instance-remove) | string | Delete the bound send |
+| [`<SendInstance>.Remove()`](#instance-remove) | string | Cancel/remove the bound send (Status → Canceled; still Retrievable) |
 | [`<SendInstance>.CancelSend()`](#instance-cancelsend) | string | Attempt to cancel the send |
 | [`Send.Tracking.Retrieve(filter)`](#tracking-retrieve) | object[] | Tracking rows (static; no `Send.Init` required) |
 | [`<SendInstance>.Tracking.Clicks.Retrieve(filter)`](#instance-tracking-clicks-retrieve) | object[] | Click tracking for this send |
@@ -53,7 +54,7 @@ Send.Init(id)
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `id` | number | Yes | Numeric ID of the send |
+| `id` | string \| number | Yes | Numeric ID of the send |
 
 #### Return value
 
@@ -65,6 +66,8 @@ Send.Init(id)
 Platform.Load("core", "1");
 var s = Send.Init(12345);
 ```
+
+{% include test-script.html bundle="core-library--send" chapter="init" %}
 
 ---
 
@@ -83,7 +86,7 @@ Send.Add(emailKey, listIds[, options])
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `emailKey` | string | Yes | Customer key of the email |
-| `listIds` | array | Yes | Array of list IDs |
+| `listIds` | string[] \| number[] | Yes | Target list IDs (numeric or numeric-string elements) |
 | `options` | object | No | Send-time overrides |
 
 #### Return value
@@ -102,6 +105,8 @@ var options = {
 };
 var status2 = Send.Add("test_email", [12345, 12346], options);
 ```
+
+{% include test-script.html bundle="core-library--send" chapter="add" %}
 
 ---
 
@@ -131,6 +136,8 @@ Send.Retrieve(filter)
 Platform.Load("core", "1.1.5");
 var sends = Send.Retrieve({ Property: "ID", SimpleOperator: "equals", Value: 12345 });
 ```
+
+{% include test-script.html bundle="core-library--send" chapter="retrieve" %}
 
 ---
 
@@ -165,11 +172,15 @@ var listsSentTo = Send.RetrieveLists({
 });
 ```
 
+{% include test-script.html bundle="core-library--send" chapter="retrievelists" %}
+
 ---
 
 ### &lt;SendInstance&gt;.Remove {#instance-remove}
 
-Deletes the send record bound to this instance.
+Cancels/removes the send bound to this instance. On success the send's `Status` becomes `"Canceled"`; the row remains Retrievable (not a hard delete).
+
+{% include differs-from-docs.html note="Runtime-verified: `Remove()` returns `\"OK\"` and sets `Status` to `\"Canceled\"`, but the send row remains Retrievable — it is not hard-deleted. A missing ID returns `\"Error\"` (does not throw)." %}
 
 #### Syntax
 
@@ -179,7 +190,7 @@ Deletes the send record bound to this instance.
 
 #### Return value
 
-`"OK"` on success.
+`"OK"` on success; `"Error"` when the ID is missing (does not throw).
 
 #### Examples
 
@@ -189,13 +200,17 @@ var s = Send.Init(12345);
 s.Remove();
 ```
 
+{% include test-script.html bundle="core-library--send" chapter="instance-remove" %}
+
 ---
 
 ### &lt;SendInstance&gt;.CancelSend {#instance-cancelsend}
 
 Attempts to cancel the bound send.
 
-{% include differs-from-docs.html note="Runtime-verified: `CancelSend()` returns the literal string `\"status\"` on success, not the `\"OK\"` the official docs describe. Don't compare its return value against `\"OK\"`." %}
+{% include differs-from-docs.html note="Runtime-verified: `CancelSend()` returns the literal string `\"status\"` on success, not the `\"OK\"` the official docs describe. Don't compare its return value against `\"OK\"`. Failure returns an error string (does not throw)." %}
+
+{% include test-script.html bundle="core-library--send" chapter="cancelsend-returns-status" label="Show test script — CancelSend returns \"status\"" %}
 
 #### Syntax
 
@@ -205,7 +220,7 @@ Attempts to cancel the bound send.
 
 #### Return value
 
-`string` — returns the literal string `"status"` on success (not `"OK"`); throws on failure.
+`string` — returns the literal string `"status"` on success (not `"OK"`); returns an error string on failure (does not throw).
 
 #### Examples
 
@@ -214,6 +229,8 @@ Platform.Load("core", "1.1.5");
 var mySend = Send.Init(12345);
 var status = mySend.CancelSend();
 ```
+
+{% include test-script.html bundle="core-library--send" chapter="instance-cancelsend" %}
 
 ---
 
@@ -248,11 +265,15 @@ var sendTracking = Send.Tracking.Retrieve({
 });
 ```
 
+{% include test-script.html bundle="core-library--send" chapter="tracking-retrieve" %}
+
 ---
 
 ### &lt;SendInstance&gt;.Tracking.Clicks.Retrieve {#instance-tracking-clicks-retrieve}
 
 {% include differs-from-docs.html note="Salesforce docs call this <code>&lt;SendInstance&gt;.Tracking.ClickRetrieve(filter)</code>, but that name is <code>undefined</code> at runtime. The working member is <code>&lt;SendInstance&gt;.Tracking.Clicks.Retrieve(filter)</code> — a <code>Clicks</code> sub-object with a <code>Retrieve</code> method." %}
+
+{% include test-script.html bundle="core-library--send" chapter="clicks-retrieve-name" label="Show test script — ClickRetrieve is undefined" %}
 
 Returns click-tracking rows for the bound send that match the filter.
 
@@ -284,13 +305,17 @@ var results = singleSend.Tracking.Clicks.Retrieve({
 });
 ```
 
+{% include test-script.html bundle="core-library--send" chapter="instance-tracking-clicks-retrieve" %}
+
 ---
 
 ### &lt;SendInstance&gt;.Tracking.TotalByInterval.Retrieve {#instance-tracking-totalbyinterval-retrieve}
 
 {% include differs-from-docs.html note="Salesforce docs call this <code>&lt;SendInstance&gt;.Tracking.TotalByIntervalRetrieve(...)</code>, but that name is <code>undefined</code> at runtime. The working member is <code>&lt;SendInstance&gt;.Tracking.TotalByInterval.Retrieve(...)</code> — a <code>TotalByInterval</code> sub-object with a <code>Retrieve</code> method." %}
 
-Aggregates tracking by `type` over the date range, grouped by `groupBy` (`"day"` or `"hour"`). Dates use **MM-DD-YYYY**.
+{% include test-script.html bundle="core-library--send" chapter="totalbyinterval-retrieve-name" label="Show test script — TotalByIntervalRetrieve is undefined" %}
+
+Aggregates tracking by `type` over the date range, grouped by `groupBy` (`"day"` or `"hour"`). Dates use **MM-DD-YYYY** strings or `Date` values.
 
 #### Syntax
 
@@ -303,8 +328,8 @@ Aggregates tracking by `type` over the date range, grouped by `groupBy` (`"day"`
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `type` | string | Yes | `"Send"`, `"Open"`, `"Click"`, `"Bounce"`, or `"Unsubscribe"` |
-| `startDate` | string | Yes | Start (MM-DD-YYYY) |
-| `endDate` | string | Yes | End (MM-DD-YYYY) |
+| `startDate` | string \| Date | Yes | Start (MM-DD-YYYY or Date) |
+| `endDate` | string \| Date | Yes | End (MM-DD-YYYY or Date) |
 | `groupBy` | string | Yes | `"day"` or `"hour"` |
 
 #### Return value
@@ -323,6 +348,8 @@ var results = singleSend.Tracking.TotalByInterval.Retrieve(
     "day"
 );
 ```
+
+{% include test-script.html bundle="core-library--send" chapter="instance-tracking-totalbyinterval-retrieve" %}
 
 ## See also
 

@@ -3,8 +3,9 @@ layout: page
 title: Template
 parent: Core Library
 parent_url: /core-library/
-description: Core library Template — HTML templates for messages (init, add, retrieve, update, remove).
+description: Core library Template — HTML templates for messages (init, add, retrieve, update).
 verification: verified
+test_scripts: complete
 deprecated: true
 requires_core_load: true
 type_mapping:
@@ -58,6 +59,8 @@ Platform.Load("core", "1");
 var t = Template.Init("myTemplate");
 ```
 
+{% include test-script.html bundle="core-library--template" chapter="init" %}
+
 ---
 
 ### Template.Add {#add}
@@ -78,7 +81,7 @@ Template.Add(properties)
 
 #### Return value
 
-`"OK"` on success.
+`"OK"` on success; `"Error"` on failure (does not throw).
 
 #### Examples
 
@@ -91,6 +94,8 @@ var myTemp = {
 };
 var status = Template.Add(myTemp);
 ```
+
+{% include test-script.html bundle="core-library--template" chapter="add" %}
 
 ---
 
@@ -125,6 +130,8 @@ var getTemplate = Template.Retrieve({
 });
 ```
 
+{% include test-script.html bundle="core-library--template" chapter="retrieve" %}
+
 ---
 
 ### &lt;TemplateInstance&gt;.Update {#instance-update}
@@ -145,7 +152,7 @@ Updates the initialized template with the given properties.
 
 #### Return value
 
-`"OK"` on success.
+`"OK"` on success; `"Error"` on failure (does not throw).
 
 #### Examples
 
@@ -154,3 +161,5 @@ Platform.Load("core", "1.1.5");
 var myTemplate = Template.Init("myTemplateCK");
 var status = myTemplate.Update({ TemplateName: "Edited Template" });
 ```
+
+{% include test-script.html bundle="core-library--template" chapter="instance-update" %}

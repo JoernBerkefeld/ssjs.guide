@@ -8,6 +8,7 @@ verification: verified
 deprecated: true
 differs_from_docs: true
 requires_core_load: true
+test_scripts: complete
 type_mapping:
   ssjs: "Send.Definition"
   soap: "SendDefinition"
@@ -68,6 +69,8 @@ Platform.Load("core", "1.1.5");
 var esd = Send.Definition.Init("myESD");
 ```
 
+{% include test-script.html bundle="core-library--senddefinition" chapter="init" %}
+
 ---
 
 ### Send.Definition.Add {#add}
@@ -91,7 +94,7 @@ Send.Definition.Add(esdParams, sendClassificationKey, emailKey, listIds)
 | `esdParams` | object | Yes | `CustomerKey`, `Name`, `EmailSubject` for the new send definition |
 | `sendClassificationKey` | string | Yes | Customer key of the send classification |
 | `emailKey` | string | Yes | Customer key of the email |
-| `listIds` | array | Yes | Target list IDs — must exist |
+| `listIds` | string[] \| number[] | Yes | Target list IDs (numeric or numeric-string elements) — must exist |
 
 #### Return value
 
@@ -108,6 +111,8 @@ var esdParams = {
 };
 var esd = Send.Definition.Add(esdParams, "example_sc_key", "example_email_key", [12345]);
 ```
+
+{% include test-script.html bundle="core-library--senddefinition" chapter="add" %}
 
 ---
 
@@ -152,6 +157,8 @@ var esdParams = {
 var esd = Send.Definition.AddWithDE(esdParams, "scKey", "test_email", "deKey");
 ```
 
+{% include test-script.html bundle="core-library--senddefinition" chapter="addwithde" %}
+
 ---
 
 ### Send.Definition.AddWithFilterDefinition {#addwithfilterdefinition}
@@ -176,7 +183,7 @@ Send.Definition.AddWithFilterDefinition(esdParams, sendClassificationKey, emailK
 | `sendClassificationKey` | string | Yes | Send classification customer key |
 | `emailKey` | string | Yes | Email customer key |
 | `filterDefinitionKey` | string | Yes | Filter definition customer key |
-| `listId` | number | No | List ID the filter applies to |
+| `listId` | string \| number | No | List ID the filter applies to |
 
 #### Return value
 
@@ -202,6 +209,8 @@ var created = Send.Definition.Retrieve({
     Value: "filterDef_esd"
 }).length > 0;
 ```
+
+{% include test-script.html bundle="core-library--senddefinition" chapter="addwithfilterdefinition" %}
 
 ---
 
@@ -237,6 +246,8 @@ var esd = Send.Definition.Retrieve({
     Value: "ssjs_test_esd"
 });
 ```
+
+{% include test-script.html bundle="core-library--senddefinition" chapter="retrieve" %}
 
 ---
 
@@ -275,6 +286,8 @@ var result = sendDef.Update({ Description: "Updated description" });
 // sendDef.Update({ Email: { ID: 12345 } });
 ```
 
+{% include test-script.html bundle="core-library--senddefinition" chapter="instance-update" %}
+
 ---
 
 ### &lt;SendDefinitionInstance&gt;.Remove {#instance-remove}
@@ -300,6 +313,8 @@ Platform.Load("core", "1.1.5");
 var esd = Send.Definition.Init("myESD");
 var status = esd.Remove();
 ```
+
+{% include test-script.html bundle="core-library--senddefinition" chapter="instance-remove" %}
 
 ---
 
@@ -332,6 +347,8 @@ if (status !== "OK") {
     Write("send rejected: " + status);
 }
 ```
+
+{% include test-script.html bundle="core-library--senddefinition" chapter="instance-send" %}
 
 ---
 
@@ -366,6 +383,8 @@ Platform.Load("core", "1.1.5");
 var esd = Send.Definition.Init("myESD");
 var status = esd.TestSend("test@example.com");
 ```
+
+{% include test-script.html bundle="core-library--senddefinition" chapter="instance-testsend" %}
 
 ## See also
 

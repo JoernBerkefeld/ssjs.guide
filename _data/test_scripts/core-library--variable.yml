@@ -1,0 +1,218 @@
+# Test scripts for /core-library/variable/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and documented deviations.
+#
+# Sister evidence reused from platform-objects--platform-variable.yml (Core
+# bare Variable is the alias of Platform.Variable after Platform.Load).
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# CLR STRING RULE: engine-returned values and caught .message values are
+# normalized with `"" + value`, never with String(value).
+#
+# DEPLOY NOTE: wrap AMPscript fixture blocks around the examples chapter
+# (or the combined harness) so GetValue can read values set before SSJS.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+
+methods: |
+  <script runat="server">
+  /*
+   * Chapter: Methods — Variable.GetValue / Variable.SetValue
+   *
+   * Proves:
+   *   1. After Platform.Load("core", "1.1.5") Variable.GetValue and
+   *      Variable.SetValue are callable.
+   *   2. GetValue returns the stored scalar (string / number / boolean)
+   *      or strict null when never set.
+   *   3. SetValue returns undefined (void-like; Methods table: undefined).
+   *   4. DEV: GetValue preserves number/boolean and returns null when never
+   *      set (official docs: string).
+   *   5. DEV vs Platform.Variable: Platform.Variable.SetValue returns null
+   *      while bare Variable.SetValue returns undefined.
+   *   6. SetValue accepts string, number, boolean, empty string, null,
+   *      and undefined; null/undefined read back as null.
+   *
+   * NON-ASSERTABLE: personalization strings (_subscriberKey, emailaddr)
+   * require send/subscriber context — not present on a plain CloudPage GET.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  function capture(fn) {
+      try { return { threw: false, value: fn() }; } catch (ex) { return { threw: true, message: "" + ex.message }; }
+  }
+
+  Platform.Load("core", "1.1.5");
+  assert("typeof Variable is object after Core load", typeOfThunk(function () { return typeof Variable; }), "object");
+  assert("typeof Variable.GetValue is function", typeOfThunk(function () { return typeof Variable.GetValue; }), "function");
+  assert("typeof Variable.SetValue is function", typeOfThunk(function () { return typeof Variable.SetValue; }), "function");
+
+  var setRet = Variable.SetValue("@coreVarMethodsStr", "hello");
+  assert("SetValue returns undefined", setRet === undefined ? "undefined" : "other", "undefined");
+  assert("SetValue return typeof is undefined", "" + (typeof setRet), "undefined");
+  var platRet = Platform.Variable.SetValue("@coreVarMethodsStrPlat", "hello-plat");
+  assert("DEV Platform.Variable.SetValue returns null (bare returns undefined)", platRet === null ? "null" : "other", "null");
+  assert("GetValue returns the string that was set", Variable.GetValue("@coreVarMethodsStr"), "hello");
+  assert("GetValue string typeof is string", "" + (typeof Variable.GetValue("@coreVarMethodsStr")), "string");
+
+  Variable.SetValue("@coreVarMethodsNum", 42);
+  var numVal = Variable.GetValue("@coreVarMethodsNum");
+  assert("DEV GetValue preserves number (official docs: string)", numVal, 42);
+  assert("DEV GetValue number typeof is number (official docs: string)", "" + (typeof numVal), "number");
+
+  Variable.SetValue("@coreVarMethodsTrue", true);
+  assert("DEV GetValue preserves boolean true (official docs: string)", Variable.GetValue("@coreVarMethodsTrue"), true);
+
+  var missing = Variable.GetValue("@coreVarMethodsMissing20260803");
+  assert("DEV never-set GetValue is strict null (official docs: string)", missing === null ? "null" : "other", "null");
+  assert("DEV never-set GetValue typeof is object", "" + (typeof missing), "object");
+
+  Variable.SetValue("@coreVarMethodsEmpty", "");
+  assert("explicit empty string remains empty", Variable.GetValue("@coreVarMethodsEmpty"), "");
+
+  var setNull = capture(function () { return Variable.SetValue("@coreVarMethodsNull", null); });
+  var unset;
+  var setUndef = capture(function () { return Variable.SetValue("@coreVarMethodsUndef", unset); });
+  assert("SetValue null does not throw", setNull.threw ? "threw:" + setNull.message : "returned", "returned");
+  assert("null input reads back strict null", Variable.GetValue("@coreVarMethodsNull") === null ? "null" : "other", "null");
+  assert("SetValue undefined does not throw", setUndef.threw ? "threw:" + setUndef.message : "returned", "returned");
+  assert("undefined input reads back strict null", Variable.GetValue("@coreVarMethodsUndef") === null ? "null" : "other", "null");
+  </script>
+
+description: |
+  <script runat="server">
+  /*
+   * Chapter: Description — Variable is the Core alias of Platform.Variable
+   *
+   * Proves:
+   *   1. Before Platform.Load the bare Variable is undefined; invoking
+   *      GetValue throws. typeof is resolved inside a thunk.
+   *   2. Platform.Variable is available without Platform.Load.
+   *   3. After Platform.Load("core", "1.1.5") Variable is an object and
+   *      shares request-local state with Platform.Variable.
+   *   4. DEV: bare SetValue returns undefined; Platform.Variable.SetValue
+   *      returns null — state is shared, return values are not identical.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+
+  assert("before load typeof Variable is undefined", typeOfThunk(function () { return typeof Variable; }), "undefined");
+  assertThrows("before load Variable.GetValue throws", function () { return Variable.GetValue("@x"); });
+  assert("Platform.Variable exists without load", typeOfThunk(function () { return typeof Platform.Variable; }), "clr");
+
+  Platform.Load("core", "1.1.5");
+  assert("after load typeof Variable is object", typeOfThunk(function () { return typeof Variable; }), "object");
+
+  Variable.SetValue("@coreVarDescAlias", "alias-roundtrip");
+  assert("bare Variable shares Platform.Variable state", Platform.Variable.GetValue("@coreVarDescAlias"), "alias-roundtrip");
+  Platform.Variable.SetValue("@coreVarDescFromPlatform", "from-platform");
+  assert("Platform.Variable writes are visible via bare Variable", Variable.GetValue("@coreVarDescFromPlatform"), "from-platform");
+  var bareSetRet = Variable.SetValue("@coreVarDescRet", "r");
+  var platSetRet = Platform.Variable.SetValue("@coreVarDescRetPlat", "r");
+  assert("DEV bare SetValue returns undefined (Platform returns null)", bareSetRet === undefined ? "undefined" : "other", "undefined");
+  assert("DEV Platform.Variable.SetValue returns null (bare returns undefined)", platSetRet === null ? "null" : "other", "null");
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples — read / write / TreatAsContent bridge
+   *
+   * Prerequisite: a preceding AMPscript block sets @coreVarExAmpSk and
+   * @coreVarExAmpEmail (stand-ins for the page's @subscriberKey / @emailAddress).
+   *
+   * Proves:
+   *   1. Variable.GetValue reads AMPscript-set values in the same request.
+   *   2. Variable.SetValue writes a value readable by later SSJS (and by
+   *      later AMPscript in a combined harness).
+   *   3. The TreatAsContent bridge: SetValue -> TreatAsContent(URLEncode) ->
+   *      GetValue returns the encoded result (injection-safe pattern).
+   *   4. SetValue with a fallback (data || "light") stores the fallback when
+   *      the left side is falsy.
+   *
+   * NON-ASSERTABLE: Lookup("Preferences", ...) DE row; personalization
+   * strings _subscriberKey / emailaddr on a plain CloudPage GET.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  assert("read AMPscript @coreVarExAmpSk", Variable.GetValue("@coreVarExAmpSk"), "sk-example");
+  assert("read AMPscript @coreVarExAmpEmail", Variable.GetValue("@coreVarExAmpEmail"), "user@example.com");
+
+  var data = null;
+  Variable.SetValue("@theme", data || "light");
+  assert("write fallback theme when lookup is falsy", Variable.GetValue("@theme"), "light");
+
+  Variable.SetValue("@inputStr", "hello world");
+  var pct = "%" + "%";
+  Platform.Function.TreatAsContent(pct + "[Set @encoded = URLEncode(@inputStr, 1, 1)]" + pct);
+  var encoded = Variable.GetValue("@encoded");
+  assert("bridge GetValue returns a string", "" + (typeof encoded), "string");
+  assert("bridge encoded differs from raw input", encoded === "hello world" ? "same" : "encoded", "encoded");
+  assert("bridge encoded is non-empty", encoded && ("" + encoded).length > 0 ? "true" : "false", "true");
+  assert("bridge encoded contains encoded space or plus", (("" + encoded).indexOf("%20") >= 0 || ("" + encoded).indexOf("+") >= 0) ? "true" : "false", "true");
+  </script>
+
+notes: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Notes — @ prefix is correct; bare name may work
+   *
+   * Proves:
+   *   1. Variable.SetValue("@name", ...) is the correct form and round-trips.
+   *   2. Variable.SetValue("name", ...) without @ also addresses the same
+   *      variable (page: may work but non-standard).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  Variable.SetValue("@name", "Jane");
+  assert("SetValue with @ prefix round-trips", Variable.GetValue("@name"), "Jane");
+  assert("GetValue without @ finds the same @name", Variable.GetValue("name"), "Jane");
+
+  Variable.SetValue("name", "Jane-bare");
+  assert("DEV SetValue without @ may work (non-standard)", Variable.GetValue("@name"), "Jane-bare");
+  assert("bare SetValue is visible via @ GetValue", Variable.GetValue("name"), "Jane-bare");
+  </script>

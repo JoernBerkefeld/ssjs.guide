@@ -14,7 +14,8 @@ availability:
   triggered_send: true
 requires_core_load: true
 verification: verified
-differs_from_docs: false
+differs_from_docs: true
+test_scripts: complete
 syntax: "Format(textToFormat, formatCode)"
 return_type: string
 min_args: 2
@@ -25,8 +26,10 @@ max_args: 2
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `textToFormat` | string \| number | Yes | The string or number to apply a formatting rule to |
+| `textToFormat` | string \| number \| Date | Yes | The string, number, or Date to apply a formatting rule to |
 | `formatCode` | string | Yes | A format code to apply (see tables below) |
+
+{% include test-script.html bundle="core-library--format" chapter="parameters" %}
 
 ## Description
 
@@ -52,6 +55,8 @@ Append a digit to any code to control the number of decimal places (rounding as 
 - `C0` → `$4,214`
 - `C4` → `$4,213.6500`
 
+{% include test-script.html bundle="core-library--format" chapter="numeric-codes" %}
+
 ## Format Codes for Date Strings
 
 ### Predefined Date Formats
@@ -60,7 +65,7 @@ The values in the Example column are based on Monday, August 5, 2024 at 1:41:23 
 
 | Code | Description | Example |
 |------|-------------|---------|
-| `d` | Short-form date | `8/5/24` |
+| `d` | Short-form date | `8/5/2024` |
 | `M` | Month and day | `August 5` |
 | `f` | Long-form date with 12-hour time | `Monday, August 5, 2024 1:41 PM` |
 | `g` | Short-form date with 12-hour time | `8/5/2024 1:41 PM` |
@@ -72,6 +77,12 @@ The values in the Example column are based on Monday, August 5, 2024 at 1:41:23 
 | `u` | Universal sortable timestamp | `2024-08-05 13:41:23Z` |
 | `U` | Long-form date with 12-hour UTC time with seconds | `Monday, August 5, 2024 7:41:23 PM` |
 | `y` | Month and year | `August 2024` |
+
+{% include differs-from-docs.html note="The official docs show short-form `d` as `8/5/24` (two-digit year). At runtime it returns a four-digit year, e.g. `8/5/2024`, for the same sample instant." %}
+
+{% include test-script.html bundle="core-library--format" chapter="differs-short-date-d" label="Show test script — short-form d year digits" %}
+
+{% include test-script.html bundle="core-library--format" chapter="date-predefined" %}
 
 ### Custom Date Formats
 
@@ -100,6 +111,8 @@ Combine the codes below to build a custom format string. The values in the Examp
 | `zzz` | Time zone offset in hours and minutes | `-06:00` |
 
 {% include callout.html type="note" content="Some custom codes overlap with predefined codes (e.g. `d`). When passed as a single code, `Format(date, \"d\")` uses the predefined format. When combined with other codes, it uses the custom interpretation. For example, `Format(date, \"d MMMM\")` outputs `5 August`." %}
+
+{% include test-script.html bundle="core-library--format" chapter="date-custom" %}
 
 ## Examples
 
@@ -143,6 +156,8 @@ Platform.Load("core", "1.1.5");
 var expiry = Format(Platform.Function.Now(), "r"); // "Mon, 05 Aug 2024 13:41:23 GMT"
 Platform.Response.SetCookie("session", token, expiry, true);
 ```
+
+{% include test-script.html bundle="core-library--format" chapter="examples" %}
 
 ## See Also
 

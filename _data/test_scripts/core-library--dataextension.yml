@@ -1,0 +1,336 @@
+# Test scripts for /core-library/dataextension/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and the documented deviation from the official Salesforce docs.
+#
+# SAFETY: every script creates its OWN throw-away sendable data extension
+# under a uniquely named external key (`ssjsguide-ts-de-*` /
+# `ssjs-guide-ts-de-*`), proves the effect, and removes it again. An orphan
+# left by a previous aborted run is cleaned up before the probe starts, so
+# no pre-existing data extension is ever touched.
+#
+# NON-ASSERTABLE:
+#   - Enterprise-level (shared) data extensions — Core DataExtension does not
+#     support them; this BU has no enterprise DE fixture to negative-prove.
+#   - Exact cross-account `queryAllAccounts: true` membership of other BUs —
+#     scripts prove the call accepts boolean true/false (and number 0/1) and
+#     returns an array-like result without throwing; they do not assert that
+#     a specific child-BU DE appears.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# NORMALIZATION RULE: assert() compares with a plain === and does NOT coerce.
+# Engine-returned values are normalized at the call site with "" + value —
+# never with String(value), which yields a CLR string that fails === and
+# aborts the page when a string method is called on it.
+#
+# REQUEST-SCOPED QUERY CACHE: identical DE queries within one request can
+# return stale data — scripts vary the filter Value or re-count after Remove
+# with a distinct filter when proving a mutation.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage GET on the QA business unit. Re-run them before changing any
+# claim on the page.
+
+init: |
+  <script runat="server">
+
+  /*
+   * Chapter: DataExtension.Init(key)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Before Platform.Load the bare DataExtension namespace is undefined
+   *      (typeof resolved lazily inside a thunk).
+   *   2. After Platform.Load("core", "1.1.5") DataExtension is an object
+   *      exposing Init, Add and Retrieve as functions.
+   *   3. Init(key) returns a DataExtensionInstance exposing Fields and Rows
+   *      namespaces plus Update and Remove instance methods.
+   *   4. Init by External Key (CustomerKey) binds: Fields.Retrieve returns
+   *      the real columns of the owned fixture.
+   *   5. BUG Init by display Name when Name differs from CustomerKey does
+   *      NOT bind Fields (empty array) or Rows.Retrieve (no match) — even
+   *      though Rows.Add on that stub can still write into the real DE
+   *      (known bug; prefer External Key).
+   *   6. Binding is lazy: Init(missing) never throws; Fields.Retrieve on
+   *      the stub is an empty array and Fields.Add returns "Error".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function outcomeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW"; }
+  }
+
+  /* 1. Before the Core load the namespace does not resolve. */
+  assert("before Platform.Load the DataExtension namespace is undefined", typeOf(function () { return typeof DataExtension; }), "undefined");
+
+  Platform.Load("core", "1.1.5");
+
+  function countDE(key) {
+      return DataExtension.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key }).length;
+  }
+
+  /* 2. Availability after the Core load. */
+  assert("after Platform.Load typeof DataExtension is object", typeOf(function () { return typeof DataExtension; }), "object");
+  assert("typeof DataExtension.Init is function", typeOf(function () { return typeof DataExtension.Init; }), "function");
+  assert("typeof DataExtension.Add is function", typeOf(function () { return typeof DataExtension.Add; }), "function");
+  assert("typeof DataExtension.Retrieve is function", typeOf(function () { return typeof DataExtension.Retrieve; }), "function");
+
+  var KEY = "ssjsguide-ts-de-init";
+  var NAME = "ssjs-guide-ts-de-init-display";
+
+  if (countDE(KEY) > 0) { DataExtension.Init(KEY).Remove(); }
+  assert("precondition: no probe data extension exists", "" + countDE(KEY), "0");
+  DataExtension.Add({
+      CustomerKey: KEY,
+      Name: NAME,
+      Fields: [
+          { Name: "SubKey", FieldType: "Text", IsPrimaryKey: true, MaxLength: 50, IsRequired: true },
+          { Name: "Active", FieldType: "Text", MaxLength: 10 }
+      ],
+      SendableInfo: { Field: { Name: "SubKey", FieldType: "Text" }, RelatesOn: "Subscriber Key" }
+  });
+  assert("fixture: the probe data extension was created", "" + countDE(KEY), "1");
+
+  /* 3. Shape of the returned DataExtensionInstance. */
+  var de = DataExtension.Init(KEY);
+  assert("typeof DataExtension.Init(key) is object", typeof de, "object");
+  assert("typeof instance.Fields is object", typeof de.Fields, "object");
+  assert("typeof instance.Rows is object", typeof de.Rows, "object");
+  assert("typeof instance.Update is function", typeof de.Update, "function");
+  assert("typeof instance.Remove is function", typeof de.Remove, "function");
+  assert("instance Stringify exposes Fields+Rows+Update+Remove", "" + Stringify(de), '{"Fields":{"Add":"function","Remove":"function","Retrieve":"function","Update":"function","UpdateSendableField":"function"},"Remove":"function","Update":"function","Rows":{"Lookup":"function","Add":"function","Remove":"function","Update":"function","Retrieve":"function"}}');
+
+  /* 4. External Key binds. */
+  assert("Init(CustomerKey) Fields.Retrieve length is 2", "" + de.Fields.Retrieve().length, "2");
+  assert("Init(CustomerKey) Rows.Add returns 1", outcomeOf(function () { return de.Rows.Add([{ SubKey: "k1", Active: "1" }]); }), "1");
+  assert("Init(CustomerKey) Rows.Retrieve(filter) sees the row", outcomeOf(function () {
+      return de.Rows.Retrieve({ Property: "SubKey", SimpleOperator: "equals", Value: "k1" }).length;
+  }), "1");
+
+  /* 5. BUG — display Name when it differs from CustomerKey does not bind reads. */
+  var byName = DataExtension.Init(NAME);
+  assert("BUG Init(display Name) still returns an object stub", typeof byName, "object");
+  assert("BUG Init(display Name) Fields.Retrieve is empty (expected real columns)", "" + byName.Fields.Retrieve().length, "0");
+  assert("BUG Init(display Name) Fields.Add returns Error", outcomeOf(function () {
+      return byName.Fields.Add({ Name: "Extra", FieldType: "Text", MaxLength: 10 });
+  }), "Error");
+  assert("BUG Init(display Name) Rows.Retrieve(filter) misses the row", outcomeOf(function () {
+      return byName.Rows.Retrieve({ Property: "SubKey", SimpleOperator: "equals", Value: "k1" }).length;
+  }), "0");
+  assert("BUG yet Init(display Name) Rows.Add can still write", outcomeOf(function () {
+      return byName.Rows.Add([{ SubKey: "k2", Active: "1" }]);
+  }), "1");
+  assert("BUG the write landed on the real DE (via External Key read)", outcomeOf(function () {
+      return DataExtension.Init(KEY).Rows.Retrieve({ Property: "SubKey", SimpleOperator: "equals", Value: "k2" }).length;
+  }), "1");
+
+  /* 6. Lazy binding for a missing key. */
+  var GHOST = "ssjsguide-ts-de-init-ghost";
+  assert("precondition: nothing exists under the unbound key", "" + countDE(GHOST), "0");
+  assert("Init(missing) does not throw", outcomeOf(function () { DataExtension.Init(GHOST); return "returned"; }), "returned");
+  var ghost = DataExtension.Init(GHOST);
+  assert("Init(missing) Fields.Retrieve length is 0", "" + ghost.Fields.Retrieve().length, "0");
+  assert("Init(missing) Fields.Add returns Error", outcomeOf(function () {
+      return ghost.Fields.Add({ Name: "X", FieldType: "Text", MaxLength: 5 });
+  }), "Error");
+  assert("Init(missing) created NO data extension", "" + countDE(GHOST), "0");
+
+  /* Cleanup. */
+  assert("cleanup: the probe data extension is removed", outcomeOf(function () { return DataExtension.Init(KEY).Remove(); }), "OK");
+  assert("cleanup: no probe data extension is left behind", "" + countDE(KEY), "0");
+  </script>
+
+add: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: DataExtension.Add(properties)
+   *
+   * CloudPage GET context. Proves:
+   *   1. DataExtension.Add is a function.
+   *   2. Add(properties) with the page example fields (CustomerKey, Name,
+   *      Fields[], SendableInfo) creates a retrievable data extension.
+   *   3. Unlike most Core Add methods, the return value is a
+   *      DataExtensionInstance (object exposing Fields/Rows/Update/Remove),
+   *      NOT the string "OK".
+   *   4. The returned instance is bound: Fields.Retrieve sees the columns
+   *      from the create payload.
+   *   5. Negative cases: Add() with no argument and Add({}) both fail
+   *      (throw or non-instance) without leaving a DE under the probe key.
+   *
+   * FIXTURE: creates ssjsguide-ts-de-add and removes it again at the end.
+   * Cleanup is verified by re-counting Retrieve rows (ghost-record rule).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function outcomeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function countDE(key) {
+      return DataExtension.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key }).length;
+  }
+
+  var KEY = "ssjsguide-ts-de-add";
+  var NAME = "ssjs-guide-ts-de-add";
+
+  if (countDE(KEY) > 0) { DataExtension.Init(KEY).Remove(); }
+  assert("precondition: no probe data extension exists", "" + countDE(KEY), "0");
+
+  assert("typeof DataExtension.Add is function", typeof DataExtension.Add, "function");
+
+  var deObj = {
+      CustomerKey: KEY,
+      Name: NAME,
+      Fields: [
+          { Name: "SubKey", FieldType: "Text", IsPrimaryKey: true, MaxLength: 50, IsRequired: true },
+          { Name: "SecondField", FieldType: "Text", MaxLength: 50 }
+      ],
+      SendableInfo: {
+          Field: { Name: "SubKey", FieldType: "Text" },
+          RelatesOn: "Subscriber Key"
+      }
+  };
+  var de = null;
+  assert("Add(properties) does not throw", invocationResult(function () { de = DataExtension.Add(deObj); }), "returned");
+  assert("typeof Add() result is object (page: DataExtensionInstance, not \"OK\")", typeof de, "object");
+  assert("Add() result is not the string OK", de === "OK" ? "true" : "false", "false");
+  assert("returned instance exposes Fields", typeof de.Fields, "object");
+  assert("returned instance exposes Rows", typeof de.Rows, "object");
+  assert("returned instance exposes Update", typeof de.Update, "function");
+  assert("returned instance exposes Remove", typeof de.Remove, "function");
+  assert("the data extension exists after Add", "" + countDE(KEY), "1");
+  assert("returned instance Fields.Retrieve length is 2", "" + de.Fields.Retrieve().length, "2");
+
+  /* Negative cases — must not leave a DE under a ghost key. */
+  var GHOST = "ssjsguide-ts-de-add-ghost";
+  assert("precondition: nothing under the ghost key", "" + countDE(GHOST), "0");
+  assert("Add() with no argument throws or is not an instance", (function () {
+      try {
+          var r = DataExtension.Add();
+          return (r && typeof r.Fields === "object") ? "instance" : "non-instance";
+      } catch (ex) { return "threw"; }
+  })() === "instance" ? "instance" : "failed-safely", "failed-safely");
+  assert("Add({}) throws or is not an instance", (function () {
+      try {
+          var r = DataExtension.Add({});
+          return (r && typeof r.Fields === "object") ? "instance" : "non-instance";
+      } catch (ex) { return "threw"; }
+  })() === "instance" ? "instance" : "failed-safely", "failed-safely");
+  assert("no ghost data extension was created", "" + countDE(GHOST), "0");
+
+  assert("fixture cleanup removed the created data extension", outcomeOf(function () { return DataExtension.Init(KEY).Remove(); }), "OK");
+  assert("cleanup re-count is 0", "" + countDE(KEY), "0");
+  </script>
+
+retrieve: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: DataExtension.Retrieve(filter, [queryAllAccounts])
+   *
+   * CloudPage GET context. Proves:
+   *   1. Retrieve is a function.
+   *   2. On a CustomerKey match the result reports as [object Array], exposes
+   *      .length, and is not a JS Array (instanceof Array is false).
+   *   3. A matched row exposes readable CustomerKey and Name.
+   *   4. A filter matching nothing returns a real empty array (length 0,
+   *      Stringify "[]") — not null / undefined.
+   *   5. DEV filter is optional (official docs: required): Retrieve() with
+   *      no arguments does not throw and returns a non-empty list.
+   *   6. queryAllAccounts accepts boolean true/false; number 1/0 is also
+   *      accepted with the same array-like result shape (type-acceptance).
+   *
+   * FIXTURE: creates ssjsguide-ts-de-retr and removes it at the end.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function outcomeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+  function countDE(key) {
+      return DataExtension.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key }).length;
+  }
+
+  var KEY = "ssjsguide-ts-de-retr";
+  var NAME = "ssjs-guide-ts-de-retr";
+
+  if (countDE(KEY) > 0) { DataExtension.Init(KEY).Remove(); }
+  assert("precondition: no probe data extension exists", "" + countDE(KEY), "0");
+  DataExtension.Add({
+      CustomerKey: KEY,
+      Name: NAME,
+      Fields: [
+          { Name: "SubKey", FieldType: "Text", IsPrimaryKey: true, MaxLength: 50, IsRequired: true }
+      ],
+      SendableInfo: { Field: { Name: "SubKey", FieldType: "Text" }, RelatesOn: "Subscriber Key" }
+  });
+  assert("fixture: the probe data extension was created", "" + countDE(KEY), "1");
+
+  assert("typeof DataExtension.Retrieve is function", typeof DataExtension.Retrieve, "function");
+
+  var rows = DataExtension.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: KEY });
+  assert("typeof the matched result is object", typeof rows, "object");
+  assert("the matched result reports as [object Array]", Object.prototype.toString.call(rows), "[object Array]");
+  assert("the matched result exposes a numeric .length", typeof rows.length, "number");
+  assert("the matched result has exactly one row", "" + rows.length, "1");
+  assert("instanceof Array is false (host-backed collection)", rows instanceof Array ? "true" : "false", "false");
+  assert("matched row CustomerKey equals the filter value", "" + rows[0].CustomerKey, KEY);
+  assert("matched row Name is a string", typeof rows[0].Name, "string");
+  assert("matched row Name equals the fixture name", "" + rows[0].Name, NAME);
+
+  var empty = DataExtension.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: "ssjsguide-ts-de-no-such-zzz" });
+  assert("empty result reports as [object Array]", Object.prototype.toString.call(empty), "[object Array]");
+  assert("empty result length is 0", "" + empty.length, "0");
+  assert("empty result Stringify is []", "" + Stringify(empty), "[]");
+  assert("workaround: guard with rows && rows.length before indexing", (rows && rows.length) ? "true" : "false", "true");
+
+  /* 5. DEV — filter optional. */
+  assert("DEV Retrieve() with no args does not throw (docs: filter required)", outcomeOf(function () {
+      DataExtension.Retrieve();
+      return "returned";
+  }), "returned");
+  assert("DEV Retrieve() returns a non-empty list (docs: filter required)", outcomeOf(function () {
+      return DataExtension.Retrieve().length > 0 ? "true" : "false";
+  }), "true");
+
+  /* 6. queryAllAccounts type-acceptance. */
+  assert("Retrieve(filter, true) returns the fixture", outcomeOf(function () {
+      return DataExtension.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: KEY }, true).length;
+  }), "1");
+  assert("Retrieve(filter, false) returns the fixture", outcomeOf(function () {
+      return DataExtension.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: KEY }, false).length;
+  }), "1");
+  assert("Retrieve(filter, 1) accepted like true", outcomeOf(function () {
+      return DataExtension.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: KEY }, 1).length;
+  }), "1");
+  assert("Retrieve(filter, 0) accepted like false", outcomeOf(function () {
+      return DataExtension.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: KEY }, 0).length;
+  }), "1");
+
+  assert("fixture cleanup removed the created data extension", outcomeOf(function () { return DataExtension.Init(KEY).Remove(); }), "OK");
+  assert("cleanup re-count is 0", "" + countDE(KEY), "0");
+  </script>

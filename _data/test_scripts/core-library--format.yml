@@ -1,0 +1,260 @@
+# Test scripts for /core-library/format/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation from the official Salesforce docs.
+#
+# SCOPE / PORTABILITY: currency symbols, group separators, and English month /
+# weekday names follow the account locale. These scripts encode the page's
+# documented fixed examples (US-style `$`, `August`, `Monday`) against fixed
+# inputs. Prefer shape/parseability checks for Now()-based examples.
+#
+# TIME-SENSITIVITY: no assertion compares against wall-clock Now() output.
+# Fixed date string "2024-08-05T13:41:23.000-06:00" anchors every date claim.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# CLR STRING RULE: engine-returned values and caught .message values are
+# normalized with `"" + value`, never with String(value).
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+
+parameters: |
+  <script runat="server">
+  /*
+   * Chapter: Parameters / Description — Format(textToFormat, formatCode)
+   *
+   * Proves:
+   *   1. Before Platform.Load the bare name is undefined and invoking it throws.
+   *   2. After Platform.Load("core", "1.1.5") Format is a function.
+   *   3. textToFormat accepts a number and a numeric string with the same
+   *      currency result (documented string | number union).
+   *   4. TYPE-ACCEPTANCE: a real Date is also accepted for date format codes
+   *      and yields the same ISO result as the matching date string.
+   *   5. Boolean is Rejected for a numeric format code (not widened).
+   *   6. The return value is a JavaScript string.
+   *
+   * NON-ASSERTABLE: tenant currency symbol / culture for codes other than the
+   * fixed documented US-style examples used elsewhere on this page.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+
+  assert("before load typeof Format is undefined", typeOfThunk(function () { return typeof Format; }), "undefined");
+  assertThrows("before load Format(...) throws", function () { return Format(4213.65, "C2"); });
+
+  Platform.Load("core", "1.1.5");
+  assert("after load typeof Format is function", typeOfThunk(function () { return typeof Format; }), "function");
+
+  var fromNumber = "" + Format(4213.65, "C2");
+  var fromString = "" + Format("4213.65", "C2");
+  assert("number textToFormat yields documented C2 currency", fromNumber, "$4,213.65");
+  assert("string textToFormat yields the same C2 currency", fromString, "$4,213.65");
+  assert("string and number paths match", fromNumber === fromString ? "true" : "false", "true");
+
+  var dateStr = "2024-08-05T13:41:23.000-06:00";
+  var dateObj = new Date(2024, 7, 5, 13, 41, 23);
+  var isoFromStr = "" + Format(dateStr, "O");
+  var isoFromDate = "" + Format(dateObj, "O");
+  assert("date string Format(..., \"O\") is ISO-like", isoFromStr, "2024-08-05T13:41:23.0000000");
+  assert("Date object Format(..., \"O\") matches the string path", isoFromDate, isoFromStr);
+
+  var boolResult = Format(true, "C2");
+  assert("boolean textToFormat is Rejected for C2 (not currency)", (boolResult === undefined || ("" + boolResult) === "undefined") ? "true" : "false", "true");
+
+  assert("return typeof is string", "" + (typeof Format(4213.65, "C2")), "string");
+  </script>
+
+numeric-codes: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Format Codes for Numeric Values
+   *
+   * Proves (sample value 4213.65, matching the page table):
+   *   1. C / D / E / F / G / N / P produce the documented example strings.
+   *   2. Appended digit controls decimals: C0 and C4 match the page.
+   *   3. The currency example Format(29.99 * 1.09, "C2") yields "$32.69".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var n = 4213.65;
+  assert("C currency", "" + Format(n, "C"), "$4,213.65");
+  assert("D decimal", "" + Format(n, "D"), "4213.65");
+  assert("E exponential", "" + Format(n, "E"), "4.213650E+003");
+  assert("F fixed-point", "" + Format(n, "F"), "4213.65");
+  assert("G compact", "" + Format(n, "G"), "4213.65");
+  assert("N grouped number", "" + Format(n, "N"), "4,213.65");
+  assert("P percentage", "" + Format(n, "P"), "421,365.00%");
+  assert("C0 rounds currency to 0 decimals", "" + Format(n, "C0"), "$4,214");
+  assert("C4 pads currency to 4 decimals", "" + Format(n, "C4"), "$4,213.6500");
+  assert("example Format(29.99*1.09, \"C2\")", "" + Format(29.99 * 1.09, "C2"), "$32.69");
+  </script>
+
+date-predefined: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Predefined Date Formats
+   *
+   * Fixed input: "2024-08-05T13:41:23.000-06:00" (page sample instant).
+   *
+   * Proves:
+   *   1. Every predefined code in the table matches the documented example,
+   *      except short-form `d` (see DEV).
+   *   2. DEV: Format(date, "d") returns "8/5/2024" (official docs / older
+   *      example text: "8/5/24").
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var date = "2024-08-05T13:41:23.000-06:00";
+  assert("DEV d short-form uses 4-digit year (official docs: 8/5/24)", "" + Format(date, "d"), "8/5/2024");
+  assert("M month and day", "" + Format(date, "M"), "August 5");
+  assert("f long-form with 12-hour time", "" + Format(date, "f"), "Monday, August 5, 2024 1:41 PM");
+  assert("g short-form with 12-hour time", "" + Format(date, "g"), "8/5/2024 1:41 PM");
+  assert("O ISO 8601", "" + Format(date, "O"), "2024-08-05T13:41:23.0000000");
+  assert("r RFC 1123", "" + Format(date, "r"), "Mon, 05 Aug 2024 13:41:23 GMT");
+  assert("s sortable", "" + Format(date, "s"), "2024-08-05T13:41:23");
+  assert("t 12-hour time", "" + Format(date, "t"), "1:41 PM");
+  assert("T 12-hour time with seconds", "" + Format(date, "T"), "1:41:23 PM");
+  assert("u universal sortable", "" + Format(date, "u"), "2024-08-05 13:41:23Z");
+  assert("U long-form UTC", "" + Format(date, "U"), "Monday, August 5, 2024 7:41:23 PM");
+  assert("y month and year", "" + Format(date, "y"), "August 2024");
+  </script>
+
+differs-short-date-d: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs: predefined short-form date code `d`
+   *
+   * Proves:
+   *   1. DEV Format(date, "d") is "8/5/2024" for the page sample instant
+   *      (official Salesforce docs example: "8/5/24").
+   *   2. Related short-form `g` already documents a 4-digit year and matches.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var date = "2024-08-05T13:41:23.000-06:00";
+  assert("DEV d short-form uses 4-digit year (official docs: 8/5/24)", "" + Format(date, "d"), "8/5/2024");
+  assert("g short-form keeps documented 4-digit year", "" + Format(date, "g"), "8/5/2024 1:41 PM");
+  </script>
+
+date-custom: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Custom Date Formats (+ overlap note)
+   *
+   * Fixed input: "2024-08-05T13:41:23.000-06:00".
+   *
+   * Proves:
+   *   1. Custom tokens in patterns match the page examples (day, hour, month,
+   *      seconds, tt, year, timezone).
+   *   2. Overlap note: single code "d" uses the predefined short date; combined
+   *      "d MMMM" uses the custom day numeral -> "5 August".
+   *   3. The page custom example string matches exactly.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var date = "2024-08-05T13:41:23.000-06:00";
+
+  assert("dd day with leading zero", "" + Format(date, "dd"), "05");
+  assert("ddd abbreviated day", "" + Format(date, "ddd"), "Mon");
+  assert("dddd full day", "" + Format(date, "dddd"), "Monday");
+  assert("h in pattern is 12-hour hour", "" + Format(date, "h:mm tt"), "1:41 PM");
+  assert("hh padded 12-hour hour", "" + Format(date, "hh"), "01");
+  assert("HH 24-hour hour", "" + Format(date, "HH"), "13");
+  assert("mm minutes", "" + Format(date, "mm"), "41");
+  assert("M in custom pattern is month numeral", "" + Format(date, "M/d/yyy"), "8/5/2024");
+  assert("MM padded month", "" + Format(date, "MM"), "08");
+  assert("MMM abbreviated month", "" + Format(date, "MMM"), "Aug");
+  assert("MMMM full month", "" + Format(date, "MMMM"), "August");
+  assert("ss seconds", "" + Format(date, "ss"), "23");
+  assert("tt period", "" + Format(date, "tt"), "PM");
+  assert("yy two-digit year", "" + Format(date, "yy"), "24");
+  assert("yyy full year", "" + Format(date, "yyy"), "2024");
+  assert("z offset hours in pattern", "" + Format(date, "(z)"), "(-6)");
+  assert("zz padded offset hours", "" + Format(date, "zz"), "-06");
+  assert("zzz offset with minutes", "" + Format(date, "zzz"), "-06:00");
+
+  assert("overlap: single d is predefined short date", "" + Format(date, "d"), "8/5/2024");
+  assert("overlap: d MMMM uses custom day numeral", "" + Format(date, "d MMMM"), "5 August");
+  assert("custom example pattern", "" + Format(date, "dddd, MMMM d yyy HH:mm:ss (zzz)"), "Monday, August 5 2024 13:41:23 (-06:00)");
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples
+   *
+   * Proves:
+   *   1. Currency example: Format(29.99 * 1.09, "C2") -> "$32.69".
+   *   2. Predefined O on a fixed date string -> documented ISO example.
+   *   3. Custom pattern example matches the page comment exactly.
+   *   4. RFC 1123 code "r" on the fixed date matches the documented shape
+   *      (cookie-expiry example uses Now(); we assert the code, not Now()).
+   *
+   * NON-ASSERTABLE: exact Now() wall-clock strings in the O / r examples.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  assert("currency example C2", "" + Format(29.99 * 1.09, "C2"), "$32.69");
+
+  var date = "2024-08-05T13:41:23.000-06:00";
+  assert("predefined O example", "" + Format(date, "O"), "2024-08-05T13:41:23.0000000");
+  assert("custom pattern example", "" + Format(date, "dddd, MMMM d yyy HH:mm:ss (zzz)"), "Monday, August 5 2024 13:41:23 (-06:00)");
+  assert("r RFC 1123 on fixed date", "" + Format(date, "r"), "Mon, 05 Aug 2024 13:41:23 GMT");
+
+  var nowIso = "" + Format(Platform.Function.Now(), "O");
+  assert("Now()+O is ISO-like (shape)", nowIso.indexOf("T") > 0 && nowIso.length >= 19 ? "true" : "false", "true");
+  var nowRfc = "" + Format(Platform.Function.Now(), "r");
+  assert("Now()+r looks like RFC 1123 (shape)", nowRfc.indexOf("GMT") > 0 ? "true" : "false", "true");
+  </script>

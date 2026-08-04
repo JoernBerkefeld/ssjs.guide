@@ -1,0 +1,867 @@
+# Test scripts for /core-library/senddefinition/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and the documented deviations from the official Salesforce docs.
+#
+# FIXTURES: write chapters create classic email + empty publication list +
+# SendClassification under unique `ssjs-guide-ts-esd-*` keys. AddWithDE also
+# creates a throwaway sendable DE. AddWithFilterDefinition reuses the owned
+# filter `ssjs-datafilter-test` (do not delete). Shared profiles
+# `ssjs-senderprofile` / `ssjs-deliveryprofile` are reused and never deleted.
+# Scripts Remove created ESDs / SC / email / list / DE and re-count orphans.
+#
+# NON-ASSERTABLE:
+#   - Send() / TestSend() returning the string "OK" — classic email content
+#     fails validation (Missing_Profile_Center_Link / Member_Addr tokens) in
+#     this BU, so scripts assert the documented non-throwing error-string
+#     path instead. No real send / inbox delivery is performed.
+#   - Creating a Core FilterDefinition (Add returns "Error"); owned
+#     ssjs-datafilter-test is used instead.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# NORMALIZATION RULE: assert() compares with a plain === and does NOT coerce.
+# Engine-returned values are normalized at the call site with "" + value —
+# never with String(value), which yields a CLR string that fails === and
+# aborts the page when a string method is called on it.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage GET on the QA business unit. Re-run them before changing any
+# claim on the page.
+
+init: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Send.Definition.Init(key)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Send.Definition requires the Core load and exposes statics Init,
+   *      Add, AddWithDE, AddWithFilterDefinition, and Retrieve.
+   *   2. Update / Remove / Send / TestSend are instance-only (not statics).
+   *   3. Init(key) returns a SendDefinitionInstance exposing Update, Remove,
+   *      Send, and TestSend (each typeof "function").
+   *   4. Init binds a key; it does not fetch readable fields (CustomerKey /
+   *      Name undefined on the stub).
+   *   5. A nonsense key still returns an indistinguishable stub.
+   *   6. The page example Init("myESD") returns without throwing.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW"; }
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  assert("typeof Send is object", typeOf(function () { return typeof Send; }), "object");
+  assert("typeof Send.Definition is object", typeOf(function () { return typeof Send.Definition; }), "object");
+  assert("typeof Send.Definition.Init is function", typeOf(function () { return typeof Send.Definition.Init; }), "function");
+  assert("typeof Send.Definition.Add is function", typeOf(function () { return typeof Send.Definition.Add; }), "function");
+  assert("typeof Send.Definition.AddWithDE is function", typeOf(function () { return typeof Send.Definition.AddWithDE; }), "function");
+  assert("typeof Send.Definition.AddWithFilterDefinition is function", typeOf(function () { return typeof Send.Definition.AddWithFilterDefinition; }), "function");
+  assert("typeof Send.Definition.Retrieve is function", typeOf(function () { return typeof Send.Definition.Retrieve; }), "function");
+  assert("Send.Definition.Update is not a static", typeOf(function () { return typeof Send.Definition.Update; }), "undefined");
+  assert("Send.Definition.Remove is not a static", typeOf(function () { return typeof Send.Definition.Remove; }), "undefined");
+  assert("Send.Definition.Send is not a static", typeOf(function () { return typeof Send.Definition.Send; }), "undefined");
+  assert("Send.Definition.TestSend is not a static", typeOf(function () { return typeof Send.Definition.TestSend; }), "undefined");
+
+  var esd = Send.Definition.Init("ssjs-guide-ts-esd-init");
+  assert("typeof Send.Definition.Init(key) is object", typeof esd, "object");
+  assert("typeof instance.Update is function", typeof esd.Update, "function");
+  assert("typeof instance.Remove is function", typeof esd.Remove, "function");
+  assert("typeof instance.Send is function", typeof esd.Send, "function");
+  assert("typeof instance.TestSend is function", typeof esd.TestSend, "function");
+  assert("instance exposes Remove+Send+TestSend+Update", "" + Stringify(esd), '{"Remove":"function","Send":"function","TestSend":"function","Update":"function"}');
+  assert("instance.CustomerKey is undefined (Init does not fetch)", typeof esd.CustomerKey, "undefined");
+  assert("instance.Name is undefined (Init does not fetch)", typeof esd.Name, "undefined");
+
+  var bogus = Send.Definition.Init("ssjs-guide-no-such-esd-zzz");
+  assert("Init(nonsense key) still returns an object", typeof bogus, "object");
+  assert("Init(nonsense key) stub matches Init(fixture key)", ("" + Stringify(bogus)) === ("" + Stringify(esd)) ? "true" : "false", "true");
+  assert("page example: Init('myESD') returns an instance", invocationResult(function () { return Send.Definition.Init("myESD"); }), "returned");
+  </script>
+
+add: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Send.Definition.Add(esdParams, sendClassificationKey, emailKey, listIds)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Add is a static function.
+   *   2. Add with real SC + classic email + real list ID creates a retrievable
+   *      ESD and does not throw.
+   *   3. DEV: return is a CLR object, NOT the string "OK" (docs imply "OK");
+   *      typeof is "clr"; stringifies to ExactTarget.Integration.WSDL.EmailSendDefinition.
+   *   4. listIds accepts number[] elements (coerce with +id) — same success path.
+   *   5. listIds accepts string[] elements (numeric strings) — same success path.
+   *   6. listIds accepts a mixed [number, numeric-string] array (same list twice).
+   *   7. DEV: unknown list ID throws the plain string
+   *      "Error adding EmailSendDefinition." (typeof ex === "string", so
+   *      ex.message is undefined) and creates nothing.
+   *   8. Workaround: Retrieve the new CustomerKey after Add.
+   *
+   * FIXTURE: ssjs-guide-ts-esd-add* + owned ssjs-senderprofile /
+   * ssjs-deliveryprofile. EXPECTED OUTPUT: every line PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function catchKind(fn) {
+      try { fn(); return "did-not-throw"; }
+      catch (ex) {
+          var t = typeof ex;
+          var s = (t === "string") ? ("" + ex) : ("" + (ex && ex.message));
+          return t + "|" + s;
+      }
+  }
+  function countEsd(key) {
+      var rows = Send.Definition.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+  function nukeEsd(key) {
+      try { Send.Definition.Init(key).Remove(); } catch (e0) {}
+  }
+
+  var SP = "ssjs-senderprofile";
+  var DP = "ssjs-deliveryprofile";
+  var SC = "ssjs-guide-ts-esd-add-sc";
+  var EM = "ssjs-guide-ts-esd-add-email";
+  var LI = "ssjs-guide-ts-esd-add-list";
+  var ESD = "ssjs-guide-ts-esd-add";
+  var ESD2 = "ssjs-guide-ts-esd-add-str";
+  var ESD3 = "ssjs-guide-ts-esd-add-num";
+  var ESD4 = "ssjs-guide-ts-esd-add-mix";
+  var ESDBAD = "ssjs-guide-ts-esd-add-bad";
+
+  nukeEsd(ESD); nukeEsd(ESD2); nukeEsd(ESD3); nukeEsd(ESD4); nukeEsd(ESDBAD);
+  try { SendClassification.Init(SC).Remove(); } catch (e1) {}
+  try { Email.Init(EM).Remove(); } catch (e2) {}
+  try { List.Init(LI).Remove(); } catch (e3) {}
+
+  SendClassification.Add({
+      CustomerKey: SC, Name: "SSJS Guide TS ESD Add SC", Description: "add fixture",
+      SenderProfileKey: SP, DeliveryProfileKey: DP
+  });
+  Email.Add({
+      CustomerKey: EM, Name: "SSJS Guide TS ESD Add Email",
+      HTMLBody: "<b>esd add</b>", TextBody: "esd add",
+      Subject: "SSJS Guide ESD Add", EmailType: "HTML", CharacterSet: "US-ASCII"
+  });
+  List.Add({ CustomerKey: LI, Name: "SSJS Guide TS ESD Add List", Type: "Public" });
+  var listIdRaw = List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: LI })[0].ID;
+  var listIdNum = +listIdRaw;
+  var listIdStr = "" + listIdRaw;
+
+  assert("typeof Send.Definition.Add is function", typeof Send.Definition.Add, "function");
+  assert("listId coerce to number is finite", (typeof listIdNum === "number" && isFinite(listIdNum)) ? "true" : "false", "true");
+  assert("listId coerce to string is non-empty", (typeof listIdStr === "string" && listIdStr.length > 0) ? "true" : "false", "true");
+
+  var params = { CustomerKey: ESD, Name: "SSJS Guide TS ESD Add", EmailSubject: "ESD Add Subject" };
+  var result = null;
+  assert("Add(esdParams, sc, email, [listIdNum]) does not throw", invocationResult(function () {
+      result = Send.Definition.Add(params, SC, EM, [listIdNum]);
+  }), "returned");
+
+  assert("DEV typeof Add() result is clr (docs: string \"OK\")", typeof result, "clr");
+  assert("DEV Add() result is not the string OK (docs: \"OK\")", ("" + result) === "OK" ? "true" : "false", "false");
+  assert("DEV Add() result stringifies to ExactTarget.Integration.WSDL.EmailSendDefinition (docs: \"OK\")", "" + result, "ExactTarget.Integration.WSDL.EmailSendDefinition");
+  assert("workaround: Retrieve after Add finds the new record", "" + countEsd(ESD), "1");
+  assert("workaround: retrieved CustomerKey matches", "" + Send.Definition.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: ESD })[0].CustomerKey, ESD);
+
+  assert("Add with number[] listIds does not throw", invocationResult(function () {
+      return Send.Definition.Add({ CustomerKey: ESD3, Name: "SSJS Guide TS ESD Add Num", EmailSubject: "ESD Add Num" }, SC, EM, [listIdNum]);
+  }), "returned");
+  assert("Add with number[] listIds creates a record", "" + countEsd(ESD3), "1");
+
+  assert("Add with string[] listIds (numeric-string) does not throw", invocationResult(function () {
+      return Send.Definition.Add({ CustomerKey: ESD2, Name: "SSJS Guide TS ESD Add Str", EmailSubject: "ESD Add Str" }, SC, EM, [listIdStr]);
+  }), "returned");
+  assert("Add with string[] listIds creates a record", "" + countEsd(ESD2), "1");
+
+  assert("Add with mixed [number, numeric-string] listIds does not throw", invocationResult(function () {
+      return Send.Definition.Add({ CustomerKey: ESD4, Name: "SSJS Guide TS ESD Add Mix", EmailSubject: "ESD Add Mix" }, SC, EM, [listIdNum, listIdStr]);
+  }), "returned");
+  assert("Add with mixed listIds creates a record", "" + countEsd(ESD4), "1");
+
+  assert("DEV unknown listId throws plain string Error adding EmailSendDefinition.", catchKind(function () {
+      return Send.Definition.Add({ CustomerKey: ESDBAD, Name: "bad", EmailSubject: "x" }, SC, EM, [999999991]);
+  }), "string|Error adding EmailSendDefinition.");
+  assert("DEV unknown listId creates nothing", "" + countEsd(ESDBAD), "0");
+  assert("DEV thrown failure is a string so ex.message is undefined", (function () {
+      try {
+          Send.Definition.Add({ CustomerKey: ESDBAD, Name: "bad", EmailSubject: "x" }, SC, EM, [999999991]);
+          return "did-not-throw";
+      } catch (ex) {
+          return (typeof ex === "string" && typeof ex.message === "undefined") ? "true" : "false";
+      }
+  })(), "true");
+
+  assert("fixture ESD removed", "" + Send.Definition.Init(ESD).Remove(), "OK");
+  assert("fixture ESD2 removed", "" + Send.Definition.Init(ESD2).Remove(), "OK");
+  assert("fixture ESD3 removed", "" + Send.Definition.Init(ESD3).Remove(), "OK");
+  assert("fixture ESD4 removed", "" + Send.Definition.Init(ESD4).Remove(), "OK");
+  assert("ESD orphan count 0", "" + countEsd(ESD), "0");
+  assert("ESD2 orphan count 0", "" + countEsd(ESD2), "0");
+  assert("ESD3 orphan count 0", "" + countEsd(ESD3), "0");
+  assert("ESD4 orphan count 0", "" + countEsd(ESD4), "0");
+  assert("fixture SC removed", "" + SendClassification.Init(SC).Remove(), "OK");
+  assert("fixture email removed", "" + Email.Init(EM).Remove(), "OK");
+  assert("fixture list removed", "" + List.Init(LI).Remove(), "OK");
+  assert("SC orphan count 0", "" + SendClassification.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: SC }).length, "0");
+  assert("email orphan count 0", "" + Email.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: EM }).length, "0");
+  assert("list orphan count 0", "" + List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: LI }).length, "0");
+  </script>
+
+addwithde: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Send.Definition.AddWithDE(...)
+   *
+   * CloudPage GET context. Proves:
+   *   1. AddWithDE is a static function.
+   *   2. Four-arg form (esdParams, sc, email, sendableDE) succeeds and the
+   *      ESD is immediately Retrievable.
+   *   3. DEV: success return is a CLR EmailSendDefinition object, not "OK".
+   *   4. DEV: any fifth argument (publication list name, numeric list ID, or
+   *      DE key) throws "Error adding EmailSendDefinition." and creates nothing.
+   *
+   * FIXTURE: ssjs-guide-ts-esd-de* + owned profiles. EXPECTED OUTPUT: every line PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function catchKind(fn) {
+      try { fn(); return "did-not-throw"; }
+      catch (ex) {
+          var t = typeof ex;
+          var s = (t === "string") ? ("" + ex) : ("" + (ex && ex.message));
+          return t + "|" + s;
+      }
+  }
+  function countEsd(key) {
+      var rows = Send.Definition.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+  function nukeEsd(key) {
+      try { Send.Definition.Init(key).Remove(); } catch (e0) {}
+  }
+
+  var SP = "ssjs-senderprofile";
+  var DP = "ssjs-deliveryprofile";
+  var SC = "ssjs-guide-ts-esd-de-sc";
+  var EM = "ssjs-guide-ts-esd-de-email";
+  var LI = "ssjs-guide-ts-esd-de-list";
+  var DE = "ssjs-guide-ts-esd-de-de";
+  var ESD = "ssjs-guide-ts-esd-de";
+  var ESD5A = "ssjs-guide-ts-esd-de-5a";
+  var ESD5B = "ssjs-guide-ts-esd-de-5b";
+  var ESD5C = "ssjs-guide-ts-esd-de-5c";
+
+  nukeEsd(ESD); nukeEsd(ESD5A); nukeEsd(ESD5B); nukeEsd(ESD5C);
+  try { SendClassification.Init(SC).Remove(); } catch (e1) {}
+  try { Email.Init(EM).Remove(); } catch (e2) {}
+  try { List.Init(LI).Remove(); } catch (e3) {}
+  try { DataExtension.Init(DE).Remove(); } catch (e4) {}
+
+  SendClassification.Add({
+      CustomerKey: SC, Name: "SSJS Guide TS ESD DE SC", Description: "de fixture",
+      SenderProfileKey: SP, DeliveryProfileKey: DP
+  });
+  Email.Add({
+      CustomerKey: EM, Name: "SSJS Guide TS ESD DE Email",
+      HTMLBody: "<b>esd de</b>", TextBody: "esd de",
+      Subject: "SSJS Guide ESD DE", EmailType: "HTML", CharacterSet: "US-ASCII"
+  });
+  List.Add({ CustomerKey: LI, Name: "SSJS Guide TS ESD DE List", Type: "Public" });
+  var listId = List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: LI })[0].ID;
+  DataExtension.Add({
+      CustomerKey: DE, Name: "SSJS Guide TS ESD DE Sendable",
+      Fields: [
+          { Name: "SubKey", FieldType: "Text", IsPrimaryKey: true, MaxLength: 50, IsRequired: true },
+          { Name: "EmailAddr", FieldType: "EmailAddress", IsRequired: true }
+      ],
+      SendableInfo: {
+          Field: { Name: "SubKey", FieldType: "Text" },
+          RelatesOn: "Subscriber Key"
+      }
+  });
+
+  assert("typeof Send.Definition.AddWithDE is function", typeof Send.Definition.AddWithDE, "function");
+
+  var result = null;
+  assert("AddWithDE four-arg form does not throw", invocationResult(function () {
+      result = Send.Definition.AddWithDE(
+          { CustomerKey: ESD, Name: "SSJS Guide TS ESD DE", EmailSubject: "ESD DE Subject" },
+          SC, EM, DE
+      );
+  }), "returned");
+  assert("DEV typeof AddWithDE() result is clr (docs: string \"OK\")", typeof result, "clr");
+  assert("DEV AddWithDE() result stringifies to ExactTarget.Integration.WSDL.EmailSendDefinition (docs: \"OK\")", "" + result, "ExactTarget.Integration.WSDL.EmailSendDefinition");
+  assert("workaround: Retrieve after AddWithDE finds the new record", "" + countEsd(ESD), "1");
+
+  assert("DEV fifth arg publication-list name throws and creates nothing", catchKind(function () {
+      return Send.Definition.AddWithDE({ CustomerKey: ESD5A, Name: "x", EmailSubject: "x" }, SC, EM, DE, LI);
+  }), "string|Error adding EmailSendDefinition.");
+  assert("DEV fifth arg publication-list name creates nothing", "" + countEsd(ESD5A), "0");
+
+  assert("DEV fifth arg numeric list ID throws and creates nothing", catchKind(function () {
+      return Send.Definition.AddWithDE({ CustomerKey: ESD5B, Name: "x", EmailSubject: "x" }, SC, EM, DE, listId);
+  }), "string|Error adding EmailSendDefinition.");
+  assert("DEV fifth arg numeric list ID creates nothing", "" + countEsd(ESD5B), "0");
+
+  assert("DEV fifth arg DE key throws and creates nothing", catchKind(function () {
+      return Send.Definition.AddWithDE({ CustomerKey: ESD5C, Name: "x", EmailSubject: "x" }, SC, EM, DE, DE);
+  }), "string|Error adding EmailSendDefinition.");
+  assert("DEV fifth arg DE key creates nothing", "" + countEsd(ESD5C), "0");
+
+  assert("fixture ESD removed", "" + Send.Definition.Init(ESD).Remove(), "OK");
+  assert("ESD orphan count 0", "" + countEsd(ESD), "0");
+  assert("fixture SC removed", "" + SendClassification.Init(SC).Remove(), "OK");
+  assert("fixture email removed", "" + Email.Init(EM).Remove(), "OK");
+  assert("fixture list removed", "" + List.Init(LI).Remove(), "OK");
+  assert("fixture DE removed", "" + DataExtension.Init(DE).Remove(), "OK");
+  </script>
+
+addwithfilterdefinition: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Send.Definition.AddWithFilterDefinition(...)
+   *
+   * CloudPage GET context. Proves:
+   *   1. AddWithFilterDefinition is a static function.
+   *   2. DEV: the call ALWAYS throws the plain string
+   *      "Error adding EmailSendDefinition." — even when the ESD is created.
+   *   3. Workaround: after catching, Retrieve the new CustomerKey; length > 0
+   *      is the only reliable success check.
+   *   4. listId accepts a number (documented) and a numeric string (Accepted).
+   *
+   * NON-ASSERTABLE: a Core-created FilterDefinition (Add returns "Error");
+   * owned ssjs-datafilter-test is used instead.
+   *
+   * FIXTURE: ssjs-guide-ts-esd-fd* + owned filter + owned profiles.
+   * EXPECTED OUTPUT: every line PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function catchKind(fn) {
+      try { fn(); return "did-not-throw"; }
+      catch (ex) {
+          var t = typeof ex;
+          var s = (t === "string") ? ("" + ex) : ("" + (ex && ex.message));
+          return t + "|" + s;
+      }
+  }
+  function countEsd(key) {
+      var rows = Send.Definition.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+  function nukeEsd(key) {
+      try { Send.Definition.Init(key).Remove(); } catch (e0) {}
+  }
+
+  var SP = "ssjs-senderprofile";
+  var DP = "ssjs-deliveryprofile";
+  var SC = "ssjs-guide-ts-esd-fd-sc";
+  var EM = "ssjs-guide-ts-esd-fd-email";
+  var LI = "ssjs-guide-ts-esd-fd-list";
+  var FD = "ssjs-datafilter-test";
+  var ESD = "ssjs-guide-ts-esd-fd";
+  var ESD2 = "ssjs-guide-ts-esd-fd-str";
+
+  nukeEsd(ESD); nukeEsd(ESD2);
+  try { SendClassification.Init(SC).Remove(); } catch (e1) {}
+  try { Email.Init(EM).Remove(); } catch (e2) {}
+  try { List.Init(LI).Remove(); } catch (e3) {}
+
+  assert("control: owned filter is Retrievable", "" + FilterDefinition.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: FD }).length, "1");
+
+  SendClassification.Add({
+      CustomerKey: SC, Name: "SSJS Guide TS ESD FD SC", Description: "fd fixture",
+      SenderProfileKey: SP, DeliveryProfileKey: DP
+  });
+  Email.Add({
+      CustomerKey: EM, Name: "SSJS Guide TS ESD FD Email",
+      HTMLBody: "<b>esd fd</b>", TextBody: "esd fd",
+      Subject: "SSJS Guide ESD FD", EmailType: "HTML", CharacterSet: "US-ASCII"
+  });
+  List.Add({ CustomerKey: LI, Name: "SSJS Guide TS ESD FD List", Type: "Public" });
+  var listId = List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: LI })[0].ID;
+
+  assert("typeof Send.Definition.AddWithFilterDefinition is function", typeof Send.Definition.AddWithFilterDefinition, "function");
+
+  assert("DEV AddWithFilterDefinition always throws Error adding EmailSendDefinition.", catchKind(function () {
+      return Send.Definition.AddWithFilterDefinition(
+          { CustomerKey: ESD, Name: "SSJS Guide TS ESD FD", EmailSubject: "ESD FD" },
+          SC, EM, FD, listId
+      );
+  }), "string|Error adding EmailSendDefinition.");
+  assert("workaround: Retrieve after catch finds the created ESD", "" + countEsd(ESD), "1");
+  assert("workaround: created flag via length > 0", (countEsd(ESD) > 0) ? "true" : "false", "true");
+
+  assert("DEV AddWithFilterDefinition with numeric-string listId also throws", catchKind(function () {
+      return Send.Definition.AddWithFilterDefinition(
+          { CustomerKey: ESD2, Name: "SSJS Guide TS ESD FD Str", EmailSubject: "ESD FD Str" },
+          SC, EM, FD, "" + listId
+      );
+  }), "string|Error adding EmailSendDefinition.");
+  assert("numeric-string listId still creates the ESD (Accepted)", "" + countEsd(ESD2), "1");
+
+  assert("fixture ESD removed", "" + Send.Definition.Init(ESD).Remove(), "OK");
+  assert("fixture ESD2 removed", "" + Send.Definition.Init(ESD2).Remove(), "OK");
+  assert("ESD orphan count 0", "" + countEsd(ESD), "0");
+  assert("ESD2 orphan count 0", "" + countEsd(ESD2), "0");
+  assert("fixture SC removed", "" + SendClassification.Init(SC).Remove(), "OK");
+  assert("fixture email removed", "" + Email.Init(EM).Remove(), "OK");
+  assert("fixture list removed", "" + List.Init(LI).Remove(), "OK");
+  assert("owned filter still present (not deleted)", "" + FilterDefinition.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: FD }).length, "1");
+  </script>
+
+retrieve: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Send.Definition.Retrieve([filter])
+   *
+   * CloudPage GET context. Proves:
+   *   1. Retrieve is a function taking an optional PascalCase WSProxy-style filter.
+   *   2. A matched filter returns an array-like with length 1 and readable
+   *      CustomerKey / Name.
+   *   3. An empty / nonsense filter returns length 0 (not null) — Stringify "[]".
+   *   4. Omit filter returns an array-like (all visible definitions).
+   *
+   * FIXTURE: ssjs-guide-ts-esd-ret* + owned profiles.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function countEsd(key) {
+      var rows = Send.Definition.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+  function nukeEsd(key) {
+      try { Send.Definition.Init(key).Remove(); } catch (e0) {}
+  }
+
+  var SP = "ssjs-senderprofile";
+  var DP = "ssjs-deliveryprofile";
+  var SC = "ssjs-guide-ts-esd-ret-sc";
+  var EM = "ssjs-guide-ts-esd-ret-email";
+  var LI = "ssjs-guide-ts-esd-ret-list";
+  var ESD = "ssjs-guide-ts-esd-ret";
+
+  nukeEsd(ESD);
+  try { SendClassification.Init(SC).Remove(); } catch (e1) {}
+  try { Email.Init(EM).Remove(); } catch (e2) {}
+  try { List.Init(LI).Remove(); } catch (e3) {}
+
+  SendClassification.Add({
+      CustomerKey: SC, Name: "SSJS Guide TS ESD Ret SC", Description: "ret fixture",
+      SenderProfileKey: SP, DeliveryProfileKey: DP
+  });
+  Email.Add({
+      CustomerKey: EM, Name: "SSJS Guide TS ESD Ret Email",
+      HTMLBody: "<b>esd ret</b>", TextBody: "esd ret",
+      Subject: "SSJS Guide ESD Ret", EmailType: "HTML", CharacterSet: "US-ASCII"
+  });
+  List.Add({ CustomerKey: LI, Name: "SSJS Guide TS ESD Ret List", Type: "Public" });
+  var listId = List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: LI })[0].ID;
+  Send.Definition.Add(
+      { CustomerKey: ESD, Name: "SSJS Guide TS ESD Ret", EmailSubject: "ESD Ret" },
+      SC, EM, [listId]
+  );
+
+  assert("typeof Send.Definition.Retrieve is function", typeof Send.Definition.Retrieve, "function");
+
+  var rows = Send.Definition.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: ESD });
+  assert("matched Retrieve reports as object", typeof rows, "object");
+  assert("matched Retrieve reports as [object Array]", Object.prototype.toString.call(rows), "[object Array]");
+  assert("matched Retrieve length is 1", "" + rows.length, "1");
+  assert("matched row CustomerKey", "" + rows[0].CustomerKey, ESD);
+  assert("matched row Name", "" + rows[0].Name, "SSJS Guide TS ESD Ret");
+
+  var empty = Send.Definition.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: "ssjs-guide-no-such-esd-zzz" });
+  assert("empty Retrieve length is 0", "" + empty.length, "0");
+  assert("empty Retrieve Stringify is []", "" + Stringify(empty), "[]");
+  assert("empty Retrieve is not null", empty === null ? "true" : "false", "false");
+
+  var all = Send.Definition.Retrieve();
+  assert("Retrieve() with no filter returns object", typeof all, "object");
+  assert("Retrieve() with no filter has numeric length", typeof all.length, "number");
+  assert("Retrieve() with no filter length >= 1 (fixture present)", (all.length >= 1) ? "true" : "false", "true");
+
+  assert("fixture ESD removed", "" + Send.Definition.Init(ESD).Remove(), "OK");
+  assert("ESD orphan count 0", "" + countEsd(ESD), "0");
+  assert("fixture SC removed", "" + SendClassification.Init(SC).Remove(), "OK");
+  assert("fixture email removed", "" + Email.Init(EM).Remove(), "OK");
+  assert("fixture list removed", "" + List.Init(LI).Remove(), "OK");
+  </script>
+
+instance-update: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <SendDefinitionInstance>.Update(properties)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Update is an instance method (typeof "function").
+   *   2. Update({ Description }) returns "OK" and the change persists via Retrieve.
+   *   3. Update({ TestEmailAddr }) returns "OK".
+   *   4. DEV: nested Email / SendDefinitionList payloads throw
+   *      "Error Updating ESD." (plain string).
+   *
+   * FIXTURE: ssjs-guide-ts-esd-upd* + owned profiles.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function threwFragment(fn, fragment) {
+      try { fn(); return "did NOT throw"; }
+      catch (ex) {
+          var s = (typeof ex === "string") ? ("" + ex) : ("" + (ex && ex.message));
+          return s.indexOf(fragment) >= 0 ? "matched" : s;
+      }
+  }
+  function countEsd(key) {
+      var rows = Send.Definition.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+  function nukeEsd(key) {
+      try { Send.Definition.Init(key).Remove(); } catch (e0) {}
+  }
+
+  var SP = "ssjs-senderprofile";
+  var DP = "ssjs-deliveryprofile";
+  var SC = "ssjs-guide-ts-esd-upd-sc";
+  var EM = "ssjs-guide-ts-esd-upd-email";
+  var LI = "ssjs-guide-ts-esd-upd-list";
+  var ESD = "ssjs-guide-ts-esd-upd";
+
+  nukeEsd(ESD);
+  try { SendClassification.Init(SC).Remove(); } catch (e1) {}
+  try { Email.Init(EM).Remove(); } catch (e2) {}
+  try { List.Init(LI).Remove(); } catch (e3) {}
+
+  SendClassification.Add({
+      CustomerKey: SC, Name: "SSJS Guide TS ESD Upd SC", Description: "upd fixture",
+      SenderProfileKey: SP, DeliveryProfileKey: DP
+  });
+  Email.Add({
+      CustomerKey: EM, Name: "SSJS Guide TS ESD Upd Email",
+      HTMLBody: "<b>esd upd</b>", TextBody: "esd upd",
+      Subject: "SSJS Guide ESD Upd", EmailType: "HTML", CharacterSet: "US-ASCII"
+  });
+  List.Add({ CustomerKey: LI, Name: "SSJS Guide TS ESD Upd List", Type: "Public" });
+  var listId = List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: LI })[0].ID;
+  Send.Definition.Add(
+      { CustomerKey: ESD, Name: "SSJS Guide TS ESD Upd", EmailSubject: "ESD Upd" },
+      SC, EM, [listId]
+  );
+
+  var inst = Send.Definition.Init(ESD);
+  assert("typeof instance.Update is function", typeof inst.Update, "function");
+
+  var status = inst.Update({ Description: "Updated description" });
+  assert("Update({ Description }) returns \"OK\"", "" + status, "OK");
+  assert("Update returns a string", typeof status, "string");
+  var after = Send.Definition.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: ESD });
+  assert("Description persisted after Update", "" + after[0].Description, "Updated description");
+
+  assert("Update({ TestEmailAddr }) returns \"OK\"", "" + Send.Definition.Init(ESD).Update({ TestEmailAddr: "ssjs-guide-ts@example.com" }), "OK");
+
+  assert("DEV Update({ Email: { ID } }) throws Error Updating ESD. (docs imply nested OK via WSProxy)", threwFragment(function () {
+      return Send.Definition.Init(ESD).Update({ Email: { ID: 1 } });
+  }, "Error Updating ESD."), "matched");
+  assert("DEV Update({ SendDefinitionList }) throws Error Updating ESD.", threwFragment(function () {
+      return Send.Definition.Init(ESD).Update({ SendDefinitionList: [] });
+  }, "Error Updating ESD."), "matched");
+  assert("DEV nested Update throw is a plain string", (function () {
+      try {
+          Send.Definition.Init(ESD).Update({ Email: { ID: 1 } });
+          return "did-not-throw";
+      } catch (ex) { return typeof ex; }
+  })(), "string");
+
+  assert("fixture ESD removed", "" + Send.Definition.Init(ESD).Remove(), "OK");
+  assert("ESD orphan count 0", "" + countEsd(ESD), "0");
+  assert("fixture SC removed", "" + SendClassification.Init(SC).Remove(), "OK");
+  assert("fixture email removed", "" + Email.Init(EM).Remove(), "OK");
+  assert("fixture list removed", "" + List.Init(LI).Remove(), "OK");
+  </script>
+
+instance-remove: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <SendDefinitionInstance>.Remove()
+   *
+   * CloudPage GET context. Proves:
+   *   1. Remove is an instance method (typeof "function") taking no args.
+   *   2. Remove() returns "OK" on success.
+   *   3. Follow-up Retrieve for the same key returns an empty array.
+   *   4. Confirmed against an ESD created through Add (page also claims
+   *      AddWithDE / WSProxy paths — Add path asserted here; AddWithDE
+   *      Remove is covered in the addwithde chapter cleanup).
+   *
+   * FIXTURE: ssjs-guide-ts-esd-rm* + owned profiles.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function countEsd(key) {
+      var rows = Send.Definition.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+  function nukeEsd(key) {
+      try { Send.Definition.Init(key).Remove(); } catch (e0) {}
+  }
+
+  var SP = "ssjs-senderprofile";
+  var DP = "ssjs-deliveryprofile";
+  var SC = "ssjs-guide-ts-esd-rm-sc";
+  var EM = "ssjs-guide-ts-esd-rm-email";
+  var LI = "ssjs-guide-ts-esd-rm-list";
+  var ESD = "ssjs-guide-ts-esd-rm";
+
+  nukeEsd(ESD);
+  try { SendClassification.Init(SC).Remove(); } catch (e1) {}
+  try { Email.Init(EM).Remove(); } catch (e2) {}
+  try { List.Init(LI).Remove(); } catch (e3) {}
+
+  SendClassification.Add({
+      CustomerKey: SC, Name: "SSJS Guide TS ESD Rm SC", Description: "rm fixture",
+      SenderProfileKey: SP, DeliveryProfileKey: DP
+  });
+  Email.Add({
+      CustomerKey: EM, Name: "SSJS Guide TS ESD Rm Email",
+      HTMLBody: "<b>esd rm</b>", TextBody: "esd rm",
+      Subject: "SSJS Guide ESD Rm", EmailType: "HTML", CharacterSet: "US-ASCII"
+  });
+  List.Add({ CustomerKey: LI, Name: "SSJS Guide TS ESD Rm List", Type: "Public" });
+  var listId = List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: LI })[0].ID;
+  Send.Definition.Add(
+      { CustomerKey: ESD, Name: "SSJS Guide TS ESD Rm", EmailSubject: "ESD Rm" },
+      SC, EM, [listId]
+  );
+
+  var inst = Send.Definition.Init(ESD);
+  assert("typeof instance.Remove is function", typeof inst.Remove, "function");
+  assert("control: fixture is Retrievable before Remove", "" + countEsd(ESD), "1");
+
+  var status = inst.Remove();
+  assert("Remove() returns \"OK\"", "" + status, "OK");
+  assert("Remove returns a string", typeof status, "string");
+  assert("Retrieve after Remove is empty", "" + countEsd(ESD), "0");
+
+  assert("fixture SC removed", "" + SendClassification.Init(SC).Remove(), "OK");
+  assert("fixture email removed", "" + Email.Init(EM).Remove(), "OK");
+  assert("fixture list removed", "" + List.Init(LI).Remove(), "OK");
+  </script>
+
+instance-send: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <SendDefinitionInstance>.Send()
+   *
+   * CloudPage GET context. Proves:
+   *   1. Send is an instance method (typeof "function").
+   *   2. DEV: a rejected send returns an error STRING instead of throwing —
+   *      try/catch alone would treat it as success.
+   *   3. Observed return contains the documented validation-error prefix
+   *      ("The following email validation errors need addressed...").
+   *   4. Caller must compare the return value to "OK".
+   *
+   * NON-ASSERTABLE: Send() returning "OK" / real inbox delivery — classic
+   * email content fails validation in this BU; no real send is performed.
+   *
+   * FIXTURE: ssjs-guide-ts-esd-send* + owned profiles (empty list audience).
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function countEsd(key) {
+      var rows = Send.Definition.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+  function nukeEsd(key) {
+      try { Send.Definition.Init(key).Remove(); } catch (e0) {}
+  }
+
+  var SP = "ssjs-senderprofile";
+  var DP = "ssjs-deliveryprofile";
+  var SC = "ssjs-guide-ts-esd-send-sc";
+  var EM = "ssjs-guide-ts-esd-send-email";
+  var LI = "ssjs-guide-ts-esd-send-list";
+  var ESD = "ssjs-guide-ts-esd-send";
+
+  nukeEsd(ESD);
+  try { SendClassification.Init(SC).Remove(); } catch (e1) {}
+  try { Email.Init(EM).Remove(); } catch (e2) {}
+  try { List.Init(LI).Remove(); } catch (e3) {}
+
+  SendClassification.Add({
+      CustomerKey: SC, Name: "SSJS Guide TS ESD Send SC", Description: "send fixture",
+      SenderProfileKey: SP, DeliveryProfileKey: DP
+  });
+  Email.Add({
+      CustomerKey: EM, Name: "SSJS Guide TS ESD Send Email",
+      HTMLBody: "<b>esd send</b>", TextBody: "esd send",
+      Subject: "SSJS Guide ESD Send", EmailType: "HTML", CharacterSet: "US-ASCII"
+  });
+  List.Add({ CustomerKey: LI, Name: "SSJS Guide TS ESD Send List", Type: "Public" });
+  var listId = List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: LI })[0].ID;
+  Send.Definition.Add(
+      { CustomerKey: ESD, Name: "SSJS Guide TS ESD Send", EmailSubject: "ESD Send" },
+      SC, EM, [listId]
+  );
+
+  var inst = Send.Definition.Init(ESD);
+  assert("typeof instance.Send is function", typeof inst.Send, "function");
+
+  var status = null;
+  assert("DEV Send() does NOT throw on rejection (docs/callers often assume throw)", invocationResult(function () {
+      status = Send.Definition.Init(ESD).Send();
+  }), "returned");
+  assert("Send() returns a string", typeof status, "string");
+  assert("DEV Send() return is not \"OK\" for this fixture (validation rejected)", ("" + status) === "OK" ? "true" : "false", "false");
+  assert("DEV Send() return contains email validation errors text", (("" + status).indexOf("email validation errors") >= 0) ? "true" : "false", "true");
+  assert("workaround: compare return to \"OK\" before treating as success", (("" + status) !== "OK") ? "rejected" : "accepted", "rejected");
+
+  assert("fixture ESD removed", "" + Send.Definition.Init(ESD).Remove(), "OK");
+  assert("ESD orphan count 0", "" + countEsd(ESD), "0");
+  assert("fixture SC removed", "" + SendClassification.Init(SC).Remove(), "OK");
+  assert("fixture email removed", "" + Email.Init(EM).Remove(), "OK");
+  assert("fixture list removed", "" + List.Init(LI).Remove(), "OK");
+  </script>
+
+instance-testsend: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <SendDefinitionInstance>.TestSend([emailAddress])
+   *
+   * CloudPage GET context. Proves:
+   *   1. TestSend exists on the Init instance (typeof "function").
+   *   2. With no arguments it returns the documented missing-test-address
+   *      error string — even after Update({ TestEmailAddr }) returned "OK".
+   *   3. Passing an address clears that message but then returns the same
+   *      email validation error string as Send().
+   *   4. Like Send(), it returns error text rather than throwing.
+   *
+   * NON-ASSERTABLE: TestSend() returning "OK" / a working test send.
+   *
+   * FIXTURE: ssjs-guide-ts-esd-ts* + owned profiles.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function countEsd(key) {
+      var rows = Send.Definition.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+  function nukeEsd(key) {
+      try { Send.Definition.Init(key).Remove(); } catch (e0) {}
+  }
+
+  var SP = "ssjs-senderprofile";
+  var DP = "ssjs-deliveryprofile";
+  var SC = "ssjs-guide-ts-esd-ts-sc";
+  var EM = "ssjs-guide-ts-esd-ts-email";
+  var LI = "ssjs-guide-ts-esd-ts-list";
+  var ESD = "ssjs-guide-ts-esd-ts";
+
+  nukeEsd(ESD);
+  try { SendClassification.Init(SC).Remove(); } catch (e1) {}
+  try { Email.Init(EM).Remove(); } catch (e2) {}
+  try { List.Init(LI).Remove(); } catch (e3) {}
+
+  SendClassification.Add({
+      CustomerKey: SC, Name: "SSJS Guide TS ESD TS SC", Description: "ts fixture",
+      SenderProfileKey: SP, DeliveryProfileKey: DP
+  });
+  Email.Add({
+      CustomerKey: EM, Name: "SSJS Guide TS ESD TS Email",
+      HTMLBody: "<b>esd ts</b>", TextBody: "esd ts",
+      Subject: "SSJS Guide ESD TS", EmailType: "HTML", CharacterSet: "US-ASCII"
+  });
+  List.Add({ CustomerKey: LI, Name: "SSJS Guide TS ESD TS List", Type: "Public" });
+  var listId = List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: LI })[0].ID;
+  Send.Definition.Add(
+      { CustomerKey: ESD, Name: "SSJS Guide TS ESD TS", EmailSubject: "ESD TS" },
+      SC, EM, [listId]
+  );
+
+  var inst = Send.Definition.Init(ESD);
+  assert("typeof instance.TestSend is function", typeof inst.TestSend, "function");
+  assert("Update({ TestEmailAddr }) returns \"OK\"", "" + Send.Definition.Init(ESD).Update({ TestEmailAddr: "ssjs-guide-ts@example.com" }), "OK");
+
+  var noArg = null;
+  assert("TestSend() does not throw", invocationResult(function () {
+      noArg = Send.Definition.Init(ESD).TestSend();
+  }), "returned");
+  assert("TestSend() returns a string", typeof noArg, "string");
+  assert("DEV TestSend() still reports missing test email address after Update", (("" + noArg).indexOf("cannot be used in a test send") >= 0) ? "true" : "false", "true");
+  assert("DEV TestSend() return is not \"OK\"", ("" + noArg) === "OK" ? "true" : "false", "false");
+
+  var withAddr = null;
+  assert("TestSend(address) does not throw", invocationResult(function () {
+      withAddr = Send.Definition.Init(ESD).TestSend("ssjs-guide-ts@example.com");
+  }), "returned");
+  assert("TestSend(address) returns a string", typeof withAddr, "string");
+  assert("DEV TestSend(address) returns email validation errors (same family as Send())", (("" + withAddr).indexOf("email validation errors") >= 0) ? "true" : "false", "true");
+  assert("DEV TestSend(address) return is not \"OK\"", ("" + withAddr) === "OK" ? "true" : "false", "false");
+
+  assert("fixture ESD removed", "" + Send.Definition.Init(ESD).Remove(), "OK");
+  assert("ESD orphan count 0", "" + countEsd(ESD), "0");
+  assert("fixture SC removed", "" + SendClassification.Init(SC).Remove(), "OK");
+  assert("fixture email removed", "" + Email.Init(EM).Remove(), "OK");
+  assert("fixture list removed", "" + List.Init(LI).Remove(), "OK");
+  </script>

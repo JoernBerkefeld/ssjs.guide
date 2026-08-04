@@ -1,0 +1,291 @@
+# Test scripts for /core-library/isphonenumber/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every arity boundary.
+#
+# SCOPE: IsPhoneNumber is a PURE, DETERMINISTIC NANP FORMAT PREDICATE. Every
+# claim below is fully observable from a CloudPage GET.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# CLR STRING RULE: engine-returned values and caught .message values are
+# normalized with `"" + value`, never with String(value).
+#
+# BOOLEAN RULE: every boolean is turned into a literal with an explicit
+# ternary at the call site — do not pass a raw boolean into assert().
+#
+# COMBINED HARNESS: run description BEFORE any other chapter that calls
+# Platform.Load, or the before-load typeof check is contaminated.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters — IsPhoneNumber(value)
+   *
+   * Proves:
+   *   1. Documented contract is min_args/max_args 1. DEV: bare arity 0 does
+   *      NOT throw — it returns false. Platform.Function.IsPhoneNumber()
+   *      throws on arity 0.
+   *   2. DEV: surplus arguments are silently IGNORED on the bare form (first
+   *      arg still validated). Platform.Function throws on arity 2+.
+   *   3. A valid NANP string answers true; page-cited punctuated forms
+   *      "(829) 555-0142" and "1-212-555-1234" are true; a + prefix and a
+   *      non-NANP international number are false.
+   *   4. Empty string, whitespace-only, null and undefined answer false
+   *      (do not throw).
+   *   5. TYPE-ACCEPTANCE (Number↔string): value accepts both a numeric
+   *      string and a real number with the SAME meaningful result. A valid
+   *      NANP digit sequence as "2125551234" and as 2125551234 both return
+   *      true; a too-short digit sequence as "1234567" and as 1234567 both
+   *      return false. Therefore the documented type is string | number.
+   *   6. A boolean argument is coerced and answered false; an array
+   *      argument throws even when it holds a valid number.
+   *
+   * NON-ASSERTABLE: availability.email / automation / triggered_send — only
+   * CloudPage context is exercised by this harness.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  assert("DEV arity 0 returns false not throw (PF throws; contract min_args 1)", IsPhoneNumber() ? "true" : "false", "false");
+  assertThrows("Platform.Function arity 0 throws", function () {
+      return Platform.Function.IsPhoneNumber();
+  });
+  assert("DEV surplus 1 arg ignored - still validates first (PF throws)", IsPhoneNumber("2125551234", "x") ? "true" : "false", "true");
+  assert("DEV surplus 1 arg ignored - malformed first still false (PF throws)", IsPhoneNumber("nope", "x") ? "true" : "false", "false");
+  assert("DEV surplus 2 args ignored - still validates first (PF throws)", IsPhoneNumber("2125551234", "x", "y") ? "true" : "false", "true");
+  assertThrows("Platform.Function arity 2 throws", function () {
+      return Platform.Function.IsPhoneNumber("2125551234", "x");
+  });
+
+  assert("a plain 10-digit NANP number is true", IsPhoneNumber("2125551234") ? "true" : "false", "true");
+  assert("page-cited Dominican Republic NANP with parentheses is true", IsPhoneNumber("(829) 555-0142") ? "true" : "false", "true");
+  assert("page-cited leading-1 with hyphens is true", IsPhoneNumber("1-212-555-1234") ? "true" : "false", "true");
+  assert("a + prefix is false even on valid NANP digits", IsPhoneNumber("+12125551234") ? "true" : "false", "false");
+  assert("a German mobile written without a prefix is false", IsPhoneNumber("4917612345678") ? "true" : "false", "false");
+
+  assert("an empty string is answered false, not thrown", IsPhoneNumber("") ? "true" : "false", "false");
+  assert("a whitespace-only string is answered false", IsPhoneNumber("   ") ? "true" : "false", "false");
+  assert("a null argument is answered false, not thrown", IsPhoneNumber(null) ? "true" : "false", "false");
+  assert("an undefined argument is answered false, not thrown", IsPhoneNumber(undefined) ? "true" : "false", "false");
+
+  var strValid = IsPhoneNumber("2125551234");
+  var numValid = IsPhoneNumber(2125551234);
+  assert("documented-type string '2125551234' is true", strValid === true ? "true" : "false", "true");
+  assert("counterpart number 2125551234 is true", numValid === true ? "true" : "false", "true");
+  assert("string and number valid forms share the same boolean result", (strValid === numValid) ? "true" : "false", "true");
+  var strShort = IsPhoneNumber("1234567");
+  var numShort = IsPhoneNumber(1234567);
+  assert("documented-type string '1234567' is false", strShort === false ? "true" : "false", "true");
+  assert("counterpart number 1234567 is false", numShort === false ? "true" : "false", "true");
+  assert("string and number short forms share the same boolean result", (strShort === numShort) ? "true" : "false", "true");
+
+  assert("a boolean argument is coerced and answered false", IsPhoneNumber(true) ? "true" : "false", "false");
+  assertThrows("an empty array argument throws", function () {
+      return IsPhoneNumber([]);
+  });
+  assertThrows("an array holding a valid number throws rather than unwrapping it", function () {
+      return IsPhoneNumber(["2125551234"]);
+  });
+  </script>
+
+description: |
+  <script runat="server">
+  /*
+   * Chapter: Description — bare-name Core form of Platform.Function.IsPhoneNumber.
+   *
+   * Proves:
+   *   1. Before Platform.Load the bare name IsPhoneNumber is undefined;
+   *      invoking it throws. typeof is resolved inside a thunk so an unbound
+   *      global cannot abort the page.
+   *   2. After Platform.Load("core", "1.1.5") IsPhoneNumber is a function.
+   *   3. For the documented 1-argument form it returns the same boolean as
+   *      Platform.Function.IsPhoneNumber on matching inputs.
+   *   4. DEV: bare arity 0 returns false (PF throws); bare surplus args are
+   *      ignored (PF throws). Documented contract remains min/max_args 1.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+
+  assert("before load typeof IsPhoneNumber is undefined", typeOfThunk(function () { return typeof IsPhoneNumber; }), "undefined");
+  assertThrows("before load IsPhoneNumber() throws", function () { return IsPhoneNumber("2125551234"); });
+
+  Platform.Load("core", "1.1.5");
+  assert("after load typeof IsPhoneNumber is function", typeOfThunk(function () { return typeof IsPhoneNumber; }), "function");
+
+  assert("bare and Platform.Function agree on valid NANP", (IsPhoneNumber("2125551234") === Platform.Function.IsPhoneNumber("2125551234")) ? "true" : "false", "true");
+  assert("bare and Platform.Function agree on non-NANP", (IsPhoneNumber("4917612345678") === Platform.Function.IsPhoneNumber("4917612345678")) ? "true" : "false", "true");
+  assert("bare and Platform.Function agree on punctuated NANP", (IsPhoneNumber("(829) 555-0142") === Platform.Function.IsPhoneNumber("(829) 555-0142")) ? "true" : "false", "true");
+  assert("bare and Platform.Function agree on empty string", (IsPhoneNumber("") === Platform.Function.IsPhoneNumber("")) ? "true" : "false", "true");
+  assert("bare and Platform.Function agree on null", (IsPhoneNumber(null) === Platform.Function.IsPhoneNumber(null)) ? "true" : "false", "true");
+  assert("bare true equals Platform.Function true", IsPhoneNumber("2125551234") ? "true" : "false", "true");
+  assert("bare false equals Platform.Function false", IsPhoneNumber("4917612345678") ? "true" : "false", "false");
+
+  assert("DEV bare arity 0 returns false (PF throws)", IsPhoneNumber() ? "true" : "false", "false");
+  assertThrows("Platform.Function arity 0 throws", function () {
+      return Platform.Function.IsPhoneNumber();
+  });
+  assert("DEV bare arity 2 ignores surplus (PF throws)", IsPhoneNumber("2125551234", "x") ? "true" : "false", "true");
+  assertThrows("Platform.Function arity 2 throws", function () {
+      return Platform.Function.IsPhoneNumber("2125551234", "x");
+  });
+  </script>
+
+return-value: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Return value — NANP boolean check and the differs-from-docs callout.
+   *
+   * Proves:
+   *   1. return_type is boolean: typeof the result is "boolean"; strictly
+   *      true / false — never null, undefined, or the string "true".
+   *   2. Core NANP shape: 10 digits, or 10 digits preceded by country code 1.
+   *   3. Area code and exchange code must each start 2-9.
+   *   4. Spaces, dots, hyphens and parentheses are IGNORED (page claim).
+   *   5. Other characters reject: +, /, _, letters, trailing extension.
+   *   6. Empty / null / undefined are false.
+   *   7. DEV — SSJS docs describe generic "valid phone number"; runtime is
+   *      NANP-only and matches the AMPscript reference result table.
+   *   8. The result stringifies to lowercase "true" / "false".
+   *
+   * NOT ASSERTED: whether a NANP area code is ASSIGNED (shape check only).
+   * NON-ASSERTABLE: availability outside CloudPage.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var valid = IsPhoneNumber("2125551234");
+  assert("typeof the result is boolean", "" + (typeof valid), "boolean");
+  assert("a valid NANP number is strictly true", valid === true ? "true" : "false", "true");
+  assert("the result is not null", valid === null ? "true" : "false", "false");
+  assert("the result is not undefined", valid === undefined ? "true" : "false", "false");
+  assert("the result is not the string 'true'", valid === "true" ? "true" : "false", "false");
+
+  var invalid = IsPhoneNumber("not-a-phone");
+  assert("typeof the negative result is boolean too", "" + (typeof invalid), "boolean");
+  assert("a malformed value is strictly false", invalid === false ? "true" : "false", "true");
+
+  assert("a plain 10-digit NANP number is true", IsPhoneNumber("2125551234") ? "true" : "false", "true");
+  assert("10 digits preceded by the country code 1 is true", IsPhoneNumber("12125551234") ? "true" : "false", "true");
+  assert("7 digits is false", IsPhoneNumber("2345678") ? "true" : "false", "false");
+  assert("11 digits NOT starting with 1 is false", IsPhoneNumber("23456789012") ? "true" : "false", "false");
+
+  assert("area code starting 0 is false", IsPhoneNumber("0812345678") ? "true" : "false", "false");
+  assert("area code starting 1 is false", IsPhoneNumber("1812345678") ? "true" : "false", "false");
+  assert("area code starting 2 is true", IsPhoneNumber("2812345678") ? "true" : "false", "true");
+  assert("exchange code starting 0 is false", IsPhoneNumber("2120551234") ? "true" : "false", "false");
+  assert("exchange code starting 1 is false", IsPhoneNumber("2121551234") ? "true" : "false", "false");
+  assert("exchange code starting 2 is true", IsPhoneNumber("2122551234") ? "true" : "false", "true");
+
+  assert("spaces are ignored", IsPhoneNumber("212 555 1234") ? "true" : "false", "true");
+  assert("dots are ignored", IsPhoneNumber("212.555.1234") ? "true" : "false", "true");
+  assert("hyphens are ignored", IsPhoneNumber("212-555-1234") ? "true" : "false", "true");
+  assert("parentheses plus a hyphen are ignored", IsPhoneNumber("(212) 555-1234") ? "true" : "false", "true");
+  assert("page-cited (829) 555-0142 is true", IsPhoneNumber("(829) 555-0142") ? "true" : "false", "true");
+  assert("page-cited 1-212-555-1234 is true", IsPhoneNumber("1-212-555-1234") ? "true" : "false", "true");
+
+  assert("a + prefix is false", IsPhoneNumber("+12125551234") ? "true" : "false", "false");
+  assert("a / separator is false", IsPhoneNumber("212/555/1234") ? "true" : "false", "false");
+  assert("an _ separator is false", IsPhoneNumber("212_555_1234") ? "true" : "false", "false");
+  assert("letters only are false", IsPhoneNumber("abcdefghij") ? "true" : "false", "false");
+  assert("a trailing extension is false", IsPhoneNumber("2125551234x99") ? "true" : "false", "false");
+
+  assert("a German mobile is false", IsPhoneNumber("4917612345678") ? "true" : "false", "false");
+  assert("empty string is false", IsPhoneNumber("") ? "true" : "false", "false");
+  assert("null is false", IsPhoneNumber(null) ? "true" : "false", "false");
+  assert("undefined is false", IsPhoneNumber(undefined) ? "true" : "false", "false");
+
+  assert("DEV a Canadian number with spaces is true (SSJS docs: generic; AMPscript: true)", IsPhoneNumber("647 555 0123") ? "true" : "false", "true");
+  assert("DEV a UK landline is false because it is not NANP (SSJS docs imply true)", IsPhoneNumber("0161 496 0009") ? "true" : "false", "false");
+  assert("DEV a South Korean number is false because it is not NANP (SSJS docs imply true)", IsPhoneNumber("82 517 460 123") ? "true" : "false", "false");
+  assert("DEV a valid US number with a + prefix is false (AMPscript docs: false)", IsPhoneNumber("+14255550142") ? "true" : "false", "false");
+
+  assert("the positive result stringifies to lowercase 'true'", "" + IsPhoneNumber("2125551234"), "true");
+  assert("the negative result stringifies to lowercase 'false'", "" + IsPhoneNumber("nope"), "false");
+
+  assert("OBSERVED reserved-looking 211 area code is true - shape check only", IsPhoneNumber("2115551234") ? "true" : "false", "true");
+  </script>
+
+example: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Example — Platform.Load then if (IsPhoneNumber(phoneInput)) Write(...).
+   *
+   * Proves:
+   *   1. The documented guard takes the valid branch for a valid NANP number
+   *      and uses the documented message "Valid phone".
+   *   2. The guard skips the valid branch for a malformed / non-NANP value.
+   *   3. The guard operand is a genuine boolean; null does not throw.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var phoneInput = "2125551234";
+  var wroteValid = false;
+  var msg = "";
+  if (IsPhoneNumber(phoneInput)) {
+      wroteValid = true;
+      msg = "Valid phone";
+  }
+  assert("example valid branch is taken for a valid NANP number", wroteValid ? "true" : "false", "true");
+  assert("example Write message is 'Valid phone'", msg, "Valid phone");
+  assert("example guard operand typeof is boolean", "" + (typeof IsPhoneNumber(phoneInput)), "boolean");
+
+  var badTookValid = false;
+  if (IsPhoneNumber("4917612345678")) {
+      badTookValid = true;
+  }
+  assert("example valid branch is NOT taken for a non-NANP value", badTookValid ? "true" : "false", "false");
+
+  var nullTookValid = false;
+  var nullThrew = false;
+  try {
+      if (IsPhoneNumber(null)) { nullTookValid = true; }
+  } catch (ex) {
+      nullThrew = true;
+  }
+  assert("example guard does not throw on null", nullThrew ? "true" : "false", "false");
+  assert("example valid branch is NOT taken for null", nullTookValid ? "true" : "false", "false");
+  </script>

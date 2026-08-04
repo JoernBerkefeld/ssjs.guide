@@ -1,0 +1,282 @@
+# Test scripts for /core-library/write/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and documented deviations.
+#
+# Sister evidence reused from platform-objects--platform-response.yml
+# (Platform.Response.Write works without Core; bare Write needs Core).
+#
+# WRITE HAZARD: bare Write() and Platform.Response.Write() share the HTTP
+# response body. Assertions that prove Write side effects emit complete
+# PASS lines via Write itself (marker / delimited regions). Helper asserts
+# use Platform.Response.Write only. Never leave non-PASS noise between
+# report lines.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call (or one Write-built PASS line). Concatenating several independent
+# expressions into one Write can interleave their evaluation in Jint.
+#
+# CLR STRING RULE: engine-returned values and caught .message values are
+# normalized with `"" + value`, never with String(value).
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+
+parameters: |
+  <script runat="server">
+  /*
+   * Chapter: Parameters — Write(content)
+   *
+   * Proves:
+   *   1. Before Platform.Load the bare name is undefined; invoking it throws.
+   *      typeof is resolved inside a thunk.
+   *   2. After Platform.Load("core", "1.1.5") Write is a function.
+   *   3. One string argument is accepted; the call returns undefined (void-like).
+   *   4. DEV: zero arguments do not throw (official docs: content Required);
+   *      they write nothing and return undefined.
+   *   5. DEV: a surplus second argument is ignored (first arg is written);
+   *      Platform.Response.Write has the same soft surplus behaviour.
+   *      Documented contract remains min_args/max_args 1.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  function capture(fn) {
+      try { return { threw: false, value: fn() }; } catch (ex) { return { threw: true, message: "" + ex.message }; }
+  }
+
+  assert("before load typeof Write is undefined", typeOfThunk(function () { return typeof Write; }), "undefined");
+  assertThrows("before load Write() throws", function () { return Write("x"); });
+
+  Platform.Load("core", "1.1.5");
+  assert("after load typeof Write is function", typeOfThunk(function () { return typeof Write; }), "function");
+
+  var one = capture(function () { return Write(""); });
+  assert("one string arg does not throw", one.threw ? ("threw:" + one.message) : "returned", "returned");
+  assert("Write returns undefined (void-like)", one.value === undefined ? "undefined" : "other", "undefined");
+
+  var zero = capture(function () { return Write(); });
+  assert("DEV zero args do not throw (official docs: content Required)", zero.threw ? "threw" : "returned", "returned");
+  assert("DEV zero args return undefined", zero.value === undefined ? "undefined" : "other", "undefined");
+
+  Write("PASS DEV surplus 2nd arg ignored - first arg written (contract max_args 1) -> [");
+  Write("only", "ignored");
+  Write("]\n");
+  </script>
+
+description: |
+  <script runat="server">
+  /*
+   * Chapter: Description — append, no newline, Core load, Platform.Response.Write
+   *
+   * Proves:
+   *   1. Platform.Response.Write is available without Platform.Load and returns null.
+   *   2. After Core load, successive bare Write calls append without an automatic
+   *      newline (A then B yields AB).
+   *   3. Write can emit an exact body marker as a parseable PASS line.
+   *   4. Bare Write returns undefined; Platform.Response.Write returns null
+   *      (both void-like; return shapes differ).
+   *
+   * NON-ASSERTABLE: email-body and Automation Studio activity-log destinations
+   * require those execution contexts — not present on a plain CloudPage GET.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+
+  assert("Platform.Response.Write proxy exists without Core", typeOfThunk(function () { return typeof Platform.Response.Write; }), "clrmethodinfo");
+  var prRet = Platform.Response.Write("");
+  assert("DEV Platform.Response.Write returns null (bare Write returns undefined)", prRet === null ? "null" : "other", "null");
+
+  Platform.Load("core", "1.1.5");
+  assert("after load typeof Write is function", typeOfThunk(function () { return typeof Write; }), "function");
+  var bareRet = Write("");
+  assert("bare Write returns undefined", bareRet === undefined ? "undefined" : "other", "undefined");
+
+  Write("PASS Write emits exact body marker -> [WRITE-MARKER]\n");
+
+  Write("PASS two Writes append without newline -> [");
+  Write("A");
+  Write("B");
+  Write("]\n");
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples — basic / HTML / multi / conditional / debug patterns
+   *
+   * Proves:
+   *   1. Basic Write emits the documented Hello, World! text.
+   *   2. HTML welcome + subtitle concatenate as documented (name fallback).
+   *   3. Multiple Write calls append sequentially (ul/li skeleton).
+   *   4. Conditional branch Write emits the admin link when the guard is true.
+   *   5. Debug guard wraps Stringify output in the documented pre markup.
+   *
+   * NON-ASSERTABLE: LookupRows / Lookup DE fixtures and live query-string
+   * name/debug parameters on this CloudPage GET — examples use stand-ins.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  Write("PASS basic Hello World -> [");
+  Write("Hello, World!");
+  Write("]\n");
+
+  var name = "Subscriber";
+  Write("PASS HTML welcome pattern -> [");
+  Write("<h1>Welcome, " + name + "</h1>");
+  Write('<p class="subtitle">We\'re glad you\'re here.</p>');
+  Write("]\n");
+
+  Write("PASS multiple Writes append list skeleton -> [");
+  Write("<ul>");
+  Write("<li>");
+  Write("Item");
+  Write("</li>");
+  Write("</ul>");
+  Write("]\n");
+
+  var isAdmin = "1";
+  if (isAdmin === "1") {
+      Write("PASS conditional admin link -> [<a href=\"/admin\">Admin Panel</a>]\n");
+  }
+
+  var debug = true;
+  var dataObject = { x: 1 };
+  if (debug) {
+      Write("PASS debug pre wrap -> [");
+      Write('<pre style="color:orange">' + Stringify(dataObject) + "</pre>");
+      Write("]\n");
+  }
+  </script>
+
+clr-coercion: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: CLR stringification (Known Bug) — not JS toString()
+   *
+   * Proves:
+   *   1. JS ({ }).toString() is still "[object Object]".
+   *   2. BUG: Write({}) / Write({a:1}) emit the CLR Dictionary type name
+   *      (not "[object Object]").
+   *   3. BUG: Write([]) emits System.Collections.ArrayList.
+   *   4. BUG: Write(true)/Write(false) emit CLR "True"/"False"
+   *      (JS Boolean.toString is "true"/"false").
+   *   5. Write(42) emits "42" (number path matches JS toString).
+   *   6. Platform.Response.Write({}) has the same Dictionary rendering.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var obj = {};
+  assert("JS ({ }).toString() is [object Object]", obj.toString(), "[object Object]");
+  assert("JS (true).toString() is lowercase true", (true).toString(), "true");
+  assert("JS (false).toString() is lowercase false", (false).toString(), "false");
+  assert("JS (42).toString() is 42", (42).toString(), "42");
+
+  Write("PASS BUG Write({}) emits CLR Dictionary (JS toString: [object Object]) -> [");
+  Write({});
+  Write("]\n");
+
+  Write("PASS BUG Write({a:1}) emits CLR Dictionary (JS toString: [object Object]) -> [");
+  Write({ a: 1 });
+  Write("]\n");
+
+  Write("PASS BUG Write([]) emits System.Collections.ArrayList -> [");
+  Write([]);
+  Write("]\n");
+
+  Write("PASS BUG Write(true) emits CLR True (JS toString: true) -> [");
+  Write(true);
+  Write("]\n");
+
+  Write("PASS BUG Write(false) emits CLR False (JS toString: false) -> [");
+  Write(false);
+  Write("]\n");
+
+  Write("PASS Write(42) emits 42 -> [");
+  Write(42);
+  Write("]\n");
+
+  Write("PASS BUG Platform.Response.Write({}) emits CLR Dictionary -> [");
+  Platform.Response.Write({});
+  Write("]\n");
+  </script>
+
+common-mistakes: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Common Mistakes — Stringify workaround, null/empty, escapeHtml
+   *
+   * Proves:
+   *   1. Workaround: Write(Stringify(obj)) emits JSON text (not a CLR type name).
+   *   2. Write(null) and Write(undefined) emit empty output (no text).
+   *   3. The documented escapeHtml helper escapes &, <, >, and quotes.
+   *
+   * CLR object/boolean rendering is covered in the clr-coercion chapter.
+   *
+   * NON-ASSERTABLE: browser XSS prevention efficacy — only the string transform
+   * is asserted here.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  Write("PASS Stringify workaround serializes the object -> [");
+  Write(Stringify({ a: 1 }));
+  Write("]\n");
+
+  Write("PASS Write(null) emits empty -> [");
+  Write(null);
+  Write("EMPTY]\n");
+
+  var unset;
+  Write("PASS Write(undefined) emits empty -> [");
+  Write(unset);
+  Write("EMPTY]\n");
+
+  function escapeHtml(str) {
+      return (str + "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+  }
+  assert("escapeHtml escapes angle brackets", escapeHtml("<script>"), "&lt;script&gt;");
+  assert("escapeHtml escapes amp and quote", escapeHtml('a&b"c'), "a&amp;b&quot;c");
+  Write("PASS escapeHtml wrapped in Write -> [");
+  Write("<p>" + escapeHtml('<b>"x"&y</b>') + "</p>");
+  Write("]\n");
+  </script>

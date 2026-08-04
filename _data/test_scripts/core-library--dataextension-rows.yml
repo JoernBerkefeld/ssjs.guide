@@ -1,0 +1,538 @@
+# Test scripts for /core-library/dataextension-rows/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and the documented deviation from the official Salesforce docs.
+#
+# SAFETY: every script creates its OWN throw-away sendable data extension
+# under a uniquely named external key (`ssjsguide-ts-der-*`), proves the
+# effect, and removes it again. An orphan left by a previous aborted run is
+# cleaned up before the probe starts. Always Init with CustomerKey (Name
+# binding is defective when Name differs — see dataextension Init).
+#
+# NON-ASSERTABLE:
+#   - Email-send / email-preview context (Retrieve forbidden; Lookup Init by
+#     Name-only rule) — CloudPage GET only.
+#   - The documented 2500-row Retrieve ceiling — not re-measured by creating
+#     2501 rows.
+#   - Long-running Remove timeout on large deletes — not exercised.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# NORMALIZATION RULE: assert() compares with a plain === and does NOT coerce.
+# Engine-returned values are normalized at the call site with "" + value —
+# never with String(value), which yields a CLR string that fails === and
+# aborts the page when a string method is called on it.
+#
+# REQUEST-SCOPED QUERY CACHE: identical DE queries within one request can
+# return stale data — scripts vary the filter / Lookup shape when proving a
+# mutation.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage GET on the QA business unit. Re-run them before changing any
+# claim on the page.
+
+instance-rows-retrieve: |
+  <script runat="server">
+
+  /*
+   * Chapter: <DataExtensionInstance>.Rows.Retrieve([filter])
+   *
+   * CloudPage GET context. Proves:
+   *   1. Rows.Retrieve is a function after Platform.Load("core", "1.1.5").
+   *   2. DEV Retrieve() without a filter works on CloudPages and returns all
+   *      rows (widely-repeated "empty on CloudPages" bug not reproducible).
+   *   3. Result is a host array: [object Array], numeric .length, index
+   *      access; instanceof Array is false.
+   *   4. DEV every field value is a string — Text/EmailAddress/Locale/Phone
+   *      as strings; Number/Decimal stringified; Boolean capitalized
+   *      "True"/"False"; Date locale-style "M/D/YYYY h:mm:ss AM/PM"
+   *      (not ISO-8601). Official docs / Platform.Function.Lookup* return
+   *      typed values.
+   *   5. SimpleFilter and ComplexFilterPart forms work.
+   *   6. On no match returns an empty host array (length 0), not null.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function outcomeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+  function countDE(key) {
+      return DataExtension.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key }).length;
+  }
+
+  Platform.Load("core", "1.1.5");
+
+  var KEY = "ssjsguide-ts-der-retr";
+  var NAME = "ssjs-guide-ts-der-retr";
+
+  if (countDE(KEY) > 0) { DataExtension.Init(KEY).Remove(); }
+  assert("precondition: no probe data extension exists", "" + countDE(KEY), "0");
+  DataExtension.Add({
+      CustomerKey: KEY,
+      Name: NAME,
+      Fields: [
+          { Name: "SubKey", FieldType: "Text", IsPrimaryKey: true, MaxLength: 50, IsRequired: true },
+          { Name: "F_Text", FieldType: "Text", MaxLength: 50 },
+          { Name: "F_Email", FieldType: "EmailAddress", MaxLength: 100 },
+          { Name: "F_Locale", FieldType: "Locale", MaxLength: 10 },
+          { Name: "F_Phone", FieldType: "Phone", MaxLength: 50 },
+          { Name: "F_Number", FieldType: "Number" },
+          { Name: "F_Decimal", FieldType: "Decimal", MaxLength: 18, Scale: 2 },
+          { Name: "F_Boolean", FieldType: "Boolean" },
+          { Name: "F_Date", FieldType: "Date" }
+      ],
+      SendableInfo: { Field: { Name: "SubKey", FieldType: "Text" }, RelatesOn: "Subscriber Key" }
+  });
+  assert("fixture: the probe data extension was created", "" + countDE(KEY), "1");
+
+  var de = DataExtension.Init(KEY);
+  assert("typeof instance.Rows.Retrieve is function", typeof de.Rows.Retrieve, "function");
+
+  de.Rows.Add([
+      {
+          SubKey: "r1", F_Text: "hello", F_Email: "a@example.com", F_Locale: "en-US",
+          F_Phone: "5551234567", F_Number: 42, F_Decimal: 3.14, F_Boolean: true,
+          F_Date: "2024-01-15T00:00:00.000"
+      },
+      {
+          SubKey: "r2", F_Text: "world", F_Email: "b@example.com", F_Locale: "en-GB",
+          F_Phone: "5559876543", F_Number: 7, F_Decimal: 1.5, F_Boolean: false,
+          F_Date: "2024-06-01T12:00:00.000"
+      }
+  ]);
+
+  /* 2 + 3. No-filter Retrieve works; host-array shape. */
+  var all = de.Rows.Retrieve();
+  assert("DEV Retrieve() without filter returns rows on CloudPages (rumor: empty)", "" + all.length, "2");
+  assert("Retrieve() reports as [object Array]", Object.prototype.toString.call(all), "[object Array]");
+  assert("Retrieve() exposes numeric .length", typeof all.length, "number");
+  assert("DEV instanceof Array is false (host array; docs imply JS Array)", all instanceof Array ? "true" : "false", "false");
+
+  /* 4. All field values are strings with documented formats. */
+  var row = de.Rows.Retrieve({ Property: "SubKey", SimpleOperator: "equals", Value: "r1" })[0];
+  assert("DEV Text field typeof string (docs: typed)", typeof row.F_Text, "string");
+  assert("Text value round-trips", "" + row.F_Text, "hello");
+  assert("DEV EmailAddress typeof string", typeof row.F_Email, "string");
+  assert("EmailAddress value", "" + row.F_Email, "a@example.com");
+  assert("DEV Locale typeof string", typeof row.F_Locale, "string");
+  assert("Locale value", "" + row.F_Locale, "en-US");
+  assert("DEV Phone typeof string", typeof row.F_Phone, "string");
+  assert("Phone value", "" + row.F_Phone, "5551234567");
+  assert("DEV Number typeof string (docs/Lookup: number)", typeof row.F_Number, "string");
+  assert("Number stringified", "" + row.F_Number, "42");
+  assert("DEV Decimal typeof string (docs/Lookup: number)", typeof row.F_Decimal, "string");
+  assert("Decimal stringified", "" + row.F_Decimal, "3.14");
+  assert("DEV Boolean typeof string (docs/Lookup: boolean)", typeof row.F_Boolean, "string");
+  assert("DEV Boolean stringified capitalized True (spec/JS: true)", "" + row.F_Boolean, "True");
+  assert("DEV Date typeof string (docs/Lookup: Date)", typeof row.F_Date, "string");
+  assert("DEV Date is locale-style not ISO-8601", "" + row.F_Date, "1/15/2024 12:00:00 AM");
+
+  /* 5. Complex filter. */
+  assert("ComplexFilterPart AND returns the matching row", outcomeOf(function () {
+      return de.Rows.Retrieve({
+          LeftOperand: { Property: "F_Number", SimpleOperator: "greaterThan", Value: "10" },
+          LogicalOperator: "AND",
+          RightOperand: { Property: "F_Boolean", SimpleOperator: "equals", Value: "true" }
+      }).length;
+  }), "1");
+
+  /* 6. No match -> empty array, not null. */
+  var empty = de.Rows.Retrieve({ Property: "SubKey", SimpleOperator: "equals", Value: "no-such-row-zzz" });
+  assert("no-match result is not null", empty === null ? "true" : "false", "false");
+  assert("no-match length is 0", "" + empty.length, "0");
+  assert("workaround: iterate without a null-guard when length is 0", empty.length === 0 ? "true" : "false", "true");
+
+  assert("cleanup: the probe data extension is removed", outcomeOf(function () { return DataExtension.Init(KEY).Remove(); }), "OK");
+  assert("cleanup: no probe data extension is left behind", "" + countDE(KEY), "0");
+  </script>
+
+instance-rows-add: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <DataExtensionInstance>.Rows.Add(rowData)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Rows.Add is a function.
+   *   2. DEV Add(array) returns a number (count of rows added), not "OK".
+   *   3. DEV Add also accepts a single row object (docs: array only).
+   *   4. Added rows are readable via Rows.Retrieve / Rows.Lookup.
+   *   5. Cleanup Remove leaves zero matching rows (ghost-record check).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function outcomeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+  function countDE(key) {
+      return DataExtension.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key }).length;
+  }
+
+  var KEY = "ssjsguide-ts-der-add";
+  var NAME = "ssjs-guide-ts-der-add";
+
+  if (countDE(KEY) > 0) { DataExtension.Init(KEY).Remove(); }
+  assert("precondition: no probe data extension exists", "" + countDE(KEY), "0");
+  DataExtension.Add({
+      CustomerKey: KEY,
+      Name: NAME,
+      Fields: [
+          { Name: "SubKey", FieldType: "Text", IsPrimaryKey: true, MaxLength: 50, IsRequired: true },
+          { Name: "FirstName", FieldType: "Text", MaxLength: 50 },
+          { Name: "LastName", FieldType: "Text", MaxLength: 50 }
+      ],
+      SendableInfo: { Field: { Name: "SubKey", FieldType: "Text" }, RelatesOn: "Subscriber Key" }
+  });
+  assert("fixture: the probe data extension was created", "" + countDE(KEY), "1");
+
+  var de = DataExtension.Init(KEY);
+  assert("typeof instance.Rows.Add is function", typeof de.Rows.Add, "function");
+
+  var nArr = de.Rows.Add([
+      { SubKey: "jdoe", FirstName: "John", LastName: "Doe" },
+      { SubKey: "aruiz", FirstName: "Angel", LastName: "Ruiz" }
+  ]);
+  assert("DEV Add(array) returns a number (docs: \"OK\")", typeof nArr, "number");
+  assert("DEV Add(array of 2) returns 2", "" + nArr, "2");
+  assert("Add(array) result is not the string OK", nArr === "OK" ? "true" : "false", "false");
+
+  var nOne = de.Rows.Add({ SubKey: "solo", FirstName: "Solo", LastName: "Row" });
+  assert("DEV Add(single object) returns a number (docs: array only)", typeof nOne, "number");
+  assert("DEV Add(single object) returns 1", "" + nOne, "1");
+
+  assert("Retrieve sees all three rows", "" + de.Rows.Retrieve().length, "3");
+  assert("Lookup finds the single-object row", outcomeOf(function () {
+      var r = de.Rows.Lookup(["SubKey"], ["solo"]);
+      return r && r.length === 1 ? r[0].FirstName : "missing";
+  }), "Solo");
+
+  assert("cleanup: the probe data extension is removed", outcomeOf(function () { return DataExtension.Init(KEY).Remove(); }), "OK");
+  assert("cleanup: no probe data extension is left behind", "" + countDE(KEY), "0");
+  </script>
+
+instance-rows-lookup: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <DataExtensionInstance>.Rows.Lookup(searchFieldNames, searchValues[, limit[, orderByFieldName]])
+   *
+   * CloudPage GET context. Proves:
+   *   1. Rows.Lookup is a function.
+   *   2. Match returns a host array (instanceof Array false) with typed
+   *      Number / Decimal / Boolean values.
+   *   3. DEV Date columns are ISO-8601 strings (e.g. "2024-01-15T00:00:00.000"),
+   *      NOT Date objects — same as Platform.Function.LookupRows (page used
+   *      to claim native Date; official "typed values" wording is incomplete).
+   *   4. On no match returns null (not an empty array).
+   *   5. Optional limit and orderByFieldName work; limit also accepts a
+   *      numeric string (type-acceptance).
+   *   6. ARRAY-SHAPE: searchFieldNames accepts string[] (column-name list);
+   *      a number[] element list is Rejected (no usable match).
+   *   7. ARRAY-SHAPE: searchValues guide type is array (heterogeneous simple
+   *      values); runtime accepts string[] (Text + numeric string for Number
+   *      columns) and number[] for Number columns.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function outcomeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+  function countDE(key) {
+      return DataExtension.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key }).length;
+  }
+
+  var KEY = "ssjsguide-ts-der-lk";
+  var NAME = "ssjs-guide-ts-der-lk";
+
+  if (countDE(KEY) > 0) { DataExtension.Init(KEY).Remove(); }
+  assert("precondition: no probe data extension exists", "" + countDE(KEY), "0");
+  DataExtension.Add({
+      CustomerKey: KEY,
+      Name: NAME,
+      Fields: [
+          { Name: "SubKey", FieldType: "Text", IsPrimaryKey: true, MaxLength: 50, IsRequired: true },
+          { Name: "LastName", FieldType: "Text", MaxLength: 50 },
+          { Name: "Age", FieldType: "Number" },
+          { Name: "Score", FieldType: "Decimal", MaxLength: 18, Scale: 2 },
+          { Name: "Active", FieldType: "Boolean" },
+          { Name: "Born", FieldType: "Date" }
+      ],
+      SendableInfo: { Field: { Name: "SubKey", FieldType: "Text" }, RelatesOn: "Subscriber Key" }
+  });
+  assert("fixture: the probe data extension was created", "" + countDE(KEY), "1");
+
+  var de = DataExtension.Init(KEY);
+  assert("typeof instance.Rows.Lookup is function", typeof de.Rows.Lookup, "function");
+
+  de.Rows.Add([
+      { SubKey: "a", LastName: "Alpha", Age: 25, Score: 3.14, Active: true, Born: "2024-01-15T00:00:00.000" },
+      { SubKey: "b", LastName: "Beta", Age: 25, Score: 1.5, Active: true, Born: "2024-06-01T12:00:00.000" },
+      { SubKey: "c", LastName: "Gamma", Age: 40, Score: 9.9, Active: false, Born: "2023-12-31T00:00:00.000" }
+  ]);
+
+  var rows = de.Rows.Lookup(["Age"], [25], 2, "LastName");
+  assert("Lookup match is not null", rows === null ? "true" : "false", "false");
+  assert("Lookup reports as [object Array]", Object.prototype.toString.call(rows), "[object Array]");
+  assert("Lookup length respects limit 2", "" + rows.length, "2");
+  assert("DEV instanceof Array is false (host array)", rows instanceof Array ? "true" : "false", "false");
+  assert("orderBy LastName puts Alpha first", "" + rows[0].LastName, "Alpha");
+  assert("Number column typeof number", typeof rows[0].Age, "number");
+  assert("Number value", "" + rows[0].Age, "25");
+  assert("Decimal column typeof number", typeof rows[0].Score, "number");
+  assert("Boolean column typeof boolean", typeof rows[0].Active, "boolean");
+  assert("Boolean === true", rows[0].Active === true ? "true" : "false", "true");
+
+  /* 3. Date lead — ISO-8601 string, not Date. */
+  assert("DEV Date column typeof string (page/docs implied Date object)", typeof rows[0].Born, "string");
+  assert("DEV Date is ISO-8601 (same as Platform.Function.LookupRows)", "" + rows[0].Born, "2024-01-15T00:00:00.000");
+  assert("DEV Date instanceof Date is false", rows[0].Born instanceof Date ? "true" : "false", "false");
+  var pf = Platform.Function.LookupRows(NAME, "SubKey", "a");
+  assert("control: Platform.Function.LookupRows Date is the same ISO string", "" + pf[0].Born, "2024-01-15T00:00:00.000");
+
+  /* 4. No match -> null. */
+  var miss = de.Rows.Lookup(["SubKey"], ["no-such-row-zzz"]);
+  assert("DEV no-match Lookup === null (docs/Retrieve: empty array)", miss === null ? "true" : "false", "true");
+
+  /* 5. limit type-acceptance. */
+  assert("limit numeric string \"1\" is accepted", outcomeOf(function () {
+      return de.Rows.Lookup(["Active"], [true], "1", "LastName").length;
+  }), "1");
+
+  /* 6 + 7. Array-shape type-acceptance for searchFieldNames / searchValues. */
+  assert("TA searchFieldNames string[] finds by SubKey", outcomeOf(function () {
+      var r = de.Rows.Lookup(["SubKey"], ["c"]);
+      return r && r.length === 1 ? r[0].LastName : "missing";
+  }), "Gamma");
+  assert("TA searchFieldNames number[] is Rejected (throws Invalid Field)", outcomeOf(function () {
+      de.Rows.Lookup([25], [25]);
+      return "returned";
+  }).indexOf("Invalid Field") >= 0 ? "true" : "false", "true");
+  assert("TA searchValues string[] matches Text column", outcomeOf(function () {
+      return de.Rows.Lookup(["LastName"], ["Beta"]).length;
+  }), "1");
+  assert("TA searchValues number[] matches Number column", outcomeOf(function () {
+      return de.Rows.Lookup(["Age"], [40]).length;
+  }), "1");
+  assert("TA searchValues numeric-string[] matches Number column", outcomeOf(function () {
+      return de.Rows.Lookup(["Age"], ["40"]).length;
+  }), "1");
+
+  assert("cleanup: the probe data extension is removed", outcomeOf(function () { return DataExtension.Init(KEY).Remove(); }), "OK");
+  assert("cleanup: no probe data extension is left behind", "" + countDE(KEY), "0");
+  </script>
+
+instance-rows-update: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <DataExtensionInstance>.Rows.Update(rowData, whereFieldNames, whereValues)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Rows.Update is a function.
+   *   2. DEV Update returns a number (count of rows updated), not "OK".
+   *   3. A matching Update changes the row (proven via a varied Retrieve
+   *      filter — identical Lookup queries can be request-cached).
+   *   4. DEV no-match Update returns 0 and does not throw.
+   *   5. ARRAY-SHAPE: whereFieldNames accepts string[] (column-name list).
+   *   6. ARRAY-SHAPE: whereValues guide type is array (heterogeneous simple
+   *      values); runtime accepts string[] (Text + numeric string for Number)
+   *      and number[] for Number columns.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function outcomeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+  function countDE(key) {
+      return DataExtension.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key }).length;
+  }
+
+  var KEY = "ssjsguide-ts-der-upd";
+  var NAME = "ssjs-guide-ts-der-upd";
+
+  if (countDE(KEY) > 0) { DataExtension.Init(KEY).Remove(); }
+  assert("precondition: no probe data extension exists", "" + countDE(KEY), "0");
+  DataExtension.Add({
+      CustomerKey: KEY,
+      Name: NAME,
+      Fields: [
+          { Name: "SubKey", FieldType: "Text", IsPrimaryKey: true, MaxLength: 50, IsRequired: true },
+          { Name: "MemberId", FieldType: "Number" },
+          { Name: "Country", FieldType: "Text", MaxLength: 10 },
+          { Name: "StateProvince", FieldType: "Text", MaxLength: 50 },
+          { Name: "PreferredActivity", FieldType: "Text", MaxLength: 50 }
+      ],
+      SendableInfo: { Field: { Name: "SubKey", FieldType: "Text" }, RelatesOn: "Subscriber Key" }
+  });
+  assert("fixture: the probe data extension was created", "" + countDE(KEY), "1");
+
+  var de = DataExtension.Init(KEY);
+  assert("typeof instance.Rows.Update is function", typeof de.Rows.Update, "function");
+
+  de.Rows.Add({ SubKey: "m1", MemberId: 9868600, Country: "CA", StateProvince: "ON", PreferredActivity: "Hiking" });
+
+  var n = de.Rows.Update(
+      { StateProvince: "QC", PreferredActivity: "Sailing" },
+      ["MemberId", "Country"],
+      [9868600, "CA"]
+  );
+  assert("DEV Update returns a number (docs: \"OK\")", typeof n, "number");
+  assert("DEV Update(match) returns 1", "" + n, "1");
+  assert("Update result is not the string OK", n === "OK" ? "true" : "false", "false");
+
+  /* Prove the write with a varied filter (avoid request-scoped Lookup cache). */
+  var proven = de.Rows.Retrieve({ Property: "StateProvince", SimpleOperator: "equals", Value: "QC" });
+  assert("varied Retrieve sees the updated StateProvince", "" + proven.length, "1");
+  assert("PreferredActivity was updated", "" + proven[0].PreferredActivity, "Sailing");
+
+  var zero = de.Rows.Update({ StateProvince: "XX" }, ["MemberId", "Country"], [111, "ZZ"]);
+  assert("DEV Update(no match) returns 0 (docs imply throw)", "" + zero, "0");
+  assert("DEV Update(no match) does not throw", outcomeOf(function () {
+      de.Rows.Update({ StateProvince: "YY" }, ["MemberId"], [999999]);
+      return "returned";
+  }), "returned");
+
+  assert("TA whereFieldNames string[] + whereValues number[] updates", outcomeOf(function () {
+      return de.Rows.Update({ PreferredActivity: "Skiing" }, ["MemberId"], [9868600]);
+  }), "1");
+  var ski = de.Rows.Retrieve({ Property: "PreferredActivity", SimpleOperator: "equals", Value: "Skiing" });
+  assert("TA number[] WHERE update landed", "" + ski.length, "1");
+
+  assert("TA whereValues numeric-string[] matches Number column", outcomeOf(function () {
+      return de.Rows.Update({ PreferredActivity: "Cycling" }, ["MemberId", "Country"], ["9868600", "CA"]);
+  }), "1");
+  var cyc = de.Rows.Retrieve({ Property: "PreferredActivity", SimpleOperator: "equals", Value: "Cycling" });
+  assert("TA numeric-string WHERE update landed", "" + cyc.length, "1");
+
+  assert("TA whereValues string[] matches Text column", outcomeOf(function () {
+      return de.Rows.Update({ PreferredActivity: "Rowing" }, ["Country"], ["CA"]);
+  }), "1");
+  var row = de.Rows.Retrieve({ Property: "PreferredActivity", SimpleOperator: "equals", Value: "Rowing" });
+  assert("TA string[] Text WHERE update landed", "" + row.length, "1");
+
+  assert("cleanup: the probe data extension is removed", outcomeOf(function () { return DataExtension.Init(KEY).Remove(); }), "OK");
+  assert("cleanup: no probe data extension is left behind", "" + countDE(KEY), "0");
+  </script>
+
+instance-rows-remove: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <DataExtensionInstance>.Rows.Remove(columnNames, columnValues)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Rows.Remove is a function.
+   *   2. Remove returns a number — the count of deleted rows.
+   *   3. Matching rows are gone afterwards (Lookup null + Retrieve length 0).
+   *   4. Ghost-record rule: after Remove, a re-count via a distinct filter
+   *      confirms zero survivors even if a prior write appeared to fail.
+   *   5. ARRAY-SHAPE: columnNames accepts string[] (column-name list).
+   *   6. ARRAY-SHAPE: columnValues guide type is array (heterogeneous simple
+   *      values); runtime accepts string[] (Text + numeric string for Number)
+   *      and number[] for Number columns.
+   *
+   * NON-ASSERTABLE: timeout on large batched deletes.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function outcomeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+  function countDE(key) {
+      return DataExtension.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key }).length;
+  }
+
+  var KEY = "ssjsguide-ts-der-rem";
+  var NAME = "ssjs-guide-ts-der-rem";
+
+  if (countDE(KEY) > 0) { DataExtension.Init(KEY).Remove(); }
+  assert("precondition: no probe data extension exists", "" + countDE(KEY), "0");
+  DataExtension.Add({
+      CustomerKey: KEY,
+      Name: NAME,
+      Fields: [
+          { Name: "SubKey", FieldType: "Text", IsPrimaryKey: true, MaxLength: 50, IsRequired: true },
+          { Name: "Area", FieldType: "Text", MaxLength: 50 },
+          { Name: "MemberId", FieldType: "Number" }
+      ],
+      SendableInfo: { Field: { Name: "SubKey", FieldType: "Text" }, RelatesOn: "Subscriber Key" }
+  });
+  assert("fixture: the probe data extension was created", "" + countDE(KEY), "1");
+
+  var de = DataExtension.Init(KEY);
+  assert("typeof instance.Rows.Remove is function", typeof de.Rows.Remove, "function");
+
+  de.Rows.Add([
+      { SubKey: "k1", Area: "Kensington", MemberId: 101 },
+      { SubKey: "k2", Area: "Kensington", MemberId: 102 },
+      { SubKey: "k3", Area: "Chelsea", MemberId: 103 },
+      { SubKey: "k4", Area: "Soho", MemberId: 104 },
+      { SubKey: "k5", Area: "Soho", MemberId: 105 }
+  ]);
+  assert("precondition: five rows present", "" + de.Rows.Retrieve().length, "5");
+
+  /* 5 + Text string[] path. */
+  var n = de.Rows.Remove(["Area"], ["Kensington"]);
+  assert("Remove returns a number", typeof n, "number");
+  assert("TA columnNames string[] + columnValues string[] Remove returns 2", "" + n, "2");
+
+  var gone = de.Rows.Lookup(["Area"], ["Kensington"]);
+  assert("Lookup confirms Kensington rows are gone (null)", gone === null ? "true" : "false", "true");
+  /* Distinct Retrieve filter avoids request-scoped cache on the same shape. */
+  var left = de.Rows.Retrieve({ Property: "Area", SimpleOperator: "equals", Value: "Chelsea" });
+  assert("Chelsea row remains", "" + left.length, "1");
+  assert("ghost-record re-count: Retrieve SubKey k1 length 0", outcomeOf(function () {
+      return de.Rows.Retrieve({ Property: "SubKey", SimpleOperator: "equals", Value: "k1" }).length;
+  }), "0");
+  assert("ghost-record re-count: Retrieve SubKey k2 length 0", outcomeOf(function () {
+      return de.Rows.Retrieve({ Property: "SubKey", SimpleOperator: "equals", Value: "k2" }).length;
+  }), "0");
+
+  /* 6. Number-column array-shape for columnValues. */
+  assert("TA columnValues number[] removes by MemberId", outcomeOf(function () {
+      return de.Rows.Remove(["MemberId"], [103]);
+  }), "1");
+  assert("TA number[] Remove: Chelsea gone", outcomeOf(function () {
+      return de.Rows.Retrieve({ Property: "Area", SimpleOperator: "equals", Value: "Chelsea" }).length;
+  }), "0");
+  assert("TA columnValues numeric-string[] removes by MemberId", outcomeOf(function () {
+      return de.Rows.Remove(["MemberId"], ["104"]);
+  }), "1");
+  assert("TA numeric-string Remove: SubKey k4 gone", outcomeOf(function () {
+      return de.Rows.Retrieve({ Property: "SubKey", SimpleOperator: "equals", Value: "k4" }).length;
+  }), "0");
+  assert("Soho k5 still present before final cleanup", outcomeOf(function () {
+      return de.Rows.Retrieve({ Property: "SubKey", SimpleOperator: "equals", Value: "k5" }).length;
+  }), "1");
+
+  assert("cleanup: the probe data extension is removed", outcomeOf(function () { return DataExtension.Init(KEY).Remove(); }), "OK");
+  assert("cleanup: no probe data extension is left behind", "" + countDE(KEY), "0");
+  </script>

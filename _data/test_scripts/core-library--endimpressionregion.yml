@@ -1,0 +1,325 @@
+# Test scripts for /core-library/endimpressionregion/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and the documented deviation from the official Salesforce docs.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage GET. Re-run them before changing any claim on the page.
+#
+# SCOPE OF THE EVIDENCE — CLOUDPAGE ONLY: every assertion in this bundle was
+# executed as a plain CloudPage GET. Nothing here was run inside a real email
+# send. Although impression regions are primarily a send/email-tracking
+# feature, no send-context assertion is made — that behaviour is untested and
+# may differ from what these scripts show.
+#
+# NOT ASSERTED (not assertable on a CloudPage):
+#   - whether an impression region is actually closed / an impression recorded
+#     in Marketing Cloud tracking. Impression counts surface in tracking
+#     reports after a send is processed, which is not deterministically
+#     observable from inside the rendering request.
+#   - whether closeAll really closes EVERY nested region that is still open.
+#     Only the call-level acceptance of closeAll is asserted.
+#   - whether the bare name behaves the same inside an email send. Only the
+#     CloudPage GET context was exercised.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# NORMALIZATION RULE: assert() compares with a plain === and does NOT coerce.
+# Engine-returned values are normalized at the call site with "" + value —
+# never with String(value), which yields a CLR string that fails === and
+# aborts the page when a string method is called on it.
+#
+# ENGINE NOTE: CLR exception messages raised here cannot be inspected with
+# .length / .indexOf / .substring — those operations abort the whole
+# CloudPage with HTTP 422. The scripts assert "it throws" and PRINT the
+# message rather than matching it.
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters — EndImpressionRegion([closeAll])
+   *
+   * Proves:
+   *   1. After Platform.Load("core", "1.1.5") the bare name is a function
+   *      (the documented requires_core_load contract).
+   *   2. The documented 0-argument form is callable and does NOT throw —
+   *      unlike its paired BeginImpressionRegion half.
+   *   3. The optional closeAll parameter accepts a boolean in either state
+   *      (true and false) without throwing.
+   *   4. Type-acceptance matrix for closeAll: a string and a number are
+   *      also accepted (coerced) without throwing — same meaningful
+   *      call-level outcome as the boolean path.
+   *   5. CONTRAST with Platform.Function: null in the closeAll position is
+   *      ACCEPTED by the bare alias (does not throw) — the qualified form
+   *      throws the security-descriptor error for the same input.
+   *   6. CONTRAST with Platform.Function: arity 2 is ACCEPTED by the bare
+   *      alias (does not throw) — the qualified form throws for arity 2/3.
+   *   7. Every successful bare-alias call returns undefined (contrast with
+   *      the Platform.Function form's null is covered in returns-undefined).
+   *
+   * SCOPE: CloudPage GET only. Nothing below asserts how the call behaves
+   * inside an actual email send.
+   *
+   * NOT ASSERTED: whether closeAll really closes every nested region, or
+   * whether an impression is recorded in tracking.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function assertNoThrow(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "FAIL " : "PASS ") + id + " -> " + (threw ? "threw: " + msg : "did not throw") + "\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+
+  /* 1. The bare name resolves as a function after the Core load. */
+  assert("typeof EndImpressionRegion is function after Platform.Load", typeOf(function () { return typeof EndImpressionRegion; }), "function");
+
+  /* 2. The 0-argument form is callable. */
+  assertNoThrow("arity 0 does not throw", function () {
+      return EndImpressionRegion();
+  });
+  var r0 = EndImpressionRegion();
+  assert("arity 0 returns typeof undefined", typeOf(function () { return typeof r0; }), "undefined");
+  assert("arity 0 returns === undefined", r0 === undefined ? "true" : "false", "true");
+
+  /* 3. closeAll accepts a boolean in either state. */
+  assertNoThrow("closeAll = true does not throw", function () {
+      return EndImpressionRegion(true);
+  });
+  var rTrue = EndImpressionRegion(true);
+  assert("closeAll = true returns typeof undefined", typeOf(function () { return typeof rTrue; }), "undefined");
+  assertNoThrow("closeAll = false does not throw", function () {
+      return EndImpressionRegion(false);
+  });
+  var rFalse = EndImpressionRegion(false);
+  assert("closeAll = false returns typeof undefined", typeOf(function () { return typeof rFalse; }), "undefined");
+
+  /* 4. Type-acceptance — string and number counterparts are Accepted. */
+  assertNoThrow("closeAll = \"true\" (string) is accepted", function () {
+      return EndImpressionRegion("true");
+  });
+  var rStr = EndImpressionRegion("true");
+  assert("closeAll = \"true\" returns typeof undefined", typeOf(function () { return typeof rStr; }), "undefined");
+  assertNoThrow("closeAll = 1 (number) is accepted", function () {
+      return EndImpressionRegion(1);
+  });
+  var rNum = EndImpressionRegion(1);
+  assert("closeAll = 1 returns typeof undefined", typeOf(function () { return typeof rNum; }), "undefined");
+  assertNoThrow("closeAll = 0 (number) is accepted", function () {
+      return EndImpressionRegion(0);
+  });
+  assertNoThrow("closeAll = \"false\" (string) is accepted", function () {
+      return EndImpressionRegion("false");
+  });
+
+  /* 5. CONTRAST — bare alias accepts null; Platform.Function rejects it. */
+  assertNoThrow("closeAll = null does not throw on bare alias (Platform.Function throws)", function () {
+      return EndImpressionRegion(null);
+  });
+  var rNull = EndImpressionRegion(null);
+  assert("closeAll = null returns typeof undefined", typeOf(function () { return typeof rNull; }), "undefined");
+
+  /* 6. CONTRAST — bare alias accepts arity 2; Platform.Function rejects it. */
+  assertNoThrow("arity 2 does not throw on bare alias (Platform.Function throws)", function () {
+      return EndImpressionRegion(true, true);
+  });
+  var r2 = EndImpressionRegion(true, true);
+  assert("arity 2 returns typeof undefined", typeOf(function () { return typeof r2; }), "undefined");
+  </script>
+
+description: |
+  <script runat="server">
+  /*
+   * Chapter: Description — bare-name Core form, Platform.Load required,
+   * callable without throwing, no practical SSJS effect.
+   *
+   * Proves:
+   *   1. Platform.Load("core", "1.1.5") is REQUIRED: the bare name is
+   *      undefined before the load and a function after it. The pre-load
+   *      typeof is resolved inside a thunk so an unbound global cannot abort
+   *      the page.
+   *   2. Once loaded the bare name IS defined as a function and can be
+   *      called without throwing (0-arg and closeAll=true forms).
+   *   3. Control: BeginImpressionRegion remains unusable from SSJS — the
+   *      paired half throws — so this End method has no practical effect
+   *      in SSJS either; impression regions are an AMPscript-only feature.
+   *   4. The AMPscript close form via TreatAsContent does not throw and
+   *      produces no output (workaround for pairing with an AMPscript open).
+   *
+   * SCOPE: CloudPage GET only — the email/send context is not covered by any
+   * assertion here.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function assertNoThrow(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "FAIL " : "PASS ") + id + " -> " + (threw ? "threw: " + msg : "did not throw") + "\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+
+  /* 1. Platform.Load is required — check BEFORE loading. */
+  assert("bare EndImpressionRegion is undefined before Platform.Load", typeOf(function () { return typeof EndImpressionRegion; }), "undefined");
+
+  Platform.Load("core", "1.1.5");
+
+  assert("bare EndImpressionRegion is a function after Platform.Load", typeOf(function () { return typeof EndImpressionRegion; }), "function");
+
+  /* 2. Once loaded it can be called without throwing. */
+  assertNoThrow("bare EndImpressionRegion() does not throw", function () {
+      return EndImpressionRegion();
+  });
+  assertNoThrow("bare EndImpressionRegion(true) does not throw", function () {
+      return EndImpressionRegion(true);
+  });
+
+  /* 3. Control — Begin is unusable, so End has no practical SSJS effect. */
+  assertThrows("control: bare BeginImpressionRegion throws (AMPscript-only feature)", function () {
+      return BeginImpressionRegion("control-region");
+  });
+  assertThrows("control: Platform.Function.BeginImpressionRegion throws identically", function () {
+      return Platform.Function.BeginImpressionRegion("control-region");
+  });
+
+  /* 4. AMPscript close via TreatAsContent works as the pairing workaround. */
+  assertNoThrow("workaround TreatAsContent end does not throw", function () {
+      return Platform.Function.TreatAsContent('%%[EndImpressionRegion()]%%');
+  });
+  var tac = Platform.Function.TreatAsContent('%%[EndImpressionRegion()]%%');
+  assert("workaround TreatAsContent end has no output", "" + tac, "");
+  assert("typeof the TreatAsContent result is string", typeOf(function () { return typeof tac; }), "string");
+  </script>
+
+returns-undefined: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs-from-docs claim: the official Salesforce documentation types the
+   * return of EndImpressionRegion as VOID. At runtime the bare-name Core
+   * alias returns undefined (typeof "undefined"), whereas the qualified
+   * Platform.Function form returns a genuine null (typeof "object", === null).
+   *
+   * Official docs: EndImpressionRegion([closeAll]) returns void
+   * SFMC runtime:  bare alias → undefined; Platform.Function → null
+   *
+   * Proves every part of the callout:
+   *   1. DEV the bare-alias 0-arg return is typeof "undefined" (docs: void —
+   *      which would also surface as undefined in JS, but the page documents
+   *      the concrete undefined vs the Platform.Function null contrast).
+   *   2. DEV the bare-alias return is strictly === undefined.
+   *   3. DEV the bare-alias return is NOT === null — distinguishing it from
+   *      the Platform.Function form.
+   *   4. DEV the closeAll form of the bare alias also returns undefined.
+   *   5. CONTRAST: Platform.Function.EndImpressionRegion() returns typeof
+   *      "object", === null, and is NOT === undefined — so the two forms
+   *      disagree with each other (and both disagree with a pure void story
+   *      once the Platform.Function null is considered).
+   *
+   * SCOPE: all of the above was observed on a plain CloudPage GET. No
+   * assertion here speaks to what happens during a real email send.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+
+  /* 1-3. DEV the bare-alias 0-arg call returns undefined, not null. */
+  var b = EndImpressionRegion();
+  assert("DEV bare-alias returns typeof undefined (docs: void)", typeOf(function () { return typeof b; }), "undefined");
+  assert("DEV bare-alias returns === undefined (docs: void)", b === undefined ? "true" : "false", "true");
+  assert("DEV bare-alias is NOT === null (contrast Platform.Function)", b === null ? "true" : "false", "false");
+
+  /* 4. The closeAll form of the bare alias returns undefined too. */
+  var bc = EndImpressionRegion(true);
+  assert("DEV bare closeAll form returns typeof undefined", typeOf(function () { return typeof bc; }), "undefined");
+  assert("DEV bare closeAll form returns === undefined", bc === undefined ? "true" : "false", "true");
+  assert("DEV bare closeAll form is NOT === null", bc === null ? "true" : "false", "false");
+
+  /* 5. CONTRAST — the Platform.Function form returns a genuine null. */
+  var p = Platform.Function.EndImpressionRegion();
+  assert("DEV Platform.Function form returns typeof object (docs: void)", typeOf(function () { return typeof p; }), "object");
+  assert("DEV Platform.Function form returns === null (docs: void)", p === null ? "true" : "false", "true");
+  assert("DEV Platform.Function form is NOT === undefined", p === undefined ? "true" : "false", "false");
+  var pc = Platform.Function.EndImpressionRegion(true);
+  assert("DEV Platform.Function closeAll returns === null", pc === null ? "true" : "false", "true");
+  </script>
+
+example: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Example
+   *
+   * Proves the page example line by line:
+   *   1. The example's Platform.Load("core", "1.1.5") is what makes the bare
+   *      name resolvable — typeof is "function" afterwards.
+   *   2. The example call EndImpressionRegion() returns undefined, matching
+   *      the example's own comment.
+   *   3. DEV contrast asserted by the comment: the Platform.Function form
+   *      returns null for the same call shape (docs type both as void).
+   *
+   * SCOPE: CloudPage GET only — no email/send-context behaviour is asserted.
+   *
+   * NOT ASSERTED: whether an impression is actually recorded in tracking.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ("" + ex.message); }
+  }
+
+  /* 1. The Core load from the example makes the bare name usable. */
+  assert("the example's Core load made the bare name a function", typeOf(function () { return typeof EndImpressionRegion; }), "function");
+
+  /* 2. The example call returns undefined. */
+  var r = EndImpressionRegion();
+  assert("example EndImpressionRegion() returns typeof undefined", typeOf(function () { return typeof r; }), "undefined");
+  assert("example EndImpressionRegion() returns === undefined", r === undefined ? "true" : "false", "true");
+  assert("example EndImpressionRegion() is NOT === null", r === null ? "true" : "false", "false");
+
+  /* 3. DEV the comment's contrast with Platform.Function is accurate. */
+  var p = Platform.Function.EndImpressionRegion();
+  assert("DEV contrast: Platform.Function form returns === null", p === null ? "true" : "false", "true");
+  assert("DEV contrast: Platform.Function form returns typeof object", typeOf(function () { return typeof p; }), "object");
+  </script>

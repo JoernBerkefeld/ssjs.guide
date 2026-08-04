@@ -1,0 +1,352 @@
+# Test scripts for /core-library/filterdefinition/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and the documented deviation from the official Salesforce docs.
+#
+# FIXTURES: reads and write-failure probes use the owned filter
+# `jb-filterdefinition` (CustomerKey = Name; source DE `SSJSGUIDE_TYPES`).
+# Core Add does not create rows in this CloudPage context, so Add probes
+# do not leave orphans. Orphan re-count via WSProxy like `ssjs-guide-ts-fd%`
+# is asserted at the end of the Add chapter.
+# Init also binds a throwaway key `ssjs-guide-ts-fd-init` (no fetch).
+#
+# NON-ASSERTABLE:
+#   - Creating a filter outside Core (mcdev dataFilter / SOAP InvokeCreate
+#     success) is an operational workaround, not a Core Library claim on this
+#     page. Scripts only assert Core behaviour.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# NORMALIZATION RULE: assert() compares with a plain === and does NOT coerce.
+# Engine-returned values are normalized at the call site with "" + value —
+# never with String(value), which yields a CLR string that fails === and
+# aborts the page when a string method is called on it.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage GET on the QA business unit. Re-run them before changing any
+# claim on the page.
+
+init: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: FilterDefinition.Init(key)
+   *
+   * CloudPage GET context. Proves:
+   *   1. FilterDefinition requires the Core load and is then an object
+   *      exposing the documented statics Init, Add and Retrieve.
+   *   2. There is no static Update / Remove — those are instance methods.
+   *   3. Init(key) returns a FilterDefinitionInstance whose only members are
+   *      Update and Remove (both typeof "function").
+   *   4. The instance carries no readable definition fields (CustomerKey /
+   *      Name read back undefined) — Init binds a key, it does not fetch.
+   *   5. A nonsense key yields an indistinguishable stub.
+   *   6. The page example Init("myFilterDef") returns without throwing.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW"; }
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  assert("typeof FilterDefinition is object", typeOf(function () { return typeof FilterDefinition; }), "object");
+  assert("typeof FilterDefinition.Init is function", typeOf(function () { return typeof FilterDefinition.Init; }), "function");
+  assert("typeof FilterDefinition.Add is function", typeOf(function () { return typeof FilterDefinition.Add; }), "function");
+  assert("typeof FilterDefinition.Retrieve is function", typeOf(function () { return typeof FilterDefinition.Retrieve; }), "function");
+  assert("FilterDefinition.Update is not a static", typeOf(function () { return typeof FilterDefinition.Update; }), "undefined");
+  assert("FilterDefinition.Remove is not a static", typeOf(function () { return typeof FilterDefinition.Remove; }), "undefined");
+
+  var fd = FilterDefinition.Init("ssjs-guide-ts-fd-init");
+  assert("typeof FilterDefinition.Init(key) is object", typeof fd, "object");
+  assert("typeof instance.Update is function", typeof fd.Update, "function");
+  assert("typeof instance.Remove is function", typeof fd.Remove, "function");
+  assert("instance has no Add", typeof fd.Add, "undefined");
+  assert("instance has no Retrieve", typeof fd.Retrieve, "undefined");
+  assert("instance exposes exactly Remove + Update", "" + Stringify(fd), '{"Remove":"function","Update":"function"}');
+  assert("instance.CustomerKey is undefined (Init does not fetch)", typeof fd.CustomerKey, "undefined");
+  assert("instance.Name is undefined (Init does not fetch)", typeof fd.Name, "undefined");
+
+  var bogus = FilterDefinition.Init("ssjs-guide-no-such-fd-zzz");
+  assert("Init(nonsense key) still returns an object", typeof bogus, "object");
+  assert("Init(nonsense key) stub is indistinguishable", ("" + Stringify(bogus)) === ("" + Stringify(fd)) ? "true" : "false", "true");
+  assert("page example: Init('myFilterDef') returns", invocationResult(function () { return FilterDefinition.Init("myFilterDef"); }), "returned");
+  </script>
+
+add: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: FilterDefinition.Add(properties)
+   *
+   * CloudPage GET context. Proves:
+   *   1. FilterDefinition.Add is a function (static).
+   *   2. DEV: the documented simple-filter payload returns the string
+   *      "Error" (docs: "OK") and does NOT create a row.
+   *   3. DEV: a LeftOperand/LogicalOperator/RightOperand complex Filter
+   *      also returns "Error" (does not throw).
+   *   4. DEV: using a DataFilter property instead of Filter throws the raw
+   *      string "Error adding FilterDefinition".
+   *   5. Add is static — the Init instance has no Add member.
+   *   6. Orphan re-count for ssjs-guide-ts-fd% stays 0 after the probes.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+  function catchKind(fn) {
+      try { fn(); return "did-not-throw"; }
+      catch (ex) {
+          var t = typeof ex;
+          var s = (t === "string") ? ("" + ex) : ("" + (ex && ex.message));
+          return t + "|" + s;
+      }
+  }
+  function countByKey(key) {
+      var rows = FilterDefinition.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+      return rows && rows.length ? rows.length : 0;
+  }
+
+  var KEY = "ssjs-guide-ts-fd-add";
+  assert("typeof FilterDefinition.Add is function", typeof FilterDefinition.Add, "function");
+  assert("Init instance has no Add (Add is static)", typeof FilterDefinition.Init(KEY).Add, "undefined");
+
+  var status = null;
+  assert("DEV simple-filter Add does not throw (docs: may throw on failure)", invocationResult(function () {
+      status = FilterDefinition.Add({
+          Name: "SSJS Guide TS FD Add",
+          CustomerKey: KEY,
+          Filter: { Property: "Pk", SimpleOperator: "equals", Value: "test" },
+          DataSource: { Type: "DataExtension", CustomerKey: "SSJSGUIDE_TYPES" }
+      });
+  }), "returned");
+  assert("DEV simple-filter Add returns \"Error\" (docs: \"OK\")", "" + status, "Error");
+  assert("DEV simple-filter Add result typeof is string", typeof status, "string");
+  assert("DEV simple-filter Add creates no row (docs: creates definition)", "" + countByKey(KEY), "0");
+
+  var complexStatus = null;
+  assert("DEV complex Filter Add does not throw", invocationResult(function () {
+      complexStatus = FilterDefinition.Add({
+          Name: "SSJS Guide TS FD Complex",
+          CustomerKey: "ssjs-guide-ts-fd-complex",
+          Filter: {
+              LeftOperand: { Property: "Pk", SimpleOperator: "equals", Value: "a" },
+              LogicalOperator: "AND",
+              RightOperand: { Property: "Txt", SimpleOperator: "equals", Value: "b" }
+          },
+          DataSource: { Type: "DataExtension", CustomerKey: "SSJSGUIDE_TYPES" }
+      });
+  }), "returned");
+  assert("DEV complex Filter Add returns \"Error\"", "" + complexStatus, "Error");
+  assert("DEV complex Filter Add creates no row", "" + countByKey("ssjs-guide-ts-fd-complex"), "0");
+
+  assert("DEV DataFilter property throws raw string", catchKind(function () {
+      FilterDefinition.Add({
+          Name: "SSJS Guide TS FD DF",
+          CustomerKey: "ssjs-guide-ts-fd-df",
+          DataFilter: { Property: "Pk", SimpleOperator: "equals", Value: "test" },
+          DataSource: { Type: "DataExtension", CustomerKey: "SSJSGUIDE_TYPES" }
+      });
+  }), "string|Error adding FilterDefinition");
+
+  var orphanLen = 0;
+  try {
+      var api = new Script.Util.WSProxy();
+      var orphans = api.retrieve("FilterDefinition", ["CustomerKey"], {
+          Property: "CustomerKey", SimpleOperator: "like", Value: "ssjs-guide-ts-fd%"
+      });
+      orphanLen = orphans.Results ? orphans.Results.length : 0;
+  } catch (exO) { orphanLen = -1; }
+  assert("orphan re-count ssjs-guide-ts-fd% is 0", "" + orphanLen, "0");
+  </script>
+
+retrieve: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: FilterDefinition.Retrieve(filter)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Retrieve is a function taking one PascalCase WSProxy-style filter.
+   *   2. On a match the result reports as [object Array], exposes .length,
+   *      and is not a JS Array (instanceof Array is false).
+   *   3. A matched row exposes readable CustomerKey / Name / ObjectID.
+   *   4. On no match the same array-like shape is returned with length 0
+   *      and Stringify "[]".
+   *   5. The documented CustomerKey filter resolves the owned fixture.
+   *   6. Retrieve by Name also finds the same fixture (CustomerKey == Name).
+   *
+   * FIXTURE: owned jb-filterdefinition (CustomerKey and Name both match).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var OWNED = "jb-filterdefinition";
+  assert("typeof FilterDefinition.Retrieve is function", typeof FilterDefinition.Retrieve, "function");
+
+  var rows = FilterDefinition.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: OWNED });
+  assert("typeof the matched result is object", typeof rows, "object");
+  assert("the matched result reports as [object Array]", Object.prototype.toString.call(rows), "[object Array]");
+  assert("the matched result exposes a numeric .length", typeof rows.length, "number");
+  assert("the matched result has exactly one row", "" + rows.length, "1");
+  assert("instanceof Array is false (engine-wide host-array quirk)", rows instanceof Array ? "true" : "false", "false");
+  assert("matched row CustomerKey equals the filter value", "" + rows[0].CustomerKey, OWNED);
+  assert("matched row Name equals the CustomerKey", "" + rows[0].Name, OWNED);
+  assert("matched row Name is a string", typeof rows[0].Name, "string");
+  assert("matched row ObjectID is a string", typeof rows[0].ObjectID, "string");
+  assert("matched row Description is a string", typeof rows[0].Description, "string");
+
+  var byName = FilterDefinition.Retrieve({ Property: "Name", SimpleOperator: "equals", Value: OWNED });
+  assert("Retrieve by Name also finds the fixture", "" + (byName && byName.length), "1");
+  assert("Name-filter row CustomerKey matches", "" + byName[0].CustomerKey, OWNED);
+
+  var empty = FilterDefinition.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: "ssjs-guide-no-such-fd-zzz" });
+  assert("empty result reports as [object Array]", Object.prototype.toString.call(empty), "[object Array]");
+  assert("empty result length is 0", "" + empty.length, "0");
+  assert("empty result Stringify is []", "" + Stringify(empty), "[]");
+  assert("workaround: guard with rows && rows.length before indexing", (rows && rows.length) ? "true" : "false", "true");
+  </script>
+
+instance-update: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <FilterDefinitionInstance>.Update(properties)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Update is an instance method (typeof "function") on Init.
+   *   2. DEV: a full Add-style payload with Filter throws the raw string
+   *      "Error updating FilterDefinition" (docs: "OK" or Error object).
+   *   3. DEV: the same payload without DataSource also throws that string.
+   *   4. DEV: a metadata-only payload returns the string "Error" (no throw).
+   *   5. DEV: the page example Update({ Description }) returns "Error".
+   *   6. Description stays empty and ObjectID is unchanged after attempts.
+   *
+   * FIXTURE: owned jb-filterdefinition (not mutated successfully).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function catchKind(fn) {
+      try { fn(); return "did-not-throw"; }
+      catch (ex) {
+          var t = typeof ex;
+          var s = (t === "string") ? ("" + ex) : ("" + (ex && ex.message));
+          return t + "|" + s;
+      }
+  }
+
+  var OWNED = "jb-filterdefinition";
+  var before = FilterDefinition.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: OWNED });
+  assert("control: owned filter is retrievable", "" + (before && before.length), "1");
+  var beforeOid = "" + before[0].ObjectID;
+  var beforeDesc = "" + before[0].Description;
+
+  var fd = FilterDefinition.Init(OWNED);
+  assert("typeof instance.Update is function", typeof fd.Update, "function");
+
+  assert("DEV full+Filter Update throws raw string (docs: \"OK\")", catchKind(function () {
+      FilterDefinition.Init(OWNED).Update({
+          Name: OWNED,
+          CustomerKey: OWNED,
+          Description: "ts-probe-should-not-stick",
+          Filter: { Property: "Pk", SimpleOperator: "equals", Value: "test" },
+          DataSource: { Type: "DataExtension", CustomerKey: "SSJSGUIDE_TYPES" }
+      });
+  }), "string|Error updating FilterDefinition");
+
+  assert("DEV Update without DataSource throws raw string", catchKind(function () {
+      FilterDefinition.Init(OWNED).Update({
+          Name: OWNED,
+          CustomerKey: OWNED,
+          Description: "ts-probe-should-not-stick",
+          Filter: { Property: "Pk", SimpleOperator: "equals", Value: "test" }
+      });
+  }), "string|Error updating FilterDefinition");
+
+  var meta = FilterDefinition.Init(OWNED).Update({
+      Name: OWNED,
+      CustomerKey: OWNED,
+      Description: "ts-probe-should-not-stick"
+  });
+  assert("DEV metadata-only Update returns \"Error\"", "" + meta, "Error");
+  assert("DEV metadata-only Update typeof is string", typeof meta, "string");
+
+  var pageEx = FilterDefinition.Init(OWNED).Update({ Description: "Updated description" });
+  assert("DEV page example Update({Description}) returns \"Error\"", "" + pageEx, "Error");
+
+  var after = FilterDefinition.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: OWNED });
+  assert("Description unchanged after Update attempts", "" + after[0].Description, beforeDesc);
+  assert("ObjectID unchanged after Update attempts", "" + after[0].ObjectID, beforeOid);
+  </script>
+
+instance-remove: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <FilterDefinitionInstance>.Remove()
+   *
+   * CloudPage GET context. Proves:
+   *   1. Remove is an instance method (typeof "function") and takes no args.
+   *   2. DEV: Remove() returns the string "Error" (docs: "OK") and does not
+   *      throw.
+   *   3. DEV: a follow-up Retrieve still finds the owned object (same
+   *      ObjectID) — the delete did not take effect.
+   *
+   * FIXTURE: owned jb-filterdefinition (must remain after the probe —
+   * Remove does not delete in this CloudPage context).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  var OWNED = "jb-filterdefinition";
+  var before = FilterDefinition.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: OWNED });
+  assert("control: owned filter is retrievable before Remove", "" + (before && before.length), "1");
+  var beforeOid = "" + before[0].ObjectID;
+
+  var myFD = FilterDefinition.Init(OWNED);
+  assert("typeof instance.Remove is function", typeof myFD.Remove, "function");
+
+  var status = null;
+  assert("DEV Remove does not throw (docs: may throw)", invocationResult(function () { status = myFD.Remove(); }), "returned");
+  assert("DEV Remove returns \"Error\" (docs: \"OK\")", "" + status, "Error");
+  assert("DEV Remove result typeof is string", typeof status, "string");
+
+  var after = FilterDefinition.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: OWNED });
+  assert("DEV after Remove the object is still retrievable", "" + (after && after.length), "1");
+  assert("DEV after Remove ObjectID is unchanged", "" + after[0].ObjectID, beforeOid);
+  </script>

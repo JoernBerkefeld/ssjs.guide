@@ -267,6 +267,51 @@ Pass a JSON string (or a number when that is intentional). Do not rely on boolea
 
 ---
 
+## HTTPHeader.SetValue Boolean Values Emit CLR `"True"` / `"False"` {#httpheader-setvalue-boolean-clr-true--false}
+
+**Severity: Low** — accepted, but conversion is unexpected
+
+[`HTTPHeader.SetValue`](/core-library/httpheader/#setvalue) accepts a boolean `value` without throwing, but the outbound response header uses CLR capitalization (`True` / `False`) rather than lowercase `true` / `false`.
+
+```javascript
+Platform.Load("core", "1.1.5");
+
+// ❌ Accepted, but the response header is "True" / "False"
+HTTPHeader.SetValue("X-Flag", true);   // outbound: X-Flag: True
+HTTPHeader.SetValue("X-Flag", false);  // outbound: X-Flag: False
+
+// ✅ Prefer an explicit string when the exact token matters
+HTTPHeader.SetValue("X-Flag", "true");
+```
+
+Prefer a string (or a number when that is intentional). Do not rely on boolean arguments when clients expect lowercase tokens.
+
+---
+
+## Write Uses CLR Stringification, Not JavaScript `toString()` {#write-clr-tostring}
+
+**Severity: Medium** — easy to mistake for `[object Object]` / lowercase booleans
+
+[`Write`](/core-library/write/) and [`Platform.Response.Write`](/platform-objects/platform-response/#write) accept non-string values without throwing, but the host stringifies them with .NET conversion — not JavaScript `toString()`. Plain objects become a CLR Dictionary type name, arrays become `System.Collections.ArrayList`, and booleans become capitalized `True` / `False`. Numbers still look like JS (`42`). The same object's own `.toString()` remains `[object Object]`.
+
+```javascript
+Platform.Load("core", "1.1.5");
+
+// ❌ Not "[object Object]" — CLR Dictionary type name
+Write({});
+
+// ❌ Emits "True" / "False", not "true" / "false"
+Write(true);
+
+// ✅ Serialize objects; pass strings when the exact token matters
+Write(Stringify({ a: 1 }));
+Write("true");
+```
+
+Use [`Stringify`](/core-library/stringify/) for objects and arrays. Prefer an explicit string when clients or parsers expect lowercase boolean tokens.
+
+---
+
 ## new on User-Defined Constructors
 
 **Severity: Low** — behavior depends on pattern
@@ -285,19 +330,25 @@ var svc = MyService(config);
 
 ---
 
-## DataExtension.Init name vs External Key
+## DataExtension.Init Requires the External Key {#dataextension-init-requires-external-key}
 
-**Severity: Low** — wrong data accessed silently
+**Severity: Medium** — Name binding looks like a success but Fields/Rows reads fail
 
-`DataExtension.Init()` (Core library) looks up the DE by **name**, while `Platform.Function.Lookup()` and friends use either name or external key depending on context. When names and external keys differ, using the wrong one returns unexpected results.
+[`DataExtension.Init(key)`](/core-library/dataextension/#init) resolves by **External Key** (`CustomerKey`), matching the official docs. Passing the **display Name** when it differs from `CustomerKey` still returns an instance stub (Init never throws), but **`Fields.Retrieve` returns an empty array**, **`Fields.Add` returns `"Error"`**, and **`Rows.Retrieve` does not see rows** — even though a `Rows.Add` on that stub can still write into the real DE. Prefer the External Key for every Core `DataExtension` call.
 
 ```javascript
-// Core library — uses Name (not External Key)
-var de = DataExtension.Init("My DE Name");
+Platform.Load("core", "1.1.5");
 
-// Platform.Function — uses External Key by default
-var val = Platform.Function.Lookup("MyDE_ExternalKey", "Field", "Key", value);
+// ❌ display Name when it differs from CustomerKey — Fields/Rows reads fail
+var broken = DataExtension.Init("My Display Name");
+broken.Fields.Retrieve(); // length 0
+
+// ✅ External Key
+var de = DataExtension.Init("MyDE_ExternalKey");
+de.Fields.Retrieve(); // real columns
 ```
+
+Note: `Platform.Function.LookupRows` looks up by **Data Extension name**, not External Key — the opposite of Core `DataExtension.Init`.
 
 ---
 
@@ -489,7 +540,7 @@ See [Reflection](/ecmascript-builtins/reflection/#reflect) and [Keyed Collection
 
 **Severity: High** — the documented way to create a triggered send definition never succeeds
 
-`TriggeredSend.Add(properties)` is officially documented and the name resolves at runtime (`typeof TriggeredSend.Add` is `"function"`), but **no working invocation was found**. Every call throws the plain string `Error adding TSD.`, and `TriggeredSend.LastMessage` afterwards is either `An error occurred when attempting to evaluate a SetObjectProperty function call.  See inner exception for details.` (whenever the payload contains a nested object such as `Email`, `List`, or `SendClassification`) or the same `Error adding TSD.` with `LastErrorCode` 17014 / 2 (flat-only payloads). A string argument or a two-argument call fails earlier with `Invalid cast from 'Char' to 'Double'.`.
+`TriggeredSend.Add(properties)` is officially documented and the name resolves at runtime (`typeof TriggeredSend.Add` is `"function"`), but **no working invocation was found**. Every call throws the plain string `Error adding TSD.`, and `TriggeredSend.LastMessage` afterwards is either `An error occurred when attempting to evaluate a SetObjectProperty function call.  See inner exception for details.` (whenever the payload contains a nested object such as `Email`, `List`, or `SendClassification`) or the same `Error adding TSD.` with `LastErrorCode` 17014 / 2 (flat-only payloads). A string argument or a two-argument call also throws `Error adding TSD.` (the `Invalid cast from 'Char' to 'Double'.` cast still appears on `<TriggeredSendInstance>.Update("x")`, not on these Add forms).
 
 Payload shapes swept without a single success: the nested SOAP shape, the documented flat shape (`EmailID`, `ListID`, `SendClassificationID`), dotted keys (`"Email.ID"`), scalar-only payloads, typed Core Library objects from `Email.Init()` / `List.Init()` / `SendClassification.Init()`, and the CLR object returned by `TriggeredSend.Retrieve` with a mutated `CustomerKey`.
 
@@ -598,4 +649,53 @@ var status = de.Fields.UpdateSendableField();
 
 // ✅ both arguments, and a real change
 var status = de.Fields.UpdateSendableField("DifferentSubKey", "Subscriber Key");
+```
+
+---
+
+## List.Subscribers.Retrieve EmailAddress Filter Returns Empty {#list-subscribers-retrieve-emailaddress-filter}
+
+**Severity: Medium** — filter looks valid but always misses
+
+[`<ListInstance>.Subscribers.Retrieve(filter)`](/core-library/list-subscribers/#instance-subscribers-retrieve) accepts a WSProxy-style filter. Filtering on `SubscriberKey` returns the membership row, but the same filter with `Property: "EmailAddress"` returns an empty array even when that email is on the list.
+
+```javascript
+Platform.Load("core", "1.1.5");
+var list = List.Init("myList");
+
+// ❌ always length 0, even when the subscriber is on the list
+var byEmail = list.Subscribers.Retrieve({
+    Property: "EmailAddress",
+    SimpleOperator: "equals",
+    Value: "person@example.com"
+});
+
+// ✅ filter on SubscriberKey
+var byKey = list.Subscribers.Retrieve({
+    Property: "SubscriberKey",
+    SimpleOperator: "equals",
+    Value: "person@example.com"
+});
+```
+
+---
+
+## List.Subscribers.Update String Form Fails When Keys Differ {#list-subscribers-update-string-vs-object}
+
+**Severity: Medium** — documented string form silently fails
+
+[`<ListInstance>.Subscribers.Update(emailAddress, status)`](/core-library/list-subscribers/#instance-subscribers-update) accepts a bare email string **or** `{ EmailAddress, SubscriberKey }`. When `SubscriberKey` differs from `EmailAddress`, the string form returns `"Error"` and leaves Status unchanged. The object form succeeds.
+
+```javascript
+Platform.Load("core", "1.1.5");
+var list = List.Init("myList");
+
+// ❌ returns "Error" when SubscriberKey != EmailAddress
+list.Subscribers.Update("person@example.com", "Unsubscribed");
+
+// ✅ pass both identifiers
+list.Subscribers.Update(
+    { EmailAddress: "person@example.com", SubscriberKey: "custom-key" },
+    "Unsubscribed"
+);
 ```

@@ -13,6 +13,7 @@ availability:
 requires_core_load: true
 verification: verified
 differs_from_docs: true
+test_scripts: complete
 syntax: "EndImpressionRegion([closeAll])"
 return_type: undefined
 min_args: 0
@@ -23,7 +24,9 @@ max_args: 1
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `closeAll` | boolean | No | When `true`, closes every nested impression region still open. |
+| `closeAll` | string \| boolean \| number | No | When `true`, closes every nested impression region still open. |
+
+{% include test-script.html bundle="core-library--endimpressionregion" chapter="parameters" %}
 
 ## Description
 
@@ -31,11 +34,15 @@ max_args: 1
 
 Once loaded, the bare name IS defined as a function and can be called without throwing. Because [`BeginImpressionRegion`](/core-library/beginimpressionregion/) is unusable from SSJS, this method has no practical effect in SSJS either — impression regions are an **AMPscript-only** feature.
 
+{% include test-script.html bundle="core-library--endimpressionregion" chapter="description" %}
+
 ## Return value
 
 The bare alias returns **`undefined`** (`typeof "undefined"`). This differs from its [`Platform.Function.EndImpressionRegion`](/platform-functions/endimpressionregion/) counterpart, which returns a genuine **`null`** (`typeof "object"`, `=== null`). The official docs type the return as void.
 
 {% include differs-from-docs.html note="The official docs type the return as void. The bare-name Core alias returns undefined (typeof \"undefined\"), whereas the Platform.Function form returns a genuine null (typeof \"object\", === null)." %}
+
+{% include test-script.html bundle="core-library--endimpressionregion" chapter="returns-undefined" label="Show test script — bare alias returns undefined, not void" %}
 
 ## Example
 
@@ -43,6 +50,8 @@ The bare alias returns **`undefined`** (`typeof "undefined"`). This differs from
 Platform.Load("core", "1.1.5");
 EndImpressionRegion(); // returns undefined (Platform.Function form returns null)
 ```
+
+{% include test-script.html bundle="core-library--endimpressionregion" chapter="example" %}
 
 ## See Also
 

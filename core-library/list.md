@@ -5,6 +5,8 @@ parent: Core Library
 parent_url: /core-library/
 description: Core library object for publication lists — create and query lists, remove a list instance, and work with list subscribers.
 verification: verified
+differs_from_docs: true
+test_scripts: complete
 requires_core_load: true
 type_mapping:
   ssjs: "List"
@@ -56,6 +58,8 @@ Platform.Load("core", "1");
 var myList = List.Init("myList");
 ```
 
+{% include test-script.html bundle="core-library--list" chapter="init" %}
+
 ---
 
 ### List.Add {#add}
@@ -88,6 +92,8 @@ var myNewList = List.Add({
     Description: "desc"
 });
 ```
+
+{% include test-script.html bundle="core-library--list" chapter="add" %}
 
 ---
 
@@ -122,6 +128,8 @@ var lists = List.Retrieve({
 });
 ```
 
+{% include test-script.html bundle="core-library--list" chapter="retrieve" %}
+
 ---
 
 ### &lt;ListInstance&gt;.Remove {#instance-remove}
@@ -136,7 +144,9 @@ Deletes the list bound to this instance (the publication list itself).
 
 #### Return value
 
-`"OK"` on success, or throws on failure.
+`"OK"` on success. A nonexistent key returns the plain string `"Error"` (does not throw).
+
+{% include differs-from-docs.html note="Runtime-verified on a CloudPage: a missing list key returns the plain string `\"Error\"` rather than throwing. Official docs claim Remove returns `\"OK\"` or throws on failure — callers must check the return value; `try`/`catch` alone is not enough." %}
 
 #### Examples
 
@@ -145,6 +155,8 @@ Platform.Load("core", "1.1.5");
 var myList = List.Init("myList");
 var status = myList.Remove();
 ```
+
+{% include test-script.html bundle="core-library--list" chapter="instance-remove" %}
 
 ---
 

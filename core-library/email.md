@@ -8,6 +8,7 @@ verification: verified
 deprecated: true
 requires_core_load: true
 differs_from_docs: true
+test_scripts: complete
 type_mapping:
   ssjs: "Email"
   soap: "Email"
@@ -62,6 +63,8 @@ Platform.Load("core", "1.1.5");
 var myEmail = Email.Init("myEmail");
 ```
 
+{% include test-script.html bundle="core-library--email" chapter="init" %}
+
 ---
 
 ### Email.Add {#add}
@@ -100,6 +103,8 @@ var newMail = {
 var myEmail = Email.Add(newMail);
 ```
 
+{% include test-script.html bundle="core-library--email" chapter="add" %}
+
 ---
 
 ### Email.Retrieve {#retrieve}
@@ -128,6 +133,8 @@ Email.Retrieve(filter)
 Platform.Load("core", "1.1.5");
 var results = Email.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: "myEmail" });
 ```
+
+{% include test-script.html bundle="core-library--email" chapter="retrieve" %}
 
 ---
 
@@ -159,6 +166,8 @@ var myEmail = Email.Init("myEmail");
 var status = myEmail.Update({ Name: "Updated Name", Subject: "Updated Email Subject" });
 ```
 
+{% include test-script.html bundle="core-library--email" chapter="instance-update" %}
+
 ---
 
 ### &lt;EmailInstance&gt;.Remove {#instance-remove}
@@ -183,13 +192,17 @@ var myEmail = Email.Init("myEmail");
 myEmail.Remove();
 ```
 
+{% include test-script.html bundle="core-library--email" chapter="instance-remove" %}
+
 ---
 
 ### &lt;EmailInstance&gt;.Validate {#instance-validate}
 
-Runs validation checks on the previously initialized classic email message. Returns a `{Task: {ValidationStatus: string, ValidationMessages: string}}` object.
+Runs validation checks on the previously initialized classic email message. Returns a `{Task: {ValidationStatus: string, ValidationMessages: object[]|null}}` object. Initialize with the email's `CustomerKey` string — `Init` with a numeric ID throws before returning a Task.
 
-{% include differs-from-docs.html note="The official docs type `Task.ValidationStatus` as a boolean, but at runtime it is a string (e.g. \"Fail\") — compare against string values, not `true`/`false`." %}
+{% include differs-from-docs.html note="The official docs type `Task.ValidationStatus` as a boolean and `Task.ValidationMessages` as a string, but at runtime `ValidationStatus` is a string (e.g. `\"Pass\"` / `\"Fail\"`) and `ValidationMessages` is `null` on Pass or an array of `{Location, Message, Description}` objects on Fail — compare the status against string values, not `true`/`false`." %}
+
+{% include test-script.html bundle="core-library--email" chapter="validation-status-is-string" label="Show test script — ValidationStatus is a string" %}
 
 #### Syntax
 
@@ -199,7 +212,7 @@ Runs validation checks on the previously initialized classic email message. Retu
 
 #### Return value
 
-`object` — with `Task.ValidationStatus` (string, e.g. `"Fail"`) and `Task.ValidationMessages` (string).
+`object` — with `Task.ValidationStatus` (string, e.g. `"Pass"` / `"Fail"`) and `Task.ValidationMessages` (`null` on Pass, or an array of `{Location, Message, Description}` on Fail).
 
 #### Examples
 
@@ -210,6 +223,8 @@ var results = myEmail.Validate();
 Write(results.Task.ValidationStatus);
 Write(results.Task.ValidationMessages);
 ```
+
+{% include test-script.html bundle="core-library--email" chapter="instance-validate" %}
 
 ---
 
@@ -236,6 +251,8 @@ var results = myEmail.CheckContent();
 Write(results.Task.CheckPassed);
 Write(results.Task.ResultMessage);
 ```
+
+{% include test-script.html bundle="core-library--email" chapter="instance-checkcontent" %}
 
 ## See Also
 

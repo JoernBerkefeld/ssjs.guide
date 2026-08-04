@@ -1,0 +1,628 @@
+# Test scripts for /core-library/triggeredsend/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and the documented deviations from the official Salesforce docs.
+#
+# FIXTURES: chapters that need a real TriggeredSendDefinition create it via
+# WSProxy createItem("TriggeredSendDefinition", ...) under unique
+# `ssjs-guide-ts-tsd-*` keys (TriggeredSend.Add is non-functional). Supporting
+# classic email + publication list use `ssjs-guide-ts-tsd-*-email/list`. Cleanup
+# uses WSProxy deleteItem + Email/List.Remove and re-counts orphans to 0.
+# Shared fixtures (ssjs-senderprofile, ssjs-deliveryprofile,
+# ssjs-sendclassification-*, ssjs_verify_tsd_email, ssjs-triggeredsend) are
+# never deleted by these scripts.
+#
+# NON-ASSERTABLE (environment — TSD email validation):
+#   Publish()/Start()/Pause()/Update() returning "OK", status transitions to
+#   Active/Inactive, Update Active → Error 17003, and Send() returning "OK" /
+#   "Created TriggeredSend" (including Inactive send + third subscriberKey)
+#   require a Triggered Send Definition whose linked classic email passes the
+#   Triggered-Send-specific validation log. On this QA BU, Email.Validate can
+#   return Pass while Publish/Start still report N validation errors (and the
+#   previously Active ssjs-triggeredsend is stuck Inactive after its email
+#   disappeared). Scripts therefore assert method shape, Add failure, Retrieve,
+#   Tracking array shape, and hard failure paths (Send() usage throw,
+#   Update("x") throw, Send on a New TSD returns "Error" without throwing).
+#   They do NOT assert the documented success tokens that need a publishable
+#   Active/Inactive definition.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# NORMALIZATION RULE: assert() compares with a plain === and does NOT coerce.
+# Engine-returned values are normalized at the call site with "" + value —
+# never with String(value), which yields a CLR string that fails === and
+# aborts the page when a string method is called on it.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage GET on the QA business unit. Re-run them before changing any
+# claim on the page.
+
+init: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: TriggeredSend.Init(key)
+   *
+   * CloudPage GET context. Proves:
+   *   1. TriggeredSend requires the Core load and exposes statics Init, Add,
+   *      and Retrieve.
+   *   2. Update / Start / Pause / Publish / Send / Tracking are instance-only
+   *      (not statics on TriggeredSend).
+   *   3. Init(key) returns a TriggeredSendInstance exposing Send, Start,
+   *      Pause, Publish, Update, Tracking (Retrieve / Clicks.Retrieve /
+   *      TotalByInterval.Retrieve), LastRequestID, and LastMessage.
+   *   4. Init binds a key; it does not fetch readable fields (CustomerKey /
+   *      Name / TriggeredSendStatus undefined on the stub).
+   *   5. A nonsense key still returns an indistinguishable stub.
+   *   6. The page example Init("support") returns without throwing.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW"; }
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  assert("typeof TriggeredSend is object", typeOf(function () { return typeof TriggeredSend; }), "object");
+  assert("typeof TriggeredSend.Init is function", typeOf(function () { return typeof TriggeredSend.Init; }), "function");
+  assert("typeof TriggeredSend.Add is function", typeOf(function () { return typeof TriggeredSend.Add; }), "function");
+  assert("typeof TriggeredSend.Retrieve is function", typeOf(function () { return typeof TriggeredSend.Retrieve; }), "function");
+  assert("TriggeredSend.Update is not a static", typeOf(function () { return typeof TriggeredSend.Update; }), "undefined");
+  assert("TriggeredSend.Start is not a static", typeOf(function () { return typeof TriggeredSend.Start; }), "undefined");
+  assert("TriggeredSend.Pause is not a static", typeOf(function () { return typeof TriggeredSend.Pause; }), "undefined");
+  assert("TriggeredSend.Publish is not a static", typeOf(function () { return typeof TriggeredSend.Publish; }), "undefined");
+  assert("TriggeredSend.Send is not a static", typeOf(function () { return typeof TriggeredSend.Send; }), "undefined");
+
+  var ts = TriggeredSend.Init("ssjs-guide-ts-tsd-init");
+  assert("typeof TriggeredSend.Init(key) is object", typeof ts, "object");
+  assert("typeof instance.Update is function", typeof ts.Update, "function");
+  assert("typeof instance.Start is function", typeof ts.Start, "function");
+  assert("typeof instance.Pause is function", typeof ts.Pause, "function");
+  assert("typeof instance.Publish is function", typeof ts.Publish, "function");
+  assert("typeof instance.Send is function", typeof ts.Send, "function");
+  assert("typeof instance.Tracking is object", typeof ts.Tracking, "object");
+  assert("typeof Tracking.Retrieve is function", typeof ts.Tracking.Retrieve, "function");
+  assert("typeof Tracking.Clicks.Retrieve is function", typeof ts.Tracking.Clicks.Retrieve, "function");
+  assert("typeof Tracking.TotalByInterval.Retrieve is function", typeof ts.Tracking.TotalByInterval.Retrieve, "function");
+  assert("instance exposes documented members", "" + Stringify(ts), '{"Send":"function","Start":"function","Pause":"function","Publish":"function","Update":"function","Tracking":{"Retrieve":"function","Clicks":{"Retrieve":"function"},"TotalByInterval":{"Retrieve":"function"}},"LastRequestID":null,"LastMessage":null}');
+  assert("instance.CustomerKey is undefined (Init does not fetch)", typeof ts.CustomerKey, "undefined");
+  assert("instance.Name is undefined (Init does not fetch)", typeof ts.Name, "undefined");
+  assert("instance.TriggeredSendStatus is undefined (Init does not fetch)", typeof ts.TriggeredSendStatus, "undefined");
+
+  var bogus = TriggeredSend.Init("ssjs-guide-no-such-tsd-zzz");
+  assert("Init(nonsense key) still returns an object", typeof bogus, "object");
+  assert("Init(nonsense key) stub matches Init(fixture key)", ("" + Stringify(bogus)) === ("" + Stringify(ts)) ? "true" : "false", "true");
+  assert("page example: Init('support') returns", invocationResult(function () { return TriggeredSend.Init("support"); }), "returned");
+  </script>
+
+add: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: TriggeredSend.Add(properties) — blocked / non-functional
+   *
+   * CloudPage GET context. Proves:
+   *   1. Add is a static function.
+   *   2. Flat scalar payload throws the string "Error adding TSD."
+   *   3. After that throw, LastMessage is "Error adding TSD." and
+   *      LastErrorCode is 2 (page table: 17014 / 2 for flat-only).
+   *   4. Nested-object payload also throws "Error adding TSD."; LastMessage
+   *      then mentions SetObjectProperty.
+   *   5. DEV: string / two-argument forms also throw "Error adding TSD."
+   *      (older note / Update("x") path: Invalid cast from 'Char' to 'Double').
+   *   6. Workaround: WSProxy createItem("TriggeredSendDefinition", ...) with
+   *      a valid payload returns Status "OK" / StatusMessage created; then
+   *      TriggeredSend.Init(key) binds the new definition. (Publish/Start of
+   *      that definition is NON-ASSERTABLE here — see bundle header.)
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function catchKind(fn) {
+      try { fn(); return "did-not-throw"; }
+      catch (ex) {
+          var t = typeof ex;
+          var s = (t === "string") ? ("" + ex) : ("" + (ex && ex.message));
+          return t + "|" + s;
+      }
+  }
+
+  var api = new Script.Util.WSProxy();
+  var EM = "ssjs-guide-ts-tsd-add-email";
+  var LI = "ssjs-guide-ts-tsd-add-list";
+  var TSD = "ssjs-guide-ts-tsd-add";
+  try { api.deleteItem("TriggeredSendDefinition", { CustomerKey: TSD }); } catch (e0) {}
+  try { Email.Init(EM).Remove(); } catch (e1) {}
+  try { List.Init(LI).Remove(); } catch (e2) {}
+
+  assert("typeof TriggeredSend.Add is function", typeof TriggeredSend.Add, "function");
+
+  assert("DEV flat Add throws string Error adding TSD. (docs: returns TriggeredSendInstance)", catchKind(function () {
+      return TriggeredSend.Add({
+          Name: "x", CustomerKey: TSD + "-flat", FromName: "n",
+          FromAddress: "a@b.com", EmailID: 1, SendClassificationID: 1
+      });
+  }), "string|Error adding TSD.");
+  assert("flat Add LastMessage is Error adding TSD.", (("" + TriggeredSend.LastMessage).indexOf("Error adding TSD.") >= 0) ? "matched" : ("" + TriggeredSend.LastMessage), "matched");
+  assert("flat Add LastErrorCode is 2", "" + TriggeredSend.LastErrorCode, "2");
+
+  assert("DEV nested Add throws string Error adding TSD. (docs: returns instance)", catchKind(function () {
+      return TriggeredSend.Add({
+          Name: "x", CustomerKey: TSD + "-nest",
+          Email: { ID: 1 }, List: { ID: 1 },
+          SendClassification: { CustomerKey: "Default Transactional" }
+      });
+  }), "string|Error adding TSD.");
+  assert("nested Add LastMessage mentions SetObjectProperty", (("" + TriggeredSend.LastMessage).indexOf("SetObjectProperty") >= 0) ? "matched" : ("" + TriggeredSend.LastMessage), "matched");
+
+  assert("DEV Add('x') throws Error adding TSD. (older note: Invalid cast Char to Double)", catchKind(function () {
+      return TriggeredSend.Add("x");
+  }), "string|Error adding TSD.");
+  assert("DEV Add(obj, 'x') throws Error adding TSD. (older note: Invalid cast Char to Double)", catchKind(function () {
+      return TriggeredSend.Add({ Name: "x" }, "x");
+  }), "string|Error adding TSD.");
+
+  Email.Add({
+      CustomerKey: EM, Name: "SSJS Guide TS TSD Add Email",
+      HTMLBody: "<b>add</b>", TextBody: "add",
+      Subject: "SSJS Guide TSD Add", EmailType: "HTML", CharacterSet: "US-ASCII"
+  });
+  List.Add({ CustomerKey: LI, Name: "SSJS Guide TS TSD Add List", Type: "Public" });
+  var emailId = Email.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: EM })[0].ID;
+  var listId = List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: LI })[0].ID;
+
+  var createRes = api.createItem("TriggeredSendDefinition", {
+      CustomerKey: TSD,
+      Name: "SSJS Guide TS TSD Add",
+      Description: "workaround fixture",
+      Email: { ID: emailId },
+      List: { ID: listId },
+      SendClassification: { CustomerKey: "ssjs-sendclassification-transactiona" },
+      TriggeredSendType: "Continuous",
+      AutoAddSubscribers: true,
+      AutoUpdateSubscribers: false,
+      BatchInterval: 0,
+      IsMultipart: false,
+      IsWrapped: true,
+      FromName: "SSJS Probe",
+      FromAddress: "joern.berkefeld@accenture.com",
+      EmailSubject: "SSJS Guide TSD Add"
+  });
+  assert("workaround WSProxy createItem Status is OK", "" + createRes.Status, "OK");
+  assert("workaround StatusMessage is TriggeredSendDefinition created", "" + createRes.Results[0].StatusMessage, "TriggeredSendDefinition created");
+  assert("workaround Init binds the new key", typeof TriggeredSend.Init(TSD).Send, "function");
+  assert("workaround Retrieve finds the new record", "" + TriggeredSend.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: TSD }).length, "1");
+
+  api.deleteItem("TriggeredSendDefinition", { CustomerKey: TSD });
+  assert("TSD orphan count 0", "" + TriggeredSend.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: TSD }).length, "0");
+  assert("fixture email removed", "" + Email.Init(EM).Remove(), "OK");
+  assert("fixture list removed", "" + List.Init(LI).Remove(), "OK");
+  assert("email orphan count 0", "" + Email.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: EM }).length, "0");
+  assert("list orphan count 0", "" + List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: LI }).length, "0");
+  </script>
+
+retrieve: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: TriggeredSend.Retrieve(filter)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Retrieve is a function taking one PascalCase WSProxy-style filter.
+   *   2. Matched / empty results report as [object Array] with .length;
+   *      instanceof Array is false (engine-wide host-array quirk).
+   *   3. A matched row exposes readable CustomerKey and TriggeredSendStatus.
+   *
+   * FIXTURE: WSProxy-created New TSD under ssjs-guide-ts-tsd-ret*.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var api = new Script.Util.WSProxy();
+  var EM = "ssjs-guide-ts-tsd-ret-email";
+  var LI = "ssjs-guide-ts-tsd-ret-list";
+  var TSD = "ssjs-guide-ts-tsd-ret";
+  try { api.deleteItem("TriggeredSendDefinition", { CustomerKey: TSD }); } catch (e0) {}
+  try { Email.Init(EM).Remove(); } catch (e1) {}
+  try { List.Init(LI).Remove(); } catch (e2) {}
+
+  Email.Add({
+      CustomerKey: EM, Name: "SSJS Guide TS TSD Ret Email",
+      HTMLBody: "<b>ret</b>", TextBody: "ret",
+      Subject: "SSJS Guide TSD Ret", EmailType: "HTML", CharacterSet: "US-ASCII"
+  });
+  List.Add({ CustomerKey: LI, Name: "SSJS Guide TS TSD Ret List", Type: "Public" });
+  var emailId = Email.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: EM })[0].ID;
+  var listId = List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: LI })[0].ID;
+  api.createItem("TriggeredSendDefinition", {
+      CustomerKey: TSD, Name: "SSJS Guide TS TSD Ret",
+      Email: { ID: emailId }, List: { ID: listId },
+      SendClassification: { CustomerKey: "ssjs-sendclassification-transactiona" },
+      TriggeredSendType: "Continuous", AutoAddSubscribers: true, IsWrapped: true,
+      FromName: "SSJS Probe", FromAddress: "joern.berkefeld@accenture.com",
+      EmailSubject: "SSJS Guide TSD Ret"
+  });
+
+  assert("typeof TriggeredSend.Retrieve is function", typeof TriggeredSend.Retrieve, "function");
+  var rows = TriggeredSend.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: TSD });
+  assert("matched Retrieve reports as [object Array]", Object.prototype.toString.call(rows), "[object Array]");
+  assert("matched Retrieve instanceof Array is false", rows instanceof Array ? "true" : "false", "false");
+  assert("matched Retrieve length is 1", "" + rows.length, "1");
+  assert("matched CustomerKey", "" + rows[0].CustomerKey, TSD);
+  assert("matched TriggeredSendStatus is New", "" + rows[0].TriggeredSendStatus, "New");
+
+  var empty = TriggeredSend.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: "ssjs-guide-no-such-tsd-zzz" });
+  assert("empty Retrieve reports as [object Array]", Object.prototype.toString.call(empty), "[object Array]");
+  assert("empty Retrieve length is 0", "" + empty.length, "0");
+  assert("empty Retrieve Stringify is []", "" + Stringify(empty), "[]");
+
+  api.deleteItem("TriggeredSendDefinition", { CustomerKey: TSD });
+  assert("TSD orphan count 0", "" + TriggeredSend.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: TSD }).length, "0");
+  Email.Init(EM).Remove();
+  List.Init(LI).Remove();
+  assert("email orphan count 0", "" + Email.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: EM }).length, "0");
+  assert("list orphan count 0", "" + List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: LI }).length, "0");
+  </script>
+
+instance-update: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <TriggeredSendInstance>.Update([properties])
+   *
+   * CloudPage GET context. Proves:
+   *   1. Update is an instance method.
+   *   2. Update("x") throws string "Error Updating TSD." with LastMessage
+   *      Invalid cast from 'Char' to 'Double'.
+   *
+   * NON-ASSERTABLE: Update({...}) / Update() returning "OK" on Inactive, and
+   * Active → "Error" / LastErrorCode 17003 — need a publishable TSD (bundle
+   * header). Differs callouts for optional properties + Active reject are
+   * likewise blocked in this environment.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function catchKind(fn) {
+      try { fn(); return "did-not-throw"; }
+      catch (ex) {
+          var t = typeof ex;
+          var s = (t === "string") ? ("" + ex) : ("" + (ex && ex.message));
+          return t + "|" + s;
+      }
+  }
+
+  var ts = TriggeredSend.Init("ssjs-guide-ts-tsd-update");
+  assert("typeof instance.Update is function", typeof ts.Update, "function");
+  assert("Update('x') throws Error Updating TSD.", catchKind(function () { return ts.Update("x"); }), "string|Error Updating TSD.");
+  assert("Update('x') LastMessage is Invalid cast from Char to Double", "" + ts.LastMessage, "Invalid cast from 'Char' to 'Double'.");
+  </script>
+
+instance-start: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <TriggeredSendInstance>.Start()
+   *
+   * CloudPage GET context. Proves:
+   *   1. Start is an instance method.
+   *
+   * NON-ASSERTABLE: Start() / Start("x") returning "OK" and moving
+   * TriggeredSendStatus to Active — needs a publishable TSD (bundle header).
+   * Differs surplus-args callout blocked for the same reason.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var ts = TriggeredSend.Init("ssjs-guide-ts-tsd-start");
+  assert("typeof instance.Start is function", typeof ts.Start, "function");
+  </script>
+
+instance-pause: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <TriggeredSendInstance>.Pause()
+   *
+   * CloudPage GET context. Proves:
+   *   1. Pause is an instance method.
+   *
+   * NON-ASSERTABLE: Pause() / Pause("x") returning "OK" and read-back status
+   * "Inactive" (not "Paused") — needs a publishable Active TSD (bundle header).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var ts = TriggeredSend.Init("ssjs-guide-ts-tsd-pause");
+  assert("typeof instance.Pause is function", typeof ts.Pause, "function");
+  </script>
+
+instance-publish: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <TriggeredSendInstance>.Publish()
+   *
+   * CloudPage GET context. Proves:
+   *   1. Publish is an instance method.
+   *
+   * NON-ASSERTABLE: Publish() / Publish("x") returning "OK" while status stays
+   * "New" until Start() — needs a TSD whose email passes Triggered-Send
+   * validation (bundle header).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var ts = TriggeredSend.Init("ssjs-guide-ts-tsd-publish");
+  assert("typeof instance.Publish is function", typeof ts.Publish, "function");
+  </script>
+
+instance-send: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <TriggeredSendInstance>.Send(emailAddress, [attrs], [subscriberKey])
+   *
+   * CloudPage GET context. Proves:
+   *   1. Send is an instance method.
+   *   2. Send() with no arguments throws Usage: Send(EmailAddress [, sendTimeAttributes]).
+   *   3. DEV vs Active-path docs: on a New (not publishable) definition,
+   *      Send("not-an-address") returns the string "Error" and does NOT throw
+   *      (differs: failures are status strings). LastMessage mentions new /
+   *      not completely configured rather than the Active-path
+   *      "no valid subscribers" text — that Active invalid-address message,
+   *      plus Send OK / Inactive OK / third subscriberKey, are NON-ASSERTABLE
+   *      without a publishable TSD (bundle header). No real inbox send is
+   *      performed.
+   *
+   * FIXTURE: WSProxy New TSD ssjs-guide-ts-tsd-send*.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function catchKind(fn) {
+      try { fn(); return "did-not-throw"; }
+      catch (ex) {
+          var t = typeof ex;
+          var s = (t === "string") ? ("" + ex) : ("" + (ex && ex.message));
+          return t + "|" + s;
+      }
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  var api = new Script.Util.WSProxy();
+  var EM = "ssjs-guide-ts-tsd-send-email";
+  var LI = "ssjs-guide-ts-tsd-send-list";
+  var TSD = "ssjs-guide-ts-tsd-send";
+  try { api.deleteItem("TriggeredSendDefinition", { CustomerKey: TSD }); } catch (e0) {}
+  try { Email.Init(EM).Remove(); } catch (e1) {}
+  try { List.Init(LI).Remove(); } catch (e2) {}
+
+  Email.Add({
+      CustomerKey: EM, Name: "SSJS Guide TS TSD Send Email",
+      HTMLBody: "<b>send</b>", TextBody: "send",
+      Subject: "SSJS Guide TSD Send", EmailType: "HTML", CharacterSet: "US-ASCII"
+  });
+  List.Add({ CustomerKey: LI, Name: "SSJS Guide TS TSD Send List", Type: "Public" });
+  var emailId = Email.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: EM })[0].ID;
+  var listId = List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: LI })[0].ID;
+  api.createItem("TriggeredSendDefinition", {
+      CustomerKey: TSD, Name: "SSJS Guide TS TSD Send",
+      Email: { ID: emailId }, List: { ID: listId },
+      SendClassification: { CustomerKey: "ssjs-sendclassification-transactiona" },
+      TriggeredSendType: "Continuous", AutoAddSubscribers: true, IsWrapped: true,
+      FromName: "SSJS Probe", FromAddress: "joern.berkefeld@accenture.com",
+      EmailSubject: "SSJS Guide TSD Send"
+  });
+
+  var ts = TriggeredSend.Init(TSD);
+  assert("typeof instance.Send is function", typeof ts.Send, "function");
+  assert("Send() with no args throws usage string", catchKind(function () { return ts.Send(); }), "string|Usage: Send(EmailAddress [, sendTimeAttributes])");
+
+  var bad = null;
+  assert("DEV Send(invalid) on New returns without throwing (docs: error / Active path)", invocationResult(function () {
+      bad = ts.Send("not-an-address");
+  }), "returned");
+  assert("DEV Send(invalid) on New returns string Error (docs: may throw)", "" + bad, "Error");
+  assert("DEV New-status LastMessage mentions not completely configured (Active path: no valid subscribers)", (("" + ts.LastMessage).indexOf("not completely configured") >= 0 || ("" + ts.LastMessage).indexOf("new status") >= 0) ? "matched" : ("" + ts.LastMessage), "matched");
+
+  api.deleteItem("TriggeredSendDefinition", { CustomerKey: TSD });
+  assert("TSD orphan count 0", "" + TriggeredSend.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: TSD }).length, "0");
+  Email.Init(EM).Remove();
+  List.Init(LI).Remove();
+  assert("email orphan count 0", "" + Email.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: EM }).length, "0");
+  assert("list orphan count 0", "" + List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: LI }).length, "0");
+  </script>
+
+send-returns-error-string: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Differs: invalid Send returns "Error" instead of throwing.
+   * On a New TSD (publishable Active path NON-ASSERTABLE), Send(invalid)
+   * still returns "Error" without throwing — that is the differs claim.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  var api = new Script.Util.WSProxy();
+  var EM = "ssjs-guide-ts-tsd-senderr-email";
+  var LI = "ssjs-guide-ts-tsd-senderr-list";
+  var TSD = "ssjs-guide-ts-tsd-senderr";
+  try { api.deleteItem("TriggeredSendDefinition", { CustomerKey: TSD }); } catch (e0) {}
+  try { Email.Init(EM).Remove(); } catch (e1) {}
+  try { List.Init(LI).Remove(); } catch (e2) {}
+  Email.Add({
+      CustomerKey: EM, Name: "SSJS Guide TS TSD SendErr Email",
+      HTMLBody: "<b>e</b>", TextBody: "e", Subject: "e", EmailType: "HTML", CharacterSet: "US-ASCII"
+  });
+  List.Add({ CustomerKey: LI, Name: "SSJS Guide TS TSD SendErr List", Type: "Public" });
+  var emailId = Email.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: EM })[0].ID;
+  var listId = List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: LI })[0].ID;
+  api.createItem("TriggeredSendDefinition", {
+      CustomerKey: TSD, Name: "SSJS Guide TS TSD SendErr",
+      Email: { ID: emailId }, List: { ID: listId },
+      SendClassification: { CustomerKey: "ssjs-sendclassification-transactiona" },
+      TriggeredSendType: "Continuous", AutoAddSubscribers: true, IsWrapped: true,
+      FromName: "SSJS Probe", FromAddress: "joern.berkefeld@accenture.com",
+      EmailSubject: "e"
+  });
+  var ts = TriggeredSend.Init(TSD);
+  var status = null;
+  assert("DEV invalid Send does NOT throw (docs: errors)", invocationResult(function () { status = ts.Send("not-an-address"); }), "returned");
+  assert("DEV invalid Send returns \"Error\" (docs: throw/error)", "" + status, "Error");
+  api.deleteItem("TriggeredSendDefinition", { CustomerKey: TSD });
+  Email.Init(EM).Remove();
+  List.Init(LI).Remove();
+  </script>
+
+instance-tracking-retrieve: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <TriggeredSendInstance>.Tracking.Retrieve([filter])
+   *
+   * CloudPage GET context. Proves:
+   *   1. Tracking.Retrieve is an instance function (optional filter).
+   *   2. No-arg and empty-filter calls return [object Array].
+   *
+   * NON-ASSERTABLE: non-empty tracking row field shape after a real send.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var ts = TriggeredSend.Init("ssjs-triggeredsend");
+  assert("typeof Tracking.Retrieve is function", typeof ts.Tracking.Retrieve, "function");
+  var rows = ts.Tracking.Retrieve();
+  assert("Tracking.Retrieve() reports as [object Array]", Object.prototype.toString.call(rows), "[object Array]");
+  assert("Tracking.Retrieve() length >= 0", (rows && rows.length >= 0) ? "true" : "false", "true");
+  var filtered = ts.Tracking.Retrieve({ Property: "SendID", SimpleOperator: "equals", Value: 999999991 });
+  assert("filtered Tracking.Retrieve reports as [object Array]", Object.prototype.toString.call(filtered), "[object Array]");
+  assert("filtered empty length is 0", "" + filtered.length, "0");
+  </script>
+
+instance-tracking-clicks-retrieve: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <TriggeredSendInstance>.Tracking.Clicks.Retrieve(filter)
+   *
+   * CloudPage GET context. Proves:
+   *   1. Tracking.Clicks.Retrieve is a function requiring a filter.
+   *   2. Empty match returns [object Array] length 0 (page example shape).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var ts = TriggeredSend.Init("ssjs-triggeredsend");
+  assert("typeof Tracking.Clicks.Retrieve is function", typeof ts.Tracking.Clicks.Retrieve, "function");
+  var rows = ts.Tracking.Clicks.Retrieve({ Property: "SendUrlID", SimpleOperator: "equals", Value: 999999991 });
+  assert("empty Clicks.Retrieve reports as [object Array]", Object.prototype.toString.call(rows), "[object Array]");
+  assert("empty Clicks.Retrieve length is 0", "" + rows.length, "0");
+  </script>
+
+instance-tracking-totalbyinterval-retrieve: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: <TriggeredSendInstance>.Tracking.TotalByInterval.Retrieve(...)
+   *
+   * CloudPage GET context. Proves:
+   *   1. TotalByInterval.Retrieve is a function.
+   *   2. Page example shape (type/start/end/groupBy strings) returns
+   *      [object Array] with length > 0 for a wide historical window.
+   *   3. startDate/endDate also accept Date values (same length as the
+   *      string-date call for an identical window) — type-acceptance.
+   *   4. groupBy "hour" is accepted.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  var ts = TriggeredSend.Init("ssjs-triggeredsend");
+  assert("typeof TotalByInterval.Retrieve is function", typeof ts.Tracking.TotalByInterval.Retrieve, "function");
+
+  var byString = null;
+  assert("string dates do not throw", invocationResult(function () {
+      byString = ts.Tracking.TotalByInterval.Retrieve("Click", "07-01-2010", "07-31-2010", "day");
+  }), "returned");
+  assert("string dates result reports as [object Array]", Object.prototype.toString.call(byString), "[object Array]");
+  assert("string dates result length > 0", (byString && byString.length > 0) ? "true" : "false", "true");
+
+  var byDate = null;
+  assert("Date dates do not throw", invocationResult(function () {
+      byDate = ts.Tracking.TotalByInterval.Retrieve("Click", new Date(2010, 6, 1), new Date(2010, 6, 31), "day");
+  }), "returned");
+  assert("Date dates result reports as [object Array]", Object.prototype.toString.call(byDate), "[object Array]");
+  assert("Date dates length matches string dates", "" + byDate.length, "" + byString.length);
+
+  var byHour = ts.Tracking.TotalByInterval.Retrieve("Open", "07-01-2010", "07-31-2010", "hour");
+  assert("groupBy hour returns [object Array]", Object.prototype.toString.call(byHour), "[object Array]");
+  assert("groupBy hour length > 0", (byHour && byHour.length > 0) ? "true" : "false", "true");
+  </script>

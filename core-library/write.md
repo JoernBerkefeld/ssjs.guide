@@ -15,6 +15,7 @@ availability:
 requires_core_load: true
 verification: verified
 differs_from_docs: false
+test_scripts: complete
 syntax: "Write(content)"
 return_type: void
 min_args: 1
@@ -27,6 +28,8 @@ max_args: 1
 |------|------|----------|-------------|
 | `content` | string | Yes | The string to output to the page. |
 
+{% include test-script.html bundle="core-library--write" chapter="parameters" %}
+
 ## Description
 
 `Write()` appends the given string to the page output at the position of the `<script runat="server">` block. It does not add a newline — concatenate `"\n"` or `"<br>"` manually if needed.
@@ -34,6 +37,8 @@ max_args: 1
 The output is written into the final rendered HTML document. In email contexts, it is written into the email body. In Automation Studio, output is written to the activity log.
 
 Requires `Platform.Load("core", "1.1.5")` before use. If you need output from a script that does not load Core, use [`Platform.Response.Write()`](/platform-objects/platform-response/#write) instead.
+
+{% include test-script.html bundle="core-library--write" chapter="description" %}
 
 ## Examples
 
@@ -87,12 +92,18 @@ if (debug) {
 }
 ```
 
+{% include test-script.html bundle="core-library--write" chapter="examples" %}
+
 ## Common Mistakes
 
-**Forgetting to convert to string:** `Write` expects a string. Non-string values are automatically coerced via `toString()`, but complex objects will output `[object Object]`. Use `Stringify()` for objects:
+**Passing objects or arrays directly:** Non-string values are stringified by the host, not by JavaScript `toString()`. Plain objects become a CLR Dictionary type name, arrays become `System.Collections.ArrayList`, and booleans become capitalized `True` / `False`. Numbers stringify as expected (`42`). Use `Stringify()` for objects:
+
+{% include callout.html type="bug" content="`Write(myObject)` does **not** emit `[object Object]`. Objects and arrays render as CLR type names, and booleans render as `True` / `False`. See [Known Bugs](/engine-limitations/known-bugs/#write-clr-tostring)." %}
+
+{% include test-script.html bundle="core-library--write" chapter="clr-coercion" label="Show test script — CLR stringification" %}
 
 ```javascript
-// ❌ Outputs "[object Object]"
+// ❌ Emits a CLR type name, not useful JSON
 Write(myObject);
 
 // ✅ Serialize first
@@ -112,6 +123,8 @@ function escapeHtml(str) {
 
 Write("<p>" + escapeHtml(userInput) + "</p>");
 ```
+
+{% include test-script.html bundle="core-library--write" chapter="common-mistakes" %}
 
 ## See Also
 

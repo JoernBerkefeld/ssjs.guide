@@ -1,0 +1,211 @@
+# Test scripts for /core-library/guid/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every structural invariant of the returned value.
+#
+# NON-DETERMINISM: GUID() returns a NEW value on every call, so no script
+# asserts a literal GUID. Every assertion is a structural invariant
+# (type, length, hyphen positions, character class, case, uniqueness).
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# CLR STRING RULE: engine-returned values and caught .message values are
+# normalized with `"" + value`, never with String(value).
+
+description: |
+  <script runat="server">
+  /*
+   * Chapter: Description — bare-name Core form of Platform.Function.GUID.
+   *
+   * Proves:
+   *   1. Before Platform.Load the bare name GUID is undefined; invoking it
+   *      throws. typeof is resolved inside a thunk so an unbound global
+   *      cannot abort the page.
+   *   2. After Platform.Load("core", "1.1.5") GUID is a function and a
+   *      successful 0-argument call is the existence proof.
+   *   3. The result is a lowercase canonical UUID v4 string of 36 characters
+   *      with the 8-4-4-4-12 hyphen shape.
+   *   4. Same return shape as Platform.Function.GUID(): typeof string, length
+   *      36, hyphen shape, v4 nibble; successive bare vs qualified calls never
+   *      collide.
+   *   5. DEV: surplus arguments are silently IGNORED on the bare form (still
+   *      returns a valid UUID). Platform.Function.GUID throws on any argument.
+   *      Documented contract remains max_args 0.
+   *   6. Successive bare-name calls return different values (20-call sweep).
+   *
+   * SCOPE: CloudPage GET only.
+   *
+   * NOT ASSERTED: actual global uniqueness across tenants and time, and the
+   * RFC 4122 variant bits — neither is deterministically observable from a
+   * single request. NON-ASSERTABLE.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+
+  assert("before load typeof GUID is undefined", typeOfThunk(function () { return typeof GUID; }), "undefined");
+  assertThrows("before load GUID() throws", function () { return GUID(); });
+
+  Platform.Load("core", "1.1.5");
+  assert("after load typeof GUID is function", typeOfThunk(function () { return typeof GUID; }), "function");
+
+  var id = GUID();
+  assert("typeof GUID() is string", "" + (typeof id), "string");
+  assert("the value is 36 characters long", "" + id.length, "36");
+  assert("a hyphen sits at index 8", id.charAt(8), "-");
+  assert("a hyphen sits at index 13", id.charAt(13), "-");
+  assert("a hyphen sits at index 18", id.charAt(18), "-");
+  assert("a hyphen sits at index 23", id.charAt(23), "-");
+  var groups = id.split("-");
+  assert("splitting on '-' yields 5 groups", "" + groups.length, "5");
+  assert("group 1 is 8 characters", "" + groups[0].length, "8");
+  assert("group 2 is 4 characters", "" + groups[1].length, "4");
+  assert("group 3 is 4 characters", "" + groups[2].length, "4");
+  assert("group 4 is 4 characters", "" + groups[3].length, "4");
+  assert("group 5 is 12 characters", "" + groups[4].length, "12");
+
+  var HEX = "0123456789abcdef";
+  var badChars = 0;
+  var upperChars = 0;
+  var i;
+  for (i = 0; i < id.length; i++) {
+      var ch = id.charAt(i);
+      if (i === 8 || i === 13 || i === 18 || i === 23) {
+          if (ch !== "-") { badChars = badChars + 1; }
+      } else {
+          if (HEX.indexOf(ch) < 0) { badChars = badChars + 1; }
+          if (ch !== ch.toLowerCase()) { upperChars = upperChars + 1; }
+      }
+  }
+  assert("every non-hyphen character is a lowercase hex digit", "" + badChars, "0");
+  assert("the value contains no uppercase characters", "" + upperChars, "0");
+  assert("the value equals its own lowercase form", id === id.toLowerCase() ? "true" : "false", "true");
+  assert("the third group starts with '4' (UUID v4)", groups[2].charAt(0), "4");
+
+  var pf = Platform.Function.GUID();
+  assert("Platform.Function.GUID typeof is also string", "" + (typeof pf), "string");
+  assert("Platform.Function.GUID is also 36 characters", "" + pf.length, "36");
+  assert("Platform.Function.GUID has hyphen at index 8", pf.charAt(8), "-");
+  assert("Platform.Function.GUID third group starts with '4'", pf.split("-")[2].charAt(0), "4");
+  assert("bare GUID() differs from Platform.Function.GUID()", id === pf ? "true" : "false", "false");
+
+  var with1 = GUID("x");
+  var with2 = GUID("x", "y");
+  assert("DEV surplus 1 arg ignored - still string (PF.GUID throws)", "" + (typeof with1), "string");
+  assert("DEV surplus 1 arg ignored - still 36 chars (PF.GUID throws)", "" + with1.length, "36");
+  assert("DEV surplus 1 arg ignored - still UUID v4 (PF.GUID throws)", with1.charAt(14), "4");
+  assert("DEV surplus 2 args ignored - still 36 chars (PF.GUID throws)", "" + with2.length, "36");
+  assertThrows("Platform.Function.GUID(1 arg) throws", function () {
+      return Platform.Function.GUID("x");
+  });
+
+  var second = GUID();
+  assert("two successive bare calls return different values", id === second ? "true" : "false", "false");
+
+  var seen = {};
+  var duplicates = 0;
+  var wrongShape = 0;
+  var n;
+  for (n = 0; n < 20; n++) {
+      var g = GUID();
+      if (g.length !== 36) { wrongShape = wrongShape + 1; }
+      if (seen[g]) { duplicates = duplicates + 1; }
+      seen[g] = true;
+  }
+  assert("20 successive calls produced no duplicate", "" + duplicates, "0");
+  assert("all 20 values have the canonical 36-character shape", "" + wrongShape, "0");
+  </script>
+
+return-value: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Return value — lowercase canonical UUID v4 string (36 chars).
+   *
+   * Proves:
+   *   1. return_type is string: typeof the result is "string".
+   *   2. Length is 36 with hyphen-separated 8-4-4-4-12 groups.
+   *   3. The value is lowercase (no uppercase letters) and matches its own
+   *      toLowerCase() form.
+   *   4. It is UUID version 4: the character at index 14 is "4".
+   *   5. The value is not brace-wrapped (unlike CLR "{...}" GUID rendering).
+   *   6. Real JS string methods work on the result (.charAt, .split, .substring).
+   *
+   * NOT ASSERTED: a fixed literal GUID — values are non-deterministic.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var id = GUID();
+  assert("typeof return value is string", "" + (typeof id), "string");
+  assert("return value length is 36", "" + id.length, "36");
+  assert("hyphen at 8", id.charAt(8), "-");
+  assert("hyphen at 13", id.charAt(13), "-");
+  assert("hyphen at 18", id.charAt(18), "-");
+  assert("hyphen at 23", id.charAt(23), "-");
+  var groups = id.split("-");
+  assert("5 hyphen groups", "" + groups.length, "5");
+  assert("group lengths 8-4-4-4-12", "" + (groups[0].length + "-" + groups[1].length + "-" + groups[2].length + "-" + groups[3].length + "-" + groups[4].length), "8-4-4-4-12");
+  assert("lowercase canonical form", id === id.toLowerCase() ? "true" : "false", "true");
+  assert("UUID v4 version nibble at index 14", id.charAt(14), "4");
+  assert("does not start with '{'", id.charAt(0) === "{" ? "true" : "false", "false");
+  assert("does not end with '}'", id.charAt(35) === "}" ? "true" : "false", "false");
+  assert("contains no '{'", "" + id.indexOf("{"), "-1");
+  assert("substring(0, 8) returns first group", id.substring(0, 8), groups[0]);
+  </script>
+
+example: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Example — Platform.Load then var id = GUID(); Write(id);
+   *
+   * Proves:
+   *   1. The documented example pattern yields a string of the documented
+   *      shape (36-char lowercase UUID v4) — never a fixed literal.
+   *   2. "" + id preserves the value verbatim (what Write would emit).
+   *   3. A second GUID() in the same script differs from the first.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var id = GUID();
+  assert("example typeof id is string", "" + (typeof id), "string");
+  assert("example id is 36 characters", "" + id.length, "36");
+  assert("example id has hyphen at index 8", id.charAt(8), "-");
+  assert("example id is UUID v4 (index 14 is '4')", id.charAt(14), "4");
+  assert("example id is lowercase", id === id.toLowerCase() ? "true" : "false", "true");
+  var written = "" + id;
+  assert("Write would emit the value verbatim", written === id ? "true" : "false", "true");
+  Platform.Response.Write("PASS Write(id) emitted sample -> [" + id + "]\n");
+  var id2 = GUID();
+  assert("second example call differs", id === id2 ? "true" : "false", "false");
+  </script>

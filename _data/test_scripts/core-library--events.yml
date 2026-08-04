@@ -1,0 +1,588 @@
+# Test scripts for /core-library/events/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and documented deviations from the page's Required-filter prose.
+#
+# NON-ASSERTABLE:
+#   - Exact event-row field schemas (SendID, SubscriberKey, EventDate, …) —
+#     the page documents only `object[]`, not per-field shapes. Tenant send
+#     history also varies; empty results still prove the return type.
+#   - Guaranteeing a non-empty match for any particular SendID without a
+#     dedicated send fixture. Scripts use a nonsense SendID and assert the
+#     empty-array shape the engine returns for no match.
+#   - No send / create / delete side effects — these APIs are read-only
+#     Retrieve. Orphan count for this page: 0.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# NORMALIZATION RULE: assert() compares with a plain === and does NOT coerce.
+# Engine-returned values are normalized at the call site with "" + value —
+# never with String(value), which yields a CLR string that fails === and
+# aborts the page when a string method is called on it.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage GET on the QA business unit. Re-run them before changing any
+# claim on the page.
+
+bounce-event: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: BounceEvent
+   *
+   * CloudPage GET context. Proves:
+   *   1. BounceEvent requires the Core load and is then an object exposing
+   *      exactly the documented static Retrieve (Stringify shows only that
+   *      member).
+   *   2. There is no Init / Add / Update / Remove on this namespace — only
+   *      Retrieve exists.
+   *   3. BounceEvent.Retrieve(filter) with a WSProxy-style SendID filter
+   *      returns a host array: typeof "object", Object.prototype.toString
+   *      "[object Array]", numeric .length, .push is a function,
+   *      instanceof Array is false (engine-wide host-array quirk).
+   *   4. A nonsense SendID yields length 0 and Stringify "[]" — still a
+   *      valid object[].
+   *   5. The page example shape (Property/SimpleOperator/Value on SendID)
+   *      runs without throwing.
+   *   6. DEVIATION "DEV": Retrieve() with the required filter omitted does
+   *      NOT throw — it still returns a host array with numeric .length
+   *      (page Parameters table marks filter Required; result may be empty
+   *      or populated depending on account history).
+   *   7. Retrieve({}) with an empty object throws.
+   *
+   * NON-ASSERTABLE: exact bounce-row field names/values (page documents
+   * only object[]; no historical bounce rows are guaranteed for a given
+   * SendID).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW"; }
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  /* 1 + 2. Availability and Methods table — only Retrieve. */
+  assert("typeof BounceEvent is object", typeOf(function () { return typeof BounceEvent; }), "object");
+  assert("typeof BounceEvent.Retrieve is function", typeOf(function () { return typeof BounceEvent.Retrieve; }), "function");
+  assert("BounceEvent.Init does not exist", typeOf(function () { return typeof BounceEvent.Init; }), "undefined");
+  assert("BounceEvent.Add does not exist", typeOf(function () { return typeof BounceEvent.Add; }), "undefined");
+  assert("BounceEvent.Update does not exist", typeOf(function () { return typeof BounceEvent.Update; }), "undefined");
+  assert("BounceEvent.Remove does not exist", typeOf(function () { return typeof BounceEvent.Remove; }), "undefined");
+  assert("BounceEvent exposes exactly Retrieve", "" + Stringify(BounceEvent), '{"Retrieve":"function"}');
+
+  /* 3 + 4. Empty-match return shape (object[]). */
+  var filter = { Property: "SendID", SimpleOperator: "equals", Value: 999999991 };
+  var rows = BounceEvent.Retrieve(filter);
+  assert("typeof Retrieve result is object", typeof rows, "object");
+  assert("Retrieve result reports as [object Array]", Object.prototype.toString.call(rows), "[object Array]");
+  assert("Retrieve result exposes a numeric .length", typeof rows.length, "number");
+  assert("no-match SendID length is 0", "" + rows.length, "0");
+  assert("Retrieve result exposes .push", typeof rows.push, "function");
+  assert("instanceof Array is false (engine-wide host-array quirk)", rows instanceof Array ? "true" : "false", "false");
+  assert("no-match Stringify is []", "" + Stringify(rows), "[]");
+
+  /* 5. Page example shape. */
+  assert("page example: Retrieve({SendID equals 12345}) returns", invocationResult(function () { return BounceEvent.Retrieve({ Property: "SendID", SimpleOperator: "equals", Value: 12345 }); }), "returned");
+
+  /* 6. DEV — Required filter is not enforced at the call site. */
+  var omitted = BounceEvent.Retrieve();
+  assert("DEV Retrieve() without filter does not throw (docs: filter Required)", invocationResult(function () { return BounceEvent.Retrieve(); }), "returned");
+  assert("DEV Retrieve() without filter still returns [object Array] (docs: filter Required)", Object.prototype.toString.call(omitted), "[object Array]");
+  assert("DEV Retrieve() without filter exposes numeric .length (docs: filter Required)", typeof omitted.length, "number");
+
+  /* 7. Empty-object filter is rejected. */
+  assert("Retrieve({}) throws", invocationResult(function () { return BounceEvent.Retrieve({}); }), "threw");
+  </script>
+
+click-event: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: ClickEvent
+   *
+   * CloudPage GET context. Proves:
+   *   1. ClickEvent is an object exposing exactly Retrieve after Core load.
+   *   2. No Init / Add / Update / Remove on this namespace.
+   *   3. ClickEvent.Retrieve(filter) returns a host array (object[] shape).
+   *   4. A nonsense SendID yields length 0 / Stringify "[]".
+   *   5. The page example shape runs without throwing.
+   *   6. DEV: Retrieve() with the required filter omitted does not throw;
+   *      result is still a host array with numeric .length.
+   *   7. Retrieve({}) throws.
+   *
+   * NON-ASSERTABLE: exact click-row field schemas / non-empty matches.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW"; }
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  assert("typeof ClickEvent is object", typeOf(function () { return typeof ClickEvent; }), "object");
+  assert("typeof ClickEvent.Retrieve is function", typeOf(function () { return typeof ClickEvent.Retrieve; }), "function");
+  assert("ClickEvent.Init does not exist", typeOf(function () { return typeof ClickEvent.Init; }), "undefined");
+  assert("ClickEvent.Add does not exist", typeOf(function () { return typeof ClickEvent.Add; }), "undefined");
+  assert("ClickEvent.Update does not exist", typeOf(function () { return typeof ClickEvent.Update; }), "undefined");
+  assert("ClickEvent.Remove does not exist", typeOf(function () { return typeof ClickEvent.Remove; }), "undefined");
+  assert("ClickEvent exposes exactly Retrieve", "" + Stringify(ClickEvent), '{"Retrieve":"function"}');
+
+  var filter = { Property: "SendID", SimpleOperator: "equals", Value: 999999991 };
+  var rows = ClickEvent.Retrieve(filter);
+  assert("typeof Retrieve result is object", typeof rows, "object");
+  assert("Retrieve result reports as [object Array]", Object.prototype.toString.call(rows), "[object Array]");
+  assert("Retrieve result exposes a numeric .length", typeof rows.length, "number");
+  assert("no-match SendID length is 0", "" + rows.length, "0");
+  assert("Retrieve result exposes .push", typeof rows.push, "function");
+  assert("instanceof Array is false (engine-wide host-array quirk)", rows instanceof Array ? "true" : "false", "false");
+  assert("no-match Stringify is []", "" + Stringify(rows), "[]");
+
+  assert("page example: Retrieve({SendID equals 12345}) returns", invocationResult(function () { return ClickEvent.Retrieve({ Property: "SendID", SimpleOperator: "equals", Value: 12345 }); }), "returned");
+
+  var omitted = ClickEvent.Retrieve();
+  assert("DEV Retrieve() without filter does not throw (docs: filter Required)", invocationResult(function () { return ClickEvent.Retrieve(); }), "returned");
+  assert("DEV Retrieve() without filter still returns [object Array] (docs: filter Required)", Object.prototype.toString.call(omitted), "[object Array]");
+  assert("DEV Retrieve() without filter exposes numeric .length (docs: filter Required)", typeof omitted.length, "number");
+
+  assert("Retrieve({}) throws", invocationResult(function () { return ClickEvent.Retrieve({}); }), "threw");
+  </script>
+
+open-event: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: OpenEvent
+   *
+   * CloudPage GET context. Proves:
+   *   1. OpenEvent is an object exposing exactly Retrieve after Core load.
+   *   2. No Init / Add / Update / Remove on this namespace.
+   *   3. OpenEvent.Retrieve(filter) returns a host array (object[] shape).
+   *   4. A nonsense SendID yields length 0 / Stringify "[]".
+   *   5. The page example shape runs without throwing.
+   *   6. DEV: Retrieve() with the required filter omitted does not throw;
+   *      result is still a host array with numeric .length.
+   *   7. Retrieve({}) throws.
+   *
+   * NON-ASSERTABLE: exact open-row field schemas / non-empty matches.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW"; }
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  assert("typeof OpenEvent is object", typeOf(function () { return typeof OpenEvent; }), "object");
+  assert("typeof OpenEvent.Retrieve is function", typeOf(function () { return typeof OpenEvent.Retrieve; }), "function");
+  assert("OpenEvent.Init does not exist", typeOf(function () { return typeof OpenEvent.Init; }), "undefined");
+  assert("OpenEvent.Add does not exist", typeOf(function () { return typeof OpenEvent.Add; }), "undefined");
+  assert("OpenEvent.Update does not exist", typeOf(function () { return typeof OpenEvent.Update; }), "undefined");
+  assert("OpenEvent.Remove does not exist", typeOf(function () { return typeof OpenEvent.Remove; }), "undefined");
+  assert("OpenEvent exposes exactly Retrieve", "" + Stringify(OpenEvent), '{"Retrieve":"function"}');
+
+  var filter = { Property: "SendID", SimpleOperator: "equals", Value: 999999991 };
+  var rows = OpenEvent.Retrieve(filter);
+  assert("typeof Retrieve result is object", typeof rows, "object");
+  assert("Retrieve result reports as [object Array]", Object.prototype.toString.call(rows), "[object Array]");
+  assert("Retrieve result exposes a numeric .length", typeof rows.length, "number");
+  assert("no-match SendID length is 0", "" + rows.length, "0");
+  assert("Retrieve result exposes .push", typeof rows.push, "function");
+  assert("instanceof Array is false (engine-wide host-array quirk)", rows instanceof Array ? "true" : "false", "false");
+  assert("no-match Stringify is []", "" + Stringify(rows), "[]");
+
+  assert("page example: Retrieve({SendID equals 12345}) returns", invocationResult(function () { return OpenEvent.Retrieve({ Property: "SendID", SimpleOperator: "equals", Value: 12345 }); }), "returned");
+
+  var omitted = OpenEvent.Retrieve();
+  assert("DEV Retrieve() without filter does not throw (docs: filter Required)", invocationResult(function () { return OpenEvent.Retrieve(); }), "returned");
+  assert("DEV Retrieve() without filter still returns [object Array] (docs: filter Required)", Object.prototype.toString.call(omitted), "[object Array]");
+  assert("DEV Retrieve() without filter exposes numeric .length (docs: filter Required)", typeof omitted.length, "number");
+
+  assert("Retrieve({}) throws", invocationResult(function () { return OpenEvent.Retrieve({}); }), "threw");
+  </script>
+
+sent-event: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: SentEvent
+   *
+   * CloudPage GET context. Proves:
+   *   1. SentEvent is an object exposing exactly Retrieve after Core load.
+   *   2. No Init / Add / Update / Remove on this namespace.
+   *   3. SentEvent.Retrieve(filter) returns a host array (object[] shape).
+   *   4. A nonsense SendID yields length 0 / Stringify "[]".
+   *   5. The page example shape runs without throwing.
+   *   6. DEV: Retrieve() with the required filter omitted does not throw;
+   *      result is still a host array with numeric .length.
+   *   7. Retrieve({}) throws.
+   *
+   * NON-ASSERTABLE: exact sent-row field schemas / non-empty matches.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW"; }
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  assert("typeof SentEvent is object", typeOf(function () { return typeof SentEvent; }), "object");
+  assert("typeof SentEvent.Retrieve is function", typeOf(function () { return typeof SentEvent.Retrieve; }), "function");
+  assert("SentEvent.Init does not exist", typeOf(function () { return typeof SentEvent.Init; }), "undefined");
+  assert("SentEvent.Add does not exist", typeOf(function () { return typeof SentEvent.Add; }), "undefined");
+  assert("SentEvent.Update does not exist", typeOf(function () { return typeof SentEvent.Update; }), "undefined");
+  assert("SentEvent.Remove does not exist", typeOf(function () { return typeof SentEvent.Remove; }), "undefined");
+  assert("SentEvent exposes exactly Retrieve", "" + Stringify(SentEvent), '{"Retrieve":"function"}');
+
+  var filter = { Property: "SendID", SimpleOperator: "equals", Value: 999999991 };
+  var rows = SentEvent.Retrieve(filter);
+  assert("typeof Retrieve result is object", typeof rows, "object");
+  assert("Retrieve result reports as [object Array]", Object.prototype.toString.call(rows), "[object Array]");
+  assert("Retrieve result exposes a numeric .length", typeof rows.length, "number");
+  assert("no-match SendID length is 0", "" + rows.length, "0");
+  assert("Retrieve result exposes .push", typeof rows.push, "function");
+  assert("instanceof Array is false (engine-wide host-array quirk)", rows instanceof Array ? "true" : "false", "false");
+  assert("no-match Stringify is []", "" + Stringify(rows), "[]");
+
+  assert("page example: Retrieve({SendID equals 12345}) returns", invocationResult(function () { return SentEvent.Retrieve({ Property: "SendID", SimpleOperator: "equals", Value: 12345 }); }), "returned");
+
+  var omitted = SentEvent.Retrieve();
+  assert("DEV Retrieve() without filter does not throw (docs: filter Required)", invocationResult(function () { return SentEvent.Retrieve(); }), "returned");
+  assert("DEV Retrieve() without filter still returns [object Array] (docs: filter Required)", Object.prototype.toString.call(omitted), "[object Array]");
+  assert("DEV Retrieve() without filter exposes numeric .length (docs: filter Required)", typeof omitted.length, "number");
+
+  assert("Retrieve({}) throws", invocationResult(function () { return SentEvent.Retrieve({}); }), "threw");
+  </script>
+
+unsub-event: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: UnsubEvent
+   *
+   * CloudPage GET context. Proves:
+   *   1. UnsubEvent is an object exposing exactly Retrieve after Core load.
+   *   2. No Init / Add / Update / Remove on this namespace.
+   *   3. UnsubEvent.Retrieve(filter) returns a host array (object[] shape).
+   *   4. A nonsense SendID yields length 0 / Stringify "[]".
+   *   5. The page example shape runs without throwing.
+   *   6. DEV: Retrieve() with the required filter omitted does not throw;
+   *      result is still a host array with numeric .length.
+   *   7. Retrieve({}) throws.
+   *
+   * NON-ASSERTABLE: exact unsub-row field schemas / non-empty matches.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW"; }
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  assert("typeof UnsubEvent is object", typeOf(function () { return typeof UnsubEvent; }), "object");
+  assert("typeof UnsubEvent.Retrieve is function", typeOf(function () { return typeof UnsubEvent.Retrieve; }), "function");
+  assert("UnsubEvent.Init does not exist", typeOf(function () { return typeof UnsubEvent.Init; }), "undefined");
+  assert("UnsubEvent.Add does not exist", typeOf(function () { return typeof UnsubEvent.Add; }), "undefined");
+  assert("UnsubEvent.Update does not exist", typeOf(function () { return typeof UnsubEvent.Update; }), "undefined");
+  assert("UnsubEvent.Remove does not exist", typeOf(function () { return typeof UnsubEvent.Remove; }), "undefined");
+  assert("UnsubEvent exposes exactly Retrieve", "" + Stringify(UnsubEvent), '{"Retrieve":"function"}');
+
+  var filter = { Property: "SendID", SimpleOperator: "equals", Value: 999999991 };
+  var rows = UnsubEvent.Retrieve(filter);
+  assert("typeof Retrieve result is object", typeof rows, "object");
+  assert("Retrieve result reports as [object Array]", Object.prototype.toString.call(rows), "[object Array]");
+  assert("Retrieve result exposes a numeric .length", typeof rows.length, "number");
+  assert("no-match SendID length is 0", "" + rows.length, "0");
+  assert("Retrieve result exposes .push", typeof rows.push, "function");
+  assert("instanceof Array is false (engine-wide host-array quirk)", rows instanceof Array ? "true" : "false", "false");
+  assert("no-match Stringify is []", "" + Stringify(rows), "[]");
+
+  assert("page example: Retrieve({SendID equals 12345}) returns", invocationResult(function () { return UnsubEvent.Retrieve({ Property: "SendID", SimpleOperator: "equals", Value: 12345 }); }), "returned");
+
+  var omitted = UnsubEvent.Retrieve();
+  assert("DEV Retrieve() without filter does not throw (docs: filter Required)", invocationResult(function () { return UnsubEvent.Retrieve(); }), "returned");
+  assert("DEV Retrieve() without filter still returns [object Array] (docs: filter Required)", Object.prototype.toString.call(omitted), "[object Array]");
+  assert("DEV Retrieve() without filter exposes numeric .length (docs: filter Required)", typeof omitted.length, "number");
+
+  assert("Retrieve({}) throws", invocationResult(function () { return UnsubEvent.Retrieve({}); }), "threw");
+  </script>
+
+not-sent-event: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: NotSentEvent
+   *
+   * CloudPage GET context. Proves:
+   *   1. NotSentEvent is an object exposing exactly Retrieve after Core load.
+   *   2. No Init / Add / Update / Remove on this namespace.
+   *   3. NotSentEvent.Retrieve(filter) returns a host array (object[] shape).
+   *   4. A nonsense SendID yields length 0 / Stringify "[]".
+   *   5. The page example shape runs without throwing.
+   *   6. DEV: Retrieve() with the required filter omitted does not throw;
+   *      result is still a host array with numeric .length.
+   *   7. Retrieve({}) throws.
+   *
+   * NON-ASSERTABLE: exact not-sent-row field schemas / non-empty matches.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW"; }
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  assert("typeof NotSentEvent is object", typeOf(function () { return typeof NotSentEvent; }), "object");
+  assert("typeof NotSentEvent.Retrieve is function", typeOf(function () { return typeof NotSentEvent.Retrieve; }), "function");
+  assert("NotSentEvent.Init does not exist", typeOf(function () { return typeof NotSentEvent.Init; }), "undefined");
+  assert("NotSentEvent.Add does not exist", typeOf(function () { return typeof NotSentEvent.Add; }), "undefined");
+  assert("NotSentEvent.Update does not exist", typeOf(function () { return typeof NotSentEvent.Update; }), "undefined");
+  assert("NotSentEvent.Remove does not exist", typeOf(function () { return typeof NotSentEvent.Remove; }), "undefined");
+  assert("NotSentEvent exposes exactly Retrieve", "" + Stringify(NotSentEvent), '{"Retrieve":"function"}');
+
+  var filter = { Property: "SendID", SimpleOperator: "equals", Value: 999999991 };
+  var rows = NotSentEvent.Retrieve(filter);
+  assert("typeof Retrieve result is object", typeof rows, "object");
+  assert("Retrieve result reports as [object Array]", Object.prototype.toString.call(rows), "[object Array]");
+  assert("Retrieve result exposes a numeric .length", typeof rows.length, "number");
+  assert("no-match SendID length is 0", "" + rows.length, "0");
+  assert("Retrieve result exposes .push", typeof rows.push, "function");
+  assert("instanceof Array is false (engine-wide host-array quirk)", rows instanceof Array ? "true" : "false", "false");
+  assert("no-match Stringify is []", "" + Stringify(rows), "[]");
+
+  assert("page example: Retrieve({SendID equals 12345}) returns", invocationResult(function () { return NotSentEvent.Retrieve({ Property: "SendID", SimpleOperator: "equals", Value: 12345 }); }), "returned");
+
+  var omitted = NotSentEvent.Retrieve();
+  assert("DEV Retrieve() without filter does not throw (docs: filter Required)", invocationResult(function () { return NotSentEvent.Retrieve(); }), "returned");
+  assert("DEV Retrieve() without filter still returns [object Array] (docs: filter Required)", Object.prototype.toString.call(omitted), "[object Array]");
+  assert("DEV Retrieve() without filter exposes numeric .length (docs: filter Required)", typeof omitted.length, "number");
+
+  assert("Retrieve({}) throws", invocationResult(function () { return NotSentEvent.Retrieve({}); }), "threw");
+  </script>
+
+forwarded-email-event: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: ForwardedEmailEvent
+   *
+   * CloudPage GET context. Proves:
+   *   1. ForwardedEmailEvent is an object exposing exactly Retrieve after
+   *      Core load.
+   *   2. No Init / Add / Update / Remove on this namespace.
+   *   3. ForwardedEmailEvent.Retrieve(filter) returns a host array.
+   *   4. A nonsense SendID yields length 0 / Stringify "[]".
+   *   5. The page example shape runs without throwing.
+   *   6. DEV: Retrieve() with the required filter omitted does not throw;
+   *      result is still a host array with numeric .length.
+   *   7. Retrieve({}) throws.
+   *
+   * NON-ASSERTABLE: exact forward-row field schemas / non-empty matches.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW"; }
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  assert("typeof ForwardedEmailEvent is object", typeOf(function () { return typeof ForwardedEmailEvent; }), "object");
+  assert("typeof ForwardedEmailEvent.Retrieve is function", typeOf(function () { return typeof ForwardedEmailEvent.Retrieve; }), "function");
+  assert("ForwardedEmailEvent.Init does not exist", typeOf(function () { return typeof ForwardedEmailEvent.Init; }), "undefined");
+  assert("ForwardedEmailEvent.Add does not exist", typeOf(function () { return typeof ForwardedEmailEvent.Add; }), "undefined");
+  assert("ForwardedEmailEvent.Update does not exist", typeOf(function () { return typeof ForwardedEmailEvent.Update; }), "undefined");
+  assert("ForwardedEmailEvent.Remove does not exist", typeOf(function () { return typeof ForwardedEmailEvent.Remove; }), "undefined");
+  assert("ForwardedEmailEvent exposes exactly Retrieve", "" + Stringify(ForwardedEmailEvent), '{"Retrieve":"function"}');
+
+  var filter = { Property: "SendID", SimpleOperator: "equals", Value: 999999991 };
+  var rows = ForwardedEmailEvent.Retrieve(filter);
+  assert("typeof Retrieve result is object", typeof rows, "object");
+  assert("Retrieve result reports as [object Array]", Object.prototype.toString.call(rows), "[object Array]");
+  assert("Retrieve result exposes a numeric .length", typeof rows.length, "number");
+  assert("no-match SendID length is 0", "" + rows.length, "0");
+  assert("Retrieve result exposes .push", typeof rows.push, "function");
+  assert("instanceof Array is false (engine-wide host-array quirk)", rows instanceof Array ? "true" : "false", "false");
+  assert("no-match Stringify is []", "" + Stringify(rows), "[]");
+
+  assert("page example: Retrieve({SendID equals 12345}) returns", invocationResult(function () { return ForwardedEmailEvent.Retrieve({ Property: "SendID", SimpleOperator: "equals", Value: 12345 }); }), "returned");
+
+  var omitted = ForwardedEmailEvent.Retrieve();
+  assert("DEV Retrieve() without filter does not throw (docs: filter Required)", invocationResult(function () { return ForwardedEmailEvent.Retrieve(); }), "returned");
+  assert("DEV Retrieve() without filter still returns [object Array] (docs: filter Required)", Object.prototype.toString.call(omitted), "[object Array]");
+  assert("DEV Retrieve() without filter exposes numeric .length (docs: filter Required)", typeof omitted.length, "number");
+
+  assert("Retrieve({}) throws", invocationResult(function () { return ForwardedEmailEvent.Retrieve({}); }), "threw");
+  </script>
+
+forwarded-email-opt-in-event: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: ForwardedEmailOptInEvent
+   *
+   * CloudPage GET context. Proves:
+   *   1. ForwardedEmailOptInEvent is an object exposing exactly Retrieve
+   *      after Core load.
+   *   2. No Init / Add / Update / Remove on this namespace.
+   *   3. ForwardedEmailOptInEvent.Retrieve(filter) returns a host array.
+   *   4. A nonsense SendID yields length 0 / Stringify "[]".
+   *   5. The page example shape runs without throwing.
+   *   6. DEV: Retrieve() with the required filter omitted does not throw;
+   *      result is still a host array with numeric .length.
+   *   7. Retrieve({}) throws.
+   *
+   * NON-ASSERTABLE: exact opt-in-row field schemas / non-empty matches.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW"; }
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  assert("typeof ForwardedEmailOptInEvent is object", typeOf(function () { return typeof ForwardedEmailOptInEvent; }), "object");
+  assert("typeof ForwardedEmailOptInEvent.Retrieve is function", typeOf(function () { return typeof ForwardedEmailOptInEvent.Retrieve; }), "function");
+  assert("ForwardedEmailOptInEvent.Init does not exist", typeOf(function () { return typeof ForwardedEmailOptInEvent.Init; }), "undefined");
+  assert("ForwardedEmailOptInEvent.Add does not exist", typeOf(function () { return typeof ForwardedEmailOptInEvent.Add; }), "undefined");
+  assert("ForwardedEmailOptInEvent.Update does not exist", typeOf(function () { return typeof ForwardedEmailOptInEvent.Update; }), "undefined");
+  assert("ForwardedEmailOptInEvent.Remove does not exist", typeOf(function () { return typeof ForwardedEmailOptInEvent.Remove; }), "undefined");
+  assert("ForwardedEmailOptInEvent exposes exactly Retrieve", "" + Stringify(ForwardedEmailOptInEvent), '{"Retrieve":"function"}');
+
+  var filter = { Property: "SendID", SimpleOperator: "equals", Value: 999999991 };
+  var rows = ForwardedEmailOptInEvent.Retrieve(filter);
+  assert("typeof Retrieve result is object", typeof rows, "object");
+  assert("Retrieve result reports as [object Array]", Object.prototype.toString.call(rows), "[object Array]");
+  assert("Retrieve result exposes a numeric .length", typeof rows.length, "number");
+  assert("no-match SendID length is 0", "" + rows.length, "0");
+  assert("Retrieve result exposes .push", typeof rows.push, "function");
+  assert("instanceof Array is false (engine-wide host-array quirk)", rows instanceof Array ? "true" : "false", "false");
+  assert("no-match Stringify is []", "" + Stringify(rows), "[]");
+
+  assert("page example: Retrieve({SendID equals 12345}) returns", invocationResult(function () { return ForwardedEmailOptInEvent.Retrieve({ Property: "SendID", SimpleOperator: "equals", Value: 12345 }); }), "returned");
+
+  var omitted = ForwardedEmailOptInEvent.Retrieve();
+  assert("DEV Retrieve() without filter does not throw (docs: filter Required)", invocationResult(function () { return ForwardedEmailOptInEvent.Retrieve(); }), "returned");
+  assert("DEV Retrieve() without filter still returns [object Array] (docs: filter Required)", Object.prototype.toString.call(omitted), "[object Array]");
+  assert("DEV Retrieve() without filter exposes numeric .length (docs: filter Required)", typeof omitted.length, "number");
+
+  assert("Retrieve({}) throws", invocationResult(function () { return ForwardedEmailOptInEvent.Retrieve({}); }), "threw");
+  </script>
+
+survey-event: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: SurveyEvent
+   *
+   * CloudPage GET context. Proves:
+   *   1. SurveyEvent is an object exposing exactly Retrieve after Core load.
+   *   2. No Init / Add / Update / Remove on this namespace.
+   *   3. SurveyEvent.Retrieve(filter) returns a host array (object[] shape).
+   *   4. A nonsense SendID yields length 0 / Stringify "[]".
+   *   5. The page example shape runs without throwing.
+   *   6. DEV: Retrieve() with the required filter omitted does not throw;
+   *      result is still a host array with numeric .length.
+   *   7. Retrieve({}) throws.
+   *
+   * NON-ASSERTABLE: exact survey-row field schemas / non-empty matches.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW"; }
+  }
+  function invocationResult(fn) {
+      try { fn(); return "returned"; } catch (ex) { return "threw"; }
+  }
+
+  assert("typeof SurveyEvent is object", typeOf(function () { return typeof SurveyEvent; }), "object");
+  assert("typeof SurveyEvent.Retrieve is function", typeOf(function () { return typeof SurveyEvent.Retrieve; }), "function");
+  assert("SurveyEvent.Init does not exist", typeOf(function () { return typeof SurveyEvent.Init; }), "undefined");
+  assert("SurveyEvent.Add does not exist", typeOf(function () { return typeof SurveyEvent.Add; }), "undefined");
+  assert("SurveyEvent.Update does not exist", typeOf(function () { return typeof SurveyEvent.Update; }), "undefined");
+  assert("SurveyEvent.Remove does not exist", typeOf(function () { return typeof SurveyEvent.Remove; }), "undefined");
+  assert("SurveyEvent exposes exactly Retrieve", "" + Stringify(SurveyEvent), '{"Retrieve":"function"}');
+
+  var filter = { Property: "SendID", SimpleOperator: "equals", Value: 999999991 };
+  var rows = SurveyEvent.Retrieve(filter);
+  assert("typeof Retrieve result is object", typeof rows, "object");
+  assert("Retrieve result reports as [object Array]", Object.prototype.toString.call(rows), "[object Array]");
+  assert("Retrieve result exposes a numeric .length", typeof rows.length, "number");
+  assert("no-match SendID length is 0", "" + rows.length, "0");
+  assert("Retrieve result exposes .push", typeof rows.push, "function");
+  assert("instanceof Array is false (engine-wide host-array quirk)", rows instanceof Array ? "true" : "false", "false");
+  assert("no-match Stringify is []", "" + Stringify(rows), "[]");
+
+  assert("page example: Retrieve({SendID equals 12345}) returns", invocationResult(function () { return SurveyEvent.Retrieve({ Property: "SendID", SimpleOperator: "equals", Value: 12345 }); }), "returned");
+
+  var omitted = SurveyEvent.Retrieve();
+  assert("DEV Retrieve() without filter does not throw (docs: filter Required)", invocationResult(function () { return SurveyEvent.Retrieve(); }), "returned");
+  assert("DEV Retrieve() without filter still returns [object Array] (docs: filter Required)", Object.prototype.toString.call(omitted), "[object Array]");
+  assert("DEV Retrieve() without filter exposes numeric .length (docs: filter Required)", typeof omitted.length, "number");
+
+  assert("Retrieve({}) throws", invocationResult(function () { return SurveyEvent.Retrieve({}); }), "threw");
+  </script>

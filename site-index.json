@@ -1188,7 +1188,7 @@
     "params": [
       "name"
     ],
-    "returnType": "string"
+    "returnType": "string|null"
   },
   {
     "name": "HTTPHeader.SetValue",
@@ -1274,7 +1274,7 @@
     "url": "/core-library/dataextension/#init",
     "section": "Core Library",
     "type": "method",
-    "description": "Initializes a DataExtension instance bound to the specified data extension.",
+    "description": "Initializes a DataExtension instance bound to the specified data extension by its External Key (`CustomerKey`).",
     "params": [
       "key"
     ],
@@ -1357,7 +1357,7 @@
       "limit",
       "orderByFieldName"
     ],
-    "returnType": "object[]"
+    "returnType": "object[]|null"
   },
   {
     "name": "DataExtension.Rows.Remove",
@@ -1758,7 +1758,7 @@
     "url": "/core-library/list-subscribers/#instance-subscribers-unsubscribe",
     "section": "Core Library",
     "type": "method",
-    "description": "Removes the specified subscriber from the previously initialized list.",
+    "description": "Sets the subscriber Status on the list to Unsubscribed.",
     "params": [
       "emailAddress"
     ],
@@ -2194,7 +2194,7 @@
     "url": "/core-library/send/#instance-remove",
     "section": "Core Library",
     "type": "method",
-    "description": "Removes the previously initialized send.",
+    "description": "Cancels/removes the previously initialized send: returns \"OK\" and sets Status to \"Canceled\".",
     "returnType": "string",
     "deprecated": true
   },
@@ -5244,7 +5244,7 @@
     "url": "/core-library/isphonenumber/",
     "section": "Core Library",
     "type": "function",
-    "description": "Evaluates whether a string is a valid phone number and returns a boolean.",
+    "description": "Checks whether a value is a valid North American Numbering Plan (NANP) phone number.",
     "params": [
       "value"
     ],
@@ -5277,7 +5277,7 @@
     "url": "/core-library/format/",
     "section": "Core Library",
     "type": "function",
-    "description": "Applies a formatting rule to a string or numeric value.",
+    "description": "Applies a formatting rule to a string, number, or Date.",
     "params": [
       "textToFormat",
       "formatCode"
@@ -5355,7 +5355,7 @@
     "url": "/core-library/request/#members",
     "section": "Core Library",
     "type": "method",
-    "description": "Returns the value of a named form field submitted with the current request (including POST data), or null when the field is absent.",
+    "description": "Returns the value of a named form field submitted with the current request (POST form data), or null when the field is absent.",
     "params": [
       "name"
     ],

@@ -89,8 +89,6 @@ AccountUser.Add(properties)
 
 `"OK"` on success. Observed returning the plain string `"Error"`, or throwing the plain string `"Error adding AccountUser"` for payloads carrying additional AccountUser fields, when the write does not succeed. Because it can throw a plain string (not an `Error` instance, so the caught value has no `.message`), wrap the call in `try`/`catch` and treat any non-`"OK"` return — and any throw — as failure.
 
-{% include test-script.html bundle="core-library--accountuser" chapter="add" label="Show test script — every payload returns \"Error\" or throws" %}
-
 #### Examples
 
 ```javascript
@@ -172,8 +170,6 @@ Updates the initialized user's profile with the given properties.
 
 `"OK"` on success. Observed returning (not throwing) the plain string `"Error"` when the write does not succeed, so treat any non-`"OK"` return as failure.
 
-{% include test-script.html bundle="core-library--accountuser" chapter="instance-update" label="Show test script — Update returns \"Error\" while other calls in the same run succeed" %}
-
 #### Examples
 
 ```javascript
@@ -204,8 +200,6 @@ Activates the initialized user account.
 
 `"OK"` on success. Observed returning (not throwing) the plain string `"Error"` when the write does not succeed, so treat any non-`"OK"` return as failure.
 
-{% include test-script.html bundle="core-library--accountuser" chapter="instance-activate" label="Show test script — Activate returns \"Error\" while reads in the same run succeed" %}
-
 #### Examples
 
 ```javascript
@@ -235,8 +229,6 @@ Deactivates the initialized user. Account users **cannot** be deleted via SSJS; 
 #### Return value
 
 `"OK"` on success. Observed returning (not throwing) the plain string `"Error"` when the write does not succeed, so treat any non-`"OK"` return as failure.
-
-{% include test-script.html bundle="core-library--accountuser" chapter="instance-deactivate" label="Show test script — Deactivate returns \"Error\" and no Delete method exists" %}
 
 #### Examples
 

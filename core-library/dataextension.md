@@ -7,6 +7,7 @@ description: Initialize a Data Extension object for row-level CRUD operations. T
 verification: verified
 differs_from_docs: true
 requires_core_load: true
+test_scripts: complete
 type_mapping:
   ssjs: "DataExtension"
   soap: "DataExtension"
@@ -30,7 +31,9 @@ type_mapping:
 
 ### DataExtension.Init {#init}
 
-Initializes a DataExtension instance bound to the specified Data Extension. Required before invoking any `Fields` or `Rows` sub-namespace method on the returned instance. At runtime the argument may be **either** the External Key **or** the Name of the Data Extension — both resolve to the same DE. Binding is lazy: `Init` never throws for a missing DE; the error surfaces on the first `Rows`/`Fields` operation.
+Initializes a DataExtension instance bound to the specified Data Extension by its **External Key** (`CustomerKey`). Required before invoking any `Fields` or `Rows` sub-namespace method on the returned instance. Binding is lazy: `Init` never throws for a missing DE; the error surfaces on the first `Rows`/`Fields` operation.
+
+{% include callout.html type="bug" content="Passing the **display Name** when it differs from `CustomerKey` still returns an instance stub, but `Fields.Retrieve` returns an empty array, `Fields.Add` returns `\"Error\"`, and `Rows.Retrieve` does not see rows — even though `Rows.Add` on that stub can still write into the real DE. Always pass the External Key. See [Known Bugs](/engine-limitations/known-bugs/#dataextension-init-requires-external-key)." %}
 
 #### Syntax
 
@@ -42,7 +45,7 @@ DataExtension.Init(key)
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `key` | string | Yes | The External Key **or** Name of the Data Extension (either resolves) |
+| `key` | string | Yes | The External Key (`CustomerKey`) of the Data Extension |
 
 #### Return value
 
@@ -108,6 +111,8 @@ var de = DataExtension.Init("TempData");
 de.Rows.Remove(["SubscriberKey"], [subscriberKey]);
 ```
 
+{% include test-script.html bundle="core-library--dataextension" chapter="init" label="Show test script — External Key binds; display Name does not" %}
+
 ---
 
 ### DataExtension.Add {#add}
@@ -149,6 +154,8 @@ var deObj = {
 var de = DataExtension.Add(deObj);
 ```
 
+{% include test-script.html bundle="core-library--dataextension" chapter="add" %}
+
 ---
 
 ### DataExtension.Retrieve {#retrieve}
@@ -168,7 +175,7 @@ DataExtension.Retrieve(filter, [queryAllAccounts])
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `filter` | object | No* | PascalCase WSProxy-style filter object: `{Property, SimpleOperator, Value}`. *Documented as required, but optional at runtime — omitting it returns all data extensions. |
-| `queryAllAccounts` | boolean | No | When `true`, search across all accessible accounts. Defaults to `false`. |
+| `queryAllAccounts` | boolean \| number | No | When `true` (or `1`), search across all accessible accounts. Defaults to `false` (`0`). |
 
 #### Return value
 
@@ -181,28 +188,17 @@ Platform.Load("core", "1.1.5");
 var results = DataExtension.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: "myDEKey" });
 ```
 
+{% include test-script.html bundle="core-library--dataextension" chapter="retrieve" %}
+
 ## Notes
 
-### External Key vs Name
+### External Key
 
-At runtime `DataExtension.Init()` resolves **either** the **External Key** or the **Name** of the Data Extension to the same DE. Prefer the External Key for stability (the display name can change). Find the External Key in:
+`DataExtension.Init()` takes the **External Key** (`CustomerKey`), not the display name. Find the External Key in:
 - Email Studio → Data Extensions → Edit → External Key
 - Contact Builder → Data Extensions → (click DE name) → Properties
 
-### CloudPage Retrieve Bug
-
-{% include callout.html type="bug" content="`de.Rows.Retrieve()` does not work reliably on CloudPages without a filter argument. Always pass a filter, or use `Platform.Function.LookupRows()` as a workaround. See [Known Bugs](/engine-limitations/known-bugs/) for details." %}
-
-```javascript
-// On CloudPages, this may return empty results:
-var rows = de.Rows.Retrieve();
-
-// Use a filter instead:
-var rows = de.Rows.Retrieve({ Property: "Active", SimpleOperator: "equals", Value: "1" });
-
-// Or use Platform.Function:
-var rows = Platform.Function.LookupRows("MyDE", ["Active"], ["1"]);
-```
+When the display Name differs from `CustomerKey`, passing the Name does **not** bind Fields or Rows reads — use the External Key. See [Known Bugs](/engine-limitations/known-bugs/#dataextension-init-requires-external-key).
 
 ## See Also
 

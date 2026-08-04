@@ -1,0 +1,280 @@
+# Test scripts for /core-library/stringify/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation.
+#
+# Sister evidence reused from platform-functions--stringify.yml (byte-identical
+# output, bare soft-arity, circular -> null) and core-library--datetime.yml
+# (Stringify serializes TimeZone.Retrieve rows — not opaque).
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# CLR STRING RULE: engine-returned values and caught .message values are
+# normalized with `"" + value`, never with String(value).
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+
+parameters: |
+  <script runat="server">
+  /*
+   * Chapter: Parameters — Stringify(value)
+   *
+   * Proves:
+   *   1. Before Platform.Load the bare name is undefined and invoking it throws.
+   *   2. After Platform.Load("core", "1.1.5") Stringify is a function.
+   *   3. One argument of any scalar/object/array type is accepted; return is string.
+   *   4. Explicit null and undefined both return the literal JSON string "null".
+   *   5. DEV: zero arguments return "null" (Platform.Function.Stringify throws).
+   *   6. DEV: a surplus second argument is ignored (Platform.Function.Stringify throws).
+   *      Documented contract remains min_args/max_args 1.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+
+  assert("before load typeof Stringify is undefined", typeOfThunk(function () { return typeof Stringify; }), "undefined");
+  assertThrows("before load Stringify(...) throws", function () { return Stringify({ a: 1 }); });
+
+  Platform.Load("core", "1.1.5");
+  assert("after load typeof Stringify is function", typeOfThunk(function () { return typeof Stringify; }), "function");
+
+  assert("one object argument returns its JSON text", Stringify({ a: 1 }), '{"a":1}');
+  assert("the return value is a string", "" + (typeof Stringify({ a: 1 })), "string");
+  assert("a string argument is accepted", Stringify("hello"), '"hello"');
+  assert("an empty string argument is accepted", Stringify(""), '""');
+  assert("a number argument is accepted", Stringify(42), "42");
+  assert("a true argument is accepted", Stringify(true), "true");
+  assert("a false argument is accepted", Stringify(false), "false");
+  assert("an array argument is accepted", Stringify([]), "[]");
+
+  assert("an explicit null returns the literal string null", Stringify(null), "null");
+  assert("the null result is a string, not the JS null value", Stringify(null) === null ? "true" : "false", "false");
+  var undef;
+  assert("an explicit undefined returns the literal string null", Stringify(undef), "null");
+
+  assert("DEV zero args return string null (PF.Stringify throws)", Stringify(), "null");
+  assert("DEV surplus arg ignored (PF.Stringify throws)", Stringify({ a: 1 }, 2), '{"a":1}');
+  assertThrows("Platform.Function.Stringify() throws on zero args", function () {
+      return Platform.Function.Stringify();
+  });
+  assertThrows("Platform.Function.Stringify throws on a second arg", function () {
+      return Platform.Function.Stringify({ a: 1 }, 2);
+  });
+  </script>
+
+description: |
+  <script runat="server">
+  /*
+   * Chapter: Description — Core Stringify vs String() and JSON.stringify
+   *
+   * Proves:
+   *   1. Native JSON is unavailable (why Stringify exists).
+   *   2. Stringify(obj) emits JSON with quoted keys (documented example shape).
+   *   3. Stringify quotes a string value; String() leaves the same value unquoted.
+   *   4. After Core load, bare Stringify and Platform.Function.Stringify produce
+   *      byte-identical output for the same value.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+
+  assert("native JSON object is unavailable", typeOfThunk(function () { return typeof JSON; }), "undefined");
+
+  Platform.Load("core", "1.1.5");
+
+  assert("Stringify emits JSON with quoted keys", Stringify({ name: "Jane", age: 30 }), '{"name":"Jane","age":30}');
+  assert("Stringify quotes a string value", Stringify("x"), '"x"');
+  assert("String() leaves the same value unquoted", "" + String("x"), "x");
+  assert("String() on a number does not quote it", "" + String(42), "42");
+  assert("Stringify on the same number is still unquoted JSON number text", Stringify(42), "42");
+
+  var sample = { name: "Jane", score: 95, active: true };
+  assert("both forms produce byte-identical output", Stringify(sample) === Platform.Function.Stringify(sample) ? "true" : "false", "true");
+  </script>
+
+examples: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Examples
+   *
+   * Proves:
+   *   1. The person example matches the documented commented output.
+   *   2. A payload with Platform.Function.Now() serializes action/page and a
+   *      quoted ISO-like timestamp (InsertData itself is not asserted).
+   *   3. The debug pattern wraps JSON in <pre> markup.
+   *   4. Stringify(e) in a catch block returns usable JSON for a thrown object
+   *      (includes message) and a quoted JSON string for a thrown string.
+   *
+   * NON-ASSERTABLE: InsertData / HttpRequest.send side effects and external
+   * HTTP — those examples need fixtures or network. ActivityLog / ErrorLog DE
+   * writes are not asserted. A bare `(null).prop` access is not a reliable
+   * throw source in this engine (it may not enter catch).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var person = {
+      name: "Jane Smith",
+      email: "jane@example.com",
+      score: 95
+  };
+  assert("the person example matches the documented output", Stringify(person), '{"name":"Jane Smith","email":"jane@example.com","score":95}');
+
+  var payload = {
+      action: "page_view",
+      page: "/preferences",
+      timestamp: Platform.Function.Now()
+  };
+  var payloadJson = Stringify(payload);
+  assert("the payload keeps the action value", payloadJson.substring(0, 22), '{"action":"page_view",');
+  assert("the payload does not escape the slash in page", payloadJson.indexOf('"page":"/preferences"') > -1 ? "true" : "false", "true");
+  assert("the payload timestamp is a quoted ISO-like string", payloadJson.indexOf('"timestamp":"20') > -1 ? "true" : "false", "true");
+
+  var debugValue = { rows: 2 };
+  assert("the debug pattern wraps the JSON in pre markup", "<pre>" + Stringify(debugValue) + "</pre>", '<pre>{"rows":2}</pre>');
+
+  var errorJson = "";
+  try {
+      throw { code: 1, message: "demo" };
+  } catch (e) {
+      errorJson = Stringify(e);
+  }
+  assert("Stringify(e) returns a string", "" + (typeof errorJson), "string");
+  assert("Stringify(e) for a thrown object starts with '{'", errorJson.substring(0, 1), "{");
+  assert("Stringify(e) carries the message field", errorJson.indexOf('"message":"demo"') > -1 ? "true" : "false", "true");
+  assert("Stringify(e) carries the code field", errorJson.indexOf('"code":1') > -1 ? "true" : "false", "true");
+
+  var thrownStringJson = "";
+  try {
+      throw "boom";
+  } catch (e2) {
+      thrownStringJson = Stringify(e2);
+  }
+  assert("Stringify(e) for a thrown string is quoted JSON", thrownStringJson, '"boom"');
+  </script>
+
+common-mistakes: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Common Mistakes
+   *
+   * Proves:
+   *   1. Circular references do NOT throw; the repeated node becomes null
+   *      (page: "may fail or produce incorrect output" — runtime: null).
+   *   2. CLR host objects are NOT universally opaque: DateTime.TimeZone.Retrieve
+   *      rows serialize through Stringify to JSON objects with ID and Name
+   *      (proven on the DateTime page; re-asserted here so Stringify docs do
+   *      not imply all CLR values become "{}").
+   *   3. Workaround reminder: String() is for CLR HttpResponse content before
+   *      ParseJSON — Stringify quotes a JS string; String() does not.
+   *
+   * NON-ASSERTABLE: Stringify(resp.content) from Script.Util.HttpRequest —
+   * needs a live HTTP response CLR content object. LookupRows rowset example
+   * needs a DE fixture (blocked on Platform.Function.Stringify DB entry too).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var circA = { name: "a" };
+  circA.self = circA;
+  assert("a circular reference does not throw; the repeat becomes null", Stringify(circA), '{"name":"a","self":null}');
+
+  var tzRows = DateTime.TimeZone.Retrieve({
+      Property: "ID",
+      SimpleOperator: "equals",
+      Value: 1
+  });
+  var tzRowJson = "" + Stringify(tzRows[0]);
+  assert("Stringify serializes a TimeZone row as a JSON object", tzRowJson.substring(0, 1), "{");
+  assert("the serialized TimeZone row carries ID", tzRowJson.indexOf('"ID"') >= 0 ? "true" : "false", "true");
+  assert("the serialized TimeZone row carries Name", tzRowJson.indexOf('"Name"') >= 0 ? "true" : "false", "true");
+  assert("Stringify serializes the TimeZone collection as a JSON array", ("" + Stringify(tzRows)).substring(0, 1), "[");
+
+  assert("workaround: Stringify quotes a JS string", Stringify("body"), '"body"');
+  assert("workaround: String() leaves a JS string unquoted for ParseJSON prep", "" + String("body"), "body");
+  var parsed = Platform.Function.ParseJSON(("" + String('{"ok":true}')) + "");
+  assert("workaround: String then ParseJSON restores a boolean field", parsed.ok ? "true" : "false", "true");
+  </script>
+
+platform-function-variant: |
+  <script runat="server">
+  /*
+   * Chapter: Platform.Function variant
+   *
+   * Proves:
+   *   1. Platform.Function.Stringify works with no Platform.Load (this chapter
+   *      must run before any other chapter that loads Core, or alone).
+   *   2. After load, both forms produce byte-identical JSON for the same value.
+   *   3. DEV: wrong arity is soft on the bare form and throws on the qualified
+   *      form — they are NOT fully identical (page previously said functionally
+   *      identical; corrected to match GUID / Platform.Function.Stringify).
+   *
+   * Pre-load bare-name undefined is asserted in the parameters chapter (keeps
+   * this chapter combinable after chapters that already called Platform.Load).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+
+  assert("qualified Stringify works without Platform.Load", Platform.Function.Stringify({ a: 1 }), '{"a":1}');
+
+  Platform.Load("core", "1.1.5");
+  assert("bare-name is a function after Core load", typeOfThunk(function () { return typeof Stringify; }), "function");
+
+  var sample = { name: "Jane", score: 95 };
+  assert("both forms produce byte-identical output", Stringify(sample) === Platform.Function.Stringify(sample) ? "true" : "false", "true");
+
+  assert("DEV bare zero-args returns null string (PF throws)", Stringify(), "null");
+  assert("DEV bare surplus arg ignored (PF throws)", Stringify({ a: 1 }, 2), '{"a":1}');
+  assertThrows("qualified form throws on zero arguments", function () {
+      return Platform.Function.Stringify();
+  });
+  assertThrows("qualified form throws on an extra argument", function () {
+      return Platform.Function.Stringify({ a: 1 }, 2);
+  });
+  </script>

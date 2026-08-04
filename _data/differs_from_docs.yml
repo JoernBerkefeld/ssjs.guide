@@ -43,6 +43,19 @@
   body: |
     The official member pages describe string values, require an `@` prefix, and document `SetValue` as void. On a published CloudPage GET, the prefix is optional, names are case-insensitive, numbers and booleans retain their SSJS type between server-side blocks, a never-set variable returns JavaScript `null`, and `SetValue` also returns JavaScript `null`. The variable state is limited to the current request.
 
+- name: "Variable (bare-name Core alias)"
+  url: "/core-library/variable/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformAMPscriptVariableFunctions.html"
+  tagline: "scalar GetValue + undefined SetValue return after Core load"
+  part: "sfmc"
+  category: "Core Library"
+  object: "Variable"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "methods"
+  body: |
+    The bare-name `Variable` alias (after `Platform.Load("core", "1.1.5")`) shares request-local state with `Platform.Variable`. GetValue preserves number/boolean scalars and returns JavaScript `null` for a never-set name (official docs: string). SetValue returns `undefined` (void-like), which matches the official void wording more closely than `Platform.Variable.SetValue`, which returns JavaScript `null`.
+
 - name: "Platform.Response"
   url: "/platform-objects/platform-response/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformClientBrowserRemoveCookie.html"
@@ -67,39 +80,42 @@
   discrepancy: "A2"
   anchor: "httpheader-bare-name-global-separate-inbound-outbound-collections"
   body: |
-    Available after `Platform.Load("core", ...)`. `GetValue` reads **inbound** request headers and returns `null` for a header you set via `SetValue` (separate inbound vs outbound collections). `Remove` returns `undefined`, not the `"OK"` string implied by some docs.
+    Available after `Platform.Load("core", ...)`. `GetValue` reads **inbound** request headers and returns `null` for a header you set via `SetValue` (separate inbound vs outbound collections). `Remove` returns `undefined`, not the `"OK"` string implied by some docs. Official docs claim `host` cannot be changed; runtime `SetValue("Host", …)` does emit an outbound `Host` header. `content-length` remains protected.
   testScript: |
     <script runat="server">
     Platform.Load("core", "1.1.5");
 
-    // Probe 1: SetValue writes to the OUTBOUND collection, GetValue reads INBOUND
-    try {
-        HTTPHeader.SetValue("X-Custom-Test", "hello");
-        var readBack = HTTPHeader.GetValue("X-Custom-Test");
-        Platform.Response.Write("GetValue after SetValue = " + Platform.Function.Stringify(readBack) + "\n");
-        // OBSERVED: null - GetValue reads inbound headers, not the outbound header you just set
-    } catch (e) {
-        Platform.Response.Write("ERROR: " + Platform.Function.Stringify(e) + "\n");
+    /*
+     * Differs-from-docs: separate inbound/outbound collections + Remove undefined
+     * + Host not protected (content-length is).
+     *
+     * Proves:
+     *   1. DEV: GetValue after SetValue is null (official docs: one header bag).
+     *   2. GetValue("Host") still returns the inbound CloudPage host string.
+     *   3. DEV: Remove returns undefined (official docs: "OK").
+     *   4. DEV: SetValue("Host", ...) succeeds (official docs: host cannot be changed).
+     *
+     * EXPECTED OUTPUT: every line starts with PASS.
+     */
+
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
     }
 
-    // Probe 2: GetValue on a real inbound header (present on most requests)
-    try {
-        var host = HTTPHeader.GetValue("Host");
-        Platform.Response.Write("GetValue('Host') = " + Platform.Function.Stringify(host) + "\n");
-        // OBSERVED: the CloudPage host as a string - the real inbound Host header value
-    } catch (e) {
-        Platform.Response.Write("ERROR: " + Platform.Function.Stringify(e) + "\n");
-    }
+    HTTPHeader.SetValue("X-Custom-Test", "hello");
+    var readBack = HTTPHeader.GetValue("X-Custom-Test");
+    assert("DEV GetValue after SetValue is null (official docs: shared collection)", readBack === null ? "null" : "other", "null");
 
-    // Probe 3: Remove returns undefined, not the \"OK\" string some docs imply
-    try {
-        var removed = HTTPHeader.Remove("X-Custom-Test");
-        Platform.Response.Write("Remove() = " + Platform.Function.Stringify(removed) + "\n");
-        Platform.Response.Write("typeof Remove() = " + (typeof removed) + "\n");
-        // OBSERVED: typeof = undefined (NOT \"OK\"); Stringify prints null for undefined
-    } catch (e) {
-        Platform.Response.Write("ERROR: " + Platform.Function.Stringify(e) + "\n");
-    }
+    var host = HTTPHeader.GetValue("Host");
+    assert("GetValue Host is a string", "" + (typeof host), "string");
+    assert("GetValue Host is non-empty", host && host.length > 0 ? "true" : "false", "true");
+
+    var removed = HTTPHeader.Remove("X-Custom-Test");
+    assert("DEV Remove returns undefined (official docs: OK)", removed === undefined ? "undefined" : "other", "undefined");
+    assert("DEV Remove typeof is undefined", "" + (typeof removed), "undefined");
+
+    var hostSet = HTTPHeader.SetValue("Host", "differs-host-probe");
+    assert("DEV SetValue Host succeeds (official docs: cannot change host)", hostSet === undefined ? "undefined" : "other", "undefined");
     </script>
 
 - name: "ErrorUtil (bare-name global)"
@@ -2442,7 +2458,7 @@
 - name: "&lt;EmailInstance&gt;.Validate"
   url: "/core-library/email/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_emailValidate.html"
-  tagline: "Task.ValidationStatus is a string, not a boolean"
+  tagline: "ValidationStatus is a string; ValidationMessages is null or an array"
   part: "sfmc"
   category: "Core Library"
   object: "EmailInstance"
@@ -2450,7 +2466,7 @@
   discrepancy: "A1"
   anchor: "emailinstance-validate"
   body: |
-    The official docs type `Task.ValidationStatus` as a **boolean**, but at runtime `<EmailInstance>.Validate()` returns it as a **string** (e.g. `"Fail"`). Compare against string values, not `true`/`false`. Two extra runtime facts: (1) the email must be initialized by its **CustomerKey** string — `Email.Init(numericID).Validate()` throws the opaque string `"Error Validating Email"`, whereas `Email.Init(customerKey).Validate()` returns the Task object; (2) `Task.ValidationMessages` is actually an **array** of `{Location, Message, Description}` objects, not the single string the docs describe. The whole classic `Email` object (Init/Add/Retrieve/Update/Remove/Validate/CheckContent) is **deprecated** (legacy classic Email Studio type) but not broken.
+    The official docs type `Task.ValidationStatus` as a **boolean** and `Task.ValidationMessages` as a **string**, but at runtime `<EmailInstance>.Validate()` returns `ValidationStatus` as a **string** (e.g. `"Pass"` / `"Fail"`) and `ValidationMessages` as **`null` on Pass** or an **array** of `{Location, Message, Description}` objects on Fail. Compare the status against string values, not `true`/`false`. Two extra runtime facts: (1) the email must be initialized by its **CustomerKey** string — `Email.Init(numericID).Validate()` throws the opaque string `"Error Validating Email"`, whereas `Email.Init(customerKey).Validate()` returns the Task object; (2) do not treat `ValidationMessages` as a single string. The whole classic `Email` object (Init/Add/Retrieve/Update/Remove/Validate/CheckContent) is **deprecated** (legacy classic Email Studio type) but not broken.
   testScript: |
     <script runat="server">
     Platform.Load("core", "1.1.5");
@@ -2520,7 +2536,7 @@
 - name: "Portfolio.Add / Portfolio.Retrieve / &lt;PortfolioInstance&gt;.Remove"
   url: "/core-library/portfolio/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_portfolioAdd.html"
-  tagline: "return \"Error\" instead of throwing; Remove always says \"OK\"; Retrieve is array-like, filter optional"
+  tagline: "return \"Error\" instead of throwing; Remove OK on already-deleted; never-existed returns Error; Retrieve is array-like, filter optional"
   part: "sfmc"
   category: "Core Library"
   object: "Portfolio"
@@ -2528,13 +2544,13 @@
   discrepancy: "A1"
   anchor: "portfolio-add-retrieve-remove"
   body: |
-    `Portfolio` is a legacy Classic Content file feature (Classic Content reached end of life on 24 Apr 2023 — prefer Content Builder Asset REST endpoints). The static namespace exposes `Init`, `Add` and `Retrieve`; `Update` and `Remove` exist only as **instance** methods (`Portfolio.Init(key).Remove()`), and `Portfolio.Update` as a static is `undefined`. `Portfolio.Init` never validates the key — it returns an instance carrying `Update` and `Remove` even for a key that does not exist and even when called with no argument, so it cannot serve as an existence check; the instance is a host object, so `String(instance)` throws `Object reference not set to an instance of an object`. Both the `CustomerKey` and the `ObjectID` are accepted as the key. The docs say `Add` and `Remove` return `"OK"` on success or **throw** on failure — they do **not** throw: `Add()` with no argument returns the plain string `"Error"`, so test the return value rather than relying on `try`/`catch`. `Remove` is worse: it returns `"OK"` for an already-deleted item and for a key that never existed, so the return value is not a usable success signal — confirm with a follow-up `Retrieve`. `Portfolio.Retrieve` returns a collection that is array-**like** but **not** a real JS array (`instanceof Array` is `false`, though `.length`, `.push`, `.slice` and index access work), a filter that matches nothing yields a zero-length collection rather than `null`, and the `filter` argument is optional in practice (no argument returns every item), while a non-object filter throws `Error Retrieving Portfolios`. `<PortfolioInstance>.Update` has no working invocation at all — see its own entry.
+    `Portfolio` is a legacy Classic Content file feature (Classic Content reached end of life on 24 Apr 2023 — prefer Content Builder Asset REST endpoints). The static namespace exposes `Init`, `Add` and `Retrieve`; `Update` and `Remove` exist only as **instance** methods (`Portfolio.Init(key).Remove()`), and `Portfolio.Update` as a static is `undefined`. `Portfolio.Init` never validates the key — it returns an instance carrying `Update` and `Remove` even for a key that does not exist and even when called with no argument, so it cannot serve as an existence check; the instance is a host object, so `String(instance)` throws `Object reference not set to an instance of an object`. Both the `CustomerKey` and the `ObjectID` are accepted as the key. The docs say `Add` and `Remove` return `"OK"` on success or **throw** on failure — they do **not** throw: `Add()` with no argument returns the plain string `"Error"`, so test the return value rather than relying on `try`/`catch`. `Remove` is worse: it returns `"OK"` for an already-deleted item (so the return value is not a usable success signal — confirm with a follow-up `Retrieve`), while a key that never existed returns the plain string `"Error"` rather than throwing. `Portfolio.Retrieve` returns a collection that is array-**like** but **not** a real JS array (`instanceof Array` is `false`, though `.length`, `.push`, `.slice` and index access work), a filter that matches nothing yields a zero-length collection rather than `null`, and the `filter` argument is optional in practice (no argument returns every item), while a non-object filter throws `Error Retrieving Portfolios`. `<PortfolioInstance>.Update` has no working invocation at all — see its own entry.
   testScript: |
     <script runat="server">
     // OBSERVED: Portfolio.Add() with no argument returned the string "Error" (no throw).
     // Portfolio.Init returned a working instance for a key that does not exist (and for no argument at all),
     // so it is not an existence check; stringifying that instance throws.
-    // <PortfolioInstance>.Remove() returned "OK" even for a key that never existed.
+    // <PortfolioInstance>.Remove() returned "OK" for an already-deleted item; a never-existed key returns "Error".
     // Portfolio.Retrieve() with no filter returned every item; instanceof Array was false.
     Platform.Load("core", "1.1.5");
     function pre(t) { Platform.Response.Write(t + "\n"); }
@@ -2612,6 +2628,178 @@
     pre("typeof Portfolio.Update=" + (typeof Portfolio.Update));
     </script>
 
+- name: "QueryDefinition.Add"
+  url: "/core-library/querydefinition/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_queryDefinitionAdd.html"
+  tagline: "failures return \"Error\", not a throw"
+  part: "sfmc"
+  category: "Core Library"
+  object: "QueryDefinition"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "querydefinition-add"
+  body: |
+    The official docs say `QueryDefinition.Add(properties)` returns `"OK"` or throws. Runtime-verified: invalid payloads return the plain string `"Error"` instead of throwing — including the docs' Overwrite sample that SELECTs from the same Data Extension used as `Target`. Overwrite requires a different source DE; `TargetUpdateType: "Update"` can read and write the same DE only when that DE has at least one non-primary-key field. Always compare the return value against `"OK"`.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core", "1.1.5");
+    
+    /*
+     * Differs-from-docs: QueryDefinition.Add failures return "Error", they do
+     * NOT throw. Official docs: failures throw. Runtime: Overwrite selecting
+     * from the target DE returns the plain string "Error".
+     *
+     * Proves:
+     *   1. DEV Add returns "Error" (docs: throw).
+     *   2. DEV Add does not throw (docs: throw).
+     *   3. DEV typeof the failure result is string.
+     *
+     * EXPECTED OUTPUT: every line starts with PASS.
+     */
+    
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+    }
+    function invocationResult(fn) {
+        try { fn(); return "returned"; } catch (ex) { return "threw"; }
+    }
+    function resolveQueryCategoryId() {
+        var api = new Script.Util.WSProxy();
+        var fr = api.retrieve("DataFolder", ["ID"], { Property: "ContentType", SimpleOperator: "equals", Value: "queryactivity" });
+        return fr.Results && fr.Results.length ? fr.Results[0].ID : null;
+    }
+    function ensureTargetDe(key, name) {
+        var rows = DataExtension.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+        if (rows && rows.length) return;
+        DataExtension.Add({
+            Name: name,
+            CustomerKey: key,
+            Fields: [
+                { Name: "Pk", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true },
+                { Name: "Val", FieldType: "Text", MaxLength: 50, IsRequired: false }
+            ]
+        });
+    }
+    function deleteDe(key) {
+        var props = Platform.Function.CreateObject("DataExtension");
+        Platform.Function.SetObjectProperty(props, "CustomerKey", key);
+        var st = [0, 0, 0];
+        return Platform.Function.InvokeDelete(props, st, null);
+    }
+    
+    var DE_KEY = "ssjs-guide-ts-qd-de";
+    var DE_NAME = "SSJS Guide TS QD Target";
+    var KEY = "ssjs-guide-ts-qd-add-err";
+    QueryDefinition.Init(KEY).Remove();
+    ensureTargetDe(DE_KEY, DE_NAME);
+    var cat = resolveQueryCategoryId();
+    
+    var status = null;
+    assert("DEV Add failure does NOT throw (docs: throw)", invocationResult(function () {
+        status = QueryDefinition.Add({
+            Name: "SSJS Guide TS QD Add Err",
+            CustomerKey: KEY,
+            CategoryID: cat,
+            TargetUpdateType: "Overwrite",
+            TargetType: "DE",
+            Target: { Name: DE_NAME, CustomerKey: DE_KEY },
+            QueryText: "SELECT Pk, Val FROM [" + DE_NAME + "]"
+        });
+    }), "returned");
+    assert("DEV Add failure returns \"Error\" (docs: throw)", "" + status, "Error");
+    assert("DEV typeof Add failure result is string", typeof status, "string");
+    deleteDe(DE_KEY);
+    </script>
+
+
+- name: "&lt;QueryDefinitionInstance&gt;.Update"
+  url: "/core-library/querydefinition/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_queryDefinitionUpdate.html"
+  tagline: "failures return \"Error\", not a throw"
+  part: "sfmc"
+  category: "Core Library"
+  object: "QueryDefinitionInstance"
+  severity: "low"
+  discrepancy: "A1"
+  anchor: "querydefinitioninstance-update"
+  body: |
+    The official docs say Update failures throw. Runtime-verified: Update on a key that does not resolve returns the plain string `"Error"` instead of throwing. Always compare the return value against `"OK"`.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core", "1.1.5");
+    
+    /*
+     * Differs-from-docs: <QueryDefinitionInstance>.Update failures return
+     * "Error", they do NOT throw.
+     *
+     * Proves:
+     *   1. DEV Update on a missing key returns "Error" (docs: throw).
+     *   2. DEV Update on a missing key does not throw.
+     *   3. DEV typeof the failure result is string.
+     *
+     * EXPECTED OUTPUT: every line starts with PASS.
+     */
+    
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+    }
+    function invocationResult(fn) {
+        try { fn(); return "returned"; } catch (ex) { return "threw"; }
+    }
+    
+    var status = null;
+    assert("DEV Update(missing) does NOT throw (docs: throw)", invocationResult(function () {
+        status = QueryDefinition.Init("ssjs-guide-no-such-qd-zzz").Update({ Name: "nope" });
+    }), "returned");
+    assert("DEV Update(missing) returns \"Error\" (docs: throw)", "" + status, "Error");
+    assert("DEV typeof Update failure result is string", typeof status, "string");
+    </script>
+
+
+- name: "&lt;QueryDefinitionInstance&gt;.Remove"
+  url: "/core-library/querydefinition/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_queryDefinitionRemove.html"
+  tagline: "failures return \"Error\", not a throw"
+  part: "sfmc"
+  category: "Core Library"
+  object: "QueryDefinitionInstance"
+  severity: "low"
+  discrepancy: "A1"
+  anchor: "querydefinitioninstance-remove"
+  body: |
+    The official docs say Remove failures throw. Runtime-verified: Remove on a key that never existed returns the plain string `"Error"` instead of throwing. A successful Remove soft-deletes the row (`Status: Inactive`); Core Retrieve no longer finds it, while WSProxy `like` may still list Inactive leftovers. Confirm deletion with Core Retrieve.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core", "1.1.5");
+    
+    /*
+     * Differs-from-docs: <QueryDefinitionInstance>.Remove failures return
+     * "Error", they do NOT throw.
+     *
+     * Proves:
+     *   1. DEV Remove on a missing key returns "Error" (docs: throw).
+     *   2. DEV Remove on a missing key does not throw.
+     *   3. DEV typeof the failure result is string.
+     *
+     * EXPECTED OUTPUT: every line starts with PASS.
+     */
+    
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+    }
+    function invocationResult(fn) {
+        try { fn(); return "returned"; } catch (ex) { return "threw"; }
+    }
+    
+    var status = null;
+    assert("DEV Remove(missing) does NOT throw (docs: throw)", invocationResult(function () {
+        status = QueryDefinition.Init("ssjs-guide-no-such-qd-zzz").Remove();
+    }), "returned");
+    assert("DEV Remove(missing) returns \"Error\" (docs: throw)", "" + status, "Error");
+    assert("DEV typeof Remove failure result is string", typeof status, "string");
+    </script>
+
+
 - name: "&lt;QueryDefinitionInstance&gt;.Perform"
   url: "/core-library/querydefinition/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_queryDefinitionPerform.html"
@@ -2627,25 +2815,87 @@
   testScript: |
     <script runat="server">
     Platform.Load("core", "1.1.5");
-    // NON-DESTRUCTIVE probe: <QueryDefinitionInstance>.Perform(action) return value.
-    // Docs annotate @returns Enum("OK"); a bogus/non-existent key means no real query runs.
-    // OBSERVED: QueryDefinition.Init -> function, returns object; qd.Perform -> function, arity 3.
-    // OBSERVED: qd.Perform("start") on a non-existent key returned the STRING (did NOT throw):
-    //   "Exception occurred during [Schedule::Start] ErrorID = 842727025"
-    //   -> not "OK" and not "QueryDefinition perform called successfully"; CONFIRMS return type is a
-    //      status string, not Enum("OK"); failure is signalled via the returned string, not a throw.
-    try {
-        var qd = QueryDefinition.Init("__qa_probe_nonexistent_query_key__");
-        Platform.Response.Write("typeof qd.Perform: " + typeof qd.Perform + "\n");
-        Platform.Response.Write("qd.Perform.length (arity): " + qd.Perform.length + "\n");
-        var result = qd.Perform("start");
-        Platform.Response.Write("typeof result: " + typeof result + "\n");
-        Platform.Response.Write("Perform result: " + Platform.Function.Stringify(result) + "\n");
-        Platform.Response.Write("is exactly 'OK'? " + (String(result) === "OK") + "\n");
-    } catch (e) {
-        Platform.Response.Write("THREW: " + Platform.Function.Stringify(e) + "\n");
+    
+    /*
+     * Differs-from-docs: <QueryDefinitionInstance>.Perform(action)
+     *
+     * Official docs: returns Enum("OK") and failures throw.
+     * Runtime:
+     *   - success → "QueryDefinition perform called successfully"
+     *   - missing key → Exception string, does NOT throw
+     *
+     * Proves:
+     *   1. DEV success string is not "OK".
+     *   2. DEV failure does not throw.
+     *   3. DEV failure string contains "Exception occurred during [Schedule::Start]".
+     *   4. Workaround: inspect the returned string, do not rely on try/catch.
+     *
+     * EXPECTED OUTPUT: every line starts with PASS.
+     */
+    
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
     }
+    function invocationResult(fn) {
+        try { fn(); return "returned"; } catch (ex) { return "threw"; }
+    }
+    function resolveQueryCategoryId() {
+        var api = new Script.Util.WSProxy();
+        var fr = api.retrieve("DataFolder", ["ID"], { Property: "ContentType", SimpleOperator: "equals", Value: "queryactivity" });
+        return fr.Results && fr.Results.length ? fr.Results[0].ID : null;
+    }
+    function ensureTargetDe(key, name) {
+        var rows = DataExtension.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: key });
+        if (rows && rows.length) return;
+        DataExtension.Add({
+            Name: name,
+            CustomerKey: key,
+            Fields: [
+                { Name: "Pk", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true },
+                { Name: "Val", FieldType: "Text", MaxLength: 50, IsRequired: false }
+            ]
+        });
+    }
+    function deleteDe(key) {
+        var props = Platform.Function.CreateObject("DataExtension");
+        Platform.Function.SetObjectProperty(props, "CustomerKey", key);
+        var st = [0, 0, 0];
+        return Platform.Function.InvokeDelete(props, st, null);
+    }
+    
+    var DE_KEY = "ssjs-guide-ts-qd-de";
+    var DE_NAME = "SSJS Guide TS QD Target";
+    var KEY = "ssjs-guide-ts-qd-perf-dev";
+    var SRC = "SSJSGUIDE_TYPES";
+    QueryDefinition.Init(KEY).Remove();
+    ensureTargetDe(DE_KEY, DE_NAME);
+    var cat = resolveQueryCategoryId();
+    assert("Add fixture for Perform differs", "" + QueryDefinition.Add({
+        Name: "SSJS Guide TS QD Perf Dev",
+        CustomerKey: KEY,
+        CategoryID: cat,
+        TargetUpdateType: "Overwrite",
+        TargetType: "DE",
+        Target: { Name: DE_NAME, CustomerKey: DE_KEY },
+        QueryText: "SELECT Pk FROM [" + SRC + "]"
+    }), "OK");
+    
+    var ok = QueryDefinition.Init(KEY).Perform("start");
+    assert("DEV success is not \"OK\" (docs: \"OK\")", ("" + ok) === "OK" ? "true" : "false", "false");
+    assert("DEV success is QueryDefinition perform called successfully", "" + ok, "QueryDefinition perform called successfully");
+    
+    var fail = null;
+    assert("DEV Perform(missing) does NOT throw (docs: throw)", invocationResult(function () {
+        fail = QueryDefinition.Init("ssjs-guide-no-such-qd-zzz").Perform("start");
+    }), "returned");
+    assert("DEV typeof Perform failure is string", typeof fail, "string");
+    assert("DEV failure contains Schedule::Start Exception", ("" + fail).indexOf("Exception occurred during [Schedule::Start]") >= 0 ? "matched" : ("" + fail), "matched");
+    assert("workaround: failure is not the success string", ("" + fail) === "QueryDefinition perform called successfully" ? "true" : "false", "false");
+    
+    assert("fixture cleanup", "" + QueryDefinition.Init(KEY).Remove(), "OK");
+    deleteDe(DE_KEY);
     </script>
+
 
 - name: "DeliveryProfile.Add"
   url: "/core-library/deliveryprofile/"
@@ -3159,7 +3409,7 @@
 - name: "&lt;DataExtensionInstance&gt;.Rows.Retrieve / Lookup"
   url: "/core-library/dataextension-rows/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_dataExtensionRowsRetrieve.html"
-  tagline: "string vs typed values, empty-array vs null, and Retrieve works on CloudPages"
+  tagline: "string vs typed values; Lookup Date is ISO-8601; empty-array vs null; Retrieve works on CloudPages"
   part: "sfmc"
   category: "Core Library"
   object: "DataExtensionInstance"
@@ -3251,42 +3501,37 @@
     } catch (e) { pre("THREW: " + e); }
     </script>
 
-- name: "FilterDefinition.Update / Remove"
+- name: "FilterDefinition write methods (Add / Update / Remove)"
   url: "/core-library/filterdefinition/"
-  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_filterDefinitionUpdate.html"
-  tagline: "reads work and static Add works via the simple-filter shape; the instance write methods Update/Remove do not work at runtime — they return/throw \"Error\", not \"OK\"/throw (no working invocation found)"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_filterDefinitionAdd.html"
+  tagline: "reads work (Init/Retrieve); the write methods Add/Update/Remove do not work at runtime — they return/throw \"Error\", not \"OK\" (no working invocation found)"
   part: "sfmc"
   category: "Core Library"
   object: "FilterDefinition"
   severity: "medium"
   discrepancy: "A1"
-  anchor: "filterdefinition-update-remove"
+  anchor: "filterdefinition-write-methods-add-update-remove"
   body: |
-    The official docs state these return `"OK"` on success or throw on failure. Reads work and static `Add` works via the simple-filter shape (returns `"OK"`) — see the FilterDefinition page where `Add` is documented as confirmed-working — so `Add` is **not** part of this deviation. This entry covers only the instance write methods **`Update`** and **`Remove`**, for which **no working invocation was found** in our runtime tests. Reads are verified against the real, owned definition (`ssjs-datafilter-test`, source DE `SSJSGUIDE_TYPES`): `FilterDefinition.Retrieve` returns the row and `Init` returns an instance exposing `Update`/`Remove` (both `typeof === "function"`). **Runtime-tested against the OWNED object.** For **Update** (1 argument), three payload shapes were tried and none succeeded (so the failure is not a single malformed/incomplete-payload rejection): (1) a FULL Add-style payload (`Name` + `CustomerKey` + `Description` + `Filter: {Property, SimpleOperator, Value}` + `DataSource: {Type, CustomerKey}`) **threw** the raw string `"Error updating FilterDefinition"` (`typeof === "string"`); (2) the same payload **without** `DataSource` also threw `"Error updating FilterDefinition"`; (3) a **metadata-only** payload (`Name` + `CustomerKey` + `Description`, no Filter/DataSource) returned the string `"Error"` (no throw). After each attempt a follow-up `Retrieve` confirmed Description was **not** changed (stayed empty) and the ObjectID was unchanged. For **Remove** (0 arguments), `<instance>.Remove()` returned the string `"Error"` and did **not** throw; a follow-up `Retrieve` confirmed the object was **not** deleted (still returned, same ObjectID). The object was then restored from mcdev source to its original `Pk Equals "test"` condition. Observed WSProxy facts (reported, not interpreted as a cause): the equivalent `updateItem("FilterDefinition", …)` and `deleteItem("FilterDefinition", …)` both returned `Status="Error"`. The SOAP describe (`mcdev soap FilterDefinition`) reports Name/Description/CustomerKey/DataFilter as `IsUpdatable: true`, i.e. the SOAP schema marks these fields editable, yet no working `Update`/`Remove` invocation was reproduced at runtime. Treat a non-`"OK"` result as failure rather than relying on a thrown Error object; note the failure form varies (a metadata-only Update returns the string `"Error"`, while a payload containing a `Filter` throws the raw string `"Error updating FilterDefinition"`, and Remove returns the string `"Error"`).
+    The official docs state these return `"OK"` on success or throw on failure. Reads work: `FilterDefinition.Init` and `FilterDefinition.Retrieve` are verified against the owned definition (`ssjs-datafilter-test`, source DE `SSJSGUIDE_TYPES`) and are **not** part of this deviation. This entry covers the write methods **`Add`** (static), **`Update`**, and **`Remove`** (instance), for which **no working invocation was found** in our CloudPage tests. For **Add**, the documented simple-filter payload (`Filter: {Property, SimpleOperator, Value}` + `DataSource: {Type, CustomerKey}`) returns the plain string `"Error"` under Core `"1"` / `"1.1.1"` / `"1.1.5"` and creates nothing (Core `Retrieve` and WSProxy stay empty for the probe key). A LeftOperand/LogicalOperator/RightOperand complex `Filter` also returns `"Error"`; using a `DataFilter` property instead of `Filter` throws the raw string `"Error adding FilterDefinition"`. For **Update**, three payload shapes were tried against the owned object and none succeeded: (1) a FULL Add-style payload **threw** `"Error updating FilterDefinition"`; (2) the same payload without `DataSource` also threw that string; (3) a metadata-only payload returned `"Error"`. Description stayed empty and ObjectID was unchanged. For **Remove**, `<instance>.Remove()` returned `"Error"` (no throw) and a follow-up `Retrieve` still found the object. Observed WSProxy facts (reported, not interpreted as a cause): `createItem` / `updateItem` / `deleteItem` on `FilterDefinition` failed (delete reported a permission error). The SOAP describe marks Name/Description/CustomerKey/DataFilter as `IsUpdatable: true`, yet no working Core write was reproduced. A follow-up probe run additionally tried payload shapes derived from the **working mcdev `dataFilter` REST implementation** (`sfmc-devtools` `DataFilter.js` `preDeployTasks()` — create posts `key`/`name`/`categoryId`/`description`/`filterDefinitionXml`/`derivedFromType: 2`/`derivedFromObjectId` to `/email/v1/filters/filterdefinition/`): the REST-shape lowercase payload with a real `filterDefinitionXml` string, a PascalCase `FilterDefinitionXml` variant, `CategoryID`, capitalized `Equals`, field-ObjectID `Property`, ObjectID-based and full `DataSource` objects, and the docs' `SubscriberList` shape. Every variant still returned `"Error"` or threw `"Error adding FilterDefinition"`/`"Error updating FilterDefinition"`, and the `CreateObject("FilterDefinition")` + `InvokeCreate` SOAP path failed with "The user does not have permission to perform this operation." — so the failure is not a payload-shape problem. Filters can still be created outside Core (for example mcdev `dataFilter` deploy or the REST endpoint above). Treat a non-`"OK"` result as failure.
   testScript: |
     <script runat="server">
     Platform.Load("core", "1.1.5");
-    // Probe: FilterDefinition reads work; the instance write methods Update/Remove do not work at runtime.
-    // Adapt "ssjs-datafilter-test" to a real Data Filter external key in your account.
-    // READS: Retrieve returns the row; Init returns an instance exposing Update/Remove.
-    // Static Add works via the simple-filter shape (returns "OK") and is NOT probed here — this entry is Update/Remove.
-    // WRITES (no working invocation found): <inst>.Update returns "Error" (metadata-only) or throws the raw
-    //   STRING "Error updating FilterDefinition" (payload with a Filter); <inst>.Remove returns "Error" (no throw).
-    // Tested against the real OWNED object; recoverable via: mcdev d ssjs/MCDEV_Training_QA dataFilter ssjs-datafilter-test
+    // Probe: FilterDefinition reads work; Core write methods Add/Update/Remove do not.
+    // Adapt "ssjs-datafilter-test" / "SSJSGUIDE_TYPES" to owned keys in your account.
     function pre(t) { Platform.Response.Write(t + "\n"); }
-    // P1 — Retrieve the real definition (READ works).
     try {
         var r = FilterDefinition.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: "ssjs-datafilter-test" });
         pre("Retrieve length=" + (r && r.length != undefined ? r.length : "n/a")); // OBSERVED: 1
     } catch (e1) { pre("Retrieve THREW -> " + e1); }
-    // P2 — Init the real definition and inspect the instance (READ works).
     try {
-        var fd = FilterDefinition.Init("ssjs-datafilter-test");
-        pre("Init typeof fd.Update=" + (typeof fd.Update) + " typeof fd.Remove=" + (typeof fd.Remove)); // OBSERVED: function / function
-    } catch (e2) { pre("Init THREW -> " + e2); }
-    // P3 — Update the owned object with the FULL Add-style shape (Name+CustomerKey+Description+Filter+DataSource).
-    //   WRITE does not work -> THROWS the raw STRING "Error updating FilterDefinition"; Description stays unchanged.
-    //   Recoverable via mcdev (see header); non-destructive because the update never takes effect.
+        var addStatus = FilterDefinition.Add({
+            Name: "ssjs-guide-ts-fd-probe",
+            CustomerKey: "ssjs-guide-ts-fd-probe",
+            Filter: { Property: "Pk", SimpleOperator: "equals", Value: "test" },
+            DataSource: { Type: "DataExtension", CustomerKey: "SSJSGUIDE_TYPES" }
+        });
+        pre("Add RETURNED typeof=" + (typeof addStatus) + " value=" + addStatus); // OBSERVED: string "Error"
+    } catch (eAdd) { pre("Add THREW typeof=" + (typeof eAdd) + " String=" + ("" + eAdd)); }
     try {
         var fd2 = FilterDefinition.Init("ssjs-datafilter-test");
         var updResult = fd2.Update({
@@ -3296,20 +3541,15 @@
             Filter: { Property: "Pk", SimpleOperator: "equals", Value: "test" },
             DataSource: { Type: "DataExtension", CustomerKey: "SSJSGUIDE_TYPES" }
         });
-        pre("Update RETURNED typeof=" + (typeof updResult) + " value=" + updResult); // metadata-only OBSERVED: string "Error"
-    } catch (e3) { pre("Update THREW typeof=" + (typeof e3) + " String=" + String(e3)); } // OBSERVED: typeof=string "Error updating FilterDefinition"
-    // P4 — Remove the owned object.
-    //   WRITE does not work -> returns the string "Error" (no throw); a follow-up Retrieve still finds the object.
-    //   Recoverable via mcdev (see header); non-destructive because the delete never takes effect.
+        pre("Update RETURNED typeof=" + (typeof updResult) + " value=" + updResult);
+    } catch (e3) { pre("Update THREW typeof=" + (typeof e3) + " String=" + ("" + e3)); } // OBSERVED: string "Error updating FilterDefinition"
     try {
-        var fd3 = FilterDefinition.Init("ssjs-datafilter-test");
-        var remResult = fd3.Remove();
+        var remResult = FilterDefinition.Init("ssjs-datafilter-test").Remove();
         pre("Remove RETURNED typeof=" + (typeof remResult) + " value=" + remResult); // OBSERVED: string "Error"
     } catch (e4) { pre("Remove THREW -> " + e4); }
-    // P5 — confirm the object still exists (Update/Remove did not take effect).
     try {
         var chk = FilterDefinition.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: "ssjs-datafilter-test" });
-        pre("Post-write Retrieve length=" + (chk && chk.length != undefined ? chk.length : "n/a")); // OBSERVED: 1 (unchanged)
+        pre("Post-write Retrieve length=" + (chk && chk.length != undefined ? chk.length : "n/a")); // OBSERVED: 1
     } catch (e5) { pre("Post-write Retrieve THREW -> " + e5); }
     </script>
 
@@ -3377,30 +3617,104 @@
   testScript: |
     <script runat="server">
     Platform.Load("core", "1.1.5");
-    // Probe: per-send Tracking API shape. Docs show <SendInstance>.Tracking.ClickRetrieve /
-    // .TotalByIntervalRetrieve, but at runtime those names are undefined. The working shape is
-    // Tracking.Clicks.Retrieve(...) and Tracking.TotalByInterval.Retrieve(...). READ-ONLY probe.
-    // Uses a non-existent Send id (shape check does not require a real send). No mutation.
-    // OBSERVED (live CloudPage, MCDEV_Training_QA): send.Tracking = object; tracking.ClickRetrieve
-    // = undefined; tracking.TotalByIntervalRetrieve = undefined; tracking.Clicks = object;
-    // tracking.Clicks.Retrieve = function; tracking.TotalByInterval = object;
-    // tracking.TotalByInterval.Retrieve = function; enumerated Tracking keys = [Clicks, TotalByInterval].
-    // => CONFIRMED: documented flat names do not exist; working shape is the two Retrieve sub-objects.
-    try {
-        var send = Send.Init(999999999); // non-existent Send id — read-only shape check
-        var tracking = send.Tracking;
-        // EXPECTED: documented names are undefined; sub-objects Clicks / TotalByInterval exist.
-        Platform.Response.Write("typeof ClickRetrieve: " + typeof tracking.ClickRetrieve + "\n"); // OBSERVED: "undefined"
-        Platform.Response.Write("typeof TotalByIntervalRetrieve: " + typeof tracking.TotalByIntervalRetrieve + "\n"); // OBSERVED: "undefined"
-        Platform.Response.Write("typeof Clicks: " + typeof tracking.Clicks + "\n"); // OBSERVED: "object"
-        Platform.Response.Write("typeof Clicks.Retrieve: " + typeof tracking.Clicks.Retrieve + "\n"); // OBSERVED: "function"
-        Platform.Response.Write("typeof TotalByInterval.Retrieve: " + typeof tracking.TotalByInterval.Retrieve + "\n"); // OBSERVED: "function"
-        var keys = "";
-        for (var k in tracking) { keys += k + ", "; }
-        Platform.Response.Write("Tracking keys: [" + keys + "]\n"); // OBSERVED: [Clicks, TotalByInterval, ]
-    } catch (e) {
-        Platform.Response.Write("ERROR: " + Platform.Function.Stringify(e) + "\n");
+    
+    /*
+     * Differs: docs ClickRetrieve vs runtime Clicks.Retrieve.
+     * EXPECTED OUTPUT: every line starts with PASS.
+     */
+    
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
     }
+    
+    var s = Send.Init(1);
+    assert("DEV ClickRetrieve is undefined (docs name)", typeof s.Tracking.ClickRetrieve, "undefined");
+    assert("working member is Clicks.Retrieve", typeof s.Tracking.Clicks.Retrieve, "function");
+    
+    /*
+     * Differs: docs TotalByIntervalRetrieve vs runtime TotalByInterval.Retrieve.
+     * EXPECTED OUTPUT: every line starts with PASS.
+     */
+    
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+    }
+    
+    var s = Send.Init(1);
+    assert("DEV TotalByIntervalRetrieve is undefined (docs name)", typeof s.Tracking.TotalByIntervalRetrieve, "undefined");
+    assert("working member is TotalByInterval.Retrieve", typeof s.Tracking.TotalByInterval.Retrieve, "function");
+    </script>
+
+- name: "&lt;SendInstance&gt;.Remove"
+  url: "/core-library/send/#instance-remove"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_sendRemove.html"
+  tagline: "soft-cancels (Status Canceled); row stays Retrievable"
+  part: "sfmc"
+  category: "Core Library"
+  object: "SendInstance"
+  severity: "medium"
+  discrepancy: "B3"
+  anchor: "instance-remove"
+  body: |
+    Official docs describe Remove as deleting the send. At runtime `Remove()` returns `"OK"` and sets `Status` to `"Canceled"`, but the send row remains Retrievable afterward — it is not a hard delete. A missing ID returns `"Error"` and does not throw.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core", "1.1.5");
+    
+    /*
+     * Chapter: <SendInstance>.Remove()
+     *
+     * CloudPage GET context. Proves:
+     *   1. Remove is an instance method.
+     *   2. Remove() returns "OK".
+     *   3. DEV: the send remains Retrievable with Status "Canceled" (not a hard
+     *      delete — official docs / older prose: deletes the record).
+     *   4. Remove on a missing ID returns "Error" and does NOT throw.
+     *
+     * FIXTURE: empty-list send under ssjs-guide-ts-send-rm.
+     * EXPECTED OUTPUT: every line starts with PASS.
+     */
+    
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+    }
+    function invocationResult(fn) {
+        try { fn(); return "returned"; } catch (ex) { return "threw"; }
+    }
+    
+    var EMAIL_KEY = "ssjs-guide-ts-send-rm";
+    var LIST_KEY = "ssjs-guide-ts-send-rm-list";
+    var EMAIL_NAME = "SSJS Guide TS Send Rm";
+    try { Email.Init(EMAIL_KEY).Remove(); } catch (e0) {}
+    try { List.Init(LIST_KEY).Remove(); } catch (e1) {}
+    Email.Add({
+        CustomerKey: EMAIL_KEY,
+        Name: EMAIL_NAME,
+        HTMLBody: "<b>rm</b>",
+        TextBody: "rm",
+        Subject: "SSJS Guide Send Rm",
+        EmailType: "HTML",
+        CharacterSet: "US-ASCII"
+    });
+    List.Add({ CustomerKey: LIST_KEY, Name: "SSJS Guide TS Send Rm List", Type: "Public" });
+    var listId = List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: LIST_KEY })[0].ID;
+    Send.Add(EMAIL_KEY, [listId]);
+    var sendId = Send.Retrieve({ Property: "EmailName", SimpleOperator: "equals", Value: EMAIL_NAME })[0].ID;
+    try { Send.Init(sendId).CancelSend(); } catch (e2) {}
+    
+    var inst = Send.Init(sendId);
+    assert("typeof instance.Remove is function", typeof inst.Remove, "function");
+    assert("Remove() returns \"OK\"", "" + inst.Remove(), "OK");
+    
+    var after = Send.Retrieve({ Property: "ID", SimpleOperator: "equals", Value: sendId });
+    assert("DEV Remove leaves row Retrievable (docs: deletes)", "" + after.length, "1");
+    assert("DEV Remove sets Status to Canceled (docs: deletes)", "" + after[0].Status, "Canceled");
+    
+    assert("Remove(missing) returns \"Error\"", "" + Send.Init(999999991).Remove(), "Error");
+    assert("Remove(missing) does NOT throw", invocationResult(function () { return Send.Init(999999991).Remove(); }), "returned");
+    
+    Email.Init(EMAIL_KEY).Remove();
+    List.Init(LIST_KEY).Remove();
     </script>
 
 - name: "&lt;SendInstance&gt;.CancelSend"
@@ -3418,33 +3732,42 @@
   testScript: |
     <script runat="server">
     Platform.Load("core", "1.1.5");
-    // Probe (NON-DESTRUCTIVE): <SendInstance>.CancelSend() signature & return value.
-    // Docs say CancelSend() returns the enum "OK" on success and throws on error.
-    // We probe safely against an obviously-invalid / non-existent Send id (999999999)
-    // so NOTHING real is cancelled: we check typeof CancelSend, its arity, and what it
-    // returns/throws for a missing send.
-    // OBSERVED (live CloudPage): typeof send.CancelSend === "function";
-    //   send.CancelSend.length === 2; for a non-existent send CancelSend() did NOT throw and
-    //   RETURNED a string (typeof result === "string", result !== "OK", result !== "status"):
-    //   "Send [ID: 999999999] not found. [ErrorID: 2063583072]".
-    //   => The documented '"OK" enum + throws-on-error' contract is wrong; the method returns
-    //      a status STRING. (The success-path literal "status" is from a prior destructive run
-    //      against a real send and is NOT re-verified by this safe probe.)
-    try {
-        var sendId = 999999999; // obviously-invalid / non-existent Send id — nothing real cancelled
-        var send = Send.Init(sendId);
-        Platform.Response.Write("typeof send.CancelSend: " + typeof send.CancelSend + "\n");
-        Platform.Response.Write("send.CancelSend.length (arity): " + send.CancelSend.length + "\n");
-        var result = send.CancelSend();
-        Platform.Response.Write("typeof result: " + typeof result + "\n");
-        Platform.Response.Write("result === \"OK\": " + (result === "OK") + "\n");
-        Platform.Response.Write("result === \"status\": " + (result === "status") + "\n");
-        Platform.Response.Write("CancelSend result: " + Platform.Function.Stringify(result) + "\n");
-    } catch (e) {
-        Platform.Response.Write("ERROR: " + Platform.Function.Stringify(e) + "\n");
+    
+    /*
+     * Differs: CancelSend success token is "status", not "OK".
+     * EXPECTED OUTPUT: every line starts with PASS.
+     */
+    
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
     }
+    
+    var EMAIL_KEY = "ssjs-guide-ts-send-cstat";
+    var LIST_KEY = "ssjs-guide-ts-send-cstat-list";
+    var EMAIL_NAME = "SSJS Guide TS Send CStat";
+    try { Email.Init(EMAIL_KEY).Remove(); } catch (e0) {}
+    try { List.Init(LIST_KEY).Remove(); } catch (e1) {}
+    Email.Add({
+        CustomerKey: EMAIL_KEY,
+        Name: EMAIL_NAME,
+        HTMLBody: "<b>cstat</b>",
+        TextBody: "cstat",
+        Subject: "SSJS Guide Send CStat",
+        EmailType: "HTML",
+        CharacterSet: "US-ASCII"
+    });
+    List.Add({ CustomerKey: LIST_KEY, Name: "SSJS Guide TS Send CStat List", Type: "Public" });
+    var listId = List.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: LIST_KEY })[0].ID;
+    Send.Add(EMAIL_KEY, [listId]);
+    var sendId = Send.Retrieve({ Property: "EmailName", SimpleOperator: "equals", Value: EMAIL_NAME })[0].ID;
+    
+    assert("DEV CancelSend success token is \"status\" (docs: \"OK\")", "" + Send.Init(sendId).CancelSend(), "status");
+    assert("success token is not \"OK\"", ("" + Send.Init(sendId).CancelSend()) === "OK" ? "true" : "false", "false");
+    
+    try { Send.Init(sendId).Remove(); } catch (e2) {}
+    Email.Init(EMAIL_KEY).Remove();
+    List.Init(LIST_KEY).Remove();
     </script>
-
 - name: "Subscriber.Upsert / Subscriber.Statistics"
   url: "/core-library/subscriber/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_subscriberUpsert.html"
@@ -5511,4 +5834,170 @@
     // script block a not-yet-defined name is a parse-time risk that aborts the page.
     function typeOf(fn) { try { return fn(); } catch (ex) { return "THREW"; } }
     show("Core still usable after the failures", typeOf(function () { return typeof Stringify; }));  // OBSERVED: function
+    </script>
+
+- name: "Format"
+  url: "/core-library/format/#format-codes-for-date-strings"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_utilitiesFormat.html"
+  tagline: "short-form d uses a four-digit year"
+  part: "sfmc"
+  category: "Core Library"
+  object: "Format"
+  severity: "low"
+  discrepancy: "A7"
+  anchor: "format-codes-for-date-strings"
+  body: |
+    The official Format reference shows predefined short-form `d` as a two-digit year (e.g. `8/5/24` for the sample August 2024 instant). On a published CloudPage the same input returns a four-digit year (`8/5/2024`). Related short-form `g` already documents a four-digit year and matches runtime. Prefer the four-digit result when writing assertions or display expectations.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core", "1.1.5");
+
+    /*
+     * Differs-from-docs: predefined short-form date code `d`
+     *
+     * Proves:
+     *   1. DEV Format(date, "d") is "8/5/2024" for the page sample instant
+     *      (official Salesforce docs example: "8/5/24").
+     *   2. Related short-form `g` already documents a 4-digit year and matches.
+     *
+     * EXPECTED OUTPUT: every line starts with PASS.
+     */
+
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+    }
+
+    var date = "2024-08-05T13:41:23.000-06:00";
+    assert("DEV d short-form uses 4-digit year (official docs: 8/5/24)", "" + Format(date, "d"), "8/5/2024");
+    assert("g short-form keeps documented 4-digit year", "" + Format(date, "g"), "8/5/2024 1:41 PM");
+    </script>
+
+- name: "<ListInstance>.Remove"
+  url: "/core-library/list/#instance-remove"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_listRemove.html"
+  tagline: "missing key returns \"Error\", does not throw"
+  part: "sfmc"
+  category: "Core Library"
+  object: "ListInstance"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "instance-remove"
+  body: |
+    The official docs annotate `<ListInstance>.Remove()` as returning `"OK"` or throwing on failure. At runtime a nonexistent list key returns the plain string `"Error"` and does **not** throw — callers must check the return value; `try`/`catch` alone is not enough. A successful delete still returns `"OK"`.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core", "1.1.5");
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+    }
+    function invocationResult(fn) {
+        try { fn(); return "returned"; } catch (ex) { return "threw"; }
+    }
+    assert("DEV Remove on a nonexistent key returns \"Error\" (docs: throws)", "" + List.Init("ssjs-guide-no-such-list-zzz").Remove(), "Error");
+    assert("DEV Remove on a nonexistent key does NOT throw (docs: throws)", invocationResult(function () { return List.Init("ssjs-guide-no-such-list-zzz").Remove(); }), "returned");
+    </script>
+
+- name: "<ListInstance>.Subscribers.Add"
+  url: "/core-library/list-subscribers/#instance-subscribers-add"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_listSubscribersAdd.html"
+  tagline: "failed Add returns \"Error\", does not throw"
+  part: "sfmc"
+  category: "Core Library"
+  object: "ListInstance.Subscribers"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "instance-subscribers-add"
+  body: |
+    The official docs annotate `<ListInstance>.Subscribers.Add()` as returning `"OK"` or throwing on failure. At runtime invalid or incomplete properties return the plain string `"Error"` and do **not** throw — callers must check the return value; `try`/`catch` alone is not enough.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core", "1.1.5");
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+    }
+    function invocationResult(fn) {
+        try { fn(); return "returned"; } catch (ex) { return "threw"; }
+    }
+    var list = List.Init("ssjs-guide-no-such-list-zzz");
+    assert("DEV Add() returns \"Error\" (docs: throws)", "" + list.Subscribers.Add(), "Error");
+    assert("DEV Add() does NOT throw (docs: throws)", invocationResult(function () { return list.Subscribers.Add(); }), "returned");
+    </script>
+
+- name: "<ListInstance>.Subscribers.Unsubscribe"
+  url: "/core-library/list-subscribers/#instance-subscribers-unsubscribe"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_listSubscribersUnsubscribe.html"
+  tagline: "missing subscriber returns \"Error\", does not throw"
+  part: "sfmc"
+  category: "Core Library"
+  object: "ListInstance.Subscribers"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "instance-subscribers-unsubscribe"
+  body: |
+    The official docs annotate `<ListInstance>.Subscribers.Unsubscribe()` as returning `"OK"` or throwing on failure. At runtime a missing subscriber returns the plain string `"Error"` and does **not** throw. A successful call sets Status to `Unsubscribed` but leaves the membership row on the list.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core", "1.1.5");
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+    }
+    function invocationResult(fn) {
+        try { fn(); return "returned"; } catch (ex) { return "threw"; }
+    }
+    var list = List.Init("ssjs-guide-no-such-list-zzz");
+    assert("DEV Unsubscribe(missing) returns \"Error\" (docs: throws)", "" + list.Subscribers.Unsubscribe("no-such-ssjs-guide-ts@gmail.com"), "Error");
+    assert("DEV Unsubscribe(missing) does NOT throw (docs: throws)", invocationResult(function () { return list.Subscribers.Unsubscribe("no-such-ssjs-guide-ts@gmail.com"); }), "returned");
+    </script>
+
+- name: "<ListInstance>.Subscribers.Update"
+  url: "/core-library/list-subscribers/#instance-subscribers-update"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_listSubscribersUpdate.html"
+  tagline: "failed Update returns \"Error\", does not throw"
+  part: "sfmc"
+  category: "Core Library"
+  object: "ListInstance.Subscribers"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "instance-subscribers-update"
+  body: |
+    The official docs annotate `<ListInstance>.Subscribers.Update()` as returning `"OK"` or throwing on failure. At runtime a missing subscriber (or an unresolved bare email when `SubscriberKey` differs from `EmailAddress`) returns the plain string `"Error"` and does **not** throw.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core", "1.1.5");
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+    }
+    function invocationResult(fn) {
+        try { fn(); return "returned"; } catch (ex) { return "threw"; }
+    }
+    var list = List.Init("ssjs-guide-no-such-list-zzz");
+    assert("DEV Update(missing) returns \"Error\" (docs: throws)", "" + list.Subscribers.Update("no-such-ssjs-guide-ts@gmail.com", "Active"), "Error");
+    assert("DEV Update(missing) does NOT throw (docs: throws)", invocationResult(function () { return list.Subscribers.Update("no-such-ssjs-guide-ts@gmail.com", "Active"); }), "returned");
+    </script>
+
+- name: "<ListInstance>.Subscribers.Upsert"
+  url: "/core-library/list-subscribers/#instance-subscribers-upsert"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_listSubscribersUpsert.html"
+  tagline: "failed Upsert returns \"Error\", does not throw"
+  part: "sfmc"
+  category: "Core Library"
+  object: "ListInstance.Subscribers"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "instance-subscribers-upsert"
+  body: |
+    The official docs annotate `<ListInstance>.Subscribers.Upsert()` as returning `"OK"` or throwing on failure. At runtime invalid calls return the plain string `"Error"` and do **not** throw — callers must check the return value.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core", "1.1.5");
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+    }
+    function invocationResult(fn) {
+        try { fn(); return "returned"; } catch (ex) { return "threw"; }
+    }
+    var list = List.Init("ssjs-guide-no-such-list-zzz");
+    var noArg = null;
+    assert("DEV Upsert() does NOT throw (docs: throws)", invocationResult(function () { noArg = list.Subscribers.Upsert(); }), "returned");
+    assert("DEV Upsert() returns \"Error\" (docs: throws)", "" + noArg, "Error");
     </script>

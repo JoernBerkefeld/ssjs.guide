@@ -5,6 +5,7 @@ parent: Core Library
 parent_url: /core-library/
 description: Core library SendClassification — ties a sender profile and delivery profile for compliant sends.
 verification: verified
+test_scripts: complete
 differs_from_docs: true
 requires_core_load: true
 type_mapping:
@@ -59,6 +60,8 @@ Platform.Load("core", "1");
 var sc = SendClassification.Init("mySendClassification");
 ```
 
+{% include test-script.html bundle="core-library--sendclassification" chapter="init" %}
+
 ---
 
 ### SendClassification.Add {#add}
@@ -99,6 +102,8 @@ var newSC = {
 SendClassification.Add(newSC);
 ```
 
+{% include test-script.html bundle="core-library--sendclassification" chapter="add" %}
+
 ---
 
 ### SendClassification.Retrieve {#retrieve}
@@ -133,6 +138,8 @@ var results = SendClassification.Retrieve({
     Value: "mySendClassification"
 });
 ```
+
+{% include test-script.html bundle="core-library--sendclassification" chapter="retrieve" %}
 
 ---
 
@@ -171,6 +178,8 @@ var updatedSC = {
 var status = sc.Update(updatedSC);
 ```
 
+{% include test-script.html bundle="core-library--sendclassification" chapter="instance-update" %}
+
 ---
 
 ### &lt;SendClassificationInstance&gt;.Remove {#instance-remove}
@@ -196,6 +205,8 @@ Platform.Load("core", "1.1.5");
 var sc = SendClassification.Init("mySendClassification");
 var status = sc.Remove();
 ```
+
+{% include test-script.html bundle="core-library--sendclassification" chapter="instance-remove" %}
 
 ## See also
 
