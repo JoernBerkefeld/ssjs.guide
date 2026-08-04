@@ -15,7 +15,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`Platform.Function.AddObjectArrayItem(apiObject, propertyName, value)`](/platform-functions/addobjectarrayitem/) | Platform Functions | void | Append item to a SOAP API object array property |
+| [`Platform.Function.AddObjectArrayItem(apiObject, propertyName, value)`](/platform-functions/addobjectarrayitem/) | Platform Functions | null | Append item to a SOAP API object array property |
 | [`Attribute.GetValue(name)`](/core-library/attribute/) | Core Library | string | Profile attribute in email / triggered send context |
 | [`Account.Init(key)`](/core-library/account/#init) | Core Library | AccountInstance | Initialize Account |
 | [`Account.Retrieve(filter)`](/core-library/account/#retrieve) | Core Library | object[] | Retrieve accounts |
@@ -103,8 +103,8 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`Platform.Function.ContentImageByID(id[, fallbackId])`](/platform-functions/contentimagebyid/) | Platform Functions | string | img tag for Content Builder image by ID |
 | [`Platform.Function.ContentImageByKey(key[, fallbackId])`](/platform-functions/contentimagebykey/) | Platform Functions | string | img tag for Content Builder image by key |
 | [`Platform.Function.CreateObject(objectType)`](/platform-functions/createobject/) | Platform Functions | object | Create SOAP API object (legacy) |
-| [`Platform.Response.CharacterSet`](/platform-objects/platform-response/#characterset) | Platform Response | write-only | ⚠️ Set the response charset — reading it throws |
-| [`Platform.Response.ContentType`](/platform-objects/platform-response/#contenttype) | Platform Response | write-only | ⚠️ Set the response `Content-Type` — reading it throws |
+| [`Platform.Response.CharacterSet`](/platform-objects/platform-response/#characterset) | Platform Response | setter with opaque read | Sets the response charset; reads do not return the configured string |
+| [`Platform.Response.ContentType`](/platform-objects/platform-response/#contenttype) | Platform Response | setter with opaque read | Sets the response `Content-Type`; reads do not return the configured string |
 | [`ClickEvent.Retrieve(filter)`](/core-library/events/#click-event) | Core Library | object[] | Click tracking events |
 | [`ContentAreaObj.Init(key)`](/core-library/contentareaobj/#init) | Core Library | ContentAreaObjInstance | Classic Content Area object (**deprecated**) |
 | [`ContentAreaObj.Add(properties)`](/core-library/contentareaobj/#add) | Core Library | string | Create Content Area (**deprecated**) |
@@ -157,7 +157,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`<DataExtensionInstance>.Fields.Retrieve()`](/core-library/dataextension-fields/#instance-fields-retrieve) | Core Library | object[] | Retrieve DE field definitions |
 | [`<DataExtensionInstance>.Fields.UpdateSendableField(deFieldName, subscriberField)`](/core-library/dataextension-fields/#instance-fields-updatesendablefield) | Core Library | string | Update sendable field mapping |
 | [`<DataExtensionInstance>.Rows.Add(rowData)`](/core-library/dataextension-rows/#instance-rows-add) | Core Library | string | Insert DE row(s) |
-| [`<DataExtensionInstance>.Rows.Lookup(searchFieldNames, searchValues, [limit], [orderByFieldName])`](/core-library/dataextension-rows/#instance-rows-lookup) | Core Library | object[] | Lookup DE rows |
+| [`<DataExtensionInstance>.Rows.Lookup(searchFieldNames, searchValues, [limit], [orderByFieldName])`](/core-library/dataextension-rows/#instance-rows-lookup) | Core Library | object[] \| null | Lookup DE rows |
 | [`<DataExtensionInstance>.Rows.Remove(columnNames, columnValues)`](/core-library/dataextension-rows/#instance-rows-remove) | Core Library | number | Delete matching DE rows |
 | [`<DataExtensionInstance>.Rows.Retrieve([filter])`](/core-library/dataextension-rows/#instance-rows-retrieve) | Core Library | object[] | Read DE rows |
 | [`<DataExtensionInstance>.Rows.Update(rowData, whereFieldNames, whereValues)`](/core-library/dataextension-rows/#instance-rows-update) | Core Library | string | Update DE rows |
@@ -235,7 +235,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`Platform.Function.GUID()`](/platform-functions/guid/) | Platform Functions | string | Generate UUID v4 |
 | [`Platform.Recipient.GetAttributeValue(attributeName)`](/platform-objects/platform-recipient/) | Platform Functions | string | Returns the value of a subscriber attribute or sendable DE field for the current recipient |
 | [`Platform.Request.GetCookieValue(name)`](/platform-objects/platform-request/) | Platform Functions | string | Read a cookie value |
-| [`Platform.Request.GetFormField(name)`](/platform-objects/platform-request/) | Platform Functions | string | Read a form field (POST or GET) |
+| [`Platform.Request.GetFormField(name)`](/platform-objects/platform-request/) | Platform Functions | string | Read a POST form field (does not fall back to GET query parameters) |
 | [`Platform.Request.GetPostData([encoding])`](/platform-objects/platform-request/) | Platform Functions | string | Read raw POST body (optional character encoding) |
 | [`Platform.Request.GetQueryStringParameter(name)`](/platform-objects/platform-request/) | Platform Functions | string | Read a URL query parameter |
 | [`Platform.Request.GetRequestHeader(name)`](/platform-objects/platform-request/) | Platform Functions | string | Read a request header |
@@ -249,8 +249,8 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 |------|----------|---------|-------------|
 | [`HTTP.Get(url[, headerNames, headerValues])`](/http/get/) | Core HTTP | object | HTTP GET — structured status + body |
 | [`HTTP.Post(url, contentType, payload, headerNames, headerValues)`](/http/post/) | Core HTTP | object | HTTP POST — structured status + body |
-| [`HTTPHeader.GetValue(name)`](/core-library/httpheader/) | Core Library | string | Read HTTP request header |
-| [`HTTPHeader.SetValue(name, value)`](/core-library/httpheader/) | Core Library | void | Set HTTP request header |
+| [`HTTPHeader.GetValue(name)`](/core-library/httpheader/) | Core Library | string \| null | Read inbound HTTP request header |
+| [`HTTPHeader.SetValue(name, value)`](/core-library/httpheader/) | Core Library | void | Set outbound response header (`content-length` cannot be changed; `host` can) |
 | [`HTTPHeader.Remove(headerName)`](/core-library/httpheader/) | Core Library | string | Remove HTTP request header |
 | [`Platform.Function.HTTPGet(url, continueOnError[, emptyContentHandling, headerNames, headerValues, statusVariable])`](/platform-functions/httpget/) | Platform Functions | string | HTTP GET — body string only |
 | [`Platform.Function.HTTPPost(url, contentType, payload[, headerNames, headerValues, response])`](/platform-functions/httppost/) | Platform Functions | string | HTTP POST — body string only |
@@ -312,7 +312,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`<ListInstance>.Remove()`](/core-library/list/#instance-remove) | Core Library | string | Remove list |
 | [`<ListInstance>.Subscribers.Add(properties)`](/core-library/list-subscribers/#instance-subscribers-add) | Core Library | string | Add subscriber to list |
 | [`<ListInstance>.Subscribers.Retrieve([filter])`](/core-library/list-subscribers/#instance-subscribers-retrieve) | Core Library | object[] | Subscribers on list |
-| [`<ListInstance>.Subscribers.Unsubscribe(emailAddress)`](/core-library/list-subscribers/#instance-subscribers-unsubscribe) | Core Library | string | Unsubscribe on list |
+| [`<ListInstance>.Subscribers.Unsubscribe(emailAddress)`](/core-library/list-subscribers/#instance-subscribers-unsubscribe) | Core Library | string | Set list status to Unsubscribed |
 | [`<ListInstance>.Subscribers.Update(emailAddress, status)`](/core-library/list-subscribers/#instance-subscribers-update) | Core Library | string | Update subscriber on list |
 | [`<ListInstance>.Subscribers.Upsert(emailAddress, attributes)`](/core-library/list-subscribers/#instance-subscribers-upsert) | Core Library | string | Upsert subscriber on list |
 | [`<ListInstance>.Subscribers.Tracking.Retrieve(filter)`](/core-library/list-subscribers/#instance-subscribers-tracking-retrieve) | Core Library | object[] | List subscriber tracking |
@@ -489,11 +489,11 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`Platform.Function.RedirectTo(url)`](/platform-functions/redirectto/) | Platform Functions | void | Email href redirect helper |
 | [`Redirect(url, movedPermanently)`](/core-library/redirect/) | Core Library | void | Redirect the browser |
 | [`Platform.Response.Redirect(url[, movedPermanently])`](/platform-objects/platform-response/#redirect) | Platform Response | void | Redirect the browser — ends the script immediately |
-| [`Platform.Response.RemoveCookie(name)`](/platform-objects/platform-response/#removecookie) | Platform Response | void | Remove a cookie |
-| [`Platform.Response.RemoveResponseHeader(headerName)`](/platform-objects/platform-response/#removeresponseheader) | Platform Response | void | Remove a response header |
+| [`Platform.Response.RemoveCookie(name)`](/platform-objects/platform-response/#removecookie) | Platform Response | null | Attempt to remove a cookie |
+| [`Platform.Response.RemoveResponseHeader(headerName)`](/platform-objects/platform-response/#removeresponseheader) | Platform Response | null | Remove a response header |
 | [`Request.URL() / PagePath() / Method() / ApplicationID() / PackageID() / ApplicationBaseURL()`](/core-library/request/) | Core Library | string | Read request values via the Core Library utility methods. A **distinct** object from `Platform.Request`, not an alias — smaller method-only set. |
 | [`Request.GetQueryStringParameter(name)`](/core-library/request/) | Core Library | string | Read a URL query parameter via the Core Library `Request` object |
-| [`Request.GetFormField(name)`](/core-library/request/) | Core Library | string | Read a form field (POST or GET) via the Core Library `Request` object |
+| [`Request.GetFormField(name)`](/core-library/request/) | Core Library | string | Read a named POST form field via Core `Request` (does not read GET query parameters) |
 | [`<RegExpInstance>.exec(string)`](/ecmascript-builtins/regular-expressions/#exec) | ECMAScript Builtins | array | ⚠️ Partial — `lastIndex` does not advance; avoid the `g`-flag loop pattern |
 | [`<RegExpInstance>.global`](/ecmascript-builtins/regular-expressions/#global) | ECMAScript Builtins | boolean | True if the `g` flag was set |
 | [`re instanceof RegExp`](/ecmascript-builtins/regular-expressions/#instanceof) | ECMAScript Builtins | boolean | ⚠️ Partial — always `false`; use `re.constructor === RegExp` |
@@ -558,7 +558,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`Send.Retrieve(filter)`](/core-library/send/#retrieve) | Core Library | object[] | Retrieve sends |
 | [`Send.RetrieveLists(filter)`](/core-library/send/#retrievelists) | Core Library | object[] | Lists for send |
 | [`<SendInstance>.CancelSend()`](/core-library/send/#instance-cancelsend) | Core Library | string | Cancel send |
-| [`<SendInstance>.Remove()`](/core-library/send/#instance-remove) | Core Library | string | Remove send |
+| [`<SendInstance>.Remove()`](/core-library/send/#instance-remove) | Core Library | string | Cancel/remove the bound send (Status → Canceled; still Retrievable) |
 | [`Send.Tracking.Retrieve(filter)`](/core-library/send/#tracking-retrieve) | Core Library | object[] | Send tracking |
 | [`<SendInstance>.Tracking.ClickRetrieve(filter)`](/core-library/send/#instance-tracking-clickretrieve) | Core Library | object[] | Click tracking for send |
 | [`<SendInstance>.Tracking.TotalByIntervalRetrieve(type, startDate, endDate, groupBy)`](/core-library/send/#instance-tracking-totalbyintervalretrieve) | Core Library | object[] | Aggregated send tracking |
@@ -593,8 +593,8 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`<StringInstance>.trimStart()`](/ecmascript-builtins/string-methods/#trimstart) | ECMAScript Builtins | string | ❌ Missing (ES2019) — needs polyfill |
 | [`SurveyEvent.Retrieve(filter)`](/core-library/events/#survey-event) | Core Library | object[] | Survey events |
 | [`Platform.Function.SystemDateToLocalDate(dateString)`](/platform-functions/systemdatetolocaldate/) | Platform Functions | string | System time (CST) to local account/user time |
-| [`Platform.Response.SetResponseHeader(headerName, value)`](/platform-objects/platform-response/#setresponseheader) | Platform Response | void | Set a response header |
-| [`Platform.Response.SetCookie(name, value [, expires [, secure]])`](/platform-objects/platform-response/#setcookie) | Platform Response | void | Set a response cookie |
+| [`Platform.Response.SetResponseHeader(headerName, value)`](/platform-objects/platform-response/#setresponseheader) | Platform Response | null | Set a response header |
+| [`Platform.Response.SetCookie(name, value [, expires [, secure]])`](/platform-objects/platform-response/#setcookie) | Platform Response | null | Set a response cookie |
 
 ---
 
@@ -643,10 +643,10 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`Variable.GetValue(variableName)`](/core-library/variable/) | Core Library | string | Read AMPscript variable |
-| [`Variable.SetValue(variableName, value)`](/core-library/variable/) | Core Library | void | Write AMPscript variable |
-| [`Platform.Variable.GetValue(name)`](/platform-objects/platform-variable/) | Platform Variable | string | Reads the value of an AMPscript variable |
-| [`Platform.Variable.SetValue(name, value)`](/platform-objects/platform-variable/#setvalue) | Platform Variable | void | Writes a value to an AMPscript variable |
+| [`Variable.GetValue(variableName)`](/core-library/variable/) | Core Library | string, number, boolean, or null | Read AMPscript variable |
+| [`Variable.SetValue(variableName, value)`](/core-library/variable/) | Core Library | undefined | Write AMPscript variable |
+| [`Platform.Variable.GetValue(name)`](/platform-objects/platform-variable/) | Platform Variable | string, number, boolean, or null | Reads an AMPscript variable in the current request |
+| [`Platform.Variable.SetValue(name, value)`](/platform-objects/platform-variable/#setvalue) | Platform Variable | null | Writes an AMPscript variable in the current request |
 
 ---
 

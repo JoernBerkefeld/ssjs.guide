@@ -40,7 +40,7 @@ On a CloudPage GET, these are CLR-backed request values rather than ordinary Jav
 | Method | Returns | Description |
 |--------|---------|-------------|
 | [`GetCookieValue(name)`](#getcookievalue) | string | Read a cookie value |
-| [`GetFormField(name)`](#getformfield) | string | Read a form field (POST or GET) |
+| [`GetFormField(name)`](#getformfield) | string | Read a named POST form field, or `null` when absent (does not read GET query parameters) |
 | [`GetPostData([encoding])`](#getpostdata) | string | Read raw POST body (optional character encoding) |
 | [`GetQueryStringParameter(name)`](#getquerystringparameter) | string | Read a URL query parameter |
 | [`GetRequestHeader(name)`](#getrequestheader) | string | Read a request header |
