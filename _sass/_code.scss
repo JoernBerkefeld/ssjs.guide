@@ -221,6 +221,29 @@
   }
 }
 
+// ── Collapsible test-script details ───────────────────────────────────────────
+// Used by _includes/test-script.html (every platform-function, platform-object,
+// core-library and ecmascript-builtins page) AND by the discrepancy cards on
+// /engine-limitations/differs-from-docs/ — global, not differs-from-docs-specific.
+
+.testscript-details {
+  margin: $space-2 0 0;
+
+  > summary {
+    cursor: pointer;
+    font-size: 0.72rem;
+    color: $text-secondary;
+
+    &:hover {
+      color: $text-primary;
+    }
+  }
+
+  pre {
+    margin: $space-2 0 0;
+  }
+}
+
 // ── Inline type badges ────────────────────────────────────────────────────────
 
 .type-badge {

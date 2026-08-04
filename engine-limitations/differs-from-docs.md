@@ -112,21 +112,9 @@ This page is the single, growing catalog of those discrepancies. Each row links 
   font-size: 0.75rem;
   color: #8b949e;
 }
-/* Collapsible copy-paste test script that reproduces the discrepancy on a CloudPage. */
-.dfd-card__testscript {
-  margin: 0.5rem 0 0;
-}
-.dfd-card__testscript > summary {
-  cursor: pointer;
-  font-size: 0.72rem;
-  color: #8b949e;
-}
-.dfd-card__testscript > summary:hover {
-  color: #c9d1d9;
-}
-.dfd-card__testscript pre {
-  margin: 0.5rem 0 0;
-}
+/* Collapsible copy-paste test script that reproduces the discrepancy on a CloudPage.
+   Uses the global .testscript-details class (see _sass/_code.scss), shared with
+   the "Show test script" blocks on function/object/core-library reference pages. */
 /* Placeholder note shown when a claim's test script still needs manual review. */
 .dfd-card__testscript-note {
   margin: 0.5rem 0 0;
@@ -282,7 +270,7 @@ This page is the single, growing catalog of those discrepancies. Each row links 
     <span class="dfd-tag">{% if r.part == "ecmascript" %}ECMAScript {{ r.object }}{% else %}{{ r.category }}{% endif %}</span>
   </div>
   <div class="dfd-card__body">{{ r.body | markdownify }}</div>
-  {% if r.testScript %}{% if r.testScript == "needs review" %}<p class="dfd-card__testscript-note"><em>Test script: needs review.</em></p>{% else %}<details class="dfd-card__testscript"><summary>Show test script</summary>{{ '```html' | append: '
+  {% if r.testScript %}{% if r.testScript == "needs review" %}<p class="dfd-card__testscript-note"><em>Test script: needs review.</em></p>{% else %}<details class="testscript-details"><summary>Show test script</summary>{{ '```html' | append: '
 ' | append: r.testScript | append: '
 ```' | markdownify }}</details>{% endif %}{% endif %}
   {% if r.officialUrl %}<p class="dfd-card__ref"><a href="{{ r.officialUrl }}" target="_blank" rel="noopener">Official documentation</a></p>{% endif %}
