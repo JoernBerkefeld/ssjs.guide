@@ -54,10 +54,12 @@ differs-from-docs: |
    *      WITH parameters and a bare ExtractRequest with no parameters at all
    *      both throw the same way.
    *
-   * NOT ASSERTED: which .NET exception type is thrown. The engine surfaces
-   * only the generic "An error occurred when attempting to evaluate an
-   * InvokeExtract function call.  See inner exception for details." wrapper;
-   * the inner NullReferenceException is not observable from SSJS.
+   * NOT ASSERTED: which .NET exception type is thrown, and WHY the call
+   * fails. The engine surfaces only the generic "An error occurred when
+   * attempting to evaluate an InvokeExtract function call.  See inner
+   * exception for details." wrapper; the inner exception is not observable
+   * from SSJS. The wrapper message is equally consistent with several
+   * causes, so no mechanism is claimed from it.
    *
    * SCOPE: CloudPage only (MCDEV_Training_QA business unit). The page also
    * lists automation availability; the automation context — the very context

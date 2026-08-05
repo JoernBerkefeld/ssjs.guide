@@ -103,6 +103,41 @@ For the confirmed runtime characteristics of `Rows.Retrieve` / `Rows.Lookup` (st
 
 ---
 
+## Repeating a Lookup in One Request Returns the Stale Result {#lookup-request-scoped-query-cache}
+
+**Severity: High** — a read after a write silently returns the pre-write value
+
+Within a single request the engine caches the result of a data-extension query. Issuing the **same** `Platform.Function.Lookup(deName, returnField, field, value)` a second time returns the **first** result, even if rows were written in between. The call does not throw and there is no indication that the value is stale.
+
+```javascript
+Platform.Load("core", "1.1.5");
+
+Platform.Function.Lookup("MyDE", "Val", "Email", "a@example.com");  // null — no row yet
+Platform.Function.InsertData("MyDE", ["Email", "Val"], ["a@example.com", "v1"]);
+
+// ❌ still null — the identical query is served from the request cache
+Platform.Function.Lookup("MyDE", "Val", "Email", "a@example.com");
+
+// ✅ a different FILTER COLUMN reads the new row
+Platform.Function.Lookup("MyDE", "Val", "Grp", "grp1");            // "v1"
+```
+
+This is not write lag: in the runtime probe a differently-shaped query issued **between** the two identical calls returned the post-write value, so the data was demonstrably current while the repeated query was not.
+
+The cache key is the **(data extension, filter)** pair, not the literal argument list:
+
+| Second call | Fresh? |
+|---|---|
+| Identical call | ❌ stale |
+| Same filter written with the **array** form of `whereFieldNames` / `whereFieldValues` | ❌ stale |
+| Same filter, **different `returnField`** | ❌ stale |
+| **Different filter column** | ✅ fresh |
+| [`LookupRows`](/platform-functions/lookuprows/) with the same filter | ✅ fresh |
+
+Switching to the array form or changing the returned field is therefore **not** a workaround. Structure scripts so each distinct query is issued at most once, and never re-read a row whose absence you queried earlier in the same request. See [Lookup](/platform-functions/lookup/).
+
+---
+
 ## GetPostData() Can Only Be Called Once
 
 **Severity: Medium** — second call returns empty string
@@ -352,6 +387,43 @@ Note: `Platform.Function.LookupRows` looks up by **Data Extension name**, not Ex
 
 ---
 
+## An ENT.-Prefixed Key Silences Fields.Retrieve and Rows.Retrieve {#ent-prefix-retrieve-empty}
+
+**Severity: High** — reads silently return nothing while writes on the very same instance succeed
+
+The `ENT.` prefix is what makes a parent-owned, shared Data Extension addressable from a child Business Unit: with it, [`DataExtension.Init`](/core-library/dataextension/#init) `Rows.Add` writes land in the real DE and `Platform.Function.InsertDE` / `LookupRows` / `Lookup` / `DeleteDE` all resolve. Without it, a child BU cannot reach the DE at all — `LookupRows` reports *A Data Extension of this name does not exist*.
+
+The bug is that Core's two read methods do not understand that prefix. On an instance built from an `ENT.`-prefixed key, `Fields.Retrieve()` and `Rows.Retrieve()` both return an **empty array** — not an error, not `null` — even while `Rows.Add` on that same instance is writing successfully and `LookupRows` reads the written row straight back.
+
+This is **not** a cross-BU restriction and **not** an artefact of the DE being empty. Run on the DE's own **owning** Business Unit, the unprefixed key returns the real 3 fields and 2 rows while the `ENT.`-prefixed key — same DE, same request — still returns `[]` for both. And a DE with **zero** rows returns its field definitions correctly, so `Fields.Retrieve()` never depended on row count. The prefix alone is the trigger. From a child BU the consequence is total: the prefixed spelling reads empty and the unprefixed one does not resolve, so there is no spelling of the key that makes Core `Retrieve` work there.
+
+```javascript
+Platform.Load("core", "1.1.5");
+
+// On the OWNING Business Unit — the same DE, two spellings, one request
+DataExtension.Init("MyDE_ExternalKey").Fields.Retrieve();     // ✅ 3 fields
+DataExtension.Init("MyDE_ExternalKey").Rows.Retrieve();       // ✅ 2 rows
+DataExtension.Init("ENT.MyDE_ExternalKey").Fields.Retrieve(); // ❌ length 0
+DataExtension.Init("ENT.MyDE_ExternalKey").Rows.Retrieve();   // ❌ length 0
+
+// From a CHILD Business Unit the prefix is mandatory — and reads are still empty
+var de = DataExtension.Init("ENT.MyDE_ExternalKey");
+de.Rows.Add({ FieldName1: "abc", FieldName2: "d", FieldName3: "s" }); // 1 — the write really lands
+de.Rows.Retrieve();                                  // ❌ length 0
+
+// ✅ read it back through Platform.Function instead
+Platform.Function.LookupRows("ENT.MyDE_ExternalKey", "FieldName1", "abc"); // the row
+```
+
+Use `Platform.Function.LookupRows` / `Lookup` for every read against an `ENT.`-prefixed key, and never treat an empty `Rows.Retrieve()` or `Fields.Retrieve()` there as proof that the DE is empty or column-less.
+
+Two further quirks on the `ENT.` path, both observed with a same-schema local Data Extension as the control:
+
+- A write that omits a column is rejected. `Rows.Add` and `InsertDE` succeeded when every field of the shared DE was supplied and failed when one was left out, while the local control accepted the same partial shapes. Whether the shared DE's columns are flagged required was not established, so treat "always supply every column" as the safe rule rather than a proven engine difference.
+- `Platform.Function.DeleteDE` returns `null` whether or not it deleted anything. Naming only the primary key left the row in place; naming every column with its value removed it. Always verify a delete with a follow-up `LookupRows`.
+
+---
+
 ## Platform.Load Must Come Before Any Core Usage
 
 **Severity: High** — runtime error
@@ -451,7 +523,7 @@ Track expected arity yourself (a plain variable or constant) rather than reading
 
 **Severity: Medium** — the variadic form crashes the page
 
-`Math.max` and `Math.min` are variadic in standard JavaScript, but in the SFMC engine they only accept **exactly two** arguments. Passing **three or more** throws, and the **no-argument** form returns `0` instead of `-Infinity` / `+Infinity`. The two-argument form is runtime-verified correct.
+`Math.max` and `Math.min` are variadic in standard JavaScript, but in the SFMC engine they only accept **exactly two** arguments. Passing **three or more** throws. Passing **fewer** than two does not throw — the engine fills every missing slot with `0`, which silently corrupts the result. The two-argument form is runtime-verified correct.
 
 ```javascript
 Math.max(1, 5);       // 5   — safe
@@ -462,6 +534,21 @@ Math.min(1, 5);       // 1   — safe
 Math.min(1, 5, 3);    // THROWS "Index was outside the bounds of the array."
 Math.min();           // 0   — expected +Infinity
 ```
+
+### A missing argument becomes `0` {#math-max-min-missing-arg-zero}
+
+The no-argument result is not a special case — it follows from a single rule: **`Math.min(x)` behaves as `Math.min(x, 0)` and `Math.max(x)` as `Math.max(x, 0)`**. The one-argument form therefore returns the wrong value whenever `0` is the more extreme operand, and it does so **without throwing**:
+
+```javascript
+Math.min(5);          // 0    — expected 5
+Math.max(5);          // 5    — correct only because 5 > 0
+Math.min(-7);         // -7   — correct only because -7 < 0
+Math.max(-7);         // 0    — expected -7
+Math.min(3.5);        // 0    — expected 3.5
+Math.max(-3.5);       // 0    — expected -3.5
+```
+
+The negative-argument cases are what prove the rule: the argument is not discarded (`Math.min(-7)` is `-7`, not `0`), and a `0` really is taking part (`Math.max(-7)` is `0`, not `-7`). Never call `Math.max` or `Math.min` with a single argument, even when it looks safe — pass both operands explicitly, or use the [polyfill](/engine-limitations/polyfills/#math-max-min).
 
 Compare two values at a time — `Math.max(Math.max(a, b), c)` — fold with a loop, or use the [Math.max / Math.min polyfill](/engine-limitations/polyfills/#math-max-min). See [Math Object](/ecmascript-builtins/math/#max) for the full list of `Math` members and which ES6 methods are missing.
 

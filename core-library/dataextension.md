@@ -17,7 +17,7 @@ type_mapping:
 
 `DataExtension` is a Core library object that provides object-oriented access to Data Extensions. Initialize it with `DataExtension.Init()`, then use the `.Rows` and `.Fields` properties.
 
-{% include callout.html type="warning" content="Requires `Platform.Load(\"core\", \"1.1.5\")` before use. Core Library DataExtension methods do not support enterprise-level data extensions." %}
+{% include callout.html type="warning" content="Requires `Platform.Load(\"core\", \"1.1.5\")` before use. A shared data extension owned by the parent Business Unit IS reachable from a child BU, but only when the key carries the `ENT.` prefix — and that prefix then makes `Fields.Retrieve()` / `Rows.Retrieve()` return an empty array on any BU, including the owning one, even though writes land. See [An ENT.-Prefixed Key Silences Fields.Retrieve and Rows.Retrieve](/engine-limitations/known-bugs/#ent-prefix-retrieve-empty)." %}
 
 ## Methods
 

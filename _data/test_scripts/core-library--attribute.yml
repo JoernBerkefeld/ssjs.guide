@@ -75,9 +75,14 @@ description: |
   assert("Attribute.GetValue equals Platform.Recipient.GetAttributeValue", "" + Attribute.GetValue("FirstName"), "" + Platform.Recipient.GetAttributeValue("FirstName"));
   assert("workaround Platform.Recipient.GetAttributeValue returns a string", typeOf(function () { return typeof Platform.Recipient.GetAttributeValue("FirstName"); }), "string");
 
-  /* 5. Recommended CloudPage workaround — read from a Data Extension instead. */
-  assert("workaround Platform.Function.Lookup is available", typeOf(function () { return typeof Platform.Function.Lookup; }), "clrmethodinfo");
-  assert("workaround Platform.Function.LookupRows is available", typeOf(function () { return typeof Platform.Function.LookupRows; }), "clrmethodinfo");
+  /* 5. Recommended CloudPage workaround — read from a Data Extension instead.
+   *    NOTE: typeof on a Platform.Function member reports "clrmethodinfo" for
+   *    ANY name, including one that does not exist, so these two lines assert
+   *    only what typeof reports — they are NOT proof that the members exist.
+   *    Lookup and LookupRows are proven by successful invocation on their own
+   *    pages: /platform-functions/lookup/ and /platform-functions/lookuprows/. */
+  assert("Platform.Function.Lookup reports typeof clrmethodinfo (not an existence proof)", typeOf(function () { return typeof Platform.Function.Lookup; }), "clrmethodinfo");
+  assert("Platform.Function.LookupRows reports typeof clrmethodinfo (not an existence proof)", typeOf(function () { return typeof Platform.Function.LookupRows; }), "clrmethodinfo");
 
   /* 6. Negative case — the member name is case sensitive. */
   assert("wrong-case Attribute.getValue throws", invocationResult(function () { return Attribute.getValue("FirstName"); }), "threw");

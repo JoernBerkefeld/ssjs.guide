@@ -34,8 +34,8 @@ Almost every `Math` member is **ES3** and works in SSJS. Two members are partial
 | [`Math.exp(x)`](#exp) | ES3 | ✅ Works | |
 | [`Math.sin/cos/tan/asin/acos/atan/atan2`](#trigonometry) | ES3 | ✅ Works | |
 | [`Math.PI / E / LN2 / LN10 / LOG2E / SQRT2 / SQRT1_2`](#constants) | ES3 | ✅ Works | |
-| [`Math.max(...values)`](#max) | ES3 | ⚠️ Partial | Throws with 3+ args; no-arg returns `0` — see Polyfills |
-| [`Math.min(...values)`](#min) | ES3 | ⚠️ Partial | Throws with 3+ args; no-arg returns `0` — see Polyfills |
+| [`Math.max(...values)`](#max) | ES3 | ⚠️ Partial | Throws with 3+ args; a missing arg becomes `0` — see Polyfills |
+| [`Math.min(...values)`](#min) | ES3 | ⚠️ Partial | Throws with 3+ args; a missing arg becomes `0` — see Polyfills |
 | [`Math.LOG10E`](#log10e) | ES3 | ❌ Missing | `undefined` — use the literal `0.4342944819032518` |
 | [`Math.trunc(x)`](#trunc) | ES6 | ❌ Missing | `x < 0 ? Math.ceil(x) : Math.floor(x)` |
 | [`Math.sign(x)`](#sign) | ES6 | ❌ Missing | `x > 0 ? 1 : x < 0 ? -1 : 0` |
@@ -199,11 +199,14 @@ Math.atan2(1, 1);        // π/4
 
 `(ES3)` — ⚠️ Partial.
 
-{% include callout.html type="warning" content="`Math.max` throws when passed **3 or more arguments**, and the no-argument form returns `0` instead of `-Infinity`. Only the two-argument form is safe — fold with a loop for more, or use the [polyfill](/engine-limitations/polyfills/#math-max-min)." %}
+{% include callout.html type="warning" content="`Math.max` throws when passed **3 or more arguments**. With **fewer than two** it does not throw — the engine supplies `0` for each missing argument, so `Math.max(x)` behaves as `Math.max(x, 0)` and the no-argument form returns `0` instead of `-Infinity`. Only the two-argument form is safe — fold with a loop for more, or use the [polyfill](/engine-limitations/polyfills/#math-max-min)." %}
 
 ```javascript
 Math.max(1, 5);   // 5  — two-argument form is safe
 // Math.max(1, 5, 3); — ❌ throws in SFMC
+
+Math.max(5);      // 5  — ⚠️ looks right, but only because 5 > 0
+Math.max(-7);     // 0  — ❌ expected -7: the missing argument became 0
 
 var arr = [3, 1, 4, 1, 5];
 var max = arr[0];
@@ -215,10 +218,13 @@ for (var i = 1; i < arr.length; i++) { if (arr[i] > max) { max = arr[i]; } }
 
 ## min {#min}
 
-`(ES3)` — ⚠️ Partial. Same caveat as [`Math.max`](#max): throws with 3+ args, no-arg returns `0` instead of `+Infinity`. See the [polyfill](/engine-limitations/polyfills/#math-max-min).
+`(ES3)` — ⚠️ Partial. Same caveat as [`Math.max`](#max): throws with 3+ args, and every missing argument is supplied as `0`, so the no-argument form returns `0` instead of `+Infinity`. See the [polyfill](/engine-limitations/polyfills/#math-max-min).
 
 ```javascript
 Math.min(1, 5);   // 1  — two-argument form is safe
+
+Math.min(5);      // 0  — ❌ expected 5: the missing argument became 0
+Math.min(-7);     // -7 — ⚠️ looks right, but only because -7 < 0
 ```
 
 

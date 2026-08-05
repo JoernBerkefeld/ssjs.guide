@@ -18,8 +18,6 @@ differs_from_docs: true
 
 SFMC exposes SOAP **Perform** for lifecycle actions. WSProxy surfaces this as **`performItem`** for one target row and **`performBatch`** for many (see [`proxy.performBatch`](/wsproxy/performbatch/)).
 
-There is **no** method named `proxy.perform` — older samples used informal shorthand.
-
 ## Parameters
 
 | Name | Type | Required | Description |

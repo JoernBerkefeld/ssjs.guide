@@ -12,6 +12,13 @@
 # interleave their evaluation in the Jint engine and pair labels with the
 # wrong values.
 #
+# FIXTURE RULE: every script creates its own Content Area through WSProxy and
+# reads the stored Name back before using it. That read-back is what makes the
+# positive assertions meaningful — the business unit's pre-existing Content
+# Area returns an empty Name over SOAP, and earlier revisions of these scripts
+# wrongly concluded the function was broken because they could only pass names
+# that never resolved. Each script deletes its fixture again at the end.
+#
 # ENGINE NOTE: the CLR exception messages thrown by ContentAreaByName cannot
 # be inspected with .length / .indexOf / .substring — those operations abort
 # the whole CloudPage with HTTP 422. The messages may only be concatenated
@@ -30,19 +37,20 @@ parameters: |
    *   1. The member resolves on Platform.Function (typeof "clrmethodinfo",
    *      the engine's uniform marker for a host CLR method — it proves
    *      nothing about existence, only invocation does).
-   *   2. DEV the required `name` parameter alone — the minimal documented
-   *      call — does NOT return content: it throws. The official docs
-   *      describe a 1-argument call as valid and returning the content
-   *      area's markup.
-   *   3. DEV the documented optional `regionName` (parameter 2) does not work
-   *      either, and fails DIFFERENTLY: it is rejected as a resolved-value
-   *      parameter. A string literal, the empty string and null all throw.
+   *   2. The required `name` parameter alone — the minimal documented call —
+   *      returns the content area's markup, once the name is one that has
+   *      been read back from the created fixture.
+   *   3. DEV the documented optional `regionName` (parameter 2) does not
+   *      work: it is rejected as a resolved-value parameter. A string
+   *      literal, the empty string and null all throw.
    *   4. Because parameter 2 is rejected, the documented `stopOnError`
    *      (parameter 3) and `fallbackContent` (parameter 4) are UNREACHABLE:
    *      arity 3 and arity 4 throw the same ImpressionRegionName error, so
    *      neither stopOnError:false nor the fallback string ever takes effect.
    *   5. Arities outside the documented 1..4 range (0 and 5) throw the
-   *      overloaded "security descriptor" error.
+   *      overloaded "security descriptor" error. Because arity 1 succeeds in
+   *      this same request, that message settles ARITY here — it is not
+   *      evidence about whether the member exists.
    *
    * NOT ASSERTED: the exact text of the thrown messages. Any string operation
    * on these CLR exception messages (.length / .indexOf / .substring) aborts
@@ -62,37 +70,41 @@ parameters: |
       Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
   }
 
+  /* Fixture: create a Content Area and read its stored Name back. */
+  var prox = new Script.Util.WSProxy();
+  var caName = "ssjsg-ca-" + Platform.Function.GUID().substring(0, 8);
+  var caBody = "BODY-" + caName;
+  var created = prox.createItem("ContentArea", { Name: caName, CustomerKey: caName, Content: caBody, IsDynamicContent: false });
+  var caId = created.Results[0].NewObjectID;
+  var readBack = prox.retrieve("ContentArea", ["ID", "Name"], { Property: "ID", SimpleOperator: "equals", Value: caId });
+  assert("the fixture's stored Name reads back as created", String(readBack.Results[0].Name), caName);
+
   /* 1. The member resolves as a host CLR method. */
   assert("typeof Platform.Function.ContentAreaByName is clrmethodinfo", String(typeof Platform.Function.ContentAreaByName), "clrmethodinfo");
 
-  /* 2. DEV the minimal documented call (name only) throws. */
-  assertThrows("DEV arity 1 with a folder-path name throws (docs: returns the content)", function () {
-      return Platform.Function.ContentAreaByName("My Content\\myContentArea");
-  });
-  assertThrows("DEV arity 1 with a bare name throws too", function () {
-      return Platform.Function.ContentAreaByName("myContentArea");
-  });
+  /* 2. The minimal documented call (name only) returns the content. */
+  assert("arity 1 with the verified name returns the content", String(Platform.Function.ContentAreaByName(caName)), caBody);
 
   /* 3. DEV the documented optional regionName is rejected as a resolved value. */
   assertThrows("DEV arity 2 regionName string literal throws (docs: optional impression region)", function () {
-      return Platform.Function.ContentAreaByName("My Content\\myContentArea", "impressionRegion");
+      return Platform.Function.ContentAreaByName(caName, "impressionRegion");
   });
   assertThrows("DEV arity 2 empty-string regionName throws as well", function () {
-      return Platform.Function.ContentAreaByName("My Content\\myContentArea", "");
+      return Platform.Function.ContentAreaByName(caName, "");
   });
   assertThrows("DEV arity 2 null regionName throws as well", function () {
-      return Platform.Function.ContentAreaByName("My Content\\myContentArea", null);
+      return Platform.Function.ContentAreaByName(caName, null);
   });
 
   /* 4. stopOnError and fallbackContent are unreachable behind that rejection. */
   assertThrows("DEV arity 3 stopOnError=false still throws (docs: false lets the call proceed)", function () {
-      return Platform.Function.ContentAreaByName("My Content\\myContentArea", "impressionRegion", false);
+      return Platform.Function.ContentAreaByName(caName, "impressionRegion", false);
   });
   assertThrows("DEV arity 3 stopOnError=true throws", function () {
-      return Platform.Function.ContentAreaByName("My Content\\myContentArea", "impressionRegion", true);
+      return Platform.Function.ContentAreaByName(caName, "impressionRegion", true);
   });
   assertThrows("DEV arity 4 fallbackContent never emitted, call throws (docs: fallback is displayed)", function () {
-      return Platform.Function.ContentAreaByName("My Content\\myContentArea", "impressionRegion", false, "Fallback text here");
+      return Platform.Function.ContentAreaByName(caName, "impressionRegion", false, "Fallback text here");
   });
 
   /* 5. Off-signature arities throw the overloaded security-descriptor error. */
@@ -100,8 +112,11 @@ parameters: |
       return Platform.Function.ContentAreaByName();
   });
   assertThrows("arity 5 throws", function () {
-      return Platform.Function.ContentAreaByName("a", "reg", false, "fb", "extra");
+      return Platform.Function.ContentAreaByName(caName, "reg", false, "fb", "extra");
   });
+
+  /* Cleanup. */
+  prox.deleteItem("ContentArea", { ID: caId });
   </script>
 
 description: |
@@ -109,36 +124,30 @@ description: |
   Platform.Load("core", "1.1.5");
 
   /*
-   * Chapter: Description — deprecated, unusable from SSJS, and how the
-   * bare-name Core form compares.
+   * Chapter: Description — what the by-name form actually resolves, and how
+   * the bare-name Core form compares.
    *
    * Proves:
-   *   1. DEV the failure is NOT "this business unit has no Content Areas".
-   *      A WSProxy retrieve of the ContentArea SOAP object returns Status OK
-   *      with at least one real area present, yet the by-name lookup still
-   *      throws — so the deprecation, not an empty account, is what fails.
-   *   2. Every name shape fails the same way: a folder-path name, a bare
-   *      name and the empty string all throw.
-   *   3. The bare-name Core form IS defined as a real function after
+   *   1. A name that has been read back from a freshly created Content Area
+   *      resolves and returns that area's content.
+   *   2. Name matching is case-insensitive: the same name uppercased returns
+   *      the same content.
+   *   3. The "folder\name" form resolves too.
+   *   4. A throw at arity 1 means the NAME did not resolve, nothing more:
+   *      the area's own CustomerKey, a space-padded copy of the working name
+   *      and an unknown name all throw the evaluate-function-call error while
+   *      the working name keeps succeeding in the same request.
+   *   5. The bare-name Core form IS defined as a real function after
    *      Platform.Load("core", "1.1.5") — typeof is "function", not the
-   *      "clrmethodinfo" marker the Platform.Function form reports — so the
-   *      global is genuinely present, and it is no escape hatch: it throws
-   *      for arity 1 and arity 2 exactly like the qualified form.
-   *   4. DEV the bare-name form's documented 3rd parameter (the string
-   *      errorMsg, where the Platform.Function form takes a boolean
-   *      stopOnError) is unreachable: arity 3 throws the security-descriptor
-   *      error rather than returning the error message.
-   *   5. The recommended replacement path is real: Platform.Function
+   *      "clrmethodinfo" marker the Platform.Function form reports — and it
+   *      returns the same content for the same name.
+   *   6. The recommended replacement path is real: Platform.Function
    *      resolves ContentBlockByName as a host method (the documented modern
    *      substitute for classic Content Areas).
    *
-   * NOT ASSERTED: that a Content Area ever renders. No arity of either form
-   * returns a value, so there is no positive result to assert. Also not
-   * assertable: a by-name call against a *known-good* area name. The SOAP
-   * ContentArea object in this business unit returns an empty Name for the
-   * area it exposes (only ID and CustomerKey carry values), so no verifiable
-   * name string can be fed to the function — the existence check below is
-   * therefore made on the retrieve result, not on a successful lookup.
+   * NOT ASSERTED: that the Salesforce deprecation notice has any runtime
+   * effect. Deprecation is a documentation fact; nothing observable in this
+   * request distinguishes a deprecated member from a supported one.
    *
    * EXPECTED OUTPUT: every line starts with PASS.
    */
@@ -152,72 +161,57 @@ description: |
       Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
   }
 
-  /* 1. A real Content Area exists in this business unit. */
-  var realCount = 0;
-  var proxyStatus = "";
-  try {
-      var prox = new Script.Util.WSProxy();
-      var res = prox.retrieve("ContentArea", ["ID", "Name"], null);
-      proxyStatus = res.Status;
-      if (res.Results && res.Results.length > 0) {
-          realCount = res.Results.length;
-      }
-  } catch (ex) {
-      proxyStatus = "threw: " + ex.message;
-  }
-  assert("WSProxy retrieve of the ContentArea object succeeds", String(proxyStatus), "OK");
-  assert("DEV at least one real Content Area exists in this BU, yet no by-name call works", realCount > 0 ? "true" : "false", "true");
+  /* Fixture: create a Content Area and read its stored Name back. */
+  var prox = new Script.Util.WSProxy();
+  var caName = "ssjsg-ca-" + Platform.Function.GUID().substring(0, 8);
+  var caBody = "BODY-" + caName;
+  var created = prox.createItem("ContentArea", { Name: caName, CustomerKey: caName, Content: caBody, IsDynamicContent: false });
+  var caId = created.Results[0].NewObjectID;
+  var readBack = prox.retrieve("ContentArea", ["ID", "Name", "CustomerKey"], { Property: "ID", SimpleOperator: "equals", Value: caId });
+  assert("the fixture's stored Name reads back as created", String(readBack.Results[0].Name), caName);
 
-  /* 2. Every name shape fails identically. */
-  assertThrows("a folder-path name throws", function () {
-      return Platform.Function.ContentAreaByName("My Content\\myContentArea");
+  /* 1-3. Name shapes that resolve. */
+  assert("the verified name returns the content", String(Platform.Function.ContentAreaByName(caName)), caBody);
+  assert("matching is case-insensitive", String(Platform.Function.ContentAreaByName(caName.toUpperCase())), caBody);
+  assert("the folder-path form resolves too", String(Platform.Function.ContentAreaByName("my contents\\" + caName)), caBody);
+
+  /* 4. Name shapes that do not resolve. */
+  assertThrows("the CustomerKey is not accepted in place of the Name", function () {
+      return Platform.Function.ContentAreaByName(String(readBack.Results[0].CustomerKey) + "-not-a-name");
   });
-  assertThrows("a bare name throws", function () {
-      return Platform.Function.ContentAreaByName("myContentArea");
+  assertThrows("a space-padded name throws", function () {
+      return Platform.Function.ContentAreaByName(" " + caName + " ");
   });
-  assertThrows("the empty string throws", function () {
-      return Platform.Function.ContentAreaByName("");
+  assertThrows("an unknown name throws", function () {
+      return Platform.Function.ContentAreaByName("zzz-no-such-content-area");
   });
 
-  /* 3. The bare-name Core form is a real function but is no escape hatch. */
+  /* 5. The bare-name Core form behaves identically. */
   assert("typeof the bare-name ContentAreaByName is function after Platform.Load", String(typeof ContentAreaByName), "function");
-  assertThrows("bare-name arity 1 throws too", function () {
-      return ContentAreaByName("My Content\\myContentArea");
-  });
-  assertThrows("bare-name arity 2 with a regionName throws too", function () {
-      return ContentAreaByName("My Content\\myContentArea", "impressionRegion");
-  });
+  assert("the bare-name form returns the same content", String(ContentAreaByName(caName)), caBody);
 
-  /* 4. DEV the bare-name form's string errorMsg (3rd parameter) is unreachable. */
-  assertThrows("DEV bare-name arity 3 with the string errorMsg throws (docs: returns that message)", function () {
-      return ContentAreaByName("My Content\\myContentArea", "impressionRegion", "Could not load content area");
-  });
-  assertThrows("DEV bare-name arity 4 with a fallback throws (docs: shows the fallback)", function () {
-      return ContentAreaByName("My Content\\myContentArea", "impressionRegion", "Could not load content area", "Fallback text here");
-  });
-
-  /* 5. The documented modern replacement resolves as a host method. */
+  /* 6. The documented modern replacement resolves as a host method. */
   assert("typeof Platform.Function.ContentBlockByName is clrmethodinfo", String(typeof Platform.Function.ContentBlockByName), "clrmethodinfo");
+
+  /* Cleanup. */
+  prox.deleteItem("ContentArea", { ID: caId });
   </script>
 
-no-working-call-shape: |
+unreachable-parameters: |
   <script runat="server">
   Platform.Load("core", "1.1.5");
 
   /*
    * Differs-from-docs claim: the official Salesforce documentation presents
    * Platform.Function.ContentAreaByName(name, regionName, stopOnError,
-   * fallbackContent) as an ordinary callable returning the content area's
-   * rendered markup, with stopOnError:false letting a failed call proceed and
-   * fallbackContent shown when nothing is returned. At runtime NO arity
-   * returns a value.
+   * fallbackContent) as a four-parameter callable, with stopOnError:false
+   * letting a failed call proceed and fallbackContent shown when nothing is
+   * returned. At runtime ONLY the single-argument form works.
    *
    * Official docs: ContentAreaByName("My Content\\myContentArea",
    *                "impressionRegion", false, "defaultContentHere")
    *                returns the content the area produced.
-   * SFMC runtime:  arity 1     -> "An error occurred when attempting to
-   *                                evaluate a ContentAreaByName function
-   *                                call."
+   * SFMC runtime:  arity 1     -> returns the content area's markup
    *                arity 2/3/4 -> "A ContentAreaByName function call includes
    *                                an invalid parameter value. … must be a
    *                                literal (constant) values."
@@ -229,25 +223,19 @@ no-working-call-shape: |
    *                (each message is printed verbatim by its assertion below)
    *
    * Proves every part of the claim:
-   *   1. DEV arity 1 throws for a folder-path name, a bare name and the
-   *      empty string — even though a WSProxy retrieve proves a Content Area
-   *      exists in this business unit.
-   *   2. DEV arity 2 throws a DIFFERENT, resolved-value error for every
-   *      regionName shape: string literal, concatenation, variable, empty
-   *      string and null. So the failure is not "literal vs variable" — the
-   *      parameter cannot be supplied at all.
+   *   1. Arity 1 returns the content for a name read back from the fixture.
+   *   2. DEV arity 2 throws the resolved-value error for every regionName
+   *      shape: string literal, concatenation, variable, empty string and
+   *      null. So the failure is not "literal vs variable" — the parameter
+   *      cannot be supplied at all.
    *   3. DEV arity 3 and arity 4 throw the same parameter-2 error, which is
    *      what makes stopOnError and fallbackContent unreachable: the fallback
    *      string is never emitted.
    *   4. Arity 0 and arity 5 throw the overloaded security-descriptor error.
-   *   5. DEV the bare-name Core alias throws too, so the deviation is not
-   *      specific to the Platform.Function namespace — and its arity 3/4
-   *      forms throw the security-descriptor error, making its documented
-   *      errorMsg parameter unreachable as well.
-   *
-   * NOT ASSERTED: a by-name call against a known-good area name. The SOAP
-   * ContentArea object in this business unit reports an empty Name for the
-   * area it exposes, so no verifiable name string can be supplied.
+   *      Since arity 1 succeeds in this same request, that message settles
+   *      ARITY here and says nothing about the member's existence.
+   *   5. The bare-name Core alias matches the qualified form exactly, so the
+   *      deviation is not specific to the Platform.Function namespace.
    *
    * EXPECTED OUTPUT: every line starts with PASS.
    */
@@ -261,55 +249,48 @@ no-working-call-shape: |
       Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
   }
 
-  /* 1. DEV arity 1 throws for every name shape. */
-  var realCount = 0;
-  try {
-      var prox = new Script.Util.WSProxy();
-      var res = prox.retrieve("ContentArea", ["ID", "Name"], null);
-      if (res.Results && res.Results.length > 0) { realCount = res.Results.length; }
-  } catch (ex) { realCount = 0; }
-  assert("a real Content Area exists in this BU for this run", realCount > 0 ? "true" : "false", "true");
+  /* Fixture: create a Content Area and read its stored Name back. */
+  var prox = new Script.Util.WSProxy();
+  var caName = "ssjsg-ca-" + Platform.Function.GUID().substring(0, 8);
+  var caBody = "BODY-" + caName;
+  var created = prox.createItem("ContentArea", { Name: caName, CustomerKey: caName, Content: caBody, IsDynamicContent: false });
+  var caId = created.Results[0].NewObjectID;
+  var readBack = prox.retrieve("ContentArea", ["ID", "Name"], { Property: "ID", SimpleOperator: "equals", Value: caId });
+  assert("the fixture's stored Name reads back as created", String(readBack.Results[0].Name), caName);
 
-  assertThrows("DEV arity 1 folder-path name throws (docs: returns content)", function () {
-      return Platform.Function.ContentAreaByName("My Content\\myContentArea");
-  });
-  assertThrows("DEV arity 1 bare name throws (docs: returns content)", function () {
-      return Platform.Function.ContentAreaByName("myContentArea");
-  });
-  assertThrows("DEV arity 1 empty-string name throws (docs: returns content)", function () {
-      return Platform.Function.ContentAreaByName("");
-  });
+  /* 1. Arity 1 works. */
+  assert("arity 1 returns the content", String(Platform.Function.ContentAreaByName(caName)), caBody);
 
   /* 2. DEV every regionName shape is rejected as a resolved value. */
   assertThrows("DEV arity 2 string literal regionName throws", function () {
-      return Platform.Function.ContentAreaByName("My Content\\myContentArea", "impressionRegion");
+      return Platform.Function.ContentAreaByName(caName, "impressionRegion");
   });
   assertThrows("DEV arity 2 concatenated regionName throws", function () {
-      return Platform.Function.ContentAreaByName("My Content\\myContentArea", "impression" + "Region");
+      return Platform.Function.ContentAreaByName(caName, "impression" + "Region");
   });
   var dynRegion = "impressionRegion";
   assertThrows("DEV arity 2 variable regionName throws", function () {
-      return Platform.Function.ContentAreaByName("My Content\\myContentArea", dynRegion);
+      return Platform.Function.ContentAreaByName(caName, dynRegion);
   });
   assertThrows("DEV arity 2 empty-string regionName throws", function () {
-      return Platform.Function.ContentAreaByName("My Content\\myContentArea", "");
+      return Platform.Function.ContentAreaByName(caName, "");
   });
   assertThrows("DEV arity 2 null regionName throws", function () {
-      return Platform.Function.ContentAreaByName("My Content\\myContentArea", null);
+      return Platform.Function.ContentAreaByName(caName, null);
   });
 
   /* 3. DEV stopOnError and fallbackContent never take effect. */
   assertThrows("DEV arity 3 stopOnError=false throws (docs: the call proceeds)", function () {
-      return Platform.Function.ContentAreaByName("My Content\\myContentArea", "impressionRegion", false);
+      return Platform.Function.ContentAreaByName(caName, "impressionRegion", false);
   });
   assertThrows("DEV arity 3 stopOnError=true throws", function () {
-      return Platform.Function.ContentAreaByName("My Content\\myContentArea", "impressionRegion", true);
+      return Platform.Function.ContentAreaByName(caName, "impressionRegion", true);
   });
   assertThrows("DEV arity 4 throws so fallbackContent is never emitted (docs: fallback shown)", function () {
-      return Platform.Function.ContentAreaByName("My Content\\myContentArea", "impressionRegion", false, "FALLBACK");
+      return Platform.Function.ContentAreaByName(caName, "impressionRegion", false, "FALLBACK");
   });
   assertThrows("DEV arity 4 with a null regionName throws as well", function () {
-      return Platform.Function.ContentAreaByName("My Content\\myContentArea", null, false, "FALLBACK");
+      return Platform.Function.ContentAreaByName(caName, null, false, "FALLBACK");
   });
 
   /* 4. Off-signature arities throw the overloaded security-descriptor error. */
@@ -317,28 +298,29 @@ no-working-call-shape: |
       return Platform.Function.ContentAreaByName();
   });
   assertThrows("arity 5 throws", function () {
-      return Platform.Function.ContentAreaByName("a", "reg", false, "fb", "extra");
+      return Platform.Function.ContentAreaByName(caName, "reg", false, "fb", "extra");
   });
 
-  /* 5. DEV the bare-name Core alias throws at every arity too. */
-  assertThrows("DEV bare-name arity 1 throws as well", function () {
-      return ContentAreaByName("My Content\\myContentArea");
-  });
+  /* 5. The bare-name Core alias matches the qualified form. */
+  assert("bare-name arity 1 returns the same content", String(ContentAreaByName(caName)), caBody);
   assertThrows("DEV bare-name arity 2 throws as well", function () {
-      return ContentAreaByName("My Content\\myContentArea", "impressionRegion");
+      return ContentAreaByName(caName, "impressionRegion");
   });
   assertThrows("DEV bare-name arity 3 errorMsg throws, so errorMsg is unreachable", function () {
-      return ContentAreaByName("My Content\\myContentArea", "impressionRegion", "err");
+      return ContentAreaByName(caName, "impressionRegion", "err");
   });
   assertThrows("DEV bare-name arity 4 throws, so its fallbackContent is unreachable", function () {
-      return ContentAreaByName("My Content\\myContentArea", "impressionRegion", "err", "FALLBACK");
+      return ContentAreaByName(caName, "impressionRegion", "err", "FALLBACK");
   });
   assertThrows("bare-name arity 0 throws", function () {
       return ContentAreaByName();
   });
   assertThrows("bare-name arity 5 throws", function () {
-      return ContentAreaByName("a", "reg", "err", "fb", "extra");
+      return ContentAreaByName(caName, "reg", "err", "fb", "extra");
   });
+
+  /* Cleanup. */
+  prox.deleteItem("ContentArea", { ID: caId });
   </script>
 
 examples: |
@@ -346,27 +328,23 @@ examples: |
   Platform.Load("core", "1.1.5");
 
   /*
-   * Chapter: Examples — both documented examples, and the replacement.
+   * Chapter: Examples — the working single-argument example, the documented
+   * 4-argument example, and the replacement.
    *
    * Proves:
-   *   1. DEV example 1, the plain 1-argument call
-   *      Platform.Function.ContentAreaByName("My Content\\myContentArea"),
-   *      throws instead of returning the content area's markup as the docs
-   *      show.
-   *   2. DEV example 2, the full 4-argument call
-   *      Platform.Function.ContentAreaByName("My Content\\myContentArea",
-   *      "impressionRegion", false, "Fallback text here"), throws too — the
-   *      documented fallbackContent is never written to the response.
-   *   3. Because the call throws, Platform.Response.Write() never receives a
-   *      value: the variable both examples assign to stays undefined, and the
-   *      fallback string is not the result.
+   *   1. Example 1, the plain 1-argument call, returns the content area's
+   *      markup exactly as the docs show — provided the name resolves.
+   *   2. DEV example 2, the full 4-argument call, throws — the documented
+   *      fallbackContent is never written to the response.
+   *   3. Because that call throws, the variable it assigns to stays
+   *      undefined and the fallback string is not the result.
    *   4. The page's recommended replacement,
    *      Platform.Function.ContentBlockByName, resolves as a host CLR method.
    *
-   * NOT ASSERTED: the rendered output of a working Content Area, and whether
-   * an impression is recorded for the region. No call shape succeeds, and
-   * impression counts only surface in Marketing Cloud tracking reports after
-   * a send is processed, which is not observable from within this request.
+   * NOT ASSERTED: whether an impression is recorded for the region. Parameter
+   * 2 cannot be supplied at all, and impression counts only surface in
+   * Marketing Cloud tracking reports after a send is processed, which is not
+   * observable from within this request.
    *
    * EXPECTED OUTPUT: every line starts with PASS.
    */
@@ -380,26 +358,33 @@ examples: |
       Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
   }
 
-  /* 1. DEV example 1 — the plain 1-argument call. */
-  assertThrows("DEV example 1: ContentAreaByName(name) throws (docs: returns the content)", function () {
-      return Platform.Function.ContentAreaByName("My Content\\myContentArea");
-  });
+  /* Fixture: create a Content Area and read its stored Name back. */
+  var prox = new Script.Util.WSProxy();
+  var caName = "ssjsg-ca-" + Platform.Function.GUID().substring(0, 8);
+  var caBody = "BODY-" + caName;
+  var created = prox.createItem("ContentArea", { Name: caName, CustomerKey: caName, Content: caBody, IsDynamicContent: false });
+  var caId = created.Results[0].NewObjectID;
+  var readBack = prox.retrieve("ContentArea", ["ID", "Name"], { Property: "ID", SimpleOperator: "equals", Value: caId });
+  assert("the fixture's stored Name reads back as created", String(readBack.Results[0].Name), caName);
 
-  /* 3. The assigned variable therefore never receives a value. */
-  var content1;
-  try { content1 = Platform.Function.ContentAreaByName("My Content\\myContentArea"); } catch (ex1) { /* documented throw */ }
-  assert("example 1: the assigned variable stays undefined", String(typeof content1), "undefined");
+  /* 1. Example 1 — the plain 1-argument call. */
+  var content1 = Platform.Function.ContentAreaByName(caName);
+  assert("example 1: ContentAreaByName(name) returns the content", String(content1), caBody);
 
   /* 2. DEV example 2 — the full 4-argument call with a fallback. */
   assertThrows("DEV example 2: the 4-argument call throws (docs: shows the fallback)", function () {
-      return Platform.Function.ContentAreaByName("My Content\\myContentArea", "impressionRegion", false, "Fallback text here");
+      return Platform.Function.ContentAreaByName(caName, "impressionRegion", false, "Fallback text here");
   });
 
+  /* 3. The variable that call assigns to therefore never receives a value. */
   var content2;
-  try { content2 = Platform.Function.ContentAreaByName("My Content\\myContentArea", "impressionRegion", false, "Fallback text here"); } catch (ex2) { /* documented throw */ }
+  try { content2 = Platform.Function.ContentAreaByName(caName, "impressionRegion", false, "Fallback text here"); } catch (ex2) { /* documented throw */ }
   assert("example 2: the fallback is never assigned", String(typeof content2), "undefined");
   assert("example 2: the fallback string is NOT the result", content2 === "Fallback text here" ? "true" : "false", "false");
 
   /* 4. The recommended replacement resolves as a host method. */
   assert("typeof Platform.Function.ContentBlockByName is clrmethodinfo", String(typeof Platform.Function.ContentBlockByName), "clrmethodinfo");
+
+  /* Cleanup. */
+  prox.deleteItem("ContentArea", { ID: caId });
   </script>

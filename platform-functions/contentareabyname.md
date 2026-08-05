@@ -3,7 +3,7 @@ layout: function
 title: Platform.Function.ContentAreaByName
 parent: Platform Functions
 parent_url: /platform-functions/
-description: "Retrieves rendered content from a classic Content Area by name. Deprecated — Content Areas are no longer supported on current SFMC infrastructure."
+description: "Retrieves rendered content from a classic Content Area by name. Salesforce documents Content Areas as deprecated in favour of Content Builder blocks."
 deprecated: true
 availability:
   email: true
@@ -23,7 +23,7 @@ test_scripts: complete
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `name` | string | Yes | Name of the Content Area (folder path notation, e.g. `"My Content\myArea"`). |
+| `name` | string | Yes | Name of the Content Area. The bare name works; the `"folder\myArea"` form works too. Matching is case-insensitive. |
 | `regionName` | string | No | Impression region for content tracking. ⚠️ Supplying it makes the call throw a resolved-value error — see below. |
 | `stopOnError` | boolean | No | When `true`, throws on retrieval failure; when `false`, the call continues. ⚠️ Unreachable — the call already throws on `regionName`. |
 | `fallbackContent` | string | No | Content to display when the area cannot be retrieved. ⚠️ Unreachable — never emitted at runtime. |
@@ -34,13 +34,13 @@ test_scripts: complete
 
 `Platform.Function.ContentAreaByName()` retrieves and renders content from a classic (legacy) SFMC Content Area identified by its name.
 
-**This function is deprecated.** Classic Content Areas are no longer supported on modern SFMC infrastructure. Migrate content to Content Builder blocks and use [`Platform.Function.ContentBlockByName()`](/platform-functions/contentblockbyname/) instead.
+Salesforce's documentation marks Content Areas as deprecated in favour of Content Builder. For new work, migrate content to Content Builder blocks and use [`Platform.Function.ContentBlockByName()`](/platform-functions/contentblockbyname/).
 
-**Runtime note:** no SSJS call shape works. The 1-argument form throws for every name — folder-path notation, a bare name and the empty string alike — even though a WSProxy retrieve confirms a Content Area exists in the same business unit. Adding the documented `regionName` throws a *different*, resolved-value error, which makes `stopOnError` and `fallbackContent` unreachable. The bare-name [`ContentAreaByName()`](/core-library/contentareabyname/) Core form behaves the same.
+**Runtime note:** only the single-argument form works. Given the name of a Content Area that actually exists, the 1-argument call returns that area's content. Matching is case-insensitive and the `"folder\myArea"` form resolves as well, while the area's CustomerKey, a name padded with spaces and an unknown name are all rejected with an evaluation error — a throw at arity 1 means the name did not resolve. Adding the documented `regionName` throws a *different*, resolved-value error, which makes `stopOnError` and `fallbackContent` unreachable. The bare-name [`ContentAreaByName()`](/core-library/contentareabyname/) Core form behaves the same.
 
-{% include differs-from-docs.html note="The official docs present the function as working, including its optional impression-region and fallback parameters. At runtime no SSJS call returns a value: the basic call fails even for an existing Content Area, and supplying `regionName` fails before `stopOnError` or `fallbackContent` can be used." %}
+{% include differs-from-docs.html note="The official docs present all four parameters as usable. At runtime only the first one is: supplying `regionName` fails with a resolved-value error before `stopOnError` or `fallbackContent` can take effect, so the documented 4-argument form never works." %}
 
-{% include test-script.html bundle="platform-functions--contentareabyname" chapter="no-working-call-shape" label="Show test script — no SSJS call shape works" %}
+{% include test-script.html bundle="platform-functions--contentareabyname" chapter="unreachable-parameters" label="Show test script — only the 1-argument form works" %}
 
 ### Difference from the global `ContentAreaByName()` form
 
@@ -57,22 +57,24 @@ See [ContentAreaByName](/core-library/contentareabyname/) for the bare-name Core
 
 ## Examples
 
-Both documented forms throw at runtime — they are shown as the *documented* shapes, not as working code:
+The single-argument form works when the name resolves to an existing Content Area:
 
 ```javascript
-// throws: An error occurred when attempting to evaluate a ContentAreaByName function call.
-var content = Platform.Function.ContentAreaByName("My Content\\myContentArea");
+// returns the content area's rendered markup
+var content = Platform.Function.ContentAreaByName("myContentArea");
 Platform.Response.Write(content);
 ```
+
+The documented 4-argument form does not — it is shown as the *documented* shape, not as working code:
 
 ```javascript
 // throws: A ContentAreaByName function call includes an invalid parameter value.
 //         … Parameter Name: ImpressionRegionName
-var content = Platform.Function.ContentAreaByName("My Content\\myContentArea", "impressionRegion", false, "Fallback text here");
+var content = Platform.Function.ContentAreaByName("myContentArea", "impressionRegion", false, "Fallback text here");
 Platform.Response.Write(content);
 ```
 
-Use [`Platform.Function.ContentBlockByName()`](/platform-functions/contentblockbyname/) instead.
+For new content, use [`Platform.Function.ContentBlockByName()`](/platform-functions/contentblockbyname/) instead.
 
 {% include test-script.html bundle="platform-functions--contentareabyname" chapter="examples" %}
 

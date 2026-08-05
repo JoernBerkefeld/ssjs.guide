@@ -24,18 +24,17 @@ parameters: |
    *
    * Proves:
    *   1. performItem is a CLR method on every WSProxy instance.
-   *   2. There is NO method named proxy.perform — invoking it fails.
-   *   3. objectType (string), properties (object) and action (string) are ALL
+   *   2. objectType (string), properties (object) and action (string) are ALL
    *      required: the 3-argument form is the documented minimum and succeeds
    *      (min_args = 3).
-   *   4. performOptions is OPTIONAL and, when supplied as a fourth argument,
+   *   3. performOptions is OPTIONAL and, when supplied as a fourth argument,
    *      is accepted (max_args = 4) and the call still succeeds.
-   *   5. NEGATIVE — calling with fewer than 3 arguments is rejected: the
+   *   4. NEGATIVE — calling with fewer than 3 arguments is rejected: the
    *      2-argument, 1-argument and 0-argument forms all throw.
-   *   6. properties identifies ONE target row (here by ObjectID) and produces
+   *   5. properties identifies ONE target row (here by ObjectID) and produces
    *      exactly ONE Results entry — the single-item counterpart of
    *      performBatch.
-   *   7. action is CASE-INSENSITIVE at runtime: "start" behaves identically
+   *   6. action is CASE-INSENSITIVE at runtime: "start" behaves identically
    *      to "Start" (same Status and same per-item StatusMessage).
    *
    * NOT PROBED: Date / number / boolean type-acceptance counterparts. No
@@ -64,9 +63,6 @@ parameters: |
 
   /* 1. The method exists on the instance. */
   assert("typeof proxy.performItem is clrmethodinfo", typeof proxy.performItem, "clrmethodinfo");
-
-  /* 2. NEGATIVE — proxy.perform does not exist (older samples used it as shorthand). */
-  assertThrows("proxy.perform(...) is not a real method - invoking it throws", function () { return proxy.perform("QueryDefinition", { ObjectID: "0" }, "Start"); });
 
   /* Fixtures — one target DE and one throwaway query definition. */
   assert("fixture target data extension created", "" + proxy.createItem("DataExtension", {

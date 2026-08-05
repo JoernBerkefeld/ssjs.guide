@@ -295,104 +295,111 @@
 - name: "Platform.Function.ContentArea"
   url: "/platform-functions/contentarea/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformContentContentArea.html"
-  tagline: "no SSJS call shape works"
+  tagline: "only the single-argument form works from SSJS"
   part: "sfmc"
   category: "Platform Functions"
   object: "Platform.Function"
   severity: "medium"
   discrepancy: "A7"
-  anchor: "platform-function-contentarea-no-working-call-shape"
+  anchor: "platform-function-contentarea-only-one-argument-works"
   body: |
-    **No arity returns a value.** The docs present `ContentArea(id, regionName, stopOnError, fallbackContent)` as an ordinary callable returning the area's rendered markup, with `stopOnError: false` letting a failed call proceed and `fallbackContent` displayed when nothing comes back. At runtime:
+    **Only arity 1 returns a value.** The docs present `ContentArea(id, regionName, stopOnError, fallbackContent)` as an ordinary callable, with `stopOnError: false` letting a failed call proceed and `fallbackContent` displayed when nothing comes back. At runtime:
 
-    - **Arity 1** throws `An error occurred when attempting to evaluate an ContentArea function call.` — for a bogus id *and* for the numeric id of a Content Area that a WSProxy `retrieve` proved exists in the same business unit, so a missing area is not the cause.
-    - **Arity 2–4** throw a *different*, resolved-value error (`… must be a literal (constant) values.`, `Parameter Name: ImpressionRegionName`, `Parameter Ordinal: 2`, `Parameter Type: ResolvedValueParameter`) for every `regionName` shape — string literal, concatenation, variable, empty string and `null` alike. Because parameter 2 is rejected outright, **`stopOnError` and `fallbackContent` are unreachable and the fallback string is never emitted**.
+    - **Arity 1** works. Given the id of a Content Area that exists, it returns that area's content, and the same id passed as a numeric string works too. An id that does not resolve throws `An error occurred when attempting to evaluate an ContentArea function call.` — that throw means the id did not resolve, nothing more.
+    - **Arity 2–4** throw a resolved-value error (`… must be a literal (constant) values.`, `Parameter Name: ImpressionRegionName`, `Parameter Ordinal: 2`, `Parameter Type: ResolvedValueParameter`) for every `regionName` shape — string literal, concatenation, variable, empty string and `null` alike. Because parameter 2 is rejected outright, **`stopOnError` and `fallbackContent` are unreachable and the fallback string is never emitted**.
     - **Arity 0 and 5+** throw the overloaded `Unable to retrieve security descriptor for this frame.`
 
-    **Core-library equivalent:** [`ContentArea()`](/core-library/contentarea/) is a genuine function after `Platform.Load("core", …)` (`typeof` is `"function"`, not the phantom `"clrmethodinfo"`), but it is no escape hatch — arity 1 and 2 throw identically, and its arity 3–5 forms throw the security-descriptor error, so its `errorMsg` parameter is unreachable too.
+    **Core-library equivalent:** [`ContentArea()`](/core-library/contentarea/) is a genuine function after `Platform.Load("core", …)` (`typeof` is `"function"`, not the phantom `"clrmethodinfo"`) and behaves identically — arity 1 returns the content, arity 2 hits the same parameter-2 rejection, and its arity 3–5 forms throw the security-descriptor error, so its `errorMsg` parameter is unreachable too.
 
-    Classic Content Areas are deprecated; use [`Platform.Function.ContentBlockByID()`](/platform-functions/contentblockbyid/) instead.
+    Salesforce documents classic Content Areas as deprecated; use [`Platform.Function.ContentBlockByID()`](/platform-functions/contentblockbyid/) for new content.
   testScript: |
     <script runat="server">
     Platform.Load("core","1.1.5");
     // NOTE: these CLR exception messages cannot be inspected with .length /
     // .indexOf / .substring - those abort the CloudPage with HTTP 422.
     function attempt(id, fn) {
-      try { fn(); Platform.Response.Write(id + ": did NOT throw\n"); }
+      try { Platform.Response.Write(id + ": returned: " + fn() + "\n"); }
       catch (e) { Platform.Response.Write(id + ": threw: " + e.message + "\n"); }
     }
-    // Resolve a Content Area that genuinely exists in this business unit.
+    // Resolve the id of a Content Area that genuinely exists in this business
+    // unit - an invented id would only prove that a missing area fails.
     var realId = 0;
     var prox = new Script.Util.WSProxy();
     var res = prox.retrieve("ContentArea", ["ID","Name"], null);
     if (res.Results && res.Results.length > 0) { realId = res.Results[0].ID; }
     Platform.Response.Write("a real Content Area id exists: " + (realId > 0) + "\n");
     attempt("arity 1, real existing id", function () { return Platform.Function.ContentArea(realId); });
-    attempt("arity 1, bogus id", function () { return Platform.Function.ContentArea(123456); });
-    // OBSERVED: both throw "An error occurred when attempting to evaluate an ContentArea function call."
-    attempt("arity 2, regionName literal", function () { return Platform.Function.ContentArea(123456, "impressionRegion"); });
-    attempt("arity 2, regionName null", function () { return Platform.Function.ContentArea(123456, null); });
-    attempt("arity 3, stopOnError false", function () { return Platform.Function.ContentArea(123456, "impressionRegion", false); });
-    attempt("arity 4, with fallbackContent", function () { return Platform.Function.ContentArea(123456, "impressionRegion", false, "FALLBACK"); });
+    attempt("arity 1, same id as a numeric string", function () { return Platform.Function.ContentArea("" + realId); });
+    // OBSERVED: both return the content area's markup.
+    attempt("arity 2, regionName literal", function () { return Platform.Function.ContentArea(realId, "impressionRegion"); });
+    attempt("arity 2, regionName null", function () { return Platform.Function.ContentArea(realId, null); });
+    attempt("arity 3, stopOnError false", function () { return Platform.Function.ContentArea(realId, "impressionRegion", false); });
+    attempt("arity 4, with fallbackContent", function () { return Platform.Function.ContentArea(realId, "impressionRegion", false, "FALLBACK"); });
     // OBSERVED: all four throw the ImpressionRegionName / ResolvedValueParameter error,
     // so stopOnError and fallbackContent never take effect.
     attempt("arity 0", function () { return Platform.Function.ContentArea(); });
-    attempt("arity 5", function () { return Platform.Function.ContentArea(123456, "reg", false, "fb", "extra"); });
+    attempt("arity 5", function () { return Platform.Function.ContentArea(realId, "reg", false, "fb", "extra"); });
     // OBSERVED: both throw "Unable to retrieve security descriptor for this frame."
-    attempt("bare-name arity 1", function () { return ContentArea(123456); });
-    // OBSERVED: throws identically - the Core form is no escape hatch.
+    attempt("bare-name arity 1", function () { return ContentArea(realId); });
+    // OBSERVED: returns the same content - the Core form behaves identically.
     </script>
 
 - name: "Platform.Function.ContentAreaByName"
   url: "/platform-functions/contentareabyname/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformContentContentAreaByName.html"
-  tagline: "no SSJS call shape works"
+  tagline: "only the single-argument form works from SSJS"
   part: "sfmc"
   category: "Platform Functions"
   object: "Platform.Function"
   severity: "medium"
   discrepancy: "A7"
-  anchor: "platform-function-contentareabyname-no-working-call-shape"
+  anchor: "platform-function-contentareabyname-only-one-argument-works"
   body: |
-    **No arity returns a value.** The docs present `ContentAreaByName(name, regionName, stopOnError, fallbackContent)` as an ordinary callable returning the area's rendered markup, with `stopOnError: false` letting a failed call proceed and `fallbackContent` displayed when nothing comes back. At runtime:
+    **Only arity 1 returns a value.** The docs present `ContentAreaByName(name, regionName, stopOnError, fallbackContent)` as an ordinary callable, with `stopOnError: false` letting a failed call proceed and `fallbackContent` displayed when nothing comes back. At runtime:
 
-    - **Arity 1** throws `An error occurred when attempting to evaluate a ContentAreaByName function call.` for every name shape — folder-path notation, a bare name and the empty string alike — while a WSProxy `retrieve` of the `ContentArea` SOAP object proves an area exists in the same business unit, so an empty account is not the cause.
-    - **Arity 2–4** throw a *different*, resolved-value error (`… must be a literal (constant) values.`, `Parameter Name: ImpressionRegionName`, `Parameter Ordinal: 2`, `Parameter Type: ResolvedValueParameter`) for every `regionName` shape — string literal, concatenation, variable, empty string and `null` alike. Because parameter 2 is rejected outright, **`stopOnError` and `fallbackContent` are unreachable and the fallback string is never emitted**.
+    - **Arity 1** works. Given the name of a Content Area that exists, it returns that area's content. Matching is case-insensitive and the `folder\name` form resolves as well; the area's CustomerKey, a space-padded name and an unknown name are rejected with `An error occurred when attempting to evaluate a ContentAreaByName function call.` — a throw here means the name did not resolve, nothing more.
+    - **Arity 2–4** throw a resolved-value error (`… must be a literal (constant) values.`, `Parameter Name: ImpressionRegionName`, `Parameter Ordinal: 2`, `Parameter Type: ResolvedValueParameter`) for every `regionName` shape — string literal, concatenation, variable, empty string and `null` alike. Because parameter 2 is rejected outright, **`stopOnError` and `fallbackContent` are unreachable and the fallback string is never emitted**.
     - **Arity 0 and 5+** throw the overloaded `Unable to retrieve security descriptor for this frame.`
 
-    **Core-library equivalent:** [`ContentAreaByName()`](/core-library/contentareabyname/) is a genuine function after `Platform.Load("core", …)` (`typeof` is `"function"`, not the phantom `"clrmethodinfo"`), but it is no escape hatch — arity 1 and 2 throw identically, and its arity 3–5 forms throw the security-descriptor error, so its `errorMsg` parameter is unreachable too.
+    **Core-library equivalent:** [`ContentAreaByName()`](/core-library/contentareabyname/) is a genuine function after `Platform.Load("core", …)` (`typeof` is `"function"`, not the phantom `"clrmethodinfo"`) and behaves identically — arity 1 returns the content, arity 2 hits the same parameter-2 rejection, and its arity 3–5 forms throw the security-descriptor error, so its `errorMsg` parameter is unreachable too.
 
-    Classic Content Areas are deprecated; use [`Platform.Function.ContentBlockByName()`](/platform-functions/contentblockbyname/) instead.
+    Salesforce documents classic Content Areas as deprecated; use [`Platform.Function.ContentBlockByName()`](/platform-functions/contentblockbyname/) for new content.
   testScript: |
     <script runat="server">
     Platform.Load("core","1.1.5");
     // NOTE: these CLR exception messages cannot be inspected with .length /
     // .indexOf / .substring - those abort the CloudPage with HTTP 422.
     function attempt(id, fn) {
-      try { fn(); Platform.Response.Write(id + ": did NOT throw\n"); }
+      try { Platform.Response.Write(id + ": returned: " + fn() + "\n"); }
       catch (e) { Platform.Response.Write(id + ": threw: " + e.message + "\n"); }
     }
-    // A Content Area genuinely exists in this business unit.
+    // Resolve a Content Area name that is verified to exist in this business
+    // unit - reading the Name back is what makes the test meaningful.
     var prox = new Script.Util.WSProxy();
-    var res = prox.retrieve("ContentArea", ["ID","Name"], null);
-    var found = res.Results && res.Results.length > 0;
-    Platform.Response.Write("a real Content Area exists: " + found + "\n");
-    attempt("arity 1, folder-path name", function () { return Platform.Function.ContentAreaByName("My Content\\myContentArea"); });
-    attempt("arity 1, bare name", function () { return Platform.Function.ContentAreaByName("myContentArea"); });
-    attempt("arity 1, empty string", function () { return Platform.Function.ContentAreaByName(""); });
+    var res = prox.retrieve("ContentArea", ["ID","Name","CustomerKey"], null);
+    var realName = "", realKey = "";
+    for (var i = 0; i < res.Results.length; i++) {
+      if (res.Results[i].Name) { realName = res.Results[i].Name; realKey = res.Results[i].CustomerKey; break; }
+    }
+    Platform.Response.Write("a Content Area with a readable name exists: " + (realName !== "") + "\n");
+    attempt("arity 1, verified name", function () { return Platform.Function.ContentAreaByName(realName); });
+    attempt("arity 1, same name uppercased", function () { return Platform.Function.ContentAreaByName(realName.toUpperCase()); });
+    // OBSERVED: both return the content area's markup - matching is case-insensitive.
+    attempt("arity 1, CustomerKey instead of Name", function () { return Platform.Function.ContentAreaByName(realKey); });
+    attempt("arity 1, space-padded name", function () { return Platform.Function.ContentAreaByName(" " + realName + " "); });
+    attempt("arity 1, unknown name", function () { return Platform.Function.ContentAreaByName("zzz-no-such-area"); });
     // OBSERVED: all three throw "An error occurred when attempting to evaluate a ContentAreaByName function call."
-    attempt("arity 2, regionName literal", function () { return Platform.Function.ContentAreaByName("My Content\\myContentArea", "impressionRegion"); });
-    attempt("arity 2, regionName null", function () { return Platform.Function.ContentAreaByName("My Content\\myContentArea", null); });
-    attempt("arity 3, stopOnError false", function () { return Platform.Function.ContentAreaByName("My Content\\myContentArea", "impressionRegion", false); });
-    attempt("arity 4, with fallbackContent", function () { return Platform.Function.ContentAreaByName("My Content\\myContentArea", "impressionRegion", false, "FALLBACK"); });
+    attempt("arity 2, regionName literal", function () { return Platform.Function.ContentAreaByName(realName, "impressionRegion"); });
+    attempt("arity 2, regionName null", function () { return Platform.Function.ContentAreaByName(realName, null); });
+    attempt("arity 3, stopOnError false", function () { return Platform.Function.ContentAreaByName(realName, "impressionRegion", false); });
+    attempt("arity 4, with fallbackContent", function () { return Platform.Function.ContentAreaByName(realName, "impressionRegion", false, "FALLBACK"); });
     // OBSERVED: all four throw the ImpressionRegionName / ResolvedValueParameter error,
     // so stopOnError and fallbackContent never take effect.
     attempt("arity 0", function () { return Platform.Function.ContentAreaByName(); });
     attempt("arity 5", function () { return Platform.Function.ContentAreaByName("a", "reg", false, "fb", "extra"); });
     // OBSERVED: both throw "Unable to retrieve security descriptor for this frame."
-    attempt("bare-name arity 1", function () { return ContentAreaByName("My Content\\myContentArea"); });
-    attempt("bare-name arity 3, string errorMsg", function () { return ContentAreaByName("My Content\\myContentArea", "impressionRegion", "err"); });
-    // OBSERVED: throws identically - the Core form is no escape hatch.
+    attempt("bare-name arity 1", function () { return ContentAreaByName(realName); });
+    // OBSERVED: returns the same content - the Core form behaves identically.
     </script>
 
 - name: "Platform.Function.ContentBlockByID"

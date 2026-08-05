@@ -68,7 +68,6 @@ workaround:
 | `for (var k in object)` enumeration | yields **0 keys** |
 | `Platform.Function.Stringify(object)` | returns only the type name string `"ExactTarget.Integration.WSDL.Subscriber"`, not the values |
 | `String(object)` | coerces to the same type-name string, not the values |
-| `Platform.Function.GetObjectProperty` | does not exist in the engine |
 
 There is therefore no supported way to confirm the assigned value from SSJS — you must
 pass the populated object straight into the SOAP call (e.g. `InvokeCreate`) that consumes

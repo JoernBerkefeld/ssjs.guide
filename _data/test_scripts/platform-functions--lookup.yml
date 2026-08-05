@@ -18,6 +18,12 @@
 # therefore issues each distinct query AT MOST ONCE, and never reads a row
 # whose absence it queried earlier.
 #
+# The cache key is the (data extension, FILTER) pair, not the literal argument
+# list: re-issuing the same filter through the ARRAY form of whereFieldNames /
+# whereFieldValues, or with a different returnField, is stale too. Only
+# changing the FILTER COLUMN produces a fresh read. LookupRows was not stale
+# for the same filter in the same request.
+#
 # All scripts were last run green (every line PASS) against a live SFMC
 # CloudPage on the MCDEV_Training_QA business unit.
 #

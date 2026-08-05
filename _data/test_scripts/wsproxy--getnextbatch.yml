@@ -254,16 +254,11 @@ notes: |
   /*
    * Chapter: Notes
    *
-   * Proves the single claim the Notes callout makes:
-   *   1. SFMC ships NO built-in retrieveBatch convenience on WSProxy —
-   *      invoking proxy.retrieveBatch throws, so a retrieve / getNextBatch
-   *      loop (or a hand-written helper) is required. Note that `typeof`
-   *      alone cannot prove this: the CLR proxy reports "clrmethodinfo" for
-   *      names that do not exist, so absence must be proven by invocation.
-   *   2. The two members the callout tells you to combine DO exist and
+   * Proves the claims the Notes callout makes:
+   *   1. The two members the callout tells you to combine DO exist and
    *      work when invoked.
-   *   3. A hand-written helper built from retrieve + getNextBatch works —
-   *      the recommended workaround, proven end to end.
+   *   2. A hand-written helper built from retrieve + getNextBatch collects
+   *      every page — the recommended pattern, proven end to end.
    *
    * EXPECTED OUTPUT: every line starts with PASS.
    */
@@ -271,26 +266,15 @@ notes: |
   function assert(id, actual, expected) {
       Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
   }
-  function assertThrows(id, fn) {
-      var threw = false, msg = "";
-      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
-      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
-  }
 
   Platform.Load("core", "1.1.5");
   var proxy = new Script.Util.WSProxy();
 
-  /* 1. No built-in retrieveBatch convenience. typeof reports "clrmethodinfo"
-     even for names that do not exist, so absence is proven by INVOCATION. */
-  assertThrows("proxy.retrieveBatch is not a real member - invoking it throws", function () {
-      return proxy.retrieveBatch("DataExtension", ["Name"]);
-  });
-
-  /* 2. The two members the workaround combines. */
+  /* 1. The two members the pattern combines. */
   assert("typeof proxy.retrieve is clrmethodinfo", typeof proxy.retrieve, "clrmethodinfo");
   assert("typeof proxy.getNextBatch is clrmethodinfo", typeof proxy.getNextBatch, "clrmethodinfo");
 
-  /* 3. The recommended workaround: your own retrieve/getNextBatch helper. */
+  /* 2. The recommended pattern: your own retrieve/getNextBatch helper. */
   var tag = "gnbN" + (new Date()).getTime();
   var deKey = tag + "_de";
   assert("fixture data extension created", "" + proxy.createItem("DataExtension", {
@@ -314,7 +298,7 @@ notes: |
   }
 
   var rows = retrieveAll("DataExtensionObject[" + deKey + "]", ["Pk"], 2);
-  assert("the hand-written retrieveBatch helper returns every row", "" + rows.length, "5");
+  assert("the hand-written paging helper returns every row", "" + rows.length, "5");
 
   /* Cleanup. */
   assert("cleanup: fixture data extension deleted", "" + proxy.deleteBatch("DataExtension", [{ CustomerKey: deKey }]).Status, "OK");

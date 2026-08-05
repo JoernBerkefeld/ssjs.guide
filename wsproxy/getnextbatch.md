@@ -56,7 +56,7 @@ do {
 
 ## Notes
 
-{% include callout.html type="note" content="Implement a <code>retrieve</code> / <code>getNextBatch</code> loop (see examples below) or wrap it in your own helper — SFMC does not ship a single built-in <code>retrieveBatch</code> convenience on <code>WSProxy</code>." %}
+{% include callout.html type="note" content="Paging is manual: implement a <code>retrieve</code> / <code>getNextBatch</code> loop (see the examples above) or wrap it in your own helper that collects every page." %}
 
 {% include test-script.html bundle="wsproxy--getnextbatch" chapter="notes" %}
 

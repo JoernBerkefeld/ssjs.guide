@@ -276,8 +276,13 @@ examples: |
    *      Parameters collection built with AddObjectArrayItem is what makes
    *      the documented example work.
    *   6. An unknown verb name answers "Unable to find a handler for the
-   *      <name> method." with ErrorCode 0 — the request reached the endpoint
-   *      and was dispatched by name.
+   *      <name> method." with ErrorCode 0 — the name reached the endpoint and
+   *      is echoed back verbatim. NOTE what this does NOT show: real but
+   *      unserved verbs (RefreshFilter, ResetPassword) answer with the same
+   *      message shape and the same ErrorCode 0, so an unregistered name and
+   *      a genuine verb that is not served here are indistinguishable from
+   *      SSJS. The message separates SERVED from UNSERVED and nothing more;
+   *      no dispatch mechanism and no cause can be read off it.
    *   7. The script leaves nothing behind: the subscriber it created is
    *      deleted again and the business unit is left clean.
    *
@@ -344,7 +349,9 @@ examples: |
   assert("the API reports that no parameters were provided", String(noParamResult[0].StatusMessage), "No Parameters were provided");
   assert("the no-parameters SOAP error code is 402", noParamResult[0].ErrorCode, 402);
 
-  /* 6. An unknown verb name is dispatched by name and rejected. */
+  /* 6. An unknown verb name is echoed back in the rejection message. A real
+   *    but unserved verb answers identically apart from the echoed name, so
+   *    this separates served from unserved verbs and nothing further. */
   var badVerbStatus = [0, 0];
   var badVerbResult = Platform.Function.InvokeExecute(execObject("NotARealExecuteVerb", null), badVerbStatus);
   assert("an unknown verb name returns 'Error'", String(badVerbResult[0].StatusCode), "Error");

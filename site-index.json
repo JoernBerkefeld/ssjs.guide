@@ -603,7 +603,7 @@
     "url": "/platform-functions/contentarea/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Retrieves content from a specified classic Content Area by numeric ID.",
+    "description": "Retrieves content from a specified classic Content Area by ID.",
     "params": [
       "id",
       "regionName",

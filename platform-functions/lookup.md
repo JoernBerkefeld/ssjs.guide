@@ -39,6 +39,8 @@ The returned value keeps the column's **native runtime type**: Text/EmailAddress
 
 When multiple rows match, `Lookup` returns the value from the **first** row found (ordering is not guaranteed — use `LookupOrderedRows` if order matters).
 
+{% include callout.html type="warning" content="Repeating the **same** lookup within one request returns the **first** result, even if rows were written in between — see [Repeating a Lookup in One Request Returns the Stale Result](/engine-limitations/known-bugs/#lookup-request-scoped-query-cache). Switching to the array filter form or changing the `returnField` does not help; only a different filter column reads fresh data." %}
+
 {% include test-script.html bundle="platform-functions--lookup" chapter="description" %}
 
 ### Field type → returned JavaScript type (runtime-verified)

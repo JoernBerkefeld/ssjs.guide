@@ -603,7 +603,7 @@ String.prototype.split = (function () {
 
 ### max / min (broken — must override) {#math-max-min}
 
-`Math.max` / `Math.min` throw when given **three or more arguments** and return `0` (not ±Infinity) with **no arguments**. These pure-JS variadic folds handle any argument count and propagate `NaN` per spec. Override them unconditionally:
+`Math.max` / `Math.min` throw when given **three or more arguments**, and every **missing** argument is silently supplied as `0` — so `Math.min(5)` returns `0`, `Math.max(-7)` returns `0`, and the no-argument form returns `0` instead of ±Infinity. These pure-JS variadic folds handle any argument count, including one and none, and propagate `NaN` per spec. Override them unconditionally:
 
 > **Note:** the no-argument results are `Number.NEGATIVE_INFINITY` / `Number.POSITIVE_INFINITY`. The engine mis-renders the **sign** of `Infinity` when stringified, but the numeric value is correct.
 

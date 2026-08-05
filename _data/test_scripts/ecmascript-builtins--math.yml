@@ -473,7 +473,11 @@ max: |
    *      largest of all arguments).
    *   3. DEVIATION marked "DEV": the no-argument form returns 0
    *      (spec: -Infinity).
-   *   4. The documented workaround — folding an array with a plain loop —
+   *   4. DEVIATION marked "DEV": a missing argument is supplied as 0 rather
+   *      than ignored, so Math.max(x) behaves as Math.max(x, 0). The
+   *      negative-argument cases are the discriminating ones — if the missing
+   *      slot were merely dropped, Math.max(-7) would return -7.
+   *   5. The documented workaround — folding an array with a plain loop —
    *      really produces the maximum of a 5-element array.
    *
    * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
@@ -504,7 +508,16 @@ max: |
   assert("DEV Math.max() === 0 (spec: -Infinity)", Math.max() === 0, true);
   assert("DEV Math.max() (spec: -Infinity)", String(Math.max()), "0");
 
-  /* 4. The recommended loop-fold workaround. */
+  /* 4. DEVIATION — a missing argument is supplied as 0, not ignored. */
+  assert("DEV Math.max(5) === 5 — right value, wrong reason (5 > 0)", Math.max(5) === 5, true);
+  assert("DEV Math.max(-7) === 0 (spec: -7) — the missing argument became 0", Math.max(-7) === 0, true);
+  assert("DEV Math.max(-7) is NOT -7, so the argument is not simply dropped", Math.max(-7) === -7, false);
+  assert("DEV Math.max(-3.5) === 0 (spec: -3.5)", Math.max(-3.5) === 0, true);
+  assert("DEV Math.max(0) === 0", Math.max(0) === 0, true);
+  assert("DEV Math.max(x) equals Math.max(x, 0) for x = -7", Math.max(-7) === Math.max(-7, 0), true);
+  assert("DEV Math.max(x) equals Math.max(x, 0) for x = 5", Math.max(5) === Math.max(5, 0), true);
+
+  /* 5. The recommended loop-fold workaround. */
   var arr = [3, 1, 4, 1, 5];
   var max = arr[0];
   for (var i = 1; i < arr.length; i++) { if (arr[i] > max) { max = arr[i]; } }
@@ -526,7 +539,12 @@ min: |
    *      smallest of all arguments).
    *   3. DEVIATION marked "DEV": the no-argument form returns 0
    *      (spec: +Infinity).
-   *   4. The loop-fold workaround produces the minimum of an array.
+   *   4. DEVIATION marked "DEV": a missing argument is supplied as 0 rather
+   *      than ignored, so Math.min(x) behaves as Math.min(x, 0) — the
+   *      striking case being Math.min(5) === 0. The negative-argument case is
+   *      the discriminating control: Math.min(-7) is -7, so the argument
+   *      itself is not being discarded.
+   *   5. The loop-fold workaround produces the minimum of an array.
    *
    * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
    * longer matches the documented claim and the page must be revised.
@@ -556,7 +574,18 @@ min: |
   assert("DEV Math.min() === 0 (spec: +Infinity)", Math.min() === 0, true);
   assert("DEV Math.min() (spec: +Infinity)", String(Math.min()), "0");
 
-  /* 4. The loop-fold workaround. */
+  /* 4. DEVIATION — a missing argument is supplied as 0, not ignored. */
+  assert("DEV Math.min(5) === 0 (spec: 5) — the missing argument became 0", Math.min(5) === 0, true);
+  assert("DEV Math.min(5) is NOT 5", Math.min(5) === 5, false);
+  assert("typeof Math.min(5) is number", String(typeof Math.min(5)), "number");
+  assert("DEV Math.min(-7) === -7 — right value, wrong reason (-7 < 0)", Math.min(-7) === -7, true);
+  assert("DEV Math.min(-7) is NOT 0, so the argument is not simply dropped", Math.min(-7) === 0, false);
+  assert("DEV Math.min(3.5) === 0 (spec: 3.5)", Math.min(3.5) === 0, true);
+  assert("DEV Math.min(0) === 0", Math.min(0) === 0, true);
+  assert("DEV Math.min(x) equals Math.min(x, 0) for x = 5", Math.min(5) === Math.min(5, 0), true);
+  assert("DEV Math.min(x) equals Math.min(x, 0) for x = -7", Math.min(-7) === Math.min(-7, 0), true);
+
+  /* 5. The loop-fold workaround. */
   var arr = [3, 1, 4, 1, 5];
   var min = arr[0];
   for (var i = 1; i < arr.length; i++) { if (arr[i] < min) { min = arr[i]; } }

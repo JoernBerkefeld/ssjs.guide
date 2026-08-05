@@ -220,9 +220,6 @@ return-value: |
    *        - Platform.Function.Stringify(object) returns only the QUOTED .NET
    *          type name, never the values
    *        - String(object) coerces to the same type name without quotes
-   *        - Platform.Function.GetObjectProperty does not exist: no arity in a
-   *          0..3 sweep ever returns a value (typeof is a worthless signal
-   *          here — it reports "clrmethodinfo" for every name, real or not).
    *   4. An unreadable property is NOT an unset property — the recommended
    *      workaround is to pass the populated object straight into the SOAP
    *      call that consumes it. That round trip is proven in the Examples
@@ -269,30 +266,6 @@ return-value: |
   assert("for..in over the CLR object yields 0 keys", keyCount, 0);
   assert("Stringify(object) returns only the quoted .NET type name", String(Platform.Function.Stringify(sub)), "\"ExactTarget.Integration.WSDL.Subscriber\"");
   assert("String(object) coerces to the .NET type name, not the values", String(sub), "ExactTarget.Integration.WSDL.Subscriber");
-
-  /* 3. GetObjectProperty does not exist — sweep every plausible arity. No
-     arity may produce a value; each one must throw. */
-  function assertNoValue(id, fn) {
-      var outcome = "returned a value";
-      try {
-          var v = fn();
-          if (v === undefined) { outcome = "returned undefined"; }
-      } catch (ex) { outcome = "threw: " + ex.message; }
-      var ok = String(outcome).indexOf("threw: ") === 0;
-      Platform.Response.Write((ok ? "PASS " : "FAIL ") + id + " -> [" + outcome + "]\n");
-  }
-  assertNoValue("GetObjectProperty arity 0 never returns a value", function () {
-      return Platform.Function.GetObjectProperty();
-  });
-  assertNoValue("GetObjectProperty arity 1 never returns a value", function () {
-      return Platform.Function.GetObjectProperty(sub);
-  });
-  assertNoValue("GetObjectProperty arity 2 never returns a value", function () {
-      return Platform.Function.GetObjectProperty(sub, "EmailAddress");
-  });
-  assertNoValue("GetObjectProperty arity 3 never returns a value", function () {
-      return Platform.Function.GetObjectProperty(sub, "EmailAddress", "x");
-  });
 
   /* 4. Unreadable is not unset — the object stays a usable CLR host object. */
   assert("the populated object is still a CLR host object", String(typeof sub), "clr");

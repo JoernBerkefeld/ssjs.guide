@@ -48,7 +48,13 @@ examples: |
   var proxy = new Script.Util.WSProxy();
   assert("typeof new Script.Util.WSProxy() is clr", typeof proxy, "clr");
 
-  /* 3. The instance carries the documented SOAP methods. */
+  /* 3. The instance carries the documented SOAP methods.
+   *    NOTE: typeof on a CLR proxy member reports "clrmethodinfo" for ANY
+   *    name, including one that does not exist, so these three lines assert
+   *    what typeof reports and nothing more — they are NOT existence proof.
+   *    retrieve is proven by the successful call below; setClientId and
+   *    createItem are proven by real invocations on their own pages,
+   *    /wsproxy/setclientid/ and /wsproxy/createitem/. */
   assert("typeof proxy.retrieve is clrmethodinfo", typeof proxy.retrieve, "clrmethodinfo");
   assert("typeof proxy.setClientId is clrmethodinfo", typeof proxy.setClientId, "clrmethodinfo");
   assert("typeof proxy.createItem is clrmethodinfo", typeof proxy.createItem, "clrmethodinfo");
@@ -162,9 +168,14 @@ business-unit-context: |
    * Proves:
    *   1. A default proxy is scoped to the CURRENTLY EXECUTING Business Unit:
    *      every row returned by retrieve carries the same Client.ID (MID),
-   *      i.e. exactly one distinct MID appears in the result set.
-   *   2. setClientId is the documented way to switch BU and is present on
-   *      every instance (typeof "clrmethodinfo").
+   *      i.e. exactly one distinct MID appears in the result set. SCOPE: this
+   *      is one retrieve, of one object type, on one BU, in a CloudPage GET —
+   *      it shows the default context on THIS BU, and was not repeated on
+   *      another BU, object type or execution context.
+   *   2. setClientId is the documented way to switch BU. The typeof lines
+   *      below report "clrmethodinfo", which a CLR proxy reports for ANY
+   *      name — they are not existence proof. setClientId is proven by a real
+   *      invocation on /wsproxy/setclientid/.
    *
    * NOT ASSERTED HERE: the effect of calling setClientId. This CloudPage runs
    * in a CHILD Business Unit, and setClientId requires a parent/Enterprise
