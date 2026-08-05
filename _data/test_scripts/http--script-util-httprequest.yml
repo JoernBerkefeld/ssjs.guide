@@ -1,0 +1,556 @@
+# Test scripts for /http/script-util-httprequest/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# HAZARD: reading `req.postData` throws "Property Get method was not found."
+# and an UNGUARDED read aborts the whole CloudPage with HTTP 422. Every read
+# below goes through assert()/assertThrowsFragment(), which catch it.
+#
+# EXTERNAL DEPENDENCY: these scripts call https://ssjs.guide/robots.txt and
+# https://postman-echo.com/post — public endpoints proven reachable from the
+# SFMC egress. Swap them for any reachable equivalent if a host ever changes.
+
+syntax: |
+  <script runat="server">
+  /*
+   * Chapter: Syntax
+   *
+   * Proves:
+   *   1. `new Script.Util.HttpRequest(url)` works WITHOUT Platform.Load.
+   *   2. The constructor returns an HttpRequestInstance (a CLR proxy).
+   *   3. Every property named in the Syntax snippet is assignable, and every
+   *      method named in it exists on the instance.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ("" + ex.message); }
+      Platform.Response.Write((got === "" + expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  /* 1. Constructor works with no Platform.Load call anywhere above it. */
+  var req = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+  assert("constructor returns an object (CLR proxy)", typeof req, "clr");
+
+  /* 2. Every property from the Syntax snippet is assignable. */
+  req.method = "GET";
+  assert("method is assignable", req.method, "GET");
+  req.contentType = "application/json";
+  assert("contentType is assignable", req.contentType, "application/json");
+  req.encoding = "UTF-8";
+  assert("encoding is assignable", req.encoding, "utf-8");
+  req.timeout = 30;
+  assert("timeout is assignable", req.timeout, "30");
+  req.emptyContentHandling = 0;
+  assert("emptyContentHandling is assignable", req.emptyContentHandling, "0");
+  req.retries = 2;
+  assert("retries is assignable", req.retries, "2");
+  req.continueOnError = true;
+  assert("continueOnError is assignable", req.continueOnError, "True");
+
+  /* 3. postData is assignable — the assignment itself never throws. */
+  var assigned = "ok";
+  try { req.postData = "body"; } catch (ex) { assigned = "THREW: " + ("" + ex.message); }
+  assert("postData is assignable", assigned, "ok");
+
+  /* 4. Every method from the Syntax snippet exists. */
+  assert("setHeader() exists", typeof req.setHeader, "clrmethodinfo");
+  assert("send() exists", typeof req.send, "clrmethodinfo");
+  </script>
+
+parameters: |
+  <script runat="server">
+  /*
+   * Chapter: Parameters
+   *
+   * Proves:
+   *   1. `url` is required — the documented single-argument call works.
+   *   2. `url` is a string parameter: a valid URL string is accepted and the
+   *      resulting instance sends to that URL.
+   *   3. An empty URL is NOT a working call form — it throws.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ("" + ex.message); }
+      Platform.Response.Write((got === "" + expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. The documented one-argument string call builds a usable instance. */
+  var req = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+  assert("url string accepted, instance created", typeof req, "clr");
+
+  /* 2. The instance actually targets that URL — send() returns 200. */
+  var resp = req.send();
+  assert("send() reached the given url (statusCode 200)", resp.statusCode, "200");
+
+  /* 3. An empty url is not a usable call form. */
+  assertThrows("empty url is not usable", function () {
+      var bad = new Script.Util.HttpRequest("");
+      return bad.send();
+  });
+  </script>
+
+httprequestinstance-properties: |
+  <script runat="server">
+  /*
+   * Chapter: HttpRequestInstance Properties
+   *
+   * Proves, for each documented property, its DEFAULT value and whether it is
+   * writable:
+   *   1. method                default "GET", writable, accepts POST/PUT/PATCH/DELETE
+   *   2. contentType           default "" (empty), writable
+   *   3. encoding              writable; an assigned value reads back LOWER-CASED
+   *   4. timeout               default 30, writable
+   *   5. emptyContentHandling  default 0, accepts 1 and 2
+   *   6. retries               default 1, writable
+   *   7. continueOnError       default false, writable
+   *
+   *   DEVIATIONS from the official Salesforce docs, each marked "DEV":
+   *     - encoding defaults to "Windows-1252", not the documented "UTF-8".
+   *     - postData is WRITE-ONLY: every read throws "Property Get method was
+   *       not found.", although the docs list it as a readable property.
+   *     - timeout is not documented at all; it exists and defaults to 30,
+   *       matching the documented 30-second send() timeout, so the unit is
+   *       SECONDS — not milliseconds.
+   *     - emptyContentHandling is documented as a boolean but is numeric at
+   *       runtime: true/false are rejected outright.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ("" + ex.message); }
+      Platform.Response.Write((got === "" + expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrowsFragment(id, fn, fragment) {
+      var msg = "";
+      try { fn(); msg = "did NOT throw"; } catch (ex) { msg = "" + ex.message; }
+      Platform.Response.Write((msg.indexOf(fragment) > -1 ? "PASS " : "FAIL ") + id + " -> " + msg + "\n");
+  }
+
+  var req = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+
+  /* 1. method — default and writability. */
+  assert("method default is GET", req.method, "GET");
+  req.method = "POST";
+  assert("method accepts POST", req.method, "POST");
+  req.method = "PUT";
+  assert("method accepts PUT", req.method, "PUT");
+  req.method = "PATCH";
+  assert("method accepts PATCH", req.method, "PATCH");
+  req.method = "DELETE";
+  assert("method accepts DELETE", req.method, "DELETE");
+  req.method = "GET";
+
+  /* 2. contentType — default empty, writable. */
+  var fresh = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+  assert("contentType default is empty", fresh.contentType, "");
+  fresh.contentType = "application/json";
+  assert("contentType is writable", fresh.contentType, "application/json");
+
+  /* 3. DEVIATION — encoding default is Windows-1252, not the documented UTF-8. */
+  var encReq = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+  assert("DEV encoding default is Windows-1252 (docs: UTF-8)", encReq.encoding, "Windows-1252");
+  encReq.encoding = "UTF-8";
+  assert("DEV assigned encoding reads back lower-cased (docs: UTF-8)", encReq.encoding, "utf-8");
+
+  /* 4. DEVIATION — timeout is undocumented; default 30 proves the unit is seconds. */
+  var toReq = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+  assert("DEV timeout default is 30 seconds (docs: property not listed)", toReq.timeout, "30");
+  toReq.timeout = 45;
+  assert("timeout is writable", toReq.timeout, "45");
+
+  /* 5. DEVIATION — postData is write-only: assignment works, every read throws. */
+  var pdReq = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+  assertThrowsFragment("DEV reading postData before assignment throws (docs: readable property)", function () {
+      return pdReq.postData;
+  }, "Property Get method was not found.");
+  pdReq.postData = "hello-body";
+  assertThrowsFragment("DEV reading postData after assignment still throws (docs: readable property)", function () {
+      return pdReq.postData;
+  }, "Property Get method was not found.");
+
+  /* 6. DEVIATION — emptyContentHandling is numeric, not the documented boolean. */
+  var ecReq = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+  assert("emptyContentHandling default is 0", ecReq.emptyContentHandling, "0");
+  ecReq.emptyContentHandling = 1;
+  assert("emptyContentHandling accepts 1 (stop)", ecReq.emptyContentHandling, "1");
+  ecReq.emptyContentHandling = 2;
+  assert("emptyContentHandling accepts 2 (next subscriber)", ecReq.emptyContentHandling, "2");
+  assertThrowsFragment("DEV emptyContentHandling rejects true (docs: boolean)", function () {
+      ecReq.emptyContentHandling = true;
+  }, "cannot be converted");
+  assertThrowsFragment("DEV emptyContentHandling rejects false (docs: boolean)", function () {
+      ecReq.emptyContentHandling = false;
+  }, "cannot be converted");
+
+  /* 7. retries and continueOnError — defaults and writability. */
+  var rReq = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+  assert("retries default is 1", rReq.retries, "1");
+  rReq.retries = 2;
+  assert("retries is writable", rReq.retries, "2");
+  assert("continueOnError default is false", rReq.continueOnError, "False");
+  rReq.continueOnError = true;
+  assert("continueOnError is writable", rReq.continueOnError, "True");
+  </script>
+
+httprequestinstance-methods: |
+  <script runat="server">
+  /*
+   * Chapter: HttpRequestInstance Methods
+   *
+   * Proves against a public echo endpoint that echoes request headers back:
+   *   1. clearHeaders(), removeHeader(), send() and setHeader() all exist.
+   *   2. setHeader() actually puts the header on the outgoing request.
+   *   3. Calling setHeader() twice for the same name REPLACES the value
+   *      rather than appending a second header.
+   *   4. removeHeader(name) removes only the named header.
+   *   5. send() returns an HttpResponseInstance and performs the request.
+   *   6. postData reaches the server (write-only property, assignment works).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ("" + ex.message); }
+      Platform.Response.Write((got === "" + expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var req = new Script.Util.HttpRequest("https://postman-echo.com/post");
+
+  /* 1. All four documented methods exist on the instance. */
+  assert("clearHeaders() exists", typeof req.clearHeaders, "clrmethodinfo");
+  assert("removeHeader() exists", typeof req.removeHeader, "clrmethodinfo");
+  assert("send() exists", typeof req.send, "clrmethodinfo");
+  assert("setHeader() exists", typeof req.setHeader, "clrmethodinfo");
+
+  /* 2. Configure the request: one kept header, one replaced, one removed. */
+  req.method = "POST";
+  req.contentType = "application/json";
+  req.setHeader("X-Kept", "x-kept");
+  req.setHeader("X-Replaced", "first-value");
+  req.setHeader("X-Replaced", "second-value");
+  req.setHeader("X-Dropped", "drop-me");
+  req.removeHeader("X-Dropped");
+  req.postData = "{\"probe\":\"body-reached-server\"}";
+
+  var resp = req.send();
+  assert("send() returns a response object", typeof resp, "clr");
+  assert("send() performed the POST (statusCode 200)", resp.statusCode, "200");
+
+  var body = "" + resp.content;
+
+  /* 3. setHeader() put the kept header on the wire. */
+  assert("setHeader() sends the custom header", body.indexOf("x-kept") > -1, "true");
+
+  /* 4. A second setHeader() for the same name replaced the first value. */
+  assert("setHeader() twice keeps the second value", body.indexOf("second-value") > -1, "true");
+  assert("setHeader() twice discards the first value", body.indexOf("first-value") > -1, "false");
+
+  /* 5. removeHeader() removed only the named header. */
+  assert("removeHeader() removed the named header", body.indexOf("drop-me") > -1, "false");
+
+  /* 6. The write-only postData actually reached the server. */
+  assert("postData reached the server", body.indexOf("body-reached-server") > -1, "true");
+
+  /* 7. clearHeaders() removes every custom header — no header echoed back. */
+  var req2 = new Script.Util.HttpRequest("https://postman-echo.com/post");
+  req2.method = "POST";
+  req2.setHeader("X-Cleared", "cleared-value");
+  req2.clearHeaders();
+  req2.postData = "x";
+  var resp2 = req2.send();
+  var body2 = "" + resp2.content;
+  assert("clearHeaders() removed the custom header", body2.indexOf("cleared-value") > -1, "false");
+  </script>
+
+httpresponseinstance-properties: |
+  <script runat="server">
+  /*
+   * Chapter: HttpResponseInstance Properties
+   *
+   * Proves, for the object returned by send():
+   *   1. content is a CLR string that must be converted before use.
+   *   2. contentType IS populated on Script.Util.HttpRequest.
+   *   3. headers is a CLR object whose for..in enumeration yields real entries.
+   *   4. returnStatus is 0 (OK) for a successful call.
+   *   5. statusCode carries the HTTP status.
+   *
+   *   DEVIATIONS from the official Salesforce docs, each marked "DEV":
+   *     - encoding is documented as a populated response property but is
+   *       ALWAYS an empty string — even when the response Content-Type
+   *       carries a charset.
+   *     - statusCode and returnStatus are CLR values, so strict equality
+   *       against a JavaScript number literal is always false.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ("" + ex.message); }
+      Platform.Response.Write((got === "" + expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var req = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+  req.method = "GET";
+  var resp = req.send();
+
+  /* 1. content is a CLR value, not a JS string. */
+  assert("content is a CLR value", typeof resp.content, "clr");
+  assert("content converts to a non-empty JS string", ("" + resp.content).length > 0, "true");
+
+  /* 2. contentType IS populated on HttpRequest. */
+  assert("contentType is populated", ("" + resp.contentType).length > 0, "true");
+  assert("contentType carries the charset", ("" + resp.contentType).indexOf("charset") > -1, "true");
+
+  /* 3. DEVIATION — encoding is empty although the content-type has a charset. */
+  assert("DEV encoding is always empty (docs: populated response property)", resp.encoding, "");
+
+  /* 4. headers is a CLR object with real enumerable entries. */
+  assert("headers is a CLR object", typeof resp.headers, "clr");
+  var headerCount = 0;
+  for (var k in resp.headers) { headerCount = headerCount + 1; }
+  assert("headers enumeration yields real entries", headerCount > 0, "true");
+
+  /* 5. returnStatus / statusCode values. */
+  assert("returnStatus is 0 (OK)", resp.returnStatus, "0");
+  assert("statusCode is 200", resp.statusCode, "200");
+
+  /* 6. DEVIATION — CLR values never satisfy strict equality with a number. */
+  assert("DEV statusCode === 200 is false (docs: number)", resp.statusCode === 200 ? "true" : "false", "false");
+  assert("DEV returnStatus === 0 is false (docs: number)", resp.returnStatus === 0 ? "true" : "false", "false");
+  </script>
+
+reading-response-headers: |
+  <script runat="server">
+  /*
+   * Chapter: Reading response headers
+   *
+   * Proves:
+   *   1. Direct indexing — resp.headers["Content-Type"] — THROWS, although the
+   *      official docs example uses exactly that access (marked DEV).
+   *   2. The documented for..in workaround yields keys shaped "[Name, Value]".
+   *   3. getHeaderMap() from the page builds a usable lower-cased header map.
+   *   4. A missing header returns undefined from that map.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ("" + ex.message); }
+      Platform.Response.Write((got === "" + expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrowsFragment(id, fn, fragment) {
+      var msg = "";
+      try { fn(); msg = "did NOT throw"; } catch (ex) { msg = "" + ex.message; }
+      Platform.Response.Write((msg.indexOf(fragment) > -1 ? "PASS " : "FAIL ") + id + " -> " + msg + "\n");
+  }
+
+  /**
+   * Build a plain { name: value } header map from an HttpResponse.
+   * Reads only the for..in enumeration keys (shaped "[Name, Value]") so it never
+   * touches a CLR value — avoiding "Use of CLR is not allowed".
+   * @param {object} resp - the response returned by req.send()
+   * @returns {object} map of lowercased header name => value string
+   */
+  function getHeaderMap(resp) {
+      var map = {};
+      for (var k in resp.headers) {
+          var pair = String(k);
+          // Enumeration keys are wrapped in [ ] — strip them.
+          if (pair.charAt(0) === "[") { pair = pair.substring(1); }
+          if (pair.charAt(pair.length - 1) === "]") { pair = pair.substring(0, pair.length - 1); }
+          var idx = pair.indexOf(", ");
+          if (idx > -1) {
+              map[pair.substring(0, idx).toLowerCase()] = pair.substring(idx + 2);
+          }
+      }
+      return map;
+  }
+
+  var req = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+  req.method = "GET";
+  var resp = req.send();
+
+  /* 1. DEVIATION — the documented direct access throws. */
+  assertThrowsFragment("DEV resp.headers[\"Content-Type\"] throws (docs show this access)", function () {
+      return resp.headers["Content-Type"];
+  }, "Use of Common Language Runtime (CLR) is not allowed");
+
+  /* 2. The for..in enumeration keys carry the value inside the key string. */
+  var firstKey = "";
+  for (var k in resp.headers) { if (firstKey === "") { firstKey = String(k); } }
+  assert("enumeration keys are wrapped in [ ]", firstKey.charAt(0), "[");
+  assert("enumeration keys embed the value after a comma", firstKey.indexOf(", ") > -1, "true");
+
+  /* 3. workaround — getHeaderMap() returns the content-type value. */
+  var headers = getHeaderMap(resp);
+  assert("workaround getHeaderMap() returns the content-type", headers["content-type"].indexOf("text/plain") > -1, "true");
+  assert("workaround header names are lower-cased", headers["content-type"].length > 0, "true");
+
+  /* 4. A missing header is undefined, not an error. */
+  assert("a missing header returns undefined", typeof headers["x-does-not-exist"], "undefined");
+  </script>
+
+checking-the-status-code: |
+  <script runat="server">
+  /*
+   * Chapter: Checking the status code
+   *
+   * Proves:
+   *   1. resp.statusCode is a CLR value, NOT a JavaScript number.
+   *   2. Strict equality against a number literal is ALWAYS false — this is
+   *      the deviation the chapter warns about (marked DEV).
+   *   3. The documented loose comparison (==) works.
+   *   4. The documented Number() conversion makes === work.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ("" + ex.message); }
+      Platform.Response.Write((got === "" + expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var req = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+  req.method = "GET";
+  var resp = req.send();
+
+  /* 1. statusCode is a CLR value. */
+  assert("typeof statusCode is clr, not number", typeof resp.statusCode, "clr");
+  assert("statusCode stringifies to 200", "" + resp.statusCode, "200");
+
+  /* 2. DEVIATION — strict equality never matches a JS number literal. */
+  assert("DEV statusCode === 200 is false (docs type it number)", resp.statusCode === 200 ? "true" : "false", "false");
+  assert("DEV statusCode === 404 is also false", resp.statusCode === 404 ? "true" : "false", "false");
+
+  /* 3. The documented loose comparison works. */
+  assert("statusCode == 200 is true", resp.statusCode == 200 ? "true" : "false", "true");
+  assert("statusCode == 404 is false", resp.statusCode == 404 ? "true" : "false", "false");
+
+  /* 4. workaround — convert once with Number(), then === works. */
+  var status = Number(resp.statusCode);
+  assert("workaround typeof Number(statusCode) is number", typeof status, "number");
+  assert("workaround Number(statusCode) === 200 is true", status === 200 ? "true" : "false", "true");
+  </script>
+
+examples: |
+  <script runat="server">
+  /*
+   * Chapter: Examples
+   *
+   * Proves the shape every example on the page relies on, using one request:
+   *   1. A GET with setHeader() + try/catch returns a parseable body.
+   *   2. String(resp.content) + ParseJSON() is the documented read path.
+   *   3. A POST with contentType + postData delivers a JSON body.
+   *   4. The timeout example's value (10) is accepted as seconds.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ("" + ex.message); }
+      Platform.Response.Write((got === "" + expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  /* 1-3. POST JSON body with headers, then read via String() + ParseJSON. */
+  var caught = "none";
+  var parsed = null;
+  var code = "";
+  try {
+      var req = new Script.Util.HttpRequest("https://postman-echo.com/post");
+      req.method = "POST";
+      req.contentType = "application/json";
+      req.setHeader("Accept", "application/json");
+      req.timeout = 10;
+      req.postData = "{\"plan\":\"example-plan\"}";
+      var resp = req.send();
+      code = "" + resp.statusCode;
+      parsed = Platform.Function.ParseJSON("" + resp.content);
+  } catch (e) {
+      caught = "" + e.message;
+  }
+  assert("the documented try/catch example did not throw", caught, "none");
+  assert("statusCode == 200", code, "200");
+  assert("String(content) + ParseJSON returns an object", typeof parsed, "object");
+  assert("the JSON body reached the server", ("" + Platform.Function.Stringify(parsed)).indexOf("example-plan") > -1, "true");
+
+  /* 4. The timeout example's value is accepted (seconds, not milliseconds). */
+  var toReq = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+  toReq.timeout = 10;
+  assert("timeout = 10 (seconds) is accepted", toReq.timeout, "10");
+  </script>
+
+complete-rest-api-helper-pattern: |
+  <script runat="server">
+  /*
+   * Chapter: Complete REST API Helper Pattern
+   *
+   * Proves the helper function shipped on the page actually works:
+   *   1. callRestApi() performs the request and returns { status, data }.
+   *   2. status is a REAL JavaScript number because of the Number() conversion,
+   *      so callers can use === (the whole point of that conversion).
+   *   3. The body argument is sent when supplied and omitted when null.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ("" + ex.message); }
+      Platform.Response.Write((got === "" + expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  function callRestApi(method, url, token, body) {
+      var req = new Script.Util.HttpRequest(url);
+      req.method = method;
+      req.setHeader("Authorization", "Bearer " + token);
+      req.setHeader("Accept", "application/json");
+
+      if (body) {
+          req.contentType = "application/json";
+          req.postData = Stringify(body);
+      }
+
+      var resp = req.send();
+      var parsed = Platform.Function.ParseJSON("" + resp.content + "");
+      // Convert the CLR statusCode to a real number so callers can use ===.
+      return { status: Number(resp.statusCode), data: parsed };
+  }
+
+  Platform.Load("core", "1.1.5");
+
+  /* 1-3. POST with a body — the echo endpoint reflects what was sent. */
+  var result = callRestApi("POST", "https://postman-echo.com/post", "dummy-token", { plan: "helper-plan" });
+  assert("callRestApi returned an object", typeof result, "object");
+  assert("status is a real JavaScript number", typeof result.status, "number");
+  assert("status === 200 works after Number() conversion", result.status === 200 ? "true" : "false", "true");
+  assert("data is a parsed object", typeof result.data, "object");
+  assert("the body was sent", ("" + Platform.Function.Stringify(result.data)).indexOf("helper-plan") > -1, "true");
+  </script>

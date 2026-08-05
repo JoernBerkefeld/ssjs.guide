@@ -7,6 +7,7 @@ permalink: /wsproxy/updateitem/
 redirect_from:
   - /wsproxy/update-item/
 verification: verified
+test_scripts: complete
 description: Update a single existing SFMC object via the SOAP API. Accepts an optional UpdateOptions argument (e.g. SaveOptions for upsert behavior).
 syntax: "<WSProxyInstance>.updateItem(objectType, properties[, updateOptions])"
 return_type: object
@@ -21,6 +22,8 @@ max_args: 3
 | `objectType` | string | Yes | SOAP API object type |
 | `properties` | object | Yes | Single object to update (must include identifier) |
 | `updateOptions` | object | No | SOAP `UpdateOptions` object (e.g. `{ SaveOptions: [...] }`) |
+
+{% include test-script.html bundle="wsproxy--updateitem" chapter="parameters" %}
 
 ## Return Value
 
@@ -41,6 +44,8 @@ max_args: 3
 ```
 
 `updateItem` updates a single object, so `Results` always contains exactly one entry. There is no top-level `StatusMessage` — the per-item status text lives on the `Results` entry.
+
+{% include test-script.html bundle="wsproxy--updateitem" chapter="return-value" %}
 
 ## Examples
 
@@ -87,6 +92,8 @@ var result = proxy.updateItem(
     { SaveOptions: [{ PropertyName: "*", SaveAction: "UpdateAdd" }] }
 );
 ```
+
+{% include test-script.html bundle="wsproxy--updateitem" chapter="examples" %}
 
 ## See Also
 

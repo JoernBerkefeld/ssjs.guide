@@ -1,0 +1,275 @@
+# Test scripts for /wsproxy/errorutil/
+#
+# One key per chapter on the page (plus one for the deprecation callout).
+# Each script is a self-contained SSJS CloudPage snippet that asserts every
+# claim the chapter makes — positive, negative, and every documented caveat.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage on the MCDEV_Training_QA business unit. Re-run them before
+# changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# NOTE ON CORE VERSIONS: Platform.Load is request-scoped, so each script
+# loads exactly ONE Core version. That is why the version lock is proven by
+# three separate scripts rather than a single version matrix.
+
+core-version-lock: |
+  <script runat="server">
+  Platform.Load("Core", "1.1.5");
+
+  /*
+   * Callout: ErrorUtil is deprecated / version-locked.
+   *
+   * Proves, under Platform.Load("Core", "1.1.5"):
+   *   1. The bare global ErrorUtil is undefined — Core 1.1.5 does not inject it.
+   *   2. Reading ErrorUtil.ThrowWSProxyError does NOT throw; it yields undefined
+   *      (missing-global member reads are silent in this engine).
+   *   3. INVOKING ErrorUtil.ThrowWSProxyError(result) throws a TypeError whose
+   *      message is "Object expected: ThrowWSProxyError".
+   *   4. The recommended replacement — inspecting result.Status yourself — works
+   *      on this Core version, for both the success and the error path.
+   *
+   * NOT ASSERTED HERE: the identical behaviour under Core "1.1.1". Platform.Load
+   * is request-scoped and mixing two Core versions in one request makes
+   * attribution ambiguous, so 1.1.1 is proven by the recommended-replacement
+   * script instead, which loads "1.1.1" and asserts the same undefined result.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return fn(); } catch (ex) { return "THREW: " + ("" + ex); }
+  }
+  function assertThrowsWith(id, fn, fragment) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex; }
+      var ok = threw && msg.indexOf(fragment) >= 0;
+      Platform.Response.Write((ok ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. ErrorUtil is not provided by Core 1.1.5. */
+  assert("typeof ErrorUtil is undefined under Core 1.1.5", typeOf(function () { return typeof ErrorUtil; }), "undefined");
+
+  /* 2. Reading the member is silent; only the call fails. */
+  assert("typeof ErrorUtil.ThrowWSProxyError is undefined (member read does not throw)", typeOf(function () { return typeof ErrorUtil.ThrowWSProxyError; }), "undefined");
+
+  /* 3. Invoking it throws a TypeError, not a ReferenceError. */
+  assertThrowsWith("ErrorUtil.ThrowWSProxyError(result) throws under Core 1.1.5", function () { return ErrorUtil.ThrowWSProxyError({ Status: "OK" }); }, "Object expected: ThrowWSProxyError");
+  assert("the thrown error name is TypeError", typeOf(function () { try { ErrorUtil.ThrowWSProxyError({ Status: "OK" }); } catch (ex) { return "" + ex.name; } return "did not throw"; }), "TypeError");
+
+  /* 4. The replacement works on this Core version — success path. */
+  var api = new Script.Util.WSProxy();
+  var okResult = api.retrieve("DataExtension", ["Name"]);
+  assert("replacement: successful retrieve has Status OK under Core 1.1.5", "" + okResult.Status, "OK");
+  assert("replacement: success Status does not start with Error", ("" + okResult.Status).indexOf("Error") === 0 ? "throws" : "no throw", "no throw");
+
+  /* 4b. The replacement works on this Core version — error path. */
+  var missingKey = "00000000-0000-0000-0000-000000000001";
+  var badResult = api.retrieve("DataExtensionObject[" + missingKey + "]", ["FirstName", "LastName", "EmailAddress"]);
+  assert("replacement: bogus CustomerKey retrieve returns a result instead of throwing", typeof badResult, "object");
+  assert("replacement: error Status starts with 'Error'", ("" + badResult.Status).indexOf("Error"), 0);
+
+  var caught = "none";
+  try {
+      if (("" + badResult.Status).indexOf("Error") === 0) {
+          throw new Error("" + badResult.Status);
+      }
+  } catch (ex2) {
+      caught = "" + ex2;
+  }
+  assert("replacement: the manual throw is caught under Core 1.1.5", caught.indexOf("Data extension does not exist") >= 0 ? "caught" : caught, "caught");
+  </script>
+
+recommended-replacement: |
+  <script runat="server">
+  Platform.Load("Core", "1.1.1");
+
+  /*
+   * Chapter: Recommended replacement (works on any Core version)
+   *
+   * Proves, under Platform.Load("Core", "1.1.1"):
+   *   1. ErrorUtil is undefined here too — the version lock is not specific to
+   *      Core 1.1.5 (see the deprecation callout).
+   *   2. A WSProxy retrieve against a non-existent DataExtensionObject does NOT
+   *      throw: it returns a result object whose Status carries the SOAP error.
+   *   3. result.Status is a plain string; String(result.Status) is safe and
+   *      .indexOf("Error") === 0 is a reliable failure test, exactly as the
+   *      chapter example shows.
+   *   4. throw new Error(String(result.Status)) produces a real Error OBJECT
+   *      (typeof "object", .constructor === Error) — unlike
+   *      ErrorUtil.ThrowWSProxyError, which throws a bare string — and
+   *      String(ex) recovers the failure text, exactly as the chapter shows.
+   *      The two Jint deviations documented on /ecmascript-builtins/error/
+   *      apply and are asserted with DEV ids: instanceof Error is false, and
+   *      .message is undefined after new Error(...).
+   *   5. The success path is untouched: Status is "OK", the guard does not fire,
+   *      and result.Results is usable.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return fn(); } catch (ex) { return "THREW: " + ("" + ex); }
+  }
+
+  /* 1. The replacement is needed because ErrorUtil is gone on modern Core. */
+  assert("typeof ErrorUtil is undefined under Core 1.1.1", typeOf(function () { return typeof ErrorUtil; }), "undefined");
+
+  var api = new Script.Util.WSProxy();
+  var customerKey = "00000000-0000-0000-0000-000000000001";
+
+  /* 2. A SOAP-level failure is reported through Status, not through an exception. */
+  var result = null;
+  var retrieveThrew = false;
+  try {
+      result = api.retrieve(
+          "DataExtensionObject[" + customerKey + "]",
+          ["FirstName", "LastName", "EmailAddress"]
+      );
+  } catch (ex0) {
+      retrieveThrew = true;
+  }
+  assert("retrieve on a missing DataExtensionObject does not throw", retrieveThrew ? "threw" : "returned", "returned");
+  assert("the failed call still returns a result object", typeof result, "object");
+  assert("result.Status is a string", typeof result.Status, "string");
+  assert("result.RequestID is a string", typeof result.RequestID, "string");
+  assert("result.Results is present on the failed call", typeof result.Results, "object");
+
+  /* 3. The documented failure test. */
+  assert("result.Status carries the SOAP error text", ("" + result.Status).indexOf("Data extension does not exist") >= 0 ? "yes" : ("" + result.Status), "yes");
+  assert("String(result.Status).indexOf('Error') === 0", String(result.Status).indexOf("Error") === 0 ? "true" : "false", "true");
+
+  /* 4. The manual throw produces a real Error object. */
+  var caught = null;
+  try {
+      if (String(result.Status).indexOf("Error") === 0) {
+          throw new Error(String(result.Status));
+      }
+      caught = "guard did not fire";
+  } catch (ex) {
+      caught = ex;
+  }
+  assert("the guard fired and an exception was caught", typeof caught, "object");
+  assert("unlike ErrorUtil, the caught value is an OBJECT not a string", typeof caught, "object");
+  assert("the caught value was built by the Error constructor", caught.constructor === Error ? "true" : "false", "true");
+  assert("DEV caught instanceof Error is false (spec: true) - see /ecmascript-builtins/error/", caught instanceof Error ? "true" : "false", "false");
+  assert("DEV ex.message is undefined after new Error(msg) (spec: the message string) - see /ecmascript-builtins/error/", typeOf(function () { return typeof caught.message; }), "undefined");
+  assert("String(ex) is readable and names the failure", String(caught).indexOf("Data extension does not exist") >= 0 ? "yes" : String(caught), "yes");
+
+  /* 5. The success path is unaffected by the guard. */
+  var okResult = api.retrieve("DataExtension", ["Name"]);
+  assert("successful retrieve Status is OK", "" + okResult.Status, "OK");
+  assert("the guard does not fire on success", String(okResult.Status).indexOf("Error") === 0 ? "fired" : "not fired", "not fired");
+  assert("the success path exposes Results", typeof okResult.Results, "object");
+  </script>
+
+throwwsproxyerror: |
+  <script runat="server">
+  Platform.Load("Core", "1");
+
+  /*
+   * Chapter: ThrowWSProxyError
+   *
+   * Proves, under Platform.Load("Core", "1") — the ONLY Core version that
+   * provides ErrorUtil:
+   *   1. ErrorUtil is an object and ThrowWSProxyError is a function on it.
+   *   2. Given a successful WSProxy result it does not throw.
+   *   3. Given a failing WSProxy result it throws.
+   *   4. The thrown value is a plain STRING, not an Error object: typeof ex is
+   *      "string", ex.message and ex.description are both undefined, and the
+   *      only way to read it is String(ex) / "" + ex.
+   *   5. It accepts the documented minimum shape { Status, RequestID, Results },
+   *      not just a live WSProxy return value.
+   *   6. The recommended result.Status replacement also works under Core "1",
+   *      so migrating away from ErrorUtil never requires a version change.
+   *
+   * DEV (differs from the historic documentation of this member):
+   *   - The call is documented elsewhere as returning nothing on success. It
+   *     actually RETURNS the Status string ("OK"). Asserted below with a DEV id.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(fn) {
+      try { return fn(); } catch (ex) { return "THREW: " + ("" + ex); }
+  }
+  function assertNoThrow(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex; }
+      Platform.Response.Write((threw ? "FAIL " : "PASS ") + id + " -> " + (threw ? "threw: " + msg : "did not throw") + "\n");
+  }
+  function assertThrowsWith(id, fn, fragment) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex; }
+      var ok = threw && msg.indexOf(fragment) >= 0;
+      Platform.Response.Write((ok ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. ErrorUtil exists only under Core "1". */
+  assert("typeof ErrorUtil under Core 1 is object", typeOf(function () { return typeof ErrorUtil; }), "object");
+  assert("typeof ErrorUtil.ThrowWSProxyError is function", typeOf(function () { return typeof ErrorUtil.ThrowWSProxyError; }), "function");
+
+  var api = new Script.Util.WSProxy();
+
+  /* 2. Success path — no throw. */
+  var okResult = api.retrieve("DataExtension", ["Name"]);
+  assert("control: the successful result has Status OK", "" + okResult.Status, "OK");
+  assertNoThrow("ThrowWSProxyError(successful result) does not throw", function () { return ErrorUtil.ThrowWSProxyError(okResult); });
+
+  /* 2b. DEV — it returns the Status string, it does not return nothing. */
+  var okReturn = ErrorUtil.ThrowWSProxyError(okResult);
+  assert("DEV typeof ThrowWSProxyError(ok) is string (documented as returning nothing)", typeof okReturn, "string");
+  assert("DEV ThrowWSProxyError(ok) returns the Status value 'OK' (documented as returning nothing)", "" + okReturn, "OK");
+
+  /* 3 + 4. Error path — throws a bare string. */
+  var missingKey = "00000000-0000-0000-0000-000000000001";
+  var badResult = api.retrieve("DataExtensionObject[" + missingKey + "]", ["FirstName", "LastName", "EmailAddress"]);
+  assert("control: the failing result has an Error Status", ("" + badResult.Status).indexOf("Error"), 0);
+  assertThrowsWith("ThrowWSProxyError(failing result) throws", function () { return ErrorUtil.ThrowWSProxyError(badResult); }, "Data extension does not exist");
+
+  var thrownType = "not thrown", thrownMsg = "not thrown", thrownDesc = "not thrown", thrownStr = "not thrown";
+  try {
+      ErrorUtil.ThrowWSProxyError(badResult);
+  } catch (ex) {
+      thrownType = typeof ex;
+      thrownMsg = typeOf(function () { return typeof ex.message; });
+      thrownDesc = typeOf(function () { return typeof ex.description; });
+      thrownStr = "" + ex;
+  }
+  assert("the thrown value is a plain string, not an Error object", thrownType, "string");
+  assert("ex.message is undefined on the thrown string", thrownMsg, "undefined");
+  assert("ex.description is undefined on the thrown string", thrownDesc, "undefined");
+  assert("String(ex) reproduces the Status text", thrownStr.indexOf("Error: Data extension does not exist") === 0 ? "yes" : thrownStr, "yes");
+  assert("the thrown string equals result.Status", thrownStr === ("" + badResult.Status) ? "true" : "false", "true");
+
+  /* 5. The documented minimum shape { Status, RequestID, Results } is enough. */
+  var minOk = { Status: "OK", RequestID: "test-request-id", Results: [] };
+  assertNoThrow("minimum shape with Status OK does not throw", function () { return ErrorUtil.ThrowWSProxyError(minOk); });
+  var minErr = { Status: "Error: synthetic failure", RequestID: "test-request-id", Results: [] };
+  assertThrowsWith("minimum shape with an Error Status throws", function () { return ErrorUtil.ThrowWSProxyError(minErr); }, "synthetic failure");
+
+  /* 6. The replacement also works under Core "1". */
+  var caught = "none";
+  try {
+      if (String(badResult.Status).indexOf("Error") === 0) {
+          throw new Error(String(badResult.Status));
+      }
+  } catch (ex3) {
+      caught = String(ex3);
+  }
+  assert("replacement: the result.Status check also works under Core 1", caught.indexOf("Data extension does not exist") >= 0 ? "caught" : caught, "caught");
+  assert("replacement: the success Status passes the guard untouched", String(okResult.Status).indexOf("Error") === 0 ? "fired" : "not fired", "not fired");
+  </script>

@@ -10,6 +10,7 @@ return_type: object
 min_args: 2
 max_args: 2
 verification: verified
+test_scripts: complete
 ---
 
 `<WSProxyInstance>.getNextBatch(objectType, requestId)` continues a paginated [`retrieve`](/wsproxy/retrieve/) sequence after `HasMoreRows` is true.
@@ -23,9 +24,13 @@ verification: verified
 | `objectType` | string | Yes | Same SOAP object type passed to the original `retrieve` call |
 | `requestId` | string | Yes | `RequestID` value from the previous `retrieve` or `getNextBatch` response |
 
+{% include test-script.html bundle="wsproxy--getnextbatch" chapter="parameters" %}
+
 ## Return value
 
 Same shape as [`retrieve`](/wsproxy/retrieve/): `Status`, `RequestID`, `Results`, and `HasMoreRows`.
+
+{% include test-script.html bundle="wsproxy--getnextbatch" chapter="return-value" %}
 
 ## Examples
 
@@ -47,9 +52,13 @@ do {
 } while (result.HasMoreRows);
 ```
 
+{% include test-script.html bundle="wsproxy--getnextbatch" chapter="examples" %}
+
 ## Notes
 
 {% include callout.html type="note" content="Implement a <code>retrieve</code> / <code>getNextBatch</code> loop (see examples below) or wrap it in your own helper — SFMC does not ship a single built-in <code>retrieveBatch</code> convenience on <code>WSProxy</code>." %}
+
+{% include test-script.html bundle="wsproxy--getnextbatch" chapter="notes" %}
 
 ## See Also
 

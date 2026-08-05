@@ -12,6 +12,7 @@ return_type: object
 min_args: 2
 max_args: 3
 verification: verified
+test_scripts: complete
 ---
 
 ## Parameters
@@ -21,6 +22,8 @@ verification: verified
 | `objectType` | string | Yes | SOAP API object type |
 | `properties` | object | Yes | Object properties identifying the record to delete |
 | `deleteOptions` | object | No | Optional SOAP DeleteOptions object (e.g. `RequestType`, `QueuePriority`) |
+
+{% include test-script.html bundle="wsproxy--deleteitem" chapter="parameters" %}
 
 ## Return Value
 
@@ -33,6 +36,8 @@ The top-level object exposes `Status`, `RequestID`, and a `Results` array of per
     Results: [{ StatusCode: "OK", StatusMessage: "...", ErrorCode: "0" }]
 }
 ```
+
+{% include test-script.html bundle="wsproxy--deleteitem" chapter="return-value" %}
 
 ## Examples
 
@@ -59,18 +64,23 @@ var result = proxy.deleteItem("Subscriber", {
 
 ### Delete a DE row
 
+Identify the Data Extension with a `CustomerKey` property and the row with a flat `Keys` array of `{ Name, Value }` pairs.
+
 ```javascript
 var proxy = new Script.Util.WSProxy();
-var result = proxy.deleteItem("DataExtensionObject[MyDE_Key]", {
-    Keys: {
-        Key: [
-            { Name: "SubscriberKey", Value: "sub_jane" }
-        ]
-    }
+var result = proxy.deleteItem("DataExtensionObject", {
+    CustomerKey: "MyDE_Key",
+    Keys: [
+        { Name: "SubscriberKey", Value: "sub_jane" }
+    ]
 });
 ```
 
+{% include callout.html type="warning" content="The nested <code>Keys: { Key: [...] }</code> form and the bracketed <code>DataExtensionObject[MyDE_Key]</code> objectType both throw <code>Error executing delete call.</code> — use the flat <code>Keys</code> array together with a <code>CustomerKey</code> property instead." %}
+
 {% include callout.html type="warning" content="Deletions are permanent and cannot be undone. Test delete logic in a sandbox before running in production." %}
+
+{% include test-script.html bundle="wsproxy--deleteitem" chapter="examples" %}
 
 ## See Also
 

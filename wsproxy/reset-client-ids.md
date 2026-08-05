@@ -13,6 +13,7 @@ min_args: 0
 max_args: 0
 verification: verified
 differs_from_docs: true
+test_scripts: complete
 ---
 
 `proxy.resetClientIds()` clears any Business Unit context set by a previous [`proxy.setClientId()`](/wsproxy/setclientid/) call. After resetting, all WSProxy operations target the BU the script is running in.
@@ -21,11 +22,17 @@ differs_from_docs: true
 
 None.
 
+{% include test-script.html bundle="wsproxy--reset-client-ids" chapter="parameters" %}
+
 ## Return Value
 
 `null`. Runtime-verified: `resetClientIds()` returns a genuine `null` value (`=== null`), not `undefined`.
 
 {% include differs-from-docs.html note="The official docs describe `resetClientIds()` as returning void, but at runtime it returns a genuine `null` (`=== null`), not `undefined`." %}
+
+{% include test-script.html bundle="wsproxy--reset-client-ids" chapter="null-return" label="Show test script — null return, not void" %}
+
+{% include test-script.html bundle="wsproxy--reset-client-ids" chapter="return-value" %}
 
 ## Examples
 
@@ -62,9 +69,13 @@ for (var i = 0; i < businessUnits.length; i++) {
 proxy.resetClientIds();
 ```
 
+{% include test-script.html bundle="wsproxy--reset-client-ids" chapter="examples" %}
+
 ## Notes
 
 {% include callout.html type="note" content="Call `resetClientIds()` after finishing any cross-BU operations. Leaving the client ID set for the remainder of a script's execution can cause later WSProxy calls to target the wrong BU." %}
+
+{% include test-script.html bundle="wsproxy--reset-client-ids" chapter="notes" %}
 
 ## See Also
 

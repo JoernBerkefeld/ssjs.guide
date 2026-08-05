@@ -1,0 +1,288 @@
+# Test scripts for /wsproxy/resetclientids/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive
+# and negative.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage running in the CHILD Business Unit MCDEV_Training_QA.
+# Re-run them before changing any claim on the page.
+#
+# resetClientIds is a context-only call — no script creates or removes any
+# fixture, and every SOAP call is read-only (retrieve).
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+parameters: |
+  <script runat="server">
+  /*
+   * Chapter: Parameters — "None."
+   *
+   * Proves:
+   *   1. resetClientIds is a CLR method on every WSProxy instance.
+   *   2. The documented 0-argument call form works (min_args = 0) and is
+   *      safe even on a fresh proxy that never called setClientId.
+   *   3. NEGATIVE — passing one argument is rejected (max_args = 0).
+   *   4. NEGATIVE — passing two arguments is rejected (max_args = 0).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+
+  /* 1. The method exists on the instance. */
+  assert("typeof proxy.resetClientIds is clrmethodinfo", typeof proxy.resetClientIds, "clrmethodinfo");
+
+  /* 2. The documented 0-argument form — no parameters at all. */
+  assert("resetClientIds() with no arguments is accepted (min_args = 0)", typeof proxy.resetClientIds(), "object");
+  var fresh = new Script.Util.WSProxy();
+  assert("resetClientIds() is safe on a fresh proxy that never called setClientId", (fresh.resetClientIds() === null) ? "true" : "false", "true");
+
+  /* 3. + 4. NEGATIVE — the method takes no parameters (max_args = 0). */
+  assertThrows("resetClientIds(arg) throws (max_args = 0)", function () { return proxy.resetClientIds({ ID: 123456 }); });
+  assertThrows("resetClientIds(arg1, arg2) throws (max_args = 0)", function () { return proxy.resetClientIds(1, 2); });
+  </script>
+
+return-value: |
+  <script runat="server">
+  /*
+   * Chapter: Return Value — `null`
+   *
+   * Proves:
+   *   1. resetClientIds() returns a genuine null: `=== null` is true.
+   *   2. It is NOT undefined: `=== undefined` is false.
+   *   3. typeof the returned value is "object" — the JS typeof of null,
+   *      not "undefined".
+   *   4. The same null is returned whether or not a setClientId call
+   *      preceded it, so the return value is not a status signal.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+
+  /* 1.-3. The documented return value. */
+  assert("resetClientIds() === null", (proxy.resetClientIds() === null) ? "true" : "false", "true");
+  assert("resetClientIds() !== undefined", (proxy.resetClientIds() === undefined) ? "true" : "false", "false");
+  assert("typeof resetClientIds() is object (the typeof of null)", typeof proxy.resetClientIds(), "object");
+
+  /* 4. Same null after an actual context switch. */
+  proxy.setClientId({ ID: 111111 });
+  assert("resetClientIds() === null after a preceding setClientId too", (proxy.resetClientIds() === null) ? "true" : "false", "true");
+  </script>
+
+null-return: |
+  <script runat="server">
+  /*
+   * Differs-from-docs claim: the official Salesforce docs describe
+   * resetClientIds() as returning void, but at runtime it returns a genuine
+   * null value, not undefined.
+   *
+   * Official docs: void (no value)
+   * SFMC runtime:  null  (=== null, typeof "object")
+   *
+   * Proves both halves of the claim:
+   *   1. DEV — the returned value strictly equals null (official docs: void,
+   *      which in JS would surface as undefined).
+   *   2. DEV — the returned value does NOT strictly equal undefined, so a
+   *      caller cannot treat it as a void return.
+   *   3. DEV — typeof the returned value is "object", the JS typeof of null,
+   *      and not "undefined".
+   *   4. The distinction is observable: assigning the result to a variable
+   *      yields a value whose `x == null` is true but `x === undefined` is
+   *      false.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+
+  /* 1.-3. The deviation itself. */
+  assert("DEV resetClientIds() === null (official docs: void)", (proxy.resetClientIds() === null) ? "true" : "false", "true");
+  assert("DEV resetClientIds() === undefined is false (official docs: void)", (proxy.resetClientIds() === undefined) ? "true" : "false", "false");
+  assert("DEV typeof resetClientIds() is object, not undefined (official docs: void)", typeof proxy.resetClientIds(), "object");
+
+  /* 4. The same distinction seen through a bound variable. */
+  var returned = proxy.resetClientIds();
+  assert("DEV the assigned return value is loosely null", (returned == null) ? "true" : "false", "true");
+  assert("DEV the assigned return value is strictly null", (returned === null) ? "true" : "false", "true");
+  assert("DEV the assigned return value is not strictly undefined", (returned === undefined) ? "true" : "false", "false");
+  </script>
+
+examples: |
+  <script runat="server">
+  /*
+   * Chapter: Examples
+   *
+   * This CloudPage runs in a CHILD Business Unit (MCDEV_Training_QA), so a
+   * foreign MID is not accessible to it. That is exactly what makes the
+   * RESET observable: a setClientId to an inaccessible MID makes retrieve
+   * fail, and resetClientIds() restores a working own-BU context.
+   *
+   * Proves:
+   *   1. Example "Switch BU, then reset" — setClientId({ ID: <foreign MID> })
+   *      is accepted, and the following retrieve is genuinely executed in
+   *      that other BU context (it comes back Status "Error" naming the
+   *      supplied ClientID, proving the context really moved).
+   *   2. resetClientIds() then restores the script's OWN BU: the next
+   *      retrieve returns Status "OK" again.
+   *   3. Every row returned after the reset carries exactly one distinct
+   *      Client.ID — the executing BU's own MID — proving "all WSProxy
+   *      operations target the BU the script is running in".
+   *   4. Example "Iterate over multiple BUs, then restore context" — the
+   *      documented loop over several MIDs runs without throwing, and the
+   *      single resetClientIds() after the loop restores the own-BU context
+   *      for the remainder of the script.
+   *
+   * NOT ASSERTED HERE (NOT ASSERTABLE from this harness): a SUCCESSFUL
+   * cross-BU retrieve, i.e. reading rows that belong to another Business
+   * Unit. This CloudPage runs in a child BU with no access to any other
+   * MID, so the happy path of the page examples (result.Results.length for
+   * a foreign BU) cannot be observed here. The reset itself — the subject
+   * of this page — is fully proven above via the Error -> OK transition.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertContains(id, actual, fragment) {
+      var hay = "" + actual;
+      Platform.Response.Write((hay.indexOf(fragment) >= 0 ? "PASS " : "FAIL ") + id + " -> [" + hay + "]\n");
+  }
+  function assertNoThrow(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "FAIL " : "PASS ") + id + " -> " + (threw ? "threw: " + msg : "did not throw") + "\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+
+  /* Baseline: the script's own BU, before any context switch. */
+  var before = proxy.retrieve("DataExtension", ["Name", "Client.ID"]);
+  assert("baseline retrieve in the own BU returns OK", "" + before.Status, "OK");
+  var ownMid = "" + before.Results[0].Client.ID;
+
+  /* 1. Example "Switch BU, then reset" — the switch half. */
+  assertNoThrow("setClientId({ ID: <foreign MID> }) is accepted", function () { return proxy.setClientId({ ID: 123456 }); });
+  var switched = proxy.retrieve("DataExtension", ["Name", "CustomerKey"]);
+  assertContains("the retrieve after setClientId ran in the SWITCHED context (denied for the supplied ClientID)", switched.Status, "123456");
+
+  /* 2. + 3. The reset half — own BU context is restored. */
+  assert("resetClientIds() returns null", (proxy.resetClientIds() === null) ? "true" : "false", "true");
+  var after = proxy.retrieve("DataExtension", ["Name", "Client.ID"]);
+  assert("the retrieve after resetClientIds() returns OK again", "" + after.Status, "OK");
+  assert("the retrieve after resetClientIds() returns rows", (after.Results.length > 0) ? "true" : "false", "true");
+  var seen = {};
+  var distinct = 0;
+  for (var i = 0; i < after.Results.length; i++) {
+      var mid = "" + after.Results[i].Client.ID;
+      if (!seen[mid]) { seen[mid] = 1; distinct = distinct + 1; }
+  }
+  assert("after the reset every row belongs to exactly one Business Unit", "" + distinct, "1");
+  assert("after the reset that Business Unit is the script's OWN BU", "" + after.Results[0].Client.ID, ownMid);
+
+  /* 4. Example "Iterate over multiple BUs, then restore context". */
+  var businessUnits = [
+      { name: "US", mid: 111111 },
+      { name: "EU", mid: 222222 }
+  ];
+  var loopThrew = "false";
+  try {
+      for (var b = 0; b < businessUnits.length; b++) {
+          proxy.setClientId({ ID: businessUnits[b].mid });
+          proxy.retrieve("DataExtension", ["Name"]);
+      }
+  } catch (loopEx) {
+      loopThrew = "true";
+  }
+  assert("the documented multi-BU loop runs without throwing", loopThrew, "false");
+  assert("the single resetClientIds() after the loop returns null", (proxy.resetClientIds() === null) ? "true" : "false", "true");
+  var restored = proxy.retrieve("DataExtension", ["Name", "Client.ID"]);
+  assert("after the loop's reset, retrieve returns OK again", "" + restored.Status, "OK");
+  assert("after the loop's reset, rows come from the script's own BU", "" + restored.Results[0].Client.ID, ownMid);
+  </script>
+
+notes: |
+  <script runat="server">
+  /*
+   * Chapter: Notes
+   *
+   * Proves the note "Leaving the client ID set for the remainder of a
+   * script's execution can cause later WSProxy calls to target the wrong
+   * BU":
+   *   1. A single setClientId affects the NEXT call — it is executed in the
+   *      other BU context (Status "Error" naming the supplied ClientID).
+   *   2. The client ID PERSISTS: a second, entirely unrelated retrieve is
+   *      still executed in that same wrong context without any further
+   *      setClientId call.
+   *   3. It also leaks into a DIFFERENT object type — the context is per
+   *      proxy instance, not per query.
+   *   4. Calling resetClientIds() after the cross-BU work — the note's
+   *      recommendation — repairs the instance: the very next retrieve
+   *      returns Status "OK" from the script's own BU.
+   *   5. The repair is durable: a further retrieve after the reset is still
+   *      executed in the own BU.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertContains(id, actual, fragment) {
+      var hay = "" + actual;
+      Platform.Response.Write((hay.indexOf(fragment) >= 0 ? "PASS " : "FAIL ") + id + " -> [" + hay + "]\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+
+  var baseline = proxy.retrieve("DataExtension", ["Name", "Client.ID"]);
+  assert("baseline retrieve returns OK before any setClientId", "" + baseline.Status, "OK");
+  var ownMid = "" + baseline.Results[0].Client.ID;
+
+  /* 1. One setClientId moves the context. */
+  proxy.setClientId({ ID: 222222 });
+  var call1 = proxy.retrieve("DataExtension", ["Name"]);
+  assertContains("the call right after setClientId targets the other BU", call1.Status, "222222");
+
+  /* 2. The client ID is still set for the NEXT call — nothing was reset. */
+  var call2 = proxy.retrieve("DataExtension", ["CustomerKey"]);
+  assertContains("a later, unrelated call still targets the wrong BU (client ID persists)", call2.Status, "222222");
+
+  /* 3. And it leaks into other object types on the same instance. */
+  var call3 = proxy.retrieve("DataFolder", ["Name"]);
+  assertContains("the leaked context applies to a different object type too", call3.Status, "222222");
+
+  /* 4. The note's recommendation repairs the instance. */
+  assert("resetClientIds() after the cross-BU work returns null", (proxy.resetClientIds() === null) ? "true" : "false", "true");
+  var repaired = proxy.retrieve("DataExtension", ["Name", "Client.ID"]);
+  assert("the next retrieve after the reset returns OK", "" + repaired.Status, "OK");
+  assert("the next retrieve after the reset comes from the script's own BU", "" + repaired.Results[0].Client.ID, ownMid);
+
+  /* 5. The repair holds for subsequent calls too. */
+  var later = proxy.retrieve("DataExtension", ["Name", "Client.ID"]);
+  assert("a further retrieve after the reset is still in the own BU", "" + later.Results[0].Client.ID, ownMid);
+  assert("a further retrieve after the reset still returns OK", "" + later.Status, "OK");
+  </script>

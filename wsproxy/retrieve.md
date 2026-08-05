@@ -9,6 +9,7 @@ return_type: object
 min_args: 2
 max_args: 5
 verification: verified
+test_scripts: complete
 ---
 
 ## Parameters
@@ -22,6 +23,8 @@ verification: verified
 | `requestProps` | object | No | Additional request-level properties such as `{ QueryAllAccounts: true }`. Set `ContinueRequest` to a prior page's `RequestID` to fetch the next page via `retrieve` (an alternative to `getNextBatch`) |
 
 {% include callout.html type="note" content="**Runtime verified.** On a published CloudPage, <code>retrieve(obj, cols, null, { BatchSize: 2 }, { QueryAllAccounts: false })</code> against a 6-row Data Extension returned a first page with `Status: \"MoreDataAvailable\"`, `HasMoreRows: true`, a `RequestID`, and exactly 2 rows — the <code>retrieveOptions.BatchSize</code> argument pages cleanly without throwing. Setting <code>props.ContinueRequest</code> to that `RequestID` and calling <code>retrieve</code> again returned each next page (3 pages of 2 rows, 6 total), the `RequestID` held constant, and `HasMoreRows` flipped to `false` (`Status: \"OK\"`) on the last page. `BatchSize` caps at 2,500." %}
+
+{% include test-script.html bundle="wsproxy--retrieve" chapter="parameters" %}
 
 ## Filter Types
 
@@ -53,6 +56,8 @@ var filter = {
 };
 ```
 
+{% include test-script.html bundle="wsproxy--retrieve" chapter="filter-types" %}
+
 ## Return Value
 
 ```javascript
@@ -63,6 +68,8 @@ var filter = {
     HasMoreRows: false   // true when more rows exist (use getNextBatch or props.ContinueRequest)
 }
 ```
+
+{% include test-script.html bundle="wsproxy--retrieve" chapter="return-value" %}
 
 ## Examples
 
@@ -82,12 +89,12 @@ for (var i = 0; i < des.length; i++) {
 ```javascript
 var proxy = new Script.Util.WSProxy();
 var filter = {
-    Property: "Status",
+    Property: "TriggeredSendStatus",
     SimpleOperator: "equals",
     Value: "Active"
 };
 var result = proxy.retrieve("TriggeredSendDefinition",
-    ["Name", "CustomerKey", "Status"],
+    ["Name", "CustomerKey", "TriggeredSendStatus"],
     filter
 );
 ```
@@ -131,11 +138,13 @@ var proxy = new Script.Util.WSProxy();
 var result = proxy.retrieve(
     "DataExtension",
     ["Name", "CustomerKey"],
-    {},
+    null,
     null,
     { QueryAllAccounts: true }
 );
 ```
+
+{% include callout.html type="warning" content="Pass <code>null</code> — not an empty object <code>{}</code> — when you want no filter. An empty filter object makes the SOAP call fail with <em>Error executing retrieve call.</em>" %}
 
 ### Manual pagination with getNextBatch
 
@@ -173,12 +182,16 @@ while (data.HasMoreRows) {
 // last page: data.Status === "OK", data.HasMoreRows === false
 ```
 
+{% include test-script.html bundle="wsproxy--retrieve" chapter="examples" %}
+
 ## Notes
 
 - Returns up to ~2,500 rows per call by default. When `HasMoreRows` is `true`, either call [`getNextBatch`](/wsproxy/getnextbatch/) with the `RequestID`, or set `props.ContinueRequest` to the `RequestID` and call `retrieve` again — both fetch subsequent pages.
 - Pass `{ BatchSize: n }` as the 4th (`retrieveOptions`) argument to force a smaller page size (1–2,500; larger values are ignored). The `retrieveOptions.BatchSize` argument is runtime-verified to page cleanly on a published CloudPage.
 - A paged `retrieve` returns `Status: "MoreDataAvailable"` until the final page, which returns `Status: "OK"`.
 - The `DataExtensionObject[CustomerKey]` syntax is used for retrieving rows from a specific DE. Replace `CustomerKey` with the DE's external key.
+
+{% include test-script.html bundle="wsproxy--retrieve" chapter="notes" %}
 
 ## See Also
 

@@ -1,0 +1,355 @@
+# Test scripts for /wsproxy/performbatch/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive
+# and negative.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# SOAP OBJECT UNDER TEST: QueryDefinition. Each script creates its own
+# run-labelled target Data Extension(s) and QueryDefinition(s) via WSProxy,
+# performs "Start" on them, and deletes every fixture again in the same
+# script, so repeated runs stay clean and no automation is touched.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+parameters: |
+  <script runat="server">
+  /*
+   * Chapter: Parameters
+   *
+   * Proves:
+   *   1. performBatch is a CLR method on every WSProxy instance.
+   *   2. objectType (string), propertiesArray (object[]) and action (string)
+   *      are ALL required: the 3-argument form is the documented minimum and
+   *      succeeds (min_args = 3).
+   *   3. performOptions is OPTIONAL and, when supplied as a fourth argument,
+   *      is accepted (max_args = 4) and the call still succeeds.
+   *   4. NEGATIVE — calling with fewer than 3 arguments is rejected: the
+   *      2-argument, 1-argument and 0-argument forms all throw.
+   *   5. propertiesArray carries ONE object per target row — a 2-element
+   *      array produces 2 Results entries; each item is identified by
+   *      ObjectID.
+   *   6. action is CASE-INSENSITIVE at runtime: "start" behaves identically
+   *      to "Start" (same Status and same per-item StatusMessage).
+   *
+   * NOT PROBED: Date / number / boolean type-acceptance counterparts. No
+   * parameter is in scope for the matrix — objectType is a SOAP type NAME
+   * (free-text string), propertiesArray is object[], action is a perform
+   * VERB (free-text string, not a flag), and performOptions is a SOAP
+   * PerformOptions object. None is documented as a date, a count/limit or a
+   * 0/1 flag.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+  var runId = "" + (new Date()).getTime();
+  var deKey = "ssjsg_pbP_de_" + runId;
+  var qdKeyA = "ssjsg_pbP_qdA_" + runId;
+  var qdKeyB = "ssjsg_pbP_qdB_" + runId;
+
+  /* 1. The method exists on the instance. */
+  assert("typeof proxy.performBatch is clrmethodinfo", typeof proxy.performBatch, "clrmethodinfo");
+
+  /* Fixtures — one target DE and two throwaway query definitions. */
+  function makeQd(key) {
+      return proxy.createItem("QueryDefinition", {
+          CustomerKey: key, Name: key,
+          QueryText: "SELECT SubscriberKey FROM _Subscribers",
+          TargetType: "DE",
+          DataExtensionTarget: { CustomerKey: deKey, Name: deKey },
+          TargetUpdateType: "Overwrite"
+      });
+  }
+  assert("fixture target data extension created", "" + proxy.createItem("DataExtension", {
+      CustomerKey: deKey, Name: deKey,
+      Fields: [{ Name: "SubscriberKey", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true }]
+  }).Status, "OK");
+  assert("fixture query definition A created", "" + makeQd(qdKeyA).Status, "OK");
+  assert("fixture query definition B created", "" + makeQd(qdKeyB).Status, "OK");
+
+  var oidA = proxy.retrieve("QueryDefinition", ["ObjectID"], { Property: "CustomerKey", SimpleOperator: "equals", Value: qdKeyA }).Results[0].ObjectID;
+  var oidB = proxy.retrieve("QueryDefinition", ["ObjectID"], { Property: "CustomerKey", SimpleOperator: "equals", Value: qdKeyB }).Results[0].ObjectID;
+  assert("fixture A resolves to an ObjectID GUID of canonical length", "" + ("" + oidA).length, "36");
+  assert("fixture B resolves to an ObjectID GUID of canonical length", "" + ("" + oidB).length, "36");
+
+  /* 2. + 5. Documented minimum: objectType + propertiesArray + action. */
+  var three = proxy.performBatch("QueryDefinition", [{ ObjectID: oidA }, { ObjectID: oidB }], "Start");
+  assert("3-argument form (objectType, propertiesArray, action) succeeds", "" + three.Status, "OK");
+  assert("2 property objects produce 2 Results entries", "" + three.Results.length, "2");
+  assert("Results[0] reports OK for the first target row", "" + three.Results[0].StatusCode, "OK");
+  assert("Results[1] reports OK for the second target row", "" + three.Results[1].StatusCode, "OK");
+
+  /* 6. action is case-insensitive. */
+  var lower = proxy.performBatch("QueryDefinition", [{ ObjectID: oidA }], "start");
+  assert("lowercase action 'start' returns the same Status as 'Start'", "" + lower.Status, "OK");
+  assert("lowercase action 'start' returns the same per-item StatusCode", "" + lower.Results[0].StatusCode, "OK");
+  assert("lowercase action 'start' returns the same per-item StatusMessage", "" + lower.Results[0].StatusMessage, "QueryDefinition perform called successfully");
+
+  /* 3. performOptions is optional and accepted as a fourth argument. */
+  var four = proxy.performBatch("QueryDefinition", [{ ObjectID: oidB }], "Start", { RequestType: "Synchronous" });
+  assert("4-argument form with performOptions succeeds (max_args = 4)", "" + four.Status, "OK");
+  assert("4-argument form still returns one result per item", "" + four.Results.length, "1");
+  assert("4-argument form result is OK", "" + four.Results[0].StatusCode, "OK");
+
+  /* 4. NEGATIVE — fewer than 3 arguments is rejected. */
+  assertThrows("performBatch(objectType, propertiesArray) with no action throws (min_args = 3)", function () { return proxy.performBatch("QueryDefinition", [{ ObjectID: oidA }]); });
+  assertThrows("performBatch(objectType) alone throws (min_args = 3)", function () { return proxy.performBatch("QueryDefinition"); });
+  assertThrows("performBatch() with no arguments throws (min_args = 3)", function () { return proxy.performBatch(); });
+
+  /* Cleanup — the business unit is left clean. */
+  assert("cleanup: query definition A deleted", "" + proxy.deleteItem("QueryDefinition", { ObjectID: oidA }).Status, "OK");
+  assert("cleanup: query definition B deleted", "" + proxy.deleteItem("QueryDefinition", { ObjectID: oidB }).Status, "OK");
+  assert("cleanup: target data extension deleted", "" + proxy.deleteItem("DataExtension", { CustomerKey: deKey }).Status, "OK");
+  </script>
+
+return-value: |
+  <script runat="server">
+  /*
+   * Chapter: Return value
+   *
+   * Proves the documented return shape, field by field:
+   *   1. performBatch returns an OBJECT.
+   *   2. Status is a STRING and is "OK" on success.
+   *   3. StatusMessage is a STRING and is EMPTY on success.
+   *   4. RequestID is a STRING (a GUID of canonical length).
+   *   5. Results is an array with ONE entry per input item.
+   *   6. Each Results entry carries StatusCode, StatusMessage, OrdinalID,
+   *      ErrorCode and an Object wrapper (the acted-on API object).
+   *      OrdinalID is the zero-based index of the input item.
+   *   7. Each Results entry carries a Task sub-object with StatusCode,
+   *      StatusMessage and InteractionObjectID.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+  var runId = "" + (new Date()).getTime();
+  var deKey = "ssjsg_pbR_de_" + runId;
+  var qdKeyA = "ssjsg_pbR_qdA_" + runId;
+  var qdKeyB = "ssjsg_pbR_qdB_" + runId;
+
+  function makeQd(key) {
+      return proxy.createItem("QueryDefinition", {
+          CustomerKey: key, Name: key,
+          QueryText: "SELECT SubscriberKey FROM _Subscribers",
+          TargetType: "DE",
+          DataExtensionTarget: { CustomerKey: deKey, Name: deKey },
+          TargetUpdateType: "Overwrite"
+      });
+  }
+  assert("fixture target data extension created", "" + proxy.createItem("DataExtension", {
+      CustomerKey: deKey, Name: deKey,
+      Fields: [{ Name: "SubscriberKey", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true }]
+  }).Status, "OK");
+  assert("fixture query definition A created", "" + makeQd(qdKeyA).Status, "OK");
+  assert("fixture query definition B created", "" + makeQd(qdKeyB).Status, "OK");
+
+  var oidA = proxy.retrieve("QueryDefinition", ["ObjectID"], { Property: "CustomerKey", SimpleOperator: "equals", Value: qdKeyA }).Results[0].ObjectID;
+  var oidB = proxy.retrieve("QueryDefinition", ["ObjectID"], { Property: "CustomerKey", SimpleOperator: "equals", Value: qdKeyB }).Results[0].ObjectID;
+
+  var result = proxy.performBatch("QueryDefinition", [{ ObjectID: oidA }, { ObjectID: oidB }], "Start");
+
+  /* 1.-4. Top-level shape. */
+  assert("typeof result is object", typeof result, "object");
+  assert("typeof result.Status is string", typeof result.Status, "string");
+  assert("result.Status is OK on success", "" + result.Status, "OK");
+  assert("typeof result.StatusMessage is string", typeof result.StatusMessage, "string");
+  assert("result.StatusMessage is empty on success", "" + result.StatusMessage, "");
+  assert("typeof result.RequestID is string", typeof result.RequestID, "string");
+  assert("result.RequestID is a GUID of canonical length", "" + ("" + result.RequestID).length, "36");
+
+  /* 5. One Results entry per input item. */
+  assert("typeof result.Results is object", typeof result.Results, "object");
+  assert("result.Results.length matches the submitted item count", "" + result.Results.length, "2");
+
+  /* 6. Per-item fields. */
+  assert("Results[0].StatusCode is OK", "" + result.Results[0].StatusCode, "OK");
+  assert("typeof Results[0].StatusMessage is string", typeof result.Results[0].StatusMessage, "string");
+  assert("Results[0].StatusMessage reports the perform outcome", "" + result.Results[0].StatusMessage, "QueryDefinition perform called successfully");
+  assert("typeof Results[0].OrdinalID is number", typeof result.Results[0].OrdinalID, "number");
+  assert("Results[0].OrdinalID is the zero-based input index", "" + result.Results[0].OrdinalID, "0");
+  assert("Results[1].OrdinalID is the zero-based input index", "" + result.Results[1].OrdinalID, "1");
+  assert("Results[0].ErrorCode is 0 on success", "" + result.Results[0].ErrorCode, "0");
+  assert("typeof Results[0].Object is object - the acted-on API object", typeof result.Results[0].Object, "object");
+  assert("Results[1].StatusCode is OK", "" + result.Results[1].StatusCode, "OK");
+
+  /* 7. The Task sub-object. */
+  assert("typeof Results[0].Task is object", typeof result.Results[0].Task, "object");
+  assert("Results[0].Task.StatusCode is OK", "" + result.Results[0].Task.StatusCode, "OK");
+  assert("typeof Results[0].Task.StatusMessage is string", typeof result.Results[0].Task.StatusMessage, "string");
+  assert("Results[0].Task.StatusMessage is OK", "" + result.Results[0].Task.StatusMessage, "OK");
+  assert("typeof Results[0].Task.InteractionObjectID is string", typeof result.Results[0].Task.InteractionObjectID, "string");
+  assert("Results[0].Task.InteractionObjectID is a GUID of canonical length", "" + ("" + result.Results[0].Task.InteractionObjectID).length, "36");
+  assert("typeof Results[1].Task is object", typeof result.Results[1].Task, "object");
+
+  /* Cleanup — the business unit is left clean. */
+  assert("cleanup: query definition A deleted", "" + proxy.deleteItem("QueryDefinition", { ObjectID: oidA }).Status, "OK");
+  assert("cleanup: query definition B deleted", "" + proxy.deleteItem("QueryDefinition", { ObjectID: oidB }).Status, "OK");
+  assert("cleanup: target data extension deleted", "" + proxy.deleteItem("DataExtension", { CustomerKey: deKey }).Status, "OK");
+  </script>
+
+differs-from-docs: |
+  <script runat="server">
+  /*
+   * Chapter: differs-from-docs callout (Parameters)
+   *
+   * The official docs list `action` as Enum('Start') without noting case
+   * behaviour, and do not detail the per-item Results structure. This script
+   * proves the runtime deviations:
+   *   1. DEV — the perform verb is CASE-INSENSITIVE: "start" (lowercase)
+   *      produces the same Status, StatusCode and StatusMessage as the
+   *      documented "Start" (docs: Enum('Start') only).
+   *   2. DEV — each Results entry carries a per-item StatusCode and
+   *      StatusMessage that the official docs do not detail.
+   *   3. DEV — each Results entry carries a Task sub-object (StatusCode,
+   *      StatusMessage, InteractionObjectID) that the official docs do not
+   *      detail.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+  var runId = "" + (new Date()).getTime();
+  var deKey = "ssjsg_pbD_de_" + runId;
+  var qdKey = "ssjsg_pbD_qd_" + runId;
+
+  assert("fixture target data extension created", "" + proxy.createItem("DataExtension", {
+      CustomerKey: deKey, Name: deKey,
+      Fields: [{ Name: "SubscriberKey", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true }]
+  }).Status, "OK");
+  assert("fixture query definition created", "" + proxy.createItem("QueryDefinition", {
+      CustomerKey: qdKey, Name: qdKey,
+      QueryText: "SELECT SubscriberKey FROM _Subscribers",
+      TargetType: "DE",
+      DataExtensionTarget: { CustomerKey: deKey, Name: deKey },
+      TargetUpdateType: "Overwrite"
+  }).Status, "OK");
+  var oid = proxy.retrieve("QueryDefinition", ["ObjectID"], { Property: "CustomerKey", SimpleOperator: "equals", Value: qdKey }).Results[0].ObjectID;
+
+  /* Documented casing — the baseline. */
+  var upper = proxy.performBatch("QueryDefinition", [{ ObjectID: oid }], "Start");
+  assert("baseline: the documented verb 'Start' returns Status OK", "" + upper.Status, "OK");
+  assert("baseline: the documented verb 'Start' returns StatusCode OK", "" + upper.Results[0].StatusCode, "OK");
+
+  /* 1. DEV — lowercase works identically. */
+  var lower = proxy.performBatch("QueryDefinition", [{ ObjectID: oid }], "start");
+  assert("DEV lowercase 'start' returns Status OK (docs: action is Enum('Start'))", "" + lower.Status, "OK");
+  assert("DEV lowercase 'start' returns the same StatusCode as 'Start' (docs: action is Enum('Start'))", "" + lower.Results[0].StatusCode, "" + upper.Results[0].StatusCode);
+  assert("DEV lowercase 'start' returns the same StatusMessage as 'Start' (docs: action is Enum('Start'))", "" + lower.Results[0].StatusMessage, "" + upper.Results[0].StatusMessage);
+
+  /* 2. DEV — per-item StatusCode / StatusMessage are not detailed in the docs. */
+  assert("DEV each Results entry carries a per-item StatusCode (not detailed in the docs)", typeof upper.Results[0].StatusCode, "string");
+  assert("DEV each Results entry carries a per-item StatusMessage (not detailed in the docs)", "" + upper.Results[0].StatusMessage, "QueryDefinition perform called successfully");
+
+  /* 3. DEV — the Task sub-object is not detailed in the docs. */
+  assert("DEV each Results entry carries a Task sub-object (not detailed in the docs)", typeof upper.Results[0].Task, "object");
+  assert("DEV Task carries a StatusCode (not detailed in the docs)", "" + upper.Results[0].Task.StatusCode, "OK");
+  assert("DEV Task carries a StatusMessage (not detailed in the docs)", "" + upper.Results[0].Task.StatusMessage, "OK");
+  assert("DEV Task carries an InteractionObjectID GUID (not detailed in the docs)", "" + ("" + upper.Results[0].Task.InteractionObjectID).length, "36");
+
+  /* Cleanup — the business unit is left clean. */
+  assert("cleanup: query definition deleted", "" + proxy.deleteItem("QueryDefinition", { ObjectID: oid }).Status, "OK");
+  assert("cleanup: target data extension deleted", "" + proxy.deleteItem("DataExtension", { CustomerKey: deKey }).Status, "OK");
+  </script>
+
+example: |
+  <script runat="server">
+  /*
+   * Chapter: Example
+   *
+   * Runs the page example verbatim in structure and proves every claim it
+   * makes:
+   *   1. `new Script.Util.WSProxy()` yields an instance whose performBatch
+   *      accepts an ARRAY of property objects, one per target row, each
+   *      identified by ObjectID.
+   *   2. `proxy.performBatch("QueryDefinition", items, "Start")` returns an
+   *      object whose `Status` is the string "OK" — the value the example
+   *      writes out.
+   *   3. The two-element items array produces two Results entries, in input
+   *      order (OrdinalID 0 and 1), each reporting the perform was called.
+   *   4. The perform really reached the API — each entry carries a Task
+   *      sub-object with an InteractionObjectID identifying the queued task.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var runId = "" + (new Date()).getTime();
+  var deKey = "ssjsg_pbX_de_" + runId;
+  var qdKey1 = "ssjsg_pbX_qd1_" + runId;
+  var qdKey2 = "ssjsg_pbX_qd2_" + runId;
+
+  var setup = new Script.Util.WSProxy();
+  function makeQd(key) {
+      return setup.createItem("QueryDefinition", {
+          CustomerKey: key, Name: key,
+          QueryText: "SELECT SubscriberKey FROM _Subscribers",
+          TargetType: "DE",
+          DataExtensionTarget: { CustomerKey: deKey, Name: deKey },
+          TargetUpdateType: "Overwrite"
+      });
+  }
+  assert("fixture target data extension created", "" + setup.createItem("DataExtension", {
+      CustomerKey: deKey, Name: deKey,
+      Fields: [{ Name: "SubscriberKey", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true }]
+  }).Status, "OK");
+  assert("first fixture query definition created", "" + makeQd(qdKey1).Status, "OK");
+  assert("second fixture query definition created", "" + makeQd(qdKey2).Status, "OK");
+  var id1 = setup.retrieve("QueryDefinition", ["ObjectID"], { Property: "CustomerKey", SimpleOperator: "equals", Value: qdKey1 }).Results[0].ObjectID;
+  var id2 = setup.retrieve("QueryDefinition", ["ObjectID"], { Property: "CustomerKey", SimpleOperator: "equals", Value: qdKey2 }).Results[0].ObjectID;
+
+  /* --- the page example, verbatim in structure --- */
+  var proxy = new Script.Util.WSProxy();
+  var items = [{ ObjectID: id1 }, { ObjectID: id2 }];
+  var result = proxy.performBatch("QueryDefinition", items, "Start");
+  /* Write(result.Status); */
+
+  /* 1. + 2. */
+  assert("example line 1: the constructor yields a WSProxy CLR instance", typeof proxy, "clr");
+  assert("example line 3: performBatch returns an object", typeof result, "object");
+  assert("example line 4: result.Status is a string", typeof result.Status, "string");
+  assert("example line 4: result.Status is OK", "" + result.Status, "OK");
+
+  /* 3. */
+  assert("the two-element items array produces two Results entries", "" + result.Results.length, "2");
+  assert("Results[0] is the first submitted item", "" + result.Results[0].OrdinalID, "0");
+  assert("Results[1] is the second submitted item", "" + result.Results[1].OrdinalID, "1");
+  assert("Results[0] reports the perform was called", "" + result.Results[0].StatusMessage, "QueryDefinition perform called successfully");
+  assert("Results[1] reports the perform was called", "" + result.Results[1].StatusMessage, "QueryDefinition perform called successfully");
+
+  /* 4. */
+  assert("Results[0] carries a queued Task", typeof result.Results[0].Task, "object");
+  assert("Results[0].Task.InteractionObjectID is a GUID of canonical length", "" + ("" + result.Results[0].Task.InteractionObjectID).length, "36");
+  assert("Results[1].Task.InteractionObjectID is a GUID of canonical length", "" + ("" + result.Results[1].Task.InteractionObjectID).length, "36");
+
+  /* Cleanup — the business unit is left clean. */
+  assert("cleanup: first query definition deleted", "" + proxy.deleteItem("QueryDefinition", { ObjectID: id1 }).Status, "OK");
+  assert("cleanup: second query definition deleted", "" + proxy.deleteItem("QueryDefinition", { ObjectID: id2 }).Status, "OK");
+  assert("cleanup: target data extension deleted", "" + proxy.deleteItem("DataExtension", { CustomerKey: deKey }).Status, "OK");
+  </script>

@@ -1,0 +1,319 @@
+# Test scripts for /wsproxy/updateitem/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes - positive
+# and negative.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# Every script creates its own run-labelled fixtures and deletes them again
+# with proxy.deleteItem, so repeated runs stay clean.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+parameters: |
+  <script runat="server">
+  /*
+   * Chapter: Parameters
+   *
+   * Proves:
+   *   1. updateItem is a CLR method on every WSProxy instance.
+   *   2. objectType (string) + properties (object) are BOTH required: the
+   *      2-argument form is the documented minimum and succeeds
+   *      (min_args = 2).
+   *   3. properties is ONE object describing ONE item - a single call
+   *      produces exactly one Results entry.
+   *   4. updateOptions is OPTIONAL and, when supplied as a third argument
+   *      in the documented { SaveOptions: [ ... ] } shape, is accepted
+   *      (max_args = 3) and the call still succeeds.
+   *   5. NEGATIVE - calling with fewer than 2 arguments is rejected: both
+   *      the 1-argument and the 0-argument form throw.
+   *   6. NEGATIVE - objectType must name a real SOAP object type; an
+   *      unknown type does not silently succeed.
+   *   7. properties must include the identifier the page requires: an
+   *      update whose properties object carries no identifier does not
+   *      succeed.
+   *
+   * NOT PROBED: Date / number / boolean type-acceptance counterparts. None
+   * of the three parameters is in scope for the matrix - objectType is a
+   * SOAP type NAME (free-text string), properties is an object, and
+   * updateOptions is a SOAP UpdateOptions object. No parameter is
+   * documented as a date, a count/limit, or a 0/1 flag.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+  var tag = "uiP" + (new Date()).getTime();
+
+  /* 1. The method exists on the instance. */
+  assert("typeof proxy.updateItem is clrmethodinfo", typeof proxy.updateItem, "clrmethodinfo");
+
+  /* Fixture - a subscriber to update. */
+  var made = proxy.createItem("Subscriber", {
+      EmailAddress: tag + "a@joernberkefeld.com",
+      SubscriberKey: tag + "-a",
+      Status: "Active"
+  });
+  assert("fixture subscriber created", "" + made.Status, "OK");
+
+  /* 2. Documented minimum: objectType + properties (min_args = 2). */
+  var two = proxy.updateItem("Subscriber", {
+      SubscriberKey: tag + "-a",
+      Status: "Unsubscribed"
+  });
+  assert("2-argument form (objectType, properties) succeeds", "" + two.Status, "OK");
+
+  /* 3. One properties object updates exactly one item. */
+  assert("one properties object produces exactly one Results entry", "" + two.Results.length, "1");
+
+  /* 4. updateOptions is optional and accepted as a third argument. */
+  var three = proxy.updateItem("Subscriber", {
+      SubscriberKey: tag + "-a",
+      Status: "Active"
+  }, { SaveOptions: [{ PropertyName: "*", SaveAction: "UpdateAdd" }] });
+  assert("3-argument form with updateOptions succeeds (max_args = 3)", "" + three.Status, "OK");
+  assert("3-argument form still returns one result", "" + three.Results.length, "1");
+  assert("3-argument form result is OK", "" + three.Results[0].StatusCode, "OK");
+
+  /* 5. NEGATIVE - fewer than 2 arguments is rejected. */
+  assertThrows("updateItem(objectType) with no properties throws (min_args = 2)", function () { return proxy.updateItem("Subscriber"); });
+  assertThrows("updateItem() with no arguments throws (min_args = 2)", function () { return proxy.updateItem(); });
+
+  /* 6. NEGATIVE - objectType must name a real SOAP object type. */
+  var unknownOk = false;
+  try {
+      var bogus = proxy.updateItem("ThisTypeDoesNotExist" + tag, { Name: tag });
+      unknownOk = ("" + bogus.Status === "OK");
+  } catch (exType) {
+      unknownOk = false;
+  }
+  assert("an unknown objectType does not succeed", unknownOk ? "true" : "false", "false");
+
+  /* 7. NEGATIVE - properties must include the identifier. */
+  var noIdOk = false;
+  try {
+      var noId = proxy.updateItem("Subscriber", { Status: "Unsubscribed" });
+      noIdOk = ("" + noId.Status === "OK");
+  } catch (exNoId) {
+      noIdOk = false;
+  }
+  assert("properties without an identifier does not succeed", noIdOk ? "true" : "false", "false");
+
+  /* Cleanup. */
+  var c1 = proxy.deleteItem("Subscriber", { SubscriberKey: tag + "-a" });
+  assert("cleanup: fixture subscriber deleted", "" + c1.Status, "OK");
+  </script>
+
+return-value: |
+  <script runat="server">
+  /*
+   * Chapter: Return Value
+   *
+   * Proves the documented return shape, field by field:
+   *   1. updateItem returns an OBJECT.
+   *   2. Status is "OK" when the item was updated.
+   *   3. RequestID is a non-empty string.
+   *   4. Results is an array and - because updateItem updates a SINGLE
+   *      object - it ALWAYS contains exactly one entry.
+   *   5. The Results entry carries StatusCode ("OK" on success),
+   *      StatusMessage ("Updated DataExtensionObject" for a DE row),
+   *      OrdinalID (0 for the single item) and ErrorCode (0 on success).
+   *   6. The Results entry carries an Object field.
+   *   7. There is NO top-level StatusMessage - the per-item status text
+   *      lives on the Results entry, not on the response root.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+  var tag = "uiR" + (new Date()).getTime();
+
+  /* Fixture - a data extension with one row to update. */
+  var de = proxy.createItem("DataExtension", {
+      Name: tag + "_de",
+      CustomerKey: tag + "_de",
+      Fields: [
+          { Name: "SubscriberKey", FieldType: "Text", IsPrimaryKey: true, IsRequired: true, MaxLength: 254 },
+          { Name: "Score", FieldType: "Number" }
+      ]
+  });
+  assert("fixture data extension created", "" + de.Status, "OK");
+  var seed = proxy.createItem("DataExtensionObject", {
+      CustomerKey: tag + "_de",
+      Properties: [
+          { Name: "SubscriberKey", Value: tag + "-r1" },
+          { Name: "Score", Value: "10" }
+      ]
+  });
+  assert("fixture row created", "" + seed.Status, "OK");
+
+  /* 1.-7. The documented success shape. */
+  var result = proxy.updateItem("DataExtensionObject", {
+      CustomerKey: tag + "_de",
+      Keys: [{ Name: "SubscriberKey", Value: tag + "-r1" }],
+      Properties: [{ Name: "Score", Value: "95" }]
+  });
+  assert("typeof result is object", typeof result, "object");
+  assert("result.Status is OK", "" + result.Status, "OK");
+  assert("typeof result.RequestID is string", typeof result.RequestID, "string");
+  assert("result.RequestID is not empty", (("" + result.RequestID).length > 0) ? "true" : "false", "true");
+  assert("typeof result.Results is object", typeof result.Results, "object");
+  assert("Results always contains exactly one entry", "" + result.Results.length, "1");
+  assert("Results[0].StatusCode is OK", "" + result.Results[0].StatusCode, "OK");
+  assert("Results[0].StatusMessage names the updated object type", "" + result.Results[0].StatusMessage, "Updated DataExtensionObject");
+  assert("Results[0].OrdinalID is 0 for the single item", "" + result.Results[0].OrdinalID, "0");
+  assert("Results[0].ErrorCode is 0 on success", "" + result.Results[0].ErrorCode, "0");
+  assert("typeof Results[0].Object is object", typeof result.Results[0].Object, "object");
+  assert("there is NO top-level StatusMessage", typeof result.StatusMessage, "undefined");
+
+  /* The update really took effect. */
+  var rows = Platform.Function.LookupRows(tag + "_de", "SubscriberKey", tag + "-r1");
+  assert("the update took effect", "" + rows[0]["Score"], "95");
+
+  /* Cleanup. */
+  var deCleanup = proxy.deleteItem("DataExtension", { CustomerKey: tag + "_de" });
+  assert("cleanup: data extension deleted", "" + deCleanup.Status, "OK");
+  </script>
+
+examples: |
+  <script runat="server">
+  /*
+   * Chapter: Examples
+   *
+   * Runs all three documented examples:
+   *   1. EXAMPLE 1 - "Update subscriber status": objectType "Subscriber"
+   *      with SubscriberKey as the identifier and Status as the updated
+   *      property; Status comes back "OK" and the subscriber really is
+   *      Unsubscribed afterwards.
+   *   2. EXAMPLE 2 - "Update DE row": objectType "DataExtensionObject",
+   *      the data extension named through the CustomerKey property, a FLAT
+   *      Keys array of { Name, Value } identifiers and a FLAT Properties
+   *      array of { Name, Value } pairs - including a date value produced
+   *      by Platform.Function.Now(); the stored row carries the new values.
+   *   3. EXAMPLE 3 - "Upsert with SaveOptions": the same call plus the
+   *      third argument { SaveOptions: [{ PropertyName: "*",
+   *      SaveAction: "UpdateAdd" }] } upserts - a key that does not exist
+   *      yet is ADDED rather than rejected.
+   *   4. CONTROL for 3 - without the SaveOptions argument the same
+   *      not-yet-existing key is NOT added (the call returns Status
+   *      "Error"), which is what makes the documented upsert option
+   *      meaningful.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  function countRows(deKey, field, value) {
+      try {
+          var found = Platform.Function.LookupRows(deKey, field, value);
+          return found ? found.length : 0;
+      } catch (exLookup) {
+          return 0;
+      }
+  }
+
+  var proxy = new Script.Util.WSProxy();
+  var tag = "uiE" + (new Date()).getTime();
+
+  /* 1. EXAMPLE 1 - update subscriber status. */
+  var madeSub = proxy.createItem("Subscriber", {
+      EmailAddress: tag + "@joernberkefeld.com",
+      SubscriberKey: tag + "-sub",
+      Status: "Active"
+  });
+  assert("example 1: fixture subscriber created as Active", "" + madeSub.Status, "OK");
+  var subResult = proxy.updateItem("Subscriber", {
+      SubscriberKey: tag + "-sub",
+      Status: "Unsubscribed"
+  });
+  assert("example 1: the subscriber update succeeds", "" + subResult.Status, "OK");
+  assert("example 1: the single item reports StatusCode OK", "" + subResult.Results[0].StatusCode, "OK");
+  var subCheck = proxy.retrieve("Subscriber", ["SubscriberKey", "Status"], {
+      Property: "SubscriberKey", SimpleOperator: "equals", Value: tag + "-sub"
+  });
+  assert("example 1: the subscriber is Unsubscribed afterwards", "" + subCheck.Results[0].Status, "Unsubscribed");
+
+  /* 2. EXAMPLE 2 - update a DE row through flat Keys + Properties. */
+  var de = proxy.createItem("DataExtension", {
+      Name: tag + "_de",
+      CustomerKey: tag + "_de",
+      Fields: [
+          { Name: "SubscriberKey", FieldType: "Text", IsPrimaryKey: true, IsRequired: true, MaxLength: 254 },
+          { Name: "Score", FieldType: "Number" },
+          { Name: "UpdatedAt", FieldType: "Date" }
+      ]
+  });
+  assert("example 2: fixture data extension created", "" + de.Status, "OK");
+  var seed = proxy.createItem("DataExtensionObject", {
+      CustomerKey: tag + "_de",
+      Properties: [
+          { Name: "SubscriberKey", Value: tag + "-r1" },
+          { Name: "Score", Value: "10" }
+      ]
+  });
+  assert("example 2: fixture row created", "" + seed.Status, "OK");
+  var rowResult = proxy.updateItem("DataExtensionObject", {
+      CustomerKey: tag + "_de",
+      Keys: [
+          { Name: "SubscriberKey", Value: tag + "-r1" }
+      ],
+      Properties: [
+          { Name: "Score", Value: "95" },
+          { Name: "UpdatedAt", Value: Platform.Function.Now() }
+      ]
+  });
+  assert("example 2: the flat Keys + Properties row update succeeds", "" + rowResult.Status, "OK");
+  assert("example 2: the single row reports StatusCode OK", "" + rowResult.Results[0].StatusCode, "OK");
+  var rows = Platform.Function.LookupRows(tag + "_de", "SubscriberKey", tag + "-r1");
+  assert("example 2: still exactly one row", "" + rows.length, "1");
+  assert("example 2: the Number value was updated", "" + rows[0]["Score"], "95");
+  assert("example 2: the Now() date value was stored", (("" + rows[0]["UpdatedAt"]).length > 0) ? "true" : "false", "true");
+
+  /* 4. CONTROL - without SaveOptions an unknown key is not added. */
+  var noUpsert = proxy.updateItem("DataExtensionObject", {
+      CustomerKey: tag + "_de",
+      Keys: [{ Name: "SubscriberKey", Value: tag + "-r2" }],
+      Properties: [{ Name: "Score", Value: "50" }]
+  });
+  assert("control: without SaveOptions the missing key is not added", "" + countRows(tag + "_de", "SubscriberKey", tag + "-r2"), "0");
+  assert("control: without SaveOptions the update of a missing key returns Status Error", "" + noUpsert.Status, "Error");
+
+  /* 3. EXAMPLE 3 - upsert with SaveOptions. */
+  var upsert = proxy.updateItem("DataExtensionObject", {
+      CustomerKey: tag + "_de",
+      Keys: [{ Name: "SubscriberKey", Value: tag + "-r3" }],
+      Properties: [{ Name: "Score", Value: "95" }]
+  }, { SaveOptions: [{ PropertyName: "*", SaveAction: "UpdateAdd" }] });
+  assert("example 3: the upsert call succeeds", "" + upsert.Status, "OK");
+  assert("example 3: the single item reports StatusCode OK", "" + upsert.Results[0].StatusCode, "OK");
+  var upsertRows = Platform.Function.LookupRows(tag + "_de", "SubscriberKey", tag + "-r3");
+  assert("example 3: SaveAction UpdateAdd added the missing key", "" + upsertRows.length, "1");
+  assert("example 3: the upserted row carries the submitted value", "" + upsertRows[0]["Score"], "95");
+
+  /* Cleanup. */
+  var subCleanup = proxy.deleteItem("Subscriber", { SubscriberKey: tag + "-sub" });
+  assert("cleanup: subscriber deleted", "" + subCleanup.Status, "OK");
+  var deCleanup = proxy.deleteItem("DataExtension", { CustomerKey: tag + "_de" });
+  assert("cleanup: data extension deleted", "" + deCleanup.Status, "OK");
+  </script>

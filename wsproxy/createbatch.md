@@ -12,6 +12,7 @@ return_type: object
 min_args: 2
 max_args: 3
 verification: verified
+test_scripts: complete
 ---
 
 ## Parameters
@@ -21,6 +22,8 @@ verification: verified
 | `objectType` | string | Yes | SOAP API object type |
 | `propertiesArray` | object[] | Yes | Array of property objects, one per item to create |
 | `createOptions` | object | No | Optional SOAP `CreateOptions` object (e.g. `RequestType`, `QueuePriority`) |
+
+{% include test-script.html bundle="wsproxy--createbatch" chapter="parameters" %}
 
 ## Return Value
 
@@ -34,6 +37,8 @@ verification: verified
     ]
 }
 ```
+
+{% include test-script.html bundle="wsproxy--createbatch" chapter="return-value" %}
 
 ## Examples
 
@@ -67,6 +72,8 @@ for (var j = 0; j < results.length; j++) {
 }
 ```
 
+{% include test-script.html bundle="wsproxy--createbatch" chapter="examples" %}
+
 ## Notes
 
 {% include callout.html type="note" content="SFMC SOAP API batches are typically limited to 2,500 records per call. For larger datasets, split into chunks." %}
@@ -87,6 +94,8 @@ for (var c = 0; c < chunks.length; c++) {
     proxy.createBatch("Subscriber", chunks[c]);
 }
 ```
+
+{% include test-script.html bundle="wsproxy--createbatch" chapter="notes" %}
 
 ## See Also
 

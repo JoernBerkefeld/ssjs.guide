@@ -1,0 +1,348 @@
+# Test scripts for /http/post/
+#
+# One key per chapter on the page, plus one dedicated script per
+# differs-from-docs callout. Each script is a self-contained SSJS CloudPage
+# snippet that asserts every claim the chapter makes.
+#
+# NETWORK DEPENDENCY: HTTP.Post performs a real outbound HTTP request with a
+# request body, so these scripts need an endpoint that ACCEPTS a POST. They
+# target https://postman-echo.com/post, a stable public echo service that
+# returns the posted body, which is what makes the payload / header claims
+# observable at all. The assertions are STRUCTURAL - typeof, numeric status,
+# array shape, body containment - rather than remote text that could change.
+# A network failure is an ENVIRONMENTAL problem, not a refutation of the page.
+# (https://ssjs.guide/ is NOT usable here: it serves static files and rejects
+# POST outright, and the probe CloudPage's own URL must never be used because
+# it recurses into the script under test.)
+#
+# TIMEOUTS: each live call can take several seconds, so every script keeps its
+# number of live calls small. Deploy one chapter at a time when iterating.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+syntax: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Syntax - HTTP.Post(url, contentType, payload[, headerNames, headerValues]).
+   *
+   * Proves:
+   *   1. The Core load requirement: after Platform.Load("core", "1.1.5") the
+   *      bare global HTTP is bound and HTTP.Post is callable.
+   *   2. The 3-argument form works: url, contentType and payload alone, with
+   *      NOTHING passed after payload, returns a usable response object.
+   *   3. The 5-argument form works: headerNames and headerValues supplied as
+   *      two parallel arrays after payload.
+   *   4. Both documented forms carry the SAME numeric StatusCode for the same
+   *      endpoint, so supplying headers does not change the documented call
+   *      result.
+   *
+   * SCOPE: evidence gathered on a CloudPage GET only; the assertions depend on
+   * the external endpoint https://postman-echo.com/post being reachable from
+   * the SFMC egress and accepting a POST body.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assertSyn(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfSyn(thunk) {
+      try { return thunk(); } catch (ex) { return "threw: " + ("" + ex.message); }
+  }
+
+  var SYN_URL = "https://postman-echo.com/post";
+  var SYN_BODY = "{\"event\":\"form_submit\"}";
+
+  /* 1. Core load makes the bare HTTP global available. */
+  assertSyn("after Platform.Load(core,1.1.5) HTTP is an object", typeOfSyn(function () { return typeof HTTP; }), "object");
+  assertSyn("HTTP.Post is callable", typeOfSyn(function () { return typeof HTTP.Post; }), "function");
+
+  /* 2. The 3-argument form - nothing passed after payload. */
+  var synPlain = HTTP.Post(SYN_URL, "application/json", SYN_BODY);
+  assertSyn("HTTP.Post(url, contentType, payload) returns an object", typeof synPlain, "object");
+  assertSyn("the 3-argument form yields a numeric StatusCode", typeof synPlain.StatusCode, "number");
+
+  /* 3. The 5-argument form - parallel header arrays after payload. */
+  var synHdr = HTTP.Post(SYN_URL, "application/json", SYN_BODY, ["X-API-Key"], ["mysecretkey"]);
+  assertSyn("HTTP.Post(url, contentType, payload, headerNames, headerValues) returns an object", typeof synHdr, "object");
+  assertSyn("the 5-argument form yields a numeric StatusCode", typeof synHdr.StatusCode, "number");
+
+  /* 4. Both documented forms agree on the status. */
+  assertSyn("both documented forms return the same StatusCode", synHdr.StatusCode === synPlain.StatusCode ? "true" : "false", "true");
+  </script>
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters - url (string, required), contentType (string,
+   * required), payload (string, required), headerNames (string[], optional,
+   * co-required with headerValues), headerValues (string[], optional,
+   * co-required).
+   *
+   * Proves:
+   *   1. url, contentType and payload are accepted as strings and together
+   *      produce a response object with a numeric StatusCode.
+   *   2. payload really is the REQUEST BODY: the echo endpoint reflects the
+   *      posted string back, so the payload argument reached the server.
+   *   3. contentType really is the MIME type of the request body: the echo
+   *      endpoint reports the content-type header we passed.
+   *   4. headerNames / headerValues are OPTIONAL - the 3-argument form
+   *      succeeds without them (also covered in the Syntax chapter).
+   *   5. headerNames / headerValues are string ARRAYS and are PAIRED: the
+   *      value supplied in headerValues is sent under the name supplied in
+   *      headerNames, proven by the echo endpoint reflecting the header value.
+   *
+   * NOT ASSERTABLE: that MISMATCHED headerNames / headerValues lengths are
+   * rejected. The page states the arrays are co-required and "only need to be
+   * paired when supplied" as a CALLER requirement, not as a documented runtime
+   * error contract, so there is no documented outcome to assert.
+   *
+   * TYPE-ACCEPTANCE MATRIX: no parameter on this page is in scope. `url` is a
+   * URL string and `contentType` a MIME-type string (both explicitly excluded
+   * from widening), `payload` is a free-text request-body string, and
+   * headerNames / headerValues are string ARRAYS, not scalars - none matches a
+   * Date/Number/Boolean/string pair.
+   *
+   * SCOPE: evidence gathered on a CloudPage GET only; the assertions depend on
+   * the external endpoint https://postman-echo.com/post being reachable from
+   * the SFMC egress and echoing the request.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assertPar(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var PAR_URL = "https://postman-echo.com/post";
+  var PAR_BODY = "{\"event\":\"form_submit\"}";
+
+  /* 1. + 4. All three required strings, headers omitted. */
+  var parRes = HTTP.Post(PAR_URL, "application/json", PAR_BODY);
+  assertPar("url + contentType + payload as strings return an object", typeof parRes, "object");
+  assertPar("headerNames and headerValues are optional (3-argument form works)", typeof parRes.StatusCode, "number");
+
+  /* 2. payload is the request body - echoed back by the endpoint. */
+  var parEcho = "" + parRes.Response[0];
+  assertPar("payload is sent as the request body (echoed back)", parEcho.indexOf("form_submit") >= 0 ? "true" : "false", "true");
+
+  /* 3. contentType is the MIME type of the request body. */
+  assertPar("contentType is sent as the request content type", parEcho.indexOf("application/json") >= 0 ? "true" : "false", "true");
+
+  /* 5. headerNames / headerValues are paired string arrays. */
+  var parHdr = HTTP.Post(PAR_URL, "application/json", PAR_BODY, ["X-API-Key"], ["mysecretkey"]);
+  assertPar("a paired string[] header pair is accepted", typeof parHdr.StatusCode, "number");
+  var parHdrEcho = "" + parHdr.Response[0];
+  assertPar("the headerValues entry is sent under its headerNames entry", parHdrEcho.indexOf("mysecretkey") >= 0 ? "true" : "false", "true");
+  </script>
+
+parameters-optional-headers: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * differs-from-docs (Parameters): the official docs list headerNames and
+   * headerValues as REQUIRED, but the runtime accepts a 3-argument call.
+   *
+   * Proves:
+   *   1. DEV - the 3-argument call HTTP.Post(url, contentType, payload)
+   *      succeeds and returns an object (official docs: headerNames and
+   *      headerValues are required, so this call should not be valid).
+   *   2. DEV - that 3-argument call produces a real numeric StatusCode, i.e.
+   *      the request was actually issued, not silently ignored.
+   *   3. The header arrays only need to be PAIRED when supplied: a supplied
+   *      pair of equal length works too, so the arrays are optional rather
+   *      than ignored.
+   *
+   * SCOPE: evidence gathered on a CloudPage GET only; the assertions depend on
+   * the external endpoint https://postman-echo.com/post being reachable from
+   * the SFMC egress.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assertOpt(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var OPT_URL = "https://postman-echo.com/post";
+  var OPT_BODY = "{\"event\":\"form_submit\"}";
+
+  /* 1. + 2. The undocumented-but-working 3-argument form. */
+  var optPlain = HTTP.Post(OPT_URL, "application/json", OPT_BODY);
+  assertOpt("DEV the 3-argument call returns an object (official docs: headerNames/headerValues required)", typeof optPlain, "object");
+  assertOpt("DEV the 3-argument call really issued the request - numeric StatusCode (official docs: call should require 5 arguments)", typeof optPlain.StatusCode, "number");
+
+  /* 3. Supplying a paired set works as well - the arrays are optional, not ignored. */
+  var optHdr = HTTP.Post(OPT_URL, "application/json", OPT_BODY, ["X-API-Key"], ["mysecretkey"]);
+  assertOpt("a supplied equal-length header pair is also accepted", typeof optHdr.StatusCode, "number");
+  </script>
+
+return-value: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Return value - an OBJECT with StatusCode (number) and Response
+   * (string[] whose first element is the body).
+   *
+   * Proves:
+   *   1. The return value is an object, not a bare string.
+   *   2. StatusCode is a NUMBER carrying the HTTP status code.
+   *   3. Response is an ARRAY, not a bare string.
+   *   4. Response[0] is a string holding the response body, and it is
+   *      non-empty for a reachable endpoint.
+   *   5. The field names really are StatusCode / Response and NOT the HTTP.Get
+   *      pair Status / Content - the page's note that the two members use
+   *      different field names is proven by Status and Content being absent
+   *      on the HTTP.Post result.
+   *
+   * SCOPE: evidence gathered on a CloudPage GET only; the assertions depend on
+   * the external endpoint https://postman-echo.com/post being reachable from
+   * the SFMC egress.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assertRv(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var RV_URL = "https://postman-echo.com/post";
+  var rv = HTTP.Post(RV_URL, "application/json", "{\"event\":\"form_submit\"}");
+
+  /* 1. An object, not a bare string. */
+  assertRv("the return value is an object", typeof rv, "object");
+  assertRv("the return value is NOT a string", typeof rv === "string" ? "true" : "false", "false");
+
+  /* 2. StatusCode is the numeric HTTP status. */
+  assertRv("StatusCode is a number", typeof rv.StatusCode, "number");
+  assertRv("StatusCode carries the HTTP status code of the response", rv.StatusCode === 200 ? "true" : "false", "true");
+
+  /* 3. + 4. Response is an array whose first element is the body. */
+  assertRv("Response is an object (an array), not a bare string", typeof rv.Response, "object");
+  assertRv("Response has a numeric length, i.e. it is array-like", typeof rv.Response.length, "number");
+  assertRv("Response[0] is a string", typeof rv.Response[0], "string");
+  assertRv("Response[0] is non-empty for a reachable endpoint", ("" + rv.Response[0]).length > 0 ? "true" : "false", "true");
+
+  /* 5. Not the HTTP.Get field names. */
+  assertRv("Status (the HTTP.Get name) is undefined here", typeof rv.Status, "undefined");
+  assertRv("Content (the HTTP.Get name) is undefined here", typeof rv.Content, "undefined");
+  </script>
+
+return-value-shape: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * differs-from-docs (Return value): the official docs type StatusCode as a
+   * STRING and Response as a SINGLE STRING, but the runtime returns a numeric
+   * StatusCode and an ARRAY whose first element holds the body.
+   *
+   * Proves:
+   *   1. DEV - StatusCode is a number (official docs: string).
+   *   2. DEV - StatusCode is NOT a string (official docs: string).
+   *   3. DEV - Response is not a string but an array-like object
+   *      (official docs: a single string).
+   *   4. DEV - the body is reached through Response[0], not through Response
+   *      itself (official docs: Response IS the body string).
+   *
+   * SCOPE: evidence gathered on a CloudPage GET only; the assertions depend on
+   * the external endpoint https://postman-echo.com/post being reachable from
+   * the SFMC egress.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assertShape(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var SHAPE_URL = "https://postman-echo.com/post";
+  var shape = HTTP.Post(SHAPE_URL, "application/json", "{\"event\":\"form_submit\"}");
+
+  /* 1. + 2. StatusCode is numeric, not a string. */
+  assertShape("DEV StatusCode is a number (official docs: string)", typeof shape.StatusCode, "number");
+  assertShape("DEV StatusCode is NOT a string (official docs: string)", typeof shape.StatusCode === "string" ? "true" : "false", "false");
+
+  /* 3. Response is array-like, not a string. */
+  assertShape("DEV Response is NOT a string (official docs: a single string)", typeof shape.Response === "string" ? "true" : "false", "false");
+  assertShape("DEV Response has a numeric length, i.e. it is an array (official docs: a single string)", typeof shape.Response.length, "number");
+
+  /* 4. The body lives at Response[0]. */
+  assertShape("DEV the body is at Response[0] (official docs: Response itself is the body)", typeof shape.Response[0], "string");
+  assertShape("DEV Response[0] holds the actual response body (official docs: Response itself is the body)", ("" + shape.Response[0]).indexOf("form_submit") >= 0 ? "true" : "false", "true");
+  </script>
+
+example: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Example - the documented snippet, line by line.
+   *
+   * Proves:
+   *   1. Stringify({...}) with a Platform.Function.Now() member produces the
+   *      payload string the example builds.
+   *   2. var response = HTTP.Post(url, contentType, payload, headerNames,
+   *      headerValues) - the exact 5-argument documented call - returns an
+   *      object.
+   *   3. The documented guard `response.StatusCode == 200` evaluates true for
+   *      a successful call, i.e. the numeric StatusCode compares against the
+   *      literal 200 as written.
+   *   4. Platform.Function.ParseJSON(String(response.Response[0])) - the exact
+   *      documented parse line, including the String(...) wrapper - yields a
+   *      non-null object.
+   *
+   * SCOPE: evidence gathered on a CloudPage GET only. The example's
+   * api.example.com URL is a placeholder and is NOT contacted; the stable
+   * public echo endpoint https://postman-echo.com/post is used instead, so
+   * these assertions depend on it being reachable from the SFMC egress.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assertEx(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var EX_URL = "https://postman-echo.com/post";
+  var submitterEmail = "test@example.com";
+
+  /* 1. The payload the example builds. */
+  var payload = Stringify({
+      event: "form_submit",
+      email: submitterEmail,
+      timestamp: Platform.Function.Now()
+  });
+  assertEx("Stringify({...}) builds a string payload", typeof payload, "string");
+  assertEx("the payload carries the event value", ("" + payload).indexOf("form_submit") >= 0 ? "true" : "false", "true");
+
+  /* 2. The documented 5-argument call. */
+  var response = HTTP.Post(
+      EX_URL,
+      "application/json",
+      payload,
+      ["X-API-Key"],
+      ["mysecretkey"]
+  );
+  assertEx("var response = HTTP.Post(url, contentType, payload, headerNames, headerValues) returns an object", typeof response, "object");
+
+  /* 3. The documented status guard. */
+  assertEx("response.StatusCode == 200 holds for a successful call", response.StatusCode == 200 ? "true" : "false", "true");
+
+  /* 4. The documented parse line. */
+  var result = Platform.Function.ParseJSON(String(response.Response[0]));
+  assertEx("ParseJSON(String(response.Response[0])) yields an object", typeof result, "object");
+  assertEx("the parsed value is not null", result === null ? "true" : "false", "false");
+  </script>

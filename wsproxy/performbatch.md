@@ -12,6 +12,7 @@ return_type: object
 min_args: 3
 max_args: 4
 verification: verified
+test_scripts: complete
 differs_from_docs: true
 ---
 
@@ -28,9 +29,15 @@ Performs the same action on **multiple** rows/objects in one SOAP request. For a
 
 {% include differs-from-docs.html note="The official docs list `action` as `Enum('Start')` without noting case behaviour; at runtime the verb is case-insensitive, and each `Results` entry carries a `Task` sub-object plus per-item `StatusCode`/`StatusMessage` not detailed in the docs." %}
 
+{% include test-script.html bundle="wsproxy--performbatch" chapter="differs-from-docs" label="Show test script — case-insensitive action and the undocumented per-item Results/Task fields" %}
+
+{% include test-script.html bundle="wsproxy--performbatch" chapter="parameters" %}
+
 ## Return value
 
 Object with `Status` (`"OK"` on success), `StatusMessage` (empty on success), `RequestID`, and `Results` — an array with one entry per input item. Each `Results` entry carries `StatusCode`, `StatusMessage`, `OrdinalID`, `ErrorCode`, an `Object` wrapper (the acted-on API object) and a `Task` sub-object (with `StatusCode`, `StatusMessage`, `InteractionObjectID`).
+
+{% include test-script.html bundle="wsproxy--performbatch" chapter="return-value" %}
 
 ## Example
 
@@ -40,6 +47,8 @@ var items = [{ ObjectID: id1 }, { ObjectID: id2 }];
 var result = proxy.performBatch("QueryDefinition", items, "Start");
 Write(result.Status);
 ```
+
+{% include test-script.html bundle="wsproxy--performbatch" chapter="example" %}
 
 ## See Also
 

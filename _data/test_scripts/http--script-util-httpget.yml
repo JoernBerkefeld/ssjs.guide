@@ -1,0 +1,272 @@
+# Test scripts for /http/script-util-httpget/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive,
+# negative, and every documented deviation.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+#
+# EXTERNAL DEPENDENCY: these scripts call https://ssjs.guide/robots.txt and
+# https://ssjs.guide/site-index.json — static, public, GET-only endpoints
+# proven reachable from the SFMC egress. Swap them for any reachable static
+# URL if that host ever changes.
+
+return-value: |
+  <script runat="server">
+  /*
+   * Chapter: Return Value
+   *
+   * Proves:
+   *   1. `new Script.Util.HttpGet(url)` returns an HttpGetInstance (a CLR proxy).
+   *   2. The instance exposes send() and the request is executed by calling it.
+   *   3. No Platform.Load is required — the constructor works without it.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ("" + ex.message); }
+      Platform.Response.Write((got === "" + expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  /* 1. Constructor returns an instance without any Platform.Load call. */
+  var req = new Script.Util.HttpGet("https://ssjs.guide/robots.txt");
+  assert("constructor returns an object (CLR proxy)", typeof req, "clr");
+
+  /* 2. send() exists on the instance. */
+  assert("instance exposes send()", typeof req.send, "clrmethodinfo");
+
+  /* 3. Calling send() executes the request and returns a response object. */
+  var resp = req.send();
+  assert("send() returns a response object", typeof resp, "clr");
+  assert("send() performed the GET (statusCode 200)", resp.statusCode, "200");
+  </script>
+
+httpgetinstance-properties: |
+  <script runat="server">
+  /*
+   * Chapter: HttpGetInstance Properties
+   *
+   * Proves, for each documented property, its DEFAULT value and that it is
+   * writable (reads back what was assigned):
+   *   1. retries              default 1
+   *   2. continueOnError      default false
+   *   3. emptyContentHandling default 0
+   *   4. timeout              default 30  (see DEV below)
+   *
+   * DEVIATION (DEV):
+   *   - `timeout` defaults to 30, NOT 30000. The official docs only state that
+   *     send() times out after 30 seconds and do not list the property at all;
+   *     the runtime value 30 is therefore expressed in SECONDS, not
+   *     milliseconds. Script.Util.HttpRequest behaves identically.
+   *
+   * NOTE: property reads return CLR values, so every comparison normalises
+   * with `"" + value` (never String(value), which yields a CLR string).
+   * A CLR boolean stringifies capitalised as "False" / "True".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ("" + ex.message); }
+      Platform.Response.Write((got === "" + expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var req = new Script.Util.HttpGet("https://ssjs.guide/robots.txt");
+
+  /* 1. retries — default and writable. */
+  assert("retries default is 1", req.retries, "1");
+  req.retries = 2;
+  assert("retries is writable", req.retries, "2");
+
+  /* 2. continueOnError — default false (CLR booleans stringify capitalised). */
+  assert("continueOnError default is false", req.continueOnError, "False");
+  req.continueOnError = true;
+  assert("continueOnError is writable", req.continueOnError, "True");
+
+  /* 3. emptyContentHandling — default 0, accepts documented modes 1 and 2. */
+  assert("emptyContentHandling default is 0", req.emptyContentHandling, "0");
+  req.emptyContentHandling = 1;
+  assert("emptyContentHandling accepts 1 (stop)", req.emptyContentHandling, "1");
+  req.emptyContentHandling = 2;
+  assert("emptyContentHandling accepts 2 (next subscriber)", req.emptyContentHandling, "2");
+  req.emptyContentHandling = 0;
+  assert("emptyContentHandling reset to 0", req.emptyContentHandling, "0");
+
+  /* 4. DEVIATION — timeout defaults to 30 (seconds), not 30000 ms. */
+  var t = new Script.Util.HttpGet("https://ssjs.guide/robots.txt");
+  assert("DEV timeout default is 30, not 30000 (docs do not list the property)", t.timeout, "30");
+  t.timeout = 45;
+  assert("timeout is writable", t.timeout, "45");
+  </script>
+
+httpgetinstance-methods: |
+  <script runat="server">
+  /*
+   * Chapter: HttpGetInstance Methods
+   *
+   * Proves that all four documented methods exist on the instance and that
+   * the header mutators can be called without throwing:
+   *   1. setHeader(name, value)
+   *   2. removeHeader(name)
+   *   3. clearHeaders()
+   *   4. send()
+   *   5. A request that had setHeader() called still succeeds (setHeader only
+   *      disables content caching — it does not break the request).
+   *
+   * NOT ASSERTABLE (documented, but not observable from a GET-only CloudPage
+   * harness): that setHeader() disables content caching for mail sends, and
+   * that the custom header reaches the remote server. Both require either a
+   * mail-send context or an echo endpoint, neither of which this harness has.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ("" + ex.message); }
+      Platform.Response.Write((got === "" + expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertNoThrow(id, fn) {
+      var msg = "ok";
+      try { fn(); } catch (ex) { msg = "THREW: " + ("" + ex.message); }
+      Platform.Response.Write((msg === "ok" ? "PASS " : "FAIL ") + id + " -> " + msg + "\n");
+  }
+
+  var req = new Script.Util.HttpGet("https://ssjs.guide/robots.txt");
+
+  /* 1-4. All four documented methods are present. */
+  assert("setHeader() exists", typeof req.setHeader, "clrmethodinfo");
+  assert("removeHeader() exists", typeof req.removeHeader, "clrmethodinfo");
+  assert("clearHeaders() exists", typeof req.clearHeaders, "clrmethodinfo");
+  assert("send() exists", typeof req.send, "clrmethodinfo");
+
+  /* The mutators return void and do not throw. */
+  assertNoThrow("setHeader(name, value) does not throw", function () { req.setHeader("X-Probe", "abc"); });
+  assertNoThrow("removeHeader(name) does not throw", function () { req.removeHeader("X-Probe"); });
+  assertNoThrow("clearHeaders() does not throw", function () { req.clearHeaders(); });
+
+  /* 5. A request with a custom header still sends successfully. */
+  var withHeader = new Script.Util.HttpGet("https://ssjs.guide/robots.txt");
+  withHeader.setHeader("X-Probe", "abc");
+  var resp = withHeader.send();
+  assert("send() succeeds after setHeader()", resp.statusCode, "200");
+  </script>
+
+httpresponseinstance-object: |
+  <script runat="server">
+  /*
+   * Chapter: HttpResponseInstance Object
+   *
+   * Proves the response properties documented for HttpGet:
+   *   1. statusCode is the HTTP status code (200 for a reachable URL).
+   *   2. returnStatus is 0 on success ("OK").
+   *   3. content is a CLR value, not a JavaScript string, and String(content)
+   *      / "" + content produce a usable JS string.
+   *   4. headers is present but NOT indexable — resp.headers["Content-Type"]
+   *      throws "Use of Common Language Runtime (CLR) is not allowed".
+   *      (This is the differs-from-docs claim: the official docs show exactly
+   *      that access pattern.)
+   *
+   * BUG (proven, see the bug callout on the page):
+   *   5. On HttpGet the response is NOT equal to the HttpRequest response:
+   *      contentType and encoding come back EMPTY, and a for..in over
+   *      resp.headers yields only the synthetic "[prototype, ]" entry — no
+   *      real response headers. The same request via Script.Util.HttpRequest
+   *      returns a populated contentType and the full header enumeration.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ("" + ex.message); }
+      Platform.Response.Write((got === "" + expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrowsFragment(id, fn, fragment) {
+      var msg = "";
+      try { fn(); msg = "did NOT throw"; } catch (ex) { msg = "" + ex.message; }
+      Platform.Response.Write((msg.indexOf(fragment) > -1 ? "PASS " : "FAIL ") + id + " -> " + msg + "\n");
+  }
+
+  var resp = new Script.Util.HttpGet("https://ssjs.guide/site-index.json").send();
+
+  /* 1-2. Status properties. */
+  assert("statusCode is 200", resp.statusCode, "200");
+  assert("returnStatus is 0 (OK)", resp.returnStatus, "0");
+
+  /* 3. content is a CLR value that must be converted before use. */
+  assert("content is a CLR value, not a JS string", typeof resp.content, "clr");
+  var body = "" + resp.content;
+  assert("content converts to a non-empty JS string", body.length > 0, "true");
+  assert("String(content) yields the same length", String(resp.content).length, body.length);
+
+  /* 4. DEV — direct header indexing throws, contradicting the official docs example. */
+  assert("headers property exists", typeof resp.headers, "clr");
+  assertThrowsFragment(
+      "DEV resp.headers[\"Content-Type\"] throws (official docs show this access)",
+      function () { return resp.headers["Content-Type"]; },
+      "Common Language Runtime"
+  );
+
+  /* 5. BUG — HttpGet returns no response metadata (HttpRequest does). */
+  assert("BUG contentType is empty on HttpGet (HttpRequest returns it)", resp.contentType, "");
+  assert("BUG encoding is empty on HttpGet (HttpRequest returns it)", resp.encoding, "");
+  var realKeys = 0;
+  for (var k in resp.headers) {
+      var pair = "" + k;
+      if (pair.indexOf("[prototype") !== 0) { realKeys = realKeys + 1; }
+  }
+  assert("BUG for..in over headers yields 0 real headers on HttpGet", realKeys, "0");
+  </script>
+
+examples: |
+  <script runat="server">
+  /*
+   * Chapter: Examples
+   *
+   * Proves that both documented example patterns run end-to-end, in a single
+   * request that combines them:
+   *   1. A custom auth-style header plus retries / continueOnError are set on
+   *      the instance before send().
+   *   2. send() returns statusCode 200.
+   *   3. The body is converted from CLR and fed to ParseJSON, which returns a
+   *      usable object — the exact pattern both examples on the page use.
+   *
+   * NOTE: one external call per deployment. Two live GETs of a large JSON
+   * document in the same CloudPage request exceed the page limit and return
+   * HTTP 422, which would be a harness artefact, not an API result.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ("" + ex.message); }
+      Platform.Response.Write((got === "" + expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  /* 1. Configure the request exactly as the "GET with auth header" example does. */
+  var req = new Script.Util.HttpGet("https://ssjs.guide/site-index.json");
+  req.setHeader("Authorization", "Bearer dummy-token");
+  req.retries = 2;
+  req.continueOnError = true;
+
+  /* 2. Send and check the status code, as both examples do. */
+  var resp = req.send();
+  assert("GET with custom header returns statusCode 200", resp.statusCode, "200");
+
+  /* 3. Convert the CLR body and parse it — the ParseJSON pattern from both examples. */
+  var body = "" + resp.content;
+  assert("body converts to a non-empty JS string", body.length > 0, "true");
+  var result = Platform.Function.ParseJSON(body);
+  assert("ParseJSON of the body returns an object", typeof result, "object");
+  </script>

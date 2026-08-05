@@ -12,6 +12,7 @@ return_type: object
 min_args: 3
 max_args: 4
 verification: verified
+test_scripts: complete
 differs_from_docs: true
 ---
 
@@ -30,11 +31,19 @@ There is **no** method named `proxy.perform` — older samples used informal sho
 
 {% include differs-from-docs.html note="The official docs type `action` as `Enum('Start')` and this page previously claimed lowercase `\"start\"` fails, but the runtime accepts the verb case-insensitively — `\"start\"` returns the same `Status: \"OK\"` as `\"Start\"`." %}
 
+{% include test-script.html bundle="wsproxy--performitem" chapter="differs-from-docs-action" label="Show test script — case-insensitive perform verb" %}
+
+{% include test-script.html bundle="wsproxy--performitem" chapter="parameters" %}
+
 ## Return value
 
 Object with `Status` (string, `"OK"` on success), `StatusMessage` (string, empty on success), `RequestID` (string), and `Results` (an array with a single entry for the acted-on item). Each `Results` element carries `StatusCode`, `StatusMessage` (e.g. `"QueryDefinition perform called successfully"`), `OrdinalID`, `ErrorCode`, an `Object` (the acted-on API object), and a `Task` sub-object (`StatusCode`, `StatusMessage`, `ID`, `TblAsyncID`, `InteractionObjectID`).
 
 {% include differs-from-docs.html note="The official docs list only `Status`, `StatusMessage`, `RequestID`, and `Results` and do not detail the per-item `Results[0]` structure (`StatusCode`, `ErrorCode`, `Object`, and the `Task` sub-object with `InteractionObjectID`) proven at runtime." %}
+
+{% include test-script.html bundle="wsproxy--performitem" chapter="differs-from-docs-return" label="Show test script — the undocumented per-item Results/Task fields" %}
+
+{% include test-script.html bundle="wsproxy--performitem" chapter="return-value" %}
 
 ## Examples
 
@@ -62,6 +71,8 @@ var result = proxy.performItem(
 ```
 
 Use the SOAP object type and property shape required for that object (see SFMC SOAP docs for valid `action` values per type).
+
+{% include test-script.html bundle="wsproxy--performitem" chapter="examples" %}
 
 ## See Also
 

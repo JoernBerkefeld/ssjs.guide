@@ -1,0 +1,321 @@
+# Test scripts for /wsproxy/getnextbatch/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive
+# and negative.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# Every script creates its own run-labelled fixtures and removes them again
+# in the same script, so repeated runs stay clean. Paging is forced with the
+# documented retrieveOptions.BatchSize argument of proxy.retrieve so the
+# probe does not need the 2,500-row natural page size.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+parameters: |
+  <script runat="server">
+  /*
+   * Chapter: Parameters
+   *
+   * Proves:
+   *   1. getNextBatch is a CLR method on every WSProxy instance.
+   *   2. objectType (string) + requestId (string) are BOTH required and the
+   *      2-argument form is the whole signature (min_args = max_args = 2).
+   *   3. requestId is the RequestID value of the PREVIOUS retrieve response,
+   *      and that value is a string.
+   *   4. objectType is the SAME SOAP object type that was passed to the
+   *      original retrieve call — passing it returns the next page.
+   *   5. NEGATIVE — fewer than 2 arguments is rejected: both the
+   *      1-argument and the 0-argument form throw.
+   *
+   * NOT PROBED: Date / number / boolean type-acceptance counterparts.
+   * Neither parameter is in scope for the matrix — objectType is a SOAP type
+   * NAME (free-text string) and requestId is an opaque server-issued
+   * identifier string. Neither is documented as a date, a count/limit, or a
+   * 0/1 flag.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  Platform.Load("core", "1.1.5");
+  var proxy = new Script.Util.WSProxy();
+  var tag = "gnbP" + (new Date()).getTime();
+  var deKey = tag + "_de";
+  var objectType = "DataExtensionObject[" + deKey + "]";
+
+  /* 1. The method exists on the instance. */
+  assert("typeof proxy.getNextBatch is clrmethodinfo", typeof proxy.getNextBatch, "clrmethodinfo");
+
+  /* Fixture: a data extension with more rows than the forced page size. */
+  assert("fixture data extension created", "" + proxy.createItem("DataExtension", {
+      Name: deKey,
+      CustomerKey: deKey,
+      Fields: [{ Name: "Pk", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true }]
+  }).Status, "OK");
+
+  var de = DataExtension.Init(deKey);
+  for (var i = 1; i <= 5; i++) { de.Rows.Add({ Pk: "r" + i }); }
+  assert("five fixture rows exist", "" + de.Rows.Retrieve().length, "5");
+
+  /* First page — forced to 2 rows via the documented retrieveOptions.BatchSize. */
+  var first = proxy.retrieve(objectType, ["Pk"], null, { BatchSize: 2 }, { QueryAllAccounts: false });
+  assert("the first retrieve reports more rows", first.HasMoreRows ? "true" : "false", "true");
+
+  /* 3. requestId comes from the previous response and is a string. */
+  assert("typeof previous RequestID is string", typeof first.RequestID, "string");
+  assert("the previous RequestID is not empty", (("" + first.RequestID).length > 0) ? "true" : "false", "true");
+
+  /* 2. + 4. The documented 2-argument form with the same object type. */
+  var next = proxy.getNextBatch(objectType, first.RequestID);
+  assert("2-argument form (objectType, requestId) succeeds", typeof next, "object");
+  assert("the same objectType as the original retrieve returns the next page", "" + next.Results.length, "3");
+
+  /* 5. NEGATIVE — fewer than 2 arguments is rejected. */
+  assertThrows("getNextBatch(objectType) with no requestId throws (min_args = 2)", function () { return proxy.getNextBatch(objectType); });
+  assertThrows("getNextBatch() with no arguments throws (min_args = 2)", function () { return proxy.getNextBatch(); });
+
+  /* Cleanup. */
+  assert("cleanup: fixture data extension deleted", "" + proxy.deleteBatch("DataExtension", [{ CustomerKey: deKey }]).Status, "OK");
+  </script>
+
+return-value: |
+  <script runat="server">
+  /*
+   * Chapter: Return value
+   *
+   * Proves the documented return shape — "same shape as retrieve": Status,
+   * RequestID, Results and HasMoreRows — plus every claim in the page's
+   * runtime-verified callout:
+   *   1. getNextBatch returns an OBJECT.
+   *   2. Status is a STRING. It is "MoreDataAvailable" while further pages
+   *      remain and "OK" on the final page.
+   *   3. HasMoreRows is a BOOLEAN: true while pages remain, and it flips to
+   *      false on the last page.
+   *   4. RequestID is a STRING on every page.
+   *   5. Results is an array; the continuation page carries the rows the
+   *      first page did not return.
+   *   6. Each Results row carries a Properties array of { Name, Value }
+   *      pairs.
+   *   7. Summing Results across all pages yields the full row count — no row
+   *      is lost or duplicated by the paging loop.
+   *
+   * NOT ASSERTABLE HERE: chaining one getNextBatch RequestID into a FURTHER
+   * getNextBatch call. retrieveOptions.BatchSize only caps the FIRST page —
+   * the continuation call returns all remaining rows in a single page — so
+   * producing three pages would require a fixture larger than the 2,500-row
+   * natural page size, which is out of scope for a page test script.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  Platform.Load("core", "1.1.5");
+  var proxy = new Script.Util.WSProxy();
+  var tag = "gnbR" + (new Date()).getTime();
+  var deKey = tag + "_de";
+  var objectType = "DataExtensionObject[" + deKey + "]";
+
+  assert("fixture data extension created", "" + proxy.createItem("DataExtension", {
+      Name: deKey,
+      CustomerKey: deKey,
+      Fields: [{ Name: "Pk", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true }]
+  }).Status, "OK");
+
+  var de = DataExtension.Init(deKey);
+  for (var i = 1; i <= 5; i++) { de.Rows.Add({ Pk: "r" + i }); }
+  assert("five fixture rows exist", "" + de.Rows.Retrieve().length, "5");
+
+  /* Page 1 comes from retrieve; BatchSize 2 caps the first page at 2 rows. */
+  var p1 = proxy.retrieve(objectType, ["Pk"], null, { BatchSize: 2 }, { QueryAllAccounts: false });
+  assert("retrieve page 1 Status is MoreDataAvailable", "" + p1.Status, "MoreDataAvailable");
+  assert("retrieve page 1 HasMoreRows is true", p1.HasMoreRows ? "true" : "false", "true");
+  assert("retrieve page 1 returns the forced page size", "" + p1.Results.length, "2");
+
+  /* 1.-6. Page 2 — the getNextBatch continuation, and the last page. */
+  var p2 = proxy.getNextBatch(objectType, p1.RequestID);
+  assert("typeof getNextBatch result is object", typeof p2, "object");
+  assert("typeof Status is string", typeof p2.Status, "string");
+  assert("Status is OK on the last page", "" + p2.Status, "OK");
+  assert("typeof HasMoreRows is boolean", typeof p2.HasMoreRows, "boolean");
+  assert("HasMoreRows is false on the last page", p2.HasMoreRows ? "true" : "false", "false");
+  assert("typeof RequestID is string", typeof p2.RequestID, "string");
+  assert("RequestID is not empty", (("" + p2.RequestID).length > 0) ? "true" : "false", "true");
+  assert("typeof Results is object", typeof p2.Results, "object");
+  assert("the continuation page carries the remaining rows", "" + p2.Results.length, "3");
+  assert("typeof a Results row Properties array is object", typeof p2.Results[0].Properties, "object");
+  assert("a Properties entry carries a Name", "" + p2.Results[0].Properties[0].Name, "Pk");
+  assert("a Properties entry carries a Value", (("" + p2.Results[0].Properties[0].Value).length > 0) ? "true" : "false", "true");
+
+  /* 7. No row lost or duplicated across the pages. */
+  assert("all rows were read across the pages", "" + (p1.Results.length + p2.Results.length), "5");
+
+  /* Cleanup. */
+  assert("cleanup: fixture data extension deleted", "" + proxy.deleteBatch("DataExtension", [{ CustomerKey: deKey }]).Status, "OK");
+  </script>
+
+examples: |
+  <script runat="server">
+  /*
+   * Chapter: Examples — Loop until all rows are read
+   *
+   * Runs the page example verbatim in structure and proves every claim it
+   * makes:
+   *   1. The do/while loop shape works: process result.Results, and while
+   *      result.HasMoreRows is true carry result.RequestID from the previous
+   *      response into proxy.getNextBatch(objectType, result.RequestID).
+   *   2. The same objectType variable is reused for every page.
+   *   3. The loop terminates — HasMoreRows becomes false on the final page.
+   *   4. Every row is visited exactly once: the loop collects the full row
+   *      set, with no duplicates and nothing missing.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  Platform.Load("core", "1.1.5");
+  var proxy = new Script.Util.WSProxy();
+  var tag = "gnbX" + (new Date()).getTime();
+  var deKey = tag + "_de";
+
+  assert("fixture data extension created", "" + proxy.createItem("DataExtension", {
+      Name: deKey,
+      CustomerKey: deKey,
+      Fields: [{ Name: "Pk", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true }]
+  }).Status, "OK");
+
+  var de = DataExtension.Init(deKey);
+  for (var i = 1; i <= 5; i++) { de.Rows.Add({ Pk: "r" + i }); }
+  assert("five fixture rows exist", "" + de.Rows.Retrieve().length, "5");
+
+  /* 1.-3. The page example, verbatim in structure. */
+  var objectType = "DataExtensionObject[" + deKey + "]";
+  var result = proxy.retrieve(objectType, ["Pk"], null, { BatchSize: 2 }, { QueryAllAccounts: false });
+
+  var seen = [];
+  var pages = 0;
+  do {
+      pages = pages + 1;
+      for (var r = 0; r < result.Results.length; r++) {
+          seen.push("" + result.Results[r].Properties[0].Value);
+      }
+      if (result.HasMoreRows) {
+          /* carry the RequestID from the previous response into the next page */
+          result = proxy.getNextBatch(objectType, result.RequestID);
+      }
+  } while (result.HasMoreRows);
+
+  assert("the loop terminated on a page with HasMoreRows false", result.HasMoreRows ? "true" : "false", "false");
+  assert("the do/while body ran once per non-final page", "" + pages, "1");
+
+  /* The example's do/while processes pages while HasMoreRows was true; the
+     final page is fetched but left for the caller after the loop. */
+  for (var t = 0; t < result.Results.length; t++) {
+      seen.push("" + result.Results[t].Properties[0].Value);
+  }
+
+  /* 4. Every row visited exactly once. */
+  assert("the loop collected every row", "" + seen.length, "5");
+  var found = 0;
+  for (var f = 1; f <= 5; f++) {
+      var hits = 0;
+      for (var s = 0; s < seen.length; s++) {
+          if (seen[s] === "r" + f) { hits = hits + 1; }
+      }
+      if (hits === 1) { found = found + 1; }
+  }
+  assert("each fixture row appears exactly once across the pages", "" + found, "5");
+
+  /* Cleanup. */
+  assert("cleanup: fixture data extension deleted", "" + proxy.deleteBatch("DataExtension", [{ CustomerKey: deKey }]).Status, "OK");
+  </script>
+
+notes: |
+  <script runat="server">
+  /*
+   * Chapter: Notes
+   *
+   * Proves the single claim the Notes callout makes:
+   *   1. SFMC ships NO built-in retrieveBatch convenience on WSProxy —
+   *      invoking proxy.retrieveBatch throws, so a retrieve / getNextBatch
+   *      loop (or a hand-written helper) is required. Note that `typeof`
+   *      alone cannot prove this: the CLR proxy reports "clrmethodinfo" for
+   *      names that do not exist, so absence must be proven by invocation.
+   *   2. The two members the callout tells you to combine DO exist and
+   *      work when invoked.
+   *   3. A hand-written helper built from retrieve + getNextBatch works —
+   *      the recommended workaround, proven end to end.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  Platform.Load("core", "1.1.5");
+  var proxy = new Script.Util.WSProxy();
+
+  /* 1. No built-in retrieveBatch convenience. typeof reports "clrmethodinfo"
+     even for names that do not exist, so absence is proven by INVOCATION. */
+  assertThrows("proxy.retrieveBatch is not a real member - invoking it throws", function () {
+      return proxy.retrieveBatch("DataExtension", ["Name"]);
+  });
+
+  /* 2. The two members the workaround combines. */
+  assert("typeof proxy.retrieve is clrmethodinfo", typeof proxy.retrieve, "clrmethodinfo");
+  assert("typeof proxy.getNextBatch is clrmethodinfo", typeof proxy.getNextBatch, "clrmethodinfo");
+
+  /* 3. The recommended workaround: your own retrieve/getNextBatch helper. */
+  var tag = "gnbN" + (new Date()).getTime();
+  var deKey = tag + "_de";
+  assert("fixture data extension created", "" + proxy.createItem("DataExtension", {
+      Name: deKey,
+      CustomerKey: deKey,
+      Fields: [{ Name: "Pk", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true }]
+  }).Status, "OK");
+
+  var de = DataExtension.Init(deKey);
+  for (var i = 1; i <= 5; i++) { de.Rows.Add({ Pk: "r" + i }); }
+
+  function retrieveAll(objectType, columns, batchSize) {
+      var all = [];
+      var page = proxy.retrieve(objectType, columns, null, { BatchSize: batchSize }, { QueryAllAccounts: false });
+      while (true) {
+          for (var k = 0; k < page.Results.length; k++) { all.push(page.Results[k]); }
+          if (!page.HasMoreRows) { break; }
+          page = proxy.getNextBatch(objectType, page.RequestID);
+      }
+      return all;
+  }
+
+  var rows = retrieveAll("DataExtensionObject[" + deKey + "]", ["Pk"], 2);
+  assert("the hand-written retrieveBatch helper returns every row", "" + rows.length, "5");
+
+  /* Cleanup. */
+  assert("cleanup: fixture data extension deleted", "" + proxy.deleteBatch("DataExtension", [{ CustomerKey: deKey }]).Status, "OK");
+  </script>

@@ -1,0 +1,547 @@
+# Test scripts for /wsproxy/retrieve/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive
+# and negative.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# Every script creates its own run-labelled fixture Data Extension and
+# removes it again in the same script, so repeated runs stay clean. Paging
+# is forced with the documented retrieveOptions.BatchSize argument so the
+# probes do not need the ~2,500-row natural page size.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+parameters: |
+  <script runat="server">
+  /*
+   * Chapter: Parameters
+   *
+   * Proves:
+   *   1. retrieve is a CLR method on every WSProxy instance.
+   *   2. objectType (string) + columns (string[]) are the two REQUIRED
+   *      arguments — the 2-argument form succeeds (min_args = 2).
+   *   3. NEGATIVE — fewer than 2 arguments is rejected: the 1-argument and
+   *      the 0-argument forms throw.
+   *   4. objectType accepts the documented forms: "DataExtension",
+   *      "Subscriber" and "DataExtensionObject[CustomerKey]".
+   *   5. columns is an array of property NAMES — every requested column is
+   *      returned on the result rows.
+   *   6. filter is OPTIONAL (3rd argument) — omitting it returns every row.
+   *   7. retrieveOptions is OPTIONAL (4th argument) and { BatchSize: n }
+   *      forces paged results.
+   *   8. requestProps is OPTIONAL (5th argument) — the full 5-argument form
+   *      (max_args = 5) succeeds with { QueryAllAccounts: false }.
+   *   9. The page's runtime-verified callout, end to end, against a 6-row
+   *      Data Extension:
+   *        retrieve(obj, cols, null, { BatchSize: 2 }, { QueryAllAccounts: false })
+   *      returns a first page with Status "MoreDataAvailable",
+   *      HasMoreRows true, a RequestID and exactly 2 rows; setting
+   *      props.ContinueRequest to that RequestID and calling retrieve again
+   *      returns each next page (3 pages of 2 rows, 6 rows total); the
+   *      RequestID stays constant; the last page reports Status "OK" and
+   *      HasMoreRows false.
+   *
+   * NOT PROBED: Date / number / boolean type-acceptance counterparts.
+   * No parameter is in scope for the matrix — objectType is a SOAP type
+   * NAME (free-text string), columns is a string array, and filter /
+   * retrieveOptions / requestProps are typed `object`. None is documented
+   * as a date, a bare count/limit, or a 0/1 flag.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  Platform.Load("core", "1.1.5");
+  var proxy = new Script.Util.WSProxy();
+  var tag = "wsrP" + (new Date()).getTime();
+  var deKey = tag + "_de";
+  var objectType = "DataExtensionObject[" + deKey + "]";
+
+  /* 1. The method exists on the instance. */
+  assert("typeof proxy.retrieve is clrmethodinfo", typeof proxy.retrieve, "clrmethodinfo");
+
+  /* Fixture: a 6-row Data Extension, matching the page callout. */
+  assert("fixture data extension created", "" + proxy.createItem("DataExtension", {
+      Name: deKey,
+      CustomerKey: deKey,
+      Fields: [
+          { Name: "Pk", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true },
+          { Name: "Val", FieldType: "Number" }
+      ]
+  }).Status, "OK");
+
+  var de = DataExtension.Init(deKey);
+  for (var i = 1; i <= 6; i++) { de.Rows.Add({ Pk: "r" + i, Val: i * 10 }); }
+  assert("six fixture rows exist", "" + de.Rows.Retrieve().length, "6");
+
+  /* 2. + 4. + 5. + 6. The 2-argument form: objectType + columns only. */
+  var two = proxy.retrieve(objectType, ["Pk", "Val"]);
+  assert("the 2-argument form (objectType, columns) succeeds", "" + two.Status, "OK");
+  assert("omitting the optional filter returns every row", "" + two.Results.length, "6");
+  assert("the first requested column is returned", "" + two.Results[0].Properties[0].Name, "Pk");
+  assert("the second requested column is returned", "" + two.Results[0].Properties[1].Name, "Val");
+
+  /* 4. objectType accepts "DataExtension". */
+  var deList = proxy.retrieve("DataExtension", ["Name", "CustomerKey"], {
+      Property: "CustomerKey", SimpleOperator: "equals", Value: deKey
+  });
+  assert("objectType DataExtension is accepted", "" + deList.Status, "OK");
+  assert("the fixture DE is found by CustomerKey", "" + deList.Results.length, "1");
+
+  /* 4. objectType accepts "Subscriber". */
+  var subs = proxy.retrieve("Subscriber", ["EmailAddress", "SubscriberKey", "Status"], {
+      Property: "SubscriberKey", SimpleOperator: "equals", Value: tag + "_nobody"
+  });
+  assert("objectType Subscriber is accepted", "" + subs.Status, "OK");
+
+  /* 3. NEGATIVE — fewer than 2 arguments is rejected. */
+  assertThrows("retrieve(objectType) with no columns throws (min_args = 2)", function () { return proxy.retrieve(objectType); });
+  assertThrows("retrieve() with no arguments throws (min_args = 2)", function () { return proxy.retrieve(); });
+
+  /* 7. + 8. + 9. The full 5-argument form and the callout's paging loop. */
+  var opts = { BatchSize: 2 };
+  var props = { QueryAllAccounts: false };
+  var page = proxy.retrieve(objectType, ["Pk", "Val"], null, opts, props);
+  assert("the 5-argument form (max_args = 5) succeeds", typeof page, "object");
+  assert("callout: first page Status is MoreDataAvailable", "" + page.Status, "MoreDataAvailable");
+  assert("callout: first page HasMoreRows is true", page.HasMoreRows ? "true" : "false", "true");
+  assert("callout: first page carries a non-empty RequestID", (("" + page.RequestID).length > 0) ? "true" : "false", "true");
+  assert("callout: retrieveOptions.BatchSize caps the first page at 2 rows", "" + page.Results.length, "2");
+
+  var firstId = "" + page.RequestID;
+  var pages = 1;
+  var rowsSeen = page.Results.length;
+  var idHeldConstant = true;
+  while (page.HasMoreRows) {
+      props.ContinueRequest = page.RequestID;
+      page = proxy.retrieve(objectType, ["Pk", "Val"], null, opts, props);
+      pages = pages + 1;
+      rowsSeen = rowsSeen + page.Results.length;
+      if (("" + page.RequestID) !== firstId) { idHeldConstant = false; }
+  }
+
+  assert("callout: props.ContinueRequest paged through 3 pages of 2 rows", "" + pages, "3");
+  assert("callout: 6 rows in total across the pages", "" + rowsSeen, "6");
+  assert("callout: the RequestID stayed constant across the pages", idHeldConstant ? "true" : "false", "true");
+  assert("callout: the last page reports Status OK", "" + page.Status, "OK");
+  assert("callout: the last page reports HasMoreRows false", page.HasMoreRows ? "true" : "false", "false");
+
+  /* Cleanup. */
+  assert("cleanup: fixture data extension deleted", "" + proxy.deleteBatch("DataExtension", [{ CustomerKey: deKey }]).Status, "OK");
+  </script>
+
+filter-types: |
+  <script runat="server">
+  /*
+   * Chapter: Filter Types
+   *
+   * Proves every filter shape and every operator the chapter documents,
+   * against a 6-row fixture Data Extension (Pk = r1..r6, Val = 10..60,
+   * Opt set on r1 only):
+   *   1. SimpleFilterPart is { Property, SimpleOperator, Value }.
+   *   2. Every documented SimpleOperator works:
+   *        equals, notEquals, greaterThan, lessThan,
+   *        isNull, isNotNull, like, between, IN
+   *   3. ComplexFilterPart is
+   *        { LeftOperand, LogicalOperator, RightOperand }
+   *      and both documented LogicalOperator values work: "AND" and "OR".
+   *
+   * The `like` wildcard character is built with String.fromCharCode(37) so
+   * no literal percent sequence reaches the CloudPage AMPscript
+   * preprocessor.
+   *
+   * NOTE on isNull / isNotNull: the SimpleFilterPart shape the chapter
+   * documents has three members, and Value must be present even for these
+   * two operators. Omitting Value (or passing null) makes the SOAP call
+   * fail with "Error executing retrieve call." — an empty string satisfies
+   * it. The last two assertions prove that, so the shape stays exactly the
+   * one the chapter documents.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  Platform.Load("core", "1.1.5");
+  var proxy = new Script.Util.WSProxy();
+  var tag = "wsrF" + (new Date()).getTime();
+  var deKey = tag + "_de";
+  var objectType = "DataExtensionObject[" + deKey + "]";
+  var cols = ["Pk", "Val", "Opt"];
+
+  assert("fixture data extension created", "" + proxy.createItem("DataExtension", {
+      Name: deKey,
+      CustomerKey: deKey,
+      Fields: [
+          { Name: "Pk", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true },
+          { Name: "Val", FieldType: "Number" },
+          { Name: "Opt", FieldType: "Text", MaxLength: 50 }
+      ]
+  }).Status, "OK");
+
+  var de = DataExtension.Init(deKey);
+  for (var i = 1; i <= 6; i++) {
+      if (i === 1) { de.Rows.Add({ Pk: "r1", Val: 10, Opt: "set" }); }
+      else { de.Rows.Add({ Pk: "r" + i, Val: i * 10 }); }
+  }
+  assert("six fixture rows exist", "" + de.Rows.Retrieve().length, "6");
+
+  function count(filter) {
+      var out = "";
+      try { out = "" + proxy.retrieve(objectType, cols, filter).Results.length; }
+      catch (ex) { out = "THREW: " + ex.message; }
+      return out;
+  }
+
+  /* 1. + 2. SimpleFilterPart — every documented operator. */
+  assert("SimpleOperator equals matches one row", count({ Property: "Pk", SimpleOperator: "equals", Value: "r3" }), "1");
+  assert("SimpleOperator notEquals matches the other five rows", count({ Property: "Pk", SimpleOperator: "notEquals", Value: "r3" }), "5");
+  assert("SimpleOperator greaterThan matches the rows above the value", count({ Property: "Val", SimpleOperator: "greaterThan", Value: "30" }), "3");
+  assert("SimpleOperator lessThan matches the rows below the value", count({ Property: "Val", SimpleOperator: "lessThan", Value: "30" }), "2");
+  assert("SimpleOperator isNull matches the rows without a value", count({ Property: "Opt", SimpleOperator: "isNull", Value: "" }), "5");
+  assert("SimpleOperator isNotNull matches the row with a value", count({ Property: "Opt", SimpleOperator: "isNotNull", Value: "" }), "1");
+  assert("SimpleOperator like matches on a wildcard", count({ Property: "Pk", SimpleOperator: "like", Value: "r" + String.fromCharCode(37) }), "6");
+  assert("SimpleOperator between matches the inclusive range", count({ Property: "Val", SimpleOperator: "between", Value: ["20", "40"] }), "3");
+  assert("SimpleOperator IN matches every listed value", count({ Property: "Pk", SimpleOperator: "IN", Value: ["r1", "r2"] }), "2");
+
+  /* 3. ComplexFilterPart — AND and OR. */
+  assert("ComplexFilterPart with LogicalOperator AND narrows the result", count({
+      LeftOperand: { Property: "Val", SimpleOperator: "greaterThan", Value: "20" },
+      LogicalOperator: "AND",
+      RightOperand: { Property: "Val", SimpleOperator: "lessThan", Value: "50" }
+  }), "2");
+  assert("ComplexFilterPart with LogicalOperator OR widens the result", count({
+      LeftOperand: { Property: "Pk", SimpleOperator: "equals", Value: "r1" },
+      LogicalOperator: "OR",
+      RightOperand: { Property: "Pk", SimpleOperator: "equals", Value: "r6" }
+  }), "2");
+
+  /* The documented three-member SimpleFilterPart shape applies to isNull /
+     isNotNull too — Value must be present, an empty string is enough. */
+  assert("isNull without a Value member is rejected", count({ Property: "Opt", SimpleOperator: "isNull" }), "THREW: Error executing retrieve call.");
+  assert("isNotNull without a Value member is rejected", count({ Property: "Opt", SimpleOperator: "isNotNull" }), "THREW: Error executing retrieve call.");
+
+  /* Cleanup. */
+  assert("cleanup: fixture data extension deleted", "" + proxy.deleteBatch("DataExtension", [{ CustomerKey: deKey }]).Status, "OK");
+  </script>
+
+return-value: |
+  <script runat="server">
+  /*
+   * Chapter: Return Value
+   *
+   * Proves the documented return shape, field by field:
+   *   1. retrieve returns an OBJECT.
+   *   2. Status is a STRING and is "OK" on an unpaged / final result, and
+   *      "MoreDataAvailable" while a paged result set still has more pages.
+   *   3. RequestID is a STRING and carries into getNextBatch AND into
+   *      props.ContinueRequest — both fetch the next page.
+   *   4. Results is an ARRAY of result objects.
+   *   5. HasMoreRows is a BOOLEAN — false when no more rows exist and true
+   *      when more rows exist.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  Platform.Load("core", "1.1.5");
+  var proxy = new Script.Util.WSProxy();
+  var tag = "wsrR" + (new Date()).getTime();
+  var deKey = tag + "_de";
+  var objectType = "DataExtensionObject[" + deKey + "]";
+
+  assert("fixture data extension created", "" + proxy.createItem("DataExtension", {
+      Name: deKey,
+      CustomerKey: deKey,
+      Fields: [{ Name: "Pk", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true }]
+  }).Status, "OK");
+
+  var de = DataExtension.Init(deKey);
+  for (var i = 1; i <= 6; i++) { de.Rows.Add({ Pk: "r" + i }); }
+  assert("six fixture rows exist", "" + de.Rows.Retrieve().length, "6");
+
+  /* 1., 2., 4., 5. — the unpaged result. */
+  var all = proxy.retrieve(objectType, ["Pk"]);
+  assert("typeof the retrieve result is object", typeof all, "object");
+  assert("typeof Status is string", typeof all.Status, "string");
+  assert("Status is OK when the whole result set fits in one page", "" + all.Status, "OK");
+  assert("typeof Results is object", typeof all.Results, "object");
+  assert("Results is an array of result objects", "" + all.Results.length, "6");
+  assert("typeof a Results entry is object", typeof all.Results[0], "object");
+  assert("typeof HasMoreRows is boolean", typeof all.HasMoreRows, "boolean");
+  assert("HasMoreRows is false when no more rows exist", all.HasMoreRows ? "true" : "false", "false");
+
+  /* 2., 3., 5. — the paged result. */
+  var p1 = proxy.retrieve(objectType, ["Pk"], null, { BatchSize: 2 }, { QueryAllAccounts: false });
+  assert("Status is MoreDataAvailable while more pages remain", "" + p1.Status, "MoreDataAvailable");
+  assert("HasMoreRows is true when more rows exist", p1.HasMoreRows ? "true" : "false", "true");
+  assert("typeof RequestID is string", typeof p1.RequestID, "string");
+  assert("RequestID is not empty", (("" + p1.RequestID).length > 0) ? "true" : "false", "true");
+
+  /* 3. RequestID carries into getNextBatch. */
+  var viaBatch = proxy.getNextBatch(objectType, p1.RequestID);
+  assert("the RequestID carried into getNextBatch returns the next page", (viaBatch.Results.length > 0) ? "true" : "false", "true");
+
+  /* 3. RequestID carries into props.ContinueRequest. */
+  var p2 = proxy.retrieve(objectType, ["Pk"], null, { BatchSize: 2 }, { QueryAllAccounts: false });
+  var viaContinue = proxy.retrieve(objectType, ["Pk"], null, { BatchSize: 2 }, { QueryAllAccounts: false, ContinueRequest: p2.RequestID });
+  assert("the RequestID carried into props.ContinueRequest returns the next page", "" + viaContinue.Results.length, "2");
+
+  /* Cleanup. */
+  assert("cleanup: fixture data extension deleted", "" + proxy.deleteBatch("DataExtension", [{ CustomerKey: deKey }]).Status, "OK");
+  </script>
+
+examples: |
+  <script runat="server">
+  /*
+   * Chapter: Examples
+   *
+   * Runs every example on the page, verbatim in structure, and proves the
+   * claim each one makes:
+   *   1. "Retrieve all Data Extensions" — retrieve("DataExtension",
+   *      ["Name", "CustomerKey", "Description"]) returns rows whose Name and
+   *      CustomerKey are read directly off the result object.
+   *   2. "Retrieve with filter" — a SimpleFilterPart on
+   *      TriggeredSendDefinition TriggeredSendStatus equals "Active" is
+   *      accepted. NOTE: "Status" is NOT a retrievable/filterable property
+   *      of TriggeredSendDefinition — the SOAP name is
+   *      TriggeredSendStatus. The last two assertions prove that.
+   *   3. "Retrieve DE rows" — "DataExtensionObject[MyDE_CustomerKey]" with a
+   *      greaterThan filter on a numeric column returns the matching rows.
+   *   4. "Retrieve a subscriber" — Subscriber with a SubscriberKey equals
+   *      filter is accepted, and result.Results[0] is the matched
+   *      subscriber. The key comes from an unfiltered single-row retrieve
+   *      rather than a created fixture: the example only reads, and this
+   *      BU's Subscriber list is not writable from a CloudPage.
+   *   5. "Retrieve across all business units" — the 5-argument form with a
+   *      null filter, a null retrieveOptions and { QueryAllAccounts: true }
+   *      is accepted and returns rows. The page's warning callout is proven
+   *      too: an EMPTY filter object {} is rejected with "Error executing
+   *      retrieve call." — pass null, not {}.
+   *   6. "Manual pagination with getNextBatch" — the while (result.HasMoreRows)
+   *      loop carrying result.RequestID into proxy.getNextBatch terminates
+   *      and visits every row.
+   *   7. "Pagination with BatchSize and ContinueRequest" — the loop that
+   *      carries props.ContinueRequest = data.RequestID reaches a last page
+   *      with Status "OK" and HasMoreRows false, and BatchSize 500 (within
+   *      1..2500) is accepted.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function guard(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ex.message; }
+  }
+
+  Platform.Load("core", "1.1.5");
+  var proxy = new Script.Util.WSProxy();
+  var tag = "wsrX" + (new Date()).getTime();
+  var deKey = tag + "_de";
+
+  assert("fixture data extension created", "" + proxy.createItem("DataExtension", {
+      Name: deKey,
+      CustomerKey: deKey,
+      Fields: [
+          { Name: "Pk", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true },
+          { Name: "Score", FieldType: "Number" }
+      ]
+  }).Status, "OK");
+
+  var de = DataExtension.Init(deKey);
+  for (var i = 1; i <= 6; i++) { de.Rows.Add({ Pk: "r" + i, Score: i * 20 }); }
+  assert("six fixture rows exist", "" + de.Rows.Retrieve().length, "6");
+
+  /* 1. Retrieve all Data Extensions. */
+  var deResult = proxy.retrieve("DataExtension", ["Name", "CustomerKey", "Description"], {
+      Property: "CustomerKey", SimpleOperator: "equals", Value: deKey
+  });
+  assert("example 1: retrieving DataExtension succeeds", "" + deResult.Status, "OK");
+  assert("example 1: Name is read directly off the result object", "" + deResult.Results[0].Name, deKey);
+  assert("example 1: CustomerKey is read directly off the result object", "" + deResult.Results[0].CustomerKey, deKey);
+
+  /* 2. Retrieve with filter. */
+  var tsd = proxy.retrieve("TriggeredSendDefinition", ["Name", "CustomerKey", "TriggeredSendStatus"], {
+      Property: "TriggeredSendStatus", SimpleOperator: "equals", Value: "Active"
+  });
+  assert("example 2: a filtered TriggeredSendDefinition retrieve succeeds", "" + tsd.Status, "OK");
+  assert("example 2: TriggeredSendDefinition has no retrievable Status property", guard(function () {
+      return proxy.retrieve("TriggeredSendDefinition", ["Name", "CustomerKey", "Status"]).Status;
+  }), "Error: The Request Property(s) Status do not match with the fields of TriggeredSendDefinition retrieve");
+  assert("example 2: filtering TriggeredSendDefinition on Status is rejected", guard(function () {
+      return proxy.retrieve("TriggeredSendDefinition", ["Name", "CustomerKey"], { Property: "Status", SimpleOperator: "equals", Value: "Active" }).Status;
+  }), "Error: The Filter Property 'Status' is not a retrievable property.");
+
+  /* 3. Retrieve DE rows with a greaterThan filter. */
+  var rows = proxy.retrieve("DataExtensionObject[" + deKey + "]", ["Pk", "Score"], {
+      Property: "Score", SimpleOperator: "greaterThan", Value: "80"
+  });
+  assert("example 3: the DataExtensionObject greaterThan filter succeeds", "" + rows.Status, "OK");
+  assert("example 3: only the rows above the threshold are returned", "" + rows.Results.length, "2");
+
+  /* 4. Retrieve a subscriber. Read an existing subscriber rather than
+     creating a fixture — this BU's Subscriber list is not writable from a
+     CloudPage, and the example only reads. */
+  var anySub = proxy.retrieve("Subscriber", ["EmailAddress", "SubscriberKey", "Status"], null, { BatchSize: 1 }, { QueryAllAccounts: false });
+  assert("example 4: a Subscriber retrieve returns a row", (anySub.Results.length > 0) ? "true" : "false", "true");
+  var subKey = "" + anySub.Results[0].SubscriberKey;
+  var subResult = proxy.retrieve("Subscriber", ["EmailAddress", "SubscriberKey", "Status"], {
+      Property: "SubscriberKey", SimpleOperator: "equals", Value: subKey
+  });
+  assert("example 4: the filtered Subscriber retrieve succeeds", "" + subResult.Status, "OK");
+  assert("example 4: Results[0] is the matched subscriber", "" + subResult.Results[0].SubscriberKey, subKey);
+
+  /* 5. Retrieve across all business units. */
+  var allBu = proxy.retrieve("DataExtension", ["Name", "CustomerKey"], null, null, { QueryAllAccounts: true });
+  assert("example 5: a null filter with QueryAllAccounts true is accepted", "" + allBu.Status, "OK");
+  assert("example 5: the cross-business-unit retrieve returns rows", (allBu.Results.length > 0) ? "true" : "false", "true");
+  assert("example 5: an EMPTY filter object is rejected - pass null instead", guard(function () {
+      return proxy.retrieve("DataExtension", ["Name", "CustomerKey"], {}, null, { QueryAllAccounts: true }).Status;
+  }), "THREW: Error executing retrieve call.");
+
+  /* 6. Manual pagination with getNextBatch. */
+  var objectType = "DataExtensionObject[" + deKey + "]";
+  var result = proxy.retrieve(objectType, ["Pk"], null, { BatchSize: 2 }, { QueryAllAccounts: false });
+  var seen = result.Results.length;
+  while (result.HasMoreRows) {
+      result = proxy.getNextBatch(objectType, result.RequestID);
+      seen = seen + result.Results.length;
+  }
+  assert("example 6: the getNextBatch loop terminated", result.HasMoreRows ? "true" : "false", "false");
+  assert("example 6: the getNextBatch loop visited every row", "" + seen, "6");
+
+  /* 7. Pagination with BatchSize and ContinueRequest. */
+  var opts = { BatchSize: 500 };
+  var props = { QueryAllAccounts: false };
+  var data = proxy.retrieve(objectType, ["Pk"], null, opts, props);
+  assert("example 7: BatchSize 500 is within the accepted 1..2500 range", "" + data.Status, "OK");
+
+  opts = { BatchSize: 2 };
+  props = { QueryAllAccounts: false };
+  data = proxy.retrieve(objectType, ["Pk"], null, opts, props);
+  assert("example 7: a paged first page reports MoreDataAvailable", "" + data.Status, "MoreDataAvailable");
+  assert("example 7: a paged first page reports HasMoreRows true", data.HasMoreRows ? "true" : "false", "true");
+  var total = data.Results.length;
+  while (data.HasMoreRows) {
+      props.ContinueRequest = data.RequestID;
+      data = proxy.retrieve(objectType, ["Pk"], null, opts, props);
+      total = total + data.Results.length;
+  }
+  assert("example 7: the last page reports Status OK", "" + data.Status, "OK");
+  assert("example 7: the last page reports HasMoreRows false", data.HasMoreRows ? "true" : "false", "false");
+  assert("example 7: the ContinueRequest loop visited every row", "" + total, "6");
+
+  /* Cleanup. */
+  assert("cleanup: fixture data extension deleted", "" + proxy.deleteBatch("DataExtension", [{ CustomerKey: deKey }]).Status, "OK");
+  </script>
+
+notes: |
+  <script runat="server">
+  /*
+   * Chapter: Notes
+   *
+   * Proves every claim in the Notes list:
+   *   1. When HasMoreRows is true, BOTH continuation routes fetch subsequent
+   *      pages: getNextBatch with the RequestID, and props.ContinueRequest
+   *      set to the RequestID followed by another retrieve.
+   *   2. { BatchSize: n } passed as the 4th (retrieveOptions) argument forces
+   *      a smaller page size — BatchSize 2 returns exactly 2 rows on the
+   *      first page of a 6-row result set.
+   *   3. Values LARGER than 2,500 are ignored — BatchSize 5000 returns the
+   *      whole 6-row result set in one unpaged page (Status "OK",
+   *      HasMoreRows false), exactly like an unpaged retrieve.
+   *   4. A paged retrieve returns Status "MoreDataAvailable" until the final
+   *      page, which returns Status "OK".
+   *   5. The DataExtensionObject[CustomerKey] syntax retrieves rows from that
+   *      specific Data Extension — the CustomerKey is the DE's external key,
+   *      and a bare "DataExtensionObject" without the bracketed key is NOT
+   *      the same call.
+   *
+   * NOT ASSERTABLE HERE: the "returns up to ~2,500 rows per call by default"
+   * default page size. Proving it requires a fixture larger than 2,500 rows,
+   * which is far beyond what a page test script can seed and delete inside a
+   * single CloudPage request. The claim is already recorded from a 2,600-row
+   * fixture in the getNextBatch verification.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  Platform.Load("core", "1.1.5");
+  var proxy = new Script.Util.WSProxy();
+  var tag = "wsrN" + (new Date()).getTime();
+  var deKey = tag + "_de";
+  var objectType = "DataExtensionObject[" + deKey + "]";
+
+  assert("fixture data extension created", "" + proxy.createItem("DataExtension", {
+      Name: deKey,
+      CustomerKey: deKey,
+      Fields: [{ Name: "Pk", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true }]
+  }).Status, "OK");
+
+  var de = DataExtension.Init(deKey);
+  for (var i = 1; i <= 6; i++) { de.Rows.Add({ Pk: "r" + i }); }
+  assert("six fixture rows exist", "" + de.Rows.Retrieve().length, "6");
+
+  /* 2. + 4. BatchSize forces a smaller page. */
+  var p1 = proxy.retrieve(objectType, ["Pk"], null, { BatchSize: 2 }, { QueryAllAccounts: false });
+  assert("BatchSize 2 forces a first page of exactly 2 rows", "" + p1.Results.length, "2");
+  assert("a paged retrieve reports MoreDataAvailable before the final page", "" + p1.Status, "MoreDataAvailable");
+  assert("a paged retrieve reports HasMoreRows true before the final page", p1.HasMoreRows ? "true" : "false", "true");
+
+  /* 1. Continuation route A — getNextBatch with the RequestID. */
+  var viaBatch = proxy.getNextBatch(objectType, p1.RequestID);
+  assert("continuation route A: getNextBatch with the RequestID returns the next page", (viaBatch.Results.length > 0) ? "true" : "false", "true");
+
+  /* 1. + 4. Continuation route B — props.ContinueRequest, looped to the end. */
+  var opts = { BatchSize: 2 };
+  var props = { QueryAllAccounts: false };
+  var data = proxy.retrieve(objectType, ["Pk"], null, opts, props);
+  var total = data.Results.length;
+  while (data.HasMoreRows) {
+      props.ContinueRequest = data.RequestID;
+      data = proxy.retrieve(objectType, ["Pk"], null, opts, props);
+      total = total + data.Results.length;
+  }
+  assert("continuation route B: props.ContinueRequest returns every remaining row", "" + total, "6");
+  assert("the final page of a paged retrieve reports Status OK", "" + data.Status, "OK");
+  assert("the final page of a paged retrieve reports HasMoreRows false", data.HasMoreRows ? "true" : "false", "false");
+
+  /* 3. Values larger than 2,500 are ignored. */
+  var big = proxy.retrieve(objectType, ["Pk"], null, { BatchSize: 5000 }, { QueryAllAccounts: false });
+  assert("BatchSize above 2500 is ignored - the whole result set is returned", "" + big.Results.length, "6");
+  assert("BatchSize above 2500 is ignored - Status is OK", "" + big.Status, "OK");
+  assert("BatchSize above 2500 is ignored - HasMoreRows is false", big.HasMoreRows ? "true" : "false", "false");
+
+  /* 5. The DataExtensionObject[CustomerKey] syntax targets that DE. */
+  var scoped = proxy.retrieve(objectType, ["Pk"]);
+  assert("DataExtensionObject[CustomerKey] returns the rows of that data extension", "" + scoped.Results.length, "6");
+  assert("DataExtensionObject[CustomerKey] returns rows, not data extensions", "" + scoped.Results[0].Properties[0].Name, "Pk");
+
+  /* Cleanup. */
+  assert("cleanup: fixture data extension deleted", "" + proxy.deleteBatch("DataExtension", [{ CustomerKey: deKey }]).Status, "OK");
+  </script>

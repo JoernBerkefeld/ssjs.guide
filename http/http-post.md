@@ -8,6 +8,7 @@ redirect_from:
   - /http/http-post/
 description: Core library HTTP POST — posts a payload and returns an object with StatusCode and Response. Requires Platform.Load.
 verification: verified
+test_scripts: complete
 differs_from_docs: true
 ---
 
@@ -21,6 +22,8 @@ differs_from_docs: true
 var response = HTTP.Post(url, contentType, payload[, headerNames, headerValues]);
 ```
 
+{% include test-script.html bundle="http--http-post" chapter="syntax" %}
+
 ## Parameters
 
 | Name | Type | Required | Description |
@@ -33,6 +36,10 @@ var response = HTTP.Post(url, contentType, payload[, headerNames, headerValues])
 
 {% include differs-from-docs.html note="The official docs list `headerNames` and `headerValues` as required, but the runtime accepts a 3-argument call (`url`, `contentType`, `payload`); the two header arrays are optional and only need to be paired when supplied." %}
 
+{% include test-script.html bundle="http--http-post" chapter="parameters-optional-headers" label="Show test script — optional header arrays" %}
+
+{% include test-script.html bundle="http--http-post" chapter="parameters" %}
+
 ## Return value
 
 Returns an **object** (not a bare string) with these fields:
@@ -44,7 +51,11 @@ Returns an **object** (not a bare string) with these fields:
 
 {% include differs-from-docs.html note="The official docs type `StatusCode` as a string and `Response` as a single string, but the runtime returns `StatusCode` as a number and `Response` as an array whose first element (`Response[0]`) holds the body." %}
 
+{% include test-script.html bundle="http--http-post" chapter="return-value-shape" label="Show test script — StatusCode/Response runtime shape" %}
+
 Note that `HTTP.Post` uses different field names than [`HTTP.Get`](/http/get/), which returns `{ Status, Content }`.
+
+{% include test-script.html bundle="http--http-post" chapter="return-value" %}
 
 ## Example
 
@@ -69,6 +80,8 @@ if (response.StatusCode == 200) {
     var result = Platform.Function.ParseJSON(String(response.Response[0]));
 }
 ```
+
+{% include test-script.html bundle="http--http-post" chapter="example" %}
 
 ## See Also
 

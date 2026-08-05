@@ -13,6 +13,7 @@ min_args: 1
 max_args: 1
 verification: verified
 differs_from_docs: true
+test_scripts: complete
 ---
 
 ## Parameters
@@ -25,12 +26,16 @@ The `options` object keys:
 
 | Key | Type | Required | Description |
 |------|------|----------|-------------|
-| `ID` | number | No* | The MID (Member ID) of the target Business Unit. |
+| `ID` | number \| string | No* | The MID (Member ID) of the target Business Unit. A numeric string targets the same MID as the equivalent number. |
 | `UserID` | number | No | Internal ID of a user to impersonate. Rarely used. |
 
 *At least one of `ID` / `UserID` should be supplied.
 
+{% include test-script.html bundle="wsproxy--setclientid" chapter="parameters" %}
+
 {% include differs-from-docs.html note="The official docs type `setClientId` as returning `void`, but at runtime it returns a genuine `null` (`=== null`), not `undefined`." %}
+
+{% include test-script.html bundle="wsproxy--setclientid" chapter="null-return" label="Show test script — null return, not void" %}
 
 ## Examples
 
@@ -64,15 +69,21 @@ for (var i = 0; i < businessUnits.length; i++) {
 }
 ```
 
+{% include test-script.html bundle="wsproxy--setclientid" chapter="examples" %}
+
 ## Return Value
 
 `null` — the runtime returns a genuine `null` (proven `=== null`), even though the official docs describe it as `void`.
 
+{% include test-script.html bundle="wsproxy--setclientid" chapter="return-value" %}
+
 ## Notes
 
-{% include callout.html type="warning" content="`setClientId` can only be used from a **parent Business Unit** or **Enterprise** account. Child BU scripts cannot use `setClientId` to access other BUs." %}
+{% include callout.html type="warning" content="`setClientId` itself is accepted from **any** Business Unit and always returns `null` — the call is never rejected. Whether the **subsequent** operation succeeds depends on the executing Business Unit: from a **parent Business Unit**, operations against the account's other Business Units succeed; from a **child Business Unit**, the only MID that works is its **own**. A child BU cannot reach its parent, and it cannot reach a sibling child BU either — both were runtime-tested with real MIDs and both are denied. Every denial returns a SOAP status naming the executing MID and the requested one (`MemberID &lt;executing&gt; does not have access to ClientID: ID[&lt;target&gt;]`). So cross-BU work with `setClientId` has to run from a parent Business Unit." %}
 
 Find the MID for a BU in: Setup → Account Settings → Business Units → (select BU) → MID column.
+
+{% include test-script.html bundle="wsproxy--setclientid" chapter="notes" %}
 
 ## See Also
 

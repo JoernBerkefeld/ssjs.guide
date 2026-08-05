@@ -1,0 +1,293 @@
+# Test scripts for /wsproxy/execute/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive
+# and negative.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# Every script creates its own run-labelled subscriber fixture and removes it
+# again in the same script, so repeated runs stay clean.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+parameters: |
+  <script runat="server">
+  /*
+   * Chapter: Parameters
+   *
+   * Proves:
+   *   1. execute is a CLR method on every WSProxy instance.
+   *   2. parameters (object[] of { Name, Value }) + requestName (string) are
+   *      BOTH required and the 2-argument form succeeds (min_args = 2).
+   *   3. The FLAT array of { Name, Value } objects is the accepted shape —
+   *      no nested wrapper is involved.
+   *   4. NEGATIVE — any arity other than 2 is rejected: the 0-, 1- and
+   *      3-argument forms all throw (min_args = max_args = 2).
+   *   5. Type acceptance inside the parameter objects: a numeric Value works
+   *      both as a number (0, as in the documented example) and as the
+   *      equivalent numeric string ("0").
+   *
+   * NOT PROBED: the Date / number / boolean type-acceptance matrix does not
+   * apply to the two documented parameters — parameters is an object[] and
+   * requestName is a SOAP request NAME (free-text string), neither of which
+   * is a date, a count/limit or a 0/1 flag.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+  var tag = "exP" + (new Date()).getTime();
+  var mail = tag + "@joernberkefeld.com";
+
+  /* 1. The method exists on the instance. */
+  assert("typeof proxy.execute is clrmethodinfo", typeof proxy.execute, "clrmethodinfo");
+
+  /* Fixture: a subscriber the unsub event can be logged against. */
+  var made = proxy.createItem("Subscriber", { EmailAddress: mail, SubscriberKey: tag, Status: "Active" });
+  assert("fixture subscriber created", "" + made.Status, "OK");
+
+  /* 3. The documented FLAT array of { Name, Value } objects. */
+  var props = [
+      { Name: "SubscriberKey", Value: tag },
+      { Name: "EmailAddress", Value: mail },
+      { Name: "JobID", Value: 0 },
+      { Name: "ListID", Value: 0 },
+      { Name: "BatchID", Value: 0 }
+  ];
+
+  /* 2. Documented form: execute(parameters, requestName). */
+  var res = proxy.execute(props, "LogUnsubEvent");
+  assert("2-argument form (parameters, requestName) succeeds", "" + res.Status, "OK");
+
+  /* 5. Numeric Value accepted as a numeric STRING as well as a number. */
+  var propsStr = [
+      { Name: "SubscriberKey", Value: tag },
+      { Name: "EmailAddress", Value: mail },
+      { Name: "JobID", Value: "0" },
+      { Name: "ListID", Value: "0" },
+      { Name: "BatchID", Value: "0" }
+  ];
+  var resStr = proxy.execute(propsStr, "LogUnsubEvent");
+  assert("numeric Value also accepted as a numeric string", "" + resStr.Status, "OK");
+
+  /* 4. NEGATIVE — only the 2-argument form is accepted. */
+  assertThrows("execute() with no arguments throws (min_args = 2)", function () { return proxy.execute(); });
+  assertThrows("execute(parameters) without requestName throws (min_args = 2)", function () { return proxy.execute(props); });
+  assertThrows("execute(parameters, requestName, extra) throws (max_args = 2)", function () { return proxy.execute(props, "LogUnsubEvent", {}); });
+
+  /* Cleanup. */
+  var gone = proxy.deleteItem("Subscriber", { SubscriberKey: tag });
+  assert("cleanup: fixture subscriber removed", "" + gone.Status, "OK");
+  </script>
+
+return-value: |
+  <script runat="server">
+  /*
+   * Chapter: Return Value
+   *
+   * Proves:
+   *   1. execute returns an OBJECT.
+   *   2. Status is a string and is "OK" for a successful Execute call.
+   *   3. RequestID is a non-empty string (the SOAP request GUID).
+   *   4. Results is an array of per-item ExecuteResponse results — one entry
+   *      for the single logged event.
+   *   5. There is NO top-level StatusMessage.
+   *   6. Each Results entry carries StatusCode, StatusMessage, OrdinalID,
+   *      Results and ErrorCode, and StatusCode is "OK" on success.
+   *   7. Status is not OK-only: an unknown requestName returns Status
+   *      "Error" with StatusCode "Error" instead of throwing.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+  var tag = "exR" + (new Date()).getTime();
+  var mail = tag + "@joernberkefeld.com";
+
+  var made = proxy.createItem("Subscriber", { EmailAddress: mail, SubscriberKey: tag, Status: "Active" });
+  assert("fixture subscriber created", "" + made.Status, "OK");
+
+  var props = [
+      { Name: "SubscriberKey", Value: tag },
+      { Name: "EmailAddress", Value: mail },
+      { Name: "JobID", Value: 0 },
+      { Name: "ListID", Value: 0 },
+      { Name: "BatchID", Value: 0 }
+  ];
+  var res = proxy.execute(props, "LogUnsubEvent");
+
+  /* 1. + 2. */
+  assert("typeof result is object", typeof res, "object");
+  assert("typeof result.Status is string", typeof res.Status, "string");
+  assert("result.Status is OK", "" + res.Status, "OK");
+
+  /* 3. */
+  assert("typeof result.RequestID is string", typeof res.RequestID, "string");
+  assert("result.RequestID is not empty", ("" + res.RequestID).length > 0 ? "true" : "false", "true");
+
+  /* 4. */
+  assert("typeof result.Results is object", typeof res.Results, "object");
+  assert("result.Results carries one per-item result", "" + res.Results.length, "1");
+
+  /* 5. */
+  assert("there is NO top-level StatusMessage", typeof res.StatusMessage, "undefined");
+
+  /* 6. */
+  assert("Results[0].StatusCode is OK", "" + res.Results[0].StatusCode, "OK");
+  assert("typeof Results[0].StatusMessage is string", typeof res.Results[0].StatusMessage, "string");
+  assert("Results[0].StatusMessage explains the outcome", "" + res.Results[0].StatusMessage, "Event posted");
+  assert("typeof Results[0].OrdinalID is number", typeof res.Results[0].OrdinalID, "number");
+  assert("Results[0].OrdinalID is 0 for the single item", "" + res.Results[0].OrdinalID, "0");
+  assert("Results[0].Results is present", typeof res.Results[0].Results, "object");
+  assert("Results[0].ErrorCode is 0 on success", "" + res.Results[0].ErrorCode, "0");
+
+  /* 7. Failure path — Status is not OK-only. */
+  var bad = proxy.execute(props, "NoSuchRequest");
+  assert("unknown requestName returns an object, it does not throw", typeof bad, "object");
+  assert("failure result.Status is Error", "" + bad.Status, "Error");
+  assert("failure Results[0].StatusCode is Error", "" + bad.Results[0].StatusCode, "Error");
+  assert("failure StatusMessage names the missing handler", ("" + bad.Results[0].StatusMessage).indexOf("Unable to find a handler") === 0 ? "true" : "false", "true");
+
+  /* Cleanup. */
+  var gone = proxy.deleteItem("Subscriber", { SubscriberKey: tag });
+  assert("cleanup: fixture subscriber removed", "" + gone.Status, "OK");
+  </script>
+
+examples: |
+  <script runat="server">
+  /*
+   * Chapter: Examples — Log an unsubscribe event
+   *
+   * Proves the page example verbatim:
+   *   1. new Script.Util.WSProxy() + an array of { Name, Value } objects for
+   *      SubscriberKey, EmailAddress, JobID, ListID and BatchID.
+   *   2. prox.execute(props, "LogUnsubEvent") returns Status "OK" — the value
+   *      the example writes out.
+   *   3. The event really was posted: Results[0].StatusCode is "OK" and
+   *      Results[0].StatusMessage is "Event posted".
+   *   4. The example's subscriber is untouched as a record — it is still
+   *      retrievable after the call.
+   *
+   * NOT ASSERTED: a change of the All Subscribers Status to "Unsubscribed".
+   * The page makes no such claim, and with JobID/ListID/BatchID 0 the logged
+   * event is recorded without flipping the subscriber's status in this run.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+  var tag = "exE" + (new Date()).getTime();
+  var mail = tag + "@joernberkefeld.com";
+
+  var made = proxy.createItem("Subscriber", { EmailAddress: mail, SubscriberKey: tag, Status: "Active" });
+  assert("fixture subscriber created as Active", "" + made.Status, "OK");
+
+  /* 1. + 2. The documented example. */
+  var prox = new Script.Util.WSProxy();
+  var props = [
+      { Name: "SubscriberKey", Value: tag },
+      { Name: "EmailAddress", Value: mail },
+      { Name: "JobID", Value: 0 },
+      { Name: "ListID", Value: 0 },
+      { Name: "BatchID", Value: 0 }
+  ];
+  var result = prox.execute(props, "LogUnsubEvent");
+  assert("example: result.Status is OK", "" + result.Status, "OK");
+
+  /* 3. */
+  assert("example: Results[0].StatusCode is OK", "" + result.Results[0].StatusCode, "OK");
+  assert("example: Results[0].StatusMessage is Event posted", "" + result.Results[0].StatusMessage, "Event posted");
+
+  /* 4. The subscriber record is still there after the Execute call. */
+  var back = proxy.retrieve("Subscriber", ["SubscriberKey", "Status"], {
+      Property: "SubscriberKey", SimpleOperator: "equals", Value: tag
+  });
+  assert("example read-back: the subscriber still exists", "" + back.Results.length, "1");
+
+  /* Cleanup. */
+  var gone = proxy.deleteItem("Subscriber", { SubscriberKey: tag });
+  assert("cleanup: fixture subscriber removed", "" + gone.Status, "OK");
+  </script>
+
+notes: |
+  <script runat="server">
+  /*
+   * Chapter: Notes
+   *
+   * Proves:
+   *   1. The first argument must be an ARRAY of Name/Value objects — passing
+   *      a plain string as the first argument raises a runtime error.
+   *   2. The Execute call is validated server-side: an unknown requestName
+   *      returns a result with Status "Error" rather than throwing, with a
+   *      diagnostic StatusMessage naming the missing handler.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+  var tag = "exN" + (new Date()).getTime();
+  var mail = tag + "@joernberkefeld.com";
+
+  var made = proxy.createItem("Subscriber", { EmailAddress: mail, SubscriberKey: tag, Status: "Active" });
+  assert("fixture subscriber created", "" + made.Status, "OK");
+
+  var props = [
+      { Name: "SubscriberKey", Value: tag },
+      { Name: "EmailAddress", Value: mail },
+      { Name: "JobID", Value: 0 },
+      { Name: "ListID", Value: 0 },
+      { Name: "BatchID", Value: 0 }
+  ];
+
+  /* 1. A plain string as the first argument is a runtime error, NOT an
+   *    object-type string as with createItem/deleteItem. */
+  assertThrows("a plain string as the first argument raises a runtime error", function () {
+      return proxy.execute("LogUnsubEvent", "LogUnsubEvent");
+  });
+
+  /* 2. An unknown requestName is rejected server-side, not by throwing. */
+  var bad = proxy.execute(props, "NoSuchRequest");
+  assert("unknown requestName does NOT throw - it returns an object", typeof bad, "object");
+  assert("unknown requestName returns Status Error", "" + bad.Status, "Error");
+  assert("unknown requestName: Results[0].StatusCode is Error", "" + bad.Results[0].StatusCode, "Error");
+  assert("unknown requestName: StatusMessage reports no handler", ("" + bad.Results[0].StatusMessage).indexOf("Unable to find a handler") === 0 ? "true" : "false", "true");
+
+  /* A valid requestName still succeeds in the same request. */
+  var good = proxy.execute(props, "LogUnsubEvent");
+  assert("a valid requestName still returns Status OK", "" + good.Status, "OK");
+
+  /* Cleanup. */
+  var gone = proxy.deleteItem("Subscriber", { SubscriberKey: tag });
+  assert("cleanup: fixture subscriber removed", "" + gone.Status, "OK");
+  </script>

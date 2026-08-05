@@ -1,0 +1,199 @@
+# Test scripts for /wsproxy/constructor/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive
+# and negative.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+examples: |
+  <script runat="server">
+  /*
+   * Chapter: Examples — new Script.Util.WSProxy()
+   *
+   * Proves:
+   *   1. Script.Util.WSProxy is a CLR constructor (typeof "clr").
+   *   2. new Script.Util.WSProxy() takes NO arguments (min_args 0 / max_args 0)
+   *      and yields a usable instance (typeof "clr").
+   *   3. The instance exposes the documented SOAP methods as CLR methods.
+   *   4. The proxy authenticates itself: retrieve("DataExtension", [...])
+   *      succeeds with Status "OK" without any credential being supplied.
+   *   5. The documented return shape: Status, Results (array), HasMoreRows.
+   *   6. NEGATIVE — passing an argument to the constructor throws, confirming
+   *      max_args = 0.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. The constructor itself. */
+  assert("typeof Script.Util.WSProxy is clr", typeof Script.Util.WSProxy, "clr");
+
+  /* 2. No arguments required — the documented call form. */
+  var proxy = new Script.Util.WSProxy();
+  assert("typeof new Script.Util.WSProxy() is clr", typeof proxy, "clr");
+
+  /* 3. The instance carries the documented SOAP methods. */
+  assert("typeof proxy.retrieve is clrmethodinfo", typeof proxy.retrieve, "clrmethodinfo");
+  assert("typeof proxy.setClientId is clrmethodinfo", typeof proxy.setClientId, "clrmethodinfo");
+  assert("typeof proxy.createItem is clrmethodinfo", typeof proxy.createItem, "clrmethodinfo");
+
+  /* 4. + 5. The page example runs and returns the documented shape.
+   *         No credentials were passed anywhere: the proxy authenticates
+   *         itself with the executing account. */
+  var result = proxy.retrieve("DataExtension", ["Name", "CustomerKey"]);
+  assert("example retrieve returns Status OK", "" + result.Status, "OK");
+  assert("typeof result.Results is object", typeof result.Results, "object");
+  assert("result.Results is array-like (length is a number)", typeof result.Results.length, "number");
+  assert("result.Results is not empty", (result.Results.length > 0) ? "true" : "false", "true");
+  assert("requested column Name is a string", typeof result.Results[0].Name, "string");
+  assert("requested column CustomerKey is a string", typeof result.Results[0].CustomerKey, "string");
+  assert("result.HasMoreRows is false for a small result set", (result.HasMoreRows === false) ? "true" : "false", "true");
+
+  /* 6. NEGATIVE — the constructor accepts no arguments (max_args = 0). */
+  assertThrows("new Script.Util.WSProxy(arg) throws (max_args = 0)", function () { return new Script.Util.WSProxy({ ID: 1 }); });
+  </script>
+
+no-platform-load-required: |
+  <script runat="server">
+  /*
+   * Chapter: No Platform.Load Required
+   *
+   * This script deliberately contains NO Platform.Load("core", ...) call.
+   *
+   * Proves:
+   *   1. Without Platform.Load, the Core Library bare names are NOT bound
+   *      (typeof DataExtension is "undefined") — the control that shows Core
+   *      really was not loaded. The bare name is resolved lazily inside a
+   *      thunk so an unbound identifier cannot abort the page.
+   *   2. Despite that, Script.Util.WSProxy is available (typeof "clr").
+   *   3. A proxy created without Platform.Load is fully functional:
+   *      retrieve returns Status "OK" with rows.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function lazy(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW: " + ex.message; }
+  }
+
+  /* 1. Control — Core is not loaded in this script. */
+  assert("control: Core bare name DataExtension is undefined (no Platform.Load)", lazy(function () { return typeof DataExtension; }), "undefined");
+  assert("control: Core bare name Subscriber is undefined (no Platform.Load)", lazy(function () { return typeof Subscriber; }), "undefined");
+
+  /* 2. WSProxy is available anyway. */
+  assert("typeof Script.Util.WSProxy is clr without Platform.Load", typeof Script.Util.WSProxy, "clr");
+
+  /* 3. And it works. */
+  var proxy = new Script.Util.WSProxy();
+  assert("typeof proxy is clr without Platform.Load", typeof proxy, "clr");
+  var result = proxy.retrieve("DataExtension", ["Name"]);
+  assert("retrieve works without Platform.Load (Status OK)", "" + result.Status, "OK");
+  assert("retrieve returned rows without Platform.Load", (result.Results.length > 0) ? "true" : "false", "true");
+  </script>
+
+single-instance-is-fine: |
+  <script runat="server">
+  /*
+   * Chapter: Single Instance is Fine
+   *
+   * Proves:
+   *   1. One proxy instance serves several consecutive operations in the same
+   *      script block — three retrieve calls in a row all return Status "OK".
+   *   2. The instance is not consumed or invalidated by a call: the last call
+   *      still returns rows, and a repeat of the first call returns the same
+   *      row count.
+   *   3. Reusing one instance gives the same result as creating a fresh one
+   *      (same row count for the same query), so a second instance buys
+   *      nothing.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+
+  /* 1. Three operations on the SAME instance. */
+  var first = proxy.retrieve("DataExtension", ["Name", "CustomerKey"]);
+  assert("call 1 on the shared instance returns OK", "" + first.Status, "OK");
+  var second = proxy.retrieve("DataExtension", ["Name"]);
+  assert("call 2 on the shared instance returns OK", "" + second.Status, "OK");
+  var third = proxy.retrieve("DataExtension", ["CustomerKey"]);
+  assert("call 3 on the shared instance returns OK", "" + third.Status, "OK");
+
+  /* 2. The instance is still healthy after repeated use. */
+  assert("call 3 still returned rows", (third.Results.length > 0) ? "true" : "false", "true");
+  var repeated = proxy.retrieve("DataExtension", ["Name", "CustomerKey"]);
+  assert("repeating call 1 on the same instance gives the same row count", "" + repeated.Results.length, "" + first.Results.length);
+
+  /* 3. A fresh instance is not required — it returns the same thing. */
+  var other = new Script.Util.WSProxy();
+  var otherResult = other.retrieve("DataExtension", ["Name", "CustomerKey"]);
+  assert("a second instance returns the same row count", "" + otherResult.Results.length, "" + first.Results.length);
+  assert("a second instance returns OK too", "" + otherResult.Status, "OK");
+  </script>
+
+business-unit-context: |
+  <script runat="server">
+  /*
+   * Chapter: Business Unit Context
+   *
+   * Proves:
+   *   1. A default proxy is scoped to the CURRENTLY EXECUTING Business Unit:
+   *      every row returned by retrieve carries the same Client.ID (MID),
+   *      i.e. exactly one distinct MID appears in the result set.
+   *   2. setClientId is the documented way to switch BU and is present on
+   *      every instance (typeof "clrmethodinfo").
+   *
+   * NOT ASSERTED HERE: the effect of calling setClientId. This CloudPage runs
+   * in a CHILD Business Unit, and setClientId requires a parent/Enterprise
+   * account — see /wsproxy/setclientid/ for that chapter's own script.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+
+  /* 1. Everything comes back from one BU — the executing one. */
+  var result = proxy.retrieve("DataExtension", ["Name", "Client.ID"]);
+  assert("retrieve with Client.ID returns OK", "" + result.Status, "OK");
+  assert("retrieve with Client.ID returned rows", (result.Results.length > 0) ? "true" : "false", "true");
+
+  var seen = {};
+  var distinct = 0;
+  for (var i = 0; i < result.Results.length; i++) {
+      var mid = "" + result.Results[i].Client.ID;
+      if (!seen[mid]) { seen[mid] = 1; distinct = distinct + 1; }
+  }
+  assert("all rows belong to exactly one Business Unit (default context)", "" + distinct, "1");
+
+  /* 2. setClientId is the documented switch, available on every instance. */
+  assert("typeof proxy.setClientId is clrmethodinfo", typeof proxy.setClientId, "clrmethodinfo");
+  var other = new Script.Util.WSProxy();
+  assert("setClientId is present on a fresh instance too", typeof other.setClientId, "clrmethodinfo");
+  </script>

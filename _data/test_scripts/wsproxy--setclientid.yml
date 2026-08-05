@@ -1,0 +1,399 @@
+# Test scripts for /wsproxy/setclientid/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive
+# and negative.
+#
+# CONTEXT MATTERS FOR THIS PAGE. Whether a cross-BU operation succeeds
+# depends on which Business Unit the script runs in, so every chapter names
+# the context it was proven in:
+#
+#   parameters / return-value / notes  -> run from a CHILD Business Unit
+#                                         (proven in MCDEV_Training_QA)
+#   examples                           -> run from the PARENT Business Unit
+#                                         of the account
+#   null-return                        -> context independent
+#
+# Every MID used below is a REAL Business Unit of the account the scripts
+# were proven in. Never substitute a made-up MID: a made-up MID cannot tell
+# "this Business Unit does not exist" apart from "the executing Business
+# Unit cannot reach it". Replace the OWN_MID / TARGET_MID / UNREACHABLE_MID
+# constants at the top of each script with real MIDs of your own account
+# (Setup -> Account Settings -> Business Units) before re-running them.
+#
+# setClientId is a context-only call — no script creates or removes any
+# fixture, and every SOAP call is read-only (retrieve). Every script calls
+# resetClientIds() at the end so a switched context cannot leak.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+parameters: |
+  <script runat="server">
+  /*
+   * Chapter: Parameters — setClientId(options)
+   *
+   * RUN FROM A CHILD BUSINESS UNIT (proven in MCDEV_Training_QA, MID
+   * 518005426). UNREACHABLE_MID must be a REAL Business Unit of the same
+   * account that the executing child BU cannot reach — a sibling child BU
+   * works. The assertions read the requested ClientID back out of the SOAP
+   * denial, which only appears when the target is genuinely unreachable.
+   *
+   * Proves:
+   *   1. setClientId is a CLR method on every WSProxy instance.
+   *   2. The documented 1-argument call form works (min_args = 1).
+   *   3. NEGATIVE — calling with no argument is rejected (min_args = 1).
+   *   4. NEGATIVE — passing two arguments is rejected (max_args = 1).
+   *   5. The `ID` key really carries the target MID: after
+   *      setClientId({ ID: UNREACHABLE_MID }) the next retrieve is executed
+   *      against exactly that ClientID (the SOAP Status names it).
+   *   6. TYPE ACCEPTANCE — the `ID` key accepts a numeric STRING as well as
+   *      a number: setClientId({ ID: "<mid>" }) produces the same
+   *      meaningful result as setClientId({ ID: <mid> }) (identical
+   *      ClientID in the SOAP response), so the key is typed
+   *      `number | string`.
+   *   7. The optional `UserID` key is accepted as documented (no throw,
+   *      same null return) for both a number and a numeric string.
+   *
+   * NOT ASSERTED HERE (NOT ASSERTABLE from this harness): the actual
+   * impersonation EFFECT of `UserID`. No impersonable user is available to
+   * the probe, so the key can only be shown to be accepted, not to change
+   * the executing identity.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertContains(id, actual, fragment) {
+      var hay = "" + actual;
+      Platform.Response.Write((hay.indexOf(fragment) >= 0 ? "PASS " : "FAIL ") + id + " -> [" + hay + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function assertNoThrow(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "FAIL " : "PASS ") + id + " -> " + (threw ? "threw: " + msg : "did not throw") + "\n");
+  }
+
+  /* A REAL sibling child BU of the account — unreachable from this child BU. */
+  var UNREACHABLE_MID = 7330930;
+
+  var proxy = new Script.Util.WSProxy();
+
+  /* 1. The method exists on the instance. */
+  assert("typeof proxy.setClientId is clrmethodinfo", typeof proxy.setClientId, "clrmethodinfo");
+
+  /* 2. The documented single-argument form. */
+  assert("setClientId(options) with one argument is accepted (min_args = 1)", (proxy.setClientId({ ID: UNREACHABLE_MID }) === null) ? "true" : "false", "true");
+
+  /* 3. + 4. NEGATIVE — exactly one argument is required. */
+  assertThrows("setClientId() with no argument throws (min_args = 1)", function () { return proxy.setClientId(); });
+  assertThrows("setClientId(a, b) with two arguments throws (max_args = 1)", function () { return proxy.setClientId({ ID: UNREACHABLE_MID }, { ID: UNREACHABLE_MID }); });
+
+  /* 5. The `ID` key carries the target MID — number form. */
+  proxy.resetClientIds();
+  proxy.setClientId({ ID: UNREACHABLE_MID });
+  var numberCall = proxy.retrieve("DataExtension", ["Name"]);
+  assertContains("ID as a number targets exactly that MID", numberCall.Status, "ID[" + UNREACHABLE_MID + "]");
+
+  /* 6. TYPE ACCEPTANCE — the `ID` key also accepts a numeric string. */
+  proxy.resetClientIds();
+  proxy.setClientId({ ID: "" + UNREACHABLE_MID });
+  var stringCall = proxy.retrieve("DataExtension", ["Name"]);
+  assertContains("ID as a numeric string targets the same MID (number | string)", stringCall.Status, "ID[" + UNREACHABLE_MID + "]");
+
+  /* 7. The optional `UserID` key is accepted. */
+  proxy.resetClientIds();
+  assertNoThrow("setClientId({ UserID: <number> }) is accepted", function () { return proxy.setClientId({ UserID: 12345 }); });
+  proxy.resetClientIds();
+  assertNoThrow("setClientId({ UserID: <numeric string> }) is accepted", function () { return proxy.setClientId({ UserID: "12345" }); });
+
+  /* Always leave the instance in its own-BU context. */
+  proxy.resetClientIds();
+  var restored = proxy.retrieve("DataExtension", ["Name"]);
+  assert("resetClientIds() at the end restores the own BU context", "" + restored.Status, "OK");
+  </script>
+
+return-value: |
+  <script runat="server">
+  /*
+   * Chapter: Return Value — `null`
+   *
+   * RUN FROM A CHILD BUSINESS UNIT (proven in MCDEV_Training_QA, MID
+   * 518005426). UNREACHABLE_MID must be a REAL Business Unit the executing
+   * BU cannot reach — a sibling child BU works.
+   *
+   * Proves:
+   *   1. setClientId() returns a genuine null: `=== null` is true.
+   *   2. It is NOT undefined: `=== undefined` is false.
+   *   3. typeof the returned value is "object" — the JS typeof of null,
+   *      not "undefined".
+   *   4. The return value is not a status signal: the very same null comes
+   *      back for a REAL Business Unit this context cannot reach, so a
+   *      caller cannot use the return value to detect success.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* A REAL sibling child BU of the account — unreachable from this child BU. */
+  var UNREACHABLE_MID = 7330930;
+
+  var proxy = new Script.Util.WSProxy();
+
+  /* 1.-3. The documented return value. */
+  assert("setClientId({ ID: ... }) === null", (proxy.setClientId({ ID: UNREACHABLE_MID }) === null) ? "true" : "false", "true");
+  assert("setClientId({ ID: ... }) !== undefined", (proxy.setClientId({ ID: UNREACHABLE_MID }) === undefined) ? "true" : "false", "false");
+  assert("typeof setClientId({ ID: ... }) is object (the typeof of null)", typeof proxy.setClientId({ ID: UNREACHABLE_MID }), "object");
+
+  /* 4. The same null for an unreachable REAL MID — not a status signal. */
+  proxy.resetClientIds();
+  var returned = proxy.setClientId({ ID: UNREACHABLE_MID });
+  assert("the same null is returned for an UNREACHABLE real MID", (returned === null) ? "true" : "false", "true");
+  var denied = proxy.retrieve("DataExtension", ["Name"]);
+  assert("yet the following retrieve is NOT OK, so null was no success signal", ("" + denied.Status === "OK") ? "true" : "false", "false");
+
+  /* Always leave the instance in its own-BU context. */
+  proxy.resetClientIds();
+  var restored = proxy.retrieve("DataExtension", ["Name"]);
+  assert("resetClientIds() at the end restores the own BU context", "" + restored.Status, "OK");
+  </script>
+
+null-return: |
+  <script runat="server">
+  /*
+   * Differs-from-docs claim: the official Salesforce docs type setClientId
+   * as returning void, but at runtime it returns a genuine null value, not
+   * undefined.
+   *
+   * Official docs: void (no value)
+   * SFMC runtime:  null  (=== null, typeof "object")
+   *
+   * Context independent — the CALL is accepted from any Business Unit, so
+   * the return value can be observed anywhere. TARGET_MID only has to be a
+   * REAL Business Unit MID; whether it is reachable does not matter here.
+   *
+   * Proves both halves of the claim:
+   *   1. DEV — the returned value strictly equals null (official docs: void,
+   *      which in JS would surface as undefined).
+   *   2. DEV — the returned value does NOT strictly equal undefined, so a
+   *      caller cannot treat it as a void return.
+   *   3. DEV — typeof the returned value is "object", the JS typeof of null,
+   *      and not "undefined".
+   *   4. The distinction is observable through a bound variable: `x == null`
+   *      and `x === null` are true while `x === undefined` is false.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* A REAL Business Unit MID of the account. */
+  var TARGET_MID = 7330930;
+
+  var proxy = new Script.Util.WSProxy();
+
+  /* 1.-3. The deviation itself. */
+  assert("DEV setClientId(...) === null (official docs: void)", (proxy.setClientId({ ID: TARGET_MID }) === null) ? "true" : "false", "true");
+  assert("DEV setClientId(...) === undefined is false (official docs: void)", (proxy.setClientId({ ID: TARGET_MID }) === undefined) ? "true" : "false", "false");
+  assert("DEV typeof setClientId(...) is object, not undefined (official docs: void)", typeof proxy.setClientId({ ID: TARGET_MID }), "object");
+
+  /* 4. The same distinction seen through a bound variable. */
+  var returned = proxy.setClientId({ ID: TARGET_MID });
+  assert("DEV the assigned return value is loosely null", (returned == null) ? "true" : "false", "true");
+  assert("DEV the assigned return value is strictly null", (returned === null) ? "true" : "false", "true");
+  assert("DEV the assigned return value is not strictly undefined", (returned === undefined) ? "true" : "false", "false");
+
+  /* Always leave the instance in its own-BU context. */
+  proxy.resetClientIds();
+  var restored = proxy.retrieve("DataExtension", ["Name"]);
+  assert("resetClientIds() at the end restores the own BU context", "" + restored.Status, "OK");
+  </script>
+
+examples: |
+  <script runat="server">
+  /*
+   * Chapter: Examples
+   *
+   * RUN FROM THE PARENT BUSINESS UNIT of the account (proven in _ParentBU_,
+   * MID 7281698). Set TARGET_MID_A and TARGET_MID_B to two REAL child BU
+   * MIDs of that account (Setup -> Account Settings -> Business Units).
+   * The same script run from a child BU fails every cross-BU assertion —
+   * see the Notes chapter.
+   *
+   * Proves:
+   *   1. Example "Operate on a child BU from parent" — after
+   *      setClientId({ ID: TARGET_MID_A }) the following
+   *      retrieve("DataExtension", ["Name", "CustomerKey"]) succeeds and the
+   *      returned rows belong to that BU (their Client.ID is TARGET_MID_A,
+   *      not the executing BU's MID).
+   *   2. All SUBSEQUENT operations target that BU: a second, unrelated
+   *      retrieve on the same instance still returns rows of TARGET_MID_A
+   *      without any further setClientId call.
+   *   3. Example "Iterate over multiple BUs" — a SECOND setClientId without
+   *      an intervening resetClientIds() replaces the previous target, so
+   *      each loop iteration reads its own BU's rows.
+   *   4. resetClientIds() restores the executing BU's own context.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertNoThrow(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "FAIL " : "PASS ") + id + " -> " + (threw ? "threw: " + msg : "did not throw") + "\n");
+  }
+
+  /* Two REAL child Business Units of the executing parent's account. */
+  var TARGET_MID_A = 518005426;
+  var TARGET_MID_B = 7330930;
+
+  var proxy = new Script.Util.WSProxy();
+
+  /* Baseline: the script's own BU, before any context switch. */
+  var before = proxy.retrieve("DataExtension", ["Name", "Client.ID"]);
+  assert("baseline retrieve in the own BU returns OK", "" + before.Status, "OK");
+  var ownMid = "" + before.Results[0].Client.ID;
+
+  /* 1. Example "Operate on a child BU from parent" — the happy path. */
+  assertNoThrow("setClientId({ ID: TARGET_MID_A }) is accepted", function () { return proxy.setClientId({ ID: TARGET_MID_A }); });
+  var result = proxy.retrieve("DataExtension", ["Name", "CustomerKey", "Client.ID"]);
+  assert("the retrieve after setClientId succeeds", "" + result.Status, "OK");
+  assert("and its rows belong to the TARGET BU, not the executing one", "" + result.Results[0].Client.ID, "" + TARGET_MID_A);
+  assert("the target BU's rows are readable as result.Results", (result.Results.length > 0) ? "true" : "false", "true");
+
+  /* 2. ALL subsequent operations target that BU. */
+  var second = proxy.retrieve("DataFolder", ["Name", "Client.ID"]);
+  assert("a later, unrelated operation still targets that BU", "" + second.Results[0].Client.ID, "" + TARGET_MID_A);
+
+  /* 3. Example "Iterate over multiple BUs" — a second setClientId re-targets. */
+  var businessUnits = [
+      { name: "A", mid: TARGET_MID_A },
+      { name: "B", mid: TARGET_MID_B }
+  ];
+  var loopThrew = "false";
+  var loopMatched = 0;
+  try {
+      for (var i = 0; i < businessUnits.length; i++) {
+          proxy.setClientId({ ID: businessUnits[i].mid });
+          var loopResult = proxy.retrieve("DataExtension", ["Name", "CustomerKey", "Client.ID"]);
+          if (("" + loopResult.Status) === "OK" && ("" + loopResult.Results[0].Client.ID) === ("" + businessUnits[i].mid)) {
+              loopMatched = loopMatched + 1;
+          }
+      }
+  } catch (loopEx) {
+      loopThrew = "true";
+  }
+  assert("the documented multi-BU loop runs without throwing", loopThrew, "false");
+  assert("every iteration read the rows of ITS OWN target MID (a second setClientId re-targets)", "" + loopMatched, "" + businessUnits.length);
+
+  /* 4. Always leave the instance in its own-BU context. */
+  proxy.resetClientIds();
+  var restored = proxy.retrieve("DataExtension", ["Name", "Client.ID"]);
+  assert("resetClientIds() at the end restores the own BU context", "" + restored.Status, "OK");
+  assert("and the restored rows come from the script's own BU", "" + restored.Results[0].Client.ID, ownMid);
+  </script>
+
+notes: |
+  <script runat="server">
+  /*
+   * Chapter: Notes
+   *
+   * RUN FROM A CHILD BUSINESS UNIT (proven in MCDEV_Training_QA, MID
+   * 518005426). This is the chapter that shows the direction restriction,
+   * so it deliberately runs in the context that is restricted.
+   *
+   * Every MID below is a REAL Business Unit of the same account. That is
+   * essential: a made-up MID cannot distinguish "no such Business Unit"
+   * from "this Business Unit cannot be reached from here".
+   *
+   *   PARENT_MID   — the parent Business Unit of the executing child BU
+   *   SIBLING_MID  — a different child Business Unit of the same parent
+   *
+   * Proves:
+   *   1. The setClientId CALL itself is never rejected — it is accepted and
+   *      returns null for every target, reachable or not.
+   *   2. Targeting the executing BU's OWN MID: the following operation
+   *      succeeds and returns that BU's rows.
+   *   3. Targeting the PARENT Business Unit from a child is denied, and the
+   *      SOAP status names the executing MemberID and the requested
+   *      ClientID.
+   *   4. Targeting a SIBLING child Business Unit is denied the same way —
+   *      a child BU cannot reach sideways either.
+   *   5. The denial is not object-type specific — a different SOAP object
+   *      is denied identically.
+   *   6. resetClientIds() restores the executing BU's own context.
+   *
+   * NOT ASSERTED (never observable from a CloudPage probe): WHY the backend
+   * denies these targets. The probe proves what failed, not why.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertContains(id, actual, fragment) {
+      var hay = "" + actual;
+      Platform.Response.Write((hay.indexOf(fragment) >= 0 ? "PASS " : "FAIL ") + id + " -> [" + hay + "]\n");
+  }
+
+  /* REAL Business Units of the account the executing child BU belongs to. */
+  var PARENT_MID = 7281698;
+  var SIBLING_MID = 7330930;
+
+  var proxy = new Script.Util.WSProxy();
+
+  /* The executing BU's own MID. */
+  var own = proxy.retrieve("DataExtension", ["Name", "Client.ID"]);
+  assert("the executing BU can read its own data", "" + own.Status, "OK");
+  var ownMid = "" + own.Results[0].Client.ID;
+
+  /* 1. + 2. The executing BU's OWN MID: call accepted, operation succeeds. */
+  assert("setClientId returns null when targeting the OWN MID", (proxy.setClientId({ ID: ownMid }) === null) ? "true" : "false", "true");
+  var self = proxy.retrieve("DataExtension", ["Name", "Client.ID"]);
+  assert("targeting the executing BU's OWN MID is allowed", "" + self.Status, "OK");
+  assert("and returns that BU's rows", "" + self.Results[0].Client.ID, ownMid);
+
+  /* 1. + 3. The PARENT Business Unit: call still accepted, operation denied. */
+  proxy.resetClientIds();
+  assert("setClientId returns null for the PARENT MID too - the CALL is never rejected", (proxy.setClientId({ ID: PARENT_MID }) === null) ? "true" : "false", "true");
+  var deniedParent = proxy.retrieve("DataExtension", ["Name"]);
+  assert("a child BU may NOT operate on its PARENT Business Unit", ("" + deniedParent.Status === "OK") ? "true" : "false", "false");
+  assertContains("the denial names the executing MemberID", deniedParent.Status, ownMid);
+  assertContains("the denial names the requested ClientID", deniedParent.Status, "ID[" + PARENT_MID + "]");
+
+  /* 1. + 4. A SIBLING child Business Unit: denied the same way. */
+  proxy.resetClientIds();
+  assert("setClientId returns null for a SIBLING child MID too", (proxy.setClientId({ ID: SIBLING_MID }) === null) ? "true" : "false", "true");
+  var deniedSibling = proxy.retrieve("DataExtension", ["Name"]);
+  assert("a child BU may NOT operate on a SIBLING child Business Unit", ("" + deniedSibling.Status === "OK") ? "true" : "false", "false");
+  assertContains("the sibling denial names the executing MemberID", deniedSibling.Status, ownMid);
+  assertContains("the sibling denial names the requested ClientID", deniedSibling.Status, "ID[" + SIBLING_MID + "]");
+
+  /* 5. The restriction is not object-type specific. */
+  var deniedFolder = proxy.retrieve("DataFolder", ["Name"]);
+  assertContains("a different SOAP object type is denied the same way", deniedFolder.Status, "ID[" + SIBLING_MID + "]");
+
+  /* 6. Always leave the instance in its own-BU context. */
+  proxy.resetClientIds();
+  var restored = proxy.retrieve("DataExtension", ["Name", "Client.ID"]);
+  assert("resetClientIds() at the end restores the own BU context", "" + restored.Status, "OK");
+  assert("and the restored rows come from the executing BU", "" + restored.Results[0].Client.ID, ownMid);
+  </script>

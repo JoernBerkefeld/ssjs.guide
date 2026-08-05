@@ -1255,7 +1255,7 @@
     "params": [
       "result"
     ],
-    "returnType": "void",
+    "returnType": "string",
     "deprecated": true
   },
   {

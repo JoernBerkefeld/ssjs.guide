@@ -1,0 +1,417 @@
+# Test scripts for /wsproxy/createitem/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes - positive
+# and negative.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# Every script creates its own run-labelled fixtures and deletes them again
+# with proxy.deleteItem, so repeated runs stay clean.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+parameters: |
+  <script runat="server">
+  /*
+   * Chapter: Parameters
+   *
+   * Proves:
+   *   1. createItem is a CLR method on every WSProxy instance.
+   *   2. objectType (string) + properties (object) are BOTH required: the
+   *      2-argument form is the documented minimum and succeeds
+   *      (min_args = 2).
+   *   3. properties is ONE object describing ONE item - a single call
+   *      produces exactly one Results entry.
+   *   4. createOptions is OPTIONAL and, when supplied as a third argument,
+   *      is accepted (max_args = 3) and the call still succeeds.
+   *   5. NEGATIVE - calling with fewer than 2 arguments is rejected: both
+   *      the 1-argument and the 0-argument form throw.
+   *   6. NEGATIVE - objectType must name a real SOAP object type; an
+   *      unknown type does not silently succeed.
+   *
+   * NOT PROBED: Date / number / boolean type-acceptance counterparts. None
+   * of the three parameters is in scope for the matrix - objectType is a
+   * SOAP type NAME (free-text string), properties is an object, and
+   * createOptions is a SOAP CreateOptions object. No parameter is
+   * documented as a date, a count/limit, or a 0/1 flag.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+  var tag = "ciP" + (new Date()).getTime();
+
+  /* 1. The method exists on the instance. */
+  assert("typeof proxy.createItem is clrmethodinfo", typeof proxy.createItem, "clrmethodinfo");
+
+  /* 2. Documented minimum: objectType + properties (min_args = 2). */
+  var two = proxy.createItem("Subscriber", {
+      EmailAddress: tag + "a@joernberkefeld.com",
+      SubscriberKey: tag + "-a",
+      Status: "Active"
+  });
+  assert("2-argument form (objectType, properties) succeeds", "" + two.Status, "OK");
+
+  /* 3. One properties object creates exactly one item. */
+  assert("one properties object produces exactly one Results entry", "" + two.Results.length, "1");
+
+  /* 4. createOptions is optional and accepted as a third argument. */
+  var three = proxy.createItem("Subscriber", {
+      EmailAddress: tag + "b@joernberkefeld.com",
+      SubscriberKey: tag + "-b",
+      Status: "Active"
+  }, { RequestType: "Synchronous" });
+  assert("3-argument form with createOptions succeeds (max_args = 3)", "" + three.Status, "OK");
+  assert("3-argument form still returns one result", "" + three.Results.length, "1");
+  assert("3-argument form result is OK", "" + three.Results[0].StatusCode, "OK");
+
+  /* 5. NEGATIVE - fewer than 2 arguments is rejected. */
+  assertThrows("createItem(objectType) with no properties throws (min_args = 2)", function () { return proxy.createItem("Subscriber"); });
+  assertThrows("createItem() with no arguments throws (min_args = 2)", function () { return proxy.createItem(); });
+
+  /* 6. NEGATIVE - objectType must name a real SOAP object type. */
+  var unknownOk = false;
+  try {
+      var bogus = proxy.createItem("ThisTypeDoesNotExist" + tag, { Name: tag });
+      unknownOk = ("" + bogus.Status === "OK");
+  } catch (exType) {
+      unknownOk = false;
+  }
+  assert("an unknown objectType does not succeed", unknownOk ? "true" : "false", "false");
+
+  /* Cleanup - remove every subscriber this script created. */
+  var c1 = proxy.deleteItem("Subscriber", { SubscriberKey: tag + "-a" });
+  assert("cleanup: first subscriber deleted", "" + c1.Status, "OK");
+  var c2 = proxy.deleteItem("Subscriber", { SubscriberKey: tag + "-b" });
+  assert("cleanup: second subscriber deleted", "" + c2.Status, "OK");
+  </script>
+
+return-value: |
+  <script runat="server">
+  /*
+   * Chapter: Return Value
+   *
+   * Proves the documented return shape, field by field:
+   *   1. createItem returns an OBJECT.
+   *   2. Status is "OK" when the item was created.
+   *   3. RequestID is a non-empty string.
+   *   4. Results is an array holding one entry for the single created item.
+   *   5. The Results entry carries StatusCode ("OK" on success),
+   *      StatusMessage (a string) and Object (the created object, echoing
+   *      back the submitted properties).
+   *   6. FAILURE PATH - the documented Status tokens are not OK-only. The
+   *      page states Status is "OK" or "Error"; an invalid item makes the
+   *      call return Status "Error" with StatusCode "Error" and a
+   *      diagnostic StatusMessage, and the call itself does NOT throw.
+   *   7. The documented error-handling example is correct: the
+   *      result.Status !== "OK" test is false on success and true on
+   *      failure, and result.Results[0].StatusMessage is readable in the
+   *      failure branch.
+   *   8. The shape is identical for a non-Subscriber object type
+   *      (DataExtension), so the documented return value is generic.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+  var tag = "ciR" + (new Date()).getTime();
+
+  /* 1.-5. Success path. */
+  var result = proxy.createItem("Subscriber", {
+      EmailAddress: tag + "@joernberkefeld.com",
+      SubscriberKey: tag + "-s",
+      Status: "Active"
+  });
+  assert("typeof result is object", typeof result, "object");
+  assert("result.Status is OK", "" + result.Status, "OK");
+  assert("typeof result.RequestID is string", typeof result.RequestID, "string");
+  assert("result.RequestID is not empty", (("" + result.RequestID).length > 0) ? "true" : "false", "true");
+  assert("typeof result.Results is object", typeof result.Results, "object");
+  assert("result.Results holds one entry for the single item", "" + result.Results.length, "1");
+  assert("Results[0].StatusCode is OK", "" + result.Results[0].StatusCode, "OK");
+  assert("typeof Results[0].StatusMessage is string", typeof result.Results[0].StatusMessage, "string");
+  assert("Results[0].StatusMessage is not empty", (("" + result.Results[0].StatusMessage).length > 0) ? "true" : "false", "true");
+  assert("typeof Results[0].Object is object", typeof result.Results[0].Object, "object");
+  assert("Results[0].Object echoes the submitted SubscriberKey", "" + result.Results[0].Object.SubscriberKey, tag + "-s");
+
+  /* 7. The documented success test. */
+  assert("the documented result.Status !== OK test is false on success", (result.Status !== "OK") ? "true" : "false", "false");
+
+  /* 6. FAILURE PATH - Status is not OK-only. */
+  var bad = proxy.createItem("Subscriber", {
+      EmailAddress: "not-an-email",
+      SubscriberKey: tag + "-bad",
+      Status: "Active"
+  });
+  assert("an invalid item does NOT throw - it returns an object", typeof bad, "object");
+  assert("result.Status is Error when the item fails", "" + bad.Status, "Error");
+  assert("Results[0].StatusCode is Error for the failed item", "" + bad.Results[0].StatusCode, "Error");
+  assert("Results[0].StatusMessage explains the failure", "" + bad.Results[0].StatusMessage, "InvalidEmailAddress");
+  assert("the failure result still carries a RequestID", typeof bad.RequestID, "string");
+
+  /* 7. The documented failure branch is reachable. */
+  assert("the documented result.Status !== OK test is true on failure", (bad.Status !== "OK") ? "true" : "false", "true");
+  assert("the failure branch can read Results[0].StatusMessage", (("" + bad.Results[0].StatusMessage).length > 0) ? "true" : "false", "true");
+
+  /* 8. Same shape for a different object type. */
+  var deResult = proxy.createItem("DataExtension", {
+      Name: tag + "_de",
+      CustomerKey: tag + "_de",
+      Fields: [
+          { Name: "SubscriberKey", FieldType: "Text", MaxLength: 254, IsPrimaryKey: true, IsRequired: true }
+      ]
+  });
+  assert("DataExtension createItem returns Status OK", "" + deResult.Status, "OK");
+  assert("DataExtension createItem returns one result", "" + deResult.Results.length, "1");
+  assert("DataExtension Results[0].StatusCode is OK", "" + deResult.Results[0].StatusCode, "OK");
+  assert("DataExtension Results[0].Object echoes CustomerKey", "" + deResult.Results[0].Object.CustomerKey, tag + "_de");
+
+  /* Cleanup. */
+  var subCleanup = proxy.deleteItem("Subscriber", { SubscriberKey: tag + "-s" });
+  assert("cleanup: subscriber deleted", "" + subCleanup.Status, "OK");
+  var deCleanup = proxy.deleteItem("DataExtension", { CustomerKey: tag + "_de" });
+  assert("cleanup: data extension deleted", "" + deCleanup.Status, "OK");
+  </script>
+
+examples: |
+  <script runat="server">
+  /*
+   * Chapter: Examples
+   *
+   * Runs all three documented examples and proves the two collection-shape
+   * callouts:
+   *   1. EXAMPLE 1 - a Subscriber is created with a Lists array of
+   *      { ID, Status } entries; Status is "OK" and the documented
+   *      result.Status !== "OK" guard is false.
+   *   2. EXAMPLE 2 - a DataExtension is created from a FLAT Fields array
+   *      covering Text / EmailAddress / Number / Date field types; the
+   *      data extension is retrievable afterwards.
+   *   3. CALLOUT - the nested wrapper Fields: { Field: [ ... ] } does NOT
+   *      work: it throws "Error executing create call." (the SOAP wire
+   *      format wraps each field in a <Field> element, but WSProxy expects
+   *      the flat array and builds that wrapper itself).
+   *   4. EXAMPLE 3 - a row is inserted with objectType
+   *      "DataExtensionObject", the data extension named through the
+   *      CustomerKey property, and a FLAT Properties array of
+   *      { Name, Value } pairs; the row is readable afterwards with the
+   *      submitted values.
+   *   5. CALLOUT - the bracketed objectType "DataExtensionObject[key]"
+   *      that retrieve accepts does NOT work here: it throws
+   *      "Error executing create call."
+   *   6. NEGATIVE - omitting CustomerKey leaves the row insert without a
+   *      target and returns Status "Error".
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+  var tag = "ciE" + (new Date()).getTime();
+
+  /* 1. EXAMPLE 1 - subscriber with a Lists array. */
+  var allSubs = proxy.retrieve("List", ["ID", "ListName"]);
+  var listId = allSubs.Results[0].ID;
+  var sub = proxy.createItem("Subscriber", {
+      EmailAddress: tag + "@joernberkefeld.com",
+      SubscriberKey: tag + "-sub",
+      Status: "Active",
+      Lists: [
+          { ID: listId, Status: "Active" }
+      ]
+  });
+  assert("example 1: subscriber with a Lists array is created", "" + sub.Status, "OK");
+  assert("example 1: the documented result.Status !== OK guard is false", (sub.Status !== "OK") ? "true" : "false", "false");
+
+  /* 2. EXAMPLE 2 - data extension from a FLAT Fields array. */
+  var de = proxy.createItem("DataExtension", {
+      Name: tag + "_de",
+      CustomerKey: tag + "_de",
+      Fields: [
+          { Name: "SubscriberKey", FieldType: "Text", IsPrimaryKey: true, IsRequired: true, MaxLength: 254 },
+          { Name: "Email", FieldType: "EmailAddress", IsRequired: true },
+          { Name: "Score", FieldType: "Number" },
+          { Name: "CreatedAt", FieldType: "Date" }
+      ]
+  });
+  assert("example 2: a flat Fields array creates the data extension", "" + de.Status, "OK");
+  assert("example 2: the created data extension echoes its CustomerKey", "" + de.Results[0].Object.CustomerKey, tag + "_de");
+  var deLookup = proxy.retrieve("DataExtension", ["CustomerKey", "Name"], {
+      Property: "CustomerKey", SimpleOperator: "equals", Value: tag + "_de"
+  });
+  assert("example 2: the data extension is retrievable afterwards", "" + deLookup.Results.length, "1");
+
+  /* 3. CALLOUT - the nested Fields.Field wrapper is rejected. */
+  assertThrows("DEV callout: nested Fields: { Field: [...] } throws (the SOAP wire format nests Field, but createItem wants the flat array)", function () {
+      return proxy.createItem("DataExtension", {
+          Name: tag + "_nested",
+          CustomerKey: tag + "_nested",
+          Fields: { Field: [{ Name: "SubscriberKey", FieldType: "Text", IsPrimaryKey: true, IsRequired: true, MaxLength: 254 }] }
+      });
+  });
+
+  /* 4. EXAMPLE 3 - row insert via DataExtensionObject + CustomerKey. */
+  var row = proxy.createItem("DataExtensionObject", {
+      CustomerKey: tag + "_de",
+      Properties: [
+          { Name: "SubscriberKey", Value: tag + "-r1" },
+          { Name: "Email", Value: "jane@example.com" },
+          { Name: "Score", Value: "95" },
+          { Name: "CreatedAt", Value: Platform.Function.Now() }
+      ]
+  });
+  assert("example 3: a flat Properties array inserts the row", "" + row.Status, "OK");
+  assert("example 3: the row result reports StatusCode OK", "" + row.Results[0].StatusCode, "OK");
+  var rows = Platform.Function.LookupRows(tag + "_de", "SubscriberKey", tag + "-r1");
+  assert("example 3: exactly one row was written", "" + rows.length, "1");
+  assert("example 3: the Email value was stored", "" + rows[0]["Email"], "jane@example.com");
+  assert("example 3: the Number value was stored", "" + rows[0]["Score"], "95");
+
+  /* 5. CALLOUT - the bracketed objectType is rejected. */
+  assertThrows("DEV callout: the bracketed DataExtensionObject[key] form that retrieve accepts throws here", function () {
+      return proxy.createItem("DataExtensionObject[" + tag + "_de]", {
+          Properties: [{ Name: "SubscriberKey", Value: tag + "-r2" }]
+      });
+  });
+
+  /* 6. NEGATIVE - without CustomerKey there is no target data extension. */
+  var noKey = proxy.createItem("DataExtensionObject", {
+      Properties: [{ Name: "SubscriberKey", Value: tag + "-r3" }]
+  });
+  assert("a row insert without CustomerKey returns Status Error", "" + noKey.Status, "Error");
+
+  /* Cleanup. */
+  var subCleanup = proxy.deleteItem("Subscriber", { SubscriberKey: tag + "-sub" });
+  assert("cleanup: subscriber deleted", "" + subCleanup.Status, "OK");
+  var deCleanup = proxy.deleteItem("DataExtension", { CustomerKey: tag + "_de" });
+  assert("cleanup: data extension deleted", "" + deCleanup.Status, "OK");
+  </script>
+
+notes: |
+  <script runat="server">
+  /*
+   * Chapter: Notes
+   *
+   * Proves that createItem is NOT an upsert and that every workaround the
+   * chapter recommends actually works:
+   *   1. createItem on an already existing primary key returns Status
+   *      "Error" - it never updates the existing row.
+   *   2. WORKAROUND A - updateItem with the save option
+   *      SaveOptions: [{ PropertyName: "*", SaveAction: "UpdateAdd" }]
+   *      inserts a row whose key does not exist yet (upsert), returning
+   *      Status "OK".
+   *   3. WORKAROUND A (batch form) - updateBatch with the same save
+   *      option upserts as well.
+   *   4. WORKAROUND B - the Core library equivalents work on the same
+   *      data extension: de.Rows.Add() inserts and returns the number of
+   *      affected rows, de.Rows.Update() updates and returns the number
+   *      of affected rows.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  Platform.Load("core", "1");
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+  var tag = "ciN" + (new Date()).getTime();
+
+  /* Fixture. */
+  var fixture = proxy.createItem("DataExtension", {
+      Name: tag + "_de",
+      CustomerKey: tag + "_de",
+      Fields: [
+          { Name: "SubscriberKey", FieldType: "Text", IsPrimaryKey: true, IsRequired: true, MaxLength: 254 },
+          { Name: "Email", FieldType: "EmailAddress" }
+      ]
+  });
+  assert("fixture data extension created", "" + fixture.Status, "OK");
+  var seed = proxy.createItem("DataExtensionObject", {
+      CustomerKey: tag + "_de",
+      Properties: [
+          { Name: "SubscriberKey", Value: tag + "-r1" },
+          { Name: "Email", Value: "first@example.com" }
+      ]
+  });
+  assert("fixture row created", "" + seed.Status, "OK");
+
+  /* 1. createItem is not an upsert. */
+  var dupe = proxy.createItem("DataExtensionObject", {
+      CustomerKey: tag + "_de",
+      Properties: [
+          { Name: "SubscriberKey", Value: tag + "-r1" },
+          { Name: "Email", Value: "second@example.com" }
+      ]
+  });
+  assert("createItem on an existing primary key returns Status Error", "" + dupe.Status, "Error");
+  var keptRows = Platform.Function.LookupRows(tag + "_de", "SubscriberKey", tag + "-r1");
+  assert("createItem left the existing row untouched", "" + keptRows[0]["Email"], "first@example.com");
+
+  /* 2. WORKAROUND A - updateItem + SaveAction UpdateAdd upserts. */
+  var upsert = proxy.updateItem("DataExtensionObject", {
+      CustomerKey: tag + "_de",
+      Properties: [
+          { Name: "SubscriberKey", Value: tag + "-r2" },
+          { Name: "Email", Value: "upsert@example.com" }
+      ]
+  }, { SaveOptions: [{ PropertyName: "*", SaveAction: "UpdateAdd" }] });
+  assert("updateItem with SaveAction UpdateAdd upserts a new key", "" + upsert.Status, "OK");
+  var upsertRows = Platform.Function.LookupRows(tag + "_de", "SubscriberKey", tag + "-r2");
+  assert("the upserted row exists", "" + upsertRows.length, "1");
+  assert("the upserted row carries the submitted value", "" + upsertRows[0]["Email"], "upsert@example.com");
+
+  /* 3. WORKAROUND A - updateBatch takes the same save option. */
+  var upsertBatch = proxy.updateBatch("DataExtensionObject", [{
+      CustomerKey: tag + "_de",
+      Properties: [
+          { Name: "SubscriberKey", Value: tag + "-r3" },
+          { Name: "Email", Value: "batch@example.com" }
+      ]
+  }], { SaveOptions: [{ PropertyName: "*", SaveAction: "UpdateAdd" }] });
+  assert("updateBatch with SaveAction UpdateAdd upserts a new key", "" + upsertBatch.Status, "OK");
+  var batchRows = Platform.Function.LookupRows(tag + "_de", "SubscriberKey", tag + "-r3");
+  assert("the batch-upserted row exists", "" + batchRows.length, "1");
+
+  /* 4. WORKAROUND B - the Core library equivalents. */
+  var deObj = DataExtension.Init(tag + "_de");
+  var added = deObj.Rows.Add({ SubscriberKey: tag + "-r4", Email: "core@example.com" });
+  assert("de.Rows.Add returns a number", typeof added, "number");
+  assert("de.Rows.Add reports one affected row", "" + added, "1");
+  var updated = deObj.Rows.Update({ Email: "core-updated@example.com" }, ["SubscriberKey"], [tag + "-r4"]);
+  assert("de.Rows.Update returns a number", typeof updated, "number");
+  assert("de.Rows.Update reports one affected row", "" + updated, "1");
+  var coreRows = Platform.Function.LookupRows(tag + "_de", "SubscriberKey", tag + "-r4");
+  assert("the Core library update took effect", "" + coreRows[0]["Email"], "core-updated@example.com");
+
+  /* Cleanup. */
+  var deCleanup = proxy.deleteItem("DataExtension", { CustomerKey: tag + "_de" });
+  assert("cleanup: data extension deleted", "" + deCleanup.Status, "OK");
+  </script>

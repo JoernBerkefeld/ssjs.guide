@@ -2339,6 +2339,365 @@
     pre("=== END ===");
     </script>
 
+- name: "Script.Util.HttpRequest.encoding"
+  url: "/http/script-util-httprequest/#httprequestinstance-properties"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformContentSyndicationScriptUtilHttpRequest.html"
+  tagline: "defaults to Windows-1252, not UTF-8"
+  part: "sfmc"
+  category: "HTTP"
+  object: "Script"
+  severity: "medium"
+  discrepancy: "A7"
+  anchor: "httprequestinstance-properties"
+  body: |
+    The official docs give `UTF-8` as the example value for the request `encoding` property, which reads as though that is what a request uses by default. On a fresh `new Script.Util.HttpRequest(url)` instance the property actually reads back **`Windows-1252`**, so a UTF-8 body is not encoded as UTF-8 unless `encoding` is set explicitly. The property is writable, but the runtime normalises the read-back to lower case: assigning `"UTF-8"` reads back as `"utf-8"`.
+  testScript: |
+    <script runat="server">
+    /*
+     * Chapter: HttpRequestInstance Properties
+     *
+     * Proves, for each documented property, its DEFAULT value and whether it is
+     * writable:
+     *   1. method                default "GET", writable, accepts POST/PUT/PATCH/DELETE
+     *   2. contentType           default "" (empty), writable
+     *   3. encoding              writable; an assigned value reads back LOWER-CASED
+     *   4. timeout               default 30, writable
+     *   5. emptyContentHandling  default 0, accepts 1 and 2
+     *   6. retries               default 1, writable
+     *   7. continueOnError       default false, writable
+     *
+     *   DEVIATIONS from the official Salesforce docs, each marked "DEV":
+     *     - encoding defaults to "Windows-1252", not the documented "UTF-8".
+     *     - postData is WRITE-ONLY: every read throws "Property Get method was
+     *       not found.", although the docs list it as a readable property.
+     *     - timeout is not documented at all; it exists and defaults to 30,
+     *       matching the documented 30-second send() timeout, so the unit is
+     *       SECONDS — not milliseconds.
+     *     - emptyContentHandling is documented as a boolean but is numeric at
+     *       runtime: true/false are rejected outright.
+     *
+     * EXPECTED OUTPUT: every line starts with PASS.
+     */
+
+    function assert(id, actual, expected) {
+        var got;
+        try { got = "" + actual; } catch (ex) { got = "THREW: " + ("" + ex.message); }
+        Platform.Response.Write((got === "" + expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+    }
+    function assertThrowsFragment(id, fn, fragment) {
+        var msg = "";
+        try { fn(); msg = "did NOT throw"; } catch (ex) { msg = "" + ex.message; }
+        Platform.Response.Write((msg.indexOf(fragment) > -1 ? "PASS " : "FAIL ") + id + " -> " + msg + "\n");
+    }
+
+    var req = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+
+    /* 1. method — default and writability. */
+    assert("method default is GET", req.method, "GET");
+    req.method = "POST";
+    assert("method accepts POST", req.method, "POST");
+    req.method = "PUT";
+    assert("method accepts PUT", req.method, "PUT");
+    req.method = "PATCH";
+    assert("method accepts PATCH", req.method, "PATCH");
+    req.method = "DELETE";
+    assert("method accepts DELETE", req.method, "DELETE");
+    req.method = "GET";
+
+    /* 2. contentType — default empty, writable. */
+    var fresh = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+    assert("contentType default is empty", fresh.contentType, "");
+    fresh.contentType = "application/json";
+    assert("contentType is writable", fresh.contentType, "application/json");
+
+    /* 3. DEVIATION — encoding default is Windows-1252, not the documented UTF-8. */
+    var encReq = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+    assert("DEV encoding default is Windows-1252 (docs: UTF-8)", encReq.encoding, "Windows-1252");
+    encReq.encoding = "UTF-8";
+    assert("DEV assigned encoding reads back lower-cased (docs: UTF-8)", encReq.encoding, "utf-8");
+
+    /* 4. DEVIATION — timeout is undocumented; default 30 proves the unit is seconds. */
+    var toReq = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+    assert("DEV timeout default is 30 seconds (docs: property not listed)", toReq.timeout, "30");
+    toReq.timeout = 45;
+    assert("timeout is writable", toReq.timeout, "45");
+
+    /* 5. DEVIATION — postData is write-only: assignment works, every read throws. */
+    var pdReq = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+    assertThrowsFragment("DEV reading postData before assignment throws (docs: readable property)", function () {
+        return pdReq.postData;
+    }, "Property Get method was not found.");
+    pdReq.postData = "hello-body";
+    assertThrowsFragment("DEV reading postData after assignment still throws (docs: readable property)", function () {
+        return pdReq.postData;
+    }, "Property Get method was not found.");
+
+    /* 6. DEVIATION — emptyContentHandling is numeric, not the documented boolean. */
+    var ecReq = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+    assert("emptyContentHandling default is 0", ecReq.emptyContentHandling, "0");
+    ecReq.emptyContentHandling = 1;
+    assert("emptyContentHandling accepts 1 (stop)", ecReq.emptyContentHandling, "1");
+    ecReq.emptyContentHandling = 2;
+    assert("emptyContentHandling accepts 2 (next subscriber)", ecReq.emptyContentHandling, "2");
+    assertThrowsFragment("DEV emptyContentHandling rejects true (docs: boolean)", function () {
+        ecReq.emptyContentHandling = true;
+    }, "cannot be converted");
+    assertThrowsFragment("DEV emptyContentHandling rejects false (docs: boolean)", function () {
+        ecReq.emptyContentHandling = false;
+    }, "cannot be converted");
+
+    /* 7. retries and continueOnError — defaults and writability. */
+    var rReq = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+    assert("retries default is 1", rReq.retries, "1");
+    rReq.retries = 2;
+    assert("retries is writable", rReq.retries, "2");
+    assert("continueOnError default is false", rReq.continueOnError, "False");
+    rReq.continueOnError = true;
+    assert("continueOnError is writable", rReq.continueOnError, "True");
+    </script>
+
+- name: "Script.Util.HttpRequest.postData"
+  url: "/http/script-util-httprequest/#httprequestinstance-properties"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformContentSyndicationScriptUtilHttpRequest.html"
+  tagline: "write-only — every read throws"
+  part: "sfmc"
+  category: "HTTP"
+  object: "Script"
+  severity: "high"
+  discrepancy: "B3"
+  anchor: "httprequestinstance-properties"
+  body: |
+    The official docs list `postData` among the configuration properties of the request handler, alongside readable properties such as `method` and `contentType`. At runtime the property has **no getter**: assignment works normally and the body does reach the server, but every read — including one immediately after assigning it — throws *"Property Get method was not found."* Because that throw is not catchable at the top level of a CloudPage, an unguarded read aborts the whole page. Keep the request body in your own variable if you need to read it back.
+  testScript: |
+    <script runat="server">
+    /*
+     * Chapter: HttpRequestInstance Properties
+     *
+     * Proves, for each documented property, its DEFAULT value and whether it is
+     * writable:
+     *   1. method                default "GET", writable, accepts POST/PUT/PATCH/DELETE
+     *   2. contentType           default "" (empty), writable
+     *   3. encoding              writable; an assigned value reads back LOWER-CASED
+     *   4. timeout               default 30, writable
+     *   5. emptyContentHandling  default 0, accepts 1 and 2
+     *   6. retries               default 1, writable
+     *   7. continueOnError       default false, writable
+     *
+     *   DEVIATIONS from the official Salesforce docs, each marked "DEV":
+     *     - encoding defaults to "Windows-1252", not the documented "UTF-8".
+     *     - postData is WRITE-ONLY: every read throws "Property Get method was
+     *       not found.", although the docs list it as a readable property.
+     *     - timeout is not documented at all; it exists and defaults to 30,
+     *       matching the documented 30-second send() timeout, so the unit is
+     *       SECONDS — not milliseconds.
+     *     - emptyContentHandling is documented as a boolean but is numeric at
+     *       runtime: true/false are rejected outright.
+     *
+     * EXPECTED OUTPUT: every line starts with PASS.
+     */
+
+    function assert(id, actual, expected) {
+        var got;
+        try { got = "" + actual; } catch (ex) { got = "THREW: " + ("" + ex.message); }
+        Platform.Response.Write((got === "" + expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+    }
+    function assertThrowsFragment(id, fn, fragment) {
+        var msg = "";
+        try { fn(); msg = "did NOT throw"; } catch (ex) { msg = "" + ex.message; }
+        Platform.Response.Write((msg.indexOf(fragment) > -1 ? "PASS " : "FAIL ") + id + " -> " + msg + "\n");
+    }
+
+    var req = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+
+    /* 1. method — default and writability. */
+    assert("method default is GET", req.method, "GET");
+    req.method = "POST";
+    assert("method accepts POST", req.method, "POST");
+    req.method = "PUT";
+    assert("method accepts PUT", req.method, "PUT");
+    req.method = "PATCH";
+    assert("method accepts PATCH", req.method, "PATCH");
+    req.method = "DELETE";
+    assert("method accepts DELETE", req.method, "DELETE");
+    req.method = "GET";
+
+    /* 2. contentType — default empty, writable. */
+    var fresh = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+    assert("contentType default is empty", fresh.contentType, "");
+    fresh.contentType = "application/json";
+    assert("contentType is writable", fresh.contentType, "application/json");
+
+    /* 3. DEVIATION — encoding default is Windows-1252, not the documented UTF-8. */
+    var encReq = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+    assert("DEV encoding default is Windows-1252 (docs: UTF-8)", encReq.encoding, "Windows-1252");
+    encReq.encoding = "UTF-8";
+    assert("DEV assigned encoding reads back lower-cased (docs: UTF-8)", encReq.encoding, "utf-8");
+
+    /* 4. DEVIATION — timeout is undocumented; default 30 proves the unit is seconds. */
+    var toReq = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+    assert("DEV timeout default is 30 seconds (docs: property not listed)", toReq.timeout, "30");
+    toReq.timeout = 45;
+    assert("timeout is writable", toReq.timeout, "45");
+
+    /* 5. DEVIATION — postData is write-only: assignment works, every read throws. */
+    var pdReq = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+    assertThrowsFragment("DEV reading postData before assignment throws (docs: readable property)", function () {
+        return pdReq.postData;
+    }, "Property Get method was not found.");
+    pdReq.postData = "hello-body";
+    assertThrowsFragment("DEV reading postData after assignment still throws (docs: readable property)", function () {
+        return pdReq.postData;
+    }, "Property Get method was not found.");
+
+    /* 6. DEVIATION — emptyContentHandling is numeric, not the documented boolean. */
+    var ecReq = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+    assert("emptyContentHandling default is 0", ecReq.emptyContentHandling, "0");
+    ecReq.emptyContentHandling = 1;
+    assert("emptyContentHandling accepts 1 (stop)", ecReq.emptyContentHandling, "1");
+    ecReq.emptyContentHandling = 2;
+    assert("emptyContentHandling accepts 2 (next subscriber)", ecReq.emptyContentHandling, "2");
+    assertThrowsFragment("DEV emptyContentHandling rejects true (docs: boolean)", function () {
+        ecReq.emptyContentHandling = true;
+    }, "cannot be converted");
+    assertThrowsFragment("DEV emptyContentHandling rejects false (docs: boolean)", function () {
+        ecReq.emptyContentHandling = false;
+    }, "cannot be converted");
+
+    /* 7. retries and continueOnError — defaults and writability. */
+    var rReq = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+    assert("retries default is 1", rReq.retries, "1");
+    rReq.retries = 2;
+    assert("retries is writable", rReq.retries, "2");
+    assert("continueOnError default is false", rReq.continueOnError, "False");
+    rReq.continueOnError = true;
+    assert("continueOnError is writable", rReq.continueOnError, "True");
+    </script>
+
+- name: "Script.Util.HttpResponse.encoding"
+  url: "/http/script-util-httprequest/#httpresponseinstance-properties"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformContentSyndicationScriptUtilHttpRequest.html"
+  tagline: "always empty"
+  part: "sfmc"
+  category: "HTTP"
+  object: "Script"
+  severity: "medium"
+  discrepancy: "B2"
+  anchor: "httpresponseinstance-properties"
+  body: |
+    The official docs list `encoding` as a populated property of the response object — "the encoding type returned in the response". At runtime it is an **empty string on every request handler**, including `Script.Util.HttpRequest`, and it stays empty even when the response `Content-Type` carries a charset (a response typed `text/plain; charset=utf-8` still yields `""`). The charset is only obtainable from the `content-type` header, read through the `for..in` enumeration of `resp.headers`.
+  testScript: |
+    <script runat="server">
+    /*
+     * Chapter: HttpResponseInstance Properties
+     *
+     * Proves, for the object returned by send():
+     *   1. content is a CLR string that must be converted before use.
+     *   2. contentType IS populated on Script.Util.HttpRequest.
+     *   3. headers is a CLR object whose for..in enumeration yields real entries.
+     *   4. returnStatus is 0 (OK) for a successful call.
+     *   5. statusCode carries the HTTP status.
+     *
+     *   DEVIATIONS from the official Salesforce docs, each marked "DEV":
+     *     - encoding is documented as a populated response property but is
+     *       ALWAYS an empty string — even when the response Content-Type
+     *       carries a charset.
+     *     - statusCode and returnStatus are CLR values, so strict equality
+     *       against a JavaScript number literal is always false.
+     *
+     * EXPECTED OUTPUT: every line starts with PASS.
+     */
+
+    function assert(id, actual, expected) {
+        var got;
+        try { got = "" + actual; } catch (ex) { got = "THREW: " + ("" + ex.message); }
+        Platform.Response.Write((got === "" + expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+    }
+
+    var req = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+    req.method = "GET";
+    var resp = req.send();
+
+    /* 1. content is a CLR value, not a JS string. */
+    assert("content is a CLR value", typeof resp.content, "clr");
+    assert("content converts to a non-empty JS string", ("" + resp.content).length > 0, "true");
+
+    /* 2. contentType IS populated on HttpRequest. */
+    assert("contentType is populated", ("" + resp.contentType).length > 0, "true");
+    assert("contentType carries the charset", ("" + resp.contentType).indexOf("charset") > -1, "true");
+
+    /* 3. DEVIATION — encoding is empty although the content-type has a charset. */
+    assert("DEV encoding is always empty (docs: populated response property)", resp.encoding, "");
+
+    /* 4. headers is a CLR object with real enumerable entries. */
+    assert("headers is a CLR object", typeof resp.headers, "clr");
+    var headerCount = 0;
+    for (var k in resp.headers) { headerCount = headerCount + 1; }
+    assert("headers enumeration yields real entries", headerCount > 0, "true");
+
+    /* 5. returnStatus / statusCode values. */
+    assert("returnStatus is 0 (OK)", resp.returnStatus, "0");
+    assert("statusCode is 200", resp.statusCode, "200");
+
+    /* 6. DEVIATION — CLR values never satisfy strict equality with a number. */
+    assert("DEV statusCode === 200 is false (docs: number)", resp.statusCode === 200 ? "true" : "false", "false");
+    assert("DEV returnStatus === 0 is false (docs: number)", resp.returnStatus === 0 ? "true" : "false", "false");
+    </script>
+
+- name: "Script.Util.HttpResponse.statusCode / returnStatus"
+  url: "/http/script-util-httprequest/#checking-the-status-code"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformContentSyndicationScriptUtilHttpRequest.html"
+  tagline: "CLR values — strict equality never matches"
+  part: "sfmc"
+  category: "HTTP"
+  object: "Script"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "checking-the-status-code"
+  body: |
+    The official docs type `statusCode` and `returnStatus` as numbers. At runtime both are **CLR values** (`typeof` reports `clr`), so strict equality against a JavaScript number literal is always false: `resp.statusCode === 200` does not match on a 200 response, and neither does `resp.returnStatus === 0` on a successful call. Loose comparison (`resp.statusCode == 200`) works, and converting once with `Number(resp.statusCode)` produces a real JavaScript number that `===` matches.
+  testScript: |
+    <script runat="server">
+    /*
+     * Chapter: Checking the status code
+     *
+     * Proves:
+     *   1. resp.statusCode is a CLR value, NOT a JavaScript number.
+     *   2. Strict equality against a number literal is ALWAYS false — this is
+     *      the deviation the chapter warns about (marked DEV).
+     *   3. The documented loose comparison (==) works.
+     *   4. The documented Number() conversion makes === work.
+     *
+     * EXPECTED OUTPUT: every line starts with PASS.
+     */
+
+    function assert(id, actual, expected) {
+        var got;
+        try { got = "" + actual; } catch (ex) { got = "THREW: " + ("" + ex.message); }
+        Platform.Response.Write((got === "" + expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+    }
+
+    var req = new Script.Util.HttpRequest("https://ssjs.guide/robots.txt");
+    req.method = "GET";
+    var resp = req.send();
+
+    /* 1. statusCode is a CLR value. */
+    assert("typeof statusCode is clr, not number", typeof resp.statusCode, "clr");
+    assert("statusCode stringifies to 200", "" + resp.statusCode, "200");
+
+    /* 2. DEVIATION — strict equality never matches a JS number literal. */
+    assert("DEV statusCode === 200 is false (docs type it number)", resp.statusCode === 200 ? "true" : "false", "false");
+    assert("DEV statusCode === 404 is also false", resp.statusCode === 404 ? "true" : "false", "false");
+
+    /* 3. The documented loose comparison works. */
+    assert("statusCode == 200 is true", resp.statusCode == 200 ? "true" : "false", "true");
+    assert("statusCode == 404 is false", resp.statusCode == 404 ? "true" : "false", "false");
+
+    /* 4. workaround — convert once with Number(), then === works. */
+    var status = Number(resp.statusCode);
+    assert("workaround typeof Number(statusCode) is number", typeof status, "number");
+    assert("workaround Number(statusCode) === 200 is true", status === 200 ? "true" : "false", "true");
+    </script>
+
 - name: "Script.Util.HttpGet.timeout"
   url: "/http/script-util-httpget/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformContentSyndicationScriptUtilHttpGet.html"

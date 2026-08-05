@@ -1,0 +1,266 @@
+# Test scripts for /wsproxy/updatebatch/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive
+# and negative.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# Every script creates its own run-labelled fixtures and deletes them again
+# with proxy.deleteBatch, so repeated runs stay clean.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+parameters: |
+  <script runat="server">
+  /*
+   * Chapter: Parameters
+   *
+   * Proves:
+   *   1. updateBatch is a CLR method on every WSProxy instance.
+   *   2. objectType (string) + propertiesArray (object[]) are BOTH required:
+   *      the 2-argument form is the documented minimum and succeeds
+   *      (min_args = 2).
+   *   3. updateOptions is OPTIONAL and, when supplied as a third argument in
+   *      the documented SOAP UpdateOptions shape
+   *      { SaveOptions: [{ PropertyName: "*", SaveAction: "UpdateAdd" }] },
+   *      is accepted (max_args = 3) and the call still succeeds.
+   *   4. NEGATIVE — calling with fewer than 2 arguments is rejected:
+   *      both the 1-argument and the 0-argument form throw.
+   *   5. propertiesArray carries ONE object per object to update — a
+   *      2-element array produces 2 Results entries.
+   *
+   * NOT PROBED: Date / number / boolean type-acceptance counterparts. None of
+   * the three parameters is in scope for the matrix — objectType is a SOAP
+   * type NAME (free-text string), propertiesArray is object[], and
+   * updateOptions is a SOAP UpdateOptions object. No parameter is documented
+   * as a date, a count/limit, or a 0/1 flag.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+  var tag = "ubP" + (new Date()).getTime();
+
+  /* 1. The method exists on the instance. */
+  assert("typeof proxy.updateBatch is clrmethodinfo", typeof proxy.updateBatch, "clrmethodinfo");
+
+  /* Fixtures to update. */
+  var seed = [];
+  for (var i = 0; i < 2; i++) {
+      seed.push({ EmailAddress: tag + i + "@joernberkefeld.com", SubscriberKey: tag + "-" + i, Status: "Active" });
+  }
+  seed.push({ EmailAddress: tag + "x@joernberkefeld.com", SubscriberKey: tag + "-x", Status: "Active" });
+  assert("fixtures created for the update probes", "" + proxy.createBatch("Subscriber", seed).Status, "OK");
+
+  /* 2. Documented minimum: objectType + propertiesArray (min_args = 2). */
+  var two = proxy.updateBatch("Subscriber", [
+      { SubscriberKey: tag + "-0", EmailAddress: tag + "0@joernberkefeld.com", Status: "Unsubscribed" },
+      { SubscriberKey: tag + "-1", EmailAddress: tag + "1@joernberkefeld.com", Status: "Unsubscribed" }
+  ]);
+  assert("2-argument form (objectType, propertiesArray) succeeds", "" + two.Status, "OK");
+
+  /* 5. One Results entry per propertiesArray element. */
+  assert("2 property objects produce 2 Results entries", "" + two.Results.length, "2");
+
+  /* 3. updateOptions is optional and accepted as a third argument. */
+  var three = proxy.updateBatch("Subscriber", [
+      { SubscriberKey: tag + "-x", EmailAddress: tag + "x@joernberkefeld.com", Status: "Unsubscribed" }
+  ], { SaveOptions: [{ PropertyName: "*", SaveAction: "UpdateAdd" }] });
+  assert("3-argument form with updateOptions succeeds (max_args = 3)", "" + three.Status, "OK");
+  assert("3-argument form still returns one result per item", "" + three.Results.length, "1");
+  assert("3-argument form result is OK", "" + three.Results[0].StatusCode, "OK");
+
+  /* 4. NEGATIVE — fewer than 2 arguments is rejected. */
+  assertThrows("updateBatch(objectType) with no propertiesArray throws (min_args = 2)", function () { return proxy.updateBatch("Subscriber"); });
+  assertThrows("updateBatch() with no arguments throws (min_args = 2)", function () { return proxy.updateBatch(); });
+
+  /* Cleanup — remove every subscriber this script created. */
+  var del = [];
+  for (var d = 0; d < 2; d++) { del.push({ SubscriberKey: tag + "-" + d }); }
+  del.push({ SubscriberKey: tag + "-x" });
+  assert("cleanup: all fixtures deleted", "" + proxy.deleteBatch("Subscriber", del).Status, "OK");
+  </script>
+
+return-value: |
+  <script runat="server">
+  /*
+   * Chapter: Return Value
+   *
+   * Proves the documented return shape, field by field:
+   *   1. updateBatch returns an OBJECT.
+   *   2. Status is a STRING and is "OK" when every object was updated.
+   *   3. RequestID is a STRING.
+   *   4. Results is an array with ONE entry per input item.
+   *   5. Each Results entry carries StatusCode ("OK" on success),
+   *      StatusMessage, OrdinalID (the zero-based index of the input object),
+   *      ErrorCode (0 on success) and an Object wrapper for the updated
+   *      record, which echoes the submitted properties.
+   *   6. The update really happened — proven by a read-back with
+   *      proxy.retrieve, not just by the returned status.
+   *   7. FAILURE PATH — Status is documented as "e.g. OK", i.e. not OK-only,
+   *      and each result carries an ErrorCode. An invalid item makes the call
+   *      return Status "Error" with StatusCode "Error" and a diagnostic
+   *      StatusMessage; the call itself does NOT throw.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+  var tag = "ubR" + (new Date()).getTime();
+
+  var made = proxy.createBatch("Subscriber", [
+      { EmailAddress: tag + "a@joernberkefeld.com", SubscriberKey: tag + "-a", Status: "Active" },
+      { EmailAddress: tag + "b@joernberkefeld.com", SubscriberKey: tag + "-b", Status: "Active" }
+  ]);
+  assert("fixtures created", "" + made.Status, "OK");
+
+  /* 1.-5. Success path. */
+  var result = proxy.updateBatch("Subscriber", [
+      { SubscriberKey: tag + "-a", EmailAddress: tag + "a@joernberkefeld.com", Status: "Unsubscribed" },
+      { SubscriberKey: tag + "-b", EmailAddress: tag + "b@joernberkefeld.com", Status: "Unsubscribed" }
+  ]);
+  assert("typeof result is object", typeof result, "object");
+  assert("typeof result.Status is string", typeof result.Status, "string");
+  assert("result.Status is OK", "" + result.Status, "OK");
+  assert("typeof result.RequestID is string", typeof result.RequestID, "string");
+  assert("result.RequestID is not empty", (("" + result.RequestID).length > 0) ? "true" : "false", "true");
+  assert("typeof result.Results is object", typeof result.Results, "object");
+  assert("result.Results.length matches the submitted item count", "" + result.Results.length, "2");
+  assert("Results[0].StatusCode is OK", "" + result.Results[0].StatusCode, "OK");
+  assert("Results[1].StatusCode is OK", "" + result.Results[1].StatusCode, "OK");
+  assert("typeof Results[0].StatusMessage is string", typeof result.Results[0].StatusMessage, "string");
+  assert("Results[0].StatusMessage is not empty", (("" + result.Results[0].StatusMessage).length > 0) ? "true" : "false", "true");
+  assert("Results[0].OrdinalID is the zero-based input index", "" + result.Results[0].OrdinalID, "0");
+  assert("Results[1].OrdinalID is the zero-based input index", "" + result.Results[1].OrdinalID, "1");
+  assert("Results[0].ErrorCode is 0 on success", "" + result.Results[0].ErrorCode, "0");
+  assert("typeof Results[0].Object is object", typeof result.Results[0].Object, "object");
+  assert("Results[0].Object echoes the submitted SubscriberKey", "" + result.Results[0].Object.SubscriberKey, tag + "-a");
+
+  /* 6. Read-back proof — the update really landed. */
+  var check = proxy.retrieve("Subscriber", ["SubscriberKey", "Status"], {
+      Property: "SubscriberKey", SimpleOperator: "equals", Value: tag + "-a"
+  });
+  assert("read-back retrieve succeeds", "" + check.Status, "OK");
+  assert("the updated subscriber exists", "" + check.Results.length, "1");
+  assert("the read-back row carries the updated Status", "" + check.Results[0].Status, "Unsubscribed");
+
+  /* 7. FAILURE PATH — Status and StatusCode are not OK-only. */
+  var badStatus = "", badCode = "", badMsgLen = "", badThrew = "false";
+  try {
+      var bad = proxy.updateBatch("Subscriber", [
+          { SubscriberKey: tag + "-a", EmailAddress: "not-an-email", Status: "Active" }
+      ]);
+      badStatus = "" + bad.Status;
+      badCode = "" + bad.Results[0].StatusCode;
+      badMsgLen = (("" + bad.Results[0].StatusMessage).length > 0) ? "true" : "false";
+  } catch (ex) {
+      badThrew = "true";
+  }
+  assert("an invalid item does NOT throw", badThrew, "false");
+  assert("result.Status is Error when an item fails", badStatus, "Error");
+  assert("Results[0].StatusCode is Error for the failed item", badCode, "Error");
+  assert("the failed item carries a diagnostic StatusMessage", badMsgLen, "true");
+
+  /* Cleanup. */
+  assert("cleanup: fixtures deleted", "" + proxy.deleteBatch("Subscriber", [
+      { SubscriberKey: tag + "-a" }, { SubscriberKey: tag + "-b" }
+  ]).Status, "OK");
+  </script>
+
+examples: |
+  <script runat="server">
+  /*
+   * Chapter: Examples — Batch upsert subscribers from form submissions
+   *
+   * Runs the page example verbatim in structure and proves every claim it
+   * makes:
+   *   1. Platform.Function.ParseJSON(rawBody + "") turns a JSON request body
+   *      into a real array whose elements expose the submitted properties,
+   *      so the example's submissions[i].email access works.
+   *   2. Building the batch array with a for loop and Array.push produces one
+   *      property object per submission.
+   *   3. ONE updateBatch call with the documented UpdateAdd save option
+   *      upserts every record: it CREATES subscribers that did not exist yet
+   *      and UPDATES one that did, in a single call, returning Status "OK"
+   *      with one result per item.
+   *   4. The records really exist afterwards with the submitted values —
+   *      proven by a read-back with proxy.retrieve, not just by the returned
+   *      status.
+   *
+   * NOT ASSERTABLE: Platform.Request.GetPostData() itself. The verification
+   * CloudPage is fetched with GET, so there is no request body to read, and
+   * consuming request input would also change later observations in the same
+   * request. The script feeds the identical JSON text to ParseJSON directly
+   * instead, which is the only part of that line the example depends on.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+  var tag = "ubE" + (new Date()).getTime();
+
+  /* One subscriber already exists — the example upserts over it. */
+  assert("pre-existing subscriber created", "" + proxy.createBatch("Subscriber", [
+      { EmailAddress: tag + "1@joernberkefeld.com", SubscriberKey: tag + "1@joernberkefeld.com", Status: "Active" }
+  ]).Status, "OK");
+
+  /* 1. The example's parse step, with a literal body instead of GetPostData. */
+  var rawBody = '[{"email":"' + tag + '1@joernberkefeld.com"},{"email":"' + tag + '2@joernberkefeld.com"}]';
+  var submissions = Platform.Function.ParseJSON(rawBody + "");
+  assert("ParseJSON returns the submitted rows", "" + submissions.length, "2");
+  assert("each parsed submission exposes its email property", "" + submissions[0].email, tag + "1@joernberkefeld.com");
+
+  /* 2. The example's loop. */
+  var batch = [];
+  for (var i = 0; i < submissions.length; i++) {
+      batch.push({
+          EmailAddress: submissions[i].email,
+          SubscriberKey: submissions[i].email,
+          Status: "Active"
+      });
+  }
+  assert("the loop built one property object per submission", "" + batch.length, "2");
+
+  /* 3. The example call, verbatim in structure. */
+  var result = proxy.updateBatch("Subscriber", batch, { SaveOptions: [{ PropertyName: "*", SaveAction: "UpdateAdd" }] });
+  assert("one updateBatch call upserts all submissions", "" + result.Status, "OK");
+  assert("the call returned one result per submission", "" + result.Results.length, "2");
+  assert("the pre-existing record was updated successfully", "" + result.Results[0].StatusCode, "OK");
+  assert("the new record was added by UpdateAdd", "" + result.Results[1].StatusCode, "OK");
+
+  /* 4. Read-back proof — including the record that did NOT exist before. */
+  var check = proxy.retrieve("Subscriber", ["SubscriberKey", "Status"], {
+      Property: "SubscriberKey", SimpleOperator: "equals", Value: tag + "2@joernberkefeld.com"
+  });
+  assert("read-back retrieve succeeds", "" + check.Status, "OK");
+  assert("UpdateAdd created the subscriber that did not exist", "" + check.Results.length, "1");
+  assert("the created subscriber carries the submitted Status", "" + check.Results[0].Status, "Active");
+
+  /* Cleanup. */
+  assert("cleanup: upserted subscribers deleted", "" + proxy.deleteBatch("Subscriber", [
+      { SubscriberKey: tag + "1@joernberkefeld.com" },
+      { SubscriberKey: tag + "2@joernberkefeld.com" }
+  ]).Status, "OK");
+  </script>

@@ -9,6 +9,7 @@ return_type: WSProxyInstance
 min_args: 0
 max_args: 0
 verification: verified
+test_scripts: complete
 ---
 
 Creates a new WSProxy instance. No arguments are needed. The proxy automatically authenticates using the current SFMC account credentials.
@@ -20,19 +21,27 @@ var proxy = new Script.Util.WSProxy();
 var result = proxy.retrieve("DataExtension", ["Name", "CustomerKey"]);
 ```
 
+{% include test-script.html bundle="wsproxy--constructor" chapter="examples" %}
+
 ## Notes
 
 ### No Platform.Load Required
 
 WSProxy does not require `Platform.Load("core", "1.1.5")`. It is available as `Script.Util.WSProxy` in all SSJS contexts.
 
+{% include test-script.html bundle="wsproxy--constructor" chapter="no-platform-load-required" %}
+
 ### Single Instance is Fine
 
 You can create one proxy instance and reuse it for multiple operations in the same script block.
 
+{% include test-script.html bundle="wsproxy--constructor" chapter="single-instance-is-fine" %}
+
 ### Business Unit Context
 
 By default, WSProxy operates in the context of the currently executing Business Unit. Use `proxy.setClientId()` to switch to a parent or child BU.
+
+{% include test-script.html bundle="wsproxy--constructor" chapter="business-unit-context" %}
 
 ## See Also
 

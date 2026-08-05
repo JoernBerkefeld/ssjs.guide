@@ -1,0 +1,390 @@
+# Test scripts for /wsproxy/performitem/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive
+# and negative.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# SOAP OBJECT UNDER TEST: QueryDefinition. Each script creates its own
+# run-labelled target Data Extension and QueryDefinition via WSProxy,
+# performs "Start" on it, and deletes every fixture again in the same
+# script, so repeated runs stay clean and no automation is touched.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+parameters: |
+  <script runat="server">
+  /*
+   * Chapter: Parameters
+   *
+   * Proves:
+   *   1. performItem is a CLR method on every WSProxy instance.
+   *   2. There is NO method named proxy.perform — invoking it fails.
+   *   3. objectType (string), properties (object) and action (string) are ALL
+   *      required: the 3-argument form is the documented minimum and succeeds
+   *      (min_args = 3).
+   *   4. performOptions is OPTIONAL and, when supplied as a fourth argument,
+   *      is accepted (max_args = 4) and the call still succeeds.
+   *   5. NEGATIVE — calling with fewer than 3 arguments is rejected: the
+   *      2-argument, 1-argument and 0-argument forms all throw.
+   *   6. properties identifies ONE target row (here by ObjectID) and produces
+   *      exactly ONE Results entry — the single-item counterpart of
+   *      performBatch.
+   *   7. action is CASE-INSENSITIVE at runtime: "start" behaves identically
+   *      to "Start" (same Status and same per-item StatusMessage).
+   *
+   * NOT PROBED: Date / number / boolean type-acceptance counterparts. No
+   * parameter is in scope for the matrix — objectType is a SOAP type NAME
+   * (free-text string), properties is an object, action is a perform VERB
+   * (free-text string, not a flag), and performOptions is a SOAP
+   * PerformOptions object. None is documented as a date, a count/limit or a
+   * 0/1 flag.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+  var runId = "" + (new Date()).getTime();
+  var deKey = "ssjsg_piP_de_" + runId;
+  var qdKey = "ssjsg_piP_qd_" + runId;
+
+  /* 1. The method exists on the instance. */
+  assert("typeof proxy.performItem is clrmethodinfo", typeof proxy.performItem, "clrmethodinfo");
+
+  /* 2. NEGATIVE — proxy.perform does not exist (older samples used it as shorthand). */
+  assertThrows("proxy.perform(...) is not a real method - invoking it throws", function () { return proxy.perform("QueryDefinition", { ObjectID: "0" }, "Start"); });
+
+  /* Fixtures — one target DE and one throwaway query definition. */
+  assert("fixture target data extension created", "" + proxy.createItem("DataExtension", {
+      CustomerKey: deKey, Name: deKey,
+      Fields: [{ Name: "SubscriberKey", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true }]
+  }).Status, "OK");
+  assert("fixture query definition created", "" + proxy.createItem("QueryDefinition", {
+      CustomerKey: qdKey, Name: qdKey,
+      QueryText: "SELECT SubscriberKey FROM _Subscribers",
+      TargetType: "DE",
+      DataExtensionTarget: { CustomerKey: deKey, Name: deKey },
+      TargetUpdateType: "Overwrite"
+  }).Status, "OK");
+
+  var oid = proxy.retrieve("QueryDefinition", ["ObjectID"], { Property: "CustomerKey", SimpleOperator: "equals", Value: qdKey }).Results[0].ObjectID;
+  assert("fixture resolves to an ObjectID GUID of canonical length", "" + ("" + oid).length, "36");
+
+  /* 3. + 6. Documented minimum: objectType + properties + action. */
+  var three = proxy.performItem("QueryDefinition", { ObjectID: oid }, "Start");
+  assert("3-argument form (objectType, properties, action) succeeds", "" + three.Status, "OK");
+  assert("a single properties object produces exactly one Results entry", "" + three.Results.length, "1");
+  assert("Results[0] reports OK for the acted-on row", "" + three.Results[0].StatusCode, "OK");
+
+  /* 7. action is case-insensitive. */
+  var lower = proxy.performItem("QueryDefinition", { ObjectID: oid }, "start");
+  assert("lowercase action 'start' returns the same Status as 'Start'", "" + lower.Status, "OK");
+  assert("lowercase action 'start' returns the same per-item StatusCode", "" + lower.Results[0].StatusCode, "OK");
+  assert("lowercase action 'start' returns the same per-item StatusMessage", "" + lower.Results[0].StatusMessage, "QueryDefinition perform called successfully");
+
+  /* 4. performOptions is optional and accepted as a fourth argument. */
+  var four = proxy.performItem("QueryDefinition", { ObjectID: oid }, "Start", { RequestType: "Synchronous" });
+  assert("4-argument form with performOptions succeeds (max_args = 4)", "" + four.Status, "OK");
+  assert("4-argument form still returns one result", "" + four.Results.length, "1");
+  assert("4-argument form result is OK", "" + four.Results[0].StatusCode, "OK");
+
+  /* 5. NEGATIVE — fewer than 3 arguments is rejected. */
+  assertThrows("performItem(objectType, properties) with no action throws (min_args = 3)", function () { return proxy.performItem("QueryDefinition", { ObjectID: oid }); });
+  assertThrows("performItem(objectType) alone throws (min_args = 3)", function () { return proxy.performItem("QueryDefinition"); });
+  assertThrows("performItem() with no arguments throws (min_args = 3)", function () { return proxy.performItem(); });
+
+  /* Cleanup — the business unit is left clean. */
+  assert("cleanup: query definition deleted", "" + proxy.deleteItem("QueryDefinition", { ObjectID: oid }).Status, "OK");
+  assert("cleanup: target data extension deleted", "" + proxy.deleteItem("DataExtension", { CustomerKey: deKey }).Status, "OK");
+  </script>
+
+differs-from-docs-action: |
+  <script runat="server">
+  /*
+   * Chapter: differs-from-docs callout (Parameters — action casing)
+   *
+   * The official docs type `action` as Enum('Start'), and this page
+   * previously claimed lowercase "start" fails. This script proves the
+   * runtime deviation:
+   *   1. DEV — the perform verb is CASE-INSENSITIVE: "start" (lowercase)
+   *      returns the same Status "OK" as the documented "Start"
+   *      (docs: action is Enum('Start')).
+   *   2. DEV — lowercase "start" also returns the same per-item StatusCode
+   *      and StatusMessage as "Start", i.e. the perform really ran.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+  var runId = "" + (new Date()).getTime();
+  var deKey = "ssjsg_piA_de_" + runId;
+  var qdKey = "ssjsg_piA_qd_" + runId;
+
+  assert("fixture target data extension created", "" + proxy.createItem("DataExtension", {
+      CustomerKey: deKey, Name: deKey,
+      Fields: [{ Name: "SubscriberKey", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true }]
+  }).Status, "OK");
+  assert("fixture query definition created", "" + proxy.createItem("QueryDefinition", {
+      CustomerKey: qdKey, Name: qdKey,
+      QueryText: "SELECT SubscriberKey FROM _Subscribers",
+      TargetType: "DE",
+      DataExtensionTarget: { CustomerKey: deKey, Name: deKey },
+      TargetUpdateType: "Overwrite"
+  }).Status, "OK");
+  var oid = proxy.retrieve("QueryDefinition", ["ObjectID"], { Property: "CustomerKey", SimpleOperator: "equals", Value: qdKey }).Results[0].ObjectID;
+
+  /* Documented casing — the baseline. */
+  var upper = proxy.performItem("QueryDefinition", { ObjectID: oid }, "Start");
+  assert("baseline: the documented verb 'Start' returns Status OK", "" + upper.Status, "OK");
+  assert("baseline: the documented verb 'Start' returns StatusCode OK", "" + upper.Results[0].StatusCode, "OK");
+
+  /* 1. + 2. DEV — lowercase works identically. */
+  var lower = proxy.performItem("QueryDefinition", { ObjectID: oid }, "start");
+  assert("DEV lowercase 'start' returns Status OK (docs: action is Enum('Start'))", "" + lower.Status, "OK");
+  assert("DEV lowercase 'start' returns the same StatusCode as 'Start' (docs: action is Enum('Start'))", "" + lower.Results[0].StatusCode, "" + upper.Results[0].StatusCode);
+  assert("DEV lowercase 'start' returns the same StatusMessage as 'Start' (docs: action is Enum('Start'))", "" + lower.Results[0].StatusMessage, "" + upper.Results[0].StatusMessage);
+
+  /* Cleanup — the business unit is left clean. */
+  assert("cleanup: query definition deleted", "" + proxy.deleteItem("QueryDefinition", { ObjectID: oid }).Status, "OK");
+  assert("cleanup: target data extension deleted", "" + proxy.deleteItem("DataExtension", { CustomerKey: deKey }).Status, "OK");
+  </script>
+
+return-value: |
+  <script runat="server">
+  /*
+   * Chapter: Return value
+   *
+   * Proves the documented return shape, field by field:
+   *   1. performItem returns an OBJECT.
+   *   2. Status is a STRING and is "OK" on success.
+   *   3. StatusMessage is a STRING and is EMPTY on success.
+   *   4. RequestID is a STRING (a GUID of canonical length).
+   *   5. Results is an array with a SINGLE entry for the acted-on item.
+   *   6. That Results entry carries StatusCode, StatusMessage
+   *      ("QueryDefinition perform called successfully"), OrdinalID,
+   *      ErrorCode and an Object (the acted-on API object).
+   *   7. That Results entry carries a Task sub-object with StatusCode,
+   *      StatusMessage, ID, TblAsyncID and InteractionObjectID.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+  var runId = "" + (new Date()).getTime();
+  var deKey = "ssjsg_piR_de_" + runId;
+  var qdKey = "ssjsg_piR_qd_" + runId;
+
+  assert("fixture target data extension created", "" + proxy.createItem("DataExtension", {
+      CustomerKey: deKey, Name: deKey,
+      Fields: [{ Name: "SubscriberKey", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true }]
+  }).Status, "OK");
+  assert("fixture query definition created", "" + proxy.createItem("QueryDefinition", {
+      CustomerKey: qdKey, Name: qdKey,
+      QueryText: "SELECT SubscriberKey FROM _Subscribers",
+      TargetType: "DE",
+      DataExtensionTarget: { CustomerKey: deKey, Name: deKey },
+      TargetUpdateType: "Overwrite"
+  }).Status, "OK");
+  var oid = proxy.retrieve("QueryDefinition", ["ObjectID"], { Property: "CustomerKey", SimpleOperator: "equals", Value: qdKey }).Results[0].ObjectID;
+
+  var result = proxy.performItem("QueryDefinition", { ObjectID: oid }, "Start");
+
+  /* 1.-4. Top-level shape. */
+  assert("typeof result is object", typeof result, "object");
+  assert("typeof result.Status is string", typeof result.Status, "string");
+  assert("result.Status is OK on success", "" + result.Status, "OK");
+  assert("typeof result.StatusMessage is string", typeof result.StatusMessage, "string");
+  assert("result.StatusMessage is empty on success", "" + result.StatusMessage, "");
+  assert("typeof result.RequestID is string", typeof result.RequestID, "string");
+  assert("result.RequestID is a GUID of canonical length", "" + ("" + result.RequestID).length, "36");
+
+  /* 5. A single Results entry for the acted-on item. */
+  assert("typeof result.Results is object", typeof result.Results, "object");
+  assert("result.Results holds a single entry for the acted-on item", "" + result.Results.length, "1");
+
+  /* 6. Per-item fields. */
+  assert("Results[0].StatusCode is OK", "" + result.Results[0].StatusCode, "OK");
+  assert("typeof Results[0].StatusMessage is string", typeof result.Results[0].StatusMessage, "string");
+  assert("Results[0].StatusMessage reports the perform outcome", "" + result.Results[0].StatusMessage, "QueryDefinition perform called successfully");
+  assert("typeof Results[0].OrdinalID is number", typeof result.Results[0].OrdinalID, "number");
+  assert("Results[0].OrdinalID is the zero-based item index", "" + result.Results[0].OrdinalID, "0");
+  assert("typeof Results[0].ErrorCode is number", typeof result.Results[0].ErrorCode, "number");
+  assert("Results[0].ErrorCode is 0 on success", "" + result.Results[0].ErrorCode, "0");
+  assert("typeof Results[0].Object is object - the acted-on API object", typeof result.Results[0].Object, "object");
+
+  /* 7. The Task sub-object. */
+  assert("typeof Results[0].Task is object", typeof result.Results[0].Task, "object");
+  assert("Results[0].Task.StatusCode is OK", "" + result.Results[0].Task.StatusCode, "OK");
+  assert("typeof Results[0].Task.StatusMessage is string", typeof result.Results[0].Task.StatusMessage, "string");
+  assert("Results[0].Task.StatusMessage is OK", "" + result.Results[0].Task.StatusMessage, "OK");
+  assert("typeof Results[0].Task.ID is string", typeof result.Results[0].Task.ID, "string");
+  assert("Results[0].Task.ID is a non-empty task identifier", "" + (("" + result.Results[0].Task.ID).length > 0), "true");
+  assert("typeof Results[0].Task.TblAsyncID is number", typeof result.Results[0].Task.TblAsyncID, "number");
+  assert("typeof Results[0].Task.InteractionObjectID is string", typeof result.Results[0].Task.InteractionObjectID, "string");
+  assert("Results[0].Task.InteractionObjectID is a GUID of canonical length", "" + ("" + result.Results[0].Task.InteractionObjectID).length, "36");
+
+  /* Cleanup — the business unit is left clean. */
+  assert("cleanup: query definition deleted", "" + proxy.deleteItem("QueryDefinition", { ObjectID: oid }).Status, "OK");
+  assert("cleanup: target data extension deleted", "" + proxy.deleteItem("DataExtension", { CustomerKey: deKey }).Status, "OK");
+  </script>
+
+differs-from-docs-return: |
+  <script runat="server">
+  /*
+   * Chapter: differs-from-docs callout (Return value)
+   *
+   * The official docs list only Status, StatusMessage, RequestID and Results,
+   * and do not detail the per-item Results[0] structure. This script proves
+   * the runtime deviations:
+   *   1. DEV — Results[0] carries a StatusCode the docs do not detail.
+   *   2. DEV — Results[0] carries an ErrorCode the docs do not detail.
+   *   3. DEV — Results[0] carries an Object (the acted-on API object) the
+   *      docs do not detail.
+   *   4. DEV — Results[0] carries a Task sub-object with an
+   *      InteractionObjectID the docs do not detail.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+  var runId = "" + (new Date()).getTime();
+  var deKey = "ssjsg_piB_de_" + runId;
+  var qdKey = "ssjsg_piB_qd_" + runId;
+
+  assert("fixture target data extension created", "" + proxy.createItem("DataExtension", {
+      CustomerKey: deKey, Name: deKey,
+      Fields: [{ Name: "SubscriberKey", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true }]
+  }).Status, "OK");
+  assert("fixture query definition created", "" + proxy.createItem("QueryDefinition", {
+      CustomerKey: qdKey, Name: qdKey,
+      QueryText: "SELECT SubscriberKey FROM _Subscribers",
+      TargetType: "DE",
+      DataExtensionTarget: { CustomerKey: deKey, Name: deKey },
+      TargetUpdateType: "Overwrite"
+  }).Status, "OK");
+  var oid = proxy.retrieve("QueryDefinition", ["ObjectID"], { Property: "CustomerKey", SimpleOperator: "equals", Value: qdKey }).Results[0].ObjectID;
+
+  var result = proxy.performItem("QueryDefinition", { ObjectID: oid }, "Start");
+
+  /* Documented top-level fields — the baseline the official docs do list. */
+  assert("baseline: the documented Status field is present and OK", "" + result.Status, "OK");
+  assert("baseline: the documented Results field is present", typeof result.Results, "object");
+
+  /* 1.-3. DEV — undocumented per-item fields. */
+  assert("DEV Results[0] carries a per-item StatusCode (not detailed in the docs)", "" + result.Results[0].StatusCode, "OK");
+  assert("DEV Results[0] carries a per-item ErrorCode (not detailed in the docs)", "" + result.Results[0].ErrorCode, "0");
+  assert("DEV Results[0] carries the acted-on Object (not detailed in the docs)", typeof result.Results[0].Object, "object");
+
+  /* 4. DEV — the Task sub-object. */
+  assert("DEV Results[0] carries a Task sub-object (not detailed in the docs)", typeof result.Results[0].Task, "object");
+  assert("DEV Task carries a StatusCode (not detailed in the docs)", "" + result.Results[0].Task.StatusCode, "OK");
+  assert("DEV Task carries an InteractionObjectID GUID (not detailed in the docs)", "" + ("" + result.Results[0].Task.InteractionObjectID).length, "36");
+
+  /* Cleanup — the business unit is left clean. */
+  assert("cleanup: query definition deleted", "" + proxy.deleteItem("QueryDefinition", { ObjectID: oid }).Status, "OK");
+  assert("cleanup: target data extension deleted", "" + proxy.deleteItem("DataExtension", { CustomerKey: deKey }).Status, "OK");
+  </script>
+
+examples: |
+  <script runat="server">
+  /*
+   * Chapter: Examples
+   *
+   * Runs the "Start a Query Definition" example verbatim in structure and
+   * proves every claim it makes:
+   *   1. `new Script.Util.WSProxy()` yields a WSProxy CLR instance.
+   *   2. `proxy.performItem("QueryDefinition", { ObjectID: queryObjectId },
+   *      "Start")` returns an object whose `Status` is the string "OK" — the
+   *      value the example writes out.
+   *   3. The single properties object produces a single Results entry that
+   *      reports the perform was called.
+   *   4. The perform really reached the API — the entry carries a Task
+   *      sub-object with an InteractionObjectID identifying the queued task.
+   *
+   * NOT ASSERTED: the second example ("Start an Automation") is labelled by
+   * the page itself as an "example shape" and is not runnable here — it would
+   * require an existing Automation fixture and starting a real automation on
+   * the business unit, which is destructive and outside this page's scope.
+   * The page states that the SOAP object type and property shape must match
+   * the target object; that requirement is object-specific, not a claim about
+   * performItem itself.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var runId = "" + (new Date()).getTime();
+  var deKey = "ssjsg_piX_de_" + runId;
+  var qdKey = "ssjsg_piX_qd_" + runId;
+
+  var setup = new Script.Util.WSProxy();
+  assert("fixture target data extension created", "" + setup.createItem("DataExtension", {
+      CustomerKey: deKey, Name: deKey,
+      Fields: [{ Name: "SubscriberKey", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true }]
+  }).Status, "OK");
+  assert("fixture query definition created", "" + setup.createItem("QueryDefinition", {
+      CustomerKey: qdKey, Name: qdKey,
+      QueryText: "SELECT SubscriberKey FROM _Subscribers",
+      TargetType: "DE",
+      DataExtensionTarget: { CustomerKey: deKey, Name: deKey },
+      TargetUpdateType: "Overwrite"
+  }).Status, "OK");
+  var queryObjectId = setup.retrieve("QueryDefinition", ["ObjectID"], { Property: "CustomerKey", SimpleOperator: "equals", Value: qdKey }).Results[0].ObjectID;
+
+  /* --- the page example, verbatim in structure --- */
+  var proxy = new Script.Util.WSProxy();
+  var result = proxy.performItem(
+      "QueryDefinition",
+      { ObjectID: queryObjectId },
+      "Start"
+  );
+  /* Write(result.Status); */
+
+  /* 1. + 2. */
+  assert("example line 1: the constructor yields a WSProxy CLR instance", typeof proxy, "clr");
+  assert("example line 2: performItem returns an object", typeof result, "object");
+  assert("example line 7: result.Status is a string", typeof result.Status, "string");
+  assert("example line 7: result.Status is OK", "" + result.Status, "OK");
+
+  /* 3. */
+  assert("the single properties object produces one Results entry", "" + result.Results.length, "1");
+  assert("Results[0] is the acted-on item", "" + result.Results[0].OrdinalID, "0");
+  assert("Results[0] reports the perform was called", "" + result.Results[0].StatusMessage, "QueryDefinition perform called successfully");
+
+  /* 4. */
+  assert("Results[0] carries a queued Task", typeof result.Results[0].Task, "object");
+  assert("Results[0].Task.InteractionObjectID is a GUID of canonical length", "" + ("" + result.Results[0].Task.InteractionObjectID).length, "36");
+
+  /* Cleanup — the business unit is left clean. */
+  assert("cleanup: query definition deleted", "" + proxy.deleteItem("QueryDefinition", { ObjectID: queryObjectId }).Status, "OK");
+  assert("cleanup: target data extension deleted", "" + proxy.deleteItem("DataExtension", { CustomerKey: deKey }).Status, "OK");
+  </script>

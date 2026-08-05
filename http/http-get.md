@@ -8,6 +8,7 @@ redirect_from:
   - /http/http-get/
 description: Core library HTTP GET — returns status and response body as an object. Requires Platform.Load.
 verification: verified
+test_scripts: complete
 ---
 
 `HTTP.Get` performs a GET request and returns a **single object** with numeric status information and the response payload (see official SOAP/Core HTTP documentation for the exact shape in your stack).
@@ -22,6 +23,8 @@ var response = HTTP.Get(url[, headerNames, headerValues]);
 
 When you omit `headerNames` and `headerValues`, pass **nothing** after `url`. When you include them, both arrays must have the same length and parallel ordering.
 
+{% include test-script.html bundle="http--http-get" chapter="syntax" %}
+
 ## Parameters
 
 | Name | Type | Required | Description |
@@ -29,6 +32,8 @@ When you omit `headerNames` and `headerValues`, pass **nothing** after `url`. Wh
 | `url` | string | Yes | Destination URL |
 | `headerNames` | string[] | No | Header names to send |
 | `headerValues` | string[] | No | Values paired with `headerNames` |
+
+{% include test-script.html bundle="http--http-get" chapter="parameters" %}
 
 ## Return value
 
@@ -40,6 +45,8 @@ Returns an **object** (not a bare string) with these fields:
 | `Content` | string | Response body |
 
 Note that `HTTP.Get` uses different field names than [`HTTP.Post`](/http/post/), which returns `{ StatusCode, Response }`. Inspect `Stringify(response)` when integrating a new endpoint.
+
+{% include test-script.html bundle="http--http-get" chapter="return-value" %}
 
 ## Example
 
@@ -53,6 +60,8 @@ var parsed = Platform.Function.ParseJSON(String(response.Content));
 ```
 
 To inspect HTTP status codes with full control, prefer [`Script.Util.HttpRequest`](/http/script-util-httprequest/).
+
+{% include test-script.html bundle="http--http-get" chapter="example" %}
 
 ## See Also
 

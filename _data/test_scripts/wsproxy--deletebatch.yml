@@ -1,0 +1,276 @@
+# Test scripts for /wsproxy/deletebatch/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive
+# and negative.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# Every script creates its own run-labelled fixtures and removes them again
+# in the same script, so repeated runs stay clean.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+parameters: |
+  <script runat="server">
+  /*
+   * Chapter: Parameters
+   *
+   * Proves:
+   *   1. deleteBatch is a CLR method on every WSProxy instance.
+   *   2. objectType (string) + propertiesArray (object[]) are BOTH required:
+   *      the 2-argument form is the documented minimum and succeeds
+   *      (min_args = 2).
+   *   3. deleteOptions is OPTIONAL and, when supplied as a third argument,
+   *      is accepted (max_args = 3) and the call still succeeds.
+   *   4. NEGATIVE — calling with fewer than 2 arguments is rejected:
+   *      both the 1-argument and the 0-argument form throw.
+   *   5. propertiesArray carries ONE object per object to delete — a
+   *      2-element array produces 2 Results entries.
+   *
+   * NOT PROBED: Date / number / boolean type-acceptance counterparts. None of
+   * the three parameters is in scope for the matrix — objectType is a SOAP
+   * type NAME (free-text string), propertiesArray is object[], and
+   * deleteOptions is a SOAP DeleteOptions object. No parameter is documented
+   * as a date, a count/limit, or a 0/1 flag.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+  var tag = "dbP" + (new Date()).getTime();
+
+  /* 1. The method exists on the instance. */
+  assert("typeof proxy.deleteBatch is clrmethodinfo", typeof proxy.deleteBatch, "clrmethodinfo");
+
+  /* Fixtures to delete. */
+  var batch = [];
+  for (var i = 0; i < 2; i++) {
+      batch.push({ EmailAddress: tag + i + "@joernberkefeld.com", SubscriberKey: tag + "-" + i, Status: "Active" });
+  }
+  batch.push({ EmailAddress: tag + "x@joernberkefeld.com", SubscriberKey: tag + "-x", Status: "Active" });
+  assert("fixtures created for the delete probes", "" + proxy.createBatch("Subscriber", batch).Status, "OK");
+
+  /* 2. Documented minimum: objectType + propertiesArray (min_args = 2). */
+  var two = proxy.deleteBatch("Subscriber", [
+      { SubscriberKey: tag + "-0" },
+      { SubscriberKey: tag + "-1" }
+  ]);
+  assert("2-argument form (objectType, propertiesArray) succeeds", "" + two.Status, "OK");
+
+  /* 5. One Results entry per propertiesArray element. */
+  assert("2 property objects produce 2 Results entries", "" + two.Results.length, "2");
+
+  /* 3. deleteOptions is optional and accepted as a third argument. */
+  var three = proxy.deleteBatch("Subscriber", [{ SubscriberKey: tag + "-x" }], { RequestType: "Synchronous" });
+  assert("3-argument form with deleteOptions succeeds (max_args = 3)", "" + three.Status, "OK");
+  assert("3-argument form still returns one result per item", "" + three.Results.length, "1");
+  assert("3-argument form result is OK", "" + three.Results[0].StatusCode, "OK");
+
+  /* 4. NEGATIVE — fewer than 2 arguments is rejected. */
+  assertThrows("deleteBatch(objectType) with no propertiesArray throws (min_args = 2)", function () { return proxy.deleteBatch("Subscriber"); });
+  assertThrows("deleteBatch() with no arguments throws (min_args = 2)", function () { return proxy.deleteBatch(); });
+
+  /* Cleanup verification — every fixture is gone. */
+  var left = proxy.retrieve("Subscriber", ["SubscriberKey"], {
+      Property: "SubscriberKey", SimpleOperator: "equals", Value: tag + "-0"
+  });
+  assert("cleanup: the deleted subscriber no longer exists", "" + left.Results.length, "0");
+  </script>
+
+return-value: |
+  <script runat="server">
+  /*
+   * Chapter: Return value
+   *
+   * Proves the documented return shape, field by field:
+   *   1. deleteBatch returns an OBJECT.
+   *   2. Status is a STRING and is "OK" when every object was deleted.
+   *   3. RequestID is a STRING.
+   *   4. There is NO top-level StatusMessage (typeof is "undefined").
+   *   5. Results is an array with one entry per input object.
+   *   6. Each Results entry carries StatusCode, StatusMessage, ErrorCode,
+   *      OrdinalID and Object. OrdinalID is the zero-based index of the
+   *      input object.
+   *   7. FAILURE PATH — the documented Status / StatusCode tokens are not
+   *      OK-only. Deleting an object that does not exist makes the call
+   *      return Status "Error" with StatusCode "Error", a diagnostic
+   *      StatusMessage and a non-zero ErrorCode; the call itself does NOT
+   *      throw.
+   *   8. The delete really happened — proven by a read-back, not just by the
+   *      returned status.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+  var tag = "dbR" + (new Date()).getTime();
+
+  var made = proxy.createBatch("Subscriber", [
+      { EmailAddress: tag + "a@joernberkefeld.com", SubscriberKey: tag + "-a", Status: "Active" },
+      { EmailAddress: tag + "b@joernberkefeld.com", SubscriberKey: tag + "-b", Status: "Active" }
+  ]);
+  assert("fixtures created", "" + made.Status, "OK");
+
+  /* 1.-6. Success path. */
+  var result = proxy.deleteBatch("Subscriber", [
+      { SubscriberKey: tag + "-a" },
+      { SubscriberKey: tag + "-b" }
+  ]);
+  assert("typeof result is object", typeof result, "object");
+  assert("typeof result.Status is string", typeof result.Status, "string");
+  assert("result.Status is OK", "" + result.Status, "OK");
+  assert("typeof result.RequestID is string", typeof result.RequestID, "string");
+  assert("result.RequestID is not empty", (("" + result.RequestID).length > 0) ? "true" : "false", "true");
+  assert("there is NO top-level StatusMessage", typeof result.StatusMessage, "undefined");
+  assert("typeof result.Results is object", typeof result.Results, "object");
+  assert("result.Results.length matches the submitted object count", "" + result.Results.length, "2");
+  assert("Results[0].StatusCode is OK", "" + result.Results[0].StatusCode, "OK");
+  assert("Results[1].StatusCode is OK", "" + result.Results[1].StatusCode, "OK");
+  assert("typeof Results[0].StatusMessage is string", typeof result.Results[0].StatusMessage, "string");
+  assert("Results[0].StatusMessage explains the outcome", "" + result.Results[0].StatusMessage, "Subscriber deleted");
+  assert("Results[0].ErrorCode is 0 on success", "" + result.Results[0].ErrorCode, "0");
+  assert("Results[0].OrdinalID is the zero-based input index", "" + result.Results[0].OrdinalID, "0");
+  assert("Results[1].OrdinalID is the zero-based input index", "" + result.Results[1].OrdinalID, "1");
+  assert("typeof Results[0].Object is object", typeof result.Results[0].Object, "object");
+
+  /* 8. Read-back proof — the objects really are gone. */
+  var check = proxy.retrieve("Subscriber", ["SubscriberKey"], {
+      Property: "SubscriberKey", SimpleOperator: "equals", Value: tag + "-a"
+  });
+  assert("read-back retrieve succeeds", "" + check.Status, "OK");
+  assert("the deleted subscriber no longer exists", "" + check.Results.length, "0");
+
+  /* 7. FAILURE PATH — Status and StatusCode are not OK-only. */
+  var bad = proxy.deleteBatch("Subscriber", [{ SubscriberKey: tag + "-does-not-exist" }]);
+  assert("deleting a missing object does NOT throw — it returns an object", typeof bad, "object");
+  assert("result.Status is Error when an object cannot be deleted", "" + bad.Status, "Error");
+  assert("Results[0].StatusCode is Error for the failed object", "" + bad.Results[0].StatusCode, "Error");
+  assert("Results[0].StatusMessage explains the failure", "" + bad.Results[0].StatusMessage, "The subscriber was not found.");
+  assert("Results[0].ErrorCode carries the SOAP error number", "" + bad.Results[0].ErrorCode, "12001");
+  assert("the failure result still carries a RequestID", typeof bad.RequestID, "string");
+  assert("the failure result still has no top-level StatusMessage", typeof bad.StatusMessage, "undefined");
+  </script>
+
+example: |
+  <script runat="server">
+  /*
+   * Chapter: Example
+   *
+   * Runs the page example verbatim in structure and proves every claim it
+   * makes:
+   *   1. A DataExtensionObject row is identified by CustomerKey plus a Keys
+   *      array of { Name, Value } pairs, and deleteBatch removes it in one
+   *      call — result.Status is "OK".
+   *   2. The row really is gone afterwards — proven by a read-back with
+   *      DataExtension.Rows.Lookup, not just by the returned status.
+   *   3. Several rows can be deleted in ONE call, and the Results array
+   *      carries one entry per submitted object with the matching OrdinalID.
+   *   4. NEGATIVE — the nested SOAP form `Keys: { Key: [ ... ] }` is NOT
+   *      accepted: it throws "Error executing delete call." The page example
+   *      therefore uses the flat `Keys: [ ... ]` array form. (proxy.deleteItem
+   *      behaves identically.)
+   *   5. NEGATIVE — the bracketed objectType form
+   *      "DataExtensionObject[<key>]" is likewise NOT accepted and throws;
+   *      the DE is identified by the CustomerKey property inside each
+   *      properties object instead.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  Platform.Load("core", "1.1.5");
+  var proxy = new Script.Util.WSProxy();
+  var tag = "dbX" + (new Date()).getTime();
+  var deKey = tag + "_de";
+
+  /* Fixture data extension with a text primary key. */
+  assert("fixture data extension created", "" + proxy.createItem("DataExtension", {
+      Name: deKey,
+      CustomerKey: deKey,
+      Fields: [{ Name: "Email", FieldType: "Text", MaxLength: 254, IsPrimaryKey: true, IsRequired: true }]
+  }).Status, "OK");
+
+  var de = DataExtension.Init(deKey);
+  de.Rows.Add({ Email: tag + "1@joernberkefeld.com" });
+  de.Rows.Add({ Email: tag + "2@joernberkefeld.com" });
+  de.Rows.Add({ Email: tag + "3@joernberkefeld.com" });
+  assert("three fixture rows exist", "" + de.Rows.Retrieve().length, "3");
+
+  /* 1. The page example, verbatim in structure. */
+  var items = [
+      {
+          CustomerKey: deKey,
+          Keys: [{ Name: "Email", Value: tag + "1@joernberkefeld.com" }]
+      }
+  ];
+  var result = proxy.deleteBatch("DataExtensionObject", items);
+  assert("the example call returns Status OK", "" + result.Status, "OK");
+  assert("the example call returns one result", "" + result.Results.length, "1");
+  assert("the example result StatusCode is OK", "" + result.Results[0].StatusCode, "OK");
+  assert("the example result StatusMessage confirms the deletion", "" + result.Results[0].StatusMessage, "Deleted DataExtensionObject");
+
+  /* 2. Read-back proof: the row is gone. */
+  var remaining = de.Rows.Retrieve();
+  var stillThere = 0;
+  for (var r = 0; r < remaining.length; r++) {
+      if ("" + remaining[r].Email === tag + "1@joernberkefeld.com") { stillThere = stillThere + 1; }
+  }
+  assert("read-back: the deleted row is gone", "" + stillThere, "0");
+  assert("read-back: two rows remain", "" + de.Rows.Retrieve().length, "2");
+
+  /* 3. Several rows in one call. */
+  var multi = proxy.deleteBatch("DataExtensionObject", [
+      { CustomerKey: deKey, Keys: [{ Name: "Email", Value: tag + "2@joernberkefeld.com" }] },
+      { CustomerKey: deKey, Keys: [{ Name: "Email", Value: tag + "3@joernberkefeld.com" }] }
+  ]);
+  assert("two rows deleted in one call return Status OK", "" + multi.Status, "OK");
+  assert("two submitted objects produce two Results entries", "" + multi.Results.length, "2");
+  assert("Results[1].OrdinalID is the zero-based input index", "" + multi.Results[1].OrdinalID, "1");
+  assert("read-back: no rows remain", "" + de.Rows.Retrieve().length, "0");
+
+  /* 4. NEGATIVE — the nested deleteItem key form is rejected by deleteBatch. */
+  de.Rows.Add({ Email: tag + "9@joernberkefeld.com" });
+  assertThrows("nested Keys: { Key: [ ... ] } is rejected by deleteBatch", function () {
+      return proxy.deleteBatch("DataExtensionObject", [
+          { CustomerKey: deKey, Keys: { Key: [{ Name: "Email", Value: tag + "9@joernberkefeld.com" }] } }
+      ]);
+  });
+  assert("the row survived the rejected nested-Keys call", "" + de.Rows.Retrieve().length, "1");
+
+  /* 5. NEGATIVE — the bracketed objectType form is rejected by deleteBatch. */
+  assertThrows("bracketed objectType DataExtensionObject[key] is rejected by deleteBatch", function () {
+      return proxy.deleteBatch("DataExtensionObject[" + deKey + "]", [
+          { Keys: [{ Name: "Email", Value: tag + "9@joernberkefeld.com" }] }
+      ]);
+  });
+  assert("the row survived the rejected bracketed-objectType call", "" + de.Rows.Retrieve().length, "1");
+
+  /* Cleanup. */
+  assert("cleanup: fixture data extension deleted", "" + proxy.deleteBatch("DataExtension", [{ CustomerKey: deKey }]).Status, "OK");
+  </script>

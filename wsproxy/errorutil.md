@@ -7,11 +7,14 @@ permalink: /wsproxy/errorutil/
 redirect_from:
   - /platform-objects/errorutil/
 verification: verified
+test_scripts: complete
 differs_from_docs: true
 description: Throw when a WSProxy result indicates failure so try/catch can handle SOAP-level errors. Deprecated in newer Core versions.
 ---
 
-{% include callout.html type="caution" content="<strong>Deprecated / version-locked.</strong> Runtime testing shows <code>ErrorUtil</code> is provided <strong>only</strong> by <code>Platform.Load(\"Core\", \"1\")</code>. Under newer Core versions (<code>1.1.1</code>, <code>1.1.5</code>) <code>ErrorUtil</code> is <code>undefined</code> and <code>ErrorUtil.ThrowWSProxyError()</code> throws a <code>ReferenceError</code>. Prefer the <code>result.Status</code> check shown below, which works on every Core version." %}
+{% include callout.html type="caution" content="<strong>Deprecated / version-locked.</strong> Runtime testing shows <code>ErrorUtil</code> is provided <strong>only</strong> by <code>Platform.Load(\"Core\", \"1\")</code>. Under newer Core versions (<code>1.1.1</code>, <code>1.1.5</code>) <code>ErrorUtil</code> is <code>undefined</code> and calling <code>ErrorUtil.ThrowWSProxyError()</code> throws a <code>TypeError</code> (<code>Object expected: ThrowWSProxyError</code>). Prefer the <code>result.Status</code> check shown below, which works on every Core version." %}
+
+{% include test-script.html bundle="wsproxy--errorutil" chapter="core-version-lock" label="Show test script — ErrorUtil is undefined on newer Core versions" %}
 
 WSProxy methods return a **result object** with a `Status` field instead of throwing on many SOAP failures. Historically `ErrorUtil.ThrowWSProxyError(result)` inspected that status and threw when the call failed, so you could use ordinary `try` / `catch` flow.
 
@@ -37,6 +40,8 @@ try {
 }
 ```
 
+{% include test-script.html bundle="wsproxy--errorutil" chapter="recommended-replacement" %}
+
 ## ThrowWSProxyError {#throwwsproxyerror}
 
 Legacy — only under `Platform.Load("Core", "1")`.
@@ -49,7 +54,9 @@ ErrorUtil.ThrowWSProxyError(result);
 |-----------|------|----------|-------------|
 | `result` | object | Yes | Any WSProxy return value (`retrieve`, `performItem`, `createItem`, etc.). Minimum shape includes `Status`, `RequestID`, and `Results`. |
 
-Returns nothing when `Status` indicates success; throws when status indicates an error. **Only available under `Platform.Load("Core", "1")`.** When it throws on a real WSProxy error, the thrown value is a plain **string** (e.g. `"Error: Data extension does not exist: …"`), not an `Error` object — read it with `String(ex)`; `ex.message` and `ex.description` are `undefined`.
+Returns the `Status` string (e.g. `"OK"`) when `Status` indicates success; throws when status indicates an error. **Only available under `Platform.Load("Core", "1")`.** When it throws on a real WSProxy error, the thrown value is a plain **string** (e.g. `"Error: Data extension does not exist: …"`), not an `Error` object — read it with `String(ex)`; `ex.message` and `ex.description` are `undefined`.
+
+{% include test-script.html bundle="wsproxy--errorutil" chapter="throwwsproxyerror" %}
 
 ## See Also
 

@@ -1,0 +1,351 @@
+# Test scripts for /wsproxy/createbatch/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive
+# and negative.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# Every script creates its own run-labelled fixtures and deletes them again
+# with proxy.deleteBatch, so repeated runs stay clean.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+parameters: |
+  <script runat="server">
+  /*
+   * Chapter: Parameters
+   *
+   * Proves:
+   *   1. createBatch is a CLR method on every WSProxy instance.
+   *   2. objectType (string) + propertiesArray (object[]) are BOTH required:
+   *      the 2-argument form is the documented minimum and succeeds
+   *      (min_args = 2).
+   *   3. createOptions is OPTIONAL and, when supplied as a third argument,
+   *      is accepted (max_args = 3) and the call still succeeds.
+   *   4. NEGATIVE — calling with fewer than 2 arguments is rejected:
+   *      both the 1-argument and the 0-argument form throw.
+   *   5. propertiesArray carries ONE object per item to create — a 3-element
+   *      array produces 3 Results entries.
+   *
+   * NOT PROBED: Date / number / boolean type-acceptance counterparts. None of
+   * the three parameters is in scope for the matrix — objectType is a SOAP
+   * type NAME (free-text string), propertiesArray is object[], and
+   * createOptions is a SOAP CreateOptions object. No parameter is documented
+   * as a date, a count/limit, or a 0/1 flag.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+  var tag = "cbP" + (new Date()).getTime();
+
+  /* 1. The method exists on the instance. */
+  assert("typeof proxy.createBatch is clrmethodinfo", typeof proxy.createBatch, "clrmethodinfo");
+
+  /* 2. Documented minimum: objectType + propertiesArray (min_args = 2). */
+  var batch = [];
+  for (var i = 0; i < 3; i++) {
+      batch.push({ EmailAddress: tag + i + "@joernberkefeld.com", SubscriberKey: tag + "-" + i, Status: "Active" });
+  }
+  var two = proxy.createBatch("Subscriber", batch);
+  assert("2-argument form (objectType, propertiesArray) succeeds", "" + two.Status, "OK");
+
+  /* 5. One Results entry per propertiesArray element. */
+  assert("3 property objects produce 3 Results entries", "" + two.Results.length, "3");
+
+  /* 3. createOptions is optional and accepted as a third argument. */
+  var three = proxy.createBatch("Subscriber", [
+      { EmailAddress: tag + "x@joernberkefeld.com", SubscriberKey: tag + "-x", Status: "Active" }
+  ], { RequestType: "Synchronous" });
+  assert("3-argument form with createOptions succeeds (max_args = 3)", "" + three.Status, "OK");
+  assert("3-argument form still returns one result per item", "" + three.Results.length, "1");
+  assert("3-argument form result is OK", "" + three.Results[0].StatusCode, "OK");
+
+  /* 4. NEGATIVE — fewer than 2 arguments is rejected. */
+  assertThrows("createBatch(objectType) with no propertiesArray throws (min_args = 2)", function () { return proxy.createBatch("Subscriber"); });
+  assertThrows("createBatch() with no arguments throws (min_args = 2)", function () { return proxy.createBatch(); });
+
+  /* Cleanup — remove every subscriber this script created. */
+  var del = [];
+  for (var d = 0; d < 3; d++) { del.push({ SubscriberKey: tag + "-" + d }); }
+  del.push({ SubscriberKey: tag + "-x" });
+  var cleanup = proxy.deleteBatch("Subscriber", del);
+  assert("cleanup: all fixtures deleted", "" + cleanup.Status, "OK");
+  </script>
+
+return-value: |
+  <script runat="server">
+  /*
+   * Chapter: Return Value
+   *
+   * Proves the documented return shape, field by field:
+   *   1. createBatch returns an OBJECT.
+   *   2. Status is "OK" when every item was created.
+   *   3. RequestID is a string.
+   *   4. Results is an array with one entry per submitted property object.
+   *   5. Each Results entry carries StatusCode ("OK" on success),
+   *      StatusMessage (a string) and Object (the created object, echoing
+   *      back the submitted properties).
+   *   6. FAILURE PATH — the documented Status / StatusCode tokens are not
+   *      OK-only. An invalid item makes the call return Status "Error" with
+   *      StatusCode "Error" and a diagnostic StatusMessage, and the call
+   *      itself does NOT throw.
+   *   7. The shape is identical for a non-Subscriber object type
+   *      (DataExtension), so the documented return value is generic.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+  var tag = "cbR" + (new Date()).getTime();
+
+  /* 1.-5. Success path. */
+  var result = proxy.createBatch("Subscriber", [
+      { EmailAddress: tag + "a@joernberkefeld.com", SubscriberKey: tag + "-a", Status: "Active" },
+      { EmailAddress: tag + "b@joernberkefeld.com", SubscriberKey: tag + "-b", Status: "Active" }
+  ]);
+  assert("typeof result is object", typeof result, "object");
+  assert("result.Status is OK", "" + result.Status, "OK");
+  assert("typeof result.RequestID is string", typeof result.RequestID, "string");
+  assert("result.RequestID is not empty", (("" + result.RequestID).length > 0) ? "true" : "false", "true");
+  assert("typeof result.Results is object", typeof result.Results, "object");
+  assert("result.Results.length matches the submitted item count", "" + result.Results.length, "2");
+  assert("Results[0].StatusCode is OK", "" + result.Results[0].StatusCode, "OK");
+  assert("Results[1].StatusCode is OK", "" + result.Results[1].StatusCode, "OK");
+  assert("typeof Results[0].StatusMessage is string", typeof result.Results[0].StatusMessage, "string");
+  assert("Results[0].StatusMessage is not empty", (("" + result.Results[0].StatusMessage).length > 0) ? "true" : "false", "true");
+  assert("typeof Results[0].Object is object", typeof result.Results[0].Object, "object");
+  assert("Results[0].Object echoes the submitted SubscriberKey", "" + result.Results[0].Object.SubscriberKey, tag + "-a");
+  assert("Results[1].Object echoes the submitted SubscriberKey", "" + result.Results[1].Object.SubscriberKey, tag + "-b");
+
+  /* 6. FAILURE PATH — Status and StatusCode are not OK-only. */
+  var bad = proxy.createBatch("Subscriber", [
+      { EmailAddress: "not-an-email", SubscriberKey: tag + "-bad", Status: "Active" }
+  ]);
+  assert("an invalid item does NOT throw — it returns an object", typeof bad, "object");
+  assert("result.Status is Error when an item fails", "" + bad.Status, "Error");
+  assert("Results[0].StatusCode is Error for the failed item", "" + bad.Results[0].StatusCode, "Error");
+  assert("Results[0].StatusMessage explains the failure", "" + bad.Results[0].StatusMessage, "InvalidEmailAddress");
+  assert("the failure result still carries a RequestID", typeof bad.RequestID, "string");
+
+  /* 7. Same shape for a different object type. */
+  var deFields = [{ Name: "SubscriberKey", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true }];
+  var deResult = proxy.createBatch("DataExtension", [
+      { Name: tag + "_de1", CustomerKey: tag + "_de1", Fields: deFields },
+      { Name: tag + "_de2", CustomerKey: tag + "_de2", Fields: deFields }
+  ]);
+  assert("DataExtension batch returns Status OK", "" + deResult.Status, "OK");
+  assert("DataExtension batch returns one result per item", "" + deResult.Results.length, "2");
+  assert("DataExtension Results[0].StatusCode is OK", "" + deResult.Results[0].StatusCode, "OK");
+  assert("DataExtension Results[0].Object echoes CustomerKey", "" + deResult.Results[0].Object.CustomerKey, tag + "_de1");
+
+  /* Cleanup. */
+  var subCleanup = proxy.deleteBatch("Subscriber", [
+      { SubscriberKey: tag + "-a" }, { SubscriberKey: tag + "-b" }
+  ]);
+  assert("cleanup: subscribers deleted", "" + subCleanup.Status, "OK");
+  var deCleanup = proxy.deleteBatch("DataExtension", [
+      { CustomerKey: tag + "_de1" }, { CustomerKey: tag + "_de2" }
+  ]);
+  assert("cleanup: data extensions deleted", "" + deCleanup.Status, "OK");
+  </script>
+
+examples: |
+  <script runat="server">
+  /*
+   * Chapter: Examples — Batch insert subscriber records
+   *
+   * Runs the page example verbatim in structure and proves every claim it
+   * makes:
+   *   1. Building the batch array with a for loop and Array.push works, and
+   *      one call creates ALL of the submitted records (three subscribers in
+   *      a single createBatch call, not three calls).
+   *   2. The records really exist afterwards — proven by a read-back with
+   *      proxy.retrieve, not just by the returned status.
+   *   3. result.Results is iterable with a plain index loop, and the example's
+   *      error test — results[j].StatusCode !== "OK" — is false for every
+   *      successfully created record.
+   *   4. NEGATIVE — the same error test is TRUE for a record that failed, so
+   *      the example's failure branch is reachable and correct.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+  var tag = "cbE" + (new Date()).getTime();
+
+  /* 1. The example, verbatim in structure. */
+  var submissions = [
+      { email: tag + "1@joernberkefeld.com", name: "Alice" },
+      { email: tag + "2@joernberkefeld.com", name: "Bob" },
+      { email: tag + "3@joernberkefeld.com", name: "Carol" }
+  ];
+
+  var batch = [];
+  for (var i = 0; i < submissions.length; i++) {
+      batch.push({
+          EmailAddress: submissions[i].email,
+          SubscriberKey: submissions[i].email,
+          Status: "Active"
+      });
+  }
+  assert("the loop built one property object per submission", "" + batch.length, "3");
+
+  var result = proxy.createBatch("Subscriber", batch);
+  assert("one createBatch call creates all three records", "" + result.Status, "OK");
+  assert("the call returned three results", "" + result.Results.length, "3");
+
+  /* 3. The example's result loop and its error test. */
+  var failures = 0;
+  var results = result.Results;
+  for (var j = 0; j < results.length; j++) {
+      if (results[j].StatusCode !== "OK") {
+          failures = failures + 1;
+      }
+  }
+  assert("the example error test finds no failures for a clean batch", "" + failures, "0");
+
+  /* 2. Read-back proof: the subscribers really exist. */
+  var check = proxy.retrieve("Subscriber", ["SubscriberKey"], {
+      Property: "SubscriberKey", SimpleOperator: "equals", Value: submissions[0].email
+  });
+  assert("read-back retrieve succeeds", "" + check.Status, "OK");
+  assert("the first batched subscriber exists after the call", "" + check.Results.length, "1");
+  assert("the read-back row has the submitted SubscriberKey", "" + check.Results[0].SubscriberKey, submissions[0].email);
+
+  /* 4. NEGATIVE — the failure branch of the example is reachable. */
+  var badResult = proxy.createBatch("Subscriber", [
+      { EmailAddress: "not-an-email", SubscriberKey: tag + "-bad", Status: "Active" }
+  ]);
+  var badFailures = 0;
+  var badResults = badResult.Results;
+  for (var k = 0; k < badResults.length; k++) {
+      if (badResults[k].StatusCode !== "OK") {
+          badFailures = badFailures + 1;
+      }
+  }
+  assert("the example error test detects a failed record", "" + badFailures, "1");
+  assert("the failed record exposes a StatusMessage for the example to print", "" + badResults[0].StatusMessage, "InvalidEmailAddress");
+
+  /* Cleanup. */
+  var del = [];
+  for (var d = 0; d < submissions.length; d++) { del.push({ SubscriberKey: submissions[d].email }); }
+  var cleanup = proxy.deleteBatch("Subscriber", del);
+  assert("cleanup: batched subscribers deleted", "" + cleanup.Status, "OK");
+  </script>
+
+notes: |
+  <script runat="server">
+  /*
+   * Chapter: Notes — batch size limit and the chunking workaround
+   *
+   * Proves:
+   *   1. The recommended chunkArray workaround behaves as documented: it
+   *      splits an array into consecutive slices of the requested size, the
+   *      final chunk holds the remainder, no element is lost or duplicated,
+   *      and the order is preserved.
+   *   2. Array.prototype.slice — the primitive the helper depends on — works
+   *      in SSJS for this use, including a final slice that runs past the end
+   *      of the array.
+   *   3. Feeding the produced chunks to createBatch in a loop actually
+   *      creates every record: 5 records chunked into slices of 2 produce
+   *      3 successful calls and 5 rows readable back through proxy.retrieve.
+   *
+   * NOT ASSERTABLE: the ~2,500-records-per-call SOAP limit itself. Proving it
+   * would require submitting more than 2,500 records in one call, which would
+   * create thousands of fixture rows and far exceed the CloudPage timeout.
+   * The note is a Salesforce platform limit, not an SSJS behaviour; the
+   * script proves the WORKAROUND the note recommends instead.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  /* The helper exactly as documented on the page. */
+  function chunkArray(arr, size) {
+      var chunks = [];
+      for (var i = 0; i < arr.length; i += size) {
+          chunks.push(arr.slice(i, i + size));
+      }
+      return chunks;
+  }
+
+  /* 2. slice works, including past the end of the array. */
+  var sample = [1, 2, 3, 4, 5];
+  assert("slice(0,2) returns two elements", "" + sample.slice(0, 2).length, "2");
+  assert("slice(4,6) past the end returns just the remainder", "" + sample.slice(4, 6).length, "1");
+  assert("slice preserves values", "" + sample.slice(2, 4).join(","), "3,4");
+
+  /* 1. The helper splits correctly. */
+  var chunks = chunkArray(sample, 2);
+  assert("5 items chunked by 2 gives 3 chunks", "" + chunks.length, "3");
+  assert("chunk 0 holds the first 2 items", "" + chunks[0].join(","), "1,2");
+  assert("chunk 1 holds the next 2 items", "" + chunks[1].join(","), "3,4");
+  assert("the final chunk holds the remainder", "" + chunks[2].join(","), "5");
+
+  var total = 0;
+  for (var c = 0; c < chunks.length; c++) { total = total + chunks[c].length; }
+  assert("no element is lost or duplicated by chunking", "" + total, "" + sample.length);
+
+  var exact = chunkArray([1, 2, 3, 4], 2);
+  assert("an exactly divisible array produces no empty trailing chunk", "" + exact.length, "2");
+  var oneChunk = chunkArray(sample, 500);
+  assert("a chunk size larger than the array gives a single chunk", "" + oneChunk.length, "1");
+
+  /* 3. The chunked loop really creates every record. */
+  var proxy = new Script.Util.WSProxy();
+  var tag = "cbN" + (new Date()).getTime();
+  var largeArray = [];
+  for (var n = 0; n < 5; n++) {
+      largeArray.push({ EmailAddress: tag + n + "@joernberkefeld.com", SubscriberKey: tag + "-" + n, Status: "Active" });
+  }
+
+  var callChunks = chunkArray(largeArray, 2);
+  assert("5 records chunked by 2 produce 3 createBatch calls", "" + callChunks.length, "3");
+
+  var okCalls = 0;
+  var createdRows = 0;
+  for (var p = 0; p < callChunks.length; p++) {
+      var res = proxy.createBatch("Subscriber", callChunks[p]);
+      if ("" + res.Status === "OK") { okCalls = okCalls + 1; }
+      createdRows = createdRows + res.Results.length;
+  }
+  assert("every chunked createBatch call returned OK", "" + okCalls, "3");
+  assert("the chunked calls reported one result per record", "" + createdRows, "5");
+
+  var check = proxy.retrieve("Subscriber", ["SubscriberKey"], {
+      Property: "SubscriberKey", SimpleOperator: "equals", Value: tag + "-4"
+  });
+  assert("read-back: a record from the LAST chunk exists", "" + check.Results.length, "1");
+
+  /* Cleanup. */
+  var del = [];
+  for (var d = 0; d < largeArray.length; d++) { del.push({ SubscriberKey: tag + "-" + d }); }
+  var cleanup = proxy.deleteBatch("Subscriber", del);
+  assert("cleanup: chunked subscribers deleted", "" + cleanup.Status, "OK");
+  </script>

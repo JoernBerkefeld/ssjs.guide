@@ -8,6 +8,7 @@ redirect_from:
 description: Full-featured HTTP request object supporting all methods, custom headers, timeouts, and full response inspection. The most powerful HTTP option in SSJS.
 verification: verified
 differs_from_docs: true
+test_scripts: complete
 ---
 
 `Script.Util.HttpRequest` is the most flexible HTTP client available in SSJS. It supports all HTTP methods, custom headers, timeouts, and gives you full access to response status codes, headers, and body.
@@ -20,21 +21,25 @@ differs_from_docs: true
 var req = new Script.Util.HttpRequest(url);
 req.method = "GET";                         // HTTP method
 req.contentType = "application/json";       // Content-Type for body
-req.encoding = "UTF-8";                     // Encoding (default UTF-8)
-req.timeout = 30000;                        // Timeout in ms
+req.encoding = "UTF-8";                     // Encoding (default Windows-1252)
+req.timeout = 30;                           // Timeout in seconds
 req.setHeader(name, value);                 // Set a request header
-req.postData = body;                        // Request body (POST/PUT/PATCH)
+req.postData = body;                        // Request body (POST/PUT/PATCH) — write-only
 req.emptyContentHandling = 0;               // 0 = continue, 1 = stop, 2 = next subscriber
 req.retries = 2;                            // Number of retries on failure
 req.continueOnError = true;                 // If true, don't throw on HTTP error status
 var resp = req.send();
 ```
 
+{% include test-script.html bundle="http--script-util-httprequest" chapter="syntax" %}
+
 ## Parameters
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
 | `url` | string | Yes | Destination URL |
+
+{% include test-script.html bundle="http--script-util-httprequest" chapter="parameters" %}
 
 ## HttpRequestInstance Properties
 
@@ -44,16 +49,24 @@ The `req` object returned by `Script.Util.HttpRequest(url)` has these properties
 |----------|------|---------|-------------|
 | `method` | `"GET"`,`"POST"`,`"PUT"`,`"PATCH"`,`"DELETE"` | `"GET"` | HTTP method |
 | `contentType` | string | `""` | Content-Type header for body, e.g. `"application/json"` |
-| `encoding` | string | `"UTF-8"` | Character encoding |
-| `timeout` | number | `30000` | Timeout in milliseconds |
-| `postData` | string | `""` | Request body (for POST/PUT/PATCH) |
+| `encoding` | string | `"Windows-1252"` | Character encoding. Set it explicitly to `"UTF-8"` when the body is UTF-8 — an assigned value reads back lower-cased (`"utf-8"`) |
+| `timeout` | number | `30` | Request timeout in **seconds** |
+| `postData` | string | *(write-only)* | Request body (for POST/PUT/PATCH). Assignment works, but reading the property throws |
 | `emptyContentHandling` | number | `0` | Indicates what to do if the request doesn't return any content. `0` = continue, `1` = stop the request, `2` = continue to the next subscriber (only works in email sends) |
 | `retries` | number | `1` | The number of times to retry the request before throwing an exception |
 | `continueOnError` | boolean | `false` | If `true`, continues after receiving a non-fatal error; if `false`, throws an exception |
 
 {% include differs-from-docs.html note="The official Salesforce docs type `emptyContentHandling` as a boolean, but the runtime accepts only a numeric value (`0`/`1`/`2`) and rejects `true`/`false` — identical to `Script.Util.HttpGet`." %}
 
-{% include differs-from-docs.html note="`timeout` is not listed as a configuration property in the official docs (which only note that `send()` times out after 30 seconds), but the property exists and is applied at runtime." %}
+{% include differs-from-docs.html note="`timeout` is not listed as a configuration property in the official docs (which only note that `send()` times out after 30 seconds), but the property exists and is applied at runtime. Its default value is `30`, matching that 30-second `send()` timeout — so the unit is seconds, not milliseconds." %}
+
+{% include differs-from-docs.html note="The official docs give `UTF-8` as the example `encoding` value, but a fresh request handler actually defaults to `Windows-1252` — set `encoding` explicitly whenever the request body is UTF-8." %}
+
+{% include differs-from-docs.html note="The official docs list `postData` among the readable configuration properties, but the runtime exposes no getter: assignment works while every read throws **\"Property Get method was not found.\"**" %}
+
+{% include callout.html type="bug" content="`req.postData` is **write-only**. Reading it — even right after assigning it — throws `Property Get method was not found.`, and outside a `try/catch` that throw aborts the entire CloudPage. Keep the body in your own variable if you need it again." %}
+
+{% include test-script.html bundle="http--script-util-httprequest" chapter="httprequestinstance-properties" %}
 
 ## HttpRequestInstance Methods
 
@@ -116,9 +129,11 @@ req.setHeader("X-Custom-Header", "my-value");
 var resp = req.send();
 ```
 
+{% include test-script.html bundle="http--script-util-httprequest" chapter="httprequestinstance-methods" %}
+
 ## HttpResponseInstance Properties
 
-{% include callout.html type="info" content="`HttpResponseInstance` is equal for `HttpGet` and `HttpRequest`." %}
+{% include callout.html type="info" content="`HttpResponseInstance` has the same shape for `HttpGet` and `HttpRequest`, but only `HttpRequest` populates the response metadata — on `HttpGet`, `contentType` is empty and the `headers` enumeration yields nothing (see the bug callout on [`Script.Util.HttpGet`](/http/script-util-httpget/))." %}
 
 The `resp` object returned by `req.send()` has these properties:
 
@@ -126,14 +141,20 @@ The `resp` object returned by `req.send()` has these properties:
 |----------|------|-------------|
 | `content` | CLR string | Response body (must use `String()` to convert) |
 | `contentType` | string | The content type returned in the response |
-| `encoding` | string | The encoding type returned in the response |
+| `encoding` | string | Documented as the response encoding, but **always empty** — read the charset from the `content-type` header instead |
 | `headers` | object | Response headers as a CLR object — not directly indexable; read via the `for..in` pattern below |
 | `returnStatus` | number | A status value: `0` = OK, `1` = Empty URL, `2` = Call failed, `3` = Call succeeded with empty content |
-| `statusCode` | number | HTTP status code |
+| `statusCode` | number | HTTP status code — a CLR value, so compare it with `==`, never `===` |
 
 {% include callout.html type="warning" content="`resp.content` is a CLR string, not a JavaScript string. Always wrap it with `String(resp.content)` before calling `ParseJSON()` or string methods." %}
 
 {% include differs-from-docs.html note="The official docs example reads a single header via `resp.headers[\"...\"]`, but that access throws **\"Use of Common Language Runtime (CLR) is not allowed\"** at runtime. Individual headers are only readable by enumerating with `for..in` (see below)." %}
+
+{% include differs-from-docs.html note="The official docs list `encoding` as a populated response property, but it is an empty string on every request handler — even on `HttpRequest`, and even when the response `Content-Type` carries a charset." %}
+
+{% include callout.html type="warning" content="`resp.statusCode` and `resp.returnStatus` are CLR values, not JavaScript numbers. Strict equality against a number literal (`resp.statusCode === 200`) is **always false** — use `==`, or convert first with `Number(resp.statusCode)`." %}
+
+{% include test-script.html bundle="http--script-util-httprequest" chapter="httpresponseinstance-properties" %}
 
 ### Reading response headers
 
@@ -169,18 +190,33 @@ var contentType = headers["content-type"]; // "application/json; charset=utf-8"
 
 Header names are lowercased in the map above so lookups are case-insensitive. A missing header returns `undefined`.
 
+{% include test-script.html bundle="http--script-util-httprequest" chapter="reading-response-headers" %}
+
 ### Checking the status code
+
+`resp.statusCode` is a CLR value, so compare it with loose equality (`==`) — `===` against a JavaScript number literal never matches.
 
 ```javascript
 var resp = req.send();
-if (resp.statusCode === 200) {
+if (resp.statusCode == 200) {
     var data = Platform.Function.ParseJSON(String(resp.content));
-} else if (resp.statusCode === 404) {
+} else if (resp.statusCode == 404) {
     Write("Not found.");
 } else {
     Write("Error: " + resp.statusCode);
 }
 ```
+
+If you prefer strict comparisons, convert once and compare the JavaScript number:
+
+```javascript
+var status = Number(resp.statusCode);
+if (status === 200) {
+    var data = Platform.Function.ParseJSON(String(resp.content));
+}
+```
+
+{% include test-script.html bundle="http--script-util-httprequest" chapter="checking-the-status-code" %}
 
 ## Examples
 
@@ -195,7 +231,7 @@ req.setHeader("Accept", "application/json");
 
 try {
     var resp = req.send();
-    if (resp.statusCode === 200) {
+    if (resp.statusCode == 200) {
         var data = Platform.Function.ParseJSON(String(resp.content));
         Platform.Response.ContentType = "application/json";
         Write(Stringify(data));
@@ -252,10 +288,12 @@ var resp = req.send();
 ```javascript
 var req = new Script.Util.HttpRequest("https://slow.api.example.com/data");
 req.method = "GET";
-req.timeout = 10000; // 10 second timeout
+req.timeout = 10; // 10 second timeout
 req.setHeader("Authorization", "Bearer " + token);
 var resp = req.send();
 ```
+
+{% include test-script.html bundle="http--script-util-httprequest" chapter="examples" %}
 
 ## Complete REST API Helper Pattern
 
@@ -273,7 +311,8 @@ function callRestApi(method, url, token, body) {
 
     var resp = req.send();
     var parsed = Platform.Function.ParseJSON(String(resp.content) + "");
-    return { status: resp.statusCode, data: parsed };
+    // Convert the CLR statusCode to a real number so callers can use ===.
+    return { status: Number(resp.statusCode), data: parsed };
 }
 
 var result = callRestApi("GET", "https://api.example.com/v1/users", accessToken, null);
@@ -281,6 +320,8 @@ if (result.status === 200) {
     Write("Users: " + result.data.count);
 }
 ```
+
+{% include test-script.html bundle="http--script-util-httprequest" chapter="complete-rest-api-helper-pattern" %}
 
 ## See Also
 

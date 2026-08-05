@@ -699,3 +699,23 @@ list.Subscribers.Update(
     "Unsubscribed"
 );
 ```
+
+## Script.Util.HttpGet Returns No Response Metadata {#script-util-httpget-no-response-metadata}
+
+**Severity: Medium** — documented response properties are never populated
+
+[`Script.Util.HttpGet`](/http/script-util-httpget/) returns the same `HttpResponseInstance` shape as [`Script.Util.HttpRequest`](/http/script-util-httprequest/), but `contentType` and `encoding` always come back empty and a `for..in` over `headers` yields no real entries. The identical request through `Script.Util.HttpRequest` returns all of them. `statusCode`, `returnStatus` and `content` are unaffected.
+
+```javascript
+// ❌ HttpGet — metadata is empty, header enumeration yields nothing
+var get = new Script.Util.HttpGet("https://example.com/data.json").send();
+Write(get.contentType); // ""
+for (var a in get.headers) { Write(a); } // only the synthetic "[prototype, ]" entry
+
+// ✅ HttpRequest — same URL, full metadata and headers
+var req = new Script.Util.HttpRequest("https://example.com/data.json");
+req.method = "GET";
+var resp = req.send();
+Write(resp.contentType); // "application/json; charset=utf-8"
+for (var b in resp.headers) { Write(b); } // "[Content-Type, application/json; charset=utf-8]", ...
+```

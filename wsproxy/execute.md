@@ -9,6 +9,7 @@ return_type: object
 min_args: 2
 max_args: 2
 verification: verified
+test_scripts: complete
 ---
 
 ## Parameters
@@ -17,6 +18,8 @@ verification: verified
 |------|------|----------|-------------|
 | `parameters` | object[] | Yes | Array of `{ Name, Value }` parameter objects to include in the Execute call |
 | `requestName` | string | Yes | The name of the Execute request to run (e.g. `"LogUnsubEvent"`) |
+
+{% include test-script.html bundle="wsproxy--execute" chapter="parameters" %}
 
 ## Return Value
 
@@ -29,6 +32,8 @@ An object with three properties:
 | `Results` | object[] | Array of per-item `ExecuteResponse` results |
 
 Each item in `Results` contains `StatusCode`, `StatusMessage`, `OrdinalID`, `Results`, and `ErrorCode`.
+
+{% include test-script.html bundle="wsproxy--execute" chapter="return-value" %}
 
 ## Examples
 
@@ -47,9 +52,13 @@ var result = prox.execute(props, "LogUnsubEvent");
 Write(result.Status);
 ```
 
+{% include test-script.html bundle="wsproxy--execute" chapter="examples" %}
+
 ## Notes
 
 The first argument is an **array of Name/Value objects**, not an object-type string — passing a plain string as the first argument raises a runtime error. The Execute call is validated server-side, so an unknown `requestName` returns a result with `Status: "Error"` rather than throwing.
+
+{% include test-script.html bundle="wsproxy--execute" chapter="notes" %}
 
 ## See Also
 

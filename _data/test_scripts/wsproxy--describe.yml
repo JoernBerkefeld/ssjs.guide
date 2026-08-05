@@ -1,0 +1,271 @@
+# Test scripts for /wsproxy/describe/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes — positive
+# and negative.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# describe is a read-only SOAP call, so no script creates or removes any
+# fixture.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+parameters: |
+  <script runat="server">
+  /*
+   * Chapter: Parameters
+   *
+   * Proves:
+   *   1. describe is a CLR method on every WSProxy instance.
+   *   2. objectType accepts a STRING — the documented single-type form
+   *      (min_args = 1).
+   *   3. objectType also accepts a STRING ARRAY — the second documented
+   *      member of the string | string[] union.
+   *   4. NEGATIVE — the 0-argument form is rejected (min_args = 1).
+   *   5. NEGATIVE — a second argument is rejected (max_args = 1).
+   *
+   * NOT PROBED: Date / number / boolean type-acceptance counterparts. The
+   * only parameter is a SOAP type NAME (free-text string) or an array of
+   * such names. It is not a date, a count/limit, or a 0/1 flag, so no
+   * matrix pair applies.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+
+  /* 1. The method exists on the instance. */
+  assert("typeof proxy.describe is clrmethodinfo", typeof proxy.describe, "clrmethodinfo");
+
+  /* 2. objectType as a plain string. */
+  var single = proxy.describe("DataExtension");
+  assert("string objectType is accepted", typeof single, "object");
+  assert("string objectType returns one Results entry", "" + single.Results.length, "1");
+  assert("string objectType returns the requested type", "" + single.Results[0].ObjectType, "DataExtension");
+
+  /* 3. objectType as a string array. */
+  var many = proxy.describe(["DataExtension", "Subscriber"]);
+  assert("string[] objectType is accepted", typeof many, "object");
+  assert("string[] objectType returns one entry per requested type", "" + many.Results.length, "2");
+  assert("string[] entry 0 is the first requested type", "" + many.Results[0].ObjectType, "DataExtension");
+  assert("string[] entry 1 is the second requested type", "" + many.Results[1].ObjectType, "Subscriber");
+
+  /* 4. NEGATIVE — objectType is required (min_args = 1). */
+  assertThrows("describe() with no arguments throws (min_args = 1)", function () { return proxy.describe(); });
+
+  /* 5. NEGATIVE — a second argument is rejected (max_args = 1). */
+  assertThrows("describe(objectType, extra) throws (max_args = 1)", function () { return proxy.describe("DataExtension", "Subscriber"); });
+  </script>
+
+return-value: |
+  <script runat="server">
+  /*
+   * Chapter: Return Value
+   *
+   * Proves the documented return shape, field by field:
+   *   1. describe returns an OBJECT.
+   *   2. RequestID is a STRING and is not empty.
+   *   3. Results is an array with one ObjectDefinition per requested type.
+   *   4. Each Results element IS the ObjectDefinition — its fields sit
+   *      DIRECTLY on Results[i]: ObjectType, Name, IsCreatable,
+   *      IsUpdatable, IsRetrievable, IsQueryable, Properties,
+   *      ExtendedProperties, ChildObjects.
+   *   5. The documented booleans really are booleans, not strings.
+   *   6. Results[i].Properties is the field-definition array and its
+   *      entries carry Name / DataType.
+   *   7. DEVIATION from the official docs, marked "DEV":
+   *        - there is NO nested Results[i].ObjectDefinition wrapper
+   *          (official docs: field details live at
+   *          Results[0].ObjectDefinition.Properties)
+   *        - the return object exposes NO Status property
+   *          (official docs reference a Status property); RequestID is
+   *          what the runtime returns instead
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+  var result = proxy.describe("DataExtension");
+
+  /* 1.-3. Top-level shape. */
+  assert("typeof result is object", typeof result, "object");
+  assert("typeof result.RequestID is string", typeof result.RequestID, "string");
+  assert("result.RequestID is not empty", (("" + result.RequestID).length > 0) ? "true" : "false", "true");
+  assert("typeof result.Results is object", typeof result.Results, "object");
+  assert("one Results entry per requested type", "" + result.Results.length, "1");
+  assert("typeof result.Results[0] is object", typeof result.Results[0], "object");
+
+  /* 4. The ObjectDefinition fields sit directly on Results[0]. */
+  assert("Results[0].ObjectType is the requested type", "" + result.Results[0].ObjectType, "DataExtension");
+  assert("Results[0] exposes a Name field", typeof result.Results[0].Name !== "undefined" ? "present" : "absent", "present");
+  assert("typeof Results[0].IsCreatable is boolean", typeof result.Results[0].IsCreatable, "boolean");
+  assert("typeof Results[0].IsUpdatable is boolean", typeof result.Results[0].IsUpdatable, "boolean");
+  assert("typeof Results[0].IsRetrievable is boolean", typeof result.Results[0].IsRetrievable, "boolean");
+  assert("typeof Results[0].IsQueryable is boolean", typeof result.Results[0].IsQueryable, "boolean");
+  assert("typeof Results[0].ExtendedProperties is object", typeof result.Results[0].ExtendedProperties, "object");
+  assert("typeof Results[0].ChildObjects is object", typeof result.Results[0].ChildObjects, "object");
+
+  /* 6. Properties carries the field definitions. */
+  assert("typeof Results[0].Properties is object", typeof result.Results[0].Properties, "object");
+  assert("Results[0].Properties is not empty", (result.Results[0].Properties.length > 0) ? "true" : "false", "true");
+  assert("typeof Results[0].Properties[0] is object", typeof result.Results[0].Properties[0], "object");
+  assert("typeof Properties[0].Name is string", typeof result.Results[0].Properties[0].Name, "string");
+  assert("typeof Properties[0].DataType is string", typeof result.Results[0].Properties[0].DataType, "string");
+
+  /* 7. DEVIATIONS from the official docs. */
+  assert("DEV there is NO Results[0].ObjectDefinition wrapper (official docs: Results[0].ObjectDefinition.Properties)", typeof result.Results[0].ObjectDefinition, "undefined");
+  assert("DEV the return object has NO Status property (official docs reference Status)", typeof result.Status, "undefined");
+  </script>
+
+objectdefinition-shape: |
+  <script runat="server">
+  /*
+   * Differs-from-docs claim: the official Salesforce docs describe a nested
+   * Results[0].ObjectDefinition wrapper and a Status property on the return
+   * object. Neither exists at runtime.
+   *
+   * Official docs: result.Results[0].ObjectDefinition.Properties, result.Status
+   * SFMC runtime:  result.Results[0].Properties,                  result.RequestID
+   *
+   * Proves both halves of the claim, for a single-type AND a multi-type call:
+   *   1. Results[0].ObjectDefinition is undefined — so the documented
+   *      Results[0].ObjectDefinition.Properties path cannot resolve.
+   *   2. The field definitions really are reachable one level higher, at
+   *      Results[0].Properties (the workaround the page documents).
+   *   3. result.Status is undefined; result.RequestID is the string the
+   *      runtime returns instead.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+
+  /* 1.-3. Single-type call. */
+  var one = proxy.describe("DataExtension");
+  assert("DEV single: Results[0].ObjectDefinition is undefined (docs: an ObjectDefinition wrapper)", typeof one.Results[0].ObjectDefinition, "undefined");
+  assert("workaround single: Results[0].Properties is the field-definition array", typeof one.Results[0].Properties, "object");
+  assert("workaround single: Results[0].Properties has entries", (one.Results[0].Properties.length > 0) ? "true" : "false", "true");
+  assert("workaround single: Results[0] carries ObjectType directly", "" + one.Results[0].ObjectType, "DataExtension");
+  assert("DEV single: result.Status is undefined (docs: a Status property)", typeof one.Status, "undefined");
+  assert("single: result.RequestID is the string returned instead", typeof one.RequestID, "string");
+
+  /* Same shape for a multi-type call. */
+  var multi = proxy.describe(["DataExtension", "Subscriber"]);
+  assert("DEV multi: Results[1].ObjectDefinition is undefined", typeof multi.Results[1].ObjectDefinition, "undefined");
+  assert("workaround multi: Results[1].Properties is the field-definition array", typeof multi.Results[1].Properties, "object");
+  assert("workaround multi: Results[1].Properties has entries", (multi.Results[1].Properties.length > 0) ? "true" : "false", "true");
+  assert("DEV multi: result.Status is undefined", typeof multi.Status, "undefined");
+  </script>
+
+examples: |
+  <script runat="server">
+  /*
+   * Chapter: Examples
+   *
+   * Runs both page examples verbatim in structure and proves every claim
+   * they make:
+   *   1. "Describe a single object type" — describe("DataExtension") and
+   *      result.Results[0].Properties resolves to a real, serializable
+   *      field-definition array.
+   *   2. "Describe multiple object types" — describe(["DataExtension",
+   *      "Subscriber"]) returns one Results entry per requested type and
+   *      each entry exposes ObjectType directly, so the documented loop
+   *      over result.Results produces the requested type names in order.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  Platform.Load("core", "1.1.5");
+  var proxy = new Script.Util.WSProxy();
+
+  /* 1. Example "Describe a single object type". */
+  var result = proxy.describe("DataExtension");
+  assert("single example: Results[0].Properties is an array-like object", typeof result.Results[0].Properties, "object");
+  assert("single example: Results[0].Properties has field definitions", (result.Results[0].Properties.length > 0) ? "true" : "false", "true");
+  var json = Stringify(result.Results[0].Properties);
+  assert("single example: Stringify(Results[0].Properties) produces a string", typeof json, "string");
+  assert("single example: the serialized properties form a JSON array", ("" + json).substring(0, 1), "[");
+
+  /* 2. Example "Describe multiple object types". */
+  var multi = proxy.describe(["DataExtension", "Subscriber"]);
+  assert("multi example: one Results entry per requested type", "" + multi.Results.length, "2");
+  var names = "";
+  for (var i = 0; i < multi.Results.length; i++) {
+      names = names + ("" + multi.Results[i].ObjectType) + ";";
+  }
+  assert("multi example: the loop prints the requested type names in order", names, "DataExtension;Subscriber;");
+  </script>
+
+notes: |
+  <script runat="server">
+  /*
+   * Chapter: Notes
+   *
+   * Proves:
+   *   1. The discovery use case — describe reveals the property names that
+   *      a later retrieve call can request, and retrieving one of those
+   *      discovered properties really works.
+   *   2. Describing an UNKNOWN object type does NOT throw.
+   *   3. Such a call still returns a RequestID string.
+   *   4. It returns a single-element Results array.
+   *   5. That single element is null.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertNoThrow(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "FAIL " : "PASS ") + id + " -> " + (threw ? "threw: " + msg : "did not throw") + "\n");
+  }
+
+  var proxy = new Script.Util.WSProxy();
+
+  /* 1. Discovery: a property found via describe can be retrieved. */
+  var def = proxy.describe("DataExtension");
+  var hasCustomerKey = "false";
+  for (var i = 0; i < def.Results[0].Properties.length; i++) {
+      if ("" + def.Results[0].Properties[i].Name === "CustomerKey") { hasCustomerKey = "true"; }
+  }
+  assert("describe lists CustomerKey as a DataExtension property", hasCustomerKey, "true");
+  var used = proxy.retrieve("DataExtension", ["CustomerKey"]);
+  assert("a property discovered via describe is retrievable", "" + used.Status, "OK");
+
+  /* 2.-5. Unknown object types are tolerated. */
+  assertNoThrow("describing an unknown object type does not throw", function () { return proxy.describe("NoSuchObjectType_XYZ"); });
+  var unknown = proxy.describe("NoSuchObjectType_XYZ");
+  assert("unknown type: the call still returns an object", typeof unknown, "object");
+  assert("unknown type: a RequestID string is still returned", typeof unknown.RequestID, "string");
+  assert("unknown type: RequestID is not empty", (("" + unknown.RequestID).length > 0) ? "true" : "false", "true");
+  assert("unknown type: Results has exactly one element", "" + unknown.Results.length, "1");
+  assert("unknown type: that element is null", (unknown.Results[0] === null) ? "true" : "false", "true");
+  </script>

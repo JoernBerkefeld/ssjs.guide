@@ -1,0 +1,250 @@
+# Test scripts for /http/get/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes.
+#
+# NETWORK DEPENDENCY: HTTP.Get performs a real outbound HTTP request, so these
+# scripts depend on a remote endpoint. They target https://ssjs.guide/robots.txt
+# (a small, stable, public text file) and https://ssjs.guide/site-index.json
+# (a stable JSON document) and assert STRUCTURAL invariants — typeof, numeric
+# status, non-empty body, field presence/absence — rather than remote body text
+# that could change. A network failure is an ENVIRONMENTAL problem, not a
+# refutation of the page.
+#
+# TIMEOUTS: each live call can take several seconds, so every script keeps its
+# number of live calls small. Deploy one chapter at a time when iterating.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+syntax: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Syntax — HTTP.Get(url[, headerNames, headerValues]).
+   *
+   * Proves:
+   *   1. The Core load requirement: after Platform.Load("core", "1.1.5") the
+   *      bare global HTTP is bound and HTTP.Get is callable.
+   *   2. The 1-argument form works: when headerNames / headerValues are
+   *      omitted, NOTHING is passed after url, and the call succeeds.
+   *   3. The 3-argument form works: headerNames and headerValues supplied as
+   *      two arrays of the SAME LENGTH with parallel ordering.
+   *   4. Both documented forms return the same response payload for the same
+   *      URL, so supplying headers does not change the documented call result.
+   *
+   * NOT ASSERTED: that a mismatched headerNames / headerValues length is
+   * rejected. The page states equal length and parallel ordering as a CALLER
+   * REQUIREMENT, not as a documented runtime error contract, so there is no
+   * documented outcome to assert. Recorded as a blocked row in the
+   * verification DB rather than guessed at here.
+   *
+   * SCOPE: evidence gathered on a CloudPage GET only; the assertions depend on
+   * the external endpoint https://ssjs.guide/robots.txt being reachable from
+   * the SFMC egress.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOf(thunk) {
+      try { return thunk(); } catch (ex) { return "threw: " + ("" + ex.message); }
+  }
+
+  var URL = "https://ssjs.guide/robots.txt";
+
+  /* 1. Core load makes the bare HTTP global available. */
+  assert("after Platform.Load(core,1.1.5) HTTP is an object", typeOf(function () { return typeof HTTP; }), "object");
+  assert("HTTP.Get is callable", typeOf(function () { return typeof HTTP.Get; }), "function");
+
+  /* 2. The 1-argument form — nothing passed after url. */
+  var plain = HTTP.Get(URL);
+  assert("HTTP.Get(url) returns an object", typeof plain, "object");
+  assert("HTTP.Get(url) carries a non-empty Content", ("" + plain.Content).length > 0 ? "true" : "false", "true");
+
+  /* 3. The 3-argument form — parallel arrays of equal length. */
+  var withHeaders = HTTP.Get(URL, ["Cache-Control", "X-Request-Id"], ["no-cache", "ssjs-guide-test"]);
+  assert("HTTP.Get(url, headerNames, headerValues) returns an object", typeof withHeaders, "object");
+  assert("the 3-argument form carries a non-empty Content", ("" + withHeaders.Content).length > 0 ? "true" : "false", "true");
+
+  /* 4. Both documented forms agree on the payload. */
+  assert("both documented forms return the same Content", ("" + withHeaders.Content) === ("" + plain.Content) ? "true" : "false", "true");
+  </script>
+
+parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Parameters — url (string, required), headerNames (string[],
+   * optional), headerValues (string[], optional).
+   *
+   * Proves:
+   *   1. url is a string parameter: a string URL is accepted and produces a
+   *      response object.
+   *   2. url is REQUIRED: calling HTTP.Get() with no arguments does not
+   *      produce a usable response object with a numeric Status.
+   *   3. headerNames is OPTIONAL: omitting it (1-argument form) succeeds.
+   *   4. headerValues is OPTIONAL: it is only supplied together with
+   *      headerNames; the 1-argument form proves both are optional.
+   *   5. headerNames / headerValues accept string ARRAYS (string[]) and the
+   *      call succeeds with a single-element pair as well as a two-element
+   *      pair.
+   *
+   * TYPE-ACCEPTANCE MATRIX: no parameter on this page is in scope. `url` is a
+   * URL string (explicitly excluded from widening), and headerNames /
+   * headerValues are string ARRAYS, not scalars — neither matches a
+   * Date/Number/Boolean/string pair.
+   *
+   * SCOPE: evidence gathered on a CloudPage GET only; the assertions depend on
+   * the external endpoint https://ssjs.guide/robots.txt being reachable from
+   * the SFMC egress.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function probe(thunk) {
+      try { return thunk(); } catch (ex) { return "threw: " + ("" + ex.message); }
+  }
+
+  var URL = "https://ssjs.guide/robots.txt";
+
+  /* 1. + 3. + 4. url as a string, headers omitted entirely. */
+  var res = HTTP.Get(URL);
+  assert("url accepts a string and returns an object", typeof res, "object");
+  assert("headerNames and headerValues are optional (1-argument form works)", typeof res.Status, "number");
+
+  /* 2. url is required — the no-argument call yields no usable response. */
+  var missing = probe(function () { return HTTP.Get(); });
+  assert("HTTP.Get() with no url does NOT return a numeric Status", (missing && typeof missing.Status === "number") ? "true" : "false", "false");
+
+  /* 5. headerNames / headerValues accept string arrays. */
+  var oneHeader = HTTP.Get(URL, ["Cache-Control"], ["no-cache"]);
+  assert("a single-element string[] header pair is accepted", typeof oneHeader.Status, "number");
+  assert("the single-header call returns a non-empty Content", ("" + oneHeader.Content).length > 0 ? "true" : "false", "true");
+
+  var twoHeaders = HTTP.Get(URL, ["Cache-Control", "X-Request-Id"], ["no-cache", "ssjs-guide-test"]);
+  assert("a two-element string[] header pair is accepted", typeof twoHeaders.Status, "number");
+  assert("the two-header call returns a non-empty Content", ("" + twoHeaders.Content).length > 0 ? "true" : "false", "true");
+  </script>
+
+return-value: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Return value — a single OBJECT with Status (number) and
+   * Content (string).
+   *
+   * Proves:
+   *   1. The return value is an object, not a bare string.
+   *   2. Status is a NUMBER carrying status information about the request.
+   *   3. Content is a string carrying the response body, and it is non-empty
+   *      for a reachable endpoint.
+   *   4. The field names really are Status / Content and NOT the HTTP.Post
+   *      pair StatusCode / Response — the page's note that the two members use
+   *      different field names is proven by StatusCode and Response being
+   *      absent on the HTTP.Get result.
+   *   5. Stringify(response) works, so the documented "inspect
+   *      Stringify(response) when integrating a new endpoint" advice holds:
+   *      it produces a non-empty string that mentions both field names.
+   *
+   * SCOPE: evidence gathered on a CloudPage GET only; the assertions depend on
+   * the external endpoint https://ssjs.guide/robots.txt being reachable from
+   * the SFMC egress.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var URL = "https://ssjs.guide/robots.txt";
+  var res = HTTP.Get(URL);
+
+  /* 1. An object, not a bare string. */
+  assert("the return value is an object", typeof res, "object");
+  assert("the return value is NOT a string", typeof res === "string" ? "true" : "false", "false");
+
+  /* 2. Status is numeric. */
+  assert("Status is a number", typeof res.Status, "number");
+
+  /* 3. Content is the response body as a string. */
+  assert("Content is a string", typeof res.Content, "string");
+  assert("Content is non-empty for a reachable endpoint", ("" + res.Content).length > 0 ? "true" : "false", "true");
+
+  /* 4. Not the HTTP.Post field names. */
+  assert("StatusCode (the HTTP.Post name) is undefined here", typeof res.StatusCode, "undefined");
+  assert("Response (the HTTP.Post name) is undefined here", typeof res.Response, "undefined");
+
+  /* 5. Stringify(response) is the documented inspection tool. */
+  var dump = "" + Stringify(res);
+  assert("Stringify(response) returns a string", typeof dump, "string");
+  assert("Stringify(response) is non-empty", dump.length > 0 ? "true" : "false", "true");
+  assert("Stringify(response) mentions the Status field", dump.indexOf("Status") >= 0 ? "true" : "false", "true");
+  assert("Stringify(response) mentions the Content field", dump.indexOf("Content") >= 0 ? "true" : "false", "true");
+  </script>
+
+example: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Example — the documented snippet, line by line.
+   *
+   * Proves:
+   *   1. var response = HTTP.Get(url) after Platform.Load("core", "1.1.5")
+   *      returns an object.
+   *   2. Write(Stringify(response)) is a valid inspection step: Stringify of
+   *      the response yields a non-empty string.
+   *   3. Platform.Function.ParseJSON(String(response.Content)) parses the body
+   *      into an object when the endpoint serves JSON — the exact form the
+   *      example uses, including the String(...) wrapper.
+   *   4. The parsed value carries the endpoint's data (non-empty), so the
+   *      example's round trip is usable and not an empty shell.
+   *
+   * NOT ASSERTED: the closing recommendation to prefer
+   * Script.Util.HttpRequest "to inspect HTTP status codes with full control".
+   * That is a cross-reference to a different member, whose behaviour is
+   * asserted by the /http/script-util-httprequest/ test scripts; asserting it
+   * here would duplicate that page rather than prove a claim of this one.
+   *
+   * SCOPE: evidence gathered on a CloudPage GET only. The example's
+   * api.example.com URL is a placeholder and is NOT contacted; the stable
+   * public endpoint https://ssjs.guide/site-index.json is used instead, so
+   * these assertions depend on it being reachable from the SFMC egress.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+
+  var JSON_URL = "https://ssjs.guide/site-index.json";
+
+  /* 1. The documented call. */
+  var response = HTTP.Get(JSON_URL);
+  assert("var response = HTTP.Get(url) returns an object", typeof response, "object");
+
+  /* 2. Write(Stringify(response)) — the inspection line. */
+  var dump = "" + Stringify(response);
+  assert("Stringify(response) yields a non-empty string", dump.length > 0 ? "true" : "false", "true");
+
+  /* 3. + 4. ParseJSON(String(response.Content)) — the exact documented form. */
+  var parsed = Platform.Function.ParseJSON(String(response.Content));
+  assert("ParseJSON(String(response.Content)) yields an object", typeof parsed, "object");
+  assert("the parsed value is not null", parsed === null ? "true" : "false", "false");
+  </script>

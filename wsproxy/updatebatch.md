@@ -12,6 +12,7 @@ return_type: object
 min_args: 2
 max_args: 3
 verification: verified
+test_scripts: complete
 ---
 
 ## Parameters
@@ -22,9 +23,13 @@ verification: verified
 | `propertiesArray` | object[] | Yes | Array of update property objects |
 | `updateOptions` | object | No | SOAP `UpdateOptions` (e.g. `{ SaveOptions: [{ PropertyName: "*", SaveAction: "UpdateAdd" }] }`) |
 
+{% include test-script.html bundle="wsproxy--updatebatch" chapter="parameters" %}
+
 ## Return Value
 
 Returns an object with `Status` (e.g. `"OK"`), `RequestID`, and a `Results` array containing one entry per input item. Each `Results` entry carries `StatusCode`, `StatusMessage`, `OrdinalID`, `ErrorCode`, and an `Object` wrapper for the updated record.
+
+{% include test-script.html bundle="wsproxy--updatebatch" chapter="return-value" %}
 
 ## Examples
 
@@ -46,6 +51,8 @@ for (var i = 0; i < submissions.length; i++) {
 
 var result = proxy.updateBatch("Subscriber", batch, { SaveOptions: [{ PropertyName: "*", SaveAction: "UpdateAdd" }] });
 ```
+
+{% include test-script.html bundle="wsproxy--updatebatch" chapter="examples" %}
 
 ## See Also
 
