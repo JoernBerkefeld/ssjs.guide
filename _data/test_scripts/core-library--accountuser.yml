@@ -117,13 +117,17 @@ add: |
    *
    * Proves the "blocked / differs from docs" callout in full:
    *   1. AccountUser.Add is a function and takes one properties object.
-   *   2. DEVIATION "DEV": no working invocation exists. A short payload
-   *      RETURNS the plain string "Error" (docs: returns "OK" on success).
-   *      Asserted for a Name+UserID payload, a Name-only payload, an empty
-   *      object and a no-argument call.
-   *   3. DEVIATION "DEV": the documented full payload (Name, UserID,
-   *      Password, Email, ClientID, DefaultBusinessUnitKey,
-   *      AssociatedBusinessUnits) also returns "Error", never "OK".
+   *   2. DEVIATION "DEV": the RETURN SHAPE. A short payload RETURNS the plain
+   *      string "Error" instead of throwing (docs: returns "OK" on success or
+   *      throws on failure). Asserted for a Name+UserID payload, a Name-only
+   *      payload, an empty object and a no-argument call. The write itself was
+   *      blocked by a tenant permission gate on AccountUser writes rather than
+   *      by a defect in the method — the WSProxy control in 5 names the cause.
+   *   3. The documented full payload (Name, UserID, Password, Email, ClientID,
+   *      DefaultBusinessUnitKey, AssociatedBusinessUnits) is blocked the same
+   *      way and returns "Error". A session carrying the ACCOUNTUSERS edit
+   *      permission was not available, so the "OK" path was never exercised
+   *      here — it is unproven, not proven absent.
    *   4. DEVIATION "DEV": a payload carrying additional AccountUser fields
    *      (CustomerKey / nested Client) or a non-object argument THROWS the
    *      plain string "Error adding AccountUser" — a string, NOT an Error
@@ -184,7 +188,7 @@ add: |
       });
   });
   assert("DEV Add(documented payload) RETURNS \"Error\" (docs: \"OK\" on success)", rDoc.kind + ":" + rDoc.value, "returned:Error");
-  assert("DEV the documented \"OK\" success return is never produced", rDoc.value === "OK" ? "true" : "false", "false");
+  assert("the documented \"OK\" success return was not produced in this session", rDoc.value === "OK" ? "true" : "false", "false");
 
   /* 4. Richer / wrongly typed payloads THROW a plain string. */
   var rRich = callAdd(function () {
@@ -361,11 +365,15 @@ instance-update: |
    * Proves the "blocked / differs from docs" callout in full:
    *   1. The instance returned by AccountUser.Init exposes Update as a
    *      function taking one properties object.
-   *   2. DEVIATION "DEV": no working invocation exists — the Core call
-   *      RETURNS the plain string "Error" (docs: returns "OK" on success),
-   *      and it returns rather than throws.
-   *   3. DEVIATION "DEV": the documented "OK" success return is never
-   *      produced; the return value is a string.
+   *   2. DEVIATION "DEV": the RETURN SHAPE — the Core call RETURNS the plain
+   *      string "Error" instead of throwing (docs: returns "OK" on success or
+   *      throws on failure). The write itself was blocked by a tenant
+   *      permission gate on AccountUser writes rather than by a defect in the
+   *      method — the WSProxy control in 4 names the cause.
+   *   3. The documented "OK" success return was not produced in this session;
+   *      the return value is a string. A session carrying the ACCOUNTUSERS
+   *      edit permission was not available, so the "OK" path was never
+   *      exercised here — it is unproven, not proven absent.
    *   4. The control: the equivalent WSProxy write on AccountUser returns
    *      SOAP ErrorCode 11001 with a
    *      "does not have permission to edit ACCOUNTUSERS" StatusMessage,
@@ -404,7 +412,7 @@ instance-update: |
   assert("DEV Update({...}) RETURNS rather than throws (docs: returns a status string)", rUpdate.kind, "returned");
   assert("DEV Update({...}) returns \"Error\" (docs: \"OK\" on success)", rUpdate.value, "Error");
   assert("typeof the return value is string", typeof rUpdate.value, "string");
-  assert("DEV the documented \"OK\" success return is never produced", rUpdate.value === "OK" ? "true" : "false", "false");
+  assert("the documented \"OK\" success return was not produced in this session", rUpdate.value === "OK" ? "true" : "false", "false");
 
   /* 4. Controls - AccountUser writes are rejected, other writes are not. */
   var wsp = (function () {
@@ -439,11 +447,15 @@ instance-activate: |
    * Proves the "blocked / differs from docs" callout in full:
    *   1. The instance returned by AccountUser.Init exposes Activate as a
    *      function that takes no arguments.
-   *   2. DEVIATION "DEV": no working invocation exists — the Core call
-   *      RETURNS the plain string "Error" (docs: returns "OK" on success),
-   *      and it returns rather than throws.
-   *   3. DEVIATION "DEV": the documented "OK" success return is never
-   *      produced; the return value is a string.
+   *   2. DEVIATION "DEV": the RETURN SHAPE — the Core call RETURNS the plain
+   *      string "Error" instead of throwing (docs: returns "OK" on success or
+   *      throws on failure). The write itself was blocked by a tenant
+   *      permission gate on AccountUser writes rather than by a defect in the
+   *      method — the WSProxy control in 4 names the cause.
+   *   3. The documented "OK" success return was not produced in this session;
+   *      the return value is a string. A session carrying the ACCOUNTUSERS
+   *      edit permission was not available, so the "OK" path was never
+   *      exercised here — it is unproven, not proven absent.
    *   4. The control: the equivalent WSProxy AccountUser write returns SOAP
    *      ErrorCode 11001 with a
    *      "does not have permission to edit ACCOUNTUSERS" StatusMessage,
@@ -481,7 +493,7 @@ instance-activate: |
   assert("DEV Activate() RETURNS rather than throws (docs: returns a status string)", rActivate.kind, "returned");
   assert("DEV Activate() returns \"Error\" (docs: \"OK\" on success)", rActivate.value, "Error");
   assert("typeof the return value is string", typeof rActivate.value, "string");
-  assert("DEV the documented \"OK\" success return is never produced", rActivate.value === "OK" ? "true" : "false", "false");
+  assert("the documented \"OK\" success return was not produced in this session", rActivate.value === "OK" ? "true" : "false", "false");
 
   /* 4. Controls. */
   var wsp = (function () {
@@ -517,11 +529,15 @@ instance-deactivate: |
    * chapter's "cannot be deleted via SSJS" statement:
    *   1. The instance returned by AccountUser.Init exposes Deactivate as a
    *      function that takes no arguments.
-   *   2. DEVIATION "DEV": no working invocation exists — the Core call
-   *      RETURNS the plain string "Error" (docs: returns "OK" on success),
-   *      and it returns rather than throws.
-   *   3. DEVIATION "DEV": the documented "OK" success return is never
-   *      produced; the return value is a string.
+   *   2. DEVIATION "DEV": the RETURN SHAPE — the Core call RETURNS the plain
+   *      string "Error" instead of throwing (docs: returns "OK" on success or
+   *      throws on failure). The write itself was blocked by a tenant
+   *      permission gate on AccountUser writes rather than by a defect in the
+   *      method — the WSProxy control in 5 names the cause.
+   *   3. The documented "OK" success return was not produced in this session;
+   *      the return value is a string. A session carrying the ACCOUNTUSERS
+   *      edit permission was not available, so the "OK" path was never
+   *      exercised here — it is unproven, not proven absent.
    *   4. Account users cannot be deleted via SSJS: the AccountUser namespace
    *      exposes no Delete method, so Deactivate is the removal path.
    *   5. The control: the equivalent WSProxy AccountUser write returns SOAP
@@ -560,7 +576,7 @@ instance-deactivate: |
   assert("DEV Deactivate() RETURNS rather than throws (docs: returns a status string)", rDeactivate.kind, "returned");
   assert("DEV Deactivate() returns \"Error\" (docs: \"OK\" on success)", rDeactivate.value, "Error");
   assert("typeof the return value is string", typeof rDeactivate.value, "string");
-  assert("DEV the documented \"OK\" success return is never produced", rDeactivate.value === "OK" ? "true" : "false", "false");
+  assert("the documented \"OK\" success return was not produced in this session", rDeactivate.value === "OK" ? "true" : "false", "false");
 
   /* 4. There is no SSJS delete path for account users. */
   assert("AccountUser exposes no Delete method (Deactivate is the removal path)", typeof AccountUser.Delete, "undefined");

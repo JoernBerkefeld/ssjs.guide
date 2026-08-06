@@ -69,7 +69,7 @@ var acctUser = AccountUser.Init("myAccountUser", 123456789);
 
 {% include method-status.html status="blocked" differs=true %}
 
-{% include callout.html type="warning" content="No working invocation found at runtime. Probed against a Parent BU session: a short payload and the documented payload both returned the plain string `\"Error\"`, while a payload carrying additional AccountUser fields (`CustomerKey`, a nested `Client`) — or a non-object argument — threw the plain string `\"Error adding AccountUser\"`. The equivalent WSProxy `createItem(\"AccountUser\", …)` returned SOAP fault `ErrorCode 11001`, `StatusMessage \"User 0 does not have permission to edit ACCOUNTUSERS on account &lt;Parent BU&gt;.\"`. In the same run `Subscriber.Add` returned `\"OK\"` and `DataExtension.Retrieve` succeeded, so this is specific to AccountUser writes from this session rather than a general write failure." %}
+{% include callout.html type="warning" content="Blocked by a tenant permission gate on AccountUser writes, not by a defect in the method. Probed against a Parent BU session: a short payload and the documented payload both returned the plain string `\"Error\"`, while a payload carrying additional AccountUser fields (`CustomerKey`, a nested `Client`) — or a non-object argument — threw the plain string `\"Error adding AccountUser\"`. The equivalent WSProxy `createItem(\"AccountUser\", …)` named the cause explicitly: SOAP fault `ErrorCode 11001`, `StatusMessage \"User 0 does not have permission to edit ACCOUNTUSERS on account &lt;Parent BU&gt;.\"`. In the same run `Subscriber.Add` returned `\"OK\"` and `DataExtension.Retrieve` succeeded, so this is specific to AccountUser writes from this session rather than a general write failure. A session whose user carries the ACCOUNTUSERS edit permission was not available, so the success path was never exercised here." %}
 
 Creates a new Marketing Cloud user with the specified properties.
 
@@ -150,7 +150,7 @@ var accountUser = AccountUser.Retrieve({
 
 {% include method-status.html status="blocked" differs=true %}
 
-{% include callout.html type="warning" content="No working invocation found at runtime. Probed against a Parent BU session: the Core call returned the plain string `\"Error\"`, and the equivalent WSProxy update returned SOAP fault `ErrorCode 11001`, `StatusMessage \"User 0 does not have permission to edit ACCOUNTUSERS on account &lt;Parent BU&gt;.\"`. Other writes in the same run (`Subscriber.Add`) succeeded, so this is specific to AccountUser writes from this session." %}
+{% include callout.html type="warning" content="Blocked by a tenant permission gate on AccountUser writes, not by a defect in the method. Probed against a Parent BU session: the Core call returned the plain string `\"Error\"`, and the equivalent WSProxy update named the cause explicitly: SOAP fault `ErrorCode 11001`, `StatusMessage \"User 0 does not have permission to edit ACCOUNTUSERS on account &lt;Parent BU&gt;.\"`. Other writes in the same run (`Subscriber.Add`) succeeded, so this is specific to AccountUser writes from this session. A session whose user carries the ACCOUNTUSERS edit permission was not available, so the success path was never exercised here." %}
 
 Updates the initialized user's profile with the given properties.
 
@@ -186,7 +186,7 @@ var status = acctUser.Update({ Password: "XXXXX" });
 
 {% include method-status.html status="blocked" differs=true %}
 
-{% include callout.html type="warning" content="No working invocation found at runtime. Probed against a Parent BU session: the Core call returned the plain string `\"Error\"`, and the equivalent WSProxy write returned SOAP fault `ErrorCode 11001`, `StatusMessage \"User 0 does not have permission to edit ACCOUNTUSERS on account &lt;Parent BU&gt;.\"`. Other writes in the same run (`Subscriber.Add`) succeeded, so this is specific to AccountUser writes from this session." %}
+{% include callout.html type="warning" content="Blocked by a tenant permission gate on AccountUser writes, not by a defect in the method. Probed against a Parent BU session: the Core call returned the plain string `\"Error\"`, and the equivalent WSProxy write named the cause explicitly: SOAP fault `ErrorCode 11001`, `StatusMessage \"User 0 does not have permission to edit ACCOUNTUSERS on account &lt;Parent BU&gt;.\"`. Other writes in the same run (`Subscriber.Add`) succeeded, so this is specific to AccountUser writes from this session. A session whose user carries the ACCOUNTUSERS edit permission was not available, so the success path was never exercised here." %}
 
 Activates the initialized user account.
 
@@ -216,7 +216,7 @@ var status = acctUser.Activate();
 
 {% include method-status.html status="blocked" differs=true %}
 
-{% include callout.html type="warning" content="No working invocation found at runtime. Probed against a Parent BU session: the Core call returned the plain string `\"Error\"`, and the equivalent WSProxy write returned SOAP fault `ErrorCode 11001`, `StatusMessage \"User 0 does not have permission to edit ACCOUNTUSERS on account &lt;Parent BU&gt;.\"`. Other writes in the same run (`Subscriber.Add`) succeeded, so this is specific to AccountUser writes from this session." %}
+{% include callout.html type="warning" content="Blocked by a tenant permission gate on AccountUser writes, not by a defect in the method. Probed against a Parent BU session: the Core call returned the plain string `\"Error\"`, and the equivalent WSProxy write named the cause explicitly: SOAP fault `ErrorCode 11001`, `StatusMessage \"User 0 does not have permission to edit ACCOUNTUSERS on account &lt;Parent BU&gt;.\"`. Other writes in the same run (`Subscriber.Add`) succeeded, so this is specific to AccountUser writes from this session. A session whose user carries the ACCOUNTUSERS edit permission was not available, so the success path was never exercised here." %}
 
 Deactivates the initialized user. Account users **cannot** be deleted via SSJS; deactivation is the supported "offboarding" path.
 

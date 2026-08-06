@@ -568,7 +568,40 @@ String(Infinity);   // "-infinity"  — inverted sign
 isFinite(Infinity); // false        — this one is correct
 ```
 
-Avoid relying on `Infinity` semantics. Use `isFinite(x)` to detect non-finite values (it returns the correct answer), and never branch on the sign or ordering of an `Infinity` value. See [Number Methods](/ecmascript-builtins/number-methods/#constants-es3).
+Avoid relying on `Infinity` semantics. Use `isFinite(x)` to detect non-finite values — it answers correctly for an actual number, though not for a non-numeric string (see [below](#isfinite-true-for-non-numeric-string)) — and never branch on the sign or ordering of an `Infinity` value. See [Number Methods](/ecmascript-builtins/number-methods/#constants-es3).
+
+---
+
+## isFinite Returns true for a Non-Numeric String {#isfinite-true-for-non-numeric-string}
+
+**Severity: Medium** — silently accepts unparseable input as a finite number
+
+The global `isFinite(value)` is specified to apply `ToNumber` first and return `false` when the conversion yields `NaN`. In the SFMC Jint engine a **non-numeric string** comes back as `true` instead (runtime-verified) — and so does `Number("abc")`, which is a real `NaN` value. `isFinite(NaN)` written as a literal is correct, so the defect sits in the argument handling, not in the `NaN` comparison itself.
+
+```javascript
+isFinite("abc");            // true   — expected false
+isFinite(Number("abc"));    // true   — expected false
+
+isFinite(NaN);              // false  — correct
+isFinite(undefined);        // false  — correct
+isFinite(0 / 0);            // false  — correct
+isFinite(Infinity);         // false  — correct
+isFinite(42);               // true   — correct
+isFinite("42");             // true   — correct
+isFinite("");               // true   — correct (ToNumber("") is 0)
+isFinite(null);             // true   — correct (ToNumber(null) is 0)
+```
+
+Guard untrusted input by coercing explicitly and testing the result, which is unaffected:
+
+```javascript
+function isFiniteNumber(value) {
+    var n = Number(value);
+    return !isNaN(n) && isFinite(n);
+}
+```
+
+See [Number Methods](/ecmascript-builtins/number-methods/#isfinite).
 
 ---
 
@@ -600,6 +633,43 @@ o.hasOwnProperty("a");       // true  — use this instead
 ```
 
 See [Object Methods](/ecmascript-builtins/object-methods/#propertyisenumerable) and [Differs from Official Docs](/engine-limitations/differs-from-docs/#objectprototypepropertyisenumerable-broken).
+
+---
+
+## Bitwise Operators Throw on a Negative Operand {#bitwise-negative-operand-throws}
+
+**Severity: High** — every bitwise expression aborts the script as soon as a value goes negative
+
+Every bitwise operator in the SFMC Jint engine fails when either operand is negative (runtime-verified). The value's sign, not the operator, is what breaks — a negative value held in a variable behaves exactly like a negative literal. `&`, `|`, `^` and `~` throw `Arithmetic operation resulted in an overflow.`; `<<`, `>>` and `>>>` throw that same message for a negative **left** operand and `Value was either too large or too small for a UInt16.` for a negative **right** operand.
+
+```javascript
+5 & 3;        // 1  — non-negative operands are fine
+(-1) | 0;     // THROWS "Arithmetic operation resulted in an overflow."
+(-1) >>> 0;   // THROWS "Arithmetic operation resulted in an overflow."
+5 & (-1);     // THROWS "Arithmetic operation resulted in an overflow."
+5 << (-1);    // THROWS "Value was either too large or too small for a UInt16."
+```
+
+Test the sign before applying any bitwise operator. This also limits the ES6 `Math` emulations built on bitwise ops: [`clz32`](/ecmascript-builtins/math/#clz32) throws on its first line for a negative argument, and [`imul`](/ecmascript-builtins/math/#imul) accepts non-negative operands only. `<<` additionally does not truncate to 32 bits (`0x80000000 << 1` returns `4294967296`, not `0`), so bitwise code cannot rely on 32-bit wrap-around.
+
+See [Operators](/language/operators/#bitwise-rarely-needed).
+
+---
+
+## Bitwise NOT (~) Returns a Constant {#bitwise-not-broken}
+
+**Severity: High** — silently wrong result, no error raised
+
+`~x` never computes `-(x + 1)` in the SFMC Jint engine. `~0`, `~1`, `~2`, `~5` and `~255` all return the same constant `1.84467440737096e+19` (2<sup>64</sup>) — runtime-verified. Unlike the other bitwise operators this fails **silently**, so `~5 === -6` is `false` and even `~5 < 0` is `false`.
+
+```javascript
+~5;          // 1.84467440737096e+19 — expected -6
+~5 === -6;   // false
+~5 < 0;      // false
+-(5 + 1);    // -6 — use this instead
+```
+
+Never use `~indexOf(…)` as a truthiness idiom; compare against `-1` explicitly. See [Operators](/language/operators/#bitwise-rarely-needed).
 
 ---
 

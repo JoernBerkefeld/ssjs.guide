@@ -131,9 +131,9 @@ The ES3 `Math` members below work natively; `Math.max` / `Math.min` have argumen
 | [`Math.log1p(x)`](/ecmascript-builtins/math/#log1p) | ES6 | ❌ Missing | `Math.log(1 + x)` |
 | [`Math.sinh/cosh/tanh(x)`](/ecmascript-builtins/math/#hyperbolic) | ES6 | ❌ Missing | Build from `Math.exp` |
 | [`Math.asinh/acosh/atanh(x)`](/ecmascript-builtins/math/#inverse-hyperbolic) | ES6 | ❌ Missing | Build from `Math.log`/`Math.sqrt` |
-| [`Math.clz32(x)`](/ecmascript-builtins/math/#clz32) | ES6 | ❌ Missing | Count leading zero bits manually |
+| [`Math.clz32(x)`](/ecmascript-builtins/math/#clz32) | ES6 | ❌ Missing | Count leading zero bits manually — the emulation throws for a negative argument |
 | [`Math.fround(x)`](/ecmascript-builtins/math/#fround) | ES6 | ❌ Missing | No ES3-safe equivalent |
-| [`Math.imul(a, b)`](/ecmascript-builtins/math/#imul) | ES6 | ❌ Missing | Emulate with bitwise ops |
+| [`Math.imul(a, b)`](/ecmascript-builtins/math/#imul) | ES6 | ❌ Missing | Emulate with bitwise ops — non-negative operands only, and no 32-bit wrap |
 
 ### Number
 
@@ -162,7 +162,7 @@ Standard ECMAScript global functions (not SFMC-specific) — callable without an
 | [`parseInt(str[, radix])`](/ecmascript-builtins/number-methods/#parseint-global) | ES3 | ⚠️ Partial | Always pass a radix; returns `NaN` for trailing non-digits (`parseInt("10px", 10)` → `NaN`, not `10`) |
 | [`parseFloat(str)`](/ecmascript-builtins/number-methods/#parsefloat-global) | ES3 | ⚠️ Partial | Returns `NaN` for trailing non-digits (`parseFloat("1.5kg")` → `NaN`); result uses 32-bit precision |
 | `isNaN(val)` | ES3 | ✅ Works | |
-| `isFinite(val)` | ES3 | ✅ Works | |
+| [`isFinite(val)`](/ecmascript-builtins/number-methods/#isfinite) | ES3 | ⚠️ Partial | Returns `true` for a non-numeric string (`isFinite("abc")`, `isFinite(Number("abc"))` → `true`); `isFinite(NaN)` is correct — use `isNaN(Number(val))` |
 | `eval(script)` | ES3 | ✅ Works | Evaluates a JS source string; direct eval sees local scope and Platform.Load Core globals. Executes arbitrary code — use sparingly (injection risk); prefer `Platform.Function.ParseJSON` for data. |
 | [`encodeURI(uri)`](/ecmascript-builtins/global-functions/#encodeuri) | ES3 | ⚠️ Partial | Space → `+` (not `%20`), lowercase hex |
 | [`encodeURIComponent(str)`](/ecmascript-builtins/global-functions/#encodeuricomponent) | ES3 | ⚠️ Partial | Space → `+`, lowercase hex (`%2f`) |

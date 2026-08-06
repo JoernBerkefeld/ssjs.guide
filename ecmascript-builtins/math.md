@@ -47,9 +47,9 @@ Almost every `Math` member is **ES3** and works in SSJS. Two members are partial
 | [`Math.log1p(x)`](#log1p) | ES6 | ❌ Missing | `Math.log(1 + x)` |
 | [`Math.sinh/cosh/tanh(x)`](#hyperbolic) | ES6 | ❌ Missing | Build from `Math.exp` — see below |
 | [`Math.asinh/acosh/atanh(x)`](#inverse-hyperbolic) | ES6 | ❌ Missing | Build from `Math.log`/`Math.sqrt` — see below |
-| [`Math.clz32(x)`](#clz32) | ES6 | ❌ Missing | Count leading zero bits manually |
+| [`Math.clz32(x)`](#clz32) | ES6 | ❌ Missing | Count leading zero bits manually — the emulation throws for a negative argument |
 | [`Math.fround(x)`](#fround) | ES6 | ❌ Missing | No ES3-safe equivalent — keep doubles |
-| [`Math.imul(a, b)`](#imul) | ES6 | ❌ Missing | Emulate with bitwise ops |
+| [`Math.imul(a, b)`](#imul) | ES6 | ❌ Missing | Emulate with bitwise ops — non-negative operands only, and no 32-bit wrap |
 
 ---
 
@@ -376,7 +376,14 @@ function clz32(x) {
     while (x <= 0x7fffffff) { n++; x = x << 1; }
     return n;
 }
+
+clz32(0);            // 32
+clz32(1);            // 31
+clz32(0x80000000);   // 0
+clz32(-1);           // throws: Arithmetic operation resulted in an overflow.
 ```
+
+{% include callout.html type="warning" content="**Non-negative arguments only.** `>>>` throws `Arithmetic operation resulted in an overflow.` for a negative operand, so this emulation cannot evaluate a negative argument at all — `clz32(-1)` and `clz32(-5)` both throw on the very first line. The spec's `Math.clz32` coerces to uint32 first and would return `0` for `-1`. Test the sign yourself before calling, or map a negative value to its uint32 form without bitwise operators (`x < 0 ? x + 4294967296 : x`). See [Bitwise operators](/language/operators/#bitwise-rarely-needed)." %}
 
 
 {% include test-script.html bundle="ecmascript-builtins--math" chapter="clz32" %}
@@ -398,7 +405,13 @@ function imul(a, b) {
     var bHi = (b >>> 16) & 0xffff, bLo = b & 0xffff;
     return ((aLo * bLo) + (((aHi * bLo + aLo * bHi) << 16) >>> 0)) | 0;
 }
+
+imul(3, 4);           // 12
+imul(65535, 32767);   // 2147385345
+imul(-5, 12);         // throws: Arithmetic operation resulted in an overflow.
 ```
+
+{% include callout.html type="warning" content="**Non-negative operands only, and no 32-bit wrap.** Every bitwise operator in this engine throws `Arithmetic operation resulted in an overflow.` when given a negative operand — not just `>>>`, `&` and `|` — so this emulation cannot evaluate a negative argument at all. See [Bitwise operators](/language/operators/#bitwise-rarely-needed). It is also correct only while the true product fits in a signed 32-bit integer — `<<` does not truncate its result to 32 bits, so `imul(0xffffffff, 5)` returns `21474836475` instead of the spec's `-5`." %}
 
 
 {% include test-script.html bundle="ecmascript-builtins--math" chapter="imul" %}

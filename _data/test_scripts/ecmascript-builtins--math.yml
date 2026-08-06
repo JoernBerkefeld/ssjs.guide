@@ -1159,8 +1159,17 @@ clz32: |
    *   2. DEVIATION marked "DEV": calling it throws "Object expected: clz32"
    *      (spec: returns the count of leading zero bits).
    *   3. The documented manual leading-zero counter returns the spec values
-   *      for the boundary cases: 32 for 0, 31 for 1, 0 for 0x80000000, and
-   *      the expected counts for intermediate powers of two.
+   *      for the boundary cases with a NON-NEGATIVE argument: 32 for 0, 31
+   *      for 1, 0 for 0x80000000, and the expected counts for intermediate
+   *      powers of two.
+   *
+   * SCOPE: the emulation cannot evaluate a negative argument at all. Every
+   * bitwise operator in this engine (>>>, <<, >>, &, |, ^, ~) throws
+   * "Arithmetic operation resulted in an overflow." as soon as either operand
+   * is negative, so clz32(-1) throws on its very first line (x >>> 0) rather
+   * than returning the spec's 0. A negative SHIFT COUNT throws "Value was
+   * either too large or too small for a UInt16." instead. Test the sign
+   * before calling. See /language/operators/#bitwise-rarely-needed.
    *
    * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
    * longer matches the documented claim and the page must be revised.
@@ -1259,8 +1268,17 @@ imul: |
    *   2. DEVIATION marked "DEV": calling it throws "Object expected: imul"
    *      (spec: returns the 32-bit integer product).
    *   3. The documented bitwise emulation returns the correct product for
-   *      operands whose true product fits in a signed 32-bit integer, and
-   *      the bitwise primitives it relies on (>>>, &, |) behave as expected.
+   *      NON-NEGATIVE operands whose true product fits in a signed 32-bit
+   *      integer, and the bitwise primitives it relies on behave as expected
+   *      for non-negative operands.
+   *
+   * SCOPE: every bitwise operator in this engine (>>>, <<, >>, &, |, ^, ~)
+   * throws "Arithmetic operation resulted in an overflow." as soon as either
+   * operand is negative (a negative SHIFT COUNT throws "Value was either too
+   * large or too small for a UInt16." instead), and ~ is broken for every
+   * operand. The assertions below therefore hold only for non-negative
+   * operands; imul(-5, 12) throws on its first line. See
+   * /language/operators/#bitwise-rarely-needed.
    *
    * NOT ASSERTED: the emulation's behaviour for operands whose product
    * OVERFLOWS 32 bits (e.g. imul(0xffffffff, 5), which the spec defines as
@@ -1306,7 +1324,8 @@ imul: |
   assert("imul(1000, 1000) === 1000000", imul(1000, 1000) === 1000000, true);
   assert("typeof imul(3, 4) is number", String(typeof imul(3, 4)), "number");
 
-  /* 4. The bitwise primitives the emulation relies on. */
+  /* 4. The bitwise primitives the emulation relies on — non-negative operands
+   *    only. The same expressions throw as soon as an operand is negative. */
   assert("(0x12345678 >>> 16) & 0xffff === 0x1234", ((0x12345678 >>> 16) & 0xffff) === 0x1234, true);
   assert("0x12345678 & 0xffff === 0x5678", (0x12345678 & 0xffff) === 0x5678, true);
   assert("12 | 0 === 12", (12 | 0) === 12, true);

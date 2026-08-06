@@ -3922,7 +3922,7 @@
 - name: "AccountUser write methods (Add / Update / Activate / Deactivate)"
   url: "/core-library/accountuser/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_accountUserAdd.html"
-  tagline: "reads work (Init/Retrieve); the write methods Add/Update/Activate/Deactivate do not work at runtime — they return the string \"Error\", not \"OK\" (no working invocation found)"
+  tagline: "reads work (Init/Retrieve); the write methods Add/Update/Activate/Deactivate return the string \"Error\" instead of throwing — blocked by a tenant permission gate on AccountUser writes, not by a defect in the method"
   part: "sfmc"
   category: "Core Library"
   object: "AccountUser"
@@ -3930,14 +3930,16 @@
   discrepancy: "A1"
   anchor: "accountuser-write-methods-add-update-activate-deactivate"
   body: |
-    The official docs state these return `"OK"` on success or throw on failure. Reads work: `AccountUser.Init(targetUserKey, myClientID)` returns an instance and `AccountUser.Retrieve(filter)` returns matching rows — both are verified working and are **not** part of this deviation. This entry covers only the write methods **`Add`** (static), **`Update`**, **`Activate`**, and **`Deactivate`** (instance), for which **no working invocation was found** in our runtime tests. Tested on a Parent BU session (the correct context for AccountUser edits): `AccountUser.Add(properties)` returned the plain string `"Error"` for a short payload and **threw** the raw string `"Error adding AccountUser"` for a full documented payload; `<instance>.Update(properties)`, `<instance>.Activate()`, and `<instance>.Deactivate()` each returned the plain string `"Error"` (no throw). The equivalent WSProxy `createItem("AccountUser", …)` on the same run returned `StatusCode "Error"`, `ErrorCode 11001`, `StatusMessage "User 0 does not have permission to edit ACCOUNTUSERS on account &lt;Parent BU&gt;."`. On the same run `Subscriber.Add` returned `"OK"` and `DataExtension.Retrieve` succeeded, so the run had a working write/read path for other object types — the failure is specific to AccountUser writes rather than a general write failure. The success (`"OK"`) path could not be reproduced in our tests. Treat a non-`"OK"` result as failure.
+    The official docs state these return `"OK"` on success or throw on failure. Reads work: `AccountUser.Init(targetUserKey, myClientID)` returns an instance and `AccountUser.Retrieve(filter)` returns matching rows — both are verified working and are **not** part of this deviation. This entry covers only the write methods **`Add`** (static), **`Update`**, **`Activate`**, and **`Deactivate`** (instance). In our runtime tests those calls were **blocked by a tenant permission gate on AccountUser writes, not by a defect in the method**. Tested on a Parent BU session (the correct context for AccountUser edits): `AccountUser.Add(properties)` returned the plain string `"Error"` for a short payload and **threw** the raw string `"Error adding AccountUser"` for a full documented payload; `<instance>.Update(properties)`, `<instance>.Activate()`, and `<instance>.Deactivate()` each returned the plain string `"Error"` (no throw). The equivalent WSProxy `createItem("AccountUser", …)` on the same run named the cause explicitly: `StatusCode "Error"`, `ErrorCode 11001`, `StatusMessage "User 0 does not have permission to edit ACCOUNTUSERS on account &lt;Parent BU&gt;."`. On the same run `Subscriber.Add` returned `"OK"` and `DataExtension.Retrieve` succeeded, so the run had a working write/read path for other object types — the failure is specific to AccountUser writes from this session rather than a general write failure. A session whose user carries the ACCOUNTUSERS edit permission was not available, so the success (`"OK"`) path was never exercised here. The documented deviation that remains regardless of permission is the **return shape**: these methods return the plain string `"Error"` instead of throwing, so always compare the returned value to `"OK"` rather than relying on `try`/`catch`.
   testScript: |
     <script runat="server">
     Platform.Load("core", "1.1.5");
-    // Probe: AccountUser reads work; the write methods Add/Update/Activate/Deactivate do not work at runtime.
+    // Probe: AccountUser reads work; the write methods Add/Update/Activate/Deactivate were blocked by a
+    // tenant permission gate on AccountUser writes (WSProxy control reported ErrorCode 11001,
+    // "does not have permission to edit ACCOUNTUSERS"), not by a defect in the methods.
     // Adapt "myAccountUser" and the MID to a real user external key and business unit in your account.
     // READS: Init returns an instance; Retrieve returns matching rows.
-    // WRITES (no working invocation found): Add returns "Error" (short payload) or throws the raw STRING
+    // WRITES (blocked in our session): Add returns "Error" (short payload) or throws the raw STRING
     //   "Error adding AccountUser" (full payload); <inst>.Update / .Activate / .Deactivate each return "Error" (no throw).
     function pre(t) { Platform.Response.Write(t + "\n"); }
     // P1 — Retrieve users (READ works).
@@ -3951,17 +3953,17 @@
         acctUser = AccountUser.Init("myAccountUser", 123456789);
         pre("Init typeof Update=" + (typeof acctUser.Update) + " typeof Activate=" + (typeof acctUser.Activate)); // OBSERVED: function / function
     } catch (e2) { pre("Init THREW -> " + e2); }
-    // P3 — Add a user (WRITE does not work -> "Error" or throws the raw STRING "Error adding AccountUser").
+    // P3 — Add a user (WRITE blocked -> "Error" or throws the raw STRING "Error adding AccountUser").
     try {
         var addResult = AccountUser.Add({ Name: "QA Probe", UserID: "qa_probe", Email: "qa_probe@example.com", ClientID: 123456789 });
         pre("Add RETURNED typeof=" + (typeof addResult) + " value=" + addResult); // OBSERVED: string "Error"
     } catch (e3) { pre("Add THREW typeof=" + (typeof e3) + " String=" + String(e3)); } // OBSERVED: typeof=string "Error adding AccountUser"
-    // P4 — Update the instance (WRITE does not work -> returns the string "Error", no throw).
+    // P4 — Update the instance (WRITE blocked -> returns the string "Error", no throw).
     try {
         var updResult = acctUser.Update({ Name: "QA Probe Updated" });
         pre("Update RETURNED typeof=" + (typeof updResult) + " value=" + updResult); // OBSERVED: string "Error"
     } catch (e4) { pre("Update THREW -> " + e4); }
-    // P5 — Deactivate the instance (WRITE does not work -> returns the string "Error", no throw).
+    // P5 — Deactivate the instance (WRITE blocked -> returns the string "Error", no throw).
     try {
         var deactResult = acctUser.Deactivate();
         pre("Deactivate RETURNED typeof=" + (typeof deactResult) + " value=" + deactResult); // OBSERVED: string "Error"
@@ -5539,6 +5541,30 @@
     P("parseFloat('3.14')", function(){ return parseFloat("3.14"); });
     P("parseFloat('3.14')===3.14", function(){ return parseFloat("3.14") === 3.14; });
     P("parseFloat('1.5kg')", function(){ return parseFloat("1.5kg"); });
+    </script>
+
+- name: "isFinite"
+  url: "/ecmascript-builtins/number-methods/#isfinite"
+  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/isFinite"
+  tagline: "returns true for a non-numeric string"
+  part: "ecmascript"
+  category: "ECMAScript Builtins"
+  object: "Number"
+  severity: "medium"
+  discrepancy: "B3"
+  anchor: "isfinite"
+  body: |
+    MDN specifies the global `isFinite(value)` applies **ToNumber** first and returns `false` when the conversion yields `NaN`, so `isFinite("abc")` is `false`. In the SFMC Jint engine `isFinite("abc")` and `isFinite(Number("abc"))` both return **`true`**. The `NaN` handling itself is spec-correct — `isFinite(NaN)`, `isFinite(undefined)`, `isFinite(0 / 0)` and `isFinite(Infinity)` all return `false`, and `isFinite(42)` / `isFinite("42")` return `true`. `isFinite("")` and `isFinite(null)` also return `true`, but that matches MDN, where `ToNumber("")` and `ToNumber(null)` are both `0`. Guard untrusted input by coercing explicitly and testing the result with `isNaN(Number(value))` first. See [isFinite Returns true for a Non-Numeric String](/engine-limitations/known-bugs/#isfinite-true-for-non-numeric-string).
+  testScript: |
+    <script runat="server">
+    Platform.Load("core", "1.1.5");
+    // OBSERVED (SFMC CloudPage, live): isFinite("abc")=true (spec: false); isFinite(Number("abc"))=true (spec: false); isFinite("")=true and isFinite(null)=true (both spec-correct); isFinite(NaN)=false. VERDICT: CONFIRMED.
+    function P(l,f){try{Platform.Response.Write(l+" => "+f()+"\n");}catch(e){Platform.Response.Write(l+" => ERR: "+e+"\n");}}
+    P("isFinite('abc')", function(){ return isFinite("abc"); });
+    P("isFinite('')", function(){ return isFinite(""); });
+    P("isFinite(null)", function(){ return isFinite(null); });
+    P("isFinite(Number('abc'))", function(){ return isFinite(Number("abc")); });
+    P("isFinite(NaN)", function(){ return isFinite(NaN); });
     </script>
 
 - name: "Number.MIN_VALUE"

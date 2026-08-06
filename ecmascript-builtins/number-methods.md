@@ -201,7 +201,12 @@ value !== value;  // reliable inline NaN check
 ```javascript
 isFinite(42);         // true
 isFinite(Infinity);   // false
+isFinite(NaN);        // false
+isFinite("abc");      // true   — expected false
+isFinite(null);       // true   — spec-correct, ToNumber(null) is 0
 ```
+
+{% include callout.html type="bug" content="The global `isFinite` returns **`true`** for a non-numeric string — `isFinite(\"abc\")` and `isFinite(Number(\"abc\"))` are both `true`, where the spec requires `false`. `isFinite(NaN)` itself is correct, and `isFinite(\"\")` / `isFinite(null)` returning `true` is spec-correct (`ToNumber` yields `0`). Test an untrusted value with `isNaN(Number(value))` instead — see [isFinite Returns true for a Non-Numeric String](/engine-limitations/known-bugs/#isfinite-true-for-non-numeric-string)." %}
 
 {% include test-script.html bundle="ecmascript-builtins--number-methods" chapter="isfinite" %}
 

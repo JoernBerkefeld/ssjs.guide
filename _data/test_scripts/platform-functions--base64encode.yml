@@ -163,7 +163,19 @@ standard-base64: |
 
   /* An independent, plain-JavaScript standard Base64 decoder. It uses only
    * language primitives — no SFMC function is involved in reading the value
-   * back, which is what "any decoder can read it" means. */
+   * back, which is what "any decoder can read it" means.
+   *
+   * SCOPE (runtime-verified): every bitwise operator in this engine throws
+   * "Arithmetic operation resulted in an overflow." on a negative operand, so
+   * a -1 sentinel must never reach one. It does not here. Base64Encode always
+   * emits a multiple of 4 characters, so after the "=" padding is stripped the
+   * final chunk is 4, 3 or 2 characters — never 1. c1 is therefore always a
+   * real alphabet index (the 2-character chunk still has left > 1), and c2/c3
+   * are read only behind the c2 >= 0 / c3 >= 0 guards. Only MALFORMED input
+   * reaches a negative operand: a body whose length mod 4 is 1 leaves c1 = -1
+   * and throws on (c1 >> 4). An EMPTY string also throws, from charAt/
+   * substring on a zero-length string rather than from a bitwise operator.
+   * Validate untrusted input before decoding. */
   var B64ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
   function externalDecode(s) {
       /* strip standard "=" padding without relying on a regex */

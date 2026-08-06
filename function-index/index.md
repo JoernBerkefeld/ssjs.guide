@@ -281,7 +281,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`IsPhoneNumber(value)`](/core-library/isphonenumber/) | Core Library | boolean | Bare-name Core form of Platform.Function.IsPhoneNumber — validate NANP phone format |
 | [`Platform.Function.IsPhoneNumber(value)`](/platform-functions/isphonenumber/) | Platform Functions | boolean | Validate phone number format |
 | [`Platform.Function.IsCHTMLBrowser(userAgentString)`](/platform-functions/ischtmlbrowser/) | Platform Functions | boolean | Detect CHTML / feature-phone browsers |
-| [`isFinite(value)`](/ecmascript-builtins/number-methods/) | ECMAScript Builtins | boolean | Test if value is finite |
+| [`isFinite(value)`](/ecmascript-builtins/number-methods/#isfinite) | ECMAScript Builtins | boolean | ⚠️ Partial — returns `true` for a non-numeric string; `isFinite(NaN)` is correct |
 | [`isNaN(value)`](/ecmascript-builtins/number-methods/) | ECMAScript Builtins | boolean | Test if value is NaN |
 | [`Infinity`](/ecmascript-builtins/global-values/#infinity) | ECMAScript Builtins | number | ⚠️ Partial — **sign inverted**: `Infinity > 0` is `false`, `String(Infinity)` is `-infinity` |
 | [`Number.isFinite(value)`](/ecmascript-builtins/number-methods/#isfinite) | ECMAScript Builtins | boolean | ❌ Missing (ES6) — use the global `isFinite` |
@@ -338,7 +338,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`Math.atanh(x)`](/ecmascript-builtins/math/#atanh) | ECMAScript Builtins | number | ❌ Missing (ES6) — use `Math.log((1 + x) / (1 - x)) / 2` |
 | [`Math.cbrt(x)`](/ecmascript-builtins/math/#cbrt) | ECMAScript Builtins | number | ❌ Missing (ES6) — use `Math.pow(x, 1/3)` |
 | [`Math.ceil(x)`](/ecmascript-builtins/math/#ceil) | ECMAScript Builtins | number | Round up |
-| [`Math.clz32(x)`](/ecmascript-builtins/math/#clz32) | ECMAScript Builtins | number | ❌ Missing (ES6) — count leading zero bits manually |
+| [`Math.clz32(x)`](/ecmascript-builtins/math/#clz32) | ECMAScript Builtins | number | ❌ Missing (ES6) — count leading zero bits manually; the emulation throws for a negative argument |
 | [`Math.cos(x)`](/ecmascript-builtins/math/#cos) | ECMAScript Builtins | number | Cosine |
 | [`Math.cosh(x)`](/ecmascript-builtins/math/#cosh) | ECMAScript Builtins | number | ❌ Missing (ES6) — use `(Math.exp(x) + Math.exp(-x)) / 2` |
 | [`Math.E`](/ecmascript-builtins/math/#e) | ECMAScript Builtins | number | Euler's number (~2.718) |
@@ -347,7 +347,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`Math.floor(x)`](/ecmascript-builtins/math/#floor) | ECMAScript Builtins | number | Round down |
 | [`Math.fround(x)`](/ecmascript-builtins/math/#fround) | ECMAScript Builtins | number | ❌ Missing (ES6) — no ES3-safe equivalent; keep doubles |
 | [`Math.hypot(value1[, value2, ...])`](/ecmascript-builtins/math/#hypot) | ECMAScript Builtins | number | ❌ Missing (ES6) — needs polyfill |
-| [`Math.imul(a, b)`](/ecmascript-builtins/math/#imul) | ECMAScript Builtins | number | ❌ Missing (ES6) — emulate with bitwise ops |
+| [`Math.imul(a, b)`](/ecmascript-builtins/math/#imul) | ECMAScript Builtins | number | ❌ Missing (ES6) — emulate with bitwise ops; non-negative operands only, no 32-bit wrap |
 | [`Math.LN2`](/ecmascript-builtins/math/#ln2) | ECMAScript Builtins | number | Natural logarithm of 2 |
 | [`Math.LN10`](/ecmascript-builtins/math/#ln10) | ECMAScript Builtins | number | Natural logarithm of 10 |
 | [`Math.log(x)`](/ecmascript-builtins/math/#log) | ECMAScript Builtins | number | Natural logarithm |

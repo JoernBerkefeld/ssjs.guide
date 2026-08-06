@@ -617,10 +617,12 @@ isfinite: |
    *        isFinite(Infinity) -> false
    *   3. isFinite is true for ordinary finite values and (like the global
    *      isNaN) coerces its argument.
-   *
-   * NOT ASSERTED: isFinite(NaN). The chapter makes no claim about it, and this
-   * engine returns true for it (the spec requires false) — an undocumented
-   * deviation that belongs to the global isFinite, not to this chapter.
+   *   4. isFinite(NaN) is false, which is spec-correct. The genuine deviation
+   *      is in the ToNumber coercion of a NON-NUMERIC STRING: isFinite("abc")
+   *      and isFinite(Number("abc")) return true where the spec requires
+   *      false. isFinite("") and isFinite(null) are also true, but that is
+   *      spec-correct — ToNumber("") and ToNumber(null) are both 0. Both
+   *      sides are asserted below.
    *
    * EXPECTED OUTPUT: every line starts with PASS.
    */
@@ -651,6 +653,14 @@ isfinite: |
   assert("isFinite(0) is true", isFinite(0), true);
   assert("isFinite(-7.5) is true", isFinite(-7.5), true);
   assert("isFinite('42') is true (argument is coerced)", isFinite("42"), true);
+
+  /* 4. NaN handling is correct; the ToNumber coercion is not. */
+  assert("isFinite(NaN) is false (spec-correct)", isFinite(NaN), false);
+  assert("isFinite(undefined) is false (spec-correct)", isFinite(undefined), false);
+  assert("DEV isFinite('abc') is true (spec: false)", isFinite("abc"), true);
+  assert("DEV isFinite(Number('abc')) is true (spec: false)", isFinite(Number("abc")), true);
+  assert("isFinite('') is true (spec-correct: ToNumber('') is 0)", isFinite(""), true);
+  assert("isFinite(null) is true (spec-correct: ToNumber(null) is 0)", isFinite(null), true);
   </script>
 
 parseint: |

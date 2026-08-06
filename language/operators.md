@@ -161,7 +161,26 @@ if (typeof myVar !== "undefined") {
 5 & 3    // 1   (AND)
 5 | 3    // 7   (OR)
 5 ^ 3    // 6   (XOR)
-~5       // -6  (NOT)
 5 << 1   // 10  (left shift)
 5 >> 1   // 2   (right shift)
+5 >>> 0  // 5   (unsigned right shift)
 ```
+
+{% include callout.html type="warning" title="Negative operands throw" content="Every bitwise operator in this engine fails when either operand is negative — the value's sign, not the operator, is what breaks. `&`, `|`, `^` and `~` throw <code>Arithmetic operation resulted in an overflow.</code>; `<<`, `>>` and `>>>` throw that same message for a negative <strong>left</strong> operand and <code>Value was either too large or too small for a UInt16.</code> for a negative <strong>right</strong> operand. A negative value held in a variable behaves exactly like a negative literal. Guard the sign before applying any bitwise operator — see [Known Bugs](/engine-limitations/known-bugs/#bitwise-negative-operand-throws)." %}
+
+```javascript
+(-1) | 0     // throws: Arithmetic operation resulted in an overflow.
+(-1) >>> 0   // throws: Arithmetic operation resulted in an overflow.
+5 & (-1)     // throws: Arithmetic operation resulted in an overflow.
+5 << (-1)    // throws: Value was either too large or too small for a UInt16.
+```
+
+{% include callout.html type="bug" title="~ is broken for every operand" content="Bitwise NOT never computes <code>-(x + 1)</code>. <code>~0</code>, <code>~1</code>, <code>~2</code>, <code>~5</code> and <code>~255</code> all return the same constant <code>1.84467440737096e+19</code> (2<sup>64</sup>), so <code>~5 === -6</code> is <code>false</code> and even <code>~5 &lt; 0</code> is <code>false</code>. Use <code>-(x + 1)</code> instead of <code>~x</code>, and never use <code>~indexOf(…)</code> as a truthiness idiom — see [Known Bugs](/engine-limitations/known-bugs/#bitwise-not-broken)." %}
+
+```javascript
+~5          // 1.84467440737096e+19  — expected -6
+~5 === -6   // false
+-(5 + 1)    // -6  — the working alternative
+```
+
+`<<` also does not truncate its result to 32 bits (`0x80000000 << 1` returns `4294967296`, not `0`), so bitwise code cannot rely on 32-bit wrap-around.
