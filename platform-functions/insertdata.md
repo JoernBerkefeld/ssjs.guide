@@ -75,7 +75,7 @@ try {
 ```javascript
 Platform.Load("core", "1.1.5");
 
-if (Platform.Request.Method === "POST") {
+if (String(Platform.Request.Method) === "POST") {
     var email   = Platform.Request.GetFormField("email");
     var message = Platform.Request.GetFormField("message");
 

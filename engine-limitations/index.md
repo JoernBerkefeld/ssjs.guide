@@ -31,7 +31,7 @@ This section documents every known limitation along with practical workarounds.
 | `async/await` | N/A — SSJS is synchronous |
 | `import/export` | N/A — use one script block |
 | `?.` optional chaining | `obj && obj.prop && obj.prop.sub` |
-| `??` nullish coalescing | `val !== null && val !== undefined ? val : def` or `val \|\| def` |
+| `??` nullish coalescing | `val !== null && val !== undefined ? val : def` or `val || def` |
 | `JSON.parse()` | `Platform.Function.ParseJSON(str + "")` |
 | `JSON.stringify()` | `Stringify(obj)` |
 | `Array.isArray()` | `Object.prototype.toString.call(v) === "[object Array]"` |
@@ -39,7 +39,7 @@ This section documents every known limitation along with practical workarounds.
 | `arr.map()` | Manual loop — or add the [`map` polyfill](/engine-limitations/polyfills/#array-prototype-map) |
 | `arr.filter()` | Manual loop — or add the [`filter` polyfill](/engine-limitations/polyfills/#array-prototype-filter) |
 | `arr.indexOf()` | Manual loop — or add the [`indexOf` polyfill](/engine-limitations/polyfills/#array-prototype-indexof) |
-| `str.trim()` | `str.replace(/^\s+\|\s+$/g, "")` — or add the [`trim` polyfill](/engine-limitations/polyfills/#string-prototype-trim) |
+| `str.trim()` | `str.replace(/^\s+|\s+$/g, "")` — or add the [`trim` polyfill](/engine-limitations/polyfills/#string-prototype-trim) |
 | `str.startsWith()` | `str.indexOf(sub) === 0` — or add the [polyfill](/engine-limitations/polyfills/#string-prototype-startswith) |
 | `str.endsWith()` | Manual substring check — or add the [polyfill](/engine-limitations/polyfills/#string-prototype-endswith) |
 

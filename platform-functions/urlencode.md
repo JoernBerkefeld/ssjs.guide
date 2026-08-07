@@ -42,7 +42,7 @@ Only the substring **after the first `?`** is ever processed. A space in the pat
 | | Characters |
 |---|---|
 | Passed through | alphanumerics, `-` `_` `.` `!` `*` `(` `)` |
-| Percent-encoded | `"` `#` `$` `%` `&` `'` `+` `,` `/` `:` `;` `<` `=` `>` `?` `@` `[` `\` `]` `^` `` ` `` `{` `\|` `}` `~` |
+| Percent-encoded | `"` `#` `$` `%` `&` `'` `+` `,` `/` `:` `;` `<` `=` `>` `?` `@` `[` `\` `]` `^` `` ` `` `{` `|` `}` `~` |
 
 Escapes use **lowercase** hex — `%3d`, not `%3D`. Because `%` itself becomes `%25`, reserved-encoding mode is **not** idempotent: applying it twice double-encodes its own output.
 

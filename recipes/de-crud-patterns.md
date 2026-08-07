@@ -46,10 +46,10 @@ var recentOrders = Platform.Function.LookupOrderedRows(
 // Update rows matching a filter
 var rowsUpdated = Platform.Function.UpdateData(
     "UserProfiles",
-    ["Status", "UpdatedAt"],
-    ["inactive", Platform.Function.Now()],
     ["SubscriberKey"],
-    [subKey]
+    [subKey],
+    ["Status", "UpdatedAt"],
+    ["inactive", Platform.Function.Now()]
 );
 // rowsUpdated === 0 if no match (no error thrown)
 ```
@@ -118,10 +118,11 @@ de.Rows.Remove("SubscriberKey", subKey);
 ## Pattern: Safe Upsert with Existence Check
 
 ```javascript
-var existing = Platform.Function.Lookup(
-    "UserProfiles", "SubscriberKey", "SubscriberKey", subKey);
+// String() first — a Lookup result throws on a truthiness test when the field is empty
+var existing = String(Platform.Function.Lookup(
+    "UserProfiles", "SubscriberKey", "SubscriberKey", subKey));
 
-if (!existing) {
+if (existing === "" || existing === "null") {
     // Insert
     Platform.Function.InsertData("UserProfiles",
         ["SubscriberKey", "Email", "CreatedAt"],
@@ -130,9 +131,9 @@ if (!existing) {
 } else {
     // Update
     Platform.Function.UpdateData("UserProfiles",
+        ["SubscriberKey"], [subKey],
         ["Email", "UpdatedAt"],
-        [email, Platform.Function.Now()],
-        ["SubscriberKey"], [subKey]
+        [email, Platform.Function.Now()]
     );
 }
 ```
@@ -177,9 +178,9 @@ Prefer marking records inactive over deleting them:
 // Soft delete — sets Status = "deleted", preserves record
 Platform.Function.UpdateData(
     "Orders",
+    ["OrderId"], [orderId],
     ["Status", "DeletedAt"],
-    ["deleted", Platform.Function.Now()],
-    ["OrderId"], [orderId]
+    ["deleted", Platform.Function.Now()]
 );
 
 // When reading, filter out deleted records

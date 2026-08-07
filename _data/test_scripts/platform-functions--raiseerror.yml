@@ -285,14 +285,20 @@ examples: |
   /*
    * Chapter: Examples —
    *   1. Halt with an error when a lookup returns nothing:
-   *        if (!email) { Platform.Function.RaiseError("No email found for contact: " + contactId); }
+   *        var email = String(Platform.Function.Lookup("Contacts", "email", "id", contactId));
+   *        if (email === "" || email === "null") { Platform.Function.RaiseError("No email found for contact: " + contactId); }
    *   2. In an email send, skip rather than bounce:
    *        if (pref !== "yes") { Platform.Function.RaiseError("Subscriber opted out.", true); }
    *
    * Proves the mechanics both examples depend on:
-   *   1. The guard shape is correct: a falsy lookup result enters the branch
-   *      and the RaiseError inside it fires, while a truthy result skips it
-   *      entirely and RaiseError is never reached.
+   *   1. The guard shape is correct: the String()-first guard enters the
+   *      branch for the two values a lookup produces when it found nothing —
+   *      an empty/NULL field, which String() turns into "", and a no-match
+   *      null, which String() turns into "null" — and the RaiseError inside
+   *      it fires, while a real value skips the branch entirely and
+   *      RaiseError is never reached. The example deliberately does NOT use
+   *      `if (!email)`: truthiness on a raw Lookup result throws when the
+   *      matched row's field is NULL (see platform-functions/lookup).
    *   2. String concatenation in the message argument is evaluated BEFORE the
    *      raise, so the raised message carries the interpolated value.
    *   3. The second example's 2-argument form raises with the literal message
@@ -322,28 +328,29 @@ examples: |
       Platform.Response.Write((ok ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
   }
 
-  /* 1. Example 1 — guard on a missing lookup result. */
+  /* 1. Example 1 — the String()-first guard on a missing lookup result. */
   var contactId = "C-1234";
   var missingEmail = "";
-  assert("example 1: an empty lookup result is falsy and enters the guard", missingEmail ? "true" : "false", "false");
+  assert("example 1: String() of an empty/NULL field is the empty string, which the guard tests for", String(missingEmail), "");
   assertRaises("example 1: the guard raises with the interpolated contact id", function () {
-      var email = missingEmail;
-      if (!email) { Platform.Function.RaiseError("No email found for contact: " + contactId); }
+      var email = String(missingEmail);
+      if (email === "" || email === "null") { Platform.Function.RaiseError("No email found for contact: " + contactId); }
       return "guard not taken";
   }, "No email found for contact: C-1234");
 
   var foundEmail = "jane@example.com";
-  assert("example 1: a non-empty lookup result is truthy", foundEmail ? "true" : "false", "true");
+  assert("example 1: String() of a found address is that address, so the guard does not fire", String(foundEmail), "jane@example.com");
   assertRaises("example 1: a found email skips the guard and never raises", function () {
-      var email = foundEmail;
-      if (!email) { Platform.Function.RaiseError("No email found for contact: " + contactId); }
+      var email = String(foundEmail);
+      if (email === "" || email === "null") { Platform.Function.RaiseError("No email found for contact: " + contactId); }
       return "guard not taken";
   }, "NO-THROW");
 
-  /* 1b. A null lookup result behaves the same as an empty one. */
-  assertRaises("example 1: a null lookup result also enters the guard", function () {
-      var email = null;
-      if (!email) { Platform.Function.RaiseError("No email found for contact: " + contactId); }
+  /* 1b. A no-match lookup result — a genuine JS null — also enters the guard. */
+  assert("example 1: String() of a no-match null is the string \"null\", the guard's other test", String(null), "null");
+  assertRaises("example 1: a no-match null also enters the guard", function () {
+      var email = String(null);
+      if (email === "" || email === "null") { Platform.Function.RaiseError("No email found for contact: " + contactId); }
       return "guard not taken";
   }, "No email found for contact: C-1234");
 

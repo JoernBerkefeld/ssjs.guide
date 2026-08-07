@@ -83,8 +83,8 @@ Platform.Load("core", "1.1.5");
 var PAGE_ID = 12345;
 var DEBUG = Platform.Request.GetQueryStringParameter("debug") === "1";
 
-// 3. Read request data once
-var method = Platform.Request.Method;
+// 3. Read request data once — String() converts the CLR value so === works
+var method = String(Platform.Request.Method);
 var rawBody = (method === "POST") ? Platform.Request.GetPostData() : "";
 
 // 4. Helper functions
@@ -149,7 +149,7 @@ var rawBody = Platform.Request.GetPostData();
 Document known bugs and workarounds:
 
 ```javascript
-// ParseJSON throws 500 on null/undefined — using + "" guard
+// + "" keeps a non-string argument valid — ParseJSON throws on an object/array
 var data = Platform.Function.ParseJSON(responseBody + "");
 ```
 

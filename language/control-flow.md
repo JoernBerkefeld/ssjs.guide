@@ -166,8 +166,9 @@ function processSubscriber(sk) {
         throw new Error("SubscriberKey is required");
     }
 
-    var email = Platform.Function.Lookup("Subscribers", "Email", "SubscriberKey", sk);
-    if (!email) {
+    // String() first — a Lookup result throws on a truthiness test when the field is empty
+    var email = String(Platform.Function.Lookup("Subscribers", "Email", "SubscriberKey", sk));
+    if (email === "" || email === "null") {
         return null; // early return — nothing to process
     }
 

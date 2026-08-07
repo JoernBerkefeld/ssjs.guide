@@ -10,13 +10,14 @@ SSJS exposes information about how the current page was invoked through the `Pla
 
 ## ExecutionContextType
 
-`Platform.Request.Method` returns the HTTP verb: `"GET"` or `"POST"`. Use it to distinguish form submissions from initial page loads:
+`Platform.Request.Method` returns the HTTP verb: `"GET"` or `"POST"`. It is a **CLR value**, not a JavaScript string, so strict equality against a literal is always false — convert it with `String(...)` first. Use it to distinguish form submissions from initial page loads:
 
 ```javascript
 <script runat="server">
 Platform.Load("core", "1.1.5");
 
-var method = Platform.Request.Method;
+// String() converts the CLR value to a real JavaScript string
+var method = String(Platform.Request.Method);
 
 if (method === "POST") {
     // Handle form submission
@@ -41,7 +42,7 @@ In CloudPages, these built-in names are available:
 
 | Variable | Description |
 |----------|-------------|
-| `Platform.Request.Method` | `"GET"` or `"POST"` |
+| `Platform.Request.Method` | `"GET"` or `"POST"` — a CLR value; wrap in `String(...)` before strict comparison |
 | `Platform.Request.GetQueryStringParameter(name)` | Value from URL query string |
 | `Platform.Request.GetFormField(name)` | Value from POST body (application/x-www-form-urlencoded) |
 | `Platform.Request.GetPostData()` | Entire raw POST body (call only once) |
@@ -55,8 +56,9 @@ You can use feature detection to write code that degrades gracefully across cont
 ```javascript
 <script runat="server">
 // Detect if we're in a web context (CloudPage vs email/automation)
-var isWebContext = (Platform.Request.Method !== null &&
-                   Platform.Request.Method !== "");
+// String() first — strict comparison against the raw CLR value never matches
+var requestMethod = String(Platform.Request.Method);
+var isWebContext = (requestMethod !== "null" && requestMethod !== "");
 
 if (isWebContext) {
     var qs = Platform.Request.GetQueryStringParameter("debug");
@@ -104,7 +106,7 @@ var rawBody = Platform.Request.GetPostData();
 <script runat="server">
 Platform.Load("core", "1.1.5");
 
-if (Platform.Request.Method === "POST") {
+if (String(Platform.Request.Method) === "POST") {
     var rawBody = Platform.Request.GetPostData();
     // ParseJSON returns null if rawBody is null/undefined
     var payload = Platform.Function.ParseJSON(rawBody + "");
@@ -116,7 +118,7 @@ if (Platform.Request.Method === "POST") {
 </script>
 ```
 
-The `+ ""` coercion prevents `ParseJSON` from throwing a 500 error on `null`/`undefined` input.
+`ParseJSON` returns `null` for `null`/`undefined` input rather than erroring — the `+ ""` coercion guards against the case that really throws, a non-string object or array argument.
 
 ## Cookies
 

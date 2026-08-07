@@ -58,9 +58,10 @@ Platform.Function.DeleteData(
 ### Safe delete pattern
 
 ```javascript
-// Verify the record exists before deleting
-var exists = Platform.Function.Lookup("Orders", "OrderID", "OrderID", orderId);
-if (exists) {
+// Verify the record exists before deleting.
+// Coerce first — a truthiness test on a raw Lookup result throws on a NULL field.
+var found = String(Platform.Function.Lookup("Orders", "OrderID", "OrderID", orderId));
+if (found !== "" && found !== "null") {
     var count = Platform.Function.DeleteData("Orders", ["OrderID"], [orderId]);
     Write("Deleted " + count + " order(s).");
 } else {

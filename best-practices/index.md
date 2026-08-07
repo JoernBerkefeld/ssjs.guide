@@ -25,10 +25,10 @@ Writing robust SSJS requires understanding both the capabilities and the sharp e
 
 1. **Always `Platform.Load("core", "1.1.5")` first** — before any Core library usage
 2. **Read `Platform.Request.GetPostData()` once** — store in a variable immediately, it returns `""` on second call
-3. **Use `+ ""` before `Platform.Function.ParseJSON()`** — `Platform.Function.ParseJSON(str + "")` not `Platform.Function.ParseJSON(str)` to avoid 500 errors
+3. **Use `+ ""` before `Platform.Function.ParseJSON()`** — `Platform.Function.ParseJSON(str + "")` not `Platform.Function.ParseJSON(str)`, because an object or array argument throws (`null`/`undefined` merely return `null`)
 4. **Never trust user input** — validate and sanitize all query params, POST fields, and cookies
 5. **Use `var` everywhere** — `let`, `const`, arrow functions, and template literals all throw runtime errors
-6. **Add filter to `de.Rows.Retrieve()` on CloudPages** — it returns empty without a filter
+6. **Filter `de.Rows.Retrieve()` for volume, not correctness** — an unfiltered call does work on CloudPages, it just returns every row
 7. **Handle the `switch default` bug** — test your `switch` statements, use `if`/`else` as fallback
 8. **Log errors to a DE** — don't rely on SFMC's native error pages for debugging
 9. **Set content type explicitly** — always set `Platform.Response.ContentType = "application/json";` for API responses

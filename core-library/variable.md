@@ -64,8 +64,10 @@ Write("<p>Processing: " + email + "</p>");
 
 ```javascript
 <script runat="server">
-var data = Platform.Function.Lookup("Preferences", "Theme", "SubscriberKey", sk);
-Variable.SetValue("@theme", data || "light");
+var data  = String(Platform.Function.Lookup("Preferences", "Theme", "SubscriberKey", sk));
+// Never use `data || "light"` on a raw Lookup result — a NULL field throws
+var theme = (data === "" || data === "null") ? "light" : data;
+Variable.SetValue("@theme", theme);
 </script>
 
 <!-- Use the variable in AMPscript -->

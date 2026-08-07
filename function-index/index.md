@@ -247,13 +247,13 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 
 | Name | Category | Returns | Description |
 |------|----------|---------|-------------|
-| [`HTTP.Get(url[, headerNames, headerValues])`](/http/get/) | Core HTTP | object | HTTP GET — structured status + body |
-| [`HTTP.Post(url, contentType, payload, headerNames, headerValues)`](/http/post/) | Core HTTP | object | HTTP POST — structured status + body |
+| [`HTTP.Get(url[, headerNames, headerValues])`](/http/get/) | Core HTTP | object | HTTP GET — structured status + body (`{ Status, Content }`) |
+| [`HTTP.Post(url, contentType, payload[, headerNames, headerValues])`](/http/post/) | Core HTTP | object | HTTP POST — structured status + body (`{ StatusCode, Response[] }`) |
 | [`HTTPHeader.GetValue(name)`](/core-library/httpheader/) | Core Library | string \| null | Read inbound HTTP request header |
 | [`HTTPHeader.SetValue(name, value)`](/core-library/httpheader/) | Core Library | void | Set outbound response header (`content-length` cannot be changed; `host` can) |
-| [`HTTPHeader.Remove(headerName)`](/core-library/httpheader/) | Core Library | string | Remove HTTP request header |
-| [`Platform.Function.HTTPGet(url, continueOnError[, emptyContentHandling, headerNames, headerValues, statusVariable])`](/platform-functions/httpget/) | Platform Functions | string | HTTP GET — body string only |
-| [`Platform.Function.HTTPPost(url, contentType, payload[, headerNames, headerValues, response])`](/platform-functions/httppost/) | Platform Functions | string | HTTP POST — body string only |
+| [`HTTPHeader.Remove(headerName)`](/core-library/httpheader/) | Core Library | void | Remove an outbound HTTP header — returns `undefined`, call it for the side effect |
+| [`Platform.Function.HTTPGet(url)` or `HTTPGet(url, continueOnError, emptyContentHandling, headerNames, headerValues, statusVariable)`](/platform-functions/httpget/) | Platform Functions | string | HTTP GET — returns the response body; only the 1-arg and full 6-arg forms are valid (2–5 args throw), and `statusVariable` stays empty |
+| [`Platform.Function.HTTPPost(url, contentType, payload[, headerNames, headerValues, response])`](/platform-functions/httppost/) | Platform Functions | number | HTTP POST — returns the status code, not the body; the `response` out-parameter stays empty and a 4xx/5xx throws |
 
 ---
 
@@ -515,7 +515,7 @@ For category browsing, see [Platform Functions](/platform-functions/), [WSProxy]
 | [`SuppressedError([error, suppressed[, message]])`](/ecmascript-builtins/error-types/#suppressederror) | ECMAScript Builtins | Error | ❌ Missing (ES2026) — use the base `Error` constructor |
 | [`new Script.Util.HttpRequest(url)`](/http/script-util-httprequest/) | HTTP | HttpRequestInstance | Full HTTP request object |
 | [`new Script.Util.HttpGet(url)`](/http/script-util-httpget/) | HTTP | HttpRequestInstance | HTTP GET shorthand |
-| [`<HttpRequestInstance>.send()`](/http/script-util-httprequest/#send) | HTTP | object | Execute HTTP request |
+| [`<HttpRequestInstance>.send()`](/http/script-util-httprequest/#send) | HTTP | HttpResponseInstance | Execute the request — read `statusCode` and `content` off the result |
 | [`<HttpRequestInstance>.setHeader(name, value)`](/http/script-util-httprequest/#setheader) | HTTP | void | Set request header |
 | [`<HttpRequestInstance>.clearHeaders()`](/http/script-util-httprequest/#clearheaders) | HTTP | void | Clear all custom headers |
 | [`<HttpRequestInstance>.removeHeader(name)`](/http/script-util-httprequest/#removeheader) | HTTP | void | Remove one header |

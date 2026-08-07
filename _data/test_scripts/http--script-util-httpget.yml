@@ -23,7 +23,7 @@ return-value: |
    * Chapter: Return Value
    *
    * Proves:
-   *   1. `new Script.Util.HttpGet(url)` returns an HttpGetInstance (a CLR proxy).
+   *   1. `new Script.Util.HttpGet(url)` returns an HttpRequestInstance (a CLR proxy).
    *   2. The instance exposes send() and the request is executed by calling it.
    *   3. No Platform.Load is required — the constructor works without it.
    *
@@ -52,7 +52,7 @@ return-value: |
 httpgetinstance-properties: |
   <script runat="server">
   /*
-   * Chapter: HttpGetInstance Properties
+   * Chapter: HttpRequestInstance Properties
    *
    * Proves, for each documented property, its DEFAULT value and that it is
    * writable (reads back what was assigned):
@@ -111,7 +111,7 @@ httpgetinstance-properties: |
 httpgetinstance-methods: |
   <script runat="server">
   /*
-   * Chapter: HttpGetInstance Methods
+   * Chapter: HttpRequestInstance Methods
    *
    * Proves that all four documented methods exist on the instance and that
    * the header mutators can be called without throwing:

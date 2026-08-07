@@ -41,9 +41,26 @@ id = parseInt(id, 10);
 // DANGEROUS — user can inject AMPscript
 Platform.Function.TreatAsContent(userInput);
 
-// SAFE — set via Variable, then use a fixed template
+// SAFE against injection — set via Variable, then use a fixed template.
+// The value now arrives as data, so it is never parsed as AMPscript source.
 Variable.SetValue("@userInput", userInput);
-Platform.Function.TreatAsContent("%%=v(@userInput)=%%"); // v() output-encodes the value
+var rendered = Platform.Function.TreatAsContent("%%=v(@userInput)=%%");
+```
+
+{% include callout.html type="warning" content="**`v()` does not encode anything.** Passing the value through `Variable.SetValue()` stops it being parsed as AMPscript **source** — that is the only guarantee it gives you. `TreatAsContent()` escapes and sanitises nothing: HTML tags, `<script>` elements and quote characters all come back byte-for-byte. If the rendered result is written into the page, it is still an XSS vector and must be HTML-encoded separately — see [Output Encoding](#6-output-encoding) below." %}
+
+The two protections are independent and you usually need both:
+
+| Threat | Protection |
+|--------|-----------|
+| AMPscript injection (SSTI) | `Variable.SetValue()` + fixed template — never concatenate input into the `TreatAsContent()` argument |
+| XSS in the rendered output | HTML-encode the result yourself before writing it (§6) |
+
+```javascript
+// Both protections together
+Variable.SetValue("@userInput", userInput);
+var rendered = Platform.Function.TreatAsContent("%%=v(@userInput)=%%");
+Write("<div>" + htmlEncode(rendered) + "</div>"); // htmlEncode defined in §6
 ```
 
 ---
@@ -79,8 +96,11 @@ var token = decryptSymmetric(encryptedToken, "AES", "myKey", "myIV");
 CloudPages forms are publicly accessible. Without CSRF protection, any site can submit to your form.
 
 ```javascript
+// Platform.Request.Method is a CLR value — convert once before comparing
+var method = String(Platform.Request.Method);
+
 // Generate CSRF token on page load (GET)
-if (Platform.Request.Method === "GET") {
+if (method === "GET") {
     var csrfToken = Platform.Function.GUID();
     Platform.Response.SetCookie("csrfToken", csrfToken, "", true);
     // Output token in form
@@ -88,7 +108,7 @@ if (Platform.Request.Method === "GET") {
 }
 
 // Validate on POST
-if (Platform.Request.Method === "POST") {
+if (method === "POST") {
     var tokenFromCookie = Platform.Request.GetCookieValue("csrfToken");
     var tokenFromForm = Platform.Request.GetFormField("csrf_token");
 
@@ -144,7 +164,7 @@ Write("<div>Hello, " + htmlEncode(userName) + "</div>");
 
 ## 7. Restrict Sensitive Data in Responses
 
-Don't expose internal identifiers, full DE records, or stack traces in error responses:
+Don't expose internal identifiers, full DE records, or raw error objects in error responses:
 
 ```javascript
 // BAD — leaks internal structure
@@ -154,9 +174,10 @@ Don't expose internal identifiers, full DE records, or stack traces in error res
 
 // GOOD — safe error message
 } catch(e) {
+    // String(e) — this engine has no .stack, and .message is undefined for new Error(...)
     Platform.Function.InsertData("ErrorLog",
-        ["timestamp", "message", "stack"],
-        [Platform.Function.Now(), e.message, e.stack || ""]
+        ["timestamp", "message"],
+        [Platform.Function.Now(), String(e)]
     );
     Write(Stringify({ status: 500, statusMessage: "Internal Server Error", error: "An internal error occurred" }));
 }
@@ -184,7 +205,8 @@ var timeWindow = formatDate(Platform.Function.Now(), "MM/DD/YYYY HH:mm");
 var key = ip + "|" + timeWindow;
 
 var hitCount = Platform.Function.Lookup("RateLimit", "count", "key", key);
-hitCount = parseInt(hitCount, 10) || 0;
+// String() first — parsing a Lookup result directly throws when the field is empty
+hitCount = parseInt(String(hitCount), 10) || 0;
 
 if (hitCount >= 10) { // 10 requests per minute
     Write(Stringify({ status: 429, statusMessage: "Too Many Requests", error: "Rate limit exceeded" }));

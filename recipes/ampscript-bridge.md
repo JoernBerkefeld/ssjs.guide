@@ -70,13 +70,26 @@ var encoded = Variable.GetValue("@encoded");
 
 ## Using Platform.Function.TreatAsContent Safely
 
-{% include callout.html type="warning" content="Never pass user input directly to `Platform.Function.TreatAsContent()`. Use `Variable.SetValue()` first — the AMPscript `v()` function output-encodes values preventing injection." %}
+{% include callout.html type="warning" content="Never pass user input directly to `Platform.Function.TreatAsContent()`. Use `Variable.SetValue()` first so the value arrives as data and is never parsed as AMPscript **source**. This stops AMPscript injection — but it is **not** output encoding: `v()` encodes nothing and `TreatAsContent()` sanitises nothing, so `<script>alert(1)</script>` comes back byte-for-byte. HTML-encode the result yourself before writing it into a page — see [Security → Output Encoding](/best-practices/security/#6-output-encoding)." %}
 
 ```javascript
-// SAFE pattern
+// Output encoder — canonical copy lives in Security → Output Encoding
+function htmlEncode(str) {
+    return (str + "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#x27;");
+}
+
+// SAFE against AMPscript injection
 Variable.SetValue("@name", userName);
 Variable.SetValue("@code", promoCode);
-Platform.Function.TreatAsContent("Hello, %%=v(@name)=%%. Your code is %%=v(@code)=%%.");
+var rendered = Platform.Function.TreatAsContent("Hello, %%=v(@name)=%%. Your code is %%=v(@code)=%%.");
+
+// Still unsafe to write raw — the rendered string is not HTML-encoded.
+Write(htmlEncode(rendered));
 
 // DANGEROUS — never do this:
 // Platform.Function.TreatAsContent(userInput); // AMPscript injection!

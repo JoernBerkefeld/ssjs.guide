@@ -4,8 +4,8 @@ title: WSProxy
 description: WSProxy is the modern SSJS interface to the Salesforce Marketing Cloud SOAP API — create, retrieve, update, delete, and execute SFMC objects without raw SOAP XML.
 nav_order: 7
 has_children: true
-verification: verified
 differs_from_docs: true
+aggregate_verification: false
 ---
 
 WSProxy is the recommended way to interact with the SFMC SOAP API from SSJS. It abstracts the verbose `CreateObject`/`SetObjectProperty`/`InvokeCreate` pattern behind simple JavaScript method calls.
@@ -47,7 +47,7 @@ var items = result.Results;
 | [`<WSProxyInstance>.performBatch(...)`](/wsproxy/performbatch/) | SOAP Perform on many objects |
 | [`<WSProxyInstance>.setClientId(...)`](/wsproxy/setclientid/) | Target another business unit |
 | [`<WSProxyInstance>.resetClientIds()`](/wsproxy/resetclientids/) | Clear BU override |
-| [`ErrorUtil.ThrowWSProxyError(...)`](/wsproxy/errorutil/) | Throw on a WSProxy error status so `try`/`catch` can handle SOAP failures (requires Core load) |
+| [`ErrorUtil.ThrowWSProxyError(...)`](/wsproxy/errorutil/) | Throw on a WSProxy error status so `try`/`catch` can handle SOAP failures — **only under `Platform.Load("Core", "1")`**; `undefined` on 1.1.1/1.1.5, so check `result.Status` yourself instead |
 
 ---
 

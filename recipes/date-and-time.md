@@ -19,13 +19,13 @@ function formatDate(dateString,dateFormat,timeFormat,isoLocale) {
     return Platform.Function.TreatAsContent("%%=FormatDate(@formatDate_string, @formatDate_date, @formatDate_time, @formatDate_iso)=%%");
 }
 
-// Format for display
-var displayDate = formatDate(now, "MM/DD/YYYY", "en-US");
-var isoDate = formatDate(now, "YYYY-MM-DD", "en-US");
-var fullDateTime = formatDate(now, "MM/DD/YYYY HH:mm:ss", "en-US");
+// Format for display — the 3rd argument is timeFormat, the locale is 4th
+var displayDate = formatDate(now, "MM/DD/YYYY", "", "en-US");
+var isoDate = formatDate(now, "YYYY-MM-DD", "", "en-US");
+var fullDateTime = formatDate(now, "MM/DD/YYYY", "HH:mm:ss", "en-US");
 
 // For cookies/HTTP headers
-var httpDate = formatDate(now, "ddd, DD MMM YYYY HH:mm:ss", "en-US") + " GMT";
+var httpDate = formatDate(now, "ddd, DD MMM YYYY", "HH:mm:ss", "en-US") + " GMT";
 ```
 
 ---
@@ -75,7 +75,8 @@ function formatDate(dateString,dateFormat,timeFormat,isoLocale) {
 // Cookie expiry 30 days from now
 var expiry = formatDate(
     dateAdd(Platform.Function.Now(), 30, "D"),
-    "ddd, DD MMM YYYY HH:mm:ss",
+    "ddd, DD MMM YYYY",
+    "HH:mm:ss",
     "en-US"
 ) + " GMT";
 Platform.Response.SetCookie("session", token, expiry, true);
@@ -97,7 +98,7 @@ function formatDate(dateString,dateFormat,timeFormat,isoLocale) {
 // Convert SFMC server time to subscriber's local time
 var serverTime = Platform.Function.Now();
 var localTime = Platform.Function.SystemDateToLocalDate(serverTime);
-var localDisplay = formatDate(localTime, "MM/DD/YYYY h:mm a", "en-US");
+var localDisplay = formatDate(localTime, "MM/DD/YYYY", "h:mm a", "en-US");
 Write("Your local time: " + localDisplay);
 ```
 
@@ -123,7 +124,8 @@ function formatDate(dateString,dateFormat,timeFormat,isoLocale) {
 // Get records from the last 7 days
 var sevenDaysAgo = formatDate(
     dateAdd(Platform.Function.Now(), -7, "D"),
-    "MM/DD/YYYY HH:mm:ss"
+    "MM/DD/YYYY",
+    "HH:mm:ss"
 );
 
 // Use with Platform.Function (filter by date string comparison)
@@ -145,7 +147,7 @@ var result = proxy.retrieve(
         RightOperand: {
             Property: "CreatedAt",
             SimpleOperator: "lessThan",
-            Value: formatDate(Platform.Function.Now(), "MM/DD/YYYY HH:mm:ss")
+            Value: formatDate(Platform.Function.Now(), "MM/DD/YYYY", "HH:mm:ss")
         }
     }
 );

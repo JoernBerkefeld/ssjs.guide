@@ -125,10 +125,11 @@ var phone = Platform.Function.Lookup(
 `Lookup` returns `null` when no match is found (runtime-verified):
 
 ```javascript
-var status = Platform.Function.Lookup("Users", "Status", "Email", email);
+var raw    = Platform.Function.Lookup("Users", "Status", "Email", email);
+var status = String(raw);   // "null" for no-match, "" for a NULL or blank field
 
-// A simple truthiness check covers null (and any empty value)
-if (!status) {
+// Never test the raw result for truthiness — a NULL field throws
+if (status === "" || status === "null") {
     Write("Not found");
 } else {
     Write("Status: " + status);
@@ -167,8 +168,12 @@ var val = Platform.Function.Lookup("My Data Extension Name", "FieldName", "ID", 
 // ❌ This won't work — Lookup returns null on no-match, not ""
 if (result === "") { ... }
 
-// ✅ Correct check
+// ❌ Also wrong — a matched row with a NULL field throws on truthiness
 if (!result) { ... }
+
+// ✅ Correct check — coerce first, then compare
+var value = String(result);
+if (value === "" || value === "null") { ... }
 ```
 
 **Passing the external key instead of the Name:**

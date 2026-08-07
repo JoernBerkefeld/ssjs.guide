@@ -191,6 +191,15 @@
     border-color: $border-muted;
   }
 
+  // ── Narrative page: prose/examples checked, no ssjs-data entry behind it ──
+  // Deliberately a DIFFERENT hue from status-verified (green) so it can never
+  // be read as the ssjs-data-backed "Runtime verified" badge.
+  &.claims-verified {
+    color: $color-purple;
+    background-color: rgba($color-purple, 0.08);
+    border-color: rgba($color-purple, 0.3);
+  }
+
   // ── Every chapter ships a runnable "Show test script" block ─────────────
   &.test-scripts-complete {
     color: $color-info;

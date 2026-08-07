@@ -8,16 +8,20 @@ description: Guard against null values, empty strings, type coercion bugs, and u
 
 SSJS has several unique failure modes that differ from standard JavaScript. Defensive coding means proactively guarding against these platform-specific behaviors.
 
-## 1. ParseJSON Null Guard
+## 1. ParseJSON Argument Guard
 
-`Platform.Function.ParseJSON(null)` or `ParseJSON(undefined)` causes a 500 error. Always add `+ ""`:
+Contrary to a widespread belief, `Platform.Function.ParseJSON(null)` and `ParseJSON(undefined)` do **not** error — they return `null` (runtime-verified, see [Known Bugs](/engine-limitations/known-bugs/)). What actually throws is a **wrong argument count** and a **non-string object or array** argument. Coercing with `+ ""` keeps such a value a string, so it is still the safe habit — but you must also check the result for `null`:
 
 ```javascript
-// WRONG — throws 500 if rawBody is null/undefined/""
+// RISKY — throws if rawBody is an object or array
 var data = Platform.Function.ParseJSON(rawBody);
 
-// CORRECT
+// CORRECT — coerce to a string, then check for null
 var data = Platform.Function.ParseJSON(rawBody + "");
+if (!data) {
+    Write("No data or invalid JSON");
+    return;
+}
 
 // Also safe for HTTP response content (CLR string)
 var resp = req.send();
@@ -26,22 +30,25 @@ var data = Platform.Function.ParseJSON(String(resp.content) + "");
 
 ---
 
-## 2. Lookup Returns "" Not null
+## 2. Lookup Returns null — and a CLR null for an Empty Field
 
-`Platform.Function.Lookup` returns `""` (empty string) when no matching row exists. Checking for `null` will silently pass.
+`Platform.Function.Lookup` returns a genuine JS `null` when no matching row exists (runtime-verified). The trap is a different case: a row that exists but whose field was never populated returns a **CLR null**, which is not `=== null` and **throws** the moment you coerce it — so `if (!email)` is not a safe guard.
 
 ```javascript
 var email = Platform.Function.Lookup("Contacts", "Email", "Id", contactId);
 
-// WRONG — "" !== null, so this is always false when no record exists
-if (email === null) { ... }
+// WRONG — throws "Object cannot be cast from DBNull to other types." on a CLR null
+if (!email) { ... }
 
-// CORRECT
-if (!email) {
-    Write("Contact not found");
+// CORRECT — coerce with String() first, then test the string
+var value = String(email);   // "null" when no row matched, "" when the field is empty
+if (value === "" || value === "null") {
+    Write("Contact not found or no email on file");
     return;
 }
 ```
+
+See [Lookup](/platform-functions/lookup/) for all four empty-ish outcomes.
 
 ---
 
@@ -69,20 +76,23 @@ function getField(name) {
 
 ## 4. Type Coercion in Comparisons
 
-`Platform.Function.Lookup` always returns a string. When comparing to numbers or booleans, be explicit:
+`Platform.Function.Lookup` hands back each column's **native** runtime type — a Number/Decimal column arrives as a `number`, a Boolean column as a `boolean`, Text as a `string`, and a Date column as a real `Date`. `DataExtension.Rows.Retrieve()` does the opposite and stringifies **every** field. Know which of the two you called before you compare:
 
 ```javascript
+// Lookup — a Number column is already a number, so a numeric compare is correct
 var score = Platform.Function.Lookup("Scores", "value", "userId", userId);
-
-// WRONG — "95" > 80 is a string/number comparison and may behave unexpectedly
 if (score > 80) { ... }
 
-// CORRECT — convert to number first
-if (parseInt(score, 10) > 80) { ... }
+// Rows.Retrieve — every field arrives as a string, so convert before comparing
+var row = DataExtension.Init("Scores").Rows.Retrieve({
+    Property: "userId", SimpleOperator: "equals", Value: userId
+})[0];
+if (parseInt(row.value, 10) > 80) { ... }
 
-// For booleans stored as "true"/"false"
+// Booleans: Lookup yields a real boolean, Rows.Retrieve the capitalized text "True"/"False"
 var isActive = Platform.Function.Lookup("Contacts", "active", "id", id);
-if (isActive === "true") { ... }  // string comparison, not boolean
+if (isActive === true) { ... }
+if (row.active === "True") { ... }
 ```
 
 ---
@@ -94,7 +104,8 @@ Always check for existence before accessing nested properties:
 ```javascript
 var result = Platform.Function.LookupRows("DE", "Status", "active");
 
-// WRONG — throws if result is empty
+// WRONG — LookupRows returns null (not an empty array) when nothing matches,
+//         so result[0] is a TypeError on null
 var firstEmail = result[0].Email;
 
 // CORRECT

@@ -59,8 +59,9 @@ function getSubscriber(sk) {
         throw new Error("SubscriberKey is required");
     }
 
-    var email = Platform.Function.Lookup("Subscribers", "Email", "SubscriberKey", sk);
-    if (!email) {
+    // String() first — a Lookup result throws on a truthiness test when the field is empty
+    var email = String(Platform.Function.Lookup("Subscribers", "Email", "SubscriberKey", sk));
+    if (email === "" || email === "null") {
         throw new Error("Subscriber not found: " + sk);
     }
 
@@ -145,15 +146,17 @@ try {
     req.retries = 2;
     var resp = req.send();
 
-    if (resp.statusCode === 200) {
+    // statusCode is a CLR value — Number() converts it so === works
+    var status = Number(resp.statusCode);
+    if (status === 200) {
         var data = Platform.Function.ParseJSON(String(resp.content) + "");
         // process data...
-    } else if (resp.statusCode === 401) {
+    } else if (status === 401) {
         throw new Error("Unauthorized — check your access token");
-    } else if (resp.statusCode === 404) {
+    } else if (status === 404) {
         throw new Error("Resource not found");
     } else {
-        throw new Error("API error: " + resp.statusCode);
+        throw new Error("API error: " + status);
     }
 } catch (e) {
     logError("apiCall", e);

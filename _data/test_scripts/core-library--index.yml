@@ -1,0 +1,196 @@
+# Test scripts for /core-library/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes - positive,
+# negative, and every documented deviation.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage.  Re-run them before changing any claim on the page.
+#
+# SPECIAL CASE - same shape as platform-objects--platform-load.yml: the
+# bare-name-globals chapter is about what Platform.Load does to name
+# visibility, so its own precondition (no Core load yet) is part of what is
+# under test. The script therefore deliberately starts with NO Platform.Load,
+# performs one load INSIDE a function body, and only later performs a
+# top-level load. Platform.Load's effect lasts for the whole REQUEST, so this
+# chapter must run FIRST when chapters are concatenated into one CloudPage.
+# For the same reason the chapter spans TWO <script runat="server"> blocks:
+# the cross-block claim cannot be proven inside a single block.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values - that manufactures phantom "deviations".
+
+bare-name-globals: |
+  <script runat="server">
+  /* NO Platform.Load at the top - the load order is the thing under test. */
+
+  /*
+   * Chapter: Bare-name Core functions and objects
+   *
+   * Proves how far the names injected by Platform.Load("core", ...) reach,
+   * and - the point of this script - which MECHANISM makes them reach:
+   *   1. Before any load, the bare names do not exist, not even inside a
+   *      helper that was declared before the load statement.
+   *   2. When the ONLY Platform.Load runs INSIDE A FUNCTION BODY, the bare
+   *      Core OBJECTS (DataExtension, Request, Variable, Attribute) still
+   *      become visible EVERYWHERE - to a sibling function that is not
+   *      lexically inside the loader, and at the page's top level.
+   *   3. Under that same in-function load the bare Core FUNCTIONS (Write,
+   *      Stringify, Base64Encode, ...) stay undefined EVERYWHERE, including
+   *      inside the loader function itself, and invoking one throws
+   *      "Object expected: Write".
+   *   4. CONTROL that rules out lexical closure as the mechanism: an ordinary
+   *      var declared in the loader's own function scope does NOT leak to a
+   *      sibling or to the top level, while the bare Core objects do. The
+   *      objects therefore do not travel by closing over the load scope.
+   *   5. After a TOP-LEVEL Platform.Load, the bare Core FUNCTIONS appear and
+   *      are reachable - and callable - from a plain helper, from a helper
+   *      DECLARED BEFORE the load statement, from a function EXPRESSION
+   *      assigned before the load, from a nested helper, and from a
+   *      three-level-nested helper.
+   *   6. Both kinds of bare name survive into a SEPARATE
+   *      <script runat="server"> block that performs no load of its own, at
+   *      that block's top level and inside its helpers.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* Thunks. A bare name that may be unbound is only ever resolved INSIDE a
+     function body - a top-level `typeof Write` can abort the whole page. */
+  function preTypeofWrite() { return typeof Write; }
+  function preTypeofDataExtension() { return typeof DataExtension; }
+  function preCallWrite() { Write(""); return "called"; }
+  function preNestedTypeofWrite() {
+      function inner() { return typeof Write; }
+      return inner();
+  }
+  var exprTypeofWrite = function () { return typeof Write; };
+  var exprTypeofDataExtension = function () { return typeof DataExtension; };
+  function siblingTypeofWrite() { return typeof Write; }
+  function siblingTypeofDataExtension() { return typeof DataExtension; }
+  function siblingNestedTypeofDataExtension() {
+      function inner() { return typeof DataExtension; }
+      return inner();
+  }
+  function siblingCallWrite() { Write(""); return "called"; }
+  function siblingReadsLoaderLocal() { return typeof loaderLocalMarker; }
+  function topLevelTypeofWrite() { return typeof Write; }
+  function topLevelTypeofDataExtension() { return typeof DataExtension; }
+  function topLevelTypeofLoaderLocal() { return typeof loaderLocalMarker; }
+
+  /* 1. Before any load at all - the bare names do not exist yet. */
+  assert("before any Platform.Load a helper sees no bare Write", preTypeofWrite(), "undefined");
+  assert("before any Platform.Load a helper sees no bare DataExtension", preTypeofDataExtension(), "undefined");
+
+  /* 2 + 3 + 4. The ONLY load on this page so far runs inside a function body. */
+  function loadCoreInsideAFunction() {
+      var loaderLocalMarker = "declared-in-the-load-scope";
+      Platform.Load("core", "1.1.5");
+      var seen = {};
+      seen.writeType = typeof Write;
+      seen.deType = typeof DataExtension;
+      seen.markerType = typeof loaderLocalMarker;
+      function nestedInsideLoader() { return typeof DataExtension; }
+      seen.nestedDeType = nestedInsideLoader();
+      function nestedInsideLoaderWrite() { return typeof Write; }
+      seen.nestedWriteType = nestedInsideLoaderWrite();
+      return seen;
+  }
+  var inFn = loadCoreInsideAFunction();
+
+  assert("an in-function load makes the bare OBJECT visible in the loader body", inFn.deType, "object");
+  assert("an in-function load makes the bare OBJECT visible to a helper nested inside the loader", inFn.nestedDeType, "object");
+  assert("DEV an in-function load leaves the bare FUNCTION undefined even inside the loader body (docs imply the load makes it available)", inFn.writeType, "undefined");
+  assert("DEV an in-function load leaves the bare FUNCTION undefined in a helper nested inside the loader", inFn.nestedWriteType, "undefined");
+  assert("control: an ordinary local var IS visible inside the loader body", inFn.markerType, "string");
+
+  assert("after an in-function load the bare OBJECT is visible to a SIBLING function that is not nested inside the loader", siblingTypeofDataExtension(), "object");
+  assert("after an in-function load the bare OBJECT is visible to a NESTED helper of that sibling", siblingNestedTypeofDataExtension(), "object");
+  assert("after an in-function load the bare OBJECT is visible at the page top level", topLevelTypeofDataExtension(), "object");
+  assert("after an in-function load the bare FUNCTION is still undefined in a sibling function", siblingTypeofWrite(), "undefined");
+  assert("after an in-function load the bare FUNCTION is still undefined at the page top level", topLevelTypeofWrite(), "undefined");
+  assertThrows("after an in-function load, invoking the bare FUNCTION throws", function () {
+      return siblingCallWrite();
+  });
+
+  /* 4. The control that rules out lexical closure: a real local of the load
+        scope does NOT escape it, while the bare objects above did. */
+  assert("control: the loader's own local var does NOT leak to a sibling function", siblingReadsLoaderLocal(), "undefined");
+  assert("control: the loader's own local var does NOT leak to the page top level", topLevelTypeofLoaderLocal(), "undefined");
+
+  /* 5. Now the documented usage - a TOP-LEVEL Platform.Load. */
+  Platform.Load("core", "1.1.5");
+
+  function postTypeofWrite() { return typeof Write; }
+  function postCallWrite() { Write(""); return "called"; }
+  function postNestedTypeofWrite() {
+      function inner() { return typeof Write; }
+      return inner();
+  }
+  function postDeepTypeofWrite() {
+      function middle() {
+          function inner() { return typeof Write; }
+          return inner();
+      }
+      return middle();
+  }
+  function postTypeofStringify() { return typeof Stringify; }
+  function postCallStringify() { return typeof Stringify({ a: 1 }); }
+  function postInitDataExtension() { return typeof DataExtension.Init("ssjsguide_scope_probe"); }
+
+  assert("after a TOP-LEVEL load the bare FUNCTION exists at the top level", topLevelTypeofWrite(), "function");
+  assert("after a TOP-LEVEL load a helper DECLARED BEFORE the load sees the bare FUNCTION", preTypeofWrite(), "function");
+  assert("after a TOP-LEVEL load a helper DECLARED BEFORE the load can INVOKE the bare FUNCTION", preCallWrite(), "called");
+  assert("after a TOP-LEVEL load a NESTED helper declared before the load sees the bare FUNCTION", preNestedTypeofWrite(), "function");
+  assert("after a TOP-LEVEL load a function EXPRESSION assigned before the load sees the bare FUNCTION", exprTypeofWrite(), "function");
+  assert("after a TOP-LEVEL load a function EXPRESSION assigned before the load sees the bare OBJECT", exprTypeofDataExtension(), "object");
+  assert("after a TOP-LEVEL load a helper DECLARED AFTER the load sees the bare FUNCTION", postTypeofWrite(), "function");
+  assert("after a TOP-LEVEL load a helper DECLARED AFTER the load can INVOKE the bare FUNCTION", postCallWrite(), "called");
+  assert("after a TOP-LEVEL load a NESTED helper sees the bare FUNCTION", postNestedTypeofWrite(), "function");
+  assert("after a TOP-LEVEL load a THREE-LEVEL nested helper sees the bare FUNCTION", postDeepTypeofWrite(), "function");
+  assert("after a TOP-LEVEL load a helper sees another bare FUNCTION, Stringify", postTypeofStringify(), "function");
+  assert("after a TOP-LEVEL load a helper can INVOKE the bare Stringify", postCallStringify(), "string");
+  assert("after a TOP-LEVEL load a helper can INVOKE a method on the bare OBJECT", postInitDataExtension(), "object");
+  assert("after a TOP-LEVEL load an IIFE sees the bare FUNCTION", (function () { return typeof Write; })(), "function");
+  </script>
+
+  <script runat="server">
+  /*
+   * 6. A SEPARATE <script runat="server"> block that performs NO load of its
+   *    own. The top-level load happened in the block above.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  function blockTwoTypeofWrite() { return typeof Write; }
+  function blockTwoTypeofDataExtension() { return typeof DataExtension; }
+  function blockTwoCallWrite() { Write(""); return "called"; }
+  function blockTwoNestedTypeofWrite() {
+      function inner() { return typeof Write; }
+      return inner();
+  }
+
+  assert("a second script block sees the bare FUNCTION at its top level", blockTwoTypeofWrite(), "function");
+  assert("a second script block sees the bare OBJECT at its top level", blockTwoTypeofDataExtension(), "object");
+  assert("a helper declared in a second script block can INVOKE the bare FUNCTION", blockTwoCallWrite(), "called");
+  assert("a NESTED helper in a second script block sees the bare FUNCTION", blockTwoNestedTypeofWrite(), "function");
+  assert("a second script block can call a helper DECLARED IN THE FIRST block", postTypeofWrite(), "function");
+  </script>

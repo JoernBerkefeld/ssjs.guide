@@ -20,12 +20,12 @@ CloudPages is the most flexible SSJS environment. A landing page is a publicly a
 - Full Data Extension CRUD
 
 **Limitations:**
-- `DataExtension.Rows.Retrieve()` does **not** work on CloudPages — use `Platform.Function.LookupRows()` instead
 - Requests time out (no documented limit, but ~30s is a practical ceiling for external calls)
 
 ```javascript
 Platform.Load("core", "1.1.5");
-var method = Platform.Request.Method; // "GET" or "POST"
+// String() converts the CLR value so === against a literal works
+var method = String(Platform.Request.Method); // "GET" or "POST"
 Write("<p>Request method: " + method + "</p>");
 ```
 
@@ -60,8 +60,9 @@ SSJS in emails runs during **precompile** — when SFMC personalizes the email f
 
 ```html
 <script runat="server">
-var firstName = Platform.Function.Lookup("Subscribers", "FirstName", "SubscriberKey", _subscriberKey);
-var displayName = firstName ? firstName : "Subscriber";
+// String() first — a Lookup result throws on a truthiness test when the field is empty
+var firstName = String(Platform.Function.Lookup("Subscribers", "FirstName", "SubscriberKey", _subscriberKey));
+var displayName = (firstName === "" || firstName === "null") ? "Subscriber" : firstName;
 Variable.SetValue("@displayName", displayName);
 </script>
 %%=v(@displayName)=%%
@@ -118,8 +119,8 @@ SSJS can run in MobileConnect context for SMS personalization, with significant 
 
 | Context | Request/Response | HTTP Calls | Platform.Load | WSProxy | Rows.Retrieve |
 |---------|-----------------|-----------|---------------|---------|---------------|
-| CloudPage | ✅ Full | ✅ | ✅ | ✅ | ❌ Use LookupRows |
-| JSON Code Resource | ✅ | ✅ | ✅ | ✅ | ❌ |
+| CloudPage | ✅ Full | ✅ | ✅ | ✅ | ✅ |
+| JSON Code Resource | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Email (precompile) | ❌ | ✅ | ✅ | ✅ (slow) | ✅ |
 | Automation Studio | ❌ | ✅ | ✅ | ✅ | ✅ |
 | Triggered Send | ❌ | ✅ | ✅ | ✅ | ✅ |

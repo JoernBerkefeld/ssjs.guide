@@ -61,7 +61,7 @@ Platform.Load("core", "1.1.5");
 
 var de = DataExtension.Init("MyDE");
 var filter = { Property: "Status", SimpleOperator: "equals", Value: "active" };
-var rows = de.Rows.Retrieve(filter); // ⚠️ Does NOT work on CloudPages
+var rows = de.Rows.Retrieve(filter); // works on CloudPages too — the filter is optional
 
 for (var i = 0; i < rows.length; i++) {
     Write(rows[i]["Email"] + "<br>");
@@ -96,10 +96,10 @@ var result = proxy.retrieve("DataExtension", cols);
 | Task | Recommended |
 |------|-------------|
 | Lookup single DE value | `Platform.Function.Lookup()` |
-| Lookup multiple rows (CloudPage) | `Platform.Function.LookupRows()` |
+| Lookup multiple rows | `Platform.Function.LookupRows()` |
 | Insert/update/delete DE rows | `Platform.Function.InsertData/UpdateData/UpsertData/DeleteData` |
 | Complex DE retrieval with sorting | `Platform.Function.LookupOrderedRows()` |
-| Read DE rows (Automation only) | `DataExtension.Init().Rows.Retrieve()` |
+| Read DE rows (any context) | `DataExtension.Init().Rows.Retrieve()` |
 | Full SFMC object CRUD | `new Script.Util.WSProxy()` |
 | Subscriber management | `Subscriber.Init()` or `WSProxy` |
 | External HTTP | `Script.Util.HttpRequest` |

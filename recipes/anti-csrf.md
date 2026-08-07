@@ -78,11 +78,12 @@ if (!submittedToken) {
 }
 
 // Look up the token
-var storedKey = Platform.Function.Lookup(
+// String() first — a Lookup result throws on a truthiness test when the field is empty
+var storedKey = String(Platform.Function.Lookup(
     "CSRFTokens", "SubscriberKey", "Token", submittedToken
-);
+));
 
-if (!storedKey || storedKey !== subKey) {
+if (storedKey === "" || storedKey === "null" || storedKey !== subKey) {
     Write(Stringify({status: 403, statusMessage: "Forbidden", error:"Invalid or expired security token."}));
     Platform.Function.RaiseError("CSRF token mismatch", true);
 }

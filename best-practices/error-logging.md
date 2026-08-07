@@ -17,28 +17,28 @@ Create a DE with these columns:
 | `LogId` | Text | 36 | Primary key, set to `GUID()` |
 | `Timestamp` | Date | — | When the error occurred |
 | `Page` | Text | 255 | CloudPage name or script identifier |
-| `ErrorMessage` | Text | 500 | Short error message |
-| `ErrorStack` | Text | 4000 | Full stack trace |
+| `ErrorMessage` | Text | 500 | Error text from `String(e)` |
 | `RequestData` | Text | 4000 | Query string, POST body snapshot |
 | `SubscriberKey` | Text | 254 | If available |
 | `Severity` | Text | 20 | `"error"`, `"warning"`, `"info"` |
+
+There is deliberately **no stack-trace column**: the SSJS engine exposes no `.stack` property on any error shape, so such a column could only ever store `undefined`. Capture the error text with `String(e)` instead — it works for engine-raised errors, `new Error(...)` (whose `.message` reads back `undefined`), and call-form `Error(...)` alike.
 
 ---
 
 ## Basic Error Logger
 
 ```javascript
-function logError(page, message, stack, requestData, subKey) {
+function logError(page, message, requestData, subKey) {
     try {
         Platform.Function.InsertData(
             "ErrorLog",
-            ["LogId", "Timestamp", "Page", "ErrorMessage", "ErrorStack", "RequestData", "SubscriberKey", "Severity"],
+            ["LogId", "Timestamp", "Page", "ErrorMessage", "RequestData", "SubscriberKey", "Severity"],
             [
                 Platform.Function.GUID(),
                 Platform.Function.Now(),
                 page || "unknown",
                 (message || "").substring(0, 500),
-                (stack || "").substring(0, 4000),
                 (requestData || "").substring(0, 4000),
                 subKey || "",
                 "error"
@@ -77,19 +77,20 @@ try {
     // ... rest of logic ...
 
 } catch(e) {
-    logError(PAGE_NAME, e.message, e.stack, requestSnapshot, "");
+    // String(e) — .message is undefined for new Error(...) and .stack does not exist
+    logError(PAGE_NAME, String(e), requestSnapshot, "");
 
     Platform.Response.ContentType = "application/json";
     Write(Stringify({ error: "An error occurred. Please try again." }));
 }
 
-function logError(page, message, stack, requestData, subKey) {
+function logError(page, message, requestData, subKey) {
     try {
         Platform.Function.InsertData(
             "ErrorLog",
-            ["LogId", "Timestamp", "Page", "ErrorMessage", "ErrorStack", "RequestData", "SubscriberKey", "Severity"],
+            ["LogId", "Timestamp", "Page", "ErrorMessage", "RequestData", "SubscriberKey", "Severity"],
             [Platform.Function.GUID(), Platform.Function.Now(), page,
-             (message || "").substring(0, 500), (stack || "").substring(0, 4000),
+             (message || "").substring(0, 500),
              (requestData || "").substring(0, 4000), subKey || "", "error"]
         );
     } catch(e) {}
@@ -165,14 +166,16 @@ function callApi(url, method, payload, token) {
     try {
         resp = req.send();
     } catch(e) {
-        logError("api-call", "HTTP request failed: " + url, e.message, "", "");
+        logError("api-call", "HTTP request failed: " + url + " — " + String(e), "", "");
         throw e;
     }
 
-    if (resp.statusCode >= 400) {
+    // statusCode is a CLR value — Number() converts it to a real JavaScript number
+    var status = Number(resp.statusCode);
+    if (status >= 400) {
         log("api-call", "error",
-            "HTTP " + resp.statusCode + " from " + url,
-            { url: url, status: resp.statusCode, body: String(resp.content).substring(0, 500) }
+            "HTTP " + status + " from " + url,
+            { url: url, status: status, body: String(resp.content).substring(0, 500) }
         );
     }
 
@@ -188,7 +191,8 @@ For critical automation failures, send an alert email:
 
 ```javascript
 } catch(e) {
-    logError(SCRIPT_NAME, e.message, e.stack, "", "");
+    // String(e) — .message is undefined for new Error(...) and .stack does not exist
+    logError(SCRIPT_NAME, String(e), "", "");
 
     // Alert the ops team
     try {

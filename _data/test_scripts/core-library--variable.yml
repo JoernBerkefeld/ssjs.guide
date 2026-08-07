@@ -159,8 +159,19 @@ examples: |
    *      later AMPscript in a combined harness).
    *   3. The TreatAsContent bridge: SetValue -> TreatAsContent(URLEncode) ->
    *      GetValue returns the encoded result (injection-safe pattern).
-   *   4. SetValue with a fallback (data || "light") stores the fallback when
-   *      the left side is falsy.
+   *   4. SetValue with the String()-first fallback stores the fallback when
+   *      the lookup produced no usable value. The example deliberately does
+   *      NOT use `data || "light"`: truthiness on a raw Lookup result throws
+   *      when the matched row's field is NULL (see platform-functions/lookup).
+   *      Asserted here on the same underlying facts, using the two values a
+   *      Lookup can produce for "no usable value" — a genuine JavaScript null
+   *      (no matching row) and an empty string (a blank field) — plus a real
+   *      value to prove the guard does not fire on it.
+   *
+   * NOT ASSERTED: that the CLR null a never-populated DE field returns also
+   * stringifies to "" and is caught by the same guard. That needs a data
+   * extension fixture, which this chapter does not create; it is proven in the
+   * empty-returns chapter of platform-functions--lookup.yml.
    *
    * NON-ASSERTABLE: Lookup("Preferences", ...) DE row; personalization
    * strings _subscriberKey / emailaddr on a plain CloudPage GET.
@@ -175,9 +186,23 @@ examples: |
   assert("read AMPscript @coreVarExAmpSk", Variable.GetValue("@coreVarExAmpSk"), "sk-example");
   assert("read AMPscript @coreVarExAmpEmail", Variable.GetValue("@coreVarExAmpEmail"), "user@example.com");
 
-  var data = null;
-  Variable.SetValue("@theme", data || "light");
-  assert("write fallback theme when lookup is falsy", Variable.GetValue("@theme"), "light");
+  /* The example's guard, on a no-match Lookup result (a genuine JS null). */
+  var noMatch = null;
+  var dataNoMatch = String(noMatch);
+  assert("String() of a no-match Lookup result is the string \"null\"", dataNoMatch, "null");
+  Variable.SetValue("@theme", (dataNoMatch === "" || dataNoMatch === "null") ? "light" : dataNoMatch);
+  assert("write fallback theme when the lookup found no row", Variable.GetValue("@theme"), "light");
+
+  /* The same guard, on a blank field (an ordinary empty string). */
+  var dataBlank = String("");
+  assert("String() of a blank field is the empty string", dataBlank, "");
+  Variable.SetValue("@themeBlank", (dataBlank === "" || dataBlank === "null") ? "light" : dataBlank);
+  assert("write fallback theme when the field is blank", Variable.GetValue("@themeBlank"), "light");
+
+  /* The guard must NOT fire on a real value. */
+  var dataReal = String("dark");
+  Variable.SetValue("@themeReal", (dataReal === "" || dataReal === "null") ? "light" : dataReal);
+  assert("a real lookup value is stored unchanged, the fallback does not fire", Variable.GetValue("@themeReal"), "dark");
 
   Variable.SetValue("@inputStr", "hello world");
   var pct = "%" + "%";

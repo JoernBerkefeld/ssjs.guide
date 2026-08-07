@@ -268,11 +268,14 @@ examples: |
    *   2. MULTI-FILTER DELETE — DeleteData(de, ["Status", "Active"],
    *      ["expired", "0"]) removes only the rows matching BOTH columns; rows
    *      matching just one of them survive.
-   *   3. SAFE DELETE PATTERN — Platform.Function.Lookup returns a truthy value
-   *      for an existing row, so the `if (exists)` branch is taken and the
-   *      delete returns 1; for a missing row Lookup returns a genuine
-   *      JavaScript null (=== null is true), so the `else` branch is taken and
-   *      DeleteData is never called.
+   *   3. SAFE DELETE PATTERN — the example guards with the String()-first
+   *      idiom, because truthiness on a raw Lookup result throws when the
+   *      matched row's field is NULL (see platform-functions/lookup). For an
+   *      existing row String() yields the stored value, so the
+   *      `found !== "" && found !== "null"` branch is taken and the delete
+   *      returns 1; for a missing row Lookup returns a genuine JavaScript null
+   *      (=== null is true) which String() turns into "null", so the `else`
+   *      branch is taken and DeleteData is never called.
    *   4. The rows are read back after the deletes, so each example is proven
    *      by its EFFECT, not merely by its return value.
    *
@@ -339,11 +342,13 @@ examples: |
   var deletedMulti = Platform.Function.DeleteData(deName, ["Status", "Active"], ["expired", "0"]);
   assert("multi-filter delete: only the rows matching BOTH columns are removed", deletedMulti, 1);
 
-  /* 3. Safe delete pattern — the page's third example, both branches. */
-  var exists = Platform.Function.Lookup(deName, "Status", "SessionToken", "tok-5");
-  assert("safe delete: Lookup finds the existing row", String(exists), "current");
+  /* 3. Safe delete pattern — the page's third example, both branches. The
+        example guards with the String()-first idiom, never with truthiness on
+        the raw Lookup result. */
+  var found = String(Platform.Function.Lookup(deName, "Status", "SessionToken", "tok-5"));
+  assert("safe delete: String() of an existing row's value is that value", found, "current");
   var count = 0, branch = "";
-  if (exists) {
+  if (found !== "" && found !== "null") {
       branch = "deleted";
       count = Platform.Function.DeleteData(deName, ["SessionToken"], ["tok-5"]);
   } else {
@@ -352,10 +357,12 @@ examples: |
   assert("safe delete: the existing row takes the delete branch", branch, "deleted");
   assert("safe delete: the delete returns 1", count, 1);
 
-  var missing = Platform.Function.Lookup(deName, "Status", "SessionToken", "tok-does-not-exist");
-  assert("safe delete: Lookup returns a genuine JavaScript null for a missing row", missing === null ? "null" : "not null", "null");
+  var missingRaw = Platform.Function.Lookup(deName, "Status", "SessionToken", "tok-does-not-exist");
+  assert("safe delete: Lookup returns a genuine JavaScript null for a missing row", missingRaw === null ? "null" : "not null", "null");
+  var missing = String(missingRaw);
+  assert("safe delete: String() turns that no-match null into the string \"null\", which is what the guard tests", missing, "null");
   var branch2 = "", count2 = 0;
-  if (missing) {
+  if (missing !== "" && missing !== "null") {
       branch2 = "deleted";
       count2 = Platform.Function.DeleteData(deName, ["SessionToken"], ["tok-does-not-exist"]);
   } else {

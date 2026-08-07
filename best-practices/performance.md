@@ -133,18 +133,30 @@ function getAccessToken() {
         return cached;
     }
 
-    // Fetch new token
-    var resp = Platform.Function.HTTPPost(authUrl, "application/json",
-        Stringify({ grant_type: "client_credentials",
-                    client_id: clientId, client_secret: clientSecret }));
-    var token = Platform.Function.ParseJSON(resp + "");
+    // Fetch new token. Platform.Function.HTTPPost only yields the HTTP status code,
+    // so Script.Util.HttpRequest is required to read the token out of the body.
+    var req = new Script.Util.HttpRequest(authUrl);
+    req.method = "POST";
+    req.contentType = "application/json";
+    req.postData = Stringify({ grant_type: "client_credentials",
+                               client_id: clientId, client_secret: clientSecret });
+    var resp = req.send();
 
-    // Cache it
+    // statusCode is a CLR value — Number() converts it so === works
+    var status = Number(resp.statusCode);
+    if (status !== 200) {
+        throw new Error("Token fetch failed with status " + status);
+    }
+    var token = Platform.Function.ParseJSON(String(resp.content) + "");
+
+    // Cache it. DateAdd knows Y, M, D, H and MI but no seconds unit,
+    // so the lifetime is rounded down to whole minutes.
+    var lifetimeMinutes = Math.floor((token.expires_in - 60) / 60);
     Platform.Function.UpsertData("TokenCache",
         ["service"], ["sfmcRest"],
         ["token", "expires"],
         [token.access_token, formatDate(
-            dateAdd(Now(), token.expires_in - 60, "S"),
+            dateAdd(Now(), lifetimeMinutes, "MI"),
             "MM/DD/YYYY HH:mm:ss")]
     );
 

@@ -4,8 +4,8 @@ title: Platform Objects
 description: Global Platform namespace objects for loading libraries, bridging AMPscript variables, managing HTTP responses, reading requests, and recipient context.
 nav_order: 5
 has_children: true
-verification: verified
 differs_from_docs: true
+aggregate_verification: false
 ---
 
 The `Platform` namespace exposes a set of objects beyond `Platform.Function.*` that give you direct control over the execution environment. These are available without loading the Core library.
@@ -50,7 +50,7 @@ Platform.Variable.SetValue("@result", "processed");
 Read everything about the incoming HTTP request:
 
 ```javascript
-var method = Platform.Request.Method;                        // "GET" or "POST"
+var method = String(Platform.Request.Method);                // "GET" or "POST" (CLR value — convert first)
 var q = Platform.Request.GetQueryStringParameter("q");       // URL query param
 var body = Platform.Request.GetPostData();                   // raw POST body
 var header = Platform.Request.GetRequestHeader("X-Token");  // request header
@@ -70,7 +70,7 @@ Platform.Response.ContentType = "application/json";
 Platform.Response.Redirect("https://example.com");   // flag optional — 302 by default
 ```
 
-`ContentType` and `CharacterSet` are **write-only** at runtime: assigning them shapes the HTTP `Content-Type` header, but reading either one throws. `Redirect()` also **ends the script immediately** — nothing after the call runs, and a `try`/`catch` around it does not regain control. See [`Platform.Response`](/platform-objects/platform-response/).
+`ContentType` and `CharacterSet` are **setters with an opaque read** at runtime: assigning them shapes the HTTP `Content-Type` header, but reading either one returns an opaque platform value rather than the string you assigned — keep your own variable if you need it back. `Redirect()` also **ends the script immediately** — nothing after the call runs, and a `try`/`catch` around it does not regain control. See [`Platform.Response`](/platform-objects/platform-response/).
 
 ---
 

@@ -83,7 +83,7 @@ Subscriber.Add(properties)
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `properties` | object | Yes | `EmailAddress`, `SubscriberKey`, `EmailTypePreference`, `Attributes`, `Lists`, ... |
+| `properties` | object | Yes | `EmailAddress`, `SubscriberKey`, `EmailTypePreference`, `Attributes`, `Lists`, ... — see [Writing attributes](#attributes-payload-shape) for the required `Attributes` shape |
 
 #### Return value
 
@@ -142,6 +142,8 @@ var results = Subscriber.Retrieve({ Property: "SubscriberKey", SimpleOperator: "
 
 {% include differs-from-docs.html note="The official docs document this as a **static** `Subscriber.Upsert(properties)`, but at runtime `Subscriber.Upsert` is `undefined` — the method lives on the **instance** (`Subscriber.Init(key).Upsert(properties)`)." %}
 
+{% include differs-from-docs.html note="The official example passes `Attributes` as an array of `{ Name, Value }` pairs. At runtime that form stores nothing: the call still returns `\"OK\"`, but a read-back through `Attributes.Retrieve()` shows the value unchanged, so the failure is silent. `Attributes` must be a **plain object keyed by attribute name** — see [Writing attributes](#attributes-payload-shape)." %}
+
 {% include callout.html type="note" content="Runtime-verified against a Parent BU session: `Subscriber.Init(key).Upsert({EmailAddress})` returns the string `\"OK\"` and the subscriber is retrievable by its key afterwards." %}
 
 Creates a new subscriber, or updates the initialized one matched by `EmailAddress` / `SubscriberKey`.
@@ -156,7 +158,7 @@ Creates a new subscriber, or updates the initialized one matched by `EmailAddres
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `properties` | object | Yes | `EmailAddress`, `SubscriberKey`, `Attributes`, ... |
+| `properties` | object | Yes | `EmailAddress`, `SubscriberKey`, `Attributes`, ... — see [Writing attributes](#attributes-payload-shape) for the required `Attributes` shape |
 
 #### Return value
 
@@ -170,7 +172,7 @@ var subObj = Subscriber.Init("test@example.com");
 var result = subObj.Upsert({
     EmailAddress: "test@example.com",
     SubscriberKey: "test@example.com",
-    Attributes: [ { Name: "FirstName", Value: "Jane" } ]
+    Attributes: { "First Name": "Jane" }
 });
 ```
 
@@ -222,7 +224,7 @@ Updates the previously initialized subscriber with the supplied attributes.
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `properties` | object | Yes | Subscriber properties to change |
+| `properties` | object | Yes | Subscriber properties to change — see [Writing attributes](#attributes-payload-shape) for the required `Attributes` shape |
 
 #### Return value
 
@@ -242,6 +244,8 @@ var status = subObj.Update({ EmailTypePreference: "HTML", Attributes: { "First N
 
 ### &lt;SubscriberInstance&gt;.Remove {#instance-remove}
 
+{% include differs-from-docs.html note="The official docs state that a failure throws. It does not: removing a key that has no matching subscriber returns the plain string `\"Error\"` and execution continues." %}
+
 {% include callout.html type="note" content="Runtime-verified against a Parent BU session: `Subscriber.Init(key).Remove()` returns the string `\"OK\"` and a follow-up `Subscriber.Retrieve` by that key returns zero rows, confirming deletion." %}
 
 Deletes the previously initialized subscriber.
@@ -254,7 +258,7 @@ Deletes the previously initialized subscriber.
 
 #### Return value
 
-`"OK"` on success.
+`"OK"` on success, or `"Error"` when the delete is rejected — for example when no subscriber matches the initialized key. It does not throw.
 
 #### Examples
 
@@ -345,6 +349,40 @@ var listArray = subObj.Lists.Retrieve();
 ```
 
 {% include test-script.html bundle="core-library--subscriber" chapter="instance-lists-retrieve" %}
+
+---
+
+## Writing attributes {#attributes-payload-shape}
+
+{% include differs-from-docs.html note="The official examples are inconsistent about the `Attributes` container — `Subscriber.Add` and `<SubscriberInstance>.Update` show a plain object, `<SubscriberInstance>.Upsert` shows an array of `{ Name, Value }` pairs. Runtime says only the object form works; the array form is accepted and returns `\"OK\"`, but writes nothing." %}
+
+`Subscriber.Add`, `<SubscriberInstance>.Upsert` and `<SubscriberInstance>.Update` all accept an `Attributes` key. It must be a **plain object keyed by attribute name**:
+
+```javascript
+Platform.Load("core", "1.1.5");
+Subscriber.Init("SubKey").Upsert({
+    EmailAddress: "test@example.com",
+    SubscriberKey: "SubKey",
+    Attributes: { "First Name": "Jane", "Last Name": "Doe" }
+});
+```
+
+The array-of-pairs form is silently ignored on all three methods — the call returns `"OK"`, no error is raised, and `Attributes.Retrieve()` afterwards shows the previous value:
+
+```javascript
+// does NOT write anything, yet still returns "OK"
+Subscriber.Init("SubKey").Upsert({
+    EmailAddress: "test@example.com",
+    SubscriberKey: "SubKey",
+    Attributes: [ { Name: "First Name", Value: "Jane" } ]
+});
+```
+
+{% include callout.html type="warning" content="Because the array form fails silently, always confirm a write with a read-back through `Attributes.Retrieve()` when porting code that was written against the official `Upsert` example." %}
+
+The keys are the attribute **display names** as configured on the business unit, so they commonly contain spaces. Spelling is not normalised: on the tested BU the attribute is `"First Name"`, and the `"FirstName"` spelling used by the official `Upsert` example does not exist there at all — reading it back returns no entry. Since the attribute catalog is per-tenant, discover the available names with `Attributes.Retrieve()` rather than assuming them.
+
+{% include test-script.html bundle="core-library--subscriber" chapter="attributes-payload-shape" %}
 
 ## Notes
 

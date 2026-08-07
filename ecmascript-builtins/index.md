@@ -4,8 +4,8 @@ title: ECMAScript Built-ins
 description: Native JavaScript built-in objects and methods available in SSJS — which Array, String, Math, Number, Date, RegExp, and JSON members work, which are partial, and which are missing.
 nav_order: 9
 has_children: true
-verification: verified
 differs_from_docs: true
+aggregate_verification: false
 redirect_from:
     - /engine-limitations/missing-methods/
 ---
@@ -141,7 +141,7 @@ The ES3 `Math` members below work natively; `Math.max` / `Math.min` have argumen
 |-------------------|----|--------|-------|
 | [`Number.prototype.toFixed(digits)`](/ecmascript-builtins/number-methods/#tofixed) | ES3 | ✅ Works | |
 | [`Number.prototype.toExponential([digits])`](/ecmascript-builtins/number-methods/#toexponential) | ES3 | ⚠️ Partial | No-arg form pads trailing zeros — always pass `digits` |
-| [`Number.prototype.toPrecision([digits])`](/ecmascript-builtins/number-methods/#toprecision) | ES3 | ✅ Works | |
+| [`Number.prototype.toPrecision(digits)`](/ecmascript-builtins/number-methods/#toprecision) | ES3 | ⚠️ Partial | `digits` counts decimal places, not significant digits (same result as `toFixed(digits - 1)`); the argument is mandatory and must be 1–21 |
 | [`Number.prototype.toString([radix])`](/ecmascript-builtins/number-methods/#tostring) | ES3 | ⚠️ Partial | `radix` only supports 2, 8, 10, 16 — others throw "Invalid Base." |
 | `Number.prototype.valueOf()` | ES3 | ✅ Works | |
 | [`Number.MAX_VALUE / MIN_VALUE / NaN / NEGATIVE_INFINITY / POSITIVE_INFINITY`](/ecmascript-builtins/number-methods/#constants-es3) | ES3 | ⚠️ Partial | Defined but several wrong: `MIN_VALUE` negative, `*_INFINITY` signs swapped (`MAX_VALUE`/`NaN` correct) — use literals |
@@ -166,7 +166,7 @@ Standard ECMAScript global functions (not SFMC-specific) — callable without an
 | `eval(script)` | ES3 | ✅ Works | Evaluates a JS source string; direct eval sees local scope and Platform.Load Core globals. Executes arbitrary code — use sparingly (injection risk); prefer `Platform.Function.ParseJSON` for data. |
 | [`encodeURI(uri)`](/ecmascript-builtins/global-functions/#encodeuri) | ES3 | ⚠️ Partial | Space → `+` (not `%20`), lowercase hex |
 | [`encodeURIComponent(str)`](/ecmascript-builtins/global-functions/#encodeuricomponent) | ES3 | ⚠️ Partial | Space → `+`, lowercase hex (`%2f`) |
-| [`decodeURI(uri)`](/ecmascript-builtins/global-functions/#decodeuri) | ES3 | ✅ Works | |
+| [`decodeURI(uri)`](/ecmascript-builtins/global-functions/#decodeuri) | ES3 | ⚠️ Partial | Also decodes the reserved escapes the spec keeps, and turns `+` into a space — behaves like `decodeURIComponent` |
 | [`decodeURIComponent(str)`](/ecmascript-builtins/global-functions/#decodeuricomponent) | ES3 | ⚠️ Partial | Decodes `+` as a space (form-urlencoded) |
 | [`escape(str)`](/ecmascript-builtins/global-functions/#escape) | ES3 | ❌ Missing | `undefined`; use `encodeURIComponent` |
 | [`unescape(str)`](/ecmascript-builtins/global-functions/#unescape) | ES3 | ❌ Missing | `undefined`; use `decodeURIComponent` |
@@ -213,7 +213,7 @@ These top-level objects/types postdate the engine's ES3/ES5 baseline and are ent
 | [`Object.prototype.hasOwnProperty(v)`](/ecmascript-builtins/object-methods/#hasownproperty) | ES3 | ✅ Works | Use inside `for...in` to skip inherited properties |
 | [`Object.prototype.toString()`](/ecmascript-builtins/object-methods/#tostring) | ES3 | ✅ Works | |
 | [`Object.prototype.valueOf()`](/ecmascript-builtins/object-methods/#valueof) | ES3 | ✅ Works | |
-| [`Object.prototype.isPrototypeOf(obj)`](/ecmascript-builtins/object-methods/#isprototypeof) | ES3 | ❌ Missing | **Hangs the engine** — never call it; compare `obj.constructor === Ctor` |
+| [`Object.prototype.isPrototypeOf(obj)`](/ecmascript-builtins/object-methods/#isprototypeof) | ES3 | ❌ Broken | Present, but calling it **hangs the engine** — never call it; compare `obj.constructor === Ctor` |
 | [`Object.prototype.propertyIsEnumerable(v)`](/ecmascript-builtins/object-methods/#propertyisenumerable) | ES3 | ⚠️ Partial | Broken — always returns `false`; use `hasOwnProperty` |
 | [`Object.defineProperty(obj, prop, desc)`](/ecmascript-builtins/object-methods/#defineproperty) | ES5 | ✅ Works | Static method |
 | [`Object.getPrototypeOf(obj)`](/ecmascript-builtins/object-methods/#getprototypeof) | ES5 | ✅ Works | Static method |

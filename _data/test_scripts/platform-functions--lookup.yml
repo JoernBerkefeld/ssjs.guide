@@ -563,11 +563,13 @@ examples: |
    *   2. MULTI-FILTER LOOKUP — Lookup(de, "Phone", ["FirstName","LastName"],
    *      [first, last]) applies AND logic and returns the phone number of the
    *      row matching BOTH columns, not of a row matching only one.
-   *   3. NULL-SAFE PATTERN — a simple truthiness check on the result covers
-   *      the no-match case, because a no-match result is a genuine JS null and
-   *      is therefore falsy. This is safe for the NO-MATCH case ONLY — see the
-   *      empty-returns chapter, where the same truthiness test THROWS on a
-   *      row whose field is NULL.
+   *   3. NULL-SAFE PATTERN — the example guards with the String()-first idiom
+   *      (`var status = String(raw); if (status === "" || status === "null")`)
+   *      rather than with truthiness on the raw result, because truthiness
+   *      THROWS on a row whose field is NULL (see the empty-returns chapter).
+   *      Asserted here on the same underlying facts: a no-match result is a
+   *      genuine JS null that String() turns into "null" and the guard fires
+   *      on it, while a real value passes the guard untouched.
    *   4. DE-NAME-NOT-EXTERNAL-KEY — the DE built here has a Name that DIFFERS
    *      from its CustomerKey; the Name form returns the value while the
    *      CustomerKey form throws.
@@ -647,16 +649,24 @@ examples: |
   assert("multi-filter lookup: the row matching BOTH columns is selected", String(phone), "555-0001");
   assert("multi-filter lookup: a first name shared by two rows does not select the wrong one", String(phone) === "555-0002" ? "wrong row" : "right row", "right row");
 
-  /* 3. Null-safe pattern — the page's third example. */
-  var status = Platform.Function.Lookup(deName, "Tier", "SubscriberKey", "sub-2");
-  assert("null-safe pattern: an existing row yields a truthy value", status ? "truthy" : "falsy", "truthy");
-  assert("null-safe pattern: that value is the stored one", String(status), "Silver");
-  var missingStatus = Platform.Function.Lookup(deName, "Tier", "SubscriberKey", "sub-nobody");
-  assert("null-safe pattern: a no-match result is falsy, so `if (!status)` catches it", missingStatus ? "truthy" : "falsy", "falsy");
+  /* 3. Null-safe pattern — the page's third example, which guards with the
+        String()-first idiom rather than with truthiness on the raw result. */
+  var statusRaw = Platform.Function.Lookup(deName, "Tier", "SubscriberKey", "sub-2");
+  var status = String(statusRaw);
+  assert("null-safe pattern: String() of an existing row's value is that value", status, "Silver");
+  assert("null-safe pattern: the guard does NOT fire on a real value", (status === "" || status === "null") ? "not found" : "found", "found");
+  var missingRaw = Platform.Function.Lookup(deName, "Tier", "SubscriberKey", "sub-nobody");
+  assert("null-safe pattern: a no-match result is a genuine JavaScript null", missingRaw === null ? "null" : "not null", "null");
+  var missingStatus = String(missingRaw);
+  assert("null-safe pattern: String() turns that null into the string \"null\"", missingStatus, "null");
+  assert("null-safe pattern: the guard fires on a no-match result", (missingStatus === "" || missingStatus === "null") ? "not found" : "found", "not found");
 
-  /* 5. The || default idiom from the email example. */
-  assert("the || default idiom turns a no-match null into the fallback", String(missingStatus || "Standard"), "Standard");
-  assert("the || default idiom leaves a real value alone", String(status || "Standard"), "Silver");
+  /* 5. The || default idiom from the email example, which the page still
+        uses. It is safe for the NO-MATCH case only, because a no-match result
+        is a genuine JS null; it would THROW on a row whose field is NULL. */
+  assert("the || default idiom turns a no-match null into the fallback", String(missingRaw || "Standard"), "Standard");
+  assert("the || default idiom leaves a real value alone", String(statusRaw || "Standard"), "Silver");
+  assert("the String()-first guard reaches the same fallback without the truthiness risk", (missingStatus === "" || missingStatus === "null") ? "Standard" : missingStatus, "Standard");
 
   /* 4. Data Extension Name, not external key. */
   assert("the Name form returns the value", String(Platform.Function.Lookup(deName, "Tier", "SubscriberKey", "sub-1")), "Gold");
@@ -677,8 +687,14 @@ common-mistakes: |
    * Proves each mistake the chapter names is really a mistake, and that the
    * suggested correction really works:
    *   1. EXPECTING AN EMPTY STRING — a no-match result is NOT === "" (so the
-   *      "wrong" check `result === ""` never fires), while the recommended
-   *      `!result` check does.
+   *      "wrong" check `result === ""` never fires). The chapter's second
+   *      wrong check, `!result`, DOES fire on a no-match, but it is listed as
+   *      wrong because it THROWS on a matched row whose field is NULL —
+   *      asserted here on a real NULL column, not just described. The
+   *      recommended correction, `var value = String(result)` followed by
+   *      `value === "" || value === "null"`, is asserted for both the no-match
+   *      null and the NULL column, and is asserted NOT to fire on a real
+   *      value.
    *   2. PASSING THE EXTERNAL KEY — the CustomerKey form throws, and the Name
    *      form on the very same row succeeds, so the failure is about the
    *      identifier and not about the data.
@@ -745,11 +761,25 @@ common-mistakes: |
   assert("setup: row a inserted", Platform.Function.InsertData(deName, ["Email", "Grp", "Val"], ["a@example.com", "solo", "alpha"]), 1);
   assert("setup: row b inserted", Platform.Function.InsertData(deName, ["Email", "Grp", "Val"], ["b@example.com", "dup", "beta"]), 1);
   assert("setup: row c inserted", Platform.Function.InsertData(deName, ["Email", "Grp", "Val"], ["c@example.com", "dup", "gamma"]), 1);
+  /* Val is deliberately OMITTED for row d, so that column stays a database NULL. */
+  assert("setup: row d inserted with Val omitted, so that column is a database NULL", Platform.Function.InsertData(deName, ["Email", "Grp"], ["d@example.com", "solo"]), 1);
 
-  /* 1. Expecting "" instead of null. */
+  /* 1. Expecting "" instead of null, and why truthiness is not the fix. */
   var result = Platform.Function.Lookup(deName, "Val", "Email", "nobody@example.com");
   assert("MISTAKE `result === \"\"` is FALSE on a no-match, so that branch never fires", result === "" ? "fires" : "never fires", "never fires");
-  assert("CORRECTION `!result` is TRUE on a no-match", !result ? "fires" : "never fires", "fires");
+  assert("MISTAKE `!result` does fire on a no-match, which is why it looks correct", !result ? "fires" : "never fires", "fires");
+  var nullField = Platform.Function.Lookup(deName, "Val", "Email", "d@example.com");
+  assertThrows("MISTAKE but `!result` THROWS on a matched row whose field is NULL, so it is not a safe guard", function () {
+      return !nullField ? "fires" : "never fires";
+  });
+  var noMatchValue = String(result);
+  var nullFieldValue = String(nullField);
+  var realValue = String(Platform.Function.Lookup(deName, "Val", "Email", "a@example.com"));
+  assert("CORRECTION String() of a no-match result is the string \"null\"", noMatchValue, "null");
+  assert("CORRECTION String() of a NULL field is the empty string, and does NOT throw", nullFieldValue, "");
+  assert("CORRECTION the String()-first guard fires on a no-match", (noMatchValue === "" || noMatchValue === "null") ? "fires" : "never fires", "fires");
+  assert("CORRECTION the String()-first guard fires on a NULL field", (nullFieldValue === "" || nullFieldValue === "null") ? "fires" : "never fires", "fires");
+  assert("CORRECTION the String()-first guard does NOT fire on a real value", (realValue === "" || realValue === "null") ? "fires" : "never fires", "never fires");
 
   /* 2. Passing the external key instead of the Name. */
   assertThrows("MISTAKE passing the external key / CustomerKey throws", function () {

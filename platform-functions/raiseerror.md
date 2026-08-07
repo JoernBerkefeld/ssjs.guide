@@ -41,8 +41,8 @@ test_scripts: complete
 
 ```javascript
 // Halt with an error
-var email = Platform.Function.Lookup("Contacts", "email", "id", contactId);
-if (!email) {
+var email = String(Platform.Function.Lookup("Contacts", "email", "id", contactId));
+if (email === "" || email === "null") {
     Platform.Function.RaiseError("No email found for contact: " + contactId);
 }
 

@@ -79,7 +79,7 @@ typeof x === "undefined"; // true
 x === undefined;          // true
 ```
 
-**SFMC quirk:** `Platform.Function.Lookup()` returns an empty string `""` (not `null` or `undefined`) when no matching row is found. Check with `!result` or `result === ""`.
+**SFMC quirk:** `Platform.Function.Lookup()` returns a genuine `null` when no matching row is found, but a **CLR null** when the row exists and the field is empty — and that value throws on any coercion, so `!result` is unsafe. Wrap the result in `String()` and test for `"null"` or `""`. See [Lookup](/platform-functions/lookup/).
 
 ## Objects
 
@@ -187,7 +187,7 @@ SSJS does **not** have `JSON.parse` or `JSON.stringify`. Use the SFMC alternativ
 ```javascript
 // Parse JSON string → object
 var obj = Platform.Function.ParseJSON(jsonString + "");
-// The + "" prevents a 500 error if jsonString is undefined
+// The + "" keeps a non-string value a valid argument — objects/arrays throw
 
 // Serialize object → JSON string
 var jsonStr = Stringify(obj);

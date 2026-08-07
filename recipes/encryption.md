@@ -122,10 +122,11 @@ Platform.Function.UpsertData(
 );
 
 // --- Read path (e.g. personalisation script) ---
-var encPhone = Platform.Function.Lookup(
+// String() first — a Lookup result throws on a truthiness test when the field is empty
+var encPhone = String(Platform.Function.Lookup(
     "ContactsSecure", "PhoneEncrypted", "SubscriberKey", subscriberKey
-);
-if (encPhone) {
+));
+if (encPhone !== "" && encPhone !== "null") {
     var phone = decryptSymmetric(
         encPhone, "AES", "PIIKey", "", "PIIiv", ""
     );
@@ -148,9 +149,18 @@ function decryptSymmetric(encryptedString, algorithm, passwordKey, passwordValue
 
 For values that only need to be compared (passwords, tokens), prefer a hash rather than encryption:
 
+SSJS itself exposes only **one** hash function — [`Platform.Function.MD5`](/platform-functions/md5/). MD5 is far too weak for tokens or passwords, so reach for the stronger AMPscript hashes (`SHA1`, `SHA256`, `SHA512`) through a `TreatAsContent` bridge, exactly as with `EncryptSymmetric` above.
+
 ```javascript
-// SHA-256 hash — cannot be reversed
-var hashed = rawValue + "";
+// SHA-256 is AMPscript-only — bridge it with TreatAsContent
+function sha256(stringToConvert,charSet) {
+    Platform.Variable.SetValue("@sha256_string",stringToConvert);
+    Platform.Variable.SetValue("@sha256_charset",charSet || "UTF-8");
+    return Platform.Function.TreatAsContent("%%=SHA256(@sha256_string, @sha256_charset)=%%");
+}
+
+// Hash the raw value — cannot be reversed
+var hashed = sha256(rawValue);
 
 // Store the hash
 Platform.Function.UpsertData(
@@ -162,12 +172,14 @@ Platform.Function.UpsertData(
 );
 
 // Verify: hash the submitted value and compare
-var submittedHash = submittedValue + "";
+var submittedHash = sha256(submittedValue);
 var match = Platform.Function.Lookup("TokenStore", "SubscriberKey", "Token", submittedHash);
 if (match) {
     Write("Token valid for: " + match);
 }
 ```
+
+{% include callout.html type="warning" content="A plain string coercion (`value + \"\"`) is **not** a hash. Every hash on this page comes from `Platform.Function.MD5` or an AMPscript `SHA*` bridge — there is no native SSJS SHA function." %}
 
 ---
 
@@ -177,7 +189,7 @@ if (match) {
 
 - Key names in `EncryptSymmetric` / `DecryptSymmetric` refer to the **external key** (name) of the key registered in Key Management, not the key value itself.
 - `EncryptSymmetric` and `DecryptSymmetric` are available in all SFMC execution contexts (Email, Cloud Page, Automation, Triggered Send).
-- For hashing without the need for decryption, prefer AMPscript's `SHA256` over encryption.
+- For hashing without the need for decryption, prefer AMPscript's `SHA256` over encryption. `SHA1`, `SHA256` and `SHA512` exist only in AMPscript — call them via `Platform.Function.TreatAsContent`. The only hash reachable directly from SSJS is [`Platform.Function.MD5`](/platform-functions/md5/), which is unsuitable for passwords or tokens.
 
 ## See Also
 

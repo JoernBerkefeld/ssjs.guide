@@ -82,7 +82,7 @@ The most common SSJS error is `TypeError: Cannot read property 'X' of undefined`
 var rawBody = Platform.Request.GetPostData();
 Write("RAW BODY: [" + rawBody + "]<br>"); // is it empty?
 
-var parsed = Platform.Function.ParseJSON(rawBody + ""); // + "" prevents 500
+var parsed = Platform.Function.ParseJSON(rawBody + ""); // + "" keeps the argument a string
 Write("PARSED TYPE: " + typeof parsed + "<br>");
 Write("PARSED VALUE: " + Stringify(parsed) + "<br>");
 ```
@@ -99,8 +99,9 @@ try {
     Write("Success: " + Stringify(result));
 } catch(e) {
     Write("<pre style='color:red'>");
-    Write("Error: " + e.message + "\n");
-    Write("Stack: " + e.stack + "\n");
+    // String(e) — there is no .stack in this engine, and .message is undefined
+    // for new Error(...). String(e) always yields something usable.
+    Write("Error: " + String(e) + "\n");
     Write("</pre>");
 }
 ```
@@ -112,9 +113,9 @@ try {
 A blank CloudPage with no output is almost always a silent runtime error. Common causes:
 
 - `Platform.Load` not called before Core library use
-- `ParseJSON` called on `null`/`undefined` without `+ ""`
+- `ParseJSON` handed an object or array argument, or called with the wrong number of arguments
 - `switch` statement with `default` not executing (see [Known Bugs](/engine-limitations/known-bugs/))
-- `DataExtension.Rows.Retrieve()` called without filter on CloudPage
+- `DataExtension.Init()` called with the display Name instead of the External Key, so reads see no rows
 
 **Diagnosis pattern:**
 
@@ -186,9 +187,10 @@ if (inserted === 0) {
     Write("Warning: InsertData returned 0 rows inserted");
 }
 
-// Lookup returns "" on no match — not null
-var val = Platform.Function.Lookup("DE", "Field", "Key", "value");
-if (val === "") {
+// Lookup returns a genuine null on no match, and a throw-on-coercion CLR null
+// for an empty field — String() first, then test the string
+var val = String(Platform.Function.Lookup("DE", "Field", "Key", "value"));
+if (val === "null" || val === "") {
     Write("No record found");
 }
 ```

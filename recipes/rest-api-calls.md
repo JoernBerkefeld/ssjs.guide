@@ -41,19 +41,30 @@ function getOAuthToken(authUrl, clientId, clientSecret) {
         client_id: clientId,
         client_secret: clientSecret
     });
-    var response = Platform.Function.HTTPPost(authUrl, "application/json", payload);
-    var tokenData = Platform.Function.ParseJSON(response + "");
+    // Platform.Function.HTTPPost hands back the HTTP status code, never the body,
+    // so the token request has to go through Script.Util.HttpRequest instead.
+    var req = new Script.Util.HttpRequest(authUrl);
+    req.method = "POST";
+    req.contentType = "application/json";
+    req.postData = payload;
+    var resp = req.send();
 
-    if (!tokenData || !tokenData.access_token) {
-        throw new Error("Token fetch failed");
+    // statusCode is a CLR value — Number() converts it so === works
+    var status = Number(resp.statusCode);
+    var tokenData = Platform.Function.ParseJSON(String(resp.content) + "");
+
+    if (status !== 200 || !tokenData || !tokenData.access_token) {
+        throw new Error("Token fetch failed with status " + status);
     }
 
-    // Cache token (expire 60s early for safety)
+    // Cache token (expire a minute early for safety). DateAdd has no seconds unit —
+    // only Y, M, D, H and MI — so convert the expires_in seconds to whole minutes.
+    var lifetimeMinutes = Math.floor((tokenData.expires_in - 60) / 60);
     var expiresAt = formatDate(
         dateAdd(
             Platform.Function.Now(),
-            tokenData.expires_in - 60,
-            "S"
+            lifetimeMinutes,
+            "MI"
         ),
         "MM/DD/YYYY","HH:mm:ss"
     );
@@ -99,10 +110,12 @@ req.postData = Stringify(payload);
 var resp = req.send();
 var result = Platform.Function.ParseJSON(String(resp.content) + "");
 
-if (resp.statusCode === 201) {
+// statusCode is a CLR value — Number() converts it so === works
+var status = Number(resp.statusCode);
+if (status === 201) {
     Write(Stringify({ status: "entered", key: subscriberKey }));
 } else {
-    throw new Error("Journey entry failed: " + resp.statusCode + " " + Stringify(result));
+    throw new Error("Journey entry failed: " + status + " " + Stringify(result));
 }
 ```
 
@@ -125,9 +138,11 @@ function apiCall(method, url, token, body) {
     var resp = req.send();
     var data = Platform.Function.ParseJSON(String(resp.content) + "");
 
+    // statusCode is a CLR value — Number() converts it to a real JavaScript number
+    var status = Number(resp.statusCode);
     return {
-        status: resp.statusCode,
-        ok: resp.statusCode >= 200 && resp.statusCode < 300,
+        status: status,
+        ok: status >= 200 && status < 300,
         data: data
     };
 }
@@ -160,13 +175,15 @@ function callWithRetry(url, method, payload, token, maxRetries) {
             }
             var resp = req.send();
 
-            if (resp.statusCode === 429) {
+            // statusCode is a CLR value — Number() converts it so === works
+            var status = Number(resp.statusCode);
+            if (status === 429) {
                 // Rate limited — wait and retry
                 // (SSJS has no sleep, so we skip back-off and just retry)
                 continue;
             }
 
-            return { status: resp.statusCode, body: String(resp.content) };
+            return { status: status, body: String(resp.content) };
         } catch(e) {
             lastError = e;
         }

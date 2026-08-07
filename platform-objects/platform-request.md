@@ -119,7 +119,7 @@ var b = Platform.Request.GetPostData(); // b === ""
 #### Checking Request Method First
 
 ```javascript
-if (Platform.Request.Method === "POST") {
+if (String(Platform.Request.Method) === "POST") {
     var rawBody = Platform.Request.GetPostData();
     if (rawBody) {
         var data = Platform.Function.ParseJSON(rawBody + "");
@@ -288,7 +288,7 @@ Returns the HTTP method of the current request as a CLR string. Convert it befor
 #### Examples
 
 ```javascript
-var method = Platform.Request.Method;
+var method = String(Platform.Request.Method);
 if (method === "POST") {
     var body = Platform.Request.GetPostData();
     // handle POST

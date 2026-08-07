@@ -17,7 +17,9 @@
 #   - Statistics field values after a real send (no send performed); scripts
 #     assert object shape / typeof only.
 #   - Specific profile Attribute Name/Value pairs (tenant attribute catalog
-#     varies); Attributes.Retrieve asserts array-like shape only.
+#     varies); Attributes.Retrieve asserts array-like shape only. The
+#     attributes-payload-shape chapter works around this by DISCOVERING the
+#     first attribute name at runtime instead of hard-coding one.
 #   - Exact Lists.Retrieve membership content beyond array-like shape;
 #     a brand-new All Subscribers row may return length 0 (no publication
 #     list membership yet).
@@ -357,8 +359,9 @@ instance-remove: |
    *   1. Remove is a function on the Init instance.
    *   2. Remove() returns "OK" on an existing subscriber.
    *   3. Follow-up Retrieve by that key returns zero rows.
-   *   4. Remove on a missing key returns "Error" without throwing
-   *      (safe orphan-cleanup preamble).
+   *   4. DEV: Remove on a missing key returns "Error" without throwing
+   *      (docs: returns "OK" or throws) — this is what makes it safe as an
+   *      orphan-cleanup preamble.
    *
    * FIXTURE: ssjs-guide-ts-sub-rm / ssjs.guide.ts.sub.rm@gmail.com.
    * EXPECTED OUTPUT: every line starts with PASS.
@@ -387,8 +390,8 @@ instance-remove: |
   assert("Remove() returns \"OK\"", "" + sub.Remove(), "OK");
   assert("Retrieve length is 0 after Remove", "" + countByKey(SK), "0");
 
-  assert("Remove(missing) returns \"Error\"", "" + Subscriber.Init("ssjs-guide-no-such-sub-zzz").Remove(), "Error");
-  assert("Remove(missing) does NOT throw", invocationResult(function () { return Subscriber.Init("ssjs-guide-no-such-sub-zzz").Remove(); }), "returned");
+  assert("DEV Remove(missing) returns \"Error\" (docs: returns \"OK\" or throws)", "" + Subscriber.Init("ssjs-guide-no-such-sub-zzz").Remove(), "Error");
+  assert("DEV Remove(missing) does NOT throw (docs: throws on failure)", invocationResult(function () { return Subscriber.Init("ssjs-guide-no-such-sub-zzz").Remove(); }), "returned");
   </script>
 
 instance-unsubscribe: |
@@ -516,4 +519,127 @@ instance-lists-retrieve: |
 
   assert("fixture cleanup Remove returns \"OK\"", "" + Subscriber.Init(SK).Remove(), "OK");
   assert("cleanup re-count is 0", "" + countByKey(SK), "0");
+  </script>
+
+attributes-payload-shape: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: the Attributes payload shape
+   *
+   * CloudPage GET context. Proves which container the Attributes key accepts
+   * on Add / Upsert / Update. The return value alone settles nothing — all
+   * shapes return "OK" — so every write is followed by a READ-BACK through
+   * Attributes.Retrieve(). Proves:
+   *   1. A plain OBJECT keyed by attribute name ({ "First Name": "..." })
+   *      writes the value: the read-back returns the sentinel.
+   *   2. DEV: the ARRAY of { Name, Value } pairs shown in the official
+   *      Upsert example returns "OK" but writes NOTHING — the read-back is
+   *      unchanged. The failure is silent, on Upsert, Update and Add alike.
+   *   3. The object form writes several attributes in one call.
+   *   4. Attribute names are the tenant's display names ("First Name" with a
+   *      space on this BU); the doc's "FirstName" spelling is not present.
+   *
+   * The targeted attribute name is DISCOVERED at runtime (first entry of
+   * Attributes.Retrieve) so the script is portable across tenants; the
+   * spelling assertions below are the only tenant-specific lines and are
+   * marked as such.
+   *
+   * FIXTURE: ssjs-guide-ts-sub-attrshape / ssjs.guide.ts.sub.attrshape@gmail.com.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function nukeSub(sk) { try { Subscriber.Init(sk).Remove(); } catch (e0) {} }
+  function countByKey(sk) {
+      var rows = Subscriber.Retrieve({ Property: "SubscriberKey", SimpleOperator: "equals", Value: sk });
+      return rows && rows.length ? rows.length : 0;
+  }
+
+  var SK = "ssjs-guide-ts-sub-attrshape";
+  var EMAIL = "ssjs.guide.ts.sub.attrshape@gmail.com";
+  nukeSub(SK);
+  Subscriber.Add({ EmailAddress: EMAIL, SubscriberKey: SK });
+
+  /* Read one attribute value by name; "<ABSENT>" when the name is unknown. */
+  function readAttr(name) {
+      var a = Subscriber.Init(SK).Attributes.Retrieve();
+      for (var j = 0; j < a.length; j++) {
+          if (("" + a[j].Name) === ("" + name)) { return "" + a[j].Value; }
+      }
+      return "<ABSENT>";
+  }
+
+  /* Discover a real attribute name on this tenant rather than assuming one. */
+  var catalog = Subscriber.Init(SK).Attributes.Retrieve();
+  assert("tenant exposes at least one profile attribute", catalog.length > 0 ? "true" : "false", "true");
+  var ATTR = "" + catalog[0].Name;
+  assert("discovered attribute name is a non-empty string", ATTR.length > 0 ? "true" : "false", "true");
+  assert("a new subscriber starts with that attribute empty", readAttr(ATTR), "");
+
+  /* 1. Object form on Upsert — writes. */
+  var objPayload = { EmailAddress: EMAIL, SubscriberKey: SK, Attributes: {} };
+  objPayload.Attributes[ATTR] = "shape-obj-upsert";
+  assert("Upsert with OBJECT Attributes returns \"OK\"", "" + Subscriber.Init(SK).Upsert(objPayload), "OK");
+  assert("OBJECT Attributes on Upsert DID write", readAttr(ATTR), "shape-obj-upsert");
+
+  /* 2. Array form on Upsert — returns OK, writes nothing. */
+  assert("DEV Upsert with ARRAY Attributes also returns \"OK\" (docs: this is the documented shape)", "" + Subscriber.Init(SK).Upsert({ EmailAddress: EMAIL, SubscriberKey: SK, Attributes: [{ Name: ATTR, Value: "shape-arr-upsert" }] }), "OK");
+  assert("DEV ARRAY Attributes on Upsert wrote NOTHING (docs: it should set the attribute)", readAttr(ATTR), "shape-obj-upsert");
+
+  /* 3. Object form on Update — writes. */
+  var updPayload = { Attributes: {} };
+  updPayload.Attributes[ATTR] = "shape-obj-update";
+  assert("Update with OBJECT Attributes returns \"OK\"", "" + Subscriber.Init(SK).Update(updPayload), "OK");
+  assert("OBJECT Attributes on Update DID write", readAttr(ATTR), "shape-obj-update");
+
+  /* 4. Array form on Update — returns OK, writes nothing. */
+  assert("DEV Update with ARRAY Attributes also returns \"OK\"", "" + Subscriber.Init(SK).Update({ Attributes: [{ Name: ATTR, Value: "shape-arr-update" }] }), "OK");
+  assert("DEV ARRAY Attributes on Update wrote NOTHING", readAttr(ATTR), "shape-obj-update");
+
+  /* 5. Same asymmetry on the static Add. */
+  var ADD_ARR_SK = "ssjs-guide-ts-sub-attrshape-addarr";
+  var ADD_OBJ_SK = "ssjs-guide-ts-sub-attrshape-addobj";
+  nukeSub(ADD_ARR_SK);
+  nukeSub(ADD_OBJ_SK);
+  assert("Add with ARRAY Attributes returns \"OK\"", "" + Subscriber.Add({ EmailAddress: "ssjs.guide.ts.sub.attrshape.addarr@gmail.com", SubscriberKey: ADD_ARR_SK, Attributes: [{ Name: ATTR, Value: "shape-arr-add" }] }), "OK");
+  var addArrAttrs = Subscriber.Init(ADD_ARR_SK).Attributes.Retrieve();
+  var addArrValue = "<ABSENT>";
+  for (var k = 0; k < addArrAttrs.length; k++) {
+      if (("" + addArrAttrs[k].Name) === ATTR) { addArrValue = "" + addArrAttrs[k].Value; }
+  }
+  assert("DEV ARRAY Attributes on Add wrote NOTHING", addArrValue, "");
+
+  var addObjPayload = { EmailAddress: "ssjs.guide.ts.sub.attrshape.addobj@gmail.com", SubscriberKey: ADD_OBJ_SK, Attributes: {} };
+  addObjPayload.Attributes[ATTR] = "shape-obj-add";
+  assert("Add with OBJECT Attributes returns \"OK\"", "" + Subscriber.Add(addObjPayload), "OK");
+  var addObjAttrs = Subscriber.Init(ADD_OBJ_SK).Attributes.Retrieve();
+  var addObjValue = "<ABSENT>";
+  for (var m = 0; m < addObjAttrs.length; m++) {
+      if (("" + addObjAttrs[m].Name) === ATTR) { addObjValue = "" + addObjAttrs[m].Value; }
+  }
+  assert("OBJECT Attributes on Add DID write", addObjValue, "shape-obj-add");
+
+  /* 6. The object form carries more than one attribute per call. */
+  if (catalog.length > 1) {
+      var ATTR2 = "" + catalog[1].Name;
+      var multi = { EmailAddress: EMAIL, SubscriberKey: SK, Attributes: {} };
+      multi.Attributes[ATTR] = "shape-multi-a";
+      multi.Attributes[ATTR2] = "shape-multi-b";
+      assert("Upsert with a multi-key OBJECT returns \"OK\"", "" + Subscriber.Init(SK).Upsert(multi), "OK");
+      assert("multi-key OBJECT wrote the first attribute", readAttr(ATTR), "shape-multi-a");
+      assert("multi-key OBJECT wrote the second attribute", readAttr(ATTR2), "shape-multi-b");
+  }
+
+  /* 7. Tenant-specific: attribute names are display names, spaces included. */
+  assert("TENANT attribute names use the display spelling \"First Name\"", readAttr("First Name") === "<ABSENT>" ? "absent" : "present", "present");
+  assert("TENANT the docs' \"FirstName\" spelling does not exist", readAttr("FirstName"), "<ABSENT>");
+
+  assert("fixture cleanup Remove returns \"OK\"", "" + Subscriber.Init(SK).Remove(), "OK");
+  assert("cleanup re-count is 0", "" + countByKey(SK), "0");
+  assert("Add-array fixture cleanup returns \"OK\"", "" + Subscriber.Init(ADD_ARR_SK).Remove(), "OK");
+  assert("Add-object fixture cleanup returns \"OK\"", "" + Subscriber.Init(ADD_OBJ_SK).Remove(), "OK");
   </script>

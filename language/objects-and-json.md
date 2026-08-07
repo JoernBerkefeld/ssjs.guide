@@ -141,7 +141,7 @@ var obj = Platform.Function.ParseJSON(jsonString + "");
 Write(obj.name); // Jane
 ```
 
-The `+ ""` coercion is important: `ParseJSON` will throw a 500 error if passed `null` or `undefined`. Appending an empty string safely coerces to `"null"` or `"undefined"` which ParseJSON can handle gracefully (returns null).
+The `+ ""` coercion is a useful habit, but not for the reason often stated: `ParseJSON` returns `null` for `null`/`undefined` input rather than erroring (runtime-verified). It throws when handed a **non-string object or array**, and the coercion turns such a value into a string so the call stays valid. Always test the result for `null`.
 
 ### Full Round-Trip Example
 

@@ -12,7 +12,8 @@ description: Patterns for building CloudPage applications — request routing, s
 <script runat="server">
 Platform.Load("core", "1.1.5");
 
-var method = Platform.Request.Method;
+// String() converts the CLR value so === against a literal works
+var method = String(Platform.Request.Method);
 var rawBody = method === "POST" ? Platform.Request.GetPostData() : "";
 
 if (method === "GET") {
@@ -30,9 +31,10 @@ function handleGet() {
         Write(Stringify({ message: "Welcome to the API" }));
         return;
     }
-    var record = Platform.Function.Lookup("Records", "data", "id", id);
+    // String() first — a Lookup result throws on a truthiness test when the field is empty
+    var record = String(Platform.Function.Lookup("Records", "data", "id", id));
     Platform.Response.ContentType = "application/json";
-    if (!record) {
+    if (record === "" || record === "null") {
         Write(Stringify({ status: 404, statusMessage: "Not Found", error: "Record not found" }));
     } else {
         Write(Stringify({ id: id, data: record }));
@@ -149,16 +151,16 @@ if (!sessionToken) {
     );
 }
 
-if (Platform.Request.Method === "POST") {
+if (String(Platform.Request.Method) === "POST") {
     var fieldName = Platform.Request.GetFormField("fieldName");
     // Save step data
     var existing = Platform.Function.Lookup("FormSessions", "data", "token", sessionToken);
     var saved = Platform.Function.ParseJSON(existing + "");
     saved["step" + step] = { name: fieldName };
     Platform.Function.UpdateData("FormSessions",
+        ["token"], [sessionToken],
         ["data", "step"],
-        [Stringify(saved), String(step + 1)],
-        ["token"], [sessionToken]
+        [Stringify(saved), String(step + 1)]
     );
 
     if (step < 3) {

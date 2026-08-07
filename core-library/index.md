@@ -4,8 +4,8 @@ title: Core Library
 description: The SSJS Core library provides object-oriented APIs for Data Extensions, Subscribers, Lists, Email sends, HTTP requests, and more. Load with Platform.Load("core", "1.1.5").
 nav_order: 6
 has_children: true
-verification: verified
 differs_from_docs: true
+aggregate_verification: false
 ---
 
 The Core library is loaded with `Platform.Load("core", "1.1.5")` and gives you access to a set of powerful object-oriented namespaces. Unlike `Platform.Function.*`, Core library objects use a more JavaScript-idiomatic dot-notation with method chaining.
@@ -46,7 +46,15 @@ Platform.Load("core", "1.1.5");
 
 ## Bare-name Core functions and objects {#bare-name-globals}
 
-`Platform.Load("core", ...)` also injects a set of **bare-name** functions and objects (historically documented as "global functions"). They exist **only after** the load has run — always call `Platform.Load("core", ...)` before you use them. Once loaded, they are visible in the scope the load ran in **and** inside nested helper-function bodies that close over that scope, so calling them from a helper works fine (a plain function declaration closes over the load scope by normal lexical closure). Where a scope-independent `Platform.*` sibling exists, you may still prefer it for clarity, but the bare names are not `undefined` inside helpers.
+`Platform.Load("core", ...)` also injects a set of **bare-name** functions and objects (historically documented as "global functions"). They exist **only after** the load has run — always call `Platform.Load("core", ...)` before you use them.
+
+Once the load has run **at the top level of a script block**, the names are reachable for the rest of the request: at the top level, inside a helper declared *after* the load, inside a helper declared *before* it, inside a function expression assigned before it, inside nested and three-level-nested helpers, and inside a separate `<script runat="server">` block that performs no load of its own. Calling them from a helper works fine, so the bare names are not `undefined` inside helpers.
+
+The mechanism is **not** lexical closure, though: an ordinary `var` declared next to the `Platform.Load` call does *not* escape that function, while the injected names do. The load writes the names into request-wide scope, and helpers reach them through the normal scope chain rather than by capturing the load scope.
+
+{% include callout.html type="warning" content="Run `Platform.Load` at the TOP LEVEL of a script block. If the only load runs inside a function body, the bare Core **objects** (`DataExtension`, `Request`, `Variable`, …) still become available request-wide, but the bare Core **functions** (`Write`, `Stringify`, `Base64Encode`, …) stay `undefined` everywhere — including inside that same function — and calling one throws `Object expected: Write`." %}
+
+Where a scope-independent `Platform.*` sibling exists, you may still prefer it for clarity.
 
 | Function / Object | Description |
 |--------|-------------|
@@ -68,14 +76,16 @@ Platform.Load("core", "1.1.5");
 | [`Variable`](/core-library/variable/) | AMPscript variable bridge (`Variable.GetValue` / `SetValue`) |
 | [`Write(content)`](/core-library/write/) | Output a string to the rendered page |
 
+{% include test-script.html bundle="core-library--index" chapter="bare-name-globals" %}
+
 ---
 
 HTTP utilities are also part of the Core library but documented separately:
 
 | Object | Description |
 |--------|-------------|
-| [`HTTP.GET`](/http/get/) | Simple HTTP GET |
-| [`HTTP.POST`](/http/post/) | Simple HTTP POST |
+| [`HTTP.Get`](/http/get/) | Simple HTTP GET |
+| [`HTTP.Post`](/http/post/) | Simple HTTP POST |
 
 ---
 

@@ -19,19 +19,65 @@
   jekyll-redirect-from stubs (which carry a `redirect` object and no
   `verification` field).
 
+  An overview page can opt OUT of that aggregation with `aggregate_verification:
+  false`. Aggregation only ever describes the CHILD pages — it says nothing about
+  the overview's own hand-written prose, tables, and code samples, which no test
+  script covers. On a page whose prose is unreviewed, an aggregated green badge
+  claims a review that never happened, so the opt-out forces the honest "pending"
+  default instead. Removing `verification:` alone is NOT enough: without the
+  opt-out the page silently falls through to aggregation and goes green again.
+
   A third, independent badge is driven by front matter `test_scripts: complete`.
   It signals that EVERY chapter on the page carries a "Show test script"
   details block whose assertions prove all documented claims (positive,
   negative, and deviation). It is never aggregated from children — the
   verify-ssjs-guide-docs skill sets it per page only after a fully green run.
+
+  NARRATIVE pages (language/, recipes/, best-practices/, getting-started/) have
+  NO ssjs-data entry, so `verification:` — which mirrors ssjs-data `isConfirmed`
+  — can never apply to them. They use the SEPARATE front matter key
+  `claims_verified: true` instead, rendered as its own purple "Claims checked"
+  badge. It states that the prose/examples on the page were checked, NOT that a
+  catalog entry was runtime-confirmed. The two keys are mutually exclusive: a
+  page carrying `verification:` ignores `claims_verified` entirely, so the
+  narrative key can never be mistaken for (or silently upgrade into) the
+  ssjs-data-backed "Runtime verified" badge.
 {% endcomment %}
 
 {% assign status = "pending" %}
 {% assign differs = false %}
 
+{% comment %}
+  Narrative mode: no `verification:` key (nothing in ssjs-data to mirror) but the
+  page's claims were checked. Renders the "Claims checked" badge INSTEAD of the
+  "Verification pending" badge. An explicit `verification:` always wins, so the
+  two keys never both drive the primary badge.
+{% endcomment %}
+{% assign claims_only = false %}
+{% if page.verification == nil and page.claims_verified %}
+  {% assign claims_only = true %}
+{% endif %}
+
 {% if page.verification %}
   {% comment %} Explicit front matter wins for leaf and overview pages alike. {% endcomment %}
   {% assign status = page.verification %}
+  {% if page.differs_from_docs %}
+    {% assign differs = true %}
+  {% endif %}
+{% elsif claims_only %}
+  {% comment %}
+    Narrative page: no ssjs-data-backed status exists, so neither the child
+    aggregation nor the "pending" default applies. Only `differs_from_docs:`
+    still carries over.
+  {% endcomment %}
+  {% if page.differs_from_docs %}
+    {% assign differs = true %}
+  {% endif %}
+{% elsif page.aggregate_verification == false %}
+  {% comment %}
+    Aggregation explicitly disabled: the page keeps the "pending" default so an
+    unreviewed overview cannot inherit a green badge from its children.
+  {% endcomment %}
   {% if page.differs_from_docs %}
     {% assign differs = true %}
   {% endif %}
@@ -100,6 +146,15 @@
 {% endif %}
 
 <div class="verification-status" aria-label="Verification status">
+  {% if claims_only %}
+  <span class="verified-badge claims-verified" title="The explanations and code examples on this page were reviewed against the runtime-verified reference pages and the official documentation. This is a narrative page with no entry in the SSJS function catalog, so it is not runtime-verified in the sense of the “Runtime verified” badge.">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <path d="M2.2 2.6h5.2l2.4 2.4v3.9a1 1 0 0 1-1 1H2.2a1 1 0 0 1-1-1V3.6a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+      <path d="M3.6 7l1.3 1.3 2.6-2.6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Claims checked
+  </span>
+  {% else %}
   <span class="verified-badge {{ status_class }}" title="{{ status_title | escape }}">
     {% if status == "verified" %}
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
@@ -119,6 +174,7 @@
     {% endif %}
     {{ status_label }}
   </span>
+  {% endif %}
 
   {% if differs %}
   <span class="verified-badge differs-from-docs" title="Some runtime behaviour on this page differs from the official Salesforce documentation. See the “Differs from official Salesforce docs” note(s) further down the page for details.">
