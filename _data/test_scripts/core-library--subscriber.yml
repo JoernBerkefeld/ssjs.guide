@@ -48,8 +48,8 @@ init: |
    * CloudPage GET context. Proves:
    *   1. Subscriber requires the Core load and is then an object exposing
    *      the documented statics Init, Add and Retrieve.
-   *   2. DEV: static Upsert / Statistics are undefined (docs: static) —
-   *      those live on the Init instance (covered in their chapters).
+   *   2. The static Upsert / Statistics are undefined — those live on the
+   *      Init instance (covered in their chapters).
    *   3. Init(key) returns a SubscriberInstance object exposing Upsert,
    *      Statistics, Update, Remove, Unsubscribe, Attributes.Retrieve and
    *      Lists.Retrieve.
@@ -75,8 +75,8 @@ init: |
   assert("typeof Subscriber.Init is function", typeOf(function () { return typeof Subscriber.Init; }), "function");
   assert("typeof Subscriber.Add is function", typeOf(function () { return typeof Subscriber.Add; }), "function");
   assert("typeof Subscriber.Retrieve is function", typeOf(function () { return typeof Subscriber.Retrieve; }), "function");
-  assert("DEV Subscriber.Upsert is not a static (docs: static)", typeOf(function () { return typeof Subscriber.Upsert; }), "undefined");
-  assert("DEV Subscriber.Statistics is not a static (docs: static)", typeOf(function () { return typeof Subscriber.Statistics; }), "undefined");
+  assert("Subscriber.Upsert is not a static", typeOf(function () { return typeof Subscriber.Upsert; }), "undefined");
+  assert("Subscriber.Statistics is not a static", typeOf(function () { return typeof Subscriber.Statistics; }), "undefined");
   assert("Subscriber.Update is not a static", typeOf(function () { return typeof Subscriber.Update; }), "undefined");
   assert("Subscriber.Remove is not a static", typeOf(function () { return typeof Subscriber.Remove; }), "undefined");
   assert("Subscriber.Unsubscribe is not a static", typeOf(function () { return typeof Subscriber.Unsubscribe; }), "undefined");
@@ -225,7 +225,7 @@ instance-upsert: |
    * Chapter: <SubscriberInstance>.Upsert(properties)
    *
    * CloudPage GET context. Proves:
-   *   1. DEV: static Subscriber.Upsert is undefined (docs: static).
+   *   1. The static Subscriber.Upsert is undefined.
    *   2. Upsert is a function on the Init instance.
    *   3. Init(key).Upsert({EmailAddress, SubscriberKey}) returns "OK" and
    *      the subscriber is retrievable by key afterwards.
@@ -248,7 +248,7 @@ instance-upsert: |
   var EMAIL = "ssjs.guide.ts.sub.ups@gmail.com";
   nukeSub(SK);
 
-  assert("DEV typeof Subscriber.Upsert is undefined (docs: static)", typeof Subscriber.Upsert, "undefined");
+  assert("typeof Subscriber.Upsert is undefined", typeof Subscriber.Upsert, "undefined");
   var sub = Subscriber.Init(SK);
   assert("typeof instance.Upsert is function", typeof sub.Upsert, "function");
   assert("Upsert(properties) returns \"OK\"", "" + sub.Upsert({ EmailAddress: EMAIL, SubscriberKey: SK }), "OK");
@@ -269,7 +269,7 @@ instance-statistics: |
    * Chapter: <SubscriberInstance>.Statistics()
    *
    * CloudPage GET context. Proves:
-   *   1. DEV: static Subscriber.Statistics is undefined (docs: static).
+   *   1. The static Subscriber.Statistics is undefined.
    *   2. Statistics is a function on the Init instance (no args).
    *   3. Statistics() returns a single object (typeof "object"), not an array.
    *
@@ -294,7 +294,7 @@ instance-statistics: |
   nukeSub(SK);
   Subscriber.Add({ EmailAddress: EMAIL, SubscriberKey: SK });
 
-  assert("DEV typeof Subscriber.Statistics is undefined (docs: static)", typeof Subscriber.Statistics, "undefined");
+  assert("typeof Subscriber.Statistics is undefined", typeof Subscriber.Statistics, "undefined");
   var sub = Subscriber.Init(SK);
   assert("typeof instance.Statistics is function", typeof sub.Statistics, "function");
   var stats = sub.Statistics();

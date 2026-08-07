@@ -140,8 +140,6 @@ var results = Subscriber.Retrieve({ Property: "SubscriberKey", SimpleOperator: "
 
 ### &lt;SubscriberInstance&gt;.Upsert {#instance-upsert}
 
-{% include differs-from-docs.html note="The official docs document this as a **static** `Subscriber.Upsert(properties)`, but at runtime `Subscriber.Upsert` is `undefined` — the method lives on the **instance** (`Subscriber.Init(key).Upsert(properties)`)." %}
-
 {% include differs-from-docs.html note="The official example passes `Attributes` as an array of `{ Name, Value }` pairs. At runtime that form stores nothing: the call still returns `\"OK\"`, but a read-back through `Attributes.Retrieve()` shows the value unchanged, so the failure is silent. `Attributes` must be a **plain object keyed by attribute name** — see [Writing attributes](#attributes-payload-shape)." %}
 
 {% include callout.html type="note" content="Runtime-verified against a Parent BU session: `Subscriber.Init(key).Upsert({EmailAddress})` returns the string `\"OK\"` and the subscriber is retrievable by its key afterwards." %}
@@ -181,8 +179,6 @@ var result = subObj.Upsert({
 ---
 
 ### &lt;SubscriberInstance&gt;.Statistics {#instance-statistics}
-
-{% include differs-from-docs.html note="The official docs document this as a **static** `Subscriber.Statistics(subscriberKey)`, but at runtime `Subscriber.Statistics` is `undefined` — the method lives on the **instance** (`Subscriber.Init(key).Statistics()`)." %}
 
 Retrieves statistical data for the initialized subscriber (sends, opens, clicks, bounces, unsubscribes).
 

@@ -686,6 +686,54 @@
     } catch (e) { Platform.Response.Write("ERROR: " + Platform.Function.Stringify(e) + "\n"); }
     </script>
 
+- name: "Platform.Function.CreateObject"
+  url: "/platform-functions/createobject/"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformAPICreateObject.html"
+  tagline: "returns a CLR host object, not a readable plain object"
+  part: "sfmc"
+  category: "Platform Functions"
+  object: "Platform.Function"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "platform-function-createobject-returns-a-clr-host-object"
+  body: |
+    The docs type the return value as a plain object. At runtime it is a **.NET CLR host object** — `typeof` reports `"clr"` for `DataExtensionObject`, `Subscriber` and `APIProperty` alike, and the engine hard-blocks introspection of it:
+
+    - `String(obj)` and `Platform.Function.Stringify(obj)` yield only the .NET type name (e.g. `ExactTarget.Integration.WSDL.Subscriber`), never the field values — before *and* after the object was populated.
+    - Dot access and bracket access both throw `Use of Common Language Runtime (CLR) is not allowed`, and `for..in` enumerates zero keys.
+
+    So properties assigned with [`SetObjectProperty()`](/platform-functions/setobjectproperty/) or [`AddObjectArrayItem()`](/platform-functions/addobjectarrayitem/) **cannot be read back from SSJS**. Unreadable is not unset: the only way to prove a value landed is to submit the object through an `Invoke*` call and read the result back from the API — a round trip through [`InvokeCreate`](/platform-functions/invokecreate/) plus [`InvokeRetrieve`](/platform-functions/invokeretrieve/) does confirm the values arrived. Each call also returns a new, independent instance. For most SOAP work [WSProxy](/wsproxy/) is the simpler option.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core", "1.1.5");
+    // The CreateObject result is a CLR host object whose fields cannot be read back from SSJS.
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+    }
+    function assertThrows(id, fn) {
+        var threw = false, msg = "";
+        try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+        Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+    }
+    var sub = Platform.Function.CreateObject("Subscriber");
+    assert("DEV typeof CreateObject('Subscriber') is clr (docs imply a plain object)", typeof sub, "clr");
+    // OBSERVED: clr
+    Platform.Response.Write("DEV String(obj) -> [" + String(sub) + "]\n");
+    Platform.Response.Write("DEV Stringify(obj) -> [" + Platform.Function.Stringify(sub) + "]\n");
+    // OBSERVED: both print only ExactTarget.Integration.WSDL.Subscriber — never the values.
+    Platform.Function.SetObjectProperty(sub, "SubscriberKey", "ssjs-guide-probe");
+    assertThrows("DEV dot access on the populated object throws", function () { return sub.SubscriberKey; });
+    assertThrows("DEV bracket access on the populated object throws", function () { return sub["SubscriberKey"]; });
+    var keyCount = 0;
+    for (var k in sub) { keyCount += 1; }
+    assert("DEV for..in over the CLR object yields 0 keys", "" + keyCount, "0");
+    // OBSERVED: the set SUCCEEDED — unreadable is not unset. Prove values landed by
+    // round-tripping the object through InvokeCreate + InvokeRetrieve instead.
+    var a = Platform.Function.CreateObject("APIProperty");
+    var b = Platform.Function.CreateObject("APIProperty");
+    assert("each call returns a new, independent instance", a === b ? "true" : "false", "false");
+    </script>
+
 - name: "Platform.Function.AddObjectArrayItem"
   url: "/platform-functions/addobjectarrayitem/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_platformAPIAddObjectArrayItem.html"
@@ -3919,6 +3967,86 @@
     } catch (e5) { pre("Post-write Retrieve THREW -> " + e5); }
     </script>
 
+- name: "AccountUser.Init"
+  url: "/core-library/accountuser/#init"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_accountUserFunctions.html"
+  tagline: "returns an opaque stub and never validates the user key"
+  part: "sfmc"
+  category: "Core Library"
+  object: "AccountUser"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "accountuser-init-opaque-stub-unvalidated-key"
+  body: |
+    The docs imply `AccountUser.Init(targetUserKey, myClientID)` hands back the user record. It does not: the returned instance is an **opaque stub** carrying only the write methods. Runtime-verified on a Parent BU CloudPage:
+
+    - `inst.ID`, `inst.Name` and `inst.CustomerKey` all read back `undefined`. `Stringify(inst)` yields `{"Activate":"function","Deactivate":"function","Remove":"function","Update":"function"}` — note the undocumented `Remove` member.
+    - **`Init` does not validate `targetUserKey`.** A key that matches no user returns an object exposing the same `Update` / `Activate` / `Deactivate` members, and `Stringify()` of the bogus stub is byte-identical to the real one. A bad key therefore only surfaces when an instance method is finally called.
+    - `myClientID` accepts a number and the same MID as a string, producing the same stub.
+
+    Use [`AccountUser.Retrieve()`](/core-library/accountuser/#retrieve) whenever you need to read user fields or to prove that a user exists.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core", "1.1.5");
+    // Init returns an opaque stub and never validates targetUserKey.
+    // Resolves the running BU and a real user dynamically, so it runs in any account.
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+    }
+    var selfRows = Account.Retrieve({ Property: "ID", SimpleOperator: "greaterThan", Value: 0 });
+    var SELF_ID = +("" + selfRows[0].ID);
+    var users = AccountUser.Retrieve({ Property: "ID", SimpleOperator: "greaterThan", Value: 0 });
+    var REAL_KEY = "" + users[0].CustomerKey;
+    var inst = AccountUser.Init(REAL_KEY, SELF_ID);
+    assert("Init(realUserKey, MID) returns an object", typeof inst, "object");
+    // OBSERVED: object — but with no readable user fields on it.
+    assert("DEV inst.ID is undefined", typeof inst.ID, "undefined");
+    assert("DEV inst.Name is undefined", typeof inst.Name, "undefined");
+    assert("DEV inst.CustomerKey is undefined", typeof inst.CustomerKey, "undefined");
+    var bogus = AccountUser.Init("ssjs-guide-no-such-user-zzz", SELF_ID);
+    assert("DEV Init(nonsense key) still returns an object", typeof bogus, "object");
+    assert("DEV Init(nonsense key) exposes Update", typeof bogus.Update, "function");
+    assert("DEV bogus stub is indistinguishable from the real one", Stringify(bogus) === Stringify(inst) ? "true" : "false", "true");
+    // OBSERVED: all four PASS — Init never reports an unknown key.
+    // Workaround: read user data through Retrieve instead.
+    assert("workaround: a Retrieve row exposes a readable Name", typeof users[0].Name, "string");
+    </script>
+
+- name: "AccountUser.Retrieve"
+  url: "/core-library/accountuser/#retrieve"
+  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_accountUserRetrieve.html"
+  tagline: "the object[] result is not a real JavaScript Array"
+  part: "sfmc"
+  category: "Core Library"
+  object: "AccountUser"
+  severity: "medium"
+  discrepancy: "A1"
+  anchor: "accountuser-retrieve-not-a-real-array"
+  body: |
+    The docs give the return type as `object[]`, which suggests a JavaScript array. At runtime `result instanceof Array` is **`false`** — both when the filter matches rows and when it matches nothing.
+
+    The collection is index- and length-addressable (`.length`, `rows[0]`, and even a `.push` member), so a classic `for` loop over `.length` works and each row is the full `AccountUser` SOAP object. But `Array.prototype` methods and `instanceof` checks must not be relied on: guard with `if (rows && rows.length)` before indexing, and copy the entries into a real array first if you need array semantics. On no match the same shape comes back with `.length` of `0`, stringifying as `[]`.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core", "1.1.5");
+    // The documented object[] return value is NOT an instanceof Array — on a match or a miss.
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+    }
+    var all = AccountUser.Retrieve({ Property: "ID", SimpleOperator: "greaterThan", Value: 0 });
+    assert("typeof matched result is object", typeof all, "object");
+    assert("matched result exposes .length", typeof all.length, "number");
+    assert("matched result has at least one row", all.length > 0 ? "true" : "false", "true");
+    assert("DEV matched result is NOT instanceof Array (docs: object[])", all instanceof Array ? "true" : "false", "false");
+    var miss = AccountUser.Retrieve({ Property: "CustomerKey", SimpleOperator: "equals", Value: "ssjs-guide-no-such-user-key-zzz" });
+    assert("no-match result .length is 0", "" + miss.length, "0");
+    assert("no-match result stringifies as []", Stringify(miss), "[]");
+    assert("DEV no-match result is NOT instanceof Array", miss instanceof Array ? "true" : "false", "false");
+    // OBSERVED: both instanceof probes are false — use a .length guard instead.
+    assert("workaround: (rows && rows.length) is truthy on a match", (all && all.length) ? "true" : "false", "true");
+    assert("workaround: (rows && rows.length) is falsy on no match", (miss && miss.length) ? "true" : "false", "false");
+    </script>
+
 - name: "AccountUser write methods (Add / Update / Activate / Deactivate)"
   url: "/core-library/accountuser/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_accountUserAdd.html"
@@ -4136,62 +4264,6 @@
     Email.Init(EMAIL_KEY).Remove();
     List.Init(LIST_KEY).Remove();
     </script>
-- name: "Subscriber.Upsert / Subscriber.Statistics"
-  url: "/core-library/subscriber/"
-  officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_subscriberUpsert.html"
-  tagline: "instance methods, not static"
-  part: "sfmc"
-  category: "Core Library"
-  object: "Subscriber"
-  severity: "medium"
-  discrepancy: "A4"
-  anchor: "subscriber-upsert-subscriber-statistics"
-  body: |
-    The official docs present `Subscriber.Upsert(properties)` and `Subscriber.Statistics(subscriberKey)` as **static** members of `Subscriber`. At runtime the static names are `undefined` (`typeof Subscriber.Upsert === "undefined"`, `typeof Subscriber.Statistics === "undefined"`). Both are actually **instance** methods on the object returned by `Subscriber.Init(subscriberKey)`: `<SubscriberInstance>.Upsert(properties)` and `<SubscriberInstance>.Statistics()` (the subscriber key comes from `Init`, so `Statistics` takes no argument — calling it with a non-existent key returns an object like `{"Error":"No subscriber found with the key: …"}`).
-  testScript: |
-    <script runat="server">
-    Platform.Load("core", "1.1.5");
-    // Subscriber.Upsert / Subscriber.Statistics static-vs-instance probe (NON-DESTRUCTIVE).
-    // Proves the STATIC names are undefined and both live as INSTANCE methods on Subscriber.Init(key).
-    // OBSERVED: static Subscriber.Upsert & Subscriber.Statistics are both `undefined`; on the instance
-    // from Subscriber.Init(key), typeof sub.Upsert === "function" and typeof sub.Statistics === "function".
-    // Statistics() called with no arg returns an object ({"Error":"No subscriber found with the key: …"}
-    // for a throwaway key); Upsert is callable. CLAIM CONFIRMED (instance methods, not static).
-    Platform.Response.Write("=== Subscriber.Upsert / Statistics probe ===\n\n");
-
-    // Probe 1: STATIC members are undefined
-    try {
-        Platform.Response.Write("typeof Subscriber: " + typeof Subscriber + "\n");
-        Platform.Response.Write("typeof Subscriber.Upsert (static): " + typeof Subscriber.Upsert + "\n");
-        Platform.Response.Write("typeof Subscriber.Statistics (static): " + typeof Subscriber.Statistics + "\n");
-        Platform.Response.Write("typeof Subscriber.Init: " + typeof Subscriber.Init + "\n");
-    } catch (e) {
-        Platform.Response.Write("P1 THREW -> " + (typeof e == "object" ? Platform.Function.Stringify(e) : e) + "\n");
-    }
-    Platform.Response.Write("\n");
-
-    // Probe 2: INSTANCE from Subscriber.Init(key) exposes Upsert & Statistics
-    try {
-        var sub = Subscriber.Init("qa-throwaway-key");
-        Platform.Response.Write("typeof sub (instance): " + typeof sub + "\n");
-        Platform.Response.Write("typeof sub.Upsert (instance): " + typeof sub.Upsert + "\n");
-        Platform.Response.Write("typeof sub.Statistics (instance): " + typeof sub.Statistics + "\n");
-    } catch (e) {
-        Platform.Response.Write("P2 THREW -> " + (typeof e == "object" ? Platform.Function.Stringify(e) : e) + "\n");
-    }
-    Platform.Response.Write("\n");
-
-    // Probe 3: Statistics() is read-only — call with no arg and observe return shape
-    try {
-        var sub3 = Subscriber.Init("qa-throwaway-stats");
-        var stats = sub3.Statistics();
-        Platform.Response.Write("typeof stats: " + typeof stats + "\n");
-        Platform.Response.Write("Stringify(stats): " + Platform.Function.Stringify(stats) + "\n");
-    } catch (e) {
-        Platform.Response.Write("P3 THREW -> " + (typeof e == "object" ? Platform.Function.Stringify(e) : e) + "\n");
-    }
-    </script>
-
 - name: "DateTime.SystemDateToLocalDate / LocalDateToSystemDate"
   url: "/core-library/datetime/"
   officialUrl: "https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_dateTimeSystemDateToLocalDate.html"

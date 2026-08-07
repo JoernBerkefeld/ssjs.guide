@@ -5,6 +5,7 @@ parent: Core Library
 parent_url: /core-library/
 description: Core library AccountUser — manage users in the business unit (init, add, retrieve, update, activate, deactivate).
 verification: verified
+differs_from_docs: true
 test_scripts: complete
 requires_core_load: true
 type_mapping:
@@ -33,9 +34,11 @@ type_mapping:
 
 ### AccountUser.Init {#init}
 
-{% include method-status.html status="verified" %}
+{% include method-status.html status="verified" differs=true %}
 
 Initializes an `AccountUser` instance bound to the given user external key and business unit MID.
+
+{% include differs-from-docs.html note="The returned instance is an opaque stub, not the populated user record the docs imply — `ID`, `Name` and `CustomerKey` all read back `undefined`. `Init()` also does not validate `targetUserKey`: a key matching no user still returns an object exposing `Update` / `Activate` / `Deactivate` that is indistinguishable from one built with a real key, so a bad key only surfaces when an instance method is called. Use [`AccountUser.Retrieve()`](#retrieve) to read user fields or to check that a user exists." %}
 
 #### Syntax
 
@@ -111,9 +114,11 @@ var status = AccountUser.Add(newUser);
 
 ### AccountUser.Retrieve {#retrieve}
 
-{% include method-status.html status="verified" %}
+{% include method-status.html status="verified" differs=true %}
 
 Retrieves user records matching the given filter criteria.
+
+{% include differs-from-docs.html note="The documented `object[]` return value is not a real JavaScript array — `result instanceof Array` is `false` both on a match and on no match. The collection is index- and length-addressable, so a classic `for` loop works, but `Array.prototype` methods and `instanceof` checks must not be relied on; copy the entries into a real array first if you need them." %}
 
 #### Syntax
 

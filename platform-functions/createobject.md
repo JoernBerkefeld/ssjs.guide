@@ -14,6 +14,7 @@ return_type: object
 min_args: 1
 max_args: 1
 verification: verified
+differs_from_docs: true
 test_scripts: complete
 ---
 
@@ -29,6 +30,8 @@ The returned value is a .NET **CLR host object** (`typeof` is `"clr"`), not a pl
 JavaScript object. Its properties cannot be read back from SSJS — see
 [SetObjectProperty](/platform-functions/setobjectproperty/). Every call returns a new,
 independent instance.
+
+{% include differs-from-docs.html note="The docs type the return value as a plain object, but the instance is a .NET CLR host object — `typeof` reports `\"clr\"` for `DataExtensionObject`, `Subscriber` and `APIProperty` alike. Properties assigned with `SetObjectProperty()` or `AddObjectArrayItem()` therefore cannot be read back from SSJS. Unreadable is not unset: the only way to prove a value landed is to submit the object through an `Invoke*` call and read the result back from the API." %}
 
 {% include test-script.html bundle="platform-functions--createobject" chapter="parameters" %}
 
