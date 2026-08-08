@@ -68,7 +68,9 @@ httpgetinstance-properties: |
    *     milliseconds. Script.Util.HttpRequest behaves identically.
    *
    * NOTE: property reads return CLR values, so every comparison normalises
-   * with `"" + value` (never String(value), which yields a CLR string).
+   * with `"" + value`. String(value) yields an equivalent real JS string on
+   * most of them, but throws "Object reference not set to an instance of an
+   * object." on contentType/encoding/headers, so `"" + value` is preferred.
    * A CLR boolean stringifies capitalised as "False" / "True".
    *
    * EXPECTED OUTPUT: every line starts with PASS.

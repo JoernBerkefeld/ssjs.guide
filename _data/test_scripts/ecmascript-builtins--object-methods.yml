@@ -18,9 +18,10 @@
 # already-evaluated argument would throw before assert() is entered, taking
 # the whole CloudPage down with HTTP 422 instead of printing FAIL.
 #
-# ENGINE NOTE: never stringify a plain object in a probe — String({}) aborts
-# the entire page with HTTP 422 and is not catchable. Every thunk below
-# returns a primitive.
+# ENGINE NOTE: String({}) throws "Object reference not set to an instance of
+# an object." — catchable, and it does not abort the page, but it yields no
+# usable rendering ("" + {} gives the empty string, not "[object Object]").
+# Every thunk below returns a primitive instead.
 #
 # NOT ASSERTABLE anywhere in this bundle: property ENUMERATION ORDER of
 # for...in. It is implementation-defined, so key/value collections are
@@ -97,7 +98,8 @@ tostring: |
    *      string representation "[object Object]".
    *
    * NOTE: only the EXPLICIT .toString() call is probed. String({}) on a plain
-   * object aborts the whole CloudPage with HTTP 422 and is not catchable, so
+   * object throws "Object reference not set to an instance of an object."
+   * (catchable, no page abort) and "" + {} yields the empty string, so
    * implicit stringification is deliberately never exercised.
    *
    * EXPECTED OUTPUT: every line starts with PASS.

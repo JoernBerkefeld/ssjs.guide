@@ -30,9 +30,11 @@
 # wrong values.
 #
 # NORMALIZATION RULE: assert() compares with a plain === and does NOT coerce.
-# Engine-returned values are normalized at the call site with "" + value —
-# never with String(value), which yields a CLR string that fails === and
-# aborts the page when a string method is called on it.
+# Engine-returned values are normalized at the call site with "" + value.
+# String(value) is equally valid — it also yields a real JS string that
+# satisfies === and supports string methods — but "" + value is preferred
+# because it never throws: String(value) throws "Object reference not set to
+# an instance of an object." on .NET-null-backed CLR properties.
 #
 # All scripts were last run green (every line PASS) against a live SFMC
 # CloudPage GET on the QA business unit. Re-run them before changing any

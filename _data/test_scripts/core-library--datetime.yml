@@ -24,10 +24,11 @@
 # wrong values.
 #
 # CLR STRING RULE: engine-returned values and caught .message values are
-# normalized with `"" + value`, never with String(value). String(...) yields a
-# CLR string whose === against a JS literal is false and whose .indexOf()
-# throws "Unable to retrieve security descriptor for this frame", aborting the
-# whole page with HTTP 422.
+# normalized with `"" + value`. String(value) produces the same real JS string
+# (typeof "string", === against a JS literal, working string methods) on every
+# source used here; `"" + value` is preferred only because it never throws,
+# whereas String(value) throws "Object reference not set to an instance of an
+# object." on .NET-null-backed CLR properties.
 #
 # All scripts were last run green (every line PASS) against a live SFMC
 # CloudPage. Re-run them before changing any claim on the page.

@@ -39,16 +39,21 @@ var data    = Platform.Function.ParseJSON(bodyStr + "");  // JS string → objec
 
 ### String() vs Stringify()
 
-- `String(value)` — converts any value (including CLR objects) to a plain JS string; objects become `"[object Object]"`.
-- [`Stringify(value)`](/core-library/stringify/) — serializes a JavaScript value to a **JSON** string.
+- `String(value)` — converts primitives and CLR/engine values to a plain JS string. It does **not** render a plain object: `String({})` **throws** `Object reference not set to an instance of an object.`
+- [`Stringify(value)`](/core-library/stringify/) — serializes a JavaScript value to a **JSON** string. This is the reliable way to render an object.
 
 ```javascript
 var obj = { a: 1, b: 2 };
-String(obj);      // "[object Object]"   — NOT useful for JSON
+String(obj);      // THROWS "Object reference not set to an instance of an object."
+("" + obj);       // ""                  — the empty string, NOT "[object Object]"
 Stringify(obj);   // '{"a":1,"b":2}'     — JSON serialization
 ```
 
-Do not call `String(e)` on a thrown plain object (it can raise a .NET null-reference error) — see [Error()](/ecmascript-builtins/error/).
+{% include differs-from-mdn.html content="Standard JavaScript coerces a plain object to `\"[object Object]\"` — in the SFMC engine **neither** coercion form does. `String({})` **throws** `Object reference not set to an instance of an object.` (the throw is catchable and does not abort the page), and `(\"\" + {})` yields the **empty string**. Runtime-proven; `String([])` and `(\"\" + [])` are also both `\"\"`. To render an object, read its fields individually or serialize it with [`Stringify()`](/core-library/stringify/). An **explicit** `obj.toString()` call still returns `\"[object Object]\"` — see [toString](/ecmascript-builtins/object-methods/#tostring)." link="#string-plain-object-coercion" %}
+
+The same throw applies to a caught plain object — do not call `String(e)` on one; see [Error()](/ecmascript-builtins/error/).
+
+{% include callout.html type="tip" content="For engine/CLR values, prefer `(\"\" + value)` over `String(value)`. Both produce a real JS string that satisfies `===` and supports string methods, but `String(value)` throws `Object reference not set to an instance of an object.` on .NET-null-backed CLR properties (`resp.contentType`, `resp.encoding`, `resp.headers`) and on plain objects, where `(\"\" + value)` safely yields `\"\"`." %}
 
 {% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="string-constructor" %}
 

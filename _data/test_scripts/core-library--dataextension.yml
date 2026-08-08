@@ -24,9 +24,11 @@
 # wrong values.
 #
 # NORMALIZATION RULE: assert() compares with a plain === and does NOT coerce.
-# Engine-returned values are normalized at the call site with "" + value —
-# never with String(value), which yields a CLR string that fails === and
-# aborts the page when a string method is called on it.
+# Engine-returned values are normalized at the call site with "" + value.
+# String(value) is equally valid — it also yields a real JS string that
+# satisfies === and supports string methods — but "" + value is preferred
+# because it never throws: String(value) throws "Object reference not set to
+# an instance of an object." on .NET-null-backed CLR properties.
 #
 # REQUEST-SCOPED QUERY CACHE: identical DE queries within one request can
 # return stale data — scripts vary the filter Value or re-count after Remove

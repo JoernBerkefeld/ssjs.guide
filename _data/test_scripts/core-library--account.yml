@@ -319,10 +319,10 @@ instance-update: |
    * past the CloudPage time budget (HTTP 422).
    */
   /*
-   * NOTE: normalize with "" + x, NOT String(x). String() on an engine value
-   * yields a CLR string wrapper whose .indexOf/.length are unusable and whose
-   * === against a JS literal is false; plain concatenation yields a real JS
-   * string.
+   * NOTE: normalize with "" + x. String(x) returns an equivalent real JS
+   * string on these sources, but "" + x is preferred because it never
+   * throws: String(x) throws "Object reference not set to an instance of an
+   * object." on .NET-null-backed CLR properties.
    */
   function callUpdate(props) {
       var inst = Account.Init(SELF_KEY);

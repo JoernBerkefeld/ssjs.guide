@@ -13,7 +13,8 @@
 # wrong values.
 #
 # CLR STRING RULE: engine-returned values and caught .message values are
-# normalized with `"" + value`, never with String(value).
+# normalized with `"" + value` — preferred over the equally valid
+# String(value) because it never throws on .NET-null-backed CLR properties.
 #
 # DEPLOY NOTE: wrap AMPscript fixture blocks around the examples chapter
 # (or the combined harness) so GetValue can read values set before SSJS.

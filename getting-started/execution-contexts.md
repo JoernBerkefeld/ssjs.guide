@@ -10,7 +10,7 @@ SSJS exposes information about how the current page was invoked through the `Pla
 
 ## ExecutionContextType
 
-`Platform.Request.Method` returns the HTTP verb: `"GET"` or `"POST"`. It is a **CLR value**, not a JavaScript string, so strict equality against a literal is always false — convert it with `String(...)` first. Use it to distinguish form submissions from initial page loads:
+`Platform.Request.Method` returns the HTTP verb: `"GET"` or `"POST"`. It is a **CLR value**, not a JavaScript string, so comparing it directly against a literal (`Platform.Request.Method === "GET"`) is false — coerce it first. Both `String(Platform.Request.Method)` and `("" + Platform.Request.Method)` produce a real JavaScript string that then compares correctly with `===` (runtime-verified). Use it to distinguish form submissions from initial page loads:
 
 ```javascript
 <script runat="server">
@@ -42,7 +42,7 @@ In CloudPages, these built-in names are available:
 
 | Variable | Description |
 |----------|-------------|
-| `Platform.Request.Method` | `"GET"` or `"POST"` — a CLR value; wrap in `String(...)` before strict comparison |
+| `Platform.Request.Method` | `"GET"` or `"POST"` — a CLR value; coerce with `String(...)` or `"" + ...` before strict comparison |
 | `Platform.Request.GetQueryStringParameter(name)` | Value from URL query string |
 | `Platform.Request.GetFormField(name)` | Value from POST body (application/x-www-form-urlencoded) |
 | `Platform.Request.GetPostData()` | Entire raw POST body (call only once) |
@@ -56,7 +56,7 @@ You can use feature detection to write code that degrades gracefully across cont
 ```javascript
 <script runat="server">
 // Detect if we're in a web context (CloudPage vs email/automation)
-// String() first — strict comparison against the raw CLR value never matches
+// String() first — strict comparison against the raw, uncoerced CLR value never matches
 var requestMethod = String(Platform.Request.Method);
 var isWebContext = (requestMethod !== "null" && requestMethod !== "");
 

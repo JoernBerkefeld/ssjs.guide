@@ -20,9 +20,10 @@
 # that never resolved. Each script deletes its fixture again at the end.
 #
 # ENGINE NOTE: engine-returned values and caught .message values are .NET/CLR
-# strings. They are normalized with `"" + value` — never with String(value),
-# which yields a CLR string whose === against a JS literal is false and whose
-# .indexOf() aborts the whole page with HTTP 422.
+# strings. They are normalized with `"" + value`. String(value) returns an
+# equivalent real JS string on these sources, but `"" + value` is preferred
+# because it never throws: String(value) throws "Object reference not set to
+# an instance of an object." on .NET-null-backed CLR properties.
 
 parameters: |
   <script runat="server">

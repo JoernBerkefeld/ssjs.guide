@@ -18,7 +18,8 @@
 # expressions into one Write can interleave their evaluation in Jint.
 #
 # CLR STRING RULE: engine-returned values and caught .message values are
-# normalized with `"" + value`, never with String(value).
+# normalized with `"" + value` — preferred over the equally valid
+# String(value) because it never throws on .NET-null-backed CLR properties.
 #
 # All scripts were last run green (every line PASS) against a live SFMC
 # CloudPage. Re-run them before changing any claim on the page.

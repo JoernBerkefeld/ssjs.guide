@@ -68,6 +68,8 @@ var o = { a: 1 };
 Write(o.toString());   // [object Object]
 ```
 
+{% include callout.html type="note" content="Only the **explicit** call returns `\"[object Object]\"`. Implicit coercion does not: `String({})` **throws** `Object reference not set to an instance of an object.` (catchable, no page abort) and `(\"\" + {})` yields the **empty string** — see [String() vs Stringify()](/ecmascript-builtins/string-methods/#string-constructor)." %}
+
 {% include test-script.html bundle="ecmascript-builtins--object-methods" chapter="tostring" %}
 
 ## valueOf {#valueof}

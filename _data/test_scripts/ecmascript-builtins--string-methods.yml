@@ -25,11 +25,14 @@ string-constructor: |
    *   2. String() with no argument returns "".
    *   3. Stringify(value) produces JSON, unlike String(value).
    *
-   * NOT ASSERTABLE (documented on the page, deliberately not asserted here):
-   *   - String({}) -> "[object Object]". Passing a plain object to String()
-   *     can raise an uncatchable .NET error that aborts the whole CloudPage
-   *     with HTTP 422, so no line would ever print. The page documents this
-   *     hazard itself ("do not call String(e) on a thrown plain object").
+   * NOT ASSERTED HERE (settled by an isolated probe, not re-run in this bundle):
+   *   - Plain-object coercion. Probe clr-coerce-3 (2026-08-08, recorded in the
+   *     verification DB entry for String) settled it: String({}) THROWS "Object
+   *     reference not set to an instance of an object." — catchable, and it
+   *     does NOT abort the page — while "" + {} yields the EMPTY STRING, not
+   *     the spec's "[object Object]". String([]) and "" + [] are also both "".
+   *     The page and ssjs-data now state this. No assertion for it has been
+   *     observed green in THIS bundle yet, so none is added here.
    *   - String(resp.content) converting CLR HTTP response content. That needs
    *     a live outbound HTTP call, which is non-deterministic and risks the
    *     CloudPage timeout; it is covered on the Script.Util.HttpRequest page.

@@ -50,7 +50,7 @@ Platform.Variable.SetValue("@result", "processed");
 Read everything about the incoming HTTP request:
 
 ```javascript
-var method = String(Platform.Request.Method);                // "GET" or "POST" (CLR value — convert first)
+var method = String(Platform.Request.Method);                // "GET" or "POST" (CLR value — coerce before comparing)
 var q = Platform.Request.GetQueryStringParameter("q");       // URL query param
 var body = Platform.Request.GetPostData();                   // raw POST body
 var header = Platform.Request.GetRequestHeader("X-Token");  // request header

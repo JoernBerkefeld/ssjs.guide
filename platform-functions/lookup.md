@@ -88,6 +88,8 @@ if (value === "" || value === "null") {
 
 Note that a column explicitly written as `""` comes back as a normal empty `string`, not a CLR null — only a column that was never populated yields the CLR null.
 
+Concatenation works just as well here: `("" + raw)` returns the same `"null"` / `""` / value for all four cases (runtime-verified). Prefer it as the general-purpose idiom for engine values, since `String(value)` throws on a handful of .NET-null-backed CLR properties (`resp.contentType`, `resp.encoding`, `resp.headers`) where concatenation safely yields `""` — none of which a `Lookup` result can be.
+
 {% include test-script.html bundle="platform-functions--lookup" chapter="empty-returns" label="Show test script — the four empty-ish returns and the only safe guard" %}
 
 ## Examples

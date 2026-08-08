@@ -283,7 +283,7 @@ Returns the same CLR boolean value as `HasSSL`. Test it directly in a condition 
 Platform.Request.Method
 ```
 
-Returns the HTTP method of the current request as a CLR string. Convert it before strict comparison: `String(Platform.Request.Method) === "GET"`.
+Returns the HTTP method of the current request as a CLR string. Coerce it before strict comparison — the raw value does not match a literal, but both `String(Platform.Request.Method) === "GET"` and `("" + Platform.Request.Method) === "GET"` are `true` (runtime-verified).
 
 #### Examples
 

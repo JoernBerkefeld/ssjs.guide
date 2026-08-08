@@ -2709,7 +2709,9 @@
   discrepancy: "A1"
   anchor: "checking-the-status-code"
   body: |
-    The official docs type `statusCode` and `returnStatus` as numbers. At runtime both are **CLR values** (`typeof` reports `clr`), so strict equality against a JavaScript number literal is always false: `resp.statusCode === 200` does not match on a 200 response, and neither does `resp.returnStatus === 0` on a successful call. Loose comparison (`resp.statusCode == 200`) works, and converting once with `Number(resp.statusCode)` produces a real JavaScript number that `===` matches.
+    The official docs type `statusCode` and `returnStatus` as numbers. At runtime both are **CLR values** (`typeof` reports `clr`), so strict equality against a JavaScript number literal is always false: `resp.statusCode === 200` does not match on a 200 response, and neither does `resp.returnStatus === 0` on a successful call. `switch (resp.statusCode)` fails the same way and silently runs the `default` branch. Convert once with `Number(resp.statusCode)` — that produces a real JavaScript number which `===` and `switch` both match.
+
+    Loose comparison (`resp.statusCode == 200`) does return the right answer on a populated status code, and the test below asserts that, but it is **not** the idiom to reach for: against a CLR value backed by a .NET null, `==` throws `Value cannot be null. Parameter name: value` for every operand type, whereas `===` returns `false` safely. Relational operators (`>= 400`, `< 300`) are the one comparison family that is already correct on the raw value.
   testScript: |
     <script runat="server">
     /*
@@ -2719,8 +2721,11 @@
      *   1. resp.statusCode is a CLR value, NOT a JavaScript number.
      *   2. Strict equality against a number literal is ALWAYS false — this is
      *      the deviation the chapter warns about (marked DEV).
-     *   3. The documented loose comparison (==) works.
-     *   4. The documented Number() conversion makes === work.
+     *   3. Loose equality (==) does discriminate correctly on a POPULATED
+     *      status code — recorded for completeness, not as a recommendation:
+     *      == throws on a CLR value backed by a .NET null, so the chapter
+     *      steers readers to Number() + === instead.
+     *   4. The Number() conversion the chapter recommends makes === work.
      *
      * EXPECTED OUTPUT: every line starts with PASS.
      */
@@ -2743,11 +2748,12 @@
     assert("DEV statusCode === 200 is false (docs type it number)", resp.statusCode === 200 ? "true" : "false", "false");
     assert("DEV statusCode === 404 is also false", resp.statusCode === 404 ? "true" : "false", "false");
 
-    /* 3. The documented loose comparison works. */
+    /* 3. Loose equality discriminates on a populated status code — but it
+     *    throws on a .NET-null-backed CLR value, so it is not the idiom. */
     assert("statusCode == 200 is true", resp.statusCode == 200 ? "true" : "false", "true");
     assert("statusCode == 404 is false", resp.statusCode == 404 ? "true" : "false", "false");
 
-    /* 4. workaround — convert once with Number(), then === works. */
+    /* 4. recommended — convert once with Number(), then === works. */
     var status = Number(resp.statusCode);
     assert("workaround typeof Number(statusCode) is number", typeof status, "number");
     assert("workaround Number(statusCode) === 200 is true", status === 200 ? "true" : "false", "true");
@@ -5450,6 +5456,39 @@
     function P(l,f){try{Platform.Response.Write(l+" => "+f()+"\n");}catch(e){Platform.Response.Write(l+" => ERR: "+e+"\n");}}
     P("split(',')", function(){ return Platform.Function.Stringify("a,b,c".split(",")); });
     P("split('') empty", function(){ return Platform.Function.Stringify("abc".split("")); });
+    </script>
+- name: "String() (plain-object coercion)"
+  url: "/ecmascript-builtins/string-methods/#string-constructor"
+  officialUrl: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/String"
+  tagline: "String({}) throws; (\"\" + {}) is \"\", not \"[object Object]\""
+  part: "ecmascript"
+  category: "ECMAScript Builtins"
+  object: "String"
+  severity: "high"
+  discrepancy: "B3"
+  anchor: "string-plain-object-coercion"
+  body: |
+    MDN specifies that coercing a plain object to a string yields `"[object Object]"`, via either `String(value)` or concatenation. In the SFMC Jint engine **neither** form does. `String({})` **throws** `Object reference not set to an instance of an object.` — the throw is catchable and does not abort the page — while `("" + {})` returns the **empty string**. `String([])` and `("" + [])` are also both `""`. An **explicit** `obj.toString()` call is unaffected and still returns `"[object Object]"`, so the divergence is specific to `String()` and implicit coercion. To render an object, read its fields individually or serialize it with [`Stringify()`](/core-library/stringify/).
+  testScript: |
+    <script runat="server">
+    Platform.Load("core", "1.1.5");
+    // OBSERVED (live CloudPage, isolated probe): String({}) THREW "Object reference not set to an instance of an object."
+    // — catchable, both markers printed, the page did not abort. ("" + {}) => [] (empty string), NOT "[object Object]".
+    // String([]) => [] and ("" + []) => []. CONFIRMED.
+    Platform.Response.Write("start\n");
+    // Probe 1: String() of a plain object throws, and the throw is catchable
+    try { Platform.Response.Write("String({}) = [" + String({}) + "]\n"); }
+    catch (e) { Platform.Response.Write("String({}) THREW -> " + e.message + "\n"); }
+    // Probe 2: concat coercion of a plain object yields the empty string
+    try { Platform.Response.Write("(\"\" + {}) = [" + ("" + {}) + "]\n"); }
+    catch (e) { Platform.Response.Write("(\"\" + {}) THREW -> " + e.message + "\n"); }
+    // Probe 3: an array coerces to the empty string in both forms
+    try { Platform.Response.Write("String([]) = [" + String([]) + "] | (\"\" + []) = [" + ("" + []) + "]\n"); }
+    catch (e) { Platform.Response.Write("array coercion THREW -> " + e.message + "\n"); }
+    // Probe 4: an explicit toString() call still returns the spec object tag
+    try { Platform.Response.Write("({}).toString() = [" + ({}).toString() + "]\n"); }
+    catch (e) { Platform.Response.Write("({}).toString() THREW -> " + e.message + "\n"); }
+    Platform.Response.Write("done\n");
     </script>
 - name: "Number.toLocaleString"
   url: "/ecmascript-builtins/internationalization/#tolocalestring-family"

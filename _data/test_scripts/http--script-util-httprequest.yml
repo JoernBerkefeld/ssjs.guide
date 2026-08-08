@@ -342,6 +342,12 @@ httpresponseinstance-properties: |
   /* 6. DEVIATION — CLR values never satisfy strict equality with a number. */
   assert("DEV statusCode === 200 is false (docs: number)", resp.statusCode === 200 ? "true" : "false", "false");
   assert("DEV returnStatus === 0 is false (docs: number)", resp.returnStatus === 0 ? "true" : "false", "false");
+
+  /* 7. BUG — .length on the raw CLR content is always -1, and typeof already
+   *    says "number" so the usual CLR tell is missing. */
+  assert("BUG raw content.length is -1 whatever the body is", resp.content.length, "-1");
+  assert("BUG typeof raw content.length is number, hiding the bug", typeof resp.content.length, "number");
+  assert("workaround String(content).length is the real length", ("" + resp.content).length > 0, "true");
   </script>
 
 reading-response-headers: |
@@ -425,8 +431,11 @@ checking-the-status-code: |
    *   1. resp.statusCode is a CLR value, NOT a JavaScript number.
    *   2. Strict equality against a number literal is ALWAYS false — this is
    *      the deviation the chapter warns about (marked DEV).
-   *   3. The documented loose comparison (==) works.
-   *   4. The documented Number() conversion makes === work.
+   *   3. Loose equality (==) does discriminate correctly on a POPULATED
+   *      status code — recorded for completeness, not as a recommendation:
+   *      == throws on a CLR value backed by a .NET null, so the chapter
+   *      steers readers to Number() + === instead.
+   *   4. The Number() conversion the chapter recommends makes === work.
    *
    * EXPECTED OUTPUT: every line starts with PASS.
    */
@@ -449,14 +458,34 @@ checking-the-status-code: |
   assert("DEV statusCode === 200 is false (docs type it number)", resp.statusCode === 200 ? "true" : "false", "false");
   assert("DEV statusCode === 404 is also false", resp.statusCode === 404 ? "true" : "false", "false");
 
-  /* 3. The documented loose comparison works. */
+  /* 3. Loose equality discriminates on a populated status code — but it
+   *    throws on a .NET-null-backed CLR value, so it is not the idiom. */
   assert("statusCode == 200 is true", resp.statusCode == 200 ? "true" : "false", "true");
   assert("statusCode == 404 is false", resp.statusCode == 404 ? "true" : "false", "false");
 
-  /* 4. workaround — convert once with Number(), then === works. */
+  /* 4. recommended — convert once with Number(), then === works. */
   var status = Number(resp.statusCode);
   assert("workaround typeof Number(statusCode) is number", typeof status, "number");
   assert("workaround Number(statusCode) === 200 is true", status === 200 ? "true" : "false", "true");
+
+  /* 5. DEVIATION — switch on the raw CLR value silently hits default. */
+  var branch = "";
+  switch (resp.statusCode) {
+      case 200: branch = "matched200"; break;
+      default: branch = "default";
+  }
+  assert("DEV switch on the raw statusCode falls through to default", branch, "default");
+  var branch2 = "";
+  switch (Number(resp.statusCode)) {
+      case 200: branch2 = "matched200"; break;
+      default: branch2 = "default";
+  }
+  assert("workaround switch on Number(statusCode) matches case 200", branch2, "matched200");
+
+  /* 6. Relational operators are CORRECT on the raw value — no conversion. */
+  assert("raw statusCode >= 400 is false on a 200", resp.statusCode >= 400 ? "true" : "false", "false");
+  assert("raw statusCode < 300 is true on a 200", resp.statusCode < 300 ? "true" : "false", "true");
+  assert("raw statusCode > 199 is true on a 200", resp.statusCode > 199 ? "true" : "false", "true");
   </script>
 
 examples: |

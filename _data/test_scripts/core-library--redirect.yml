@@ -19,7 +19,8 @@
 #
 # NORMALIZATION RULE: assert() compares with a plain === and does NOT coerce.
 # Engine-returned values and caught .message values are normalized at the
-# call site with "" + value — never with String(value).
+# call site with "" + value — preferred over the equally valid String(value)
+# because it never throws on .NET-null-backed CLR properties.
 #
 # All scripts were last run green (every line PASS) against a live SFMC
 # CloudPage GET on the QA business unit. Re-run them before changing any

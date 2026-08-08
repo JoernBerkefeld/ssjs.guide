@@ -144,15 +144,17 @@ The `resp` object returned by `req.send()` has these properties:
 | `encoding` | string | Documented as the response encoding, but **always empty** — read the charset from the `content-type` header instead |
 | `headers` | object | Response headers as a CLR object — not directly indexable; read via the `for..in` pattern below |
 | `returnStatus` | number | A status value: `0` = OK, `1` = Empty URL, `2` = Call failed, `3` = Call succeeded with empty content |
-| `statusCode` | number | HTTP status code — a CLR value, so compare it with `==`, never `===` |
+| `statusCode` | number | HTTP status code — a CLR value: convert with `Number()` before `===` or `switch` (relational operators like `>= 400` work on it directly) |
 
 {% include callout.html type="warning" content="`resp.content` is a CLR string, not a JavaScript string. Always wrap it with `String(resp.content)` before calling `ParseJSON()` or string methods." %}
+
+{% include callout.html type="bug" content="`resp.content.length` returns **`-1`** no matter how long the body actually is — a 40-character body still reports `-1`. Unlike every other CLR value on this object, `typeof resp.content.length` already reports `number`, so the usual CLR tell is missing and the wrong answer is invisible on inspection. Emptiness guards written as `resp.content.length > 0` are therefore always false, and `if (resp.content.length)` is always truthy. Measure the length as `String(resp.content).length` instead." %}
 
 {% include differs-from-docs.html note="The official docs example reads a single header via `resp.headers[\"...\"]`, but that access throws **\"Use of Common Language Runtime (CLR) is not allowed\"** at runtime. Individual headers are only readable by enumerating with `for..in` (see below)." %}
 
 {% include differs-from-docs.html note="The official docs list `encoding` as a populated response property, but it is an empty string on every request handler — even on `HttpRequest`, and even when the response `Content-Type` carries a charset." %}
 
-{% include callout.html type="warning" content="`resp.statusCode` and `resp.returnStatus` are CLR values, not JavaScript numbers. Strict equality against a number literal (`resp.statusCode === 200`) is **always false** — use `==`, or convert first with `Number(resp.statusCode)`." %}
+{% include callout.html type="warning" content="`resp.statusCode` and `resp.returnStatus` are CLR values, not JavaScript numbers. Strict equality against a number literal (`resp.statusCode === 200`) is **always false**, and `switch (resp.statusCode)` silently falls through to `default`. Convert once with `Number(resp.statusCode)` and then compare normally. **Do not use `==`** — loose equality throws `Value cannot be null.` when a CLR value is backed by a .NET null. Relational operators (`>= 400`, `< 300`) are the exception: they evaluate correctly on the raw value." %}
 
 {% include test-script.html bundle="http--script-util-httprequest" chapter="httpresponseinstance-properties" %}
 
@@ -194,27 +196,23 @@ Header names are lowercased in the map above so lookups are case-insensitive. A 
 
 ### Checking the status code
 
-`resp.statusCode` is a CLR value, so compare it with loose equality (`==`) — `===` against a JavaScript number literal never matches.
+`resp.statusCode` is a CLR value, so convert it once and compare the JavaScript number:
 
 ```javascript
 var resp = req.send();
-if (resp.statusCode == 200) {
-    var data = Platform.Function.ParseJSON(String(resp.content));
-} else if (resp.statusCode == 404) {
-    Write("Not found.");
-} else {
-    Write("Error: " + resp.statusCode);
-}
-```
-
-If you prefer strict comparisons, convert once and compare the JavaScript number:
-
-```javascript
 var status = Number(resp.statusCode);
 if (status === 200) {
     var data = Platform.Function.ParseJSON(String(resp.content));
+} else if (status === 404) {
+    Write("Not found.");
+} else {
+    Write("Error: " + status);
 }
 ```
+
+Avoid `==`. It appears to work on a populated status code, but loose equality against any CLR value backed by a .NET null throws `Value cannot be null. Parameter name: value` — `===` returns `false` safely instead. Relational comparisons (`status >= 400`) are correct with or without the conversion.
+
+`switch` needs the conversion too: `switch (resp.statusCode) { case 200: … }` never matches a `case` and silently runs the `default` branch, without throwing. `switch (Number(resp.statusCode))` behaves as expected.
 
 {% include test-script.html bundle="http--script-util-httprequest" chapter="checking-the-status-code" %}
 
@@ -231,12 +229,13 @@ req.setHeader("Accept", "application/json");
 
 try {
     var resp = req.send();
-    if (resp.statusCode == 200) {
+    var status = Number(resp.statusCode);
+    if (status === 200) {
         var data = Platform.Function.ParseJSON(String(resp.content));
         Platform.Response.ContentType = "application/json";
         Write(Stringify(data));
     } else {
-        Write(Stringify({ status: resp.statusCode, statusMessage: "Upstream Error", error: resp.statusCode }));
+        Write(Stringify({ status: status, statusMessage: "Upstream Error", error: status }));
     }
 } catch(e) {
     Write(Stringify({ status: 500, statusMessage: "Internal Server Error", error: e.message }));
