@@ -1,0 +1,17 @@
+{
+  "name": "ssjs-guide-site",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Tooling host for the ssjs.guide Jekyll site — husky hooks only. Not a publishable package.",
+  "type": "module",
+  "author": "Joern Berkefeld <joern.berkefeld@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "prepare": "husky || true",
+    "generate:site-index": "node scripts/regenerate-site-index.mjs",
+    "check:bom": "node scripts/check-bom.mjs"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}

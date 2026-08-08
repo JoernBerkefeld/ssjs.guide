@@ -1,1 +1,35 @@
+# Formatting in this repo is opt-in for scripts/ only — everything else is ignored.
+#
+# The content pages, Liquid templates, SCSS and front-end JS were all authored before
+# Prettier existed here; running it over them produces hundreds of changed lines per
+# file, which would bury real changes in review noise.
+
+# Build output, caches and dependencies
+_site/
+.jekyll-cache/
+.sass-cache/
+node_modules/
+vendor/
+
+# Liquid templates and every other HTML file
+_includes/
+_layouts/
+**/*.html
+
+# Content pages
 **/*.md
+**/*.markdown
+
+# Jekyll data and generated artifacts — site-index.json is owned by ssjs-data
+_data/
+site-index.json
+
+# Styles and front-end JavaScript
+_sass/
+assets/
+sw.js
+
+# Site and CI configuration
+_config.yml
+.github/
+manifest.webmanifest

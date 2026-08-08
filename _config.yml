@@ -34,6 +34,9 @@ exclude:
   - vendor/ruby/
   - .git
   - README.md
+  - package.json
+  - package-lock.json
+  - scripts
 
 # Collections
 collections:

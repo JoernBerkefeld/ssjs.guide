@@ -1,0 +1,40 @@
+if [[ $SKIP_HOOKS -gt 0 ]]; then
+  echo "[PRE-COMMIT] skipping hooks (SKIP_HOOKS=$SKIP_HOOKS)"
+  exit 0
+fi
+
+# ── Regenerate site-index.json ────────────────────────────────────────────────
+# The index is built by ssjs-data (single source of truth) and written into this
+# repo. ssjs-data's own hook stages only its dist/ copy, so without this step the
+# copy here can silently ship stale. The generator runs in well under a second and
+# is idempotent, so it runs on every commit rather than guessing which inputs
+# matter — the inputs live in another repo and a wrong guess reintroduces exactly
+# the stale-artifact bug this hook exists to prevent.
+echo "[PRE-COMMIT] 🔄 Regenerating site-index.json..."
+node scripts/regenerate-site-index.mjs || {
+  echo "[PRE-COMMIT] ❌ The site search index could not be generated, so the commit was blocked"
+  echo "[PRE-COMMIT]    to stop a stale site-index.json from being committed."
+  echo "[PRE-COMMIT]    See the error above — usually a page was added, renamed or moved"
+  echo "[PRE-COMMIT]    without a matching update to ssjs-data/src/urls.js."
+  exit 1
+}
+
+# Re-staging is the whole point: regenerating without `git add` would still
+# commit the stale blob that was staged before the hook ran.
+git add site-index.json || {
+  echo "[PRE-COMMIT] ❌ Could not stage the regenerated site-index.json. See the error above."
+  exit 1
+}
+echo "[PRE-COMMIT] ✅ site-index.json regenerated and staged."
+
+# ── Strip UTF-8 BOMs (must stay last) ─────────────────────────────────────────
+# Runs after everything else that writes files, so a BOM re-introduced by the
+# generator still gets caught. A BOM before a page's opening `---` silently breaks
+# Jekyll frontmatter parsing.
+echo "[PRE-COMMIT] Checking staged files for UTF-8 BOMs..."
+node scripts/check-bom.mjs || {
+  echo "[PRE-COMMIT] ❌ BOM check failed. See the message above."
+  exit 1
+}
+
+echo "[PRE-COMMIT] All checks passed."
