@@ -4,7 +4,7 @@ title: Script.Util.HttpGet
 parent: HTTP & REST APIs
 parent_url: /http/
 permalink: /http/script-util-httpget/
-description: HTTP GET request constructor — creates an HttpRequestInstance that caches content for mail sends and supports custom headers.
+description: HTTP GET request constructor — creates an HttpGetInstance that caches content for mail sends and supports custom headers.
 verification: verified
 test_scripts: complete
 differs_from_docs: true

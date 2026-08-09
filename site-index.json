@@ -4,7 +4,7 @@
     "url": "/platform-functions/lookup/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Retrieves a single field value from the first Data Extension row matching filter criteria.",
+    "description": "Retrieves a single field value from the first Data Extension row…",
     "params": [
       "deName",
       "returnField",
@@ -18,7 +18,7 @@
     "url": "/platform-functions/lookuprows/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Returns an array of row objects from a Data Extension matching filter criteria (up to 2,000 rows).",
+    "description": "Returns an array of row objects from a Data Extension matching filter…",
     "params": [
       "deName",
       "whereFieldNames",
@@ -46,7 +46,7 @@
     "url": "/platform-functions/insertdata/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Adds a new row to a Data Extension and returns the number of rows inserted.",
+    "description": "Adds a new row to a Data Extension and returns the number of rows…",
     "params": [
       "deName",
       "fieldNames",
@@ -72,7 +72,7 @@
     "url": "/platform-functions/updatedata/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Modifies existing rows in a Data Extension matching filter criteria and returns the number of rows updated.",
+    "description": "Modifies existing rows in a Data Extension matching filter criteria…",
     "params": [
       "deName",
       "whereFieldNames",
@@ -87,7 +87,7 @@
     "url": "/platform-functions/updatede/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Modifies existing rows in a Data Extension matching filter criteria and returns null.",
+    "description": "Modifies existing rows in a Data Extension matching filter criteria…",
     "params": [
       "deName",
       "whereFieldNames",
@@ -102,7 +102,7 @@
     "url": "/platform-functions/upsertdata/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Inserts a new row or updates an existing one in a Data Extension and returns the number of rows affected.",
+    "description": "Inserts a new row or updates an existing one in a Data Extension and…",
     "params": [
       "deName",
       "whereFieldNames",
@@ -117,7 +117,7 @@
     "url": "/platform-functions/upsertde/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Inserts one row when no filter match exists or updates every matching row in a Data Extension.",
+    "description": "Inserts one row when no filter match exists or updates every matching…",
     "params": [
       "deName",
       "whereFieldNames",
@@ -132,7 +132,7 @@
     "url": "/platform-functions/deletedata/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Removes rows from a Data Extension matching filter criteria and returns the number of rows deleted.",
+    "description": "Removes rows from a Data Extension matching filter criteria and…",
     "params": [
       "deName",
       "whereFieldNames",
@@ -201,7 +201,7 @@
     "url": "/platform-functions/contentimagebykey/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Returns an HTML img tag for a Content Builder image identified by its external key.",
+    "description": "Returns an HTML img tag for a Content Builder image identified by its…",
     "params": [
       "key",
       "fallbackId"
@@ -213,7 +213,7 @@
     "url": "/platform-functions/contentimagebyid/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Returns an HTML img tag for a Content Builder image identified by its numeric ID.",
+    "description": "Returns an HTML img tag for a Content Builder image identified by its…",
     "params": [
       "id",
       "fallbackId"
@@ -225,7 +225,7 @@
     "url": "/platform-functions/treatascontent/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Processes a string as AMPscript/HTML on the SFMC server and returns the rendered result directly as a string.",
+    "description": "Processes a string as AMPscript/HTML on the SFMC server and returns…",
     "params": [
       "content"
     ],
@@ -258,7 +258,7 @@
     "url": "/platform-functions/now/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Returns the current server date/time as a Date object (in the account timezone, Central by default), or the timestamp of the triggering send when called with true.",
+    "description": "Returns the current server date/time as a Date object (in the account…",
     "params": [
       "useContextTime"
     ],
@@ -269,7 +269,7 @@
     "url": "/platform-functions/systemdatetolocaldate/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Converts a date-time value from Marketing Cloud system time (CST, without daylight saving) to the local time of the account or user.",
+    "description": "Converts a date-time value from Marketing Cloud system time (CST…",
     "params": [
       "dateString"
     ],
@@ -280,7 +280,7 @@
     "url": "/platform-functions/localdatetosystemdate/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Converts a date-time value from the local time of the account or user to Marketing Cloud system time (CST, without daylight saving).",
+    "description": "Converts a date-time value from the local time of the account or user…",
     "params": [
       "dateString"
     ],
@@ -305,7 +305,7 @@
     "url": "/platform-functions/guid/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Generates a new globally unique identifier as a lowercase canonical UUID v4 string (36 characters).",
+    "description": "Generates a new globally unique identifier as a lowercase canonical…",
     "returnType": "string"
   },
   {
@@ -324,7 +324,7 @@
     "url": "/platform-functions/isphonenumber/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Evaluates whether a string is a valid phone number and returns a boolean.",
+    "description": "Evaluates whether a string is a valid phone number and returns a…",
     "params": [
       "value"
     ],
@@ -346,7 +346,7 @@
     "url": "/platform-functions/setobjectproperty/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Assigns a property value on a SOAP API object created with CreateObject.",
+    "description": "Assigns a property value on a SOAP API object created with…",
     "params": [
       "apiObject",
       "propertyName",
@@ -372,7 +372,7 @@
     "url": "/platform-functions/invokecreate/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Executes a SOAP API Create call on an API object and returns the OverallStatus message as a string.",
+    "description": "Executes a SOAP API Create call on an API object and returns the…",
     "params": [
       "apiObject",
       "status",
@@ -385,7 +385,7 @@
     "url": "/platform-functions/invokeupdate/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Executes a SOAP API Update call on an API object and returns the OverallStatus message as a string.",
+    "description": "Executes a SOAP API Update call on an API object and returns the…",
     "params": [
       "apiObject",
       "status",
@@ -398,7 +398,7 @@
     "url": "/platform-functions/invokedelete/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Executes a SOAP API Delete call on an API object and returns the OverallStatus message as a string.",
+    "description": "Executes a SOAP API Delete call on an API object and returns the…",
     "params": [
       "apiObject",
       "status",
@@ -411,7 +411,7 @@
     "url": "/platform-functions/invokeretrieve/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Executes a SOAP API Retrieve call, returning an array of result objects when records match or null on error / no match.",
+    "description": "Executes a SOAP API Retrieve call, returning an array of result…",
     "params": [
       "apiObject",
       "status"
@@ -423,7 +423,7 @@
     "url": "/platform-functions/invokeperform/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Executes a SOAP API Perform action on an API object and returns the OverallStatus message as a string.",
+    "description": "Executes a SOAP API Perform action on an API object and returns the…",
     "params": [
       "apiObject",
       "method",
@@ -437,7 +437,7 @@
     "url": "/platform-functions/invokeconfigure/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Executes a SOAP API Configure call on an API object and returns the OverallStatus message as a string.",
+    "description": "Executes a SOAP API Configure call on an API object and returns the…",
     "params": [
       "apiObject",
       "method",
@@ -451,7 +451,7 @@
     "url": "/platform-functions/invokeexecute/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Executes a SOAP API Execute call on an API object and returns an array of result objects.",
+    "description": "Executes a SOAP API Execute call on an API object and returns an…",
     "params": [
       "apiObject",
       "status"
@@ -475,7 +475,7 @@
     "url": "/platform-functions/invokeschedule/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Invokes the Schedule SOAP API method on the specified object and returns the OverallStatus message as a string.",
+    "description": "Invokes the Schedule SOAP API method on the specified object and…",
     "params": [
       "apiObject",
       "action",
@@ -490,7 +490,7 @@
     "url": "/platform-functions/httpget/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Performs an HTTP GET request and returns the response body as a string.",
+    "description": "Performs an HTTP GET request and returns the response body as a…",
     "params": [
       "url",
       "continueOnError",
@@ -522,7 +522,7 @@
     "url": "/platform-functions/parsejson/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Parses a JSON-formatted string (also accepts boolean or number) and returns the resulting JavaScript object or array.",
+    "description": "Parses a JSON-formatted string (also accepts boolean or number) and…",
     "params": [
       "jsonString"
     ],
@@ -533,7 +533,7 @@
     "url": "/platform-functions/redirectto/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Specifies the target of an email link as a complete URL stored in an attribute, data extension field, or variable.",
+    "description": "Specifies the target of an email link as a complete URL stored in an…",
     "params": [
       "url"
     ],
@@ -544,7 +544,7 @@
     "url": "/platform-functions/urlencode/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Percent-encodes only the query string after the first question mark; a URL without one is returned unchanged.",
+    "description": "Percent-encodes only the query string after the first question mark…",
     "params": [
       "url",
       "encodeReservedKeywords"
@@ -580,7 +580,7 @@
     "url": "/platform-functions/md5/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Returns a lowercase 32-character hexadecimal MD5 hash for a given string value.",
+    "description": "Returns a lowercase 32-character hexadecimal MD5 hash for a given…",
     "params": [
       "string",
       "charset"
@@ -633,7 +633,7 @@
     "url": "/platform-functions/ischtmlbrowser/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Indicates whether the passed-in user-agent value represents a CHTML browser.",
+    "description": "Indicates whether the passed-in user-agent value represents a CHTML…",
     "params": [
       "userAgentString"
     ],
@@ -711,7 +711,7 @@
     "url": "/wsproxy/retrieve/",
     "section": "WSProxy",
     "type": "method",
-    "description": "Retrieves Marketing Cloud objects matching an optional filter via the SOAP API.",
+    "description": "Retrieves Marketing Cloud objects matching an optional filter via the…",
     "params": [
       "objectType",
       "columns",
@@ -726,7 +726,7 @@
     "url": "/wsproxy/getnextbatch/",
     "section": "WSProxy",
     "type": "method",
-    "description": "Retrieves the next page of results from a previous retrieve call that returned HasMoreRows = true.",
+    "description": "Retrieves the next page of results from a previous retrieve call that…",
     "params": [
       "objectType",
       "requestId"
@@ -752,7 +752,7 @@
     "url": "/wsproxy/performbatch/",
     "section": "WSProxy",
     "type": "method",
-    "description": "Executes a perform action on multiple Marketing Cloud objects in a single SOAP API call.",
+    "description": "Executes a perform action on multiple Marketing Cloud objects in a…",
     "params": [
       "objectType",
       "propertiesArray",
@@ -766,7 +766,7 @@
     "url": "/wsproxy/describe/",
     "section": "WSProxy",
     "type": "method",
-    "description": "Returns structural metadata for one or more SOAP API object types, one ObjectDefinition per requested type.",
+    "description": "Returns structural metadata for one or more SOAP API object types…",
     "params": [
       "objectType"
     ],
@@ -777,7 +777,7 @@
     "url": "/wsproxy/execute/",
     "section": "WSProxy",
     "type": "method",
-    "description": "Runs a SOAP Execute request (e.",
+    "description": "Runs a SOAP Execute request (e.g. LogUnsubEvent), passing an array of…",
     "params": [
       "parameters",
       "requestName"
@@ -789,7 +789,7 @@
     "url": "/wsproxy/setclientid/",
     "section": "WSProxy",
     "type": "method",
-    "description": "Sets a ClientId (impersonation) context on the WSProxy instance so subsequent operations run against another business unit.",
+    "description": "Sets a ClientId (impersonation) context on the WSProxy instance so…",
     "params": [
       "options"
     ],
@@ -800,7 +800,7 @@
     "url": "/wsproxy/resetclientids/",
     "section": "WSProxy",
     "type": "method",
-    "description": "Clears all client IDs set on the WSProxy instance, reverting to the default execution context credentials.",
+    "description": "Clears all client IDs set on the WSProxy instance, reverting to the…",
     "returnType": "null"
   },
   {
@@ -847,7 +847,7 @@
     "url": "/wsproxy/",
     "section": "HTTP & REST",
     "type": "function",
-    "description": "Creates a WSProxy instance for making SOAP API calls against the Marketing Cloud web service.",
+    "description": "Creates a WSProxy instance for making SOAP API calls against the…",
     "returnType": "WSProxyInstance"
   },
   {
@@ -855,7 +855,7 @@
     "url": "/http/script-util-httprequest/",
     "section": "HTTP & REST",
     "type": "function",
-    "description": "Creates an HTTP request handler that supports any HTTP method (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS).",
+    "description": "Creates an HTTP request handler that supports any HTTP method (GET…",
     "params": [
       "url"
     ],
@@ -870,14 +870,14 @@
     "params": [
       "url"
     ],
-    "returnType": "HttpRequestInstance"
+    "returnType": "HttpGetInstance"
   },
   {
     "name": "<HttpRequestInstance>.send",
     "url": "/http/script-util-httprequest/#send",
     "section": "HTTP & REST",
     "type": "method",
-    "description": "Executes the HTTP request and returns a Script.",
+    "description": "Executes the HTTP request and returns a Script.Util.HttpResponse…",
     "returnType": "HttpResponseInstance"
   },
   {
@@ -885,7 +885,7 @@
     "url": "/http/script-util-httprequest/#setheader",
     "section": "HTTP & REST",
     "type": "method",
-    "description": "Sets a request header on the Script.",
+    "description": "Sets a request header on the Script.Util HTTP request.",
     "params": [
       "name",
       "value"
@@ -974,7 +974,7 @@
     "url": "/platform-objects/platform-response/#redirect",
     "section": "Platform Objects",
     "type": "method",
-    "description": "Redirects the current page to a new URL and stops script execution immediately.",
+    "description": "Redirects the current page to a new URL and stops script execution…",
     "params": [
       "url",
       "movedPermanently"
@@ -1071,7 +1071,7 @@
     "url": "/platform-objects/platform-request/#getcookievalue",
     "section": "Platform Objects",
     "type": "method",
-    "description": "Retrieves the value of a named cookie from the HTTP request sent by the client browser.",
+    "description": "Retrieves the value of a named cookie from the HTTP request sent by…",
     "params": [
       "cookieName"
     ],
@@ -1082,7 +1082,7 @@
     "url": "/platform-objects/platform-request/#getuserlanguages",
     "section": "Platform Objects",
     "type": "method",
-    "description": "Returns the language preferences of the client browser as specified in the HTTP Accept-Language request header.",
+    "description": "Returns the language preferences of the client browser as specified…",
     "returnType": "string"
   },
   {
@@ -1090,7 +1090,7 @@
     "url": "/platform-objects/platform-request/#getrequestheader",
     "section": "Platform Objects",
     "type": "method",
-    "description": "Returns the value of the named HTTP request header, or null if not present.",
+    "description": "Returns the value of the named HTTP request header, or null if not…",
     "params": [
       "headerName"
     ],
@@ -1101,7 +1101,7 @@
     "url": "/platform-objects/platform-request/#browser",
     "section": "Platform Objects",
     "type": "property",
-    "description": "Returns an object describing the client browser, parsed from the User-Agent request header.",
+    "description": "Returns an object describing the client browser, parsed from the…",
     "returnType": "object"
   },
   {
@@ -1125,7 +1125,7 @@
     "url": "/platform-objects/platform-request/#isssl",
     "section": "Platform Objects",
     "type": "property",
-    "description": "Returns true if the current request was made over HTTPS (alias of HasSSL).",
+    "description": "Returns true if the current request was made over HTTPS (alias of…",
     "returnType": "boolean"
   },
   {
@@ -1133,7 +1133,7 @@
     "url": "/platform-objects/platform-request/#method",
     "section": "Platform Objects",
     "type": "property",
-    "description": "Returns the HTTP method (GET, POST, etc.",
+    "description": "Returns the HTTP method (GET, POST, etc.) of the current request.",
     "returnType": "string"
   },
   {
@@ -1173,7 +1173,7 @@
     "url": "/platform-objects/platform-recipient/#getattributevalue",
     "section": "Platform Objects",
     "type": "method",
-    "description": "Returns the value of a subscriber attribute or sendable data extension field for the current recipient.",
+    "description": "Returns the value of a subscriber attribute or sendable data…",
     "params": [
       "attributeName"
     ],
@@ -1184,7 +1184,7 @@
     "url": "/core-library/httpheader/#getvalue",
     "section": "Core Library",
     "type": "method",
-    "description": "Retrieves the value of the specified INBOUND HTTP request header (e.",
+    "description": "Retrieves the value of the specified INBOUND HTTP request header…",
     "params": [
       "name"
     ],
@@ -1218,7 +1218,7 @@
     "url": "/core-library/datetime/#systemdatetolocaldate",
     "section": "Core Library",
     "type": "method",
-    "description": "Converts a date-time value from Marketing Cloud system time (CST) to the local time of the account or user.",
+    "description": "Converts a date-time value from Marketing Cloud system time (CST) to…",
     "params": [
       "dateString"
     ],
@@ -1229,7 +1229,7 @@
     "url": "/core-library/datetime/#localdatetosystemdate",
     "section": "Core Library",
     "type": "method",
-    "description": "Converts a date-time value from the local time of the account or user to Marketing Cloud system time (CST).",
+    "description": "Converts a date-time value from the local time of the account or user…",
     "params": [
       "dateString"
     ],
@@ -1240,7 +1240,7 @@
     "url": "/core-library/datetime/#timezone-retrieve",
     "section": "Core Library",
     "type": "method",
-    "description": "Retrieves an array of time zones matching the specified filter criteria.",
+    "description": "Retrieves an array of time zones matching the specified filter…",
     "params": [
       "filter"
     ],
@@ -1251,7 +1251,7 @@
     "url": "/wsproxy/errorutil/#throwwsproxyerror",
     "section": "WSProxy",
     "type": "method",
-    "description": "Inspects a WSProxy result object and throws when its `Status` property indicates an error.",
+    "description": "Inspects a WSProxy result object and throws when its `Status`…",
     "params": [
       "result"
     ],
@@ -1263,7 +1263,7 @@
     "url": "/core-library/attribute/#getvalue",
     "section": "Core Library",
     "type": "method",
-    "description": "Returns the value of the specified subscriber attribute or sendable data extension field for the current recipient.",
+    "description": "Returns the value of the specified subscriber attribute or sendable…",
     "params": [
       "name"
     ],
@@ -1274,7 +1274,7 @@
     "url": "/core-library/dataextension/#init",
     "section": "Core Library",
     "type": "method",
-    "description": "Initializes a DataExtension instance bound to the specified data extension by its External Key (`CustomerKey`).",
+    "description": "Initializes a DataExtension instance bound to the specified data…",
     "params": [
       "key"
     ],
@@ -1285,7 +1285,7 @@
     "url": "/core-library/dataextension/#add",
     "section": "Core Library",
     "type": "method",
-    "description": "Creates a new data extension from the supplied properties and returns an initialized DataExtension instance (the same shape as `DataExtension.",
+    "description": "Creates a new data extension from the supplied properties and returns…",
     "params": [
       "properties"
     ],
@@ -1319,7 +1319,7 @@
     "url": "/core-library/dataextension-fields/#instance-fields-retrieve",
     "section": "Core Library",
     "type": "method",
-    "description": "Returns an array of field definitions for the previously initialized data extension.",
+    "description": "Returns an array of field definitions for the previously initialized…",
     "returnType": "object[]"
   },
   {
@@ -1327,7 +1327,7 @@
     "url": "/core-library/dataextension-fields/#instance-fields-updatesendablefield",
     "section": "Core Library",
     "type": "method",
-    "description": "Updates which data extension field is used to relate the data extension to the All Subscribers list during sending.",
+    "description": "Updates which data extension field is used to relate the data…",
     "params": [
       "deFieldName",
       "subscriberField"
@@ -1350,7 +1350,7 @@
     "url": "/core-library/dataextension-rows/#instance-rows-lookup",
     "section": "Core Library",
     "type": "method",
-    "description": "Returns rows where the specified columns equal the specified values (AND-joined).",
+    "description": "Returns rows where the specified columns equal the specified values…",
     "params": [
       "searchFieldNames",
       "searchValues",
@@ -1364,7 +1364,7 @@
     "url": "/core-library/dataextension-rows/#instance-rows-remove",
     "section": "Core Library",
     "type": "method",
-    "description": "Deletes rows from the previously initialized data extension where the specified columns equal the specified values (AND-joined).",
+    "description": "Deletes rows from the previously initialized data extension where the…",
     "params": [
       "columnNames",
       "columnValues"
@@ -1376,7 +1376,7 @@
     "url": "/core-library/dataextension-rows/#instance-rows-retrieve",
     "section": "Core Library",
     "type": "method",
-    "description": "Retrieves up to 2500 rows from the previously initialized data extension.",
+    "description": "Retrieves up to 2500 rows from the previously initialized data…",
     "params": [
       "filter"
     ],
@@ -1387,7 +1387,7 @@
     "url": "/core-library/dataextension-rows/#instance-rows-update",
     "section": "Core Library",
     "type": "method",
-    "description": "Updates the columns of rows where `whereFieldNames` equal `whereValues` (AND-joined).",
+    "description": "Updates the columns of rows where `whereFieldNames` equal…",
     "params": [
       "rowData",
       "whereFieldNames",
@@ -1433,7 +1433,7 @@
     "url": "/core-library/account/#tracking-retrieve",
     "section": "Core Library",
     "type": "method",
-    "description": "Returns an array of tracking data related to the accounts specified by the passed filter argument.",
+    "description": "Returns an array of tracking data related to the accounts specified…",
     "params": [
       "filter"
     ],
@@ -1444,7 +1444,7 @@
     "url": "/core-library/accountuser/#init",
     "section": "Core Library",
     "type": "method",
-    "description": "Initializes an AccountUser instance bound to the specified external key and client ID (MID).",
+    "description": "Initializes an AccountUser instance bound to the specified external…",
     "params": [
       "targetUserKey",
       "myClientID"
@@ -1517,7 +1517,7 @@
     "url": "/core-library/email/#add",
     "section": "Core Library",
     "type": "method",
-    "description": "Creates a new classic email message from the supplied properties and returns an initialized email instance.",
+    "description": "Creates a new classic email message from the supplied properties and…",
     "params": [
       "properties"
     ],
@@ -1529,7 +1529,7 @@
     "url": "/core-library/email/#retrieve",
     "section": "Core Library",
     "type": "method",
-    "description": "Returns an array of classic email messages matching the specified filter.",
+    "description": "Returns an array of classic email messages matching the specified…",
     "params": [
       "filter"
     ],
@@ -1562,7 +1562,7 @@
     "url": "/core-library/email/#instance-validate",
     "section": "Core Library",
     "type": "method",
-    "description": "Runs validation checks on the previously initialized classic email message.",
+    "description": "Runs validation checks on the previously initialized classic email…",
     "returnType": "object",
     "deprecated": true
   },
@@ -1571,7 +1571,7 @@
     "url": "/core-library/email/#instance-checkcontent",
     "section": "Core Library",
     "type": "method",
-    "description": "Runs content checks on the previously initialized classic email message.",
+    "description": "Runs content checks on the previously initialized classic email…",
     "returnType": "object",
     "deprecated": true
   },
@@ -1580,7 +1580,7 @@
     "url": "/core-library/filterdefinition/#init",
     "section": "Core Library",
     "type": "method",
-    "description": "Initializes a FilterDefinition instance bound to the specified external key.",
+    "description": "Initializes a FilterDefinition instance bound to the specified…",
     "params": [
       "key"
     ],
@@ -1632,7 +1632,7 @@
     "url": "/core-library/folder/#init",
     "section": "Core Library",
     "type": "method",
-    "description": "Initializes a Folder instance, optionally bound to the specified external key.",
+    "description": "Initializes a Folder instance, optionally bound to the specified…",
     "params": [
       "key"
     ],
@@ -1684,7 +1684,7 @@
     "url": "/core-library/folder/#instance-setid",
     "section": "Core Library",
     "type": "method",
-    "description": "Binds a previously initialized Folder instance to a specific folder ID.",
+    "description": "Binds a previously initialized Folder instance to a specific folder…",
     "params": [
       "id"
     ],
@@ -1706,7 +1706,7 @@
     "url": "/core-library/list/#add",
     "section": "Core Library",
     "type": "method",
-    "description": "Creates a new list from the supplied properties and returns an initialized list instance.",
+    "description": "Creates a new list from the supplied properties and returns an…",
     "params": [
       "properties"
     ],
@@ -1769,7 +1769,7 @@
     "url": "/core-library/list-subscribers/#instance-subscribers-update",
     "section": "Core Library",
     "type": "method",
-    "description": "Updates the status of the specified subscriber on the previously initialized list.",
+    "description": "Updates the status of the specified subscriber on the previously…",
     "params": [
       "emailAddress",
       "status"
@@ -1781,7 +1781,7 @@
     "url": "/core-library/list-subscribers/#instance-subscribers-upsert",
     "section": "Core Library",
     "type": "method",
-    "description": "Adds the subscriber if not on the list, otherwise updates the supplied attributes.",
+    "description": "Adds the subscriber if not on the list, otherwise updates the…",
     "params": [
       "emailAddress",
       "attributes"
@@ -1804,7 +1804,7 @@
     "url": "/core-library/subscriber/#init",
     "section": "Core Library",
     "type": "method",
-    "description": "Initializes a Subscriber instance bound to the specified subscriber key.",
+    "description": "Initializes a Subscriber instance bound to the specified subscriber…",
     "params": [
       "key"
     ],
@@ -1837,7 +1837,7 @@
     "url": "/core-library/subscriber/#instance-upsert",
     "section": "Core Library",
     "type": "method",
-    "description": "Creates a new subscriber, or updates the initialized one matched by EmailAddress / SubscriberKey.",
+    "description": "Creates a new subscriber, or updates the initialized one matched by…",
     "params": [
       "properties"
     ],
@@ -1848,7 +1848,7 @@
     "url": "/core-library/subscriber/#instance-statistics",
     "section": "Core Library",
     "type": "method",
-    "description": "Retrieves statistical data for the initialized subscriber (sends, opens, clicks).",
+    "description": "Retrieves statistical data for the initialized subscriber (sends…",
     "returnType": "object"
   },
   {
@@ -1856,7 +1856,7 @@
     "url": "/core-library/subscriber/#instance-update",
     "section": "Core Library",
     "type": "method",
-    "description": "Updates the previously initialized subscriber with the supplied attributes.",
+    "description": "Updates the previously initialized subscriber with the supplied…",
     "params": [
       "properties"
     ],
@@ -1875,7 +1875,7 @@
     "url": "/core-library/subscriber/#instance-unsubscribe",
     "section": "Core Library",
     "type": "method",
-    "description": "Sets the previously initialized subscriber's status to `\"Unsubscribed\"`.",
+    "description": "Sets the previously initialized subscriber's status to…",
     "returnType": "string"
   },
   {
@@ -1883,7 +1883,7 @@
     "url": "/core-library/subscriber/#instance-attributes-retrieve",
     "section": "Core Library",
     "type": "method",
-    "description": "Returns an array of attributes associated with the previously initialized subscriber.",
+    "description": "Returns an array of attributes associated with the previously…",
     "returnType": "object[]"
   },
   {
@@ -1891,7 +1891,7 @@
     "url": "/core-library/subscriber/#instance-lists-retrieve",
     "section": "Core Library",
     "type": "method",
-    "description": "Returns the lists the previously initialized subscriber is a member of.",
+    "description": "Returns the lists the previously initialized subscriber is a member…",
     "returnType": "object[]"
   },
   {
@@ -1947,7 +1947,7 @@
     "url": "/core-library/deliveryprofile/#init",
     "section": "Core Library",
     "type": "method",
-    "description": "Initializes a DeliveryProfile instance bound to the specified external key.",
+    "description": "Initializes a DeliveryProfile instance bound to the specified…",
     "params": [
       "key"
     ],
@@ -1988,7 +1988,7 @@
     "url": "/core-library/senderprofile/#init",
     "section": "Core Library",
     "type": "method",
-    "description": "Initializes a SenderProfile instance bound to the specified external key.",
+    "description": "Initializes a SenderProfile instance bound to the specified external…",
     "params": [
       "key"
     ],
@@ -2029,7 +2029,7 @@
     "url": "/core-library/sendclassification/#init",
     "section": "Core Library",
     "type": "method",
-    "description": "Initializes a SendClassification instance bound to the specified external key.",
+    "description": "Initializes a SendClassification instance bound to the specified…",
     "params": [
       "key"
     ],
@@ -2051,7 +2051,7 @@
     "url": "/core-library/sendclassification/#retrieve",
     "section": "Core Library",
     "type": "method",
-    "description": "Returns an array of send classifications matching the specified filter.",
+    "description": "Returns an array of send classifications matching the specified…",
     "params": [
       "filter"
     ],
@@ -2081,7 +2081,7 @@
     "url": "/core-library/querydefinition/#init",
     "section": "Core Library",
     "type": "method",
-    "description": "Initializes a QueryDefinition instance bound to the specified external key.",
+    "description": "Initializes a QueryDefinition instance bound to the specified…",
     "params": [
       "key"
     ],
@@ -2194,7 +2194,7 @@
     "url": "/core-library/send/#instance-remove",
     "section": "Core Library",
     "type": "method",
-    "description": "Cancels/removes the previously initialized send: returns \"OK\" and sets Status to \"Canceled\".",
+    "description": "Cancels/removes the previously initialized send: returns \"OK\" and…",
     "returnType": "string",
     "deprecated": true
   },
@@ -2223,7 +2223,7 @@
     "url": "/core-library/senddefinition/#init",
     "section": "Core Library",
     "type": "method",
-    "description": "Initializes a SendDefinition instance bound to the specified external key.",
+    "description": "Initializes a SendDefinition instance bound to the specified external…",
     "params": [
       "key"
     ],
@@ -2266,7 +2266,7 @@
     "url": "/core-library/senddefinition/#addwithfilterdefinition",
     "section": "Core Library",
     "type": "method",
-    "description": "Creates a new send definition that targets the audience defined by a filter definition.",
+    "description": "Creates a new send definition that targets the audience defined by a…",
     "params": [
       "esdParams",
       "sendClassificationKey",
@@ -2315,7 +2315,7 @@
     "url": "/core-library/senddefinition/#instance-send",
     "section": "Core Library",
     "type": "method",
-    "description": "Sends email messages to the lists associated with the previously initialized send definition.",
+    "description": "Sends email messages to the lists associated with the previously…",
     "returnType": "string",
     "deprecated": true
   },
@@ -2336,7 +2336,7 @@
     "url": "/core-library/triggeredsend/#init",
     "section": "Core Library",
     "type": "method",
-    "description": "Initializes a TriggeredSend instance bound to the specified external key.",
+    "description": "Initializes a TriggeredSend instance bound to the specified external…",
     "params": [
       "key"
     ],
@@ -2347,7 +2347,7 @@
     "url": "/core-library/triggeredsend/#add",
     "section": "Core Library",
     "type": "method",
-    "description": "Creates a new triggered send definition from the supplied properties and returns an initialized TriggeredSend instance.",
+    "description": "Creates a new triggered send definition from the supplied properties…",
     "params": [
       "properties"
     ],
@@ -2358,7 +2358,7 @@
     "url": "/core-library/triggeredsend/#retrieve",
     "section": "Core Library",
     "type": "method",
-    "description": "Returns an array of triggered send definitions matching the specified filter.",
+    "description": "Returns an array of triggered send definitions matching the specified…",
     "params": [
       "filter"
     ],
@@ -2396,7 +2396,7 @@
     "url": "/core-library/triggeredsend/#instance-publish",
     "section": "Core Library",
     "type": "method",
-    "description": "Publishes a triggered send definition, making it active and ready to accept sends.",
+    "description": "Publishes a triggered send definition, making it active and ready to…",
     "returnType": "string"
   },
   {
@@ -2404,7 +2404,7 @@
     "url": "/core-library/triggeredsend/#instance-send",
     "section": "Core Library",
     "type": "method",
-    "description": "Sends an email using the previously initialized triggered send definition.",
+    "description": "Sends an email using the previously initialized triggered send…",
     "params": [
       "emailAddress",
       "sendTimeAttributes",
@@ -2417,7 +2417,7 @@
     "url": "/core-library/triggeredsend/#instance-tracking-retrieve",
     "section": "Core Library",
     "type": "method",
-    "description": "Returns tracking data for the previously initialized triggered send definition.",
+    "description": "Returns tracking data for the previously initialized triggered send…",
     "params": [
       "filter"
     ],
@@ -2428,7 +2428,7 @@
     "url": "/core-library/triggeredsend/#instance-tracking-clicks-retrieve",
     "section": "Core Library",
     "type": "method",
-    "description": "Returns click tracking information for the previously initialized triggered send definition.",
+    "description": "Returns click tracking information for the previously initialized…",
     "params": [
       "filter"
     ],
@@ -2439,7 +2439,7 @@
     "url": "/core-library/triggeredsend/#instance-tracking-totalbyinterval-retrieve",
     "section": "Core Library",
     "type": "method",
-    "description": "Returns aggregated tracking data for the previously initialized triggered send.",
+    "description": "Returns aggregated tracking data for the previously initialized…",
     "params": [
       "type",
       "startDate",
@@ -2453,7 +2453,7 @@
     "url": "/core-library/events/#bounce-event",
     "section": "Core Library",
     "type": "method",
-    "description": "Retrieves bounce event data for message sends matching the specified filter.",
+    "description": "Retrieves bounce event data for message sends matching the specified…",
     "params": [
       "filter"
     ],
@@ -2464,7 +2464,7 @@
     "url": "/core-library/events/#click-event",
     "section": "Core Library",
     "type": "method",
-    "description": "Retrieves click tracking event data for message sends matching the specified filter.",
+    "description": "Retrieves click tracking event data for message sends matching the…",
     "params": [
       "filter"
     ],
@@ -2475,7 +2475,7 @@
     "url": "/core-library/events/#forwarded-email-event",
     "section": "Core Library",
     "type": "method",
-    "description": "Retrieves forwarded email event data for message sends matching the specified filter.",
+    "description": "Retrieves forwarded email event data for message sends matching the…",
     "params": [
       "filter"
     ],
@@ -2486,7 +2486,7 @@
     "url": "/core-library/events/#forwarded-email-opt-in-event",
     "section": "Core Library",
     "type": "method",
-    "description": "Retrieves forwarded email opt-in event data for message sends matching the specified filter.",
+    "description": "Retrieves forwarded email opt-in event data for message sends…",
     "params": [
       "filter"
     ],
@@ -2497,7 +2497,7 @@
     "url": "/core-library/events/#not-sent-event",
     "section": "Core Library",
     "type": "method",
-    "description": "Retrieves not-sent event data for message sends matching the specified filter.",
+    "description": "Retrieves not-sent event data for message sends matching the…",
     "params": [
       "filter"
     ],
@@ -2508,7 +2508,7 @@
     "url": "/core-library/events/#open-event",
     "section": "Core Library",
     "type": "method",
-    "description": "Retrieves open tracking event data for message sends matching the specified filter.",
+    "description": "Retrieves open tracking event data for message sends matching the…",
     "params": [
       "filter"
     ],
@@ -2519,7 +2519,7 @@
     "url": "/core-library/events/#sent-event",
     "section": "Core Library",
     "type": "method",
-    "description": "Retrieves sent event data for message sends matching the specified filter.",
+    "description": "Retrieves sent event data for message sends matching the specified…",
     "params": [
       "filter"
     ],
@@ -2530,7 +2530,7 @@
     "url": "/core-library/events/#survey-event",
     "section": "Core Library",
     "type": "method",
-    "description": "Retrieves survey response event data for message sends matching the specified filter.",
+    "description": "Retrieves survey response event data for message sends matching the…",
     "params": [
       "filter"
     ],
@@ -2541,7 +2541,7 @@
     "url": "/core-library/events/#unsub-event",
     "section": "Core Library",
     "type": "method",
-    "description": "Retrieves unsubscribe event data for message sends matching the specified filter.",
+    "description": "Retrieves unsubscribe event data for message sends matching the…",
     "params": [
       "filter"
     ],
@@ -2552,7 +2552,7 @@
     "url": "/core-library/contentareaobj/#init",
     "section": "Core Library",
     "type": "method",
-    "description": "Initializes a ContentAreaObj instance bound to the specified external key.",
+    "description": "Initializes a ContentAreaObj instance bound to the specified external…",
     "params": [
       "key"
     ],
@@ -2564,7 +2564,7 @@
     "url": "/core-library/contentareaobj/#add",
     "section": "Core Library",
     "type": "method",
-    "description": "Creates a new content area from the supplied properties and returns an initialized ContentAreaObj instance bound to it.",
+    "description": "Creates a new content area from the supplied properties and returns…",
     "params": [
       "properties"
     ],
@@ -2737,7 +2737,7 @@
     "url": "/core-library/triggeredsend/",
     "section": "Core Library",
     "type": "object",
-    "description": "Returns aggregated tracking data for a triggered send by type and interval."
+    "description": "Returns aggregated tracking data for a triggered send by type and…"
   },
   {
     "name": "List",
@@ -2809,14 +2809,14 @@
     "url": "/core-library/send/",
     "section": "Core Library",
     "type": "object",
-    "description": "Retrieves aggregated tracking data by interval for the initialized send."
+    "description": "Retrieves aggregated tracking data by interval for the initialized…"
   },
   {
     "name": "Send.Definition",
     "url": "/core-library/senddefinition/",
     "section": "Core Library",
     "type": "object",
-    "description": "Manages reusable Send Definition configurations that define all parameters for a send including content, audience, and delivery settings.",
+    "description": "Manages reusable Send Definition configurations that define all…",
     "deprecated": true
   },
   {
@@ -2959,7 +2959,7 @@
     "url": "/ecmascript-builtins/array-methods/#join",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Joins all array elements into a string, separated by the specified delimiter.",
+    "description": "Joins all array elements into a string, separated by the specified…",
     "params": [
       "separator"
     ],
@@ -2970,7 +2970,7 @@
     "url": "/ecmascript-builtins/array-methods/#push",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Appends one or more elements to the end of an array and returns the new length.",
+    "description": "Appends one or more elements to the end of an array and returns the…",
     "params": [
       "element"
     ],
@@ -2997,7 +2997,7 @@
     "url": "/ecmascript-builtins/array-methods/#unshift",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Inserts one or more elements at the start of an array and returns the new length.",
+    "description": "Inserts one or more elements at the start of an array and returns the…",
     "params": [
       "element"
     ],
@@ -3008,7 +3008,7 @@
     "url": "/ecmascript-builtins/array-methods/#concat",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns a new array formed by merging this array with other arrays or values.",
+    "description": "Returns a new array formed by merging this array with other arrays or…",
     "params": [
       "value"
     ],
@@ -3058,7 +3058,7 @@
     "url": "/ecmascript-builtins/array-methods/#tolocalestring",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns a string representing the array elements, joined by a locale-specific separator.",
+    "description": "Returns a string representing the array elements, joined by a…",
     "returnType": "string"
   },
   {
@@ -3088,7 +3088,7 @@
     "url": "/ecmascript-builtins/string-methods/#indexof",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the index of the first occurrence of a substring, or -1 if not found.",
+    "description": "Returns the index of the first occurrence of a substring, or -1 if…",
     "params": [
       "searchValue",
       "fromIndex"
@@ -3100,7 +3100,7 @@
     "url": "/ecmascript-builtins/string-methods/#lastindexof",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the index of the last occurrence of a substring, or -1 if not found.",
+    "description": "Returns the index of the last occurrence of a substring, or -1 if not…",
     "params": [
       "searchValue",
       "fromIndex"
@@ -3112,7 +3112,7 @@
     "url": "/ecmascript-builtins/string-methods/#match",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Matches a string against a regular expression and returns the matches array.",
+    "description": "Matches a string against a regular expression and returns the matches…",
     "params": [
       "regexp"
     ],
@@ -3123,7 +3123,7 @@
     "url": "/ecmascript-builtins/string-methods/#replace",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns a new string with matches replaced by a replacement string or function.",
+    "description": "Returns a new string with matches replaced by a replacement string or…",
     "params": [
       "searchValue",
       "replaceValue"
@@ -3214,7 +3214,7 @@
     "url": "/ecmascript-builtins/string-methods/#concat",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns a new string formed by concatenating this string with one or more additional strings.",
+    "description": "Returns a new string formed by concatenating this string with one or…",
     "params": [
       "string"
     ],
@@ -3225,7 +3225,7 @@
     "url": "/ecmascript-builtins/string-methods/#localecompare",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Compares this string with another and returns a negative number if it sorts before, a positive number if it sorts after, or 0 if they are equivalent.",
+    "description": "Compares this string with another and returns a negative number if it…",
     "params": [
       "compareString"
     ],
@@ -3407,7 +3407,7 @@
     "url": "/ecmascript-builtins/math/#atan2",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the angle (in radians) from the positive x-axis to the point (x, y).",
+    "description": "Returns the angle (in radians) from the positive x-axis to the point…",
     "params": [
       "y",
       "x"
@@ -3441,7 +3441,7 @@
     "url": "/ecmascript-builtins/math/#pi",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "The ratio of a circle's circumference to its diameter (~3.",
+    "description": "The ratio of a circle's circumference to its diameter (~3.14159).",
     "returnType": "number"
   },
   {
@@ -3449,7 +3449,7 @@
     "url": "/ecmascript-builtins/math/#e",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Euler's number, the base of the natural logarithm (~2.",
+    "description": "Euler's number, the base of the natural logarithm (~2.71828).",
     "returnType": "number"
   },
   {
@@ -3457,7 +3457,7 @@
     "url": "/ecmascript-builtins/math/#ln2",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "The natural logarithm of 2 (~0.",
+    "description": "The natural logarithm of 2 (~0.69315).",
     "returnType": "number"
   },
   {
@@ -3465,7 +3465,7 @@
     "url": "/ecmascript-builtins/math/#ln10",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "The natural logarithm of 10 (~2.",
+    "description": "The natural logarithm of 10 (~2.30259).",
     "returnType": "number"
   },
   {
@@ -3473,7 +3473,7 @@
     "url": "/ecmascript-builtins/math/#log2e",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "The base-2 logarithm of e (~1.",
+    "description": "The base-2 logarithm of e (~1.44270).",
     "returnType": "number"
   },
   {
@@ -3481,7 +3481,7 @@
     "url": "/ecmascript-builtins/math/#sqrt2",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "The square root of 2 (~1.",
+    "description": "The square root of 2 (~1.41421).",
     "returnType": "number"
   },
   {
@@ -3489,7 +3489,7 @@
     "url": "/ecmascript-builtins/math/#sqrt1_2",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "The square root of 1/2 (~0.",
+    "description": "The square root of 1/2 (~0.70711); equivalent to 1/Math.SQRT2.",
     "returnType": "number"
   },
   {
@@ -3497,7 +3497,7 @@
     "url": "/ecmascript-builtins/number-methods/#tofixed",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns a string representing the number in fixed-point notation with the given number of decimal places.",
+    "description": "Returns a string representing the number in fixed-point notation with…",
     "params": [
       "fractionDigits"
     ],
@@ -3569,7 +3569,7 @@
     "url": "/ecmascript-builtins/number-methods/#constants-es3",
     "section": "ECMAScript Builtins",
     "type": "property",
-    "description": "Standard ES3 exposes the smallest positive representable Number (~5e-324).",
+    "description": "Standard ES3 exposes the smallest positive representable Number…",
     "returnType": "number"
   },
   {
@@ -3601,7 +3601,7 @@
     "url": "/ecmascript-builtins/object-methods/#hasownproperty",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns true if the object has the specified property as its own (not inherited) property.",
+    "description": "Returns true if the object has the specified property as its own (not…",
     "params": [
       "v"
     ],
@@ -3651,7 +3651,7 @@
     "url": "/ecmascript-builtins/number-methods/#isnan",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns true if the value is NaN (Not-a-Number) after applying ToNumber conversion.",
+    "description": "Returns true if the value is NaN (Not-a-Number) after applying…",
     "params": [
       "value"
     ],
@@ -3662,7 +3662,7 @@
     "url": "/ecmascript-builtins/number-methods/#isfinite",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns true if the value is a finite number (not NaN, +Infinity, or -Infinity) after applying ToNumber conversion.",
+    "description": "Returns true if the value is a finite number (not NaN, +Infinity, or…",
     "params": [
       "value"
     ],
@@ -3673,7 +3673,7 @@
     "url": "/ecmascript-builtins/global-functions/#eval",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Parses a string of JavaScript source and executes it as a script, returning the completion value of the last evaluated expression (or undefined when there is nothing to complete).",
+    "description": "Parses a string of JavaScript source and executes it as a script…",
     "params": [
       "script"
     ],
@@ -3706,7 +3706,7 @@
     "url": "/ecmascript-builtins/global-functions/#decodeuri",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Decodes a URI previously encoded by encodeURI, converting percent-escapes back to their characters.",
+    "description": "Decodes a URI previously encoded by encodeURI, converting…",
     "params": [
       "uri"
     ],
@@ -3717,7 +3717,7 @@
     "url": "/ecmascript-builtins/global-functions/#decodeuricomponent",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Decodes a URI component previously encoded by encodeURIComponent, converting all percent-escapes back to characters.",
+    "description": "Decodes a URI component previously encoded by encodeURIComponent…",
     "params": [
       "str"
     ],
@@ -3762,7 +3762,7 @@
     "url": "/ecmascript-builtins/regular-expressions/#source",
     "section": "ECMAScript Builtins",
     "type": "property",
-    "description": "The text of the pattern, excluding the enclosing slashes and any flags.",
+    "description": "The text of the pattern, excluding the enclosing slashes and any…",
     "returnType": "string"
   },
   {
@@ -3770,7 +3770,7 @@
     "url": "/ecmascript-builtins/regular-expressions/#global",
     "section": "ECMAScript Builtins",
     "type": "property",
-    "description": "True if the g (global) flag was specified when creating the regular expression.",
+    "description": "True if the g (global) flag was specified when creating the regular…",
     "returnType": "boolean"
   },
   {
@@ -3794,7 +3794,7 @@
     "url": "/ecmascript-builtins/date-methods/#getmonth",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the month (0 = January … 11 = December) of the date according to local time.",
+    "description": "Returns the month (0 = January … 11 = December) of the date according…",
     "returnType": "number"
   },
   {
@@ -3802,7 +3802,7 @@
     "url": "/ecmascript-builtins/date-methods/#getdate",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the day of the month (1–31) of the date according to local time.",
+    "description": "Returns the day of the month (1–31) of the date according to local…",
     "returnType": "number"
   },
   {
@@ -3818,7 +3818,7 @@
     "url": "/ecmascript-builtins/date-methods/#gettime",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the numeric timestamp (milliseconds since 1970-01-01T00:00:00 UTC) for the date.",
+    "description": "Returns the numeric timestamp (milliseconds since 1970-01-01T00:00:00…",
     "returnType": "number"
   },
   {
@@ -3826,7 +3826,7 @@
     "url": "/ecmascript-builtins/date-methods/#gettimezoneoffset",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the difference, in minutes, between this date evaluated in UTC and in the host local time zone.",
+    "description": "Returns the difference, in minutes, between this date evaluated in…",
     "returnType": "number"
   },
   {
@@ -3850,7 +3850,7 @@
     "url": "/ecmascript-builtins/date-methods/#getday",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the day of the week (0 = Sunday … 6 = Saturday) according to local time.",
+    "description": "Returns the day of the week (0 = Sunday … 6 = Saturday) according to…",
     "returnType": "number"
   },
   {
@@ -3890,7 +3890,7 @@
     "url": "/ecmascript-builtins/date-methods/#valueof",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the primitive value of the date as the number of milliseconds since the Unix epoch.",
+    "description": "Returns the primitive value of the date as the number of milliseconds…",
     "returnType": "number"
   },
   {
@@ -3898,7 +3898,7 @@
     "url": "/ecmascript-builtins/date-methods/#getutcfullyear",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the four-digit year of the date according to universal time (UTC).",
+    "description": "Returns the four-digit year of the date according to universal time…",
     "returnType": "number"
   },
   {
@@ -3906,7 +3906,7 @@
     "url": "/ecmascript-builtins/date-methods/#getutcmonth",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the month (0 = January … 11 = December) of the date according to universal time (UTC).",
+    "description": "Returns the month (0 = January … 11 = December) of the date according…",
     "returnType": "number"
   },
   {
@@ -3914,7 +3914,7 @@
     "url": "/ecmascript-builtins/date-methods/#getutcdate",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the day of the month (1–31) of the date according to universal time (UTC).",
+    "description": "Returns the day of the month (1–31) of the date according to…",
     "returnType": "number"
   },
   {
@@ -3922,7 +3922,7 @@
     "url": "/ecmascript-builtins/date-methods/#getutcday",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the day of the week (0 = Sunday … 6 = Saturday) according to universal time (UTC).",
+    "description": "Returns the day of the week (0 = Sunday … 6 = Saturday) according to…",
     "returnType": "number"
   },
   {
@@ -3938,7 +3938,7 @@
     "url": "/ecmascript-builtins/date-methods/#getutcminutes",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the minutes (0–59) of the date according to universal time (UTC).",
+    "description": "Returns the minutes (0–59) of the date according to universal time…",
     "returnType": "number"
   },
   {
@@ -3946,7 +3946,7 @@
     "url": "/ecmascript-builtins/date-methods/#getutcseconds",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the seconds (0–59) of the date according to universal time (UTC).",
+    "description": "Returns the seconds (0–59) of the date according to universal time…",
     "returnType": "number"
   },
   {
@@ -3954,7 +3954,7 @@
     "url": "/ecmascript-builtins/date-methods/#getutcmilliseconds",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the milliseconds (0–999) of the date according to universal time (UTC).",
+    "description": "Returns the milliseconds (0–999) of the date according to universal…",
     "returnType": "number"
   },
   {
@@ -3982,7 +3982,7 @@
     "url": "/ecmascript-builtins/date-methods/#utc",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the number of milliseconds since the Unix epoch for the given UTC date components.",
+    "description": "Returns the number of milliseconds since the Unix epoch for the given…",
     "params": [
       "year",
       "month",
@@ -3999,7 +3999,7 @@
     "url": "/ecmascript-builtins/date-methods/#parse",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Parses a date string and returns the numeric timestamp (milliseconds since the Unix epoch).",
+    "description": "Parses a date string and returns the numeric timestamp (milliseconds…",
     "params": [
       "dateString"
     ],
@@ -4018,7 +4018,7 @@
     "url": "/ecmascript-builtins/object-methods/#defineproperty",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Defines a new property on an object, or modifies an existing one, with the given descriptor.",
+    "description": "Defines a new property on an object, or modifies an existing one…",
     "params": [
       "obj",
       "prop",
@@ -4031,7 +4031,7 @@
     "url": "/ecmascript-builtins/object-methods/#getprototypeof",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the prototype (internal [[Prototype]]) of the specified object.",
+    "description": "Returns the prototype (internal [[Prototype]]) of the specified…",
     "params": [
       "obj"
     ],
@@ -4042,7 +4042,7 @@
     "url": "/ecmascript-builtins/function-methods/#call",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Calls the function with a given `this` value and arguments provided individually.",
+    "description": "Calls the function with a given `this` value and arguments provided…",
     "params": [
       "thisArg",
       "arg"
@@ -4054,7 +4054,7 @@
     "url": "/ecmascript-builtins/function-methods/#apply",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Calls the function with a given `this` value and arguments provided as an array.",
+    "description": "Calls the function with a given `this` value and arguments provided…",
     "params": [
       "thisArg",
       "argsArray"
@@ -4074,7 +4074,7 @@
     "url": "/ecmascript-builtins/boolean/#boolean-coercion",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Called as a plain function, Boolean(value) returns a primitive boolean reflecting the value truthiness.",
+    "description": "Called as a plain function, Boolean(value) returns a primitive…",
     "params": [
       "value"
     ],
@@ -4096,7 +4096,7 @@
     "url": "/ecmascript-builtins/boolean/#boolean-prototype",
     "section": "ECMAScript Builtins",
     "type": "property",
-    "description": "Boolean.",
+    "description": "Boolean.prototype exists and exposes toString, valueOf and…",
     "returnType": "object"
   },
   {
@@ -4104,7 +4104,7 @@
     "url": "/ecmascript-builtins/boolean/#boolean-prototype",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Defined on Boolean.",
+    "description": "Defined on Boolean.prototype, but it does NOT unwrap a boxed Boolean…",
     "returnType": "boolean"
   },
   {
@@ -4205,182 +4205,182 @@
     "url": "/ecmascript-builtins/array-methods/#copywithin",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Array."
+    "description": "Not available in SFMC SSJS."
   },
   {
     "name": "Array.entries",
     "url": "/ecmascript-builtins/array-methods/#entries",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Array."
+    "description": "Not available in SFMC SSJS."
   },
   {
     "name": "Array.fill",
     "url": "/ecmascript-builtins/array-methods/#fill",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Array."
+    "description": "Not available in SFMC SSJS."
   },
   {
     "name": "Array.filter",
     "url": "/ecmascript-builtins/array-methods/#filter",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Array."
+    "description": "Not available in SFMC SSJS."
   },
   {
     "name": "Array.find",
     "url": "/ecmascript-builtins/array-methods/#find",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Array."
+    "description": "Not available in SFMC SSJS."
   },
   {
     "name": "Array.findIndex",
     "url": "/ecmascript-builtins/array-methods/#findindex",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Array."
+    "description": "Not available in SFMC SSJS."
   },
   {
     "name": "Array.forEach",
     "url": "/ecmascript-builtins/array-methods/#foreach",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Array."
+    "description": "Not available in SFMC SSJS."
   },
   {
     "name": "Array.includes",
     "url": "/ecmascript-builtins/array-methods/#includes",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Array."
+    "description": "Not available in SFMC SSJS."
   },
   {
     "name": "Array.indexOf",
     "url": "/ecmascript-builtins/array-methods/#indexof",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Array."
+    "description": "Not available in SFMC SSJS."
   },
   {
     "name": "Array.lastIndexOf",
     "url": "/ecmascript-builtins/array-methods/#lastindexof",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Array."
+    "description": "Array.prototype.lastIndexOf exists in SFMC SSJS but always returns -1."
   },
   {
     "name": "Array.map",
     "url": "/ecmascript-builtins/array-methods/#map",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Array."
+    "description": "Not available in SFMC SSJS."
   },
   {
     "name": "Array.reduce",
     "url": "/ecmascript-builtins/array-methods/#reduce",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Array."
+    "description": "Not available in SFMC SSJS."
   },
   {
     "name": "Array.reduceRight",
     "url": "/ecmascript-builtins/array-methods/#reduceright",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Array."
+    "description": "Not available in SFMC SSJS."
   },
   {
     "name": "Array.some",
     "url": "/ecmascript-builtins/array-methods/#some",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Array."
+    "description": "Not available in SFMC SSJS."
   },
   {
     "name": "Array.every",
     "url": "/ecmascript-builtins/array-methods/#every",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Array."
+    "description": "Not available in SFMC SSJS."
   },
   {
     "name": "Array.splice",
     "url": "/ecmascript-builtins/array-methods/#splice",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Array."
+    "description": "Array.prototype.splice(start, deleteCount, item1, …, itemN) works in…"
   },
   {
     "name": "String.trim",
     "url": "/ecmascript-builtins/string-methods/#trim",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "String."
+    "description": "Not available in SFMC SSJS."
   },
   {
     "name": "String.startsWith",
     "url": "/ecmascript-builtins/string-methods/#startswith",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "String."
+    "description": "Not available in SFMC SSJS."
   },
   {
     "name": "String.endsWith",
     "url": "/ecmascript-builtins/string-methods/#endswith",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "String."
+    "description": "Not available in SFMC SSJS."
   },
   {
     "name": "Function.bind",
     "url": "/ecmascript-builtins/function-methods/#bind",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Function."
+    "description": "Not available in SFMC SSJS, and Function.prototype is sealed so it…"
   },
   {
     "name": "Date.toISOString",
     "url": "/ecmascript-builtins/date-methods/#toisostring",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Date."
+    "description": "Not available in SFMC SSJS (typeof d.toISOString is undefined…"
   },
   {
     "name": "Array.isArray",
     "url": "/ecmascript-builtins/array-methods/#isarray",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Array."
+    "description": "Not available in SFMC SSJS."
   },
   {
     "name": "Array.of",
     "url": "/ecmascript-builtins/array-methods/#of",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Array."
+    "description": "Not available in SFMC SSJS."
   },
   {
     "name": "String.substr",
     "url": "/ecmascript-builtins/string-methods/#substr",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "String."
+    "description": "Not available in SFMC SSJS (calling it throws)."
   },
   {
     "name": "Global.escape",
     "url": "/ecmascript-builtins/global-functions/#escape",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "The legacy escape() function is undefined in SFMC (calling it throws \"Object expected\")."
+    "description": "The legacy escape() function is undefined in SFMC (calling it throws…"
   },
   {
     "name": "Global.unescape",
     "url": "/ecmascript-builtins/global-functions/#unescape",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "The legacy unescape() function is undefined in SFMC (calling it throws \"Object expected\")."
+    "description": "The legacy unescape() function is undefined in SFMC (calling it…"
   },
   {
     "name": "GlobalValues.globalThis",
@@ -4401,7 +4401,7 @@
     "url": "/ecmascript-builtins/bigint/",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "BigInt is undefined in SFMC (ES2020) and the 10n literal is a syntax error."
+    "description": "BigInt is undefined in SFMC (ES2020) and the 10n literal is a syntax…"
   },
   {
     "name": "Global.Map",
@@ -4422,21 +4422,21 @@
     "url": "/ecmascript-builtins/keyed-collections/#weakmap",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "WeakMap is undefined in SFMC (ES6); new WeakMap() throws \"Unknown type: WeakMap\"."
+    "description": "WeakMap is undefined in SFMC (ES6); new WeakMap() throws \"Unknown…"
   },
   {
     "name": "Global.WeakSet",
     "url": "/ecmascript-builtins/keyed-collections/#weakset",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "WeakSet is undefined in SFMC (ES6); new WeakSet() throws \"Unknown type: WeakSet\"."
+    "description": "WeakSet is undefined in SFMC (ES6); new WeakSet() throws \"Unknown…"
   },
   {
     "name": "Global.Promise",
     "url": "/ecmascript-builtins/promises-iteration/#promise",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Promise is undefined in SFMC (ES6); new Promise() throws \"Unknown type: Promise\"."
+    "description": "Promise is undefined in SFMC (ES6); new Promise() throws \"Unknown…"
   },
   {
     "name": "Global.Iterator",
@@ -4450,7 +4450,7 @@
     "url": "/ecmascript-builtins/promises-iteration/#generator",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Generator is undefined in SFMC (ES6); function* / yield syntax is a parse error."
+    "description": "Generator is undefined in SFMC (ES6); function* / yield syntax is a…"
   },
   {
     "name": "Global.GeneratorFunction",
@@ -4464,35 +4464,35 @@
     "url": "/ecmascript-builtins/promises-iteration/#async-variants",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "AsyncFunction is undefined in SFMC (ES2017); async/await is unsupported."
+    "description": "AsyncFunction is undefined in SFMC (ES2017); async/await is…"
   },
   {
     "name": "Global.AsyncGenerator",
     "url": "/ecmascript-builtins/promises-iteration/#async-variants",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "AsyncGenerator is undefined in SFMC (ES2018); async iteration is unsupported."
+    "description": "AsyncGenerator is undefined in SFMC (ES2018); async iteration is…"
   },
   {
     "name": "Global.AsyncGeneratorFunction",
     "url": "/ecmascript-builtins/promises-iteration/#async-variants",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "AsyncGeneratorFunction is undefined in SFMC (ES2018); async generator functions are unsupported."
+    "description": "AsyncGeneratorFunction is undefined in SFMC (ES2018); async generator…"
   },
   {
     "name": "Global.AsyncIterator",
     "url": "/ecmascript-builtins/promises-iteration/#async-variants",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "AsyncIterator is undefined in SFMC (ES2018); async iteration is unsupported."
+    "description": "AsyncIterator is undefined in SFMC (ES2018); async iteration is…"
   },
   {
     "name": "Global.Proxy",
     "url": "/ecmascript-builtins/reflection/#proxy",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Proxy is undefined in SFMC (ES6); new Proxy() throws \"Unknown type: Proxy\"."
+    "description": "Proxy is undefined in SFMC (ES6); new Proxy() throws \"Unknown type…"
   },
   {
     "name": "Global.Reflect",
@@ -4506,21 +4506,21 @@
     "url": "/ecmascript-builtins/error-types/#aggregateerror",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "AggregateError is undefined in SFMC (ES2021); new AggregateError() throws \"Unknown type: AggregateError\"."
+    "description": "AggregateError is undefined in SFMC (ES2021); new AggregateError()…"
   },
   {
     "name": "Global.SuppressedError",
     "url": "/ecmascript-builtins/error-types/#suppressederror",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "SuppressedError is undefined in SFMC (ES2026); it does not exist in this engine."
+    "description": "SuppressedError is undefined in SFMC (ES2026); it does not exist in…"
   },
   {
     "name": "Global.InternalError",
     "url": "/ecmascript-builtins/error-types/#internalerror",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "InternalError is a non-standard Mozilla-only error and is undefined in SFMC."
+    "description": "InternalError is a non-standard Mozilla-only error and is undefined…"
   },
   {
     "name": "Global.ArrayBuffer",
@@ -4653,77 +4653,77 @@
     "url": "/ecmascript-builtins/internationalization/#intl",
     "section": "ECMAScript Builtins",
     "type": "property",
-    "description": "Intl is undefined in SFMC (ES2015); none of its formatters (NumberFormat, DateTimeFormat, Collator, …) exist."
+    "description": "Intl is undefined in SFMC (ES2015); none of its formatters…"
   },
   {
     "name": "GlobalValues.Infinity",
     "url": "/ecmascript-builtins/global-values/#infinity",
     "section": "ECMAScript Builtins",
     "type": "property",
-    "description": "The Infinity global is broken in SFMC: its sign is inverted in comparisons and string coercion (Infinity > 0 is false, String(Infinity) is \"-infinity\")."
+    "description": "The Infinity global is broken in SFMC: its sign is inverted in…"
   },
   {
     "name": "GlobalValues.NaN",
     "url": "/ecmascript-builtins/global-values/#nan",
     "section": "ECMAScript Builtins",
     "type": "property",
-    "description": "The NaN global compares correctly (NaN === NaN is false; isNaN(NaN) is true) but String(NaN) is the lowercase \"nan\" instead of \"NaN\"."
+    "description": "The NaN global compares correctly (NaN === NaN is false; isNaN(NaN)…"
   },
   {
     "name": "Math.LOG10E",
     "url": "/ecmascript-builtins/math/#log10e",
     "section": "ECMAScript Builtins",
     "type": "property",
-    "description": "Math."
+    "description": "Undefined in SFMC."
   },
   {
     "name": "RegExp.ignoreCase",
     "url": "/ecmascript-builtins/regular-expressions/#ignorecase",
     "section": "ECMAScript Builtins",
     "type": "property",
-    "description": "RegExp."
+    "description": "Undefined in SFMC."
   },
   {
     "name": "RegExp.multiline",
     "url": "/ecmascript-builtins/regular-expressions/#multiline",
     "section": "ECMAScript Builtins",
     "type": "property",
-    "description": "RegExp."
+    "description": "Undefined in SFMC."
   },
   {
     "name": "RegExp.instanceof",
     "url": "/ecmascript-builtins/regular-expressions/#instanceof",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "The instanceof operator against RegExp is broken in SFMC: `re instanceof RegExp` always returns false, even for objects created with `new RegExp(."
+    "description": "The instanceof operator against RegExp is broken in SFMC: `re…"
   },
   {
     "name": "Function.length",
     "url": "/ecmascript-builtins/function-methods/#length",
     "section": "ECMAScript Builtins",
     "type": "property",
-    "description": "fn."
+    "description": "fn.length throws \"Object reference not set to an instance of an…"
   },
   {
     "name": "Function.name",
     "url": "/ecmascript-builtins/function-methods/#name",
     "section": "ECMAScript Builtins",
     "type": "property",
-    "description": "fn."
+    "description": "Undefined in SFMC (it does not return the function name)."
   },
   {
     "name": "Function.caller",
     "url": "/ecmascript-builtins/function-methods/#caller",
     "section": "ECMAScript Builtins",
     "type": "property",
-    "description": "fn."
+    "description": "Undefined in SFMC (the deprecated caller property is not exposed)."
   },
   {
     "name": "Date.toJSON",
     "url": "/ecmascript-builtins/date-methods/#tojson",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Date."
+    "description": "Unavailable in SFMC (it depends on the absent toISOString)."
   },
   {
     "name": "JSON.parse",
@@ -4744,399 +4744,399 @@
     "url": "/ecmascript-builtins/object-methods/#isprototypeof",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Object."
+    "description": "Object.prototype.isPrototypeOf exists but HANGS the Jint engine when…"
   },
   {
     "name": "Object.propertyIsEnumerable",
     "url": "/ecmascript-builtins/object-methods/#propertyisenumerable",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Object."
+    "description": "Object.prototype.propertyIsEnumerable exists but is broken: it…"
   },
   {
     "name": "Object.keys",
     "url": "/ecmascript-builtins/object-methods/#keys",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Object."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Object.values",
     "url": "/ecmascript-builtins/object-methods/#values",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Object."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Object.entries",
     "url": "/ecmascript-builtins/object-methods/#entries",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Object."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Object.assign",
     "url": "/ecmascript-builtins/object-methods/#assign",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Object."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Object.create",
     "url": "/ecmascript-builtins/object-methods/#create",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Object."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Object.freeze",
     "url": "/ecmascript-builtins/object-methods/#freeze",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Object."
+    "description": "Unavailable in SFMC and immutability cannot be enforced; treat the…"
   },
   {
     "name": "Object.getOwnPropertyNames",
     "url": "/ecmascript-builtins/object-methods/#getownpropertynames",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Object."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Object.defineProperties",
     "url": "/ecmascript-builtins/object-methods/#defineproperties",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Object."
+    "description": "Unavailable in SFMC (only the singular Object.defineProperty works)."
   },
   {
     "name": "Object.getOwnPropertyDescriptor",
     "url": "/ecmascript-builtins/object-methods/#getownpropertydescriptor",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Object."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Object.isFrozen",
     "url": "/ecmascript-builtins/object-methods/#freeze",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Object."
+    "description": "Unavailable in SFMC (freeze itself is missing)."
   },
   {
     "name": "Object.seal",
     "url": "/ecmascript-builtins/object-methods/#extensibility",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Object."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Object.isSealed",
     "url": "/ecmascript-builtins/object-methods/#extensibility",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Object."
+    "description": "Unavailable in SFMC (seal itself is missing)."
   },
   {
     "name": "Object.preventExtensions",
     "url": "/ecmascript-builtins/object-methods/#extensibility",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Object."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Object.isExtensible",
     "url": "/ecmascript-builtins/object-methods/#extensibility",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Object."
+    "description": "Unavailable in SFMC (preventExtensions itself is missing)."
   },
   {
     "name": "String.trimStart",
     "url": "/ecmascript-builtins/string-methods/#trimstart",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "String."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "String.trimEnd",
     "url": "/ecmascript-builtins/string-methods/#trimend",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "String."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "String.padStart",
     "url": "/ecmascript-builtins/string-methods/#padstart",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "String."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "String.padEnd",
     "url": "/ecmascript-builtins/string-methods/#padend",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "String."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "String.repeat",
     "url": "/ecmascript-builtins/string-methods/#repeat",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "String."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "String.includes",
     "url": "/ecmascript-builtins/string-methods/#includes",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "String."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "String.codePointAt",
     "url": "/ecmascript-builtins/string-methods/#codepointat",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "String."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Array.flat",
     "url": "/ecmascript-builtins/array-methods/#flat",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Array."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Array.flatMap",
     "url": "/ecmascript-builtins/array-methods/#flatmap",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Array."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Array.findLast",
     "url": "/ecmascript-builtins/array-methods/#findlast",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Array."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Array.at",
     "url": "/ecmascript-builtins/array-methods/#at",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Array."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Array.keys",
     "url": "/ecmascript-builtins/array-methods/#keys",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Array."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Array.values",
     "url": "/ecmascript-builtins/array-methods/#values",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Array."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Array.from",
     "url": "/ecmascript-builtins/array-methods/#from",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Array."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Number.isInteger",
     "url": "/ecmascript-builtins/number-methods/#isinteger",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Number."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Number.isNaN",
     "url": "/ecmascript-builtins/number-methods/#isnan",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Number."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Number.isFinite",
     "url": "/ecmascript-builtins/number-methods/#isfinite",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Number."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Number.parseInt",
     "url": "/ecmascript-builtins/number-methods/#parseint",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Number."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Number.MAX_SAFE_INTEGER",
     "url": "/ecmascript-builtins/number-methods/#constants-es6",
     "section": "ECMAScript Builtins",
     "type": "property",
-    "description": "Number."
+    "description": "Undefined in SFMC."
   },
   {
     "name": "Number.isSafeInteger",
     "url": "/ecmascript-builtins/number-methods/#issafeinteger",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Number."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Number.parseFloat",
     "url": "/ecmascript-builtins/number-methods/#parsefloat",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Number."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Number.MIN_SAFE_INTEGER",
     "url": "/ecmascript-builtins/number-methods/#constants-es6",
     "section": "ECMAScript Builtins",
     "type": "property",
-    "description": "Number."
+    "description": "Undefined in SFMC."
   },
   {
     "name": "Number.EPSILON",
     "url": "/ecmascript-builtins/number-methods/#constants-es6",
     "section": "ECMAScript Builtins",
     "type": "property",
-    "description": "Number."
+    "description": "Undefined in SFMC."
   },
   {
     "name": "Math.trunc",
     "url": "/ecmascript-builtins/math/#trunc",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Math."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Math.sign",
     "url": "/ecmascript-builtins/math/#sign",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Math."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Math.cbrt",
     "url": "/ecmascript-builtins/math/#cbrt",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Math."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Math.log2",
     "url": "/ecmascript-builtins/math/#log2",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Math."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Math.log10",
     "url": "/ecmascript-builtins/math/#log10",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Math."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Math.hypot",
     "url": "/ecmascript-builtins/math/#hypot",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Math."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Math.expm1",
     "url": "/ecmascript-builtins/math/#expm1",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Math."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Math.log1p",
     "url": "/ecmascript-builtins/math/#log1p",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Math."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Math.sinh",
     "url": "/ecmascript-builtins/math/#sinh",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Math."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Math.cosh",
     "url": "/ecmascript-builtins/math/#cosh",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Math."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Math.tanh",
     "url": "/ecmascript-builtins/math/#tanh",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Math."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Math.asinh",
     "url": "/ecmascript-builtins/math/#asinh",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Math."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Math.acosh",
     "url": "/ecmascript-builtins/math/#acosh",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Math."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Math.atanh",
     "url": "/ecmascript-builtins/math/#atanh",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Math."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Math.clz32",
     "url": "/ecmascript-builtins/math/#clz32",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Math."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Math.fround",
     "url": "/ecmascript-builtins/math/#fround",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Math."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "Math.imul",
     "url": "/ecmascript-builtins/math/#imul",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Math."
+    "description": "Unavailable in SFMC."
   },
   {
     "name": "String",
     "url": "/ecmascript-builtins/string-methods/#string-constructor",
     "section": "ECMAScript Builtins",
     "type": "function",
-    "description": "Native JavaScript function that converts any value to its string representation.",
+    "description": "Native JavaScript function that converts any value to its string…",
     "params": [
       "value"
     ],
@@ -5202,7 +5202,7 @@
     "url": "/core-library/now/",
     "section": "Core Library",
     "type": "function",
-    "description": "Returns the current server date/time as a Date object (in the account timezone, Central by default), or the timestamp of the triggering send when called with `true`.",
+    "description": "Returns the current server date/time as a Date object (in the account…",
     "params": [
       "useContextTime"
     ],
@@ -5225,7 +5225,7 @@
     "url": "/core-library/guid/",
     "section": "Core Library",
     "type": "function",
-    "description": "Generates a new globally unique identifier as a lowercase canonical UUID v4 string (36 characters).",
+    "description": "Generates a new globally unique identifier as a lowercase canonical…",
     "returnType": "string"
   },
   {
@@ -5244,7 +5244,7 @@
     "url": "/core-library/isphonenumber/",
     "section": "Core Library",
     "type": "function",
-    "description": "Checks whether a value is a valid North American Numbering Plan (NANP) phone number.",
+    "description": "Checks whether a value is a valid North American Numbering Plan…",
     "params": [
       "value"
     ],
@@ -5289,7 +5289,7 @@
     "url": "/core-library/request/",
     "section": "Core Library",
     "type": "object",
-    "description": "Core Library \"Request Object Utility Functions\" object for reading incoming request values."
+    "description": "Core Library \"Request Object Utility Functions\" object for reading…"
   },
   {
     "name": "Request.URL",
@@ -5312,7 +5312,7 @@
     "url": "/core-library/request/#members",
     "section": "Core Library",
     "type": "method",
-    "description": "Returns the HTTP method (GET, POST, etc.",
+    "description": "Returns the HTTP method (GET, POST, etc.) of the current request.",
     "returnType": "string"
   },
   {
@@ -5344,7 +5344,7 @@
     "url": "/core-library/request/#members",
     "section": "Core Library",
     "type": "method",
-    "description": "Returns the value of a named URL query string parameter for the current page request, or null when the parameter is absent.",
+    "description": "Returns the value of a named URL query string parameter for the…",
     "params": [
       "name"
     ],
@@ -5355,7 +5355,7 @@
     "url": "/core-library/request/#members",
     "section": "Core Library",
     "type": "method",
-    "description": "Returns the value of a named form field submitted with the current request (POST form data), or null when the field is absent.",
+    "description": "Returns the value of a named form field submitted with the current…",
     "params": [
       "name"
     ],
