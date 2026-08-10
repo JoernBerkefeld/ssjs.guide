@@ -27,6 +27,24 @@ git add site-index.json || {
 }
 echo "[PRE-COMMIT] ✅ site-index.json regenerated and staged."
 
+# ── Regenerate _data/ssjs_functions.yml ───────────────────────────────────────
+# The /function-index/ table is data-driven: its rows come from ssjs-data via the
+# same catalog traversal that builds site-index.json. Same staleness risk, same
+# treatment — regenerate on every commit and re-stage.
+echo "[PRE-COMMIT] 🔄 Regenerating _data/ssjs_functions.yml..."
+node scripts/regenerate-function-index.mjs || {
+  echo "[PRE-COMMIT] ❌ The function index data could not be generated, so the commit was"
+  echo "[PRE-COMMIT]    blocked to stop a stale _data/ssjs_functions.yml from being committed."
+  echo "[PRE-COMMIT]    See the error above."
+  exit 1
+}
+
+git add _data/ssjs_functions.yml || {
+  echo "[PRE-COMMIT] ❌ Could not stage the regenerated _data/ssjs_functions.yml. See above."
+  exit 1
+}
+echo "[PRE-COMMIT] ✅ _data/ssjs_functions.yml regenerated and staged."
+
 # ── Strip UTF-8 BOMs (must stay last) ─────────────────────────────────────────
 # Runs after everything else that writes files, so a BOM re-introduced by the
 # generator still gets caught. A BOM before a page's opening `---` silently breaks

@@ -31,11 +31,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Manages Marketing Cloud account settings."
-- name: "Account.Init(key)"
+- name: "Account.Init()"
   sortKey: "account.init"
   section: "Core Library"
   returnType: "AccountInstance"
@@ -44,11 +45,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Initializes an Account instance bound to the specified external key."
-- name: "Account.Retrieve(filter)"
+- name: "Account.Retrieve()"
   sortKey: "account.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -57,6 +59,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -70,11 +73,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Retrieves tracking data associated with account-level sends."
-- name: "Account.Tracking.Retrieve(filter)"
+- name: "Account.Tracking.Retrieve()"
   sortKey: "account.tracking.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -83,11 +87,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Returns an array of tracking data related to the accounts specified…"
-- name: "<AccountInstance>.Update(properties)"
+- name: "<AccountInstance>.Update()"
   sortKey: "accountinstance.update"
   section: "Core Library"
   returnType: "string"
@@ -96,6 +101,7 @@
   status: "blocked"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -109,11 +115,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Manages user accounts within the Marketing Cloud business unit."
-- name: "AccountUser.Add(properties)"
+- name: "AccountUser.Add()"
   sortKey: "accountuser.add"
   section: "Core Library"
   returnType: "string"
@@ -122,11 +129,12 @@
   status: "blocked"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Creates a new account user from the supplied properties object."
-- name: "AccountUser.Init(targetUserKey, myClientID)"
+- name: "AccountUser.Init()"
   sortKey: "accountuser.init"
   section: "Core Library"
   returnType: "AccountUserInstance"
@@ -135,11 +143,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Initializes an AccountUser instance bound to the specified external…"
-- name: "AccountUser.Retrieve(filter)"
+- name: "AccountUser.Retrieve()"
   sortKey: "accountuser.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -148,6 +157,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -161,6 +171,7 @@
   status: "blocked"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -174,11 +185,12 @@
   status: "blocked"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Deactivates the account user."
-- name: "<AccountUserInstance>.Update(properties)"
+- name: "<AccountUserInstance>.Update()"
   sortKey: "accountuserinstance.update"
   section: "Core Library"
   returnType: "string"
@@ -187,19 +199,21 @@
   status: "blocked"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Updates the account user with the supplied attributes."
-- name: "Platform.Function.AddObjectArrayItem(apiObject, propertyName, value)"
+- name: "Platform.Function.AddObjectArrayItem()"
   sortKey: "addobjectarrayitem"
   section: "Platform Functions"
-  returnType: "void"
+  returnType: "null"
   url: "/platform-functions/addobjectarrayitem/"
   anchorId: "fn-addobjectarrayitem"
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -207,12 +221,13 @@
 - name: "AggregateError()"
   sortKey: "aggregateerror"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/error-types/#aggregateerror"
   anchorId: "fn-aggregateerror"
   status: "missing"
   es: "2021"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -220,12 +235,13 @@
 - name: "Array.from()"
   sortKey: "array.from"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "array"
   url: "/ecmascript-builtins/array-methods/#from"
   anchorId: "fn-array-from"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -233,12 +249,13 @@
 - name: "Array.isArray()"
   sortKey: "array.isarray"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "boolean"
   url: "/ecmascript-builtins/array-methods/#isarray"
   anchorId: "fn-array-isarray"
   status: "missing"
   es: "5"
   polyfill: true
+  polyfillUrl: "/engine-limitations/polyfills/#array-isarray"
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -246,12 +263,13 @@
 - name: "Array.of()"
   sortKey: "array.of"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "array"
   url: "/ecmascript-builtins/array-methods/#of"
   anchorId: "fn-array-of"
   status: "missing"
   es: "6"
   polyfill: true
+  polyfillUrl: "/engine-limitations/polyfills/#array-of"
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -259,12 +277,13 @@
 - name: "Array.prototype.at()"
   sortKey: "array.prototype.at"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "any"
   url: "/ecmascript-builtins/array-methods/#at"
   anchorId: "fn-array-prototype-at"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -278,6 +297,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -285,12 +305,13 @@
 - name: "Array.prototype.copyWithin()"
   sortKey: "array.prototype.copywithin"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "array"
   url: "/ecmascript-builtins/array-methods/#copywithin"
   anchorId: "fn-array-prototype-copywithin"
   status: "missing"
   es: "6"
   polyfill: true
+  polyfillUrl: "/engine-limitations/polyfills/#array-prototype-copywithin"
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -298,12 +319,13 @@
 - name: "Array.prototype.entries()"
   sortKey: "array.prototype.entries"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/array-methods/#entries"
   anchorId: "fn-array-prototype-entries"
   status: "missing"
   es: "6"
   polyfill: true
+  polyfillUrl: "/engine-limitations/polyfills/#array-prototype-entries"
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -311,12 +333,13 @@
 - name: "Array.prototype.every()"
   sortKey: "array.prototype.every"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "boolean"
   url: "/ecmascript-builtins/array-methods/#every"
   anchorId: "fn-array-prototype-every"
   status: "missing"
   es: "5"
   polyfill: true
+  polyfillUrl: "/engine-limitations/polyfills/#array-prototype-every"
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -324,12 +347,13 @@
 - name: "Array.prototype.fill()"
   sortKey: "array.prototype.fill"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "array"
   url: "/ecmascript-builtins/array-methods/#fill"
   anchorId: "fn-array-prototype-fill"
   status: "missing"
   es: "6"
   polyfill: true
+  polyfillUrl: "/engine-limitations/polyfills/#array-prototype-fill"
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -337,12 +361,13 @@
 - name: "Array.prototype.filter()"
   sortKey: "array.prototype.filter"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "array"
   url: "/ecmascript-builtins/array-methods/#filter"
   anchorId: "fn-array-prototype-filter"
   status: "missing"
   es: "5"
   polyfill: true
+  polyfillUrl: "/engine-limitations/polyfills/#array-prototype-filter"
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -350,12 +375,13 @@
 - name: "Array.prototype.find()"
   sortKey: "array.prototype.find"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "any"
   url: "/ecmascript-builtins/array-methods/#find"
   anchorId: "fn-array-prototype-find"
   status: "missing"
   es: "6"
   polyfill: true
+  polyfillUrl: "/engine-limitations/polyfills/#array-prototype-find"
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -363,12 +389,13 @@
 - name: "Array.prototype.findIndex()"
   sortKey: "array.prototype.findindex"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/array-methods/#findindex"
   anchorId: "fn-array-prototype-findindex"
   status: "missing"
   es: "6"
   polyfill: true
+  polyfillUrl: "/engine-limitations/polyfills/#array-prototype-findindex"
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -376,12 +403,13 @@
 - name: "Array.prototype.findLast()"
   sortKey: "array.prototype.findlast"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "any"
   url: "/ecmascript-builtins/array-methods/#findlast"
   anchorId: "fn-array-prototype-findlast"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -389,12 +417,13 @@
 - name: "Array.prototype.flat()"
   sortKey: "array.prototype.flat"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "array"
   url: "/ecmascript-builtins/array-methods/#flat"
   anchorId: "fn-array-prototype-flat"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -402,12 +431,13 @@
 - name: "Array.prototype.flatMap()"
   sortKey: "array.prototype.flatmap"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "array"
   url: "/ecmascript-builtins/array-methods/#flatmap"
   anchorId: "fn-array-prototype-flatmap"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -415,12 +445,13 @@
 - name: "Array.prototype.forEach()"
   sortKey: "array.prototype.foreach"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "undefined"
   url: "/ecmascript-builtins/array-methods/#foreach"
   anchorId: "fn-array-prototype-foreach"
   status: "missing"
   es: "5"
   polyfill: true
+  polyfillUrl: "/engine-limitations/polyfills/#array-prototype-foreach"
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -428,12 +459,13 @@
 - name: "Array.prototype.includes()"
   sortKey: "array.prototype.includes"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "boolean"
   url: "/ecmascript-builtins/array-methods/#includes"
   anchorId: "fn-array-prototype-includes"
   status: "missing"
   es: "6"
   polyfill: true
+  polyfillUrl: "/engine-limitations/polyfills/#array-prototype-includes"
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -441,12 +473,13 @@
 - name: "Array.prototype.indexOf()"
   sortKey: "array.prototype.indexof"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/array-methods/#indexof"
   anchorId: "fn-array-prototype-indexof"
   status: "missing"
   es: "5"
   polyfill: true
+  polyfillUrl: "/engine-limitations/polyfills/#array-prototype-indexof"
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -460,6 +493,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -467,12 +501,13 @@
 - name: "Array.prototype.keys()"
   sortKey: "array.prototype.keys"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/array-methods/#keys"
   anchorId: "fn-array-prototype-keys"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -480,12 +515,13 @@
 - name: "Array.prototype.lastIndexOf()"
   sortKey: "array.prototype.lastindexof"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/array-methods/#lastindexof"
   anchorId: "fn-array-prototype-lastindexof"
   status: "missing"
   es: "5"
   polyfill: true
+  polyfillUrl: "/engine-limitations/polyfills/#array-prototype-lastindexof"
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -499,6 +535,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -506,12 +543,13 @@
 - name: "Array.prototype.map()"
   sortKey: "array.prototype.map"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "array"
   url: "/ecmascript-builtins/array-methods/#map"
   anchorId: "fn-array-prototype-map"
   status: "missing"
   es: "5"
   polyfill: true
+  polyfillUrl: "/engine-limitations/polyfills/#array-prototype-map"
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -525,6 +563,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -538,6 +577,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -545,12 +585,13 @@
 - name: "Array.prototype.reduce()"
   sortKey: "array.prototype.reduce"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "any"
   url: "/ecmascript-builtins/array-methods/#reduce"
   anchorId: "fn-array-prototype-reduce"
   status: "missing"
   es: "5"
   polyfill: true
+  polyfillUrl: "/engine-limitations/polyfills/#array-prototype-reduce"
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -558,12 +599,13 @@
 - name: "Array.prototype.reduceRight()"
   sortKey: "array.prototype.reduceright"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "any"
   url: "/ecmascript-builtins/array-methods/#reduceright"
   anchorId: "fn-array-prototype-reduceright"
   status: "missing"
   es: "5"
   polyfill: true
+  polyfillUrl: "/engine-limitations/polyfills/#array-prototype-reduceright"
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -577,6 +619,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -590,6 +633,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -603,6 +647,7 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -610,12 +655,13 @@
 - name: "Array.prototype.some()"
   sortKey: "array.prototype.some"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "boolean"
   url: "/ecmascript-builtins/array-methods/#some"
   anchorId: "fn-array-prototype-some"
   status: "missing"
   es: "5"
   polyfill: true
+  polyfillUrl: "/engine-limitations/polyfills/#array-prototype-some"
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -629,6 +675,7 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -636,16 +683,17 @@
 - name: "Array.prototype.splice()"
   sortKey: "array.prototype.splice"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "array"
   url: "/ecmascript-builtins/array-methods/#splice"
   anchorId: "fn-array-prototype-splice"
-  status: "missing"
+  status: "partial"
   es: "3"
   polyfill: true
+  polyfillUrl: "/engine-limitations/polyfills/#array-prototype-splice"
   verified: true
   differsFromDocs: false
   deprecated: false
-  description: "Array.prototype.splice(start, deleteCount, item1, …, itemN) works in…"
+  description: "Only the two-argument delete form splice(start, deleteCount) works…"
 - name: "Array.prototype.toLocaleString()"
   sortKey: "array.prototype.tolocalestring"
   section: "ECMAScript Builtins"
@@ -655,6 +703,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -668,6 +717,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -675,12 +725,13 @@
 - name: "Array.prototype.values()"
   sortKey: "array.prototype.values"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/array-methods/#values"
   anchorId: "fn-array-prototype-values"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -688,12 +739,13 @@
 - name: "ArrayBuffer()"
   sortKey: "arraybuffer"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/typed-arrays/#arraybuffer"
   anchorId: "fn-arraybuffer"
   status: "missing"
   es: "2015"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -701,12 +753,13 @@
 - name: "AsyncFunction()"
   sortKey: "asyncfunction"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/promises-iteration/#async-variants"
   anchorId: "fn-asyncfunction"
   status: "missing"
   es: "2017"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -714,12 +767,13 @@
 - name: "AsyncGenerator()"
   sortKey: "asyncgenerator"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/promises-iteration/#async-variants"
   anchorId: "fn-asyncgenerator"
   status: "missing"
   es: "2018"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -727,12 +781,13 @@
 - name: "AsyncGeneratorFunction()"
   sortKey: "asyncgeneratorfunction"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/promises-iteration/#async-variants"
   anchorId: "fn-asyncgeneratorfunction"
   status: "missing"
   es: "2018"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -740,12 +795,13 @@
 - name: "AsyncIterator()"
   sortKey: "asynciterator"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/promises-iteration/#async-variants"
   anchorId: "fn-asynciterator"
   status: "missing"
   es: "2018"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -753,17 +809,18 @@
 - name: "Atomics"
   sortKey: "atomics"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/typed-arrays/#atomics"
   anchorId: "fn-atomics"
   status: "missing"
   es: "2017"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Atomics is undefined in SFMC (ES2017)."
-- name: "Attribute.GetValue(name)"
+- name: "Attribute.GetValue()"
   sortKey: "attribute.getvalue"
   section: "Core Library"
   returnType: "string"
@@ -772,11 +829,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Returns the value of the specified subscriber attribute or sendable…"
-- name: "Base64Decode(encodedString)"
+- name: "Base64Decode()"
   sortKey: "base64decode"
   section: "Core Library"
   returnType: "string"
@@ -785,11 +843,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Decodes a Base64 encoded string to plain text."
-- name: "Platform.Function.Base64Decode(encodedString[, charset])"
+- name: "Platform.Function.Base64Decode()"
   sortKey: "base64decode"
   section: "Platform Functions"
   returnType: "string"
@@ -798,11 +857,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Decodes a standard Base64-encoded string."
-- name: "Base64Encode(string)"
+- name: "Base64Encode()"
   sortKey: "base64encode"
   section: "Core Library"
   returnType: "string"
@@ -811,11 +871,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Encodes plain text to a Base64 encoded string."
-- name: "Platform.Function.Base64Encode(string[, charset])"
+- name: "Platform.Function.Base64Encode()"
   sortKey: "base64encode"
   section: "Platform Functions"
   returnType: "string"
@@ -824,11 +885,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Encodes any string value to standard Base64."
-- name: "BeginImpressionRegion(name)"
+- name: "BeginImpressionRegion()"
   sortKey: "beginimpressionregion"
   section: "Core Library"
   returnType: "void"
@@ -837,11 +899,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Marks the start of a named impression tracking region within content."
-- name: "Platform.Function.BeginImpressionRegion(name)"
+- name: "Platform.Function.BeginImpressionRegion()"
   sortKey: "beginimpressionregion"
   section: "Platform Functions"
   returnType: "void"
@@ -850,6 +913,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -857,12 +921,13 @@
 - name: "BigInt()"
   sortKey: "bigint"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "any"
   url: "/ecmascript-builtins/bigint/"
   anchorId: "fn-bigint"
   status: "missing"
   es: "2020"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -870,12 +935,13 @@
 - name: "BigInt64Array()"
   sortKey: "bigint64array"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/typed-arrays/#typedarray-views"
   anchorId: "fn-bigint64array"
   status: "missing"
   es: "2020"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -883,12 +949,13 @@
 - name: "BigUint64Array()"
   sortKey: "biguint64array"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/typed-arrays/#typedarray-views"
   anchorId: "fn-biguint64array"
   status: "missing"
   es: "2020"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -902,6 +969,7 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -915,6 +983,7 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -928,6 +997,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -941,6 +1011,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -954,6 +1025,7 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -967,11 +1039,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Retrieves bounce event data for message sends."
-- name: "BounceEvent.Retrieve(filter)"
+- name: "BounceEvent.Retrieve()"
   sortKey: "bounceevent.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -980,6 +1053,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -993,11 +1067,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Retrieves click tracking event data for message sends."
-- name: "ClickEvent.Retrieve(filter)"
+- name: "ClickEvent.Retrieve()"
   sortKey: "clickevent.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -1006,11 +1081,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Retrieves click tracking event data for message sends matching the…"
-- name: "Platform.Function.ContentArea(id[, regionName, stopOnError, fallbackContent])"
+- name: "Platform.Function.ContentArea()"
   sortKey: "contentarea"
   section: "Platform Functions"
   returnType: "string"
@@ -1019,11 +1095,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: true
   description: "Retrieves content from a specified classic Content Area by ID."
-- name: "Platform.Function.ContentAreaByName(name[, regionName, stopOnError, fallbackContent])"
+- name: "Platform.Function.ContentAreaByName()"
   sortKey: "contentareabyname"
   section: "Platform Functions"
   returnType: "string"
@@ -1032,6 +1109,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: true
@@ -1045,11 +1123,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: true
   description: "Manages classic content area objects."
-- name: "ContentAreaObj.Add(properties)"
+- name: "ContentAreaObj.Add()"
   sortKey: "contentareaobj.add"
   section: "Core Library"
   returnType: "ContentAreaObjInstance"
@@ -1058,11 +1137,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: true
   description: "Creates a new content area from the supplied properties and returns…"
-- name: "ContentAreaObj.Init(key)"
+- name: "ContentAreaObj.Init()"
   sortKey: "contentareaobj.init"
   section: "Core Library"
   returnType: "ContentAreaObjInstance"
@@ -1071,11 +1151,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: true
   description: "Initializes a ContentAreaObj instance bound to the specified external…"
-- name: "ContentAreaObj.Retrieve(filter)"
+- name: "ContentAreaObj.Retrieve()"
   sortKey: "contentareaobj.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -1084,6 +1165,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: true
@@ -1097,11 +1179,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: true
   description: "Removes the previously initialized content area."
-- name: "<ContentAreaObjInstance>.Update(properties)"
+- name: "<ContentAreaObjInstance>.Update()"
   sortKey: "contentareaobjinstance.update"
   section: "Core Library"
   returnType: "string"
@@ -1110,11 +1193,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: true
   description: "Updates the content area with the supplied attributes."
-- name: "Platform.Function.ContentBlockByID(id[, regionName, stopOnError, fallbackContent])"
+- name: "Platform.Function.ContentBlockByID()"
   sortKey: "contentblockbyid"
   section: "Platform Functions"
   returnType: "string"
@@ -1123,11 +1207,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Renders a Content Builder asset by its numeric identifier."
-- name: "Platform.Function.ContentBlockByKey(customerKey[, regionName, stopOnError, fallbackContent])"
+- name: "Platform.Function.ContentBlockByKey()"
   sortKey: "contentblockbykey"
   section: "Platform Functions"
   returnType: "string"
@@ -1136,11 +1221,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Renders a Content Builder asset referenced by customer key."
-- name: "Platform.Function.ContentBlockByName(name[, regionName, stopOnError, fallbackContent, statusVariable])"
+- name: "Platform.Function.ContentBlockByName()"
   sortKey: "contentblockbyname"
   section: "Platform Functions"
   returnType: "string"
@@ -1149,11 +1235,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Renders a Content Builder asset referenced by folder path and name."
-- name: "Platform.Function.ContentImageByID(id[, fallbackId])"
+- name: "Platform.Function.ContentImageByID()"
   sortKey: "contentimagebyid"
   section: "Platform Functions"
   returnType: "string"
@@ -1162,11 +1249,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Returns an HTML img tag for a Content Builder image identified by its…"
-- name: "Platform.Function.ContentImageByKey(key[, fallbackId])"
+- name: "Platform.Function.ContentImageByKey()"
   sortKey: "contentimagebykey"
   section: "Platform Functions"
   returnType: "string"
@@ -1175,11 +1263,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Returns an HTML img tag for a Content Builder image identified by its…"
-- name: "Platform.Function.CreateObject(objectType)"
+- name: "Platform.Function.CreateObject()"
   sortKey: "createobject"
   section: "Platform Functions"
   returnType: "object"
@@ -1188,6 +1277,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -1201,11 +1291,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Manages Data Extension definitions and their field schemas."
-- name: "DataExtension.Add(properties)"
+- name: "DataExtension.Add()"
   sortKey: "dataextension.add"
   section: "Core Library"
   returnType: "DataExtensionInstance"
@@ -1214,6 +1305,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1227,11 +1319,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Accesses and manages field definitions within a Data Extension."
-- name: "DataExtension.Init(key)"
+- name: "DataExtension.Init()"
   sortKey: "dataextension.init"
   section: "Core Library"
   returnType: "DataExtensionInstance"
@@ -1240,11 +1333,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Initializes a DataExtension instance bound to the specified data…"
-- name: "DataExtension.Retrieve(filter, [queryAllAccounts])"
+- name: "DataExtension.Retrieve()"
   sortKey: "dataextension.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -1253,6 +1347,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -1266,11 +1361,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Manages individual rows within a Data Extension."
-- name: "<DataExtensionInstance>.Fields.Add(properties)"
+- name: "<DataExtensionInstance>.Fields.Add()"
   sortKey: "dataextensioninstance.fields.add"
   section: "Core Library"
   returnType: "string"
@@ -1279,6 +1375,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1292,11 +1389,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Returns an array of field definitions for the previously initialized…"
-- name: "<DataExtensionInstance>.Fields.UpdateSendableField(deFieldName, subscriberField)"
+- name: "<DataExtensionInstance>.Fields.UpdateSendableField()"
   sortKey: "dataextensioninstance.fields.updatesendablefield"
   section: "Core Library"
   returnType: "string"
@@ -1305,11 +1403,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Updates which data extension field is used to relate the data…"
-- name: "<DataExtensionInstance>.Rows.Add(rowData)"
+- name: "<DataExtensionInstance>.Rows.Add()"
   sortKey: "dataextensioninstance.rows.add"
   section: "Core Library"
   returnType: "number"
@@ -1318,11 +1417,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Adds one or more rows to the previously initialized data extension."
-- name: "<DataExtensionInstance>.Rows.Lookup(searchFieldNames, searchValues, [limit], [orderByFieldName])"
+- name: "<DataExtensionInstance>.Rows.Lookup()"
   sortKey: "dataextensioninstance.rows.lookup"
   section: "Core Library"
   returnType: "object[]|null"
@@ -1331,11 +1431,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Returns rows where the specified columns equal the specified values…"
-- name: "<DataExtensionInstance>.Rows.Remove(columnNames, columnValues)"
+- name: "<DataExtensionInstance>.Rows.Remove()"
   sortKey: "dataextensioninstance.rows.remove"
   section: "Core Library"
   returnType: "number"
@@ -1344,11 +1445,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Deletes rows from the previously initialized data extension where the…"
-- name: "<DataExtensionInstance>.Rows.Retrieve([filter])"
+- name: "<DataExtensionInstance>.Rows.Retrieve()"
   sortKey: "dataextensioninstance.rows.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -1357,11 +1459,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Retrieves up to 2500 rows from the previously initialized data…"
-- name: "<DataExtensionInstance>.Rows.Update(rowData, whereFieldNames, whereValues)"
+- name: "<DataExtensionInstance>.Rows.Update()"
   sortKey: "dataextensioninstance.rows.update"
   section: "Core Library"
   returnType: "number"
@@ -1370,6 +1473,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -1377,12 +1481,13 @@
 - name: "DataView()"
   sortKey: "dataview"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/typed-arrays/#dataview"
   anchorId: "fn-dataview"
   status: "missing"
   es: "2015"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1396,6 +1501,7 @@
   status: "partial"
   es: "5"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -1409,6 +1515,7 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -1422,6 +1529,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1435,6 +1543,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1448,6 +1557,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1461,6 +1571,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1474,6 +1585,7 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -1487,6 +1599,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1500,6 +1613,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1513,6 +1627,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1526,6 +1641,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1539,6 +1655,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1552,6 +1669,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1565,6 +1683,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1578,6 +1697,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1591,6 +1711,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1604,6 +1725,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1617,6 +1739,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1630,6 +1753,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1643,6 +1767,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1656,6 +1781,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1663,12 +1789,13 @@
 - name: "Date.prototype.toISOString()"
   sortKey: "date.prototype.toisostring"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "string"
   url: "/ecmascript-builtins/date-methods/#toisostring"
   anchorId: "fn-date-prototype-toisostring"
   status: "missing"
   es: "5"
   polyfill: true
+  polyfillUrl: "/engine-limitations/polyfills/#date-toisostring"
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1676,12 +1803,13 @@
 - name: "Date.prototype.toJSON()"
   sortKey: "date.prototype.tojson"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "string"
   url: "/ecmascript-builtins/date-methods/#tojson"
   anchorId: "fn-date-prototype-tojson"
   status: "missing"
   es: "5"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1695,6 +1823,7 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -1708,6 +1837,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1721,6 +1851,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1734,6 +1865,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1747,6 +1879,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1760,11 +1893,12 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Runtime-verified: with year + month (and beyond) it returns the…"
-- name: "DateTime.LocalDateToSystemDate(dateString)"
+- name: "DateTime.LocalDateToSystemDate()"
   sortKey: "datetime.localdatetosystemdate"
   section: "Core Library"
   returnType: "Date"
@@ -1773,11 +1907,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Converts a date-time value from the local time of the account or user…"
-- name: "DateTime.SystemDateToLocalDate(dateString)"
+- name: "DateTime.SystemDateToLocalDate()"
   sortKey: "datetime.systemdatetolocaldate"
   section: "Core Library"
   returnType: "Date"
@@ -1786,6 +1921,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -1799,11 +1935,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Time zone utilities for SSJS date/time conversions."
-- name: "DateTime.TimeZone.Retrieve([filter])"
+- name: "DateTime.TimeZone.Retrieve()"
   sortKey: "datetime.timezone.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -1812,6 +1949,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1825,6 +1963,7 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -1838,11 +1977,12 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "A literal \"+\" is decoded to a space, unlike the ECMAScript spec…"
-- name: "Platform.Function.DeleteData(deName, whereFieldNames, whereFieldValues)"
+- name: "Platform.Function.DeleteData()"
   sortKey: "deletedata"
   section: "Platform Functions"
   returnType: "number"
@@ -1851,11 +1991,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Removes rows from a Data Extension matching filter criteria and…"
-- name: "Platform.Function.DeleteDE(deName, whereFieldNames, whereFieldValues)"
+- name: "Platform.Function.DeleteDE()"
   sortKey: "deletede"
   section: "Platform Functions"
   returnType: "null"
@@ -1864,6 +2005,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -1877,11 +2019,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Manages delivery profile configurations."
-- name: "DeliveryProfile.Add(properties)"
+- name: "DeliveryProfile.Add()"
   sortKey: "deliveryprofile.add"
   section: "Core Library"
   returnType: "object"
@@ -1890,11 +2033,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Creates a new delivery profile from the supplied properties."
-- name: "DeliveryProfile.Init(key)"
+- name: "DeliveryProfile.Init()"
   sortKey: "deliveryprofile.init"
   section: "Core Library"
   returnType: "DeliveryProfileInstance"
@@ -1903,6 +2047,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1916,11 +2061,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Removes the previously initialized delivery profile."
-- name: "<DeliveryProfileInstance>.Update(properties)"
+- name: "<DeliveryProfileInstance>.Update()"
   sortKey: "deliveryprofileinstance.update"
   section: "Core Library"
   returnType: "string"
@@ -1929,6 +2075,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -1942,11 +2089,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: true
   description: "Manages classic Email Studio email message definitions."
-- name: "Email.Add(properties)"
+- name: "Email.Add()"
   sortKey: "email.add"
   section: "Core Library"
   returnType: "EmailInstance"
@@ -1955,11 +2103,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: true
   description: "Creates a new classic email message from the supplied properties and…"
-- name: "Email.Init(key)"
+- name: "Email.Init()"
   sortKey: "email.init"
   section: "Core Library"
   returnType: "EmailInstance"
@@ -1968,11 +2117,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: true
   description: "Initializes an Email instance bound to the specified external key."
-- name: "Email.Retrieve(filter)"
+- name: "Email.Retrieve()"
   sortKey: "email.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -1981,6 +2131,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: true
@@ -1994,6 +2145,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: true
@@ -2007,11 +2159,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: true
   description: "Removes the previously initialized classic email message."
-- name: "<EmailInstance>.Update(properties)"
+- name: "<EmailInstance>.Update()"
   sortKey: "emailinstance.update"
   section: "Core Library"
   returnType: "string"
@@ -2020,6 +2173,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: true
@@ -2033,6 +2187,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: true
@@ -2046,6 +2201,7 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -2059,11 +2215,12 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Space -> \"+\" and lowercase hex (e.g. \"/\" -> \"%2f\") instead of the…"
-- name: "EndImpressionRegion([closeAll])"
+- name: "EndImpressionRegion()"
   sortKey: "endimpressionregion"
   section: "Core Library"
   returnType: "undefined"
@@ -2072,11 +2229,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Marks the end of an impression tracking region within content."
-- name: "Platform.Function.EndImpressionRegion([closeAll])"
+- name: "Platform.Function.EndImpressionRegion()"
   sortKey: "endimpressionregion"
   section: "Platform Functions"
   returnType: "null"
@@ -2085,6 +2243,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -2098,11 +2257,12 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "The base Error constructor works in SSJS."
-- name: "new Error([message])"
+- name: "new Error()"
   sortKey: "error"
   section: "ECMAScript Builtins"
   returnType: "object"
@@ -2111,11 +2271,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Native JavaScript Error constructor."
-- name: "ErrorUtil.ThrowWSProxyError(result)"
+- name: "ErrorUtil.ThrowWSProxyError()"
   sortKey: "errorutil.throwwsproxyerror"
   section: "WSProxy"
   returnType: "string"
@@ -2124,6 +2285,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: true
@@ -2131,12 +2293,13 @@
 - name: "escape()"
   sortKey: "escape"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "string"
   url: "/ecmascript-builtins/global-functions/#escape"
   anchorId: "fn-escape"
   status: "missing"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -2150,6 +2313,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -2163,6 +2327,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -2176,11 +2341,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Manages data filter definitions."
-- name: "FilterDefinition.Add(properties)"
+- name: "FilterDefinition.Add()"
   sortKey: "filterdefinition.add"
   section: "Core Library"
   returnType: "string"
@@ -2189,11 +2355,12 @@
   status: "blocked"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Creates a new filter definition from the supplied properties."
-- name: "FilterDefinition.Init(key)"
+- name: "FilterDefinition.Init()"
   sortKey: "filterdefinition.init"
   section: "Core Library"
   returnType: "FilterDefinitionInstance"
@@ -2202,11 +2369,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Initializes a FilterDefinition instance bound to the specified…"
-- name: "FilterDefinition.Retrieve(filter)"
+- name: "FilterDefinition.Retrieve()"
   sortKey: "filterdefinition.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -2215,6 +2383,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -2228,11 +2397,12 @@
   status: "blocked"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Deletes the previously initialized filter definition."
-- name: "<FilterDefinitionInstance>.Update(properties)"
+- name: "<FilterDefinitionInstance>.Update()"
   sortKey: "filterdefinitioninstance.update"
   section: "Core Library"
   returnType: "string"
@@ -2241,6 +2411,7 @@
   status: "blocked"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -2248,12 +2419,13 @@
 - name: "FinalizationRegistry()"
   sortKey: "finalizationregistry"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/memory-management/#finalizationregistry"
   anchorId: "fn-finalizationregistry"
   status: "missing"
   es: "2021"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -2261,12 +2433,13 @@
 - name: "Float16Array()"
   sortKey: "float16array"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/typed-arrays/#typedarray-views"
   anchorId: "fn-float16array"
   status: "missing"
   es: "2025"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -2274,12 +2447,13 @@
 - name: "Float32Array()"
   sortKey: "float32array"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/typed-arrays/#typedarray-views"
   anchorId: "fn-float32array"
   status: "missing"
   es: "2015"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -2287,12 +2461,13 @@
 - name: "Float64Array()"
   sortKey: "float64array"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/typed-arrays/#typedarray-views"
   anchorId: "fn-float64array"
   status: "missing"
   es: "2015"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -2306,11 +2481,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Manages folder structures within the Marketing Cloud account."
-- name: "Folder.Add(properties)"
+- name: "Folder.Add()"
   sortKey: "folder.add"
   section: "Core Library"
   returnType: "string"
@@ -2319,11 +2495,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Creates a new folder as a child of an existing folder."
-- name: "Folder.Init([key])"
+- name: "Folder.Init()"
   sortKey: "folder.init"
   section: "Core Library"
   returnType: "FolderInstance"
@@ -2332,11 +2509,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Initializes a Folder instance, optionally bound to the specified…"
-- name: "Folder.Retrieve(filter)"
+- name: "Folder.Retrieve()"
   sortKey: "folder.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -2345,6 +2523,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -2358,11 +2537,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Removes the previously initialized folder."
-- name: "<FolderInstance>.SetID(id)"
+- name: "<FolderInstance>.SetID()"
   sortKey: "folderinstance.setid"
   section: "Core Library"
   returnType: "void"
@@ -2371,11 +2551,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Binds a previously initialized Folder instance to a specific folder…"
-- name: "<FolderInstance>.Update(properties)"
+- name: "<FolderInstance>.Update()"
   sortKey: "folderinstance.update"
   section: "Core Library"
   returnType: "string"
@@ -2384,11 +2565,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Updates the folder with the supplied attributes."
-- name: "Format(textToFormat, formatCode)"
+- name: "Format()"
   sortKey: "format"
   section: "Core Library"
   returnType: "string"
@@ -2397,6 +2579,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -2410,11 +2593,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Retrieves forwarded email event data for message sends."
-- name: "ForwardedEmailEvent.Retrieve(filter)"
+- name: "ForwardedEmailEvent.Retrieve()"
   sortKey: "forwardedemailevent.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -2423,6 +2607,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -2436,11 +2621,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Retrieves forwarded email opt-in event data for message sends."
-- name: "ForwardedEmailOptInEvent.Retrieve(filter)"
+- name: "ForwardedEmailOptInEvent.Retrieve()"
   sortKey: "forwardedemailoptinevent.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -2449,6 +2635,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -2462,6 +2649,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -2469,12 +2657,13 @@
 - name: "Function.prototype.bind()"
   sortKey: "function.prototype.bind"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "any"
   url: "/ecmascript-builtins/function-methods/#bind"
   anchorId: "fn-function-prototype-bind"
   status: "missing"
   es: "5"
   polyfill: true
+  polyfillUrl: "/engine-limitations/polyfills/#function-prototype-bind"
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -2488,6 +2677,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -2495,12 +2685,13 @@
 - name: "Function.prototype.caller"
   sortKey: "function.prototype.caller"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "any"
   url: "/ecmascript-builtins/function-methods/#caller"
   anchorId: "fn-function-prototype-caller"
   status: "missing"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -2508,12 +2699,13 @@
 - name: "Function.prototype.length"
   sortKey: "function.prototype.length"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/function-methods/#length"
   anchorId: "fn-function-prototype-length"
   status: "missing"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -2521,12 +2713,13 @@
 - name: "Function.prototype.name"
   sortKey: "function.prototype.name"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "string"
   url: "/ecmascript-builtins/function-methods/#name"
   anchorId: "fn-function-prototype-name"
   status: "missing"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -2540,6 +2733,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -2547,12 +2741,13 @@
 - name: "Generator()"
   sortKey: "generator"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/promises-iteration/#generator"
   anchorId: "fn-generator"
   status: "missing"
   es: "2015"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -2560,12 +2755,13 @@
 - name: "GeneratorFunction()"
   sortKey: "generatorfunction"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/promises-iteration/#generatorfunction"
   anchorId: "fn-generatorfunction"
   status: "missing"
   es: "2015"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -2573,12 +2769,13 @@
 - name: "globalThis"
   sortKey: "globalthis"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/global-values/#globalthis"
   anchorId: "fn-globalthis"
   status: "missing"
   es: "2020"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -2592,6 +2789,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -2605,11 +2803,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Generates a new globally unique identifier as a lowercase canonical…"
-- name: "HTTP.Get(url[, headerNames, headerValues])"
+- name: "HTTP.Get()"
   sortKey: "http.get"
   section: "HTTP & REST"
   returnType: "{ Status: number, Content: string }"
@@ -2618,11 +2817,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Performs an HTTP GET request and returns the response body."
-- name: "HTTP.Post(url, contentType, payload[, headerNames, headerValues])"
+- name: "HTTP.Post()"
   sortKey: "http.post"
   section: "HTTP & REST"
   returnType: "{ StatusCode: number, Response: string[] }"
@@ -2631,11 +2831,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Performs an HTTP POST request with a content type and payload."
-- name: "Platform.Function.HTTPGet(url) | Platform.Function.HTTPGet(url, continueOnError, emptyContentHandling, headerNames, headerValues, statusVariable)"
+- name: "Platform.Function.HTTPGet()"
   sortKey: "httpget"
   section: "Platform Functions"
   returnType: "string"
@@ -2644,11 +2845,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Performs an HTTP GET request and returns the response body as a…"
-- name: "HTTPHeader.GetValue(name)"
+- name: "HTTPHeader.GetValue()"
   sortKey: "httpheader.getvalue"
   section: "Core Library"
   returnType: "string|null"
@@ -2657,11 +2859,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Retrieves the value of the specified INBOUND HTTP request header…"
-- name: "HTTPHeader.Remove(headerName)"
+- name: "HTTPHeader.Remove()"
   sortKey: "httpheader.remove"
   section: "Core Library"
   returnType: "void"
@@ -2670,11 +2873,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Removes the specified entry from the HTTP header."
-- name: "HTTPHeader.SetValue(name, value)"
+- name: "HTTPHeader.SetValue()"
   sortKey: "httpheader.setvalue"
   section: "Core Library"
   returnType: "void"
@@ -2683,11 +2887,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Sets the value of the specified OUTBOUND HTTP header."
-- name: "Platform.Function.HTTPPost(url, contentType, payload[, headerNames, headerValues, response])"
+- name: "Platform.Function.HTTPPost()"
   sortKey: "httppost"
   section: "Platform Functions"
   returnType: "number"
@@ -2696,6 +2901,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -2709,11 +2915,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Removes all custom headers previously set on the request."
-- name: "<HttpRequestInstance>.removeHeader(name)"
+- name: "<HttpRequestInstance>.removeHeader()"
   sortKey: "httprequestinstance.removeheader"
   section: "HTTP & REST"
   returnType: "void"
@@ -2722,6 +2929,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -2735,11 +2943,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Executes the HTTP request and returns a Script.Util.HttpResponse…"
-- name: "<HttpRequestInstance>.setHeader(name, value)"
+- name: "<HttpRequestInstance>.setHeader()"
   sortKey: "httprequestinstance.setheader"
   section: "HTTP & REST"
   returnType: "void"
@@ -2748,6 +2957,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -2755,17 +2965,18 @@
 - name: "Infinity"
   sortKey: "infinity"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/global-values/#infinity"
   anchorId: "fn-infinity"
   status: "missing"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "The Infinity global is broken in SFMC: its sign is inverted in…"
-- name: "Platform.Function.InsertData(deName, fieldNames, fieldValues)"
+- name: "Platform.Function.InsertData()"
   sortKey: "insertdata"
   section: "Platform Functions"
   returnType: "number"
@@ -2774,11 +2985,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Adds a new row to a Data Extension and returns the number of rows…"
-- name: "Platform.Function.InsertDE(deName, fieldNames, fieldValues)"
+- name: "Platform.Function.InsertDE()"
   sortKey: "insertde"
   section: "Platform Functions"
   returnType: "null"
@@ -2787,6 +2999,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -2794,12 +3007,13 @@
 - name: "Int16Array()"
   sortKey: "int16array"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/typed-arrays/#typedarray-views"
   anchorId: "fn-int16array"
   status: "missing"
   es: "2015"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -2807,12 +3021,13 @@
 - name: "Int32Array()"
   sortKey: "int32array"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/typed-arrays/#typedarray-views"
   anchorId: "fn-int32array"
   status: "missing"
   es: "2015"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -2820,12 +3035,13 @@
 - name: "Int8Array()"
   sortKey: "int8array"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/typed-arrays/#typedarray-views"
   anchorId: "fn-int8array"
   status: "missing"
   es: "2015"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -2833,12 +3049,13 @@
 - name: "InternalError()"
   sortKey: "internalerror"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/error-types/#internalerror"
   anchorId: "fn-internalerror"
   status: "missing"
   es: "0"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -2846,17 +3063,18 @@
 - name: "Intl"
   sortKey: "intl"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/internationalization/#intl"
   anchorId: "fn-intl"
   status: "missing"
   es: "2015"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Intl is undefined in SFMC (ES2015); none of its formatters…"
-- name: "Platform.Function.InvokeConfigure(apiObject, method, status, options)"
+- name: "Platform.Function.InvokeConfigure()"
   sortKey: "invokeconfigure"
   section: "Platform Functions"
   returnType: "string"
@@ -2865,11 +3083,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Executes a SOAP API Configure call on an API object and returns the…"
-- name: "Platform.Function.InvokeCreate(apiObject, status, options)"
+- name: "Platform.Function.InvokeCreate()"
   sortKey: "invokecreate"
   section: "Platform Functions"
   returnType: "string"
@@ -2878,11 +3097,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Executes a SOAP API Create call on an API object and returns the…"
-- name: "Platform.Function.InvokeDelete(apiObject, status, options)"
+- name: "Platform.Function.InvokeDelete()"
   sortKey: "invokedelete"
   section: "Platform Functions"
   returnType: "string"
@@ -2891,11 +3111,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Executes a SOAP API Delete call on an API object and returns the…"
-- name: "Platform.Function.InvokeExecute(apiObject, status)"
+- name: "Platform.Function.InvokeExecute()"
   sortKey: "invokeexecute"
   section: "Platform Functions"
   returnType: "object[]"
@@ -2904,11 +3125,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Executes a SOAP API Execute call on an API object and returns an…"
-- name: "Platform.Function.InvokeExtract(apiObject, statusArray)"
+- name: "Platform.Function.InvokeExtract()"
   sortKey: "invokeextract"
   section: "Platform Functions"
   returnType: "string"
@@ -2917,11 +3139,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Invokes the Extract SOAP API method on the specified object."
-- name: "Platform.Function.InvokePerform(apiObject, method, status[, options])"
+- name: "Platform.Function.InvokePerform()"
   sortKey: "invokeperform"
   section: "Platform Functions"
   returnType: "string"
@@ -2930,11 +3153,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Executes a SOAP API Perform action on an API object and returns the…"
-- name: "Platform.Function.InvokeRetrieve(apiObject, status)"
+- name: "Platform.Function.InvokeRetrieve()"
   sortKey: "invokeretrieve"
   section: "Platform Functions"
   returnType: "object[]|null"
@@ -2943,11 +3167,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Executes a SOAP API Retrieve call, returning an array of result…"
-- name: "Platform.Function.InvokeSchedule(apiObject, action, schedule, statusArray[, options])"
+- name: "Platform.Function.InvokeSchedule()"
   sortKey: "invokeschedule"
   section: "Platform Functions"
   returnType: "string"
@@ -2956,11 +3181,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Invokes the Schedule SOAP API method on the specified object and…"
-- name: "Platform.Function.InvokeUpdate(apiObject, status, options)"
+- name: "Platform.Function.InvokeUpdate()"
   sortKey: "invokeupdate"
   section: "Platform Functions"
   returnType: "string"
@@ -2969,11 +3195,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Executes a SOAP API Update call on an API object and returns the…"
-- name: "Platform.Function.IsCHTMLBrowser(userAgentString)"
+- name: "Platform.Function.IsCHTMLBrowser()"
   sortKey: "ischtmlbrowser"
   section: "Platform Functions"
   returnType: "boolean"
@@ -2982,11 +3209,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Indicates whether the passed-in user-agent value represents a CHTML…"
-- name: "IsEmailAddress(value)"
+- name: "IsEmailAddress()"
   sortKey: "isemailaddress"
   section: "Core Library"
   returnType: "boolean"
@@ -2995,11 +3223,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Checks whether a string is a valid email address format."
-- name: "Platform.Function.IsEmailAddress(value)"
+- name: "Platform.Function.IsEmailAddress()"
   sortKey: "isemailaddress"
   section: "Platform Functions"
   returnType: "boolean"
@@ -3008,6 +3237,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3021,6 +3251,7 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -3034,11 +3265,12 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Returns true if the value is NaN (Not-a-Number) after applying…"
-- name: "IsPhoneNumber(value)"
+- name: "IsPhoneNumber()"
   sortKey: "isphonenumber"
   section: "Core Library"
   returnType: "boolean"
@@ -3047,11 +3279,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Checks whether a value is a valid North American Numbering Plan…"
-- name: "Platform.Function.IsPhoneNumber(value)"
+- name: "Platform.Function.IsPhoneNumber()"
   sortKey: "isphonenumber"
   section: "Platform Functions"
   returnType: "boolean"
@@ -3060,6 +3293,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -3067,12 +3301,13 @@
 - name: "Iterator()"
   sortKey: "iterator"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/promises-iteration/#iterator"
   anchorId: "fn-iterator"
   status: "missing"
   es: "2015"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3080,12 +3315,13 @@
 - name: "JSON.parse()"
   sortKey: "json.parse"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "any"
   url: "/ecmascript-builtins/json/#parse"
   anchorId: "fn-json-parse"
   status: "missing"
   es: "5"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3093,12 +3329,13 @@
 - name: "JSON.stringify()"
   sortKey: "json.stringify"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "string"
   url: "/ecmascript-builtins/json/#stringify"
   anchorId: "fn-json-stringify"
   status: "missing"
   es: "5"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3112,11 +3349,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Manages subscriber lists."
-- name: "List.Add(properties)"
+- name: "List.Add()"
   sortKey: "list.add"
   section: "Core Library"
   returnType: "ListInstance"
@@ -3125,11 +3363,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Creates a new list from the supplied properties and returns an…"
-- name: "List.Init(key)"
+- name: "List.Init()"
   sortKey: "list.init"
   section: "Core Library"
   returnType: "ListInstance"
@@ -3138,11 +3377,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Initializes a List instance bound to the specified external key."
-- name: "List.Retrieve(filter)"
+- name: "List.Retrieve()"
   sortKey: "list.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -3151,6 +3391,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3164,6 +3405,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3177,6 +3419,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3190,11 +3433,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Removes the previously initialized list."
-- name: "<ListInstance>.Subscribers.Add(properties)"
+- name: "<ListInstance>.Subscribers.Add()"
   sortKey: "listinstance.subscribers.add"
   section: "Core Library"
   returnType: "string"
@@ -3203,11 +3447,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Adds a subscriber to the previously initialized list."
-- name: "<ListInstance>.Subscribers.Retrieve([filter])"
+- name: "<ListInstance>.Subscribers.Retrieve()"
   sortKey: "listinstance.subscribers.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -3216,11 +3461,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Returns the subscribers belonging to the previously initialized list."
-- name: "<ListInstance>.Subscribers.Tracking.Retrieve(filter)"
+- name: "<ListInstance>.Subscribers.Tracking.Retrieve()"
   sortKey: "listinstance.subscribers.tracking.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -3229,11 +3475,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Returns an array of tracking data for subscribers matching the filter."
-- name: "<ListInstance>.Subscribers.Unsubscribe(emailAddress)"
+- name: "<ListInstance>.Subscribers.Unsubscribe()"
   sortKey: "listinstance.subscribers.unsubscribe"
   section: "Core Library"
   returnType: "string"
@@ -3242,11 +3489,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Sets the subscriber Status on the list to Unsubscribed."
-- name: "<ListInstance>.Subscribers.Update(emailAddress, status)"
+- name: "<ListInstance>.Subscribers.Update()"
   sortKey: "listinstance.subscribers.update"
   section: "Core Library"
   returnType: "string"
@@ -3255,11 +3503,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Updates the status of the specified subscriber on the previously…"
-- name: "<ListInstance>.Subscribers.Upsert(emailAddress, attributes)"
+- name: "<ListInstance>.Subscribers.Upsert()"
   sortKey: "listinstance.subscribers.upsert"
   section: "Core Library"
   returnType: "string"
@@ -3268,11 +3517,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Adds the subscriber if not on the list, otherwise updates the…"
-- name: "Platform.Load(libraryName, version)"
+- name: "Platform.Load()"
   sortKey: "load"
   section: "Platform Objects"
   returnType: "null"
@@ -3281,11 +3531,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Loads a platform library."
-- name: "Platform.Function.LocalDateToSystemDate(dateString)"
+- name: "Platform.Function.LocalDateToSystemDate()"
   sortKey: "localdatetosystemdate"
   section: "Platform Functions"
   returnType: "Date"
@@ -3294,11 +3545,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Converts a date-time value from the local time of the account or user…"
-- name: "Platform.Function.Lookup(deName, returnField, whereFieldNames, whereFieldValues)"
+- name: "Platform.Function.Lookup()"
   sortKey: "lookup"
   section: "Platform Functions"
   returnType: "string|number|boolean|Date|null"
@@ -3307,11 +3559,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Retrieves a single field value from the first Data Extension row…"
-- name: "Platform.Function.LookupOrderedRows(deName, count, orderBy, whereFieldNames, whereFieldValues)"
+- name: "Platform.Function.LookupOrderedRows()"
   sortKey: "lookuporderedrows"
   section: "Platform Functions"
   returnType: "object[]|null"
@@ -3320,11 +3573,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Returns an ordered array of row objects from a Data Extension."
-- name: "Platform.Function.LookupRows(deName, whereFieldNames, whereFieldValues)"
+- name: "Platform.Function.LookupRows()"
   sortKey: "lookuprows"
   section: "Platform Functions"
   returnType: "object[]|null"
@@ -3333,6 +3587,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -3340,12 +3595,13 @@
 - name: "Map()"
   sortKey: "map"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/keyed-collections/#map"
   anchorId: "fn-map"
   status: "missing"
   es: "2015"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3359,6 +3615,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3372,6 +3629,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3379,12 +3637,13 @@
 - name: "Math.acosh()"
   sortKey: "math.acosh"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/math/#acosh"
   anchorId: "fn-math-acosh"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3398,6 +3657,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3405,12 +3665,13 @@
 - name: "Math.asinh()"
   sortKey: "math.asinh"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/math/#asinh"
   anchorId: "fn-math-asinh"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3424,6 +3685,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3437,6 +3699,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3444,12 +3707,13 @@
 - name: "Math.atanh()"
   sortKey: "math.atanh"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/math/#atanh"
   anchorId: "fn-math-atanh"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3457,12 +3721,13 @@
 - name: "Math.cbrt()"
   sortKey: "math.cbrt"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/math/#cbrt"
   anchorId: "fn-math-cbrt"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3476,6 +3741,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3483,12 +3749,13 @@
 - name: "Math.clz32()"
   sortKey: "math.clz32"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/math/#clz32"
   anchorId: "fn-math-clz32"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3502,6 +3769,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3509,12 +3777,13 @@
 - name: "Math.cosh()"
   sortKey: "math.cosh"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/math/#cosh"
   anchorId: "fn-math-cosh"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3528,6 +3797,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3541,6 +3811,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3548,12 +3819,13 @@
 - name: "Math.expm1()"
   sortKey: "math.expm1"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/math/#expm1"
   anchorId: "fn-math-expm1"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3567,6 +3839,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3574,12 +3847,13 @@
 - name: "Math.fround()"
   sortKey: "math.fround"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/math/#fround"
   anchorId: "fn-math-fround"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3587,12 +3861,13 @@
 - name: "Math.hypot()"
   sortKey: "math.hypot"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/math/#hypot"
   anchorId: "fn-math-hypot"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3600,12 +3875,13 @@
 - name: "Math.imul()"
   sortKey: "math.imul"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/math/#imul"
   anchorId: "fn-math-imul"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3619,6 +3895,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3632,6 +3909,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3645,6 +3923,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3652,12 +3931,13 @@
 - name: "Math.log10()"
   sortKey: "math.log10"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/math/#log10"
   anchorId: "fn-math-log10"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3665,12 +3945,13 @@
 - name: "Math.LOG10E"
   sortKey: "math.log10e"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/math/#log10e"
   anchorId: "fn-math-log10e"
   status: "missing"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3678,12 +3959,13 @@
 - name: "Math.log1p()"
   sortKey: "math.log1p"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/math/#log1p"
   anchorId: "fn-math-log1p"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3691,12 +3973,13 @@
 - name: "Math.log2()"
   sortKey: "math.log2"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/math/#log2"
   anchorId: "fn-math-log2"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3710,6 +3993,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3723,6 +4007,7 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3736,6 +4021,7 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3749,6 +4035,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3762,6 +4049,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3775,6 +4063,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3788,6 +4077,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3795,12 +4085,13 @@
 - name: "Math.sign()"
   sortKey: "math.sign"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/math/#sign"
   anchorId: "fn-math-sign"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3814,6 +4105,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3821,12 +4113,13 @@
 - name: "Math.sinh()"
   sortKey: "math.sinh"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/math/#sinh"
   anchorId: "fn-math-sinh"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3840,6 +4133,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3853,6 +4147,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3866,6 +4161,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3879,6 +4175,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3886,12 +4183,13 @@
 - name: "Math.tanh()"
   sortKey: "math.tanh"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/math/#tanh"
   anchorId: "fn-math-tanh"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3899,17 +4197,18 @@
 - name: "Math.trunc()"
   sortKey: "math.trunc"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/math/#trunc"
   anchorId: "fn-math-trunc"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Unavailable in SFMC."
-- name: "Platform.Function.MD5(string[, charset])"
+- name: "Platform.Function.MD5()"
   sortKey: "md5"
   section: "Platform Functions"
   returnType: "string"
@@ -3918,6 +4217,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3925,12 +4225,13 @@
 - name: "NaN"
   sortKey: "nan"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/global-values/#nan"
   anchorId: "fn-nan"
   status: "missing"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -3944,11 +4245,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Retrieves not-sent event data for message sends."
-- name: "NotSentEvent.Retrieve(filter)"
+- name: "NotSentEvent.Retrieve()"
   sortKey: "notsentevent.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -3957,11 +4259,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Retrieves not-sent event data for message sends matching the…"
-- name: "Now([useContextTime])"
+- name: "Now()"
   sortKey: "now"
   section: "Core Library"
   returnType: "Date"
@@ -3970,11 +4273,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Returns the current server date/time as a Date object (in the account…"
-- name: "Platform.Function.Now([useContextTime])"
+- name: "Platform.Function.Now()"
   sortKey: "now"
   section: "Platform Functions"
   returnType: "Date"
@@ -3983,6 +4287,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -3990,12 +4295,13 @@
 - name: "Number.EPSILON"
   sortKey: "number.epsilon"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/number-methods/#constants-es6"
   anchorId: "fn-number-epsilon"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4003,12 +4309,13 @@
 - name: "Number.isFinite()"
   sortKey: "number.isfinite"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "boolean"
   url: "/ecmascript-builtins/number-methods/#isfinite"
   anchorId: "fn-number-isfinite"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4016,12 +4323,13 @@
 - name: "Number.isInteger()"
   sortKey: "number.isinteger"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "boolean"
   url: "/ecmascript-builtins/number-methods/#isinteger"
   anchorId: "fn-number-isinteger"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4029,12 +4337,13 @@
 - name: "Number.isNaN()"
   sortKey: "number.isnan"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "boolean"
   url: "/ecmascript-builtins/number-methods/#isnan"
   anchorId: "fn-number-isnan"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4042,12 +4351,13 @@
 - name: "Number.isSafeInteger()"
   sortKey: "number.issafeinteger"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "boolean"
   url: "/ecmascript-builtins/number-methods/#issafeinteger"
   anchorId: "fn-number-issafeinteger"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4055,12 +4365,13 @@
 - name: "Number.MAX_SAFE_INTEGER"
   sortKey: "number.max_safe_integer"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/number-methods/#constants-es6"
   anchorId: "fn-number-max-safe-integer"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4074,6 +4385,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4081,12 +4393,13 @@
 - name: "Number.MIN_SAFE_INTEGER"
   sortKey: "number.min_safe_integer"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/number-methods/#constants-es6"
   anchorId: "fn-number-min-safe-integer"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4100,6 +4413,7 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -4113,6 +4427,7 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -4126,6 +4441,7 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -4133,12 +4449,13 @@
 - name: "Number.parseFloat()"
   sortKey: "number.parsefloat"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/number-methods/#parsefloat"
   anchorId: "fn-number-parsefloat"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4146,12 +4463,13 @@
 - name: "Number.parseInt()"
   sortKey: "number.parseint"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/number-methods/#parseint"
   anchorId: "fn-number-parseint"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4165,6 +4483,7 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -4178,6 +4497,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -4191,6 +4511,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4204,6 +4525,7 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -4217,6 +4539,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -4230,6 +4553,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -4243,6 +4567,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4250,12 +4575,13 @@
 - name: "Object.assign()"
   sortKey: "object.assign"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/object-methods/#assign"
   anchorId: "fn-object-assign"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4263,12 +4589,13 @@
 - name: "Object.create()"
   sortKey: "object.create"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/object-methods/#create"
   anchorId: "fn-object-create"
   status: "missing"
   es: "5"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4276,12 +4603,13 @@
 - name: "Object.defineProperties()"
   sortKey: "object.defineproperties"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/object-methods/#defineproperties"
   anchorId: "fn-object-defineproperties"
   status: "missing"
   es: "5"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4295,6 +4623,7 @@
   status: "ok"
   es: "5"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4302,12 +4631,13 @@
 - name: "Object.entries()"
   sortKey: "object.entries"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "array"
   url: "/ecmascript-builtins/object-methods/#entries"
   anchorId: "fn-object-entries"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4315,12 +4645,13 @@
 - name: "Object.freeze()"
   sortKey: "object.freeze"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/object-methods/#freeze"
   anchorId: "fn-object-freeze"
   status: "missing"
   es: "5"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4328,12 +4659,13 @@
 - name: "Object.getOwnPropertyDescriptor()"
   sortKey: "object.getownpropertydescriptor"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/object-methods/#getownpropertydescriptor"
   anchorId: "fn-object-getownpropertydescriptor"
   status: "missing"
   es: "5"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4341,12 +4673,13 @@
 - name: "Object.getOwnPropertyNames()"
   sortKey: "object.getownpropertynames"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "array"
   url: "/ecmascript-builtins/object-methods/#getownpropertynames"
   anchorId: "fn-object-getownpropertynames"
   status: "missing"
   es: "5"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4360,6 +4693,7 @@
   status: "ok"
   es: "5"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4367,12 +4701,13 @@
 - name: "Object.isExtensible()"
   sortKey: "object.isextensible"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "boolean"
   url: "/ecmascript-builtins/object-methods/#extensibility"
   anchorId: "fn-object-isextensible"
   status: "missing"
   es: "5"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4380,12 +4715,13 @@
 - name: "Object.isFrozen()"
   sortKey: "object.isfrozen"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "boolean"
   url: "/ecmascript-builtins/object-methods/#freeze"
   anchorId: "fn-object-isfrozen"
   status: "missing"
   es: "5"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4393,12 +4729,13 @@
 - name: "Object.isSealed()"
   sortKey: "object.issealed"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "boolean"
   url: "/ecmascript-builtins/object-methods/#extensibility"
   anchorId: "fn-object-issealed"
   status: "missing"
   es: "5"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4406,12 +4743,13 @@
 - name: "Object.keys()"
   sortKey: "object.keys"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "array"
   url: "/ecmascript-builtins/object-methods/#keys"
   anchorId: "fn-object-keys"
   status: "missing"
   es: "5"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4419,12 +4757,13 @@
 - name: "Object.preventExtensions()"
   sortKey: "object.preventextensions"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/object-methods/#extensibility"
   anchorId: "fn-object-preventextensions"
   status: "missing"
   es: "5"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4438,6 +4777,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4445,12 +4785,13 @@
 - name: "Object.prototype.isPrototypeOf()"
   sortKey: "object.prototype.isprototypeof"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "boolean"
   url: "/ecmascript-builtins/object-methods/#isprototypeof"
   anchorId: "fn-object-prototype-isprototypeof"
   status: "missing"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4458,12 +4799,13 @@
 - name: "Object.prototype.propertyIsEnumerable()"
   sortKey: "object.prototype.propertyisenumerable"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "boolean"
   url: "/ecmascript-builtins/object-methods/#propertyisenumerable"
   anchorId: "fn-object-prototype-propertyisenumerable"
   status: "missing"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4477,6 +4819,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4490,6 +4833,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4497,12 +4841,13 @@
 - name: "Object.seal()"
   sortKey: "object.seal"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/object-methods/#extensibility"
   anchorId: "fn-object-seal"
   status: "missing"
   es: "5"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4510,12 +4855,13 @@
 - name: "Object.values()"
   sortKey: "object.values"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "array"
   url: "/ecmascript-builtins/object-methods/#values"
   anchorId: "fn-object-values"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4529,11 +4875,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Retrieves open tracking event data for message sends."
-- name: "OpenEvent.Retrieve(filter)"
+- name: "OpenEvent.Retrieve()"
   sortKey: "openevent.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -4542,6 +4889,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4555,6 +4903,7 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -4568,11 +4917,12 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Unlike the spec, the SFMC engine returns NaN when the string has…"
-- name: "Platform.Function.ParseJSON(jsonString)"
+- name: "Platform.Function.ParseJSON()"
   sortKey: "parsejson"
   section: "Platform Functions"
   returnType: "any"
@@ -4581,6 +4931,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -4594,11 +4945,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: true
   description: "Manages portfolio (file) items in the account."
-- name: "Portfolio.Add(properties)"
+- name: "Portfolio.Add()"
   sortKey: "portfolio.add"
   section: "Core Library"
   returnType: "string"
@@ -4607,11 +4959,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: true
   description: "Creates a new portfolio (file) object from the supplied properties."
-- name: "Portfolio.Init(key)"
+- name: "Portfolio.Init()"
   sortKey: "portfolio.init"
   section: "Core Library"
   returnType: "PortfolioInstance"
@@ -4620,11 +4973,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: true
   description: "Initializes a Portfolio instance bound to the specified external key."
-- name: "Portfolio.Retrieve(filter)"
+- name: "Portfolio.Retrieve()"
   sortKey: "portfolio.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -4633,6 +4987,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: true
@@ -4646,11 +5001,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: true
   description: "Removes the previously initialized portfolio object."
-- name: "<PortfolioInstance>.Update(properties)"
+- name: "<PortfolioInstance>.Update()"
   sortKey: "portfolioinstance.update"
   section: "Core Library"
   returnType: "string"
@@ -4659,6 +5015,7 @@
   status: "blocked"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: true
@@ -4666,12 +5023,13 @@
 - name: "Promise()"
   sortKey: "promise"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/promises-iteration/#promise"
   anchorId: "fn-promise"
   status: "missing"
   es: "2015"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4679,12 +5037,13 @@
 - name: "Proxy()"
   sortKey: "proxy"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/reflection/#proxy"
   anchorId: "fn-proxy"
   status: "missing"
   es: "2015"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4698,11 +5057,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Manages SQL query activity definitions."
-- name: "QueryDefinition.Add(properties)"
+- name: "QueryDefinition.Add()"
   sortKey: "querydefinition.add"
   section: "Core Library"
   returnType: "string"
@@ -4711,11 +5071,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Creates a new query definition from the supplied properties."
-- name: "QueryDefinition.Init(key)"
+- name: "QueryDefinition.Init()"
   sortKey: "querydefinition.init"
   section: "Core Library"
   returnType: "QueryDefinitionInstance"
@@ -4724,11 +5085,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Initializes a QueryDefinition instance bound to the specified…"
-- name: "QueryDefinition.Retrieve(filter)"
+- name: "QueryDefinition.Retrieve()"
   sortKey: "querydefinition.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -4737,11 +5099,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Returns an array of query definitions matching the specified filter."
-- name: "<QueryDefinitionInstance>.Perform(action)"
+- name: "<QueryDefinitionInstance>.Perform()"
   sortKey: "querydefinitioninstance.perform"
   section: "Core Library"
   returnType: "string"
@@ -4750,6 +5113,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -4763,11 +5127,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Removes the previously initialized query definition."
-- name: "<QueryDefinitionInstance>.Update(properties)"
+- name: "<QueryDefinitionInstance>.Update()"
   sortKey: "querydefinitioninstance.update"
   section: "Core Library"
   returnType: "string"
@@ -4776,11 +5141,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Updates the query definition with the supplied attributes."
-- name: "Platform.Function.RaiseError(message[, currentRecipientOnly[, errorCode[, errorNumber]]])"
+- name: "Platform.Function.RaiseError()"
   sortKey: "raiseerror"
   section: "Platform Functions"
   returnType: "void"
@@ -4789,6 +5155,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -4802,11 +5169,12 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "The RangeError subtype constructor is present in SSJS."
-- name: "Platform.Recipient.GetAttributeValue(attributeName)"
+- name: "Platform.Recipient.GetAttributeValue()"
   sortKey: "recipient.getattributevalue"
   section: "Platform Objects"
   returnType: "string"
@@ -4815,11 +5183,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Returns the value of a subscriber attribute or sendable data…"
-- name: "Redirect(url, movedPermanently)"
+- name: "Redirect()"
   sortKey: "redirect"
   section: "Core Library"
   returnType: "void"
@@ -4828,11 +5197,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Redirects the browser to another address."
-- name: "Platform.Function.RedirectTo(url)"
+- name: "Platform.Function.RedirectTo()"
   sortKey: "redirectto"
   section: "Platform Functions"
   returnType: "string"
@@ -4841,6 +5211,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -4854,6 +5225,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -4861,12 +5233,13 @@
 - name: "Reflect"
   sortKey: "reflect"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/reflection/#reflect"
   anchorId: "fn-reflect"
   status: "missing"
   es: "2015"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4880,6 +5253,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4887,12 +5261,13 @@
 - name: "instanceof RegExp"
   sortKey: "regexp.instanceof"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "boolean"
   url: "/ecmascript-builtins/regular-expressions/#instanceof"
   anchorId: "fn-regexp-instanceof"
   status: "missing"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -4906,6 +5281,7 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -4919,6 +5295,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4926,12 +5303,13 @@
 - name: "RegExp.prototype.ignoreCase"
   sortKey: "regexp.prototype.ignorecase"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "boolean"
   url: "/ecmascript-builtins/regular-expressions/#ignorecase"
   anchorId: "fn-regexp-prototype-ignorecase"
   status: "missing"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4945,6 +5323,7 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -4952,12 +5331,13 @@
 - name: "RegExp.prototype.multiline"
   sortKey: "regexp.prototype.multiline"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "boolean"
   url: "/ecmascript-builtins/regular-expressions/#multiline"
   anchorId: "fn-regexp-prototype-multiline"
   status: "missing"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4971,6 +5351,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4984,6 +5365,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -4997,6 +5379,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -5010,6 +5393,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -5023,6 +5407,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -5036,6 +5421,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -5049,11 +5435,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Returns the IP address of the client."
-- name: "Platform.Request.GetCookieValue(cookieName)"
+- name: "Platform.Request.GetCookieValue()"
   sortKey: "request.getcookievalue"
   section: "Platform Objects"
   returnType: "string|null"
@@ -5062,11 +5449,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Retrieves the value of a named cookie from the HTTP request sent by…"
-- name: "Platform.Request.GetFormField(name)"
+- name: "Platform.Request.GetFormField()"
   sortKey: "request.getformfield"
   section: "Platform Objects"
   returnType: "string|null"
@@ -5075,11 +5463,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Retrieves a named field from a submitted POST form body."
-- name: "Request.GetFormField(name)"
+- name: "Request.GetFormField()"
   sortKey: "request.getformfield"
   section: "Core Library"
   returnType: "string"
@@ -5088,11 +5477,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Returns the value of a named form field submitted with the current…"
-- name: "Platform.Request.GetPostData([encoding])"
+- name: "Platform.Request.GetPostData()"
   sortKey: "request.getpostdata"
   section: "Platform Objects"
   returnType: "string"
@@ -5101,11 +5491,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Returns the raw body of the HTTP POST request."
-- name: "Platform.Request.GetQueryStringParameter(parameterName)"
+- name: "Platform.Request.GetQueryStringParameter()"
   sortKey: "request.getquerystringparameter"
   section: "Platform Objects"
   returnType: "string|null"
@@ -5114,11 +5505,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Retrieves the value of a URL query string parameter."
-- name: "Request.GetQueryStringParameter(name)"
+- name: "Request.GetQueryStringParameter()"
   sortKey: "request.getquerystringparameter"
   section: "Core Library"
   returnType: "string"
@@ -5127,11 +5519,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Returns the value of a named URL query string parameter for the…"
-- name: "Platform.Request.GetRequestHeader(headerName)"
+- name: "Platform.Request.GetRequestHeader()"
   sortKey: "request.getrequestheader"
   section: "Platform Objects"
   returnType: "string|null"
@@ -5140,6 +5533,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -5153,6 +5547,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -5166,6 +5561,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -5179,6 +5575,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -5192,6 +5589,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -5205,6 +5603,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -5218,6 +5617,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -5231,6 +5631,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -5244,6 +5645,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -5257,6 +5659,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -5270,6 +5673,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -5283,6 +5687,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -5296,6 +5701,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -5309,6 +5715,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -5322,11 +5729,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Sets the Content-Type of the HTTP response."
-- name: "Platform.Response.Redirect(url[, movedPermanently])"
+- name: "Platform.Response.Redirect()"
   sortKey: "response.redirect"
   section: "Platform Objects"
   returnType: "void"
@@ -5335,11 +5743,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Redirects the current page to a new URL and stops script execution…"
-- name: "Platform.Response.RemoveCookie(name)"
+- name: "Platform.Response.RemoveCookie()"
   sortKey: "response.removecookie"
   section: "Platform Objects"
   returnType: "null"
@@ -5348,11 +5757,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Attempts to remove a browser cookie from a CloudPage response."
-- name: "Platform.Response.RemoveResponseHeader(headerName)"
+- name: "Platform.Response.RemoveResponseHeader()"
   sortKey: "response.removeresponseheader"
   section: "Platform Objects"
   returnType: "null"
@@ -5361,11 +5771,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Removes a previously set HTTP response header from the response."
-- name: "Platform.Response.SetCookie(name, value[, expires, secure])"
+- name: "Platform.Response.SetCookie()"
   sortKey: "response.setcookie"
   section: "Platform Objects"
   returnType: "null"
@@ -5374,11 +5785,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Sets a cookie on the client browser response."
-- name: "Platform.Response.SetResponseHeader(headerName, value)"
+- name: "Platform.Response.SetResponseHeader()"
   sortKey: "response.setresponseheader"
   section: "Platform Objects"
   returnType: "null"
@@ -5387,11 +5799,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Sets a response header on the current page response."
-- name: "Platform.Response.Write(content)"
+- name: "Platform.Response.Write()"
   sortKey: "response.write"
   section: "Platform Objects"
   returnType: "void"
@@ -5400,11 +5813,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Writes content to the HTTP response output."
-- name: "new Script.Util.HttpGet(url)"
+- name: "new Script.Util.HttpGet()"
   sortKey: "script.util.httpget"
   section: "HTTP & REST"
   returnType: "HttpGetInstance"
@@ -5413,11 +5827,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Creates an HTTP GET request handler."
-- name: "new Script.Util.HttpRequest(url)"
+- name: "new Script.Util.HttpRequest()"
   sortKey: "script.util.httprequest"
   section: "HTTP & REST"
   returnType: "HttpRequestInstance"
@@ -5426,6 +5841,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -5439,6 +5855,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -5452,11 +5869,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: true
   description: "Manages email sends."
-- name: "Send.Add(emailKey, listIds, [options])"
+- name: "Send.Add()"
   sortKey: "send.add"
   section: "Core Library"
   returnType: "string"
@@ -5465,6 +5883,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: true
@@ -5478,11 +5897,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: true
   description: "Manages reusable Send Definition configurations that define all…"
-- name: "Send.Definition.Add(esdParams, sendClassificationKey, emailKey, listIds)"
+- name: "Send.Definition.Add()"
   sortKey: "send.definition.add"
   section: "Core Library"
   returnType: "object"
@@ -5491,11 +5911,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: true
   description: "Creates a new send definition."
-- name: "Send.Definition.AddWithDE(esdParams, sendClassificationKey, emailKey, sendableDataExtensionKey)"
+- name: "Send.Definition.AddWithDE()"
   sortKey: "send.definition.addwithde"
   section: "Core Library"
   returnType: "object"
@@ -5504,11 +5925,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: true
   description: "Creates a new send definition that targets a sendable Data Extension."
-- name: "Send.Definition.AddWithFilterDefinition(esdParams, sendClassificationKey, emailKey, filterDefinitionKey, listId)"
+- name: "Send.Definition.AddWithFilterDefinition()"
   sortKey: "send.definition.addwithfilterdefinition"
   section: "Core Library"
   returnType: "never"
@@ -5517,11 +5939,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: true
   description: "Creates a new send definition that targets the audience defined by a…"
-- name: "Send.Definition.Init(key)"
+- name: "Send.Definition.Init()"
   sortKey: "send.definition.init"
   section: "Core Library"
   returnType: "SendDefinitionInstance"
@@ -5530,11 +5953,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: true
   description: "Initializes a SendDefinition instance bound to the specified external…"
-- name: "Send.Definition.Retrieve([filter])"
+- name: "Send.Definition.Retrieve()"
   sortKey: "send.definition.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -5543,11 +5967,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: true
   description: "Returns an array of send definitions, optionally filtered."
-- name: "Send.Init(id)"
+- name: "Send.Init()"
   sortKey: "send.init"
   section: "Core Library"
   returnType: "SendInstance"
@@ -5556,11 +5981,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: true
   description: "Initializes a Send instance bound to the specified send ID."
-- name: "Send.Retrieve(filter)"
+- name: "Send.Retrieve()"
   sortKey: "send.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -5569,11 +5995,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: true
   description: "Returns an array of sends matching the specified filter."
-- name: "Send.RetrieveLists(filter)"
+- name: "Send.RetrieveLists()"
   sortKey: "send.retrievelists"
   section: "Core Library"
   returnType: "object[]"
@@ -5582,6 +6009,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: true
@@ -5595,6 +6023,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -5608,11 +6037,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Retrieves click tracking data for the initialized send."
-- name: "Send.Tracking.Retrieve(filter)"
+- name: "Send.Tracking.Retrieve()"
   sortKey: "send.tracking.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -5621,6 +6051,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -5634,6 +6065,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -5647,11 +6079,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Manages send classification settings."
-- name: "SendClassification.Add(properties)"
+- name: "SendClassification.Add()"
   sortKey: "sendclassification.add"
   section: "Core Library"
   returnType: "object"
@@ -5660,11 +6093,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Creates a new send classification from the supplied properties."
-- name: "SendClassification.Init(key)"
+- name: "SendClassification.Init()"
   sortKey: "sendclassification.init"
   section: "Core Library"
   returnType: "SendClassificationInstance"
@@ -5673,11 +6107,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Initializes a SendClassification instance bound to the specified…"
-- name: "SendClassification.Retrieve(filter)"
+- name: "SendClassification.Retrieve()"
   sortKey: "sendclassification.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -5686,6 +6121,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -5699,11 +6135,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Removes the previously initialized send classification."
-- name: "<SendClassificationInstance>.Update(properties)"
+- name: "<SendClassificationInstance>.Update()"
   sortKey: "sendclassificationinstance.update"
   section: "Core Library"
   returnType: "string"
@@ -5712,6 +6149,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -5725,6 +6163,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: true
@@ -5738,11 +6177,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: true
   description: "Sends email messages to the lists associated with the previously…"
-- name: "<SendDefinitionInstance>.TestSend([emailAddress])"
+- name: "<SendDefinitionInstance>.TestSend()"
   sortKey: "senddefinitioninstance.testsend"
   section: "Core Library"
   returnType: "string"
@@ -5751,11 +6191,12 @@
   status: "blocked"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: true
   description: "Sends a test version of the previously initialized send definition."
-- name: "<SendDefinitionInstance>.Update(properties)"
+- name: "<SendDefinitionInstance>.Update()"
   sortKey: "senddefinitioninstance.update"
   section: "Core Library"
   returnType: "string"
@@ -5764,6 +6205,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: true
@@ -5777,11 +6219,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Manages sender profile definitions."
-- name: "SenderProfile.Add(properties)"
+- name: "SenderProfile.Add()"
   sortKey: "senderprofile.add"
   section: "Core Library"
   returnType: "object"
@@ -5790,11 +6233,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Creates a new sender profile from the supplied properties."
-- name: "SenderProfile.Init(key)"
+- name: "SenderProfile.Init()"
   sortKey: "senderprofile.init"
   section: "Core Library"
   returnType: "SenderProfileInstance"
@@ -5803,6 +6247,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -5816,11 +6261,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Removes the previously initialized sender profile."
-- name: "<SenderProfileInstance>.Update(properties)"
+- name: "<SenderProfileInstance>.Update()"
   sortKey: "senderprofileinstance.update"
   section: "Core Library"
   returnType: "string"
@@ -5829,6 +6275,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -5842,6 +6289,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: true
@@ -5855,6 +6303,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: true
@@ -5868,11 +6317,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Retrieves sent event data for message sends."
-- name: "SentEvent.Retrieve(filter)"
+- name: "SentEvent.Retrieve()"
   sortKey: "sentevent.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -5881,6 +6331,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -5888,17 +6339,18 @@
 - name: "Set()"
   sortKey: "set"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/keyed-collections/#set"
   anchorId: "fn-set"
   status: "missing"
   es: "2015"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Set is undefined in SFMC (ES6); new Set() throws \"Unknown type: Set\"."
-- name: "Platform.Function.SetObjectProperty(apiObject, propertyName, value)"
+- name: "Platform.Function.SetObjectProperty()"
   sortKey: "setobjectproperty"
   section: "Platform Functions"
   returnType: "null"
@@ -5907,6 +6359,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -5914,17 +6367,18 @@
 - name: "SharedArrayBuffer()"
   sortKey: "sharedarraybuffer"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/typed-arrays/#sharedarraybuffer"
   anchorId: "fn-sharedarraybuffer"
   status: "missing"
   es: "2017"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "SharedArrayBuffer is undefined in SFMC (ES2017)."
-- name: "String(value)"
+- name: "String()"
   sortKey: "string"
   section: "ECMAScript Builtins"
   returnType: "string"
@@ -5933,6 +6387,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -5946,6 +6401,7 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -5959,6 +6415,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -5966,12 +6423,13 @@
 - name: "String.prototype.codePointAt()"
   sortKey: "string.prototype.codepointat"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "number"
   url: "/ecmascript-builtins/string-methods/#codepointat"
   anchorId: "fn-string-prototype-codepointat"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -5985,6 +6443,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -5992,12 +6451,13 @@
 - name: "String.prototype.endsWith()"
   sortKey: "string.prototype.endswith"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "boolean"
   url: "/ecmascript-builtins/string-methods/#endswith"
   anchorId: "fn-string-prototype-endswith"
   status: "missing"
   es: "6"
   polyfill: true
+  polyfillUrl: "/engine-limitations/polyfills/#string-prototype-endswith"
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6005,12 +6465,13 @@
 - name: "String.prototype.includes()"
   sortKey: "string.prototype.includes"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "boolean"
   url: "/ecmascript-builtins/string-methods/#includes"
   anchorId: "fn-string-prototype-includes"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6024,6 +6485,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6037,6 +6499,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6050,6 +6513,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6063,6 +6527,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6076,6 +6541,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -6083,12 +6549,13 @@
 - name: "String.prototype.padEnd()"
   sortKey: "string.prototype.padend"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "string"
   url: "/ecmascript-builtins/string-methods/#padend"
   anchorId: "fn-string-prototype-padend"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6096,12 +6563,13 @@
 - name: "String.prototype.padStart()"
   sortKey: "string.prototype.padstart"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "string"
   url: "/ecmascript-builtins/string-methods/#padstart"
   anchorId: "fn-string-prototype-padstart"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6109,12 +6577,13 @@
 - name: "String.prototype.repeat()"
   sortKey: "string.prototype.repeat"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "string"
   url: "/ecmascript-builtins/string-methods/#repeat"
   anchorId: "fn-string-prototype-repeat"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6128,6 +6597,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6141,6 +6611,7 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -6154,6 +6625,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6167,6 +6639,7 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -6174,12 +6647,13 @@
 - name: "String.prototype.startsWith()"
   sortKey: "string.prototype.startswith"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "boolean"
   url: "/ecmascript-builtins/string-methods/#startswith"
   anchorId: "fn-string-prototype-startswith"
   status: "missing"
   es: "6"
   polyfill: true
+  polyfillUrl: "/engine-limitations/polyfills/#string-prototype-startswith"
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6187,12 +6661,13 @@
 - name: "String.prototype.substr()"
   sortKey: "string.prototype.substr"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "string"
   url: "/ecmascript-builtins/string-methods/#substr"
   anchorId: "fn-string-prototype-substr"
   status: "missing"
   es: "3"
   polyfill: true
+  polyfillUrl: "/engine-limitations/polyfills/#string-prototype-substr"
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6206,6 +6681,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6219,6 +6695,7 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -6232,6 +6709,7 @@
   status: "partial"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -6245,6 +6723,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6258,6 +6737,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6265,12 +6745,13 @@
 - name: "String.prototype.trim()"
   sortKey: "string.prototype.trim"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "string"
   url: "/ecmascript-builtins/string-methods/#trim"
   anchorId: "fn-string-prototype-trim"
   status: "missing"
   es: "5"
   polyfill: true
+  polyfillUrl: "/engine-limitations/polyfills/#string-prototype-trim"
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6278,12 +6759,13 @@
 - name: "String.prototype.trimEnd()"
   sortKey: "string.prototype.trimend"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "string"
   url: "/ecmascript-builtins/string-methods/#trimend"
   anchorId: "fn-string-prototype-trimend"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6291,17 +6773,18 @@
 - name: "String.prototype.trimStart()"
   sortKey: "string.prototype.trimstart"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "string"
   url: "/ecmascript-builtins/string-methods/#trimstart"
   anchorId: "fn-string-prototype-trimstart"
   status: "missing"
   es: "6"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Unavailable in SFMC."
-- name: "Platform.Function.Stringify(value)"
+- name: "Platform.Function.Stringify()"
   sortKey: "stringify"
   section: "Platform Functions"
   returnType: "string"
@@ -6310,11 +6793,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Converts a JavaScript object into its JSON string representation."
-- name: "Stringify(value)"
+- name: "Stringify()"
   sortKey: "stringify"
   section: "Core Library"
   returnType: "string"
@@ -6323,6 +6807,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6336,11 +6821,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Manages subscriber records in the account."
-- name: "Subscriber.Add(properties)"
+- name: "Subscriber.Add()"
   sortKey: "subscriber.add"
   section: "Core Library"
   returnType: "string"
@@ -6349,6 +6835,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6362,11 +6849,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Accesses attributes belonging to a specific subscriber."
-- name: "Subscriber.Init(key)"
+- name: "Subscriber.Init()"
   sortKey: "subscriber.init"
   section: "Core Library"
   returnType: "SubscriberInstance"
@@ -6375,6 +6863,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6388,11 +6877,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Lists the subscriber lists a specific subscriber belongs to."
-- name: "Subscriber.Retrieve(filter)"
+- name: "Subscriber.Retrieve()"
   sortKey: "subscriber.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -6401,6 +6891,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6414,6 +6905,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6427,6 +6919,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6440,6 +6933,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -6453,6 +6947,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6466,11 +6961,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Sets the previously initialized subscriber's status to…"
-- name: "<SubscriberInstance>.Update(properties)"
+- name: "<SubscriberInstance>.Update()"
   sortKey: "subscriberinstance.update"
   section: "Core Library"
   returnType: "string"
@@ -6479,11 +6975,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Updates the previously initialized subscriber with the supplied…"
-- name: "<SubscriberInstance>.Upsert(properties)"
+- name: "<SubscriberInstance>.Upsert()"
   sortKey: "subscriberinstance.upsert"
   section: "Core Library"
   returnType: "string"
@@ -6492,6 +6989,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -6499,12 +6997,13 @@
 - name: "SuppressedError()"
   sortKey: "suppressederror"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/error-types/#suppressederror"
   anchorId: "fn-suppressederror"
   status: "missing"
   es: "2026"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6518,11 +7017,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Retrieves survey response event data for message sends."
-- name: "SurveyEvent.Retrieve(filter)"
+- name: "SurveyEvent.Retrieve()"
   sortKey: "surveyevent.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -6531,6 +7031,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6538,12 +7039,13 @@
 - name: "Symbol()"
   sortKey: "symbol"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "any"
   url: "/ecmascript-builtins/symbol/"
   anchorId: "fn-symbol"
   status: "missing"
   es: "2015"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6557,11 +7059,12 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "The SyntaxError subtype constructor is present in SSJS."
-- name: "Platform.Function.SystemDateToLocalDate(dateString)"
+- name: "Platform.Function.SystemDateToLocalDate()"
   sortKey: "systemdatetolocaldate"
   section: "Platform Functions"
   returnType: "Date"
@@ -6570,6 +7073,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -6583,11 +7087,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: true
   description: "Manages email template definitions."
-- name: "Template.Add(properties)"
+- name: "Template.Add()"
   sortKey: "template.add"
   section: "Core Library"
   returnType: "string"
@@ -6596,11 +7101,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: true
   description: "Creates a new template from the supplied properties."
-- name: "Template.Init(key)"
+- name: "Template.Init()"
   sortKey: "template.init"
   section: "Core Library"
   returnType: "TemplateInstance"
@@ -6609,11 +7115,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: true
   description: "Initializes a Template instance bound to the specified external key."
-- name: "Template.Retrieve(filter)"
+- name: "Template.Retrieve()"
   sortKey: "template.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -6622,11 +7129,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: true
   description: "Returns an array of templates matching the specified filter."
-- name: "<TemplateInstance>.Update(properties)"
+- name: "<TemplateInstance>.Update()"
   sortKey: "templateinstance.update"
   section: "Core Library"
   returnType: "string"
@@ -6635,11 +7143,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: true
   description: "Updates the template with the supplied attributes."
-- name: "Platform.Function.TreatAsContent(content)"
+- name: "Platform.Function.TreatAsContent()"
   sortKey: "treatascontent"
   section: "Platform Functions"
   returnType: "string"
@@ -6648,6 +7157,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6661,11 +7171,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Manages triggered send definitions and fires individual sends."
-- name: "TriggeredSend.Add(properties)"
+- name: "TriggeredSend.Add()"
   sortKey: "triggeredsend.add"
   section: "Core Library"
   returnType: "TriggeredSendInstance"
@@ -6674,11 +7185,12 @@
   status: "blocked"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Creates a new triggered send definition from the supplied properties…"
-- name: "TriggeredSend.Init(key)"
+- name: "TriggeredSend.Init()"
   sortKey: "triggeredsend.init"
   section: "Core Library"
   returnType: "TriggeredSendInstance"
@@ -6687,11 +7199,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Initializes a TriggeredSend instance bound to the specified external…"
-- name: "TriggeredSend.Retrieve(filter)"
+- name: "TriggeredSend.Retrieve()"
   sortKey: "triggeredsend.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -6700,6 +7213,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6713,6 +7227,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6726,6 +7241,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6739,6 +7255,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6752,6 +7269,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -6765,11 +7283,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Publishes a triggered send definition, making it active and ready to…"
-- name: "<TriggeredSendInstance>.Send(emailAddress, [sendTimeAttributes], [subscriberKey])"
+- name: "<TriggeredSendInstance>.Send()"
   sortKey: "triggeredsendinstance.send"
   section: "Core Library"
   returnType: "string"
@@ -6778,6 +7297,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -6791,11 +7311,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Starts (reactivates) a paused triggered send definition."
-- name: "<TriggeredSendInstance>.Tracking.Clicks.Retrieve(filter)"
+- name: "<TriggeredSendInstance>.Tracking.Clicks.Retrieve()"
   sortKey: "triggeredsendinstance.tracking.clicks.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -6804,11 +7325,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Returns click tracking information for the previously initialized…"
-- name: "<TriggeredSendInstance>.Tracking.Retrieve([filter])"
+- name: "<TriggeredSendInstance>.Tracking.Retrieve()"
   sortKey: "triggeredsendinstance.tracking.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -6817,11 +7339,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Returns tracking data for the previously initialized triggered send…"
-- name: "<TriggeredSendInstance>.Tracking.TotalByInterval.Retrieve(type, startDate, endDate, groupBy)"
+- name: "<TriggeredSendInstance>.Tracking.TotalByInterval.Retrieve()"
   sortKey: "triggeredsendinstance.tracking.totalbyinterval.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -6830,11 +7353,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Returns aggregated tracking data for the previously initialized…"
-- name: "<TriggeredSendInstance>.Update([properties])"
+- name: "<TriggeredSendInstance>.Update()"
   sortKey: "triggeredsendinstance.update"
   section: "Core Library"
   returnType: "string"
@@ -6843,6 +7367,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -6856,6 +7381,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -6863,12 +7389,13 @@
 - name: "Uint16Array()"
   sortKey: "uint16array"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/typed-arrays/#typedarray-views"
   anchorId: "fn-uint16array"
   status: "missing"
   es: "2015"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6876,12 +7403,13 @@
 - name: "Uint32Array()"
   sortKey: "uint32array"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/typed-arrays/#typedarray-views"
   anchorId: "fn-uint32array"
   status: "missing"
   es: "2015"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6889,12 +7417,13 @@
 - name: "Uint8Array()"
   sortKey: "uint8array"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/typed-arrays/#typedarray-views"
   anchorId: "fn-uint8array"
   status: "missing"
   es: "2015"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6902,12 +7431,13 @@
 - name: "Uint8ClampedArray()"
   sortKey: "uint8clampedarray"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/typed-arrays/#typedarray-views"
   anchorId: "fn-uint8clampedarray"
   status: "missing"
   es: "2015"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6921,6 +7451,7 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6928,12 +7459,13 @@
 - name: "unescape()"
   sortKey: "unescape"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "string"
   url: "/ecmascript-builtins/global-functions/#unescape"
   anchorId: "fn-unescape"
   status: "missing"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -6947,11 +7479,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Retrieves unsubscribe event data for message sends."
-- name: "UnsubEvent.Retrieve(filter)"
+- name: "UnsubEvent.Retrieve()"
   sortKey: "unsubevent.retrieve"
   section: "Core Library"
   returnType: "object[]"
@@ -6960,11 +7493,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Retrieves unsubscribe event data for message sends matching the…"
-- name: "Platform.Function.UpdateData(deName, whereFieldNames, whereFieldValues, fieldNames, fieldValues)"
+- name: "Platform.Function.UpdateData()"
   sortKey: "updatedata"
   section: "Platform Functions"
   returnType: "number"
@@ -6973,11 +7507,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Modifies existing rows in a Data Extension matching filter criteria…"
-- name: "Platform.Function.UpdateDE(deName, whereFieldNames, whereFieldValues, fieldNames, fieldValues)"
+- name: "Platform.Function.UpdateDE()"
   sortKey: "updatede"
   section: "Platform Functions"
   returnType: "null"
@@ -6986,11 +7521,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Modifies existing rows in a Data Extension matching filter criteria…"
-- name: "Platform.Function.UpsertData(deName, whereFieldNames, whereFieldValues, fieldNames, fieldValues)"
+- name: "Platform.Function.UpsertData()"
   sortKey: "upsertdata"
   section: "Platform Functions"
   returnType: "number"
@@ -6999,11 +7535,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Inserts a new row or updates an existing one in a Data Extension and…"
-- name: "Platform.Function.UpsertDE(deName, whereFieldNames, whereFieldValues, fieldNames, fieldValues)"
+- name: "Platform.Function.UpsertDE()"
   sortKey: "upsertde"
   section: "Platform Functions"
   returnType: "null"
@@ -7012,6 +7549,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -7025,11 +7563,12 @@
   status: "ok"
   es: "3"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "The URIError subtype constructor is present in SSJS."
-- name: "Platform.Function.UrlEncode(url[, encodeReservedKeywords])"
+- name: "Platform.Function.UrlEncode()"
   sortKey: "urlencode"
   section: "Platform Functions"
   returnType: "string"
@@ -7038,11 +7577,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Percent-encodes only the query string after the first question mark…"
-- name: "Platform.Variable.GetValue(variableName)"
+- name: "Platform.Variable.GetValue()"
   sortKey: "variable.getvalue"
   section: "Platform Objects"
   returnType: "string|number|boolean|null"
@@ -7051,11 +7591,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Retrieves the value of an AMPscript variable from the SSJS context."
-- name: "Platform.Variable.SetValue(variableName, value)"
+- name: "Platform.Variable.SetValue()"
   sortKey: "variable.setvalue"
   section: "Platform Objects"
   returnType: "null"
@@ -7064,6 +7605,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -7071,12 +7613,13 @@
 - name: "WeakMap()"
   sortKey: "weakmap"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/keyed-collections/#weakmap"
   anchorId: "fn-weakmap"
   status: "missing"
   es: "2015"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -7084,12 +7627,13 @@
 - name: "WeakRef()"
   sortKey: "weakref"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/memory-management/#weakref"
   anchorId: "fn-weakref"
   status: "missing"
   es: "2021"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
@@ -7097,17 +7641,18 @@
 - name: "WeakSet()"
   sortKey: "weakset"
   section: "ECMAScript Builtins"
-  returnType: "—"
+  returnType: "object"
   url: "/ecmascript-builtins/keyed-collections/#weakset"
   anchorId: "fn-weakset"
   status: "missing"
   es: "2015"
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "WeakSet is undefined in SFMC (ES6); new WeakSet() throws \"Unknown…"
-- name: "Write(text)"
+- name: "Write()"
   sortKey: "write"
   section: "Core Library"
   returnType: "void"
@@ -7116,11 +7661,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Writes text to the HTTP response output."
-- name: "<WSProxyInstance>.createBatch(objectType, propertiesArray[, createOptions])"
+- name: "<WSProxyInstance>.createBatch()"
   sortKey: "wsproxyinstance.createbatch"
   section: "WSProxy"
   returnType: "WSProxyResult"
@@ -7129,11 +7675,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Creates multiple Marketing Cloud objects in a single SOAP API call."
-- name: "<WSProxyInstance>.createItem(objectType, properties[, createOptions])"
+- name: "<WSProxyInstance>.createItem()"
   sortKey: "wsproxyinstance.createitem"
   section: "WSProxy"
   returnType: "WSProxyResult"
@@ -7142,11 +7689,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Creates a new Marketing Cloud object via the SOAP API."
-- name: "<WSProxyInstance>.deleteBatch(objectType, propertiesArray[, deleteOptions])"
+- name: "<WSProxyInstance>.deleteBatch()"
   sortKey: "wsproxyinstance.deletebatch"
   section: "WSProxy"
   returnType: "WSProxyResult"
@@ -7155,11 +7703,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Deletes multiple Marketing Cloud objects in a single SOAP API call."
-- name: "<WSProxyInstance>.deleteItem(objectType, properties[, deleteOptions])"
+- name: "<WSProxyInstance>.deleteItem()"
   sortKey: "wsproxyinstance.deleteitem"
   section: "WSProxy"
   returnType: "WSProxyResult"
@@ -7168,11 +7717,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Deletes a Marketing Cloud object via the SOAP API."
-- name: "<WSProxyInstance>.describe(objectType)"
+- name: "<WSProxyInstance>.describe()"
   sortKey: "wsproxyinstance.describe"
   section: "WSProxy"
   returnType: "WSProxyResult"
@@ -7181,11 +7731,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Returns structural metadata for one or more SOAP API object types…"
-- name: "<WSProxyInstance>.execute(parameters, requestName)"
+- name: "<WSProxyInstance>.execute()"
   sortKey: "wsproxyinstance.execute"
   section: "WSProxy"
   returnType: "WSProxyResult"
@@ -7194,11 +7745,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Runs a SOAP Execute request (e.g. LogUnsubEvent), passing an array of…"
-- name: "<WSProxyInstance>.getNextBatch(objectType, requestId)"
+- name: "<WSProxyInstance>.getNextBatch()"
   sortKey: "wsproxyinstance.getnextbatch"
   section: "WSProxy"
   returnType: "WSProxyResult"
@@ -7207,11 +7759,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Retrieves the next page of results from a previous retrieve call that…"
-- name: "<WSProxyInstance>.performBatch(objectType, propertiesArray, action[, performOptions])"
+- name: "<WSProxyInstance>.performBatch()"
   sortKey: "wsproxyinstance.performbatch"
   section: "WSProxy"
   returnType: "WSProxyResult"
@@ -7220,11 +7773,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Executes a perform action on multiple Marketing Cloud objects in a…"
-- name: "<WSProxyInstance>.performItem(objectType, properties, action[, performOptions])"
+- name: "<WSProxyInstance>.performItem()"
   sortKey: "wsproxyinstance.performitem"
   section: "WSProxy"
   returnType: "WSProxyResult"
@@ -7233,6 +7787,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
@@ -7246,11 +7801,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Clears all client IDs set on the WSProxy instance, reverting to the…"
-- name: "<WSProxyInstance>.retrieve(objectType, columns[, filter[, retrieveOptions[, requestProps]]])"
+- name: "<WSProxyInstance>.retrieve()"
   sortKey: "wsproxyinstance.retrieve"
   section: "WSProxy"
   returnType: "WSProxyResult"
@@ -7259,11 +7815,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Retrieves Marketing Cloud objects matching an optional filter via the…"
-- name: "<WSProxyInstance>.setClientId(options)"
+- name: "<WSProxyInstance>.setClientId()"
   sortKey: "wsproxyinstance.setclientid"
   section: "WSProxy"
   returnType: "null"
@@ -7272,11 +7829,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: true
   deprecated: false
   description: "Sets a ClientId (impersonation) context on the WSProxy instance so…"
-- name: "<WSProxyInstance>.updateBatch(objectType, propertiesArray[, updateOptions])"
+- name: "<WSProxyInstance>.updateBatch()"
   sortKey: "wsproxyinstance.updatebatch"
   section: "WSProxy"
   returnType: "WSProxyResult"
@@ -7285,11 +7843,12 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false
   description: "Updates multiple Marketing Cloud objects in a single SOAP API call."
-- name: "<WSProxyInstance>.updateItem(objectType, properties[, updateOptions])"
+- name: "<WSProxyInstance>.updateItem()"
   sortKey: "wsproxyinstance.updateitem"
   section: "WSProxy"
   returnType: "WSProxyResult"
@@ -7298,6 +7857,7 @@
   status: "ok"
   es: ""
   polyfill: false
+  polyfillUrl: ""
   verified: true
   differsFromDocs: false
   deprecated: false

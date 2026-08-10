@@ -9,6 +9,7 @@
   "scripts": {
     "prepare": "husky || true",
     "generate:site-index": "node scripts/regenerate-site-index.mjs",
+    "generate:function-index": "node scripts/regenerate-function-index.mjs",
     "check:bom": "node scripts/check-bom.mjs"
   },
   "devDependencies": {

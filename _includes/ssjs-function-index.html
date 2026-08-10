@@ -1,0 +1,254 @@
+{% comment %}
+  Renders the searchable / filterable / sortable SSJS API catalog table.
+
+  Usage:
+    {% include ssjs-function-index.html entries=site.data.ssjs_functions %}
+    {% include ssjs-function-index.html entries=site.data.ssjs_functions
+       section="Platform Functions" empty="Nothing catalogued yet." %}
+
+  Parameters:
+    entries (array)  - a site.data.* list of rows (may be empty/nil).
+    section (string) - keep only rows whose `section` matches, for embedding the
+                       same table on a category landing page.
+    empty   (string) - sentence shown when there are no entries.
+
+  Row fields come from ssjs-data/scripts/generate-function-index.mjs:
+    name, sortKey, section, returnType, url, anchorId, status, es, polyfill,
+    verified, differsFromDocs, deprecated, description
+
+  Rows arrive pre-sorted by sortKey; the client sorter reads data-sort so the
+  initial paint needs no JavaScript.
+
+  `description` MUST be escaped: catalog text contains raw angle brackets
+  (`<WSProxyInstance>`, `<option>`) that would otherwise open elements Kramdown
+  never sees closed, swallowing the rest of the page.
+{% endcomment %}
+
+{% assign sfi_entries = include.entries %}
+{% if include.section %}{% assign sfi_entries = sfi_entries | where: "section", include.section %}{% endif %}
+{% assign sfi_count = sfi_entries | size %}
+
+{% if sfi_count > 0 %}
+{% assign sfi_ok = sfi_entries | where: "status", "ok" | size %}
+
+<div class="sfi-controls">
+  <div class="sfi-control sfi-control--search">
+    <label for="sfi-search">Search</label>
+    <input type="search" id="sfi-search" placeholder="Filter by name (e.g. Rows.Lookup)" autocomplete="off" spellcheck="false">
+  </div>
+  {%- unless include.section %}
+  <div class="sfi-control">
+    <label for="sfi-section">Section</label>
+    <select id="sfi-section">
+      <option value="" selected>All sections</option>
+      {%- assign sfi_sections = sfi_entries | map: "section" | uniq | sort %}
+      {%- for s in sfi_sections %}
+      <option value="{{ s | escape }}">{{ s }}</option>
+      {%- endfor %}
+    </select>
+  </div>
+  {%- endunless %}
+  <div class="sfi-control">
+    <label for="sfi-status">Availability</label>
+    <select id="sfi-status">
+      <option value="" selected>Everything</option>
+      <option value="ok">Fully working</option>
+      <option value="partial">Works with a caveat</option>
+      <option value="missing">Missing</option>
+      <option value="blocked">No working invocation</option>
+      <option value="polyfill">Polyfill available</option>
+      <option value="deprecated">Deprecated</option>
+      <option value="differs">Differs from official docs</option>
+    </select>
+  </div>
+  <div class="sfi-control">
+    <label for="sfi-sort">Sort by</label>
+    <select id="sfi-sort">
+      <option value="name" selected>Name (A &rarr; Z)</option>
+      <option value="section">Section</option>
+      <option value="status">Availability</option>
+    </select>
+  </div>
+</div>
+
+<p class="sfi-count" id="sfi-count"></p>
+
+<div class="sfi-tablewrap">
+  <table class="sfi-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        {%- unless include.section %}<th>Section</th>{% endunless %}
+        <th>Returns</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody id="sfi-body">
+      {%- for f in sfi_entries %}
+      <tr class="sfi-row sfi-row--{{ f.status }}"
+          data-name="{{ f.name | replace: '<', '' | replace: '>', '' | downcase | escape }}"
+          data-sort="{{ f.sortKey | escape }}"
+          data-section="{{ f.section | escape }}"
+          data-status="{{ f.status }}"
+          data-polyfill="{{ f.polyfill }}"
+          data-deprecated="{{ f.deprecated }}"
+          data-differs="{{ f.differsFromDocs }}"
+          id="{{ f.anchorId }}">
+        <td>
+          <a href="{{ f.url }}"><code>{{ f.name | escape }}</code></a>
+          {%- if f.verified %} <span class="sfi-state sfi-state--verified" title="Proven on a live Marketing Cloud CloudPage.">Verified</span>{% endif %}
+          {%- if f.deprecated %} <span class="sfi-flag sfi-flag--deprecated" title="Deprecated in the SSJS catalog">deprecated</span>{% endif %}
+          {%- if f.differsFromDocs %} <span class="sfi-flag" title="Runtime behaviour differs from the official Salesforce documentation">differs</span>{% endif %}
+          {%- if f.polyfill %} <span class="sfi-flag sfi-flag--polyfill" title="A polyfill for it ships in this guide">polyfill</span>{% endif %}
+        </td>
+        {%- unless include.section %}
+        <td><span class="sfi-tag">{{ f.section }}</span></td>
+        {%- endunless %}
+        <td><code>{{ f.returnType | escape }}</code></td>
+        <td class="sfi-desc">
+          {%- if f.status == "partial" -%}
+          <span class="sfi-marker sfi-marker--partial">⚠️ Partial</span> &mdash; {{ f.description | escape }}
+          {%- elsif f.status == "missing" -%}
+          <span class="sfi-marker sfi-marker--missing">❌ Missing{% if f.es != "" %} (ES{{ f.es }}){% endif %}</span> &mdash; {{ f.description | escape }}
+          {%- elsif f.status == "blocked" -%}
+          <span class="sfi-marker sfi-marker--missing">❌ No working runtime invocation</span> &mdash; {{ f.description | escape }}
+          {%- else -%}
+          {{ f.description | escape }}
+          {%- endif -%}
+          {%- if f.polyfill and f.polyfillUrl != "" %} <a class="sfi-polyfill-link" href="{{ f.polyfillUrl }}">Polyfill&nbsp;&rarr;</a>{% endif -%}
+        </td>
+      </tr>
+      {%- endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var searchInput = document.getElementById("sfi-search");
+  var sectionSel = document.getElementById("sfi-section");
+  var statusSel = document.getElementById("sfi-status");
+  var sortSel = document.getElementById("sfi-sort");
+  var countEl = document.getElementById("sfi-count");
+  var body = document.getElementById("sfi-body");
+  if (!body) { return; }
+
+  var rows = Array.prototype.slice.call(body.querySelectorAll(".sfi-row"));
+  var TOTAL = rows.length;
+  var OK = {{ sfi_ok }};
+  var STATUS_ORDER = { ok: 0, partial: 1, missing: 2, blocked: 3 };
+
+  // VS Code-style subsequence match: every query character must appear in order
+  // within the haystack, but not necessarily contiguously. Both are lowercased,
+  // and the haystack already has its < > placeholders stripped.
+  function fuzzyMatch(query, haystack) {
+    if (!query) { return true; }
+    var qi = 0;
+    for (var hi = 0; hi < haystack.length && qi < query.length; hi++) {
+      if (haystack.charAt(hi) === query.charAt(qi)) { qi += 1; }
+    }
+    return qi === query.length;
+  }
+
+  function apply() {
+    var query = searchInput ? searchInput.value.toLowerCase().replace(/[<>]/g, "") : "";
+    var section = sectionSel ? sectionSel.value : "";
+    var status = statusSel ? statusSel.value : "";
+    var total = 0;
+    var k, row, visible;
+
+    for (k = 0; k < rows.length; k++) {
+      row = rows[k];
+      visible = true;
+      if (section && row.getAttribute("data-section") !== section) { visible = false; }
+      if (visible && status) {
+        if (status === "polyfill") {
+          if (row.getAttribute("data-polyfill") !== "true") { visible = false; }
+        } else if (status === "deprecated") {
+          if (row.getAttribute("data-deprecated") !== "true") { visible = false; }
+        } else if (status === "differs") {
+          if (row.getAttribute("data-differs") !== "true") { visible = false; }
+        } else if (row.getAttribute("data-status") !== status) {
+          visible = false;
+        }
+      }
+      if (visible && !fuzzyMatch(query, row.getAttribute("data-name") || "")) { visible = false; }
+      if (visible) {
+        row.classList.remove("is-hidden");
+        total += 1;
+      } else {
+        row.classList.add("is-hidden");
+      }
+    }
+
+    if (countEl) {
+      countEl.textContent =
+        "Showing " + total + " of " + TOTAL + " entries — " + OK + " fully working";
+    }
+  }
+
+  function rowKey(row) {
+    return row.getAttribute("data-sort") || "";
+  }
+
+  function byKey(a, b) {
+    var ka = rowKey(a), kb = rowKey(b);
+    return ka < kb ? -1 : ka > kb ? 1 : 0;
+  }
+
+  function groupBy(group, attribute, order) {
+    var decorated = [];
+    for (var i = 0; i < group.length; i++) {
+      var value = group[i].getAttribute(attribute) || "";
+      decorated.push({ row: group[i], key: order ? order[value] : value });
+    }
+    decorated.sort(function (a, b) {
+      var ka = a.key === undefined ? 99 : a.key;
+      var kb = b.key === undefined ? 99 : b.key;
+      if (ka < kb) { return -1; }
+      if (ka > kb) { return 1; }
+      return byKey(a.row, b.row);
+    });
+    var ordered = [];
+    for (var j = 0; j < decorated.length; j++) { ordered.push(decorated[j].row); }
+    return ordered;
+  }
+
+  function sortRows() {
+    var mode = sortSel ? sortSel.value : "name";
+    var group = Array.prototype.slice.call(body.querySelectorAll(".sfi-row"));
+    var ordered;
+
+    if (mode === "section") {
+      ordered = groupBy(group, "data-section", null);
+    } else if (mode === "status") {
+      ordered = groupBy(group, "data-status", STATUS_ORDER);
+    } else {
+      ordered = group.slice();
+      ordered.sort(byKey);
+    }
+
+    for (var o = 0; o < ordered.length; o++) {
+      body.appendChild(ordered[o]);
+    }
+    // Rebuild the master row list to reflect the new DOM order.
+    rows = Array.prototype.slice.call(body.querySelectorAll(".sfi-row"));
+  }
+
+  function refresh() {
+    sortRows();
+    apply();
+  }
+
+  if (searchInput) { searchInput.addEventListener("input", apply); }
+  if (sectionSel) { sectionSel.addEventListener("change", apply); }
+  if (statusSel) { statusSel.addEventListener("change", apply); }
+  if (sortSel) { sortSel.addEventListener("change", refresh); }
+
+  refresh();
+})();
+</script>
+{% else %}
+<p class="sfi-empty">{{ include.empty | default: "Nothing catalogued yet." }}</p>
+{% endif %}

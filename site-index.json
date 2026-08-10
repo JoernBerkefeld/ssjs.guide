@@ -10,8 +10,7 @@
       "returnField",
       "whereFieldNames",
       "whereFieldValues"
-    ],
-    "returnType": "string|number|boolean|Date|null"
+    ]
   },
   {
     "name": "LookupRows",
@@ -23,8 +22,7 @@
       "deName",
       "whereFieldNames",
       "whereFieldValues"
-    ],
-    "returnType": "object[]|null"
+    ]
   },
   {
     "name": "LookupOrderedRows",
@@ -38,8 +36,7 @@
       "orderBy",
       "whereFieldNames",
       "whereFieldValues"
-    ],
-    "returnType": "object[]|null"
+    ]
   },
   {
     "name": "InsertData",
@@ -51,8 +48,7 @@
       "deName",
       "fieldNames",
       "fieldValues"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "InsertDE",
@@ -64,8 +60,7 @@
       "deName",
       "fieldNames",
       "fieldValues"
-    ],
-    "returnType": "null"
+    ]
   },
   {
     "name": "UpdateData",
@@ -79,8 +74,7 @@
       "whereFieldValues",
       "fieldNames",
       "fieldValues"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "UpdateDE",
@@ -94,8 +88,7 @@
       "whereFieldValues",
       "fieldNames",
       "fieldValues"
-    ],
-    "returnType": "null"
+    ]
   },
   {
     "name": "UpsertData",
@@ -109,8 +102,7 @@
       "whereFieldValues",
       "fieldNames",
       "fieldValues"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "UpsertDE",
@@ -124,8 +116,7 @@
       "whereFieldValues",
       "fieldNames",
       "fieldValues"
-    ],
-    "returnType": "null"
+    ]
   },
   {
     "name": "DeleteData",
@@ -137,8 +128,7 @@
       "deName",
       "whereFieldNames",
       "whereFieldValues"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "DeleteDE",
@@ -150,8 +140,7 @@
       "deName",
       "whereFieldNames",
       "whereFieldValues"
-    ],
-    "returnType": "null"
+    ]
   },
   {
     "name": "ContentBlockByKey",
@@ -164,8 +153,7 @@
       "regionName",
       "stopOnError",
       "fallbackContent"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "ContentBlockByName",
@@ -179,8 +167,7 @@
       "stopOnError",
       "fallbackContent",
       "statusVariable"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "ContentBlockByID",
@@ -193,8 +180,7 @@
       "regionName",
       "stopOnError",
       "fallbackContent"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "ContentImageByKey",
@@ -205,8 +191,7 @@
     "params": [
       "key",
       "fallbackId"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "ContentImageByID",
@@ -217,8 +202,7 @@
     "params": [
       "id",
       "fallbackId"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "TreatAsContent",
@@ -228,8 +212,7 @@
     "description": "Processes a string as AMPscript/HTML on the SFMC server and returns…",
     "params": [
       "content"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "BeginImpressionRegion",
@@ -239,8 +222,7 @@
     "description": "Marks the start of a named impression tracking region within content.",
     "params": [
       "name"
-    ],
-    "returnType": "void"
+    ]
   },
   {
     "name": "EndImpressionRegion",
@@ -250,8 +232,7 @@
     "description": "Marks the end of an impression tracking region within content.",
     "params": [
       "closeAll"
-    ],
-    "returnType": "null"
+    ]
   },
   {
     "name": "Now",
@@ -261,8 +242,7 @@
     "description": "Returns the current server date/time as a Date object (in the account…",
     "params": [
       "useContextTime"
-    ],
-    "returnType": "Date"
+    ]
   },
   {
     "name": "SystemDateToLocalDate",
@@ -272,8 +252,7 @@
     "description": "Converts a date-time value from Marketing Cloud system time (CST…",
     "params": [
       "dateString"
-    ],
-    "returnType": "Date"
+    ]
   },
   {
     "name": "LocalDateToSystemDate",
@@ -283,8 +262,7 @@
     "description": "Converts a date-time value from the local time of the account or user…",
     "params": [
       "dateString"
-    ],
-    "returnType": "Date"
+    ]
   },
   {
     "name": "RaiseError",
@@ -297,16 +275,14 @@
       "currentRecipientOnly",
       "errorCode",
       "errorNumber"
-    ],
-    "returnType": "void"
+    ]
   },
   {
     "name": "GUID",
     "url": "/platform-functions/guid/",
     "section": "Platform Functions",
     "type": "function",
-    "description": "Generates a new globally unique identifier as a lowercase canonical…",
-    "returnType": "string"
+    "description": "Generates a new globally unique identifier as a lowercase canonical…"
   },
   {
     "name": "IsEmailAddress",
@@ -316,8 +292,7 @@
     "description": "Checks whether a string is a valid email address format.",
     "params": [
       "value"
-    ],
-    "returnType": "boolean"
+    ]
   },
   {
     "name": "IsPhoneNumber",
@@ -327,8 +302,7 @@
     "description": "Evaluates whether a string is a valid phone number and returns a…",
     "params": [
       "value"
-    ],
-    "returnType": "boolean"
+    ]
   },
   {
     "name": "CreateObject",
@@ -338,8 +312,7 @@
     "description": "Instantiates a Marketing Cloud SOAP API object.",
     "params": [
       "objectType"
-    ],
-    "returnType": "object"
+    ]
   },
   {
     "name": "SetObjectProperty",
@@ -351,8 +324,7 @@
       "apiObject",
       "propertyName",
       "value"
-    ],
-    "returnType": "null"
+    ]
   },
   {
     "name": "AddObjectArrayItem",
@@ -364,8 +336,7 @@
       "apiObject",
       "propertyName",
       "value"
-    ],
-    "returnType": "void"
+    ]
   },
   {
     "name": "InvokeCreate",
@@ -377,8 +348,7 @@
       "apiObject",
       "status",
       "options"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "InvokeUpdate",
@@ -390,8 +360,7 @@
       "apiObject",
       "status",
       "options"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "InvokeDelete",
@@ -403,8 +372,7 @@
       "apiObject",
       "status",
       "options"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "InvokeRetrieve",
@@ -415,8 +383,7 @@
     "params": [
       "apiObject",
       "status"
-    ],
-    "returnType": "object[]|null"
+    ]
   },
   {
     "name": "InvokePerform",
@@ -429,8 +396,7 @@
       "method",
       "status",
       "options"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "InvokeConfigure",
@@ -443,8 +409,7 @@
       "method",
       "status",
       "options"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "InvokeExecute",
@@ -455,8 +420,7 @@
     "params": [
       "apiObject",
       "status"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "InvokeExtract",
@@ -467,8 +431,7 @@
     "params": [
       "apiObject",
       "statusArray"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "InvokeSchedule",
@@ -482,8 +445,7 @@
       "schedule",
       "statusArray",
       "options"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "HTTPGet",
@@ -498,8 +460,7 @@
       "headerNames",
       "headerValues",
       "statusVariable"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "HTTPPost",
@@ -514,8 +475,7 @@
       "headerNames",
       "headerValues",
       "response"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "ParseJSON",
@@ -525,8 +485,7 @@
     "description": "Parses a JSON-formatted string (also accepts boolean or number) and…",
     "params": [
       "jsonString"
-    ],
-    "returnType": "any"
+    ]
   },
   {
     "name": "RedirectTo",
@@ -536,8 +495,7 @@
     "description": "Specifies the target of an email link as a complete URL stored in an…",
     "params": [
       "url"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "UrlEncode",
@@ -548,8 +506,7 @@
     "params": [
       "url",
       "encodeReservedKeywords"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "Base64Encode",
@@ -560,8 +517,7 @@
     "params": [
       "string",
       "charset"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "Base64Decode",
@@ -572,8 +528,7 @@
     "params": [
       "encodedString",
       "charset"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "MD5",
@@ -584,8 +539,7 @@
     "params": [
       "string",
       "charset"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "Stringify",
@@ -595,8 +549,7 @@
     "description": "Converts a JavaScript object into its JSON string representation.",
     "params": [
       "value"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "ContentArea",
@@ -610,7 +563,6 @@
       "stopOnError",
       "fallbackContent"
     ],
-    "returnType": "string",
     "deprecated": true
   },
   {
@@ -625,7 +577,6 @@
       "stopOnError",
       "fallbackContent"
     ],
-    "returnType": "string",
     "deprecated": true
   },
   {
@@ -636,8 +587,7 @@
     "description": "Indicates whether the passed-in user-agent value represents a CHTML…",
     "params": [
       "userAgentString"
-    ],
-    "returnType": "boolean"
+    ]
   },
   {
     "name": "HTTP.Get",
@@ -649,8 +599,7 @@
       "url",
       "headerNames",
       "headerValues"
-    ],
-    "returnType": "{ Status: number, Content: string }"
+    ]
   },
   {
     "name": "HTTP.Post",
@@ -664,8 +613,7 @@
       "payload",
       "headerNames",
       "headerValues"
-    ],
-    "returnType": "{ StatusCode: number, Response: string[] }"
+    ]
   },
   {
     "name": "<WSProxyInstance>.createItem",
@@ -677,8 +625,7 @@
       "objectType",
       "properties",
       "createOptions"
-    ],
-    "returnType": "WSProxyResult"
+    ]
   },
   {
     "name": "<WSProxyInstance>.updateItem",
@@ -690,8 +637,7 @@
       "objectType",
       "properties",
       "updateOptions"
-    ],
-    "returnType": "WSProxyResult"
+    ]
   },
   {
     "name": "<WSProxyInstance>.deleteItem",
@@ -703,8 +649,7 @@
       "objectType",
       "properties",
       "deleteOptions"
-    ],
-    "returnType": "WSProxyResult"
+    ]
   },
   {
     "name": "<WSProxyInstance>.retrieve",
@@ -718,8 +663,7 @@
       "filter",
       "retrieveOptions",
       "requestProps"
-    ],
-    "returnType": "WSProxyResult"
+    ]
   },
   {
     "name": "<WSProxyInstance>.getNextBatch",
@@ -730,8 +674,7 @@
     "params": [
       "objectType",
       "requestId"
-    ],
-    "returnType": "WSProxyResult"
+    ]
   },
   {
     "name": "<WSProxyInstance>.performItem",
@@ -744,8 +687,7 @@
       "properties",
       "action",
       "performOptions"
-    ],
-    "returnType": "WSProxyResult"
+    ]
   },
   {
     "name": "<WSProxyInstance>.performBatch",
@@ -758,8 +700,7 @@
       "propertiesArray",
       "action",
       "performOptions"
-    ],
-    "returnType": "WSProxyResult"
+    ]
   },
   {
     "name": "<WSProxyInstance>.describe",
@@ -769,8 +710,7 @@
     "description": "Returns structural metadata for one or more SOAP API object types…",
     "params": [
       "objectType"
-    ],
-    "returnType": "WSProxyResult"
+    ]
   },
   {
     "name": "<WSProxyInstance>.execute",
@@ -781,8 +721,7 @@
     "params": [
       "parameters",
       "requestName"
-    ],
-    "returnType": "WSProxyResult"
+    ]
   },
   {
     "name": "<WSProxyInstance>.setClientId",
@@ -792,16 +731,14 @@
     "description": "Sets a ClientId (impersonation) context on the WSProxy instance so…",
     "params": [
       "options"
-    ],
-    "returnType": "null"
+    ]
   },
   {
     "name": "<WSProxyInstance>.resetClientIds",
     "url": "/wsproxy/resetclientids/",
     "section": "WSProxy",
     "type": "method",
-    "description": "Clears all client IDs set on the WSProxy instance, reverting to the…",
-    "returnType": "null"
+    "description": "Clears all client IDs set on the WSProxy instance, reverting to the…"
   },
   {
     "name": "<WSProxyInstance>.createBatch",
@@ -813,8 +750,7 @@
       "objectType",
       "propertiesArray",
       "createOptions"
-    ],
-    "returnType": "WSProxyResult"
+    ]
   },
   {
     "name": "<WSProxyInstance>.updateBatch",
@@ -826,8 +762,7 @@
       "objectType",
       "propertiesArray",
       "updateOptions"
-    ],
-    "returnType": "WSProxyResult"
+    ]
   },
   {
     "name": "<WSProxyInstance>.deleteBatch",
@@ -839,16 +774,14 @@
       "objectType",
       "propertiesArray",
       "deleteOptions"
-    ],
-    "returnType": "WSProxyResult"
+    ]
   },
   {
     "name": "new Script.Util.WSProxy",
     "url": "/wsproxy/",
     "section": "HTTP & REST",
     "type": "function",
-    "description": "Creates a WSProxy instance for making SOAP API calls against the…",
-    "returnType": "WSProxyInstance"
+    "description": "Creates a WSProxy instance for making SOAP API calls against the…"
   },
   {
     "name": "new Script.Util.HttpRequest",
@@ -858,8 +791,7 @@
     "description": "Creates an HTTP request handler that supports any HTTP method (GET…",
     "params": [
       "url"
-    ],
-    "returnType": "HttpRequestInstance"
+    ]
   },
   {
     "name": "new Script.Util.HttpGet",
@@ -869,16 +801,14 @@
     "description": "Creates an HTTP GET request handler.",
     "params": [
       "url"
-    ],
-    "returnType": "HttpGetInstance"
+    ]
   },
   {
     "name": "<HttpRequestInstance>.send",
     "url": "/http/script-util-httprequest/#send",
     "section": "HTTP & REST",
     "type": "method",
-    "description": "Executes the HTTP request and returns a Script.Util.HttpResponse…",
-    "returnType": "HttpResponseInstance"
+    "description": "Executes the HTTP request and returns a Script.Util.HttpResponse…"
   },
   {
     "name": "<HttpRequestInstance>.setHeader",
@@ -889,16 +819,14 @@
     "params": [
       "name",
       "value"
-    ],
-    "returnType": "void"
+    ]
   },
   {
     "name": "<HttpRequestInstance>.clearHeaders",
     "url": "/http/script-util-httprequest/#clearheaders",
     "section": "HTTP & REST",
     "type": "method",
-    "description": "Removes all custom headers previously set on the request.",
-    "returnType": "void"
+    "description": "Removes all custom headers previously set on the request."
   },
   {
     "name": "<HttpRequestInstance>.removeHeader",
@@ -908,8 +836,7 @@
     "description": "Removes a specific header from the request by name.",
     "params": [
       "name"
-    ],
-    "returnType": "void"
+    ]
   },
   {
     "name": "Platform.Load",
@@ -920,8 +847,7 @@
     "params": [
       "libraryName",
       "version"
-    ],
-    "returnType": "null"
+    ]
   },
   {
     "name": "Platform.Variable.GetValue",
@@ -931,8 +857,7 @@
     "description": "Retrieves the value of an AMPscript variable from the SSJS context.",
     "params": [
       "variableName"
-    ],
-    "returnType": "string|number|boolean|null"
+    ]
   },
   {
     "name": "Platform.Variable.SetValue",
@@ -943,8 +868,7 @@
     "params": [
       "variableName",
       "value"
-    ],
-    "returnType": "null"
+    ]
   },
   {
     "name": "Platform.Response.SetResponseHeader",
@@ -955,8 +879,7 @@
     "params": [
       "headerName",
       "value"
-    ],
-    "returnType": "null"
+    ]
   },
   {
     "name": "Platform.Response.RemoveResponseHeader",
@@ -966,8 +889,7 @@
     "description": "Removes a previously set HTTP response header from the response.",
     "params": [
       "headerName"
-    ],
-    "returnType": "null"
+    ]
   },
   {
     "name": "Platform.Response.Redirect",
@@ -978,8 +900,7 @@
     "params": [
       "url",
       "movedPermanently"
-    ],
-    "returnType": "void"
+    ]
   },
   {
     "name": "Platform.Response.SetCookie",
@@ -992,8 +913,7 @@
       "value",
       "expires",
       "secure"
-    ],
-    "returnType": "null"
+    ]
   },
   {
     "name": "Platform.Response.RemoveCookie",
@@ -1003,8 +923,7 @@
     "description": "Attempts to remove a browser cookie from a CloudPage response.",
     "params": [
       "name"
-    ],
-    "returnType": "null"
+    ]
   },
   {
     "name": "Platform.Response.Write",
@@ -1014,24 +933,21 @@
     "description": "Writes content to the HTTP response output.",
     "params": [
       "content"
-    ],
-    "returnType": "void"
+    ]
   },
   {
     "name": "Platform.Response.ContentType",
     "url": "/platform-objects/platform-response/#contenttype",
     "section": "Platform Objects",
     "type": "property",
-    "description": "Sets the Content-Type of the HTTP response.",
-    "returnType": "clr"
+    "description": "Sets the Content-Type of the HTTP response."
   },
   {
     "name": "Platform.Response.CharacterSet",
     "url": "/platform-objects/platform-response/#characterset",
     "section": "Platform Objects",
     "type": "property",
-    "description": "Sets the character set of the HTTP response.",
-    "returnType": "clr"
+    "description": "Sets the character set of the HTTP response."
   },
   {
     "name": "Platform.Request.GetQueryStringParameter",
@@ -1041,8 +957,7 @@
     "description": "Retrieves the value of a URL query string parameter.",
     "params": [
       "parameterName"
-    ],
-    "returnType": "string|null"
+    ]
   },
   {
     "name": "Platform.Request.GetFormField",
@@ -1052,8 +967,7 @@
     "description": "Retrieves a named field from a submitted POST form body.",
     "params": [
       "name"
-    ],
-    "returnType": "string|null"
+    ]
   },
   {
     "name": "Platform.Request.GetPostData",
@@ -1063,8 +977,7 @@
     "description": "Returns the raw body of the HTTP POST request.",
     "params": [
       "encoding"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "Platform.Request.GetCookieValue",
@@ -1074,16 +987,14 @@
     "description": "Retrieves the value of a named cookie from the HTTP request sent by…",
     "params": [
       "cookieName"
-    ],
-    "returnType": "string|null"
+    ]
   },
   {
     "name": "Platform.Request.GetUserLanguages",
     "url": "/platform-objects/platform-request/#getuserlanguages",
     "section": "Platform Objects",
     "type": "method",
-    "description": "Returns the language preferences of the client browser as specified…",
-    "returnType": "string"
+    "description": "Returns the language preferences of the client browser as specified…"
   },
   {
     "name": "Platform.Request.GetRequestHeader",
@@ -1093,80 +1004,70 @@
     "description": "Returns the value of the named HTTP request header, or null if not…",
     "params": [
       "headerName"
-    ],
-    "returnType": "string|null"
+    ]
   },
   {
     "name": "Platform.Request.Browser",
     "url": "/platform-objects/platform-request/#browser",
     "section": "Platform Objects",
     "type": "property",
-    "description": "Returns an object describing the client browser, parsed from the…",
-    "returnType": "object"
+    "description": "Returns an object describing the client browser, parsed from the…"
   },
   {
     "name": "Platform.Request.ClientIP",
     "url": "/platform-objects/platform-request/#clientip",
     "section": "Platform Objects",
     "type": "property",
-    "description": "Returns the IP address of the client.",
-    "returnType": "string"
+    "description": "Returns the IP address of the client."
   },
   {
     "name": "Platform.Request.HasSSL",
     "url": "/platform-objects/platform-request/#hasssl",
     "section": "Platform Objects",
     "type": "property",
-    "description": "Returns true if the current request was made over HTTPS.",
-    "returnType": "boolean"
+    "description": "Returns true if the current request was made over HTTPS."
   },
   {
     "name": "Platform.Request.IsSSL",
     "url": "/platform-objects/platform-request/#isssl",
     "section": "Platform Objects",
     "type": "property",
-    "description": "Returns true if the current request was made over HTTPS (alias of…",
-    "returnType": "boolean"
+    "description": "Returns true if the current request was made over HTTPS (alias of…"
   },
   {
     "name": "Platform.Request.Method",
     "url": "/platform-objects/platform-request/#method",
     "section": "Platform Objects",
     "type": "property",
-    "description": "Returns the HTTP method (GET, POST, etc.) of the current request.",
-    "returnType": "string"
+    "description": "Returns the HTTP method (GET, POST, etc.) of the current request."
   },
   {
     "name": "Platform.Request.QueryString",
     "url": "/platform-objects/platform-request/#querystring",
     "section": "Platform Objects",
     "type": "property",
-    "description": "Returns the full query string of the current request URL.",
-    "returnType": "string"
+    "description": "Returns the full query string of the current request URL."
   },
   {
     "name": "Platform.Request.ReferrerURL",
     "url": "/platform-objects/platform-request/#referrerurl",
     "section": "Platform Objects",
     "type": "property",
-    "description": "Returns the referrer URL from the HTTP Referer header.",
-    "returnType": "string"
+    "description": "Returns the referrer URL from the HTTP Referer header."
   },
   {
     "name": "Platform.Request.RequestURL",
     "url": "/platform-objects/platform-request/#requesturl",
     "section": "Platform Objects",
     "type": "property",
-    "description": "Returns the full URL of the current page request.",
-    "returnType": "string"
+    "description": "Returns the full URL of the current page request."
   },
   {
     "name": "Platform.Request.UserAgent",
     "url": "/platform-objects/platform-request/#useragent",
     "section": "Platform Objects",
     "type": "property",
-    "description": "Returns the user-agent string from the HTTP request.",
-    "returnType": "string"
+    "description": "Returns the user-agent string from the HTTP request."
   },
   {
     "name": "Platform.Recipient.GetAttributeValue",
@@ -1176,8 +1077,7 @@
     "description": "Returns the value of a subscriber attribute or sendable data…",
     "params": [
       "attributeName"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "HTTPHeader.GetValue",
@@ -1187,8 +1087,7 @@
     "description": "Retrieves the value of the specified INBOUND HTTP request header…",
     "params": [
       "name"
-    ],
-    "returnType": "string|null"
+    ]
   },
   {
     "name": "HTTPHeader.SetValue",
@@ -1199,8 +1098,7 @@
     "params": [
       "name",
       "value"
-    ],
-    "returnType": "void"
+    ]
   },
   {
     "name": "HTTPHeader.Remove",
@@ -1210,8 +1108,7 @@
     "description": "Removes the specified entry from the HTTP header.",
     "params": [
       "headerName"
-    ],
-    "returnType": "void"
+    ]
   },
   {
     "name": "DateTime.SystemDateToLocalDate",
@@ -1221,8 +1118,7 @@
     "description": "Converts a date-time value from Marketing Cloud system time (CST) to…",
     "params": [
       "dateString"
-    ],
-    "returnType": "Date"
+    ]
   },
   {
     "name": "DateTime.LocalDateToSystemDate",
@@ -1232,8 +1128,7 @@
     "description": "Converts a date-time value from the local time of the account or user…",
     "params": [
       "dateString"
-    ],
-    "returnType": "Date"
+    ]
   },
   {
     "name": "DateTime.TimeZone.Retrieve",
@@ -1243,8 +1138,7 @@
     "description": "Retrieves an array of time zones matching the specified filter…",
     "params": [
       "filter"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "ErrorUtil.ThrowWSProxyError",
@@ -1255,7 +1149,6 @@
     "params": [
       "result"
     ],
-    "returnType": "string",
     "deprecated": true
   },
   {
@@ -1266,8 +1159,7 @@
     "description": "Returns the value of the specified subscriber attribute or sendable…",
     "params": [
       "name"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "DataExtension.Init",
@@ -1277,8 +1169,7 @@
     "description": "Initializes a DataExtension instance bound to the specified data…",
     "params": [
       "key"
-    ],
-    "returnType": "DataExtensionInstance"
+    ]
   },
   {
     "name": "DataExtension.Add",
@@ -1288,8 +1179,7 @@
     "description": "Creates a new data extension from the supplied properties and returns…",
     "params": [
       "properties"
-    ],
-    "returnType": "DataExtensionInstance"
+    ]
   },
   {
     "name": "DataExtension.Retrieve",
@@ -1300,8 +1190,7 @@
     "params": [
       "filter",
       "queryAllAccounts"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "DataExtension.Fields.Add",
@@ -1311,16 +1200,14 @@
     "description": "Adds a field to the previously initialized data extension.",
     "params": [
       "properties"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "DataExtension.Fields.Retrieve",
     "url": "/core-library/dataextension-fields/#instance-fields-retrieve",
     "section": "Core Library",
     "type": "method",
-    "description": "Returns an array of field definitions for the previously initialized…",
-    "returnType": "object[]"
+    "description": "Returns an array of field definitions for the previously initialized…"
   },
   {
     "name": "DataExtension.Fields.UpdateSendableField",
@@ -1331,8 +1218,7 @@
     "params": [
       "deFieldName",
       "subscriberField"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "DataExtension.Rows.Add",
@@ -1342,8 +1228,7 @@
     "description": "Adds one or more rows to the previously initialized data extension.",
     "params": [
       "rowData"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "DataExtension.Rows.Lookup",
@@ -1356,8 +1241,7 @@
       "searchValues",
       "limit",
       "orderByFieldName"
-    ],
-    "returnType": "object[]|null"
+    ]
   },
   {
     "name": "DataExtension.Rows.Remove",
@@ -1368,8 +1252,7 @@
     "params": [
       "columnNames",
       "columnValues"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "DataExtension.Rows.Retrieve",
@@ -1379,8 +1262,7 @@
     "description": "Retrieves up to 2500 rows from the previously initialized data…",
     "params": [
       "filter"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "DataExtension.Rows.Update",
@@ -1392,8 +1274,7 @@
       "rowData",
       "whereFieldNames",
       "whereValues"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "Account.Init",
@@ -1403,8 +1284,7 @@
     "description": "Initializes an Account instance bound to the specified external key.",
     "params": [
       "key"
-    ],
-    "returnType": "AccountInstance"
+    ]
   },
   {
     "name": "Account.Retrieve",
@@ -1414,8 +1294,7 @@
     "description": "Retrieves accounts based on the specified filter criteria.",
     "params": [
       "filter"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "Account.Update",
@@ -1425,8 +1304,7 @@
     "description": "Updates the account with the supplied attributes.",
     "params": [
       "properties"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "Account.Tracking.Retrieve",
@@ -1436,8 +1314,7 @@
     "description": "Returns an array of tracking data related to the accounts specified…",
     "params": [
       "filter"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "AccountUser.Init",
@@ -1448,8 +1325,7 @@
     "params": [
       "targetUserKey",
       "myClientID"
-    ],
-    "returnType": "AccountUserInstance"
+    ]
   },
   {
     "name": "AccountUser.Add",
@@ -1459,8 +1335,7 @@
     "description": "Creates a new account user from the supplied properties object.",
     "params": [
       "properties"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "AccountUser.Retrieve",
@@ -1470,8 +1345,7 @@
     "description": "Retrieves account users based on the specified filter criteria.",
     "params": [
       "filter"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "AccountUser.Update",
@@ -1481,24 +1355,21 @@
     "description": "Updates the account user with the supplied attributes.",
     "params": [
       "properties"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "AccountUser.Activate",
     "url": "/core-library/accountuser/#instance-activate",
     "section": "Core Library",
     "type": "method",
-    "description": "Activates the account user.",
-    "returnType": "string"
+    "description": "Activates the account user."
   },
   {
     "name": "AccountUser.Deactivate",
     "url": "/core-library/accountuser/#instance-deactivate",
     "section": "Core Library",
     "type": "method",
-    "description": "Deactivates the account user.",
-    "returnType": "string"
+    "description": "Deactivates the account user."
   },
   {
     "name": "Email.Init",
@@ -1509,7 +1380,6 @@
     "params": [
       "key"
     ],
-    "returnType": "EmailInstance",
     "deprecated": true
   },
   {
@@ -1521,7 +1391,6 @@
     "params": [
       "properties"
     ],
-    "returnType": "EmailInstance",
     "deprecated": true
   },
   {
@@ -1533,7 +1402,6 @@
     "params": [
       "filter"
     ],
-    "returnType": "object[]",
     "deprecated": true
   },
   {
@@ -1545,7 +1413,6 @@
     "params": [
       "properties"
     ],
-    "returnType": "string",
     "deprecated": true
   },
   {
@@ -1554,7 +1421,6 @@
     "section": "Core Library",
     "type": "method",
     "description": "Removes the previously initialized classic email message.",
-    "returnType": "string",
     "deprecated": true
   },
   {
@@ -1563,7 +1429,6 @@
     "section": "Core Library",
     "type": "method",
     "description": "Runs validation checks on the previously initialized classic email…",
-    "returnType": "object",
     "deprecated": true
   },
   {
@@ -1572,7 +1437,6 @@
     "section": "Core Library",
     "type": "method",
     "description": "Runs content checks on the previously initialized classic email…",
-    "returnType": "object",
     "deprecated": true
   },
   {
@@ -1583,8 +1447,7 @@
     "description": "Initializes a FilterDefinition instance bound to the specified…",
     "params": [
       "key"
-    ],
-    "returnType": "FilterDefinitionInstance"
+    ]
   },
   {
     "name": "FilterDefinition.Add",
@@ -1594,8 +1457,7 @@
     "description": "Creates a new filter definition from the supplied properties.",
     "params": [
       "properties"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "FilterDefinition.Retrieve",
@@ -1605,8 +1467,7 @@
     "description": "Returns an array of filter definitions matching the specified filter.",
     "params": [
       "filter"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "FilterDefinition.Update",
@@ -1616,16 +1477,14 @@
     "description": "Updates the filter definition with the supplied attributes.",
     "params": [
       "properties"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "FilterDefinition.Remove",
     "url": "/core-library/filterdefinition/#instance-remove",
     "section": "Core Library",
     "type": "method",
-    "description": "Deletes the previously initialized filter definition.",
-    "returnType": "string"
+    "description": "Deletes the previously initialized filter definition."
   },
   {
     "name": "Folder.Init",
@@ -1635,8 +1494,7 @@
     "description": "Initializes a Folder instance, optionally bound to the specified…",
     "params": [
       "key"
-    ],
-    "returnType": "FolderInstance"
+    ]
   },
   {
     "name": "Folder.Add",
@@ -1646,8 +1504,7 @@
     "description": "Creates a new folder as a child of an existing folder.",
     "params": [
       "properties"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "Folder.Retrieve",
@@ -1657,8 +1514,7 @@
     "description": "Returns an array of folders matching the specified filter.",
     "params": [
       "filter"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "Folder.Update",
@@ -1668,16 +1524,14 @@
     "description": "Updates the folder with the supplied attributes.",
     "params": [
       "properties"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "Folder.Remove",
     "url": "/core-library/folder/#instance-remove",
     "section": "Core Library",
     "type": "method",
-    "description": "Removes the previously initialized folder.",
-    "returnType": "string"
+    "description": "Removes the previously initialized folder."
   },
   {
     "name": "Folder.SetID",
@@ -1687,8 +1541,7 @@
     "description": "Binds a previously initialized Folder instance to a specific folder…",
     "params": [
       "id"
-    ],
-    "returnType": "void"
+    ]
   },
   {
     "name": "List.Init",
@@ -1698,8 +1551,7 @@
     "description": "Initializes a List instance bound to the specified external key.",
     "params": [
       "key"
-    ],
-    "returnType": "ListInstance"
+    ]
   },
   {
     "name": "List.Add",
@@ -1709,8 +1561,7 @@
     "description": "Creates a new list from the supplied properties and returns an…",
     "params": [
       "properties"
-    ],
-    "returnType": "ListInstance"
+    ]
   },
   {
     "name": "List.Retrieve",
@@ -1720,16 +1571,14 @@
     "description": "Returns an array of lists matching the specified filter.",
     "params": [
       "filter"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "List.Remove",
     "url": "/core-library/list/#instance-remove",
     "section": "Core Library",
     "type": "method",
-    "description": "Removes the previously initialized list.",
-    "returnType": "string"
+    "description": "Removes the previously initialized list."
   },
   {
     "name": "List.Subscribers.Add",
@@ -1739,8 +1588,7 @@
     "description": "Adds a subscriber to the previously initialized list.",
     "params": [
       "properties"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "List.Subscribers.Retrieve",
@@ -1750,8 +1598,7 @@
     "description": "Returns the subscribers belonging to the previously initialized list.",
     "params": [
       "filter"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "List.Subscribers.Unsubscribe",
@@ -1761,8 +1608,7 @@
     "description": "Sets the subscriber Status on the list to Unsubscribed.",
     "params": [
       "emailAddress"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "List.Subscribers.Update",
@@ -1773,8 +1619,7 @@
     "params": [
       "emailAddress",
       "status"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "List.Subscribers.Upsert",
@@ -1785,8 +1630,7 @@
     "params": [
       "emailAddress",
       "attributes"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "List.Subscribers.Tracking.Retrieve",
@@ -1796,8 +1640,7 @@
     "description": "Returns an array of tracking data for subscribers matching the filter.",
     "params": [
       "filter"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "Subscriber.Init",
@@ -1807,8 +1650,7 @@
     "description": "Initializes a Subscriber instance bound to the specified subscriber…",
     "params": [
       "key"
-    ],
-    "returnType": "SubscriberInstance"
+    ]
   },
   {
     "name": "Subscriber.Add",
@@ -1818,8 +1660,7 @@
     "description": "Creates a new subscriber from the supplied properties.",
     "params": [
       "properties"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "Subscriber.Retrieve",
@@ -1829,8 +1670,7 @@
     "description": "Returns an array of subscribers matching the specified filter.",
     "params": [
       "filter"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "Subscriber.Upsert",
@@ -1840,16 +1680,14 @@
     "description": "Creates a new subscriber, or updates the initialized one matched by…",
     "params": [
       "properties"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "Subscriber.Statistics",
     "url": "/core-library/subscriber/#instance-statistics",
     "section": "Core Library",
     "type": "method",
-    "description": "Retrieves statistical data for the initialized subscriber (sends…",
-    "returnType": "object"
+    "description": "Retrieves statistical data for the initialized subscriber (sends…"
   },
   {
     "name": "Subscriber.Update",
@@ -1859,40 +1697,35 @@
     "description": "Updates the previously initialized subscriber with the supplied…",
     "params": [
       "properties"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "Subscriber.Remove",
     "url": "/core-library/subscriber/#instance-remove",
     "section": "Core Library",
     "type": "method",
-    "description": "Deletes the previously initialized subscriber.",
-    "returnType": "string"
+    "description": "Deletes the previously initialized subscriber."
   },
   {
     "name": "Subscriber.Unsubscribe",
     "url": "/core-library/subscriber/#instance-unsubscribe",
     "section": "Core Library",
     "type": "method",
-    "description": "Sets the previously initialized subscriber's status to…",
-    "returnType": "string"
+    "description": "Sets the previously initialized subscriber's status to…"
   },
   {
     "name": "Subscriber.Attributes.Retrieve",
     "url": "/core-library/subscriber/#instance-attributes-retrieve",
     "section": "Core Library",
     "type": "method",
-    "description": "Returns an array of attributes associated with the previously…",
-    "returnType": "object[]"
+    "description": "Returns an array of attributes associated with the previously…"
   },
   {
     "name": "Subscriber.Lists.Retrieve",
     "url": "/core-library/subscriber/#instance-lists-retrieve",
     "section": "Core Library",
     "type": "method",
-    "description": "Returns the lists the previously initialized subscriber is a member…",
-    "returnType": "object[]"
+    "description": "Returns the lists the previously initialized subscriber is a member…"
   },
   {
     "name": "Template.Init",
@@ -1903,7 +1736,6 @@
     "params": [
       "key"
     ],
-    "returnType": "TemplateInstance",
     "deprecated": true
   },
   {
@@ -1915,7 +1747,6 @@
     "params": [
       "properties"
     ],
-    "returnType": "string",
     "deprecated": true
   },
   {
@@ -1927,7 +1758,6 @@
     "params": [
       "filter"
     ],
-    "returnType": "object[]",
     "deprecated": true
   },
   {
@@ -1939,7 +1769,6 @@
     "params": [
       "properties"
     ],
-    "returnType": "string",
     "deprecated": true
   },
   {
@@ -1950,8 +1779,7 @@
     "description": "Initializes a DeliveryProfile instance bound to the specified…",
     "params": [
       "key"
-    ],
-    "returnType": "DeliveryProfileInstance"
+    ]
   },
   {
     "name": "DeliveryProfile.Add",
@@ -1961,8 +1789,7 @@
     "description": "Creates a new delivery profile from the supplied properties.",
     "params": [
       "properties"
-    ],
-    "returnType": "object"
+    ]
   },
   {
     "name": "DeliveryProfile.Update",
@@ -1972,16 +1799,14 @@
     "description": "Updates the delivery profile with the supplied attributes.",
     "params": [
       "properties"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "DeliveryProfile.Remove",
     "url": "/core-library/deliveryprofile/#instance-remove",
     "section": "Core Library",
     "type": "method",
-    "description": "Removes the previously initialized delivery profile.",
-    "returnType": "string"
+    "description": "Removes the previously initialized delivery profile."
   },
   {
     "name": "SenderProfile.Init",
@@ -1991,8 +1816,7 @@
     "description": "Initializes a SenderProfile instance bound to the specified external…",
     "params": [
       "key"
-    ],
-    "returnType": "SenderProfileInstance"
+    ]
   },
   {
     "name": "SenderProfile.Add",
@@ -2002,8 +1826,7 @@
     "description": "Creates a new sender profile from the supplied properties.",
     "params": [
       "properties"
-    ],
-    "returnType": "object"
+    ]
   },
   {
     "name": "SenderProfile.Update",
@@ -2013,16 +1836,14 @@
     "description": "Updates the sender profile with the supplied attributes.",
     "params": [
       "properties"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "SenderProfile.Remove",
     "url": "/core-library/senderprofile/#instance-remove",
     "section": "Core Library",
     "type": "method",
-    "description": "Removes the previously initialized sender profile.",
-    "returnType": "string"
+    "description": "Removes the previously initialized sender profile."
   },
   {
     "name": "SendClassification.Init",
@@ -2032,8 +1853,7 @@
     "description": "Initializes a SendClassification instance bound to the specified…",
     "params": [
       "key"
-    ],
-    "returnType": "SendClassificationInstance"
+    ]
   },
   {
     "name": "SendClassification.Add",
@@ -2043,8 +1863,7 @@
     "description": "Creates a new send classification from the supplied properties.",
     "params": [
       "properties"
-    ],
-    "returnType": "object"
+    ]
   },
   {
     "name": "SendClassification.Retrieve",
@@ -2054,8 +1873,7 @@
     "description": "Returns an array of send classifications matching the specified…",
     "params": [
       "filter"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "SendClassification.Update",
@@ -2065,16 +1883,14 @@
     "description": "Updates the send classification with the supplied attributes.",
     "params": [
       "properties"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "SendClassification.Remove",
     "url": "/core-library/sendclassification/#instance-remove",
     "section": "Core Library",
     "type": "method",
-    "description": "Removes the previously initialized send classification.",
-    "returnType": "string"
+    "description": "Removes the previously initialized send classification."
   },
   {
     "name": "QueryDefinition.Init",
@@ -2084,8 +1900,7 @@
     "description": "Initializes a QueryDefinition instance bound to the specified…",
     "params": [
       "key"
-    ],
-    "returnType": "QueryDefinitionInstance"
+    ]
   },
   {
     "name": "QueryDefinition.Add",
@@ -2095,8 +1910,7 @@
     "description": "Creates a new query definition from the supplied properties.",
     "params": [
       "properties"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "QueryDefinition.Retrieve",
@@ -2106,8 +1920,7 @@
     "description": "Returns an array of query definitions matching the specified filter.",
     "params": [
       "filter"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "QueryDefinition.Update",
@@ -2117,16 +1930,14 @@
     "description": "Updates the query definition with the supplied attributes.",
     "params": [
       "properties"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "QueryDefinition.Remove",
     "url": "/core-library/querydefinition/#instance-remove",
     "section": "Core Library",
     "type": "method",
-    "description": "Removes the previously initialized query definition.",
-    "returnType": "string"
+    "description": "Removes the previously initialized query definition."
   },
   {
     "name": "QueryDefinition.Perform",
@@ -2136,8 +1947,7 @@
     "description": "Executes the query definition.",
     "params": [
       "action"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "Send.Init",
@@ -2148,7 +1958,6 @@
     "params": [
       "id"
     ],
-    "returnType": "SendInstance",
     "deprecated": true
   },
   {
@@ -2162,7 +1971,6 @@
       "listIds",
       "options"
     ],
-    "returnType": "string",
     "deprecated": true
   },
   {
@@ -2174,7 +1982,6 @@
     "params": [
       "filter"
     ],
-    "returnType": "object[]",
     "deprecated": true
   },
   {
@@ -2186,7 +1993,6 @@
     "params": [
       "filter"
     ],
-    "returnType": "object[]",
     "deprecated": true
   },
   {
@@ -2195,7 +2001,6 @@
     "section": "Core Library",
     "type": "method",
     "description": "Cancels/removes the previously initialized send: returns \"OK\" and…",
-    "returnType": "string",
     "deprecated": true
   },
   {
@@ -2204,7 +2009,6 @@
     "section": "Core Library",
     "type": "method",
     "description": "Attempts to cancel the previously initialized send.",
-    "returnType": "string",
     "deprecated": true
   },
   {
@@ -2215,8 +2019,7 @@
     "description": "Returns tracking data for sends matching the filter.",
     "params": [
       "filter"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "Send.Definition.Init",
@@ -2227,7 +2030,6 @@
     "params": [
       "key"
     ],
-    "returnType": "SendDefinitionInstance",
     "deprecated": true
   },
   {
@@ -2242,7 +2044,6 @@
       "emailKey",
       "listIds"
     ],
-    "returnType": "object",
     "deprecated": true
   },
   {
@@ -2258,7 +2059,6 @@
       "sendableDataExtensionKey",
       "publicationListKey"
     ],
-    "returnType": "object",
     "deprecated": true
   },
   {
@@ -2274,7 +2074,6 @@
       "filterDefinitionKey",
       "listId"
     ],
-    "returnType": "never",
     "deprecated": true
   },
   {
@@ -2286,7 +2085,6 @@
     "params": [
       "filter"
     ],
-    "returnType": "object[]",
     "deprecated": true
   },
   {
@@ -2298,7 +2096,6 @@
     "params": [
       "properties"
     ],
-    "returnType": "string",
     "deprecated": true
   },
   {
@@ -2307,7 +2104,6 @@
     "section": "Core Library",
     "type": "method",
     "description": "Deletes the previously initialized send definition.",
-    "returnType": "string",
     "deprecated": true
   },
   {
@@ -2316,7 +2112,6 @@
     "section": "Core Library",
     "type": "method",
     "description": "Sends email messages to the lists associated with the previously…",
-    "returnType": "string",
     "deprecated": true
   },
   {
@@ -2328,7 +2123,6 @@
     "params": [
       "emailAddress"
     ],
-    "returnType": "string",
     "deprecated": true
   },
   {
@@ -2339,8 +2133,7 @@
     "description": "Initializes a TriggeredSend instance bound to the specified external…",
     "params": [
       "key"
-    ],
-    "returnType": "TriggeredSendInstance"
+    ]
   },
   {
     "name": "TriggeredSend.Add",
@@ -2350,8 +2143,7 @@
     "description": "Creates a new triggered send definition from the supplied properties…",
     "params": [
       "properties"
-    ],
-    "returnType": "TriggeredSendInstance"
+    ]
   },
   {
     "name": "TriggeredSend.Retrieve",
@@ -2361,8 +2153,7 @@
     "description": "Returns an array of triggered send definitions matching the specified…",
     "params": [
       "filter"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "TriggeredSend.Update",
@@ -2372,32 +2163,28 @@
     "description": "Updates the previously initialized triggered send definition.",
     "params": [
       "properties"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "TriggeredSend.Start",
     "url": "/core-library/triggeredsend/#instance-start",
     "section": "Core Library",
     "type": "method",
-    "description": "Starts (reactivates) a paused triggered send definition.",
-    "returnType": "string"
+    "description": "Starts (reactivates) a paused triggered send definition."
   },
   {
     "name": "TriggeredSend.Pause",
     "url": "/core-library/triggeredsend/#instance-pause",
     "section": "Core Library",
     "type": "method",
-    "description": "Pauses an active triggered send definition.",
-    "returnType": "string"
+    "description": "Pauses an active triggered send definition."
   },
   {
     "name": "TriggeredSend.Publish",
     "url": "/core-library/triggeredsend/#instance-publish",
     "section": "Core Library",
     "type": "method",
-    "description": "Publishes a triggered send definition, making it active and ready to…",
-    "returnType": "string"
+    "description": "Publishes a triggered send definition, making it active and ready to…"
   },
   {
     "name": "TriggeredSend.Send",
@@ -2409,8 +2196,7 @@
       "emailAddress",
       "sendTimeAttributes",
       "subscriberKey"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "TriggeredSend.Tracking.Retrieve",
@@ -2420,8 +2206,7 @@
     "description": "Returns tracking data for the previously initialized triggered send…",
     "params": [
       "filter"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "TriggeredSend.Tracking.Clicks.Retrieve",
@@ -2431,8 +2216,7 @@
     "description": "Returns click tracking information for the previously initialized…",
     "params": [
       "filter"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "TriggeredSend.Tracking.TotalByInterval.Retrieve",
@@ -2445,8 +2229,7 @@
       "startDate",
       "endDate",
       "groupBy"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "Tracking.Retrieve",
@@ -2456,8 +2239,7 @@
     "description": "Retrieves bounce event data for message sends matching the specified…",
     "params": [
       "filter"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "Tracking.Retrieve",
@@ -2467,8 +2249,7 @@
     "description": "Retrieves click tracking event data for message sends matching the…",
     "params": [
       "filter"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "Tracking.Retrieve",
@@ -2478,8 +2259,7 @@
     "description": "Retrieves forwarded email event data for message sends matching the…",
     "params": [
       "filter"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "Tracking.Retrieve",
@@ -2489,8 +2269,7 @@
     "description": "Retrieves forwarded email opt-in event data for message sends…",
     "params": [
       "filter"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "Tracking.Retrieve",
@@ -2500,8 +2279,7 @@
     "description": "Retrieves not-sent event data for message sends matching the…",
     "params": [
       "filter"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "Tracking.Retrieve",
@@ -2511,8 +2289,7 @@
     "description": "Retrieves open tracking event data for message sends matching the…",
     "params": [
       "filter"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "Tracking.Retrieve",
@@ -2522,8 +2299,7 @@
     "description": "Retrieves sent event data for message sends matching the specified…",
     "params": [
       "filter"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "Tracking.Retrieve",
@@ -2533,8 +2309,7 @@
     "description": "Retrieves survey response event data for message sends matching the…",
     "params": [
       "filter"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "Tracking.Retrieve",
@@ -2544,8 +2319,7 @@
     "description": "Retrieves unsubscribe event data for message sends matching the…",
     "params": [
       "filter"
-    ],
-    "returnType": "object[]"
+    ]
   },
   {
     "name": "ContentAreaObj.Init",
@@ -2556,7 +2330,6 @@
     "params": [
       "key"
     ],
-    "returnType": "ContentAreaObjInstance",
     "deprecated": true
   },
   {
@@ -2568,7 +2341,6 @@
     "params": [
       "properties"
     ],
-    "returnType": "ContentAreaObjInstance",
     "deprecated": true
   },
   {
@@ -2580,7 +2352,6 @@
     "params": [
       "filter"
     ],
-    "returnType": "object[]",
     "deprecated": true
   },
   {
@@ -2592,7 +2363,6 @@
     "params": [
       "properties"
     ],
-    "returnType": "string",
     "deprecated": true
   },
   {
@@ -2601,7 +2371,6 @@
     "section": "Core Library",
     "type": "method",
     "description": "Removes the previously initialized content area.",
-    "returnType": "string",
     "deprecated": true
   },
   {
@@ -2613,7 +2382,6 @@
     "params": [
       "key"
     ],
-    "returnType": "PortfolioInstance",
     "deprecated": true
   },
   {
@@ -2625,7 +2393,6 @@
     "params": [
       "properties"
     ],
-    "returnType": "string",
     "deprecated": true
   },
   {
@@ -2637,7 +2404,6 @@
     "params": [
       "filter"
     ],
-    "returnType": "object[]",
     "deprecated": true
   },
   {
@@ -2649,7 +2415,6 @@
     "params": [
       "properties"
     ],
-    "returnType": "string",
     "deprecated": true
   },
   {
@@ -2658,7 +2423,6 @@
     "section": "Core Library",
     "type": "method",
     "description": "Removes the previously initialized portfolio object.",
-    "returnType": "string",
     "deprecated": true
   },
   {
@@ -2962,8 +2726,7 @@
     "description": "Joins all array elements into a string, separated by the specified…",
     "params": [
       "separator"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "Array.push",
@@ -2973,24 +2736,21 @@
     "description": "Appends one or more elements to the end of an array and returns the…",
     "params": [
       "element"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "Array.pop",
     "url": "/ecmascript-builtins/array-methods/#pop",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Removes and returns the last element from an array.",
-    "returnType": "any"
+    "description": "Removes and returns the last element from an array."
   },
   {
     "name": "Array.shift",
     "url": "/ecmascript-builtins/array-methods/#shift",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Removes and returns the first element from an array.",
-    "returnType": "any"
+    "description": "Removes and returns the first element from an array."
   },
   {
     "name": "Array.unshift",
@@ -3000,8 +2760,7 @@
     "description": "Inserts one or more elements at the start of an array and returns the…",
     "params": [
       "element"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "Array.concat",
@@ -3011,8 +2770,7 @@
     "description": "Returns a new array formed by merging this array with other arrays or…",
     "params": [
       "value"
-    ],
-    "returnType": "array"
+    ]
   },
   {
     "name": "Array.slice",
@@ -3023,8 +2781,7 @@
     "params": [
       "start",
       "end"
-    ],
-    "returnType": "array"
+    ]
   },
   {
     "name": "Array.sort",
@@ -3034,32 +2791,28 @@
     "description": "Sorts the array in place and returns it.",
     "params": [
       "compareFn"
-    ],
-    "returnType": "array"
+    ]
   },
   {
     "name": "Array.reverse",
     "url": "/ecmascript-builtins/array-methods/#reverse",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Reverses the elements of an array in place.",
-    "returnType": "array"
+    "description": "Reverses the elements of an array in place."
   },
   {
     "name": "Array.length",
     "url": "/ecmascript-builtins/array-methods/#length",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the number of elements in the array.",
-    "returnType": "number"
+    "description": "Returns the number of elements in the array."
   },
   {
     "name": "Array.toLocaleString",
     "url": "/ecmascript-builtins/array-methods/#tolocalestring",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns a string representing the array elements, joined by a…",
-    "returnType": "string"
+    "description": "Returns a string representing the array elements, joined by a…"
   },
   {
     "name": "String.charAt",
@@ -3069,8 +2822,7 @@
     "description": "Returns the character at the specified index.",
     "params": [
       "index"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "String.charCodeAt",
@@ -3080,8 +2832,7 @@
     "description": "Returns the UTF-16 code unit at the specified index.",
     "params": [
       "index"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "String.indexOf",
@@ -3092,8 +2843,7 @@
     "params": [
       "searchValue",
       "fromIndex"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "String.lastIndexOf",
@@ -3104,8 +2854,7 @@
     "params": [
       "searchValue",
       "fromIndex"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "String.match",
@@ -3115,8 +2864,7 @@
     "description": "Matches a string against a regular expression and returns the matches…",
     "params": [
       "regexp"
-    ],
-    "returnType": "array"
+    ]
   },
   {
     "name": "String.replace",
@@ -3127,8 +2875,7 @@
     "params": [
       "searchValue",
       "replaceValue"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "String.search",
@@ -3138,8 +2885,7 @@
     "description": "Searches for a match and returns the index of the first match, or -1.",
     "params": [
       "regexp"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "String.slice",
@@ -3150,8 +2896,7 @@
     "params": [
       "start",
       "end"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "String.split",
@@ -3162,8 +2907,7 @@
     "params": [
       "separator",
       "limit"
-    ],
-    "returnType": "array"
+    ]
   },
   {
     "name": "String.substring",
@@ -3174,40 +2918,35 @@
     "params": [
       "start",
       "end"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "String.toLowerCase",
     "url": "/ecmascript-builtins/string-methods/#tolowercase",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the string converted to lowercase.",
-    "returnType": "string"
+    "description": "Returns the string converted to lowercase."
   },
   {
     "name": "String.toLocaleLowerCase",
     "url": "/ecmascript-builtins/string-methods/#tolocalelowercase",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the string converted to lowercase.",
-    "returnType": "string"
+    "description": "Returns the string converted to lowercase."
   },
   {
     "name": "String.toLocaleUpperCase",
     "url": "/ecmascript-builtins/internationalization/#tolocalestring-family",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the string converted to uppercase.",
-    "returnType": "string"
+    "description": "Returns the string converted to uppercase."
   },
   {
     "name": "String.toUpperCase",
     "url": "/ecmascript-builtins/string-methods/#touppercase",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the string converted to uppercase.",
-    "returnType": "string"
+    "description": "Returns the string converted to uppercase."
   },
   {
     "name": "String.concat",
@@ -3217,8 +2956,7 @@
     "description": "Returns a new string formed by concatenating this string with one or…",
     "params": [
       "string"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "String.localeCompare",
@@ -3228,16 +2966,14 @@
     "description": "Compares this string with another and returns a negative number if it…",
     "params": [
       "compareString"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "String.length",
     "url": "/ecmascript-builtins/string-methods/#length",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the number of characters in the string.",
-    "returnType": "number"
+    "description": "Returns the number of characters in the string."
   },
   {
     "name": "Math.abs",
@@ -3247,8 +2983,7 @@
     "description": "Returns the absolute value of a number.",
     "params": [
       "x"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "Math.ceil",
@@ -3258,8 +2993,7 @@
     "description": "Rounds a number up to the next integer.",
     "params": [
       "x"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "Math.floor",
@@ -3269,8 +3003,7 @@
     "description": "Rounds a number down to the nearest integer.",
     "params": [
       "x"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "Math.max",
@@ -3280,8 +3013,7 @@
     "description": "Returns the largest of the supplied numbers.",
     "params": [
       "values"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "Math.min",
@@ -3291,8 +3023,7 @@
     "description": "Returns the smallest of the supplied numbers.",
     "params": [
       "values"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "Math.pow",
@@ -3303,16 +3034,14 @@
     "params": [
       "base",
       "exponent"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "Math.random",
     "url": "/ecmascript-builtins/math/#random",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns a pseudo-random floating-point number in [0, 1).",
-    "returnType": "number"
+    "description": "Returns a pseudo-random floating-point number in [0, 1)."
   },
   {
     "name": "Math.round",
@@ -3322,8 +3051,7 @@
     "description": "Rounds a number to the nearest integer.",
     "params": [
       "x"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "Math.sqrt",
@@ -3333,8 +3061,7 @@
     "description": "Returns the square root of a number.",
     "params": [
       "x"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "Math.sin",
@@ -3344,8 +3071,7 @@
     "description": "Returns the sine of an angle given in radians.",
     "params": [
       "x"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "Math.cos",
@@ -3355,8 +3081,7 @@
     "description": "Returns the cosine of an angle given in radians.",
     "params": [
       "x"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "Math.tan",
@@ -3366,8 +3091,7 @@
     "description": "Returns the tangent of an angle given in radians.",
     "params": [
       "x"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "Math.asin",
@@ -3377,8 +3101,7 @@
     "description": "Returns the arc sine (in radians) of a number in the range [-1, 1].",
     "params": [
       "x"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "Math.acos",
@@ -3388,8 +3111,7 @@
     "description": "Returns the arc cosine (in radians) of a number in the range [-1, 1].",
     "params": [
       "x"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "Math.atan",
@@ -3399,8 +3121,7 @@
     "description": "Returns the arc tangent (in radians) of a number.",
     "params": [
       "x"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "Math.atan2",
@@ -3411,8 +3132,7 @@
     "params": [
       "y",
       "x"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "Math.exp",
@@ -3422,8 +3142,7 @@
     "description": "Returns e raised to the power of x (e^x).",
     "params": [
       "x"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "Math.log",
@@ -3433,64 +3152,56 @@
     "description": "Returns the natural logarithm (base e) of a number.",
     "params": [
       "x"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "Math.PI",
     "url": "/ecmascript-builtins/math/#pi",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "The ratio of a circle's circumference to its diameter (~3.14159).",
-    "returnType": "number"
+    "description": "The ratio of a circle's circumference to its diameter (~3.14159)."
   },
   {
     "name": "Math.E",
     "url": "/ecmascript-builtins/math/#e",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Euler's number, the base of the natural logarithm (~2.71828).",
-    "returnType": "number"
+    "description": "Euler's number, the base of the natural logarithm (~2.71828)."
   },
   {
     "name": "Math.LN2",
     "url": "/ecmascript-builtins/math/#ln2",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "The natural logarithm of 2 (~0.69315).",
-    "returnType": "number"
+    "description": "The natural logarithm of 2 (~0.69315)."
   },
   {
     "name": "Math.LN10",
     "url": "/ecmascript-builtins/math/#ln10",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "The natural logarithm of 10 (~2.30259).",
-    "returnType": "number"
+    "description": "The natural logarithm of 10 (~2.30259)."
   },
   {
     "name": "Math.LOG2E",
     "url": "/ecmascript-builtins/math/#log2e",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "The base-2 logarithm of e (~1.44270).",
-    "returnType": "number"
+    "description": "The base-2 logarithm of e (~1.44270)."
   },
   {
     "name": "Math.SQRT2",
     "url": "/ecmascript-builtins/math/#sqrt2",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "The square root of 2 (~1.41421).",
-    "returnType": "number"
+    "description": "The square root of 2 (~1.41421)."
   },
   {
     "name": "Math.SQRT1_2",
     "url": "/ecmascript-builtins/math/#sqrt1_2",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "The square root of 1/2 (~0.70711); equivalent to 1/Math.SQRT2.",
-    "returnType": "number"
+    "description": "The square root of 1/2 (~0.70711); equivalent to 1/Math.SQRT2."
   },
   {
     "name": "Number.toFixed",
@@ -3500,8 +3211,7 @@
     "description": "Returns a string representing the number in fixed-point notation with…",
     "params": [
       "fractionDigits"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "Number.toExponential",
@@ -3511,8 +3221,7 @@
     "description": "Returns a string representing the number in exponential notation.",
     "params": [
       "fractionDigits"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "Number.toPrecision",
@@ -3522,8 +3231,7 @@
     "description": "Returns a string representing the number.",
     "params": [
       "precision"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "Number.toString",
@@ -3533,16 +3241,14 @@
     "description": "Returns a string representing the number.",
     "params": [
       "radix"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "Number.valueOf",
     "url": "/ecmascript-builtins/number-methods/#valueof",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the primitive number value of a Number object.",
-    "returnType": "number"
+    "description": "Returns the primitive number value of a Number object."
   },
   {
     "name": "Number.toLocaleString",
@@ -3553,48 +3259,42 @@
     "params": [
       "locales",
       "options"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "Number.MAX_VALUE",
     "url": "/ecmascript-builtins/number-methods/#constants-es3",
     "section": "ECMAScript Builtins",
     "type": "property",
-    "description": "The largest positive finite value representable by a Number.",
-    "returnType": "number"
+    "description": "The largest positive finite value representable by a Number."
   },
   {
     "name": "Number.MIN_VALUE",
     "url": "/ecmascript-builtins/number-methods/#constants-es3",
     "section": "ECMAScript Builtins",
     "type": "property",
-    "description": "Standard ES3 exposes the smallest positive representable Number…",
-    "returnType": "number"
+    "description": "Standard ES3 exposes the smallest positive representable Number…"
   },
   {
     "name": "Number.NaN",
     "url": "/ecmascript-builtins/number-methods/#constants-es3",
     "section": "ECMAScript Builtins",
     "type": "property",
-    "description": "The Not-a-Number value.",
-    "returnType": "number"
+    "description": "The Not-a-Number value."
   },
   {
     "name": "Number.POSITIVE_INFINITY",
     "url": "/ecmascript-builtins/number-methods/#constants-es3",
     "section": "ECMAScript Builtins",
     "type": "property",
-    "description": "Standard ES3 exposes positive infinity.",
-    "returnType": "number"
+    "description": "Standard ES3 exposes positive infinity."
   },
   {
     "name": "Number.NEGATIVE_INFINITY",
     "url": "/ecmascript-builtins/number-methods/#constants-es3",
     "section": "ECMAScript Builtins",
     "type": "property",
-    "description": "Standard ES3 exposes negative infinity.",
-    "returnType": "number"
+    "description": "Standard ES3 exposes negative infinity."
   },
   {
     "name": "Object.hasOwnProperty",
@@ -3604,24 +3304,21 @@
     "description": "Returns true if the object has the specified property as its own (not…",
     "params": [
       "v"
-    ],
-    "returnType": "boolean"
+    ]
   },
   {
     "name": "Object.toString",
     "url": "/ecmascript-builtins/object-methods/#tostring",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns a string representation of the object.",
-    "returnType": "string"
+    "description": "Returns a string representation of the object."
   },
   {
     "name": "Object.valueOf",
     "url": "/ecmascript-builtins/object-methods/#valueof",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the primitive value of the object.",
-    "returnType": "object"
+    "description": "Returns the primitive value of the object."
   },
   {
     "name": "Global.parseInt",
@@ -3632,8 +3329,7 @@
     "params": [
       "string",
       "radix"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "Global.parseFloat",
@@ -3643,8 +3339,7 @@
     "description": "Parses a string and returns a floating-point number.",
     "params": [
       "string"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "Global.isNaN",
@@ -3654,8 +3349,7 @@
     "description": "Returns true if the value is NaN (Not-a-Number) after applying…",
     "params": [
       "value"
-    ],
-    "returnType": "boolean"
+    ]
   },
   {
     "name": "Global.isFinite",
@@ -3665,8 +3359,7 @@
     "description": "Returns true if the value is a finite number (not NaN, +Infinity, or…",
     "params": [
       "value"
-    ],
-    "returnType": "boolean"
+    ]
   },
   {
     "name": "Global.eval",
@@ -3676,8 +3369,7 @@
     "description": "Parses a string of JavaScript source and executes it as a script…",
     "params": [
       "script"
-    ],
-    "returnType": "any"
+    ]
   },
   {
     "name": "Global.encodeURI",
@@ -3687,8 +3379,7 @@
     "description": "Encodes a complete URI, leaving reserved characters (/ ?",
     "params": [
       "uri"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "Global.encodeURIComponent",
@@ -3698,8 +3389,7 @@
     "description": "Encodes a URI component, escaping reserved characters as well.",
     "params": [
       "str"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "Global.decodeURI",
@@ -3709,8 +3399,7 @@
     "description": "Decodes a URI previously encoded by encodeURI, converting…",
     "params": [
       "uri"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "Global.decodeURIComponent",
@@ -3720,8 +3409,7 @@
     "description": "Decodes a URI component previously encoded by encodeURIComponent…",
     "params": [
       "str"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "Global.RegExp",
@@ -3732,8 +3420,7 @@
     "params": [
       "pattern",
       "flags"
-    ],
-    "returnType": "RegExp"
+    ]
   },
   {
     "name": "RegExp.test",
@@ -3743,8 +3430,7 @@
     "description": "Tests whether the string matches the pattern.",
     "params": [
       "string"
-    ],
-    "returnType": "boolean"
+    ]
   },
   {
     "name": "RegExp.exec",
@@ -3754,216 +3440,189 @@
     "description": "Executes a search for a match in the string.",
     "params": [
       "string"
-    ],
-    "returnType": "array"
+    ]
   },
   {
     "name": "RegExp.source",
     "url": "/ecmascript-builtins/regular-expressions/#source",
     "section": "ECMAScript Builtins",
     "type": "property",
-    "description": "The text of the pattern, excluding the enclosing slashes and any…",
-    "returnType": "string"
+    "description": "The text of the pattern, excluding the enclosing slashes and any…"
   },
   {
     "name": "RegExp.global",
     "url": "/ecmascript-builtins/regular-expressions/#global",
     "section": "ECMAScript Builtins",
     "type": "property",
-    "description": "True if the g (global) flag was specified when creating the regular…",
-    "returnType": "boolean"
+    "description": "True if the g (global) flag was specified when creating the regular…"
   },
   {
     "name": "RegExp.lastIndex",
     "url": "/ecmascript-builtins/regular-expressions/#lastindex",
     "section": "ECMAScript Builtins",
     "type": "property",
-    "description": "The index at which to start the next match.",
-    "returnType": "number"
+    "description": "The index at which to start the next match."
   },
   {
     "name": "Date.getFullYear",
     "url": "/ecmascript-builtins/date-methods/#getfullyear",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the four-digit year of the date according to local time.",
-    "returnType": "number"
+    "description": "Returns the four-digit year of the date according to local time."
   },
   {
     "name": "Date.getMonth",
     "url": "/ecmascript-builtins/date-methods/#getmonth",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the month (0 = January … 11 = December) of the date according…",
-    "returnType": "number"
+    "description": "Returns the month (0 = January … 11 = December) of the date according…"
   },
   {
     "name": "Date.getDate",
     "url": "/ecmascript-builtins/date-methods/#getdate",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the day of the month (1–31) of the date according to local…",
-    "returnType": "number"
+    "description": "Returns the day of the month (1–31) of the date according to local…"
   },
   {
     "name": "Date.getHours",
     "url": "/ecmascript-builtins/date-methods/#gethours",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the hour (0–23) of the date according to local time.",
-    "returnType": "number"
+    "description": "Returns the hour (0–23) of the date according to local time."
   },
   {
     "name": "Date.getTime",
     "url": "/ecmascript-builtins/date-methods/#gettime",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the numeric timestamp (milliseconds since 1970-01-01T00:00:00…",
-    "returnType": "number"
+    "description": "Returns the numeric timestamp (milliseconds since 1970-01-01T00:00:00…"
   },
   {
     "name": "Date.getTimezoneOffset",
     "url": "/ecmascript-builtins/date-methods/#gettimezoneoffset",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the difference, in minutes, between this date evaluated in…",
-    "returnType": "number"
+    "description": "Returns the difference, in minutes, between this date evaluated in…"
   },
   {
     "name": "Date.getMinutes",
     "url": "/ecmascript-builtins/date-methods/#getminutes",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the minutes (0–59) of the date according to local time.",
-    "returnType": "number"
+    "description": "Returns the minutes (0–59) of the date according to local time."
   },
   {
     "name": "Date.getSeconds",
     "url": "/ecmascript-builtins/date-methods/#getseconds",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the seconds (0–59) of the date according to local time.",
-    "returnType": "number"
+    "description": "Returns the seconds (0–59) of the date according to local time."
   },
   {
     "name": "Date.getDay",
     "url": "/ecmascript-builtins/date-methods/#getday",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the day of the week (0 = Sunday … 6 = Saturday) according to…",
-    "returnType": "number"
+    "description": "Returns the day of the week (0 = Sunday … 6 = Saturday) according to…"
   },
   {
     "name": "Date.getMilliseconds",
     "url": "/ecmascript-builtins/date-methods/#getmilliseconds",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the milliseconds (0–999) of the date according to local time.",
-    "returnType": "number"
+    "description": "Returns the milliseconds (0–999) of the date according to local time."
   },
   {
     "name": "Date.toString",
     "url": "/ecmascript-builtins/date-methods/#tostring",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns a human-readable string representing the date.",
-    "returnType": "string"
+    "description": "Returns a human-readable string representing the date."
   },
   {
     "name": "Date.toDateString",
     "url": "/ecmascript-builtins/date-methods/#todatestring",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the date portion of the date as a human-readable string.",
-    "returnType": "string"
+    "description": "Returns the date portion of the date as a human-readable string."
   },
   {
     "name": "Date.toUTCString",
     "url": "/ecmascript-builtins/date-methods/#toutcstring",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the date as a string using the UTC time zone.",
-    "returnType": "string"
+    "description": "Returns the date as a string using the UTC time zone."
   },
   {
     "name": "Date.valueOf",
     "url": "/ecmascript-builtins/date-methods/#valueof",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the primitive value of the date as the number of milliseconds…",
-    "returnType": "number"
+    "description": "Returns the primitive value of the date as the number of milliseconds…"
   },
   {
     "name": "Date.getUTCFullYear",
     "url": "/ecmascript-builtins/date-methods/#getutcfullyear",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the four-digit year of the date according to universal time…",
-    "returnType": "number"
+    "description": "Returns the four-digit year of the date according to universal time…"
   },
   {
     "name": "Date.getUTCMonth",
     "url": "/ecmascript-builtins/date-methods/#getutcmonth",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the month (0 = January … 11 = December) of the date according…",
-    "returnType": "number"
+    "description": "Returns the month (0 = January … 11 = December) of the date according…"
   },
   {
     "name": "Date.getUTCDate",
     "url": "/ecmascript-builtins/date-methods/#getutcdate",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the day of the month (1–31) of the date according to…",
-    "returnType": "number"
+    "description": "Returns the day of the month (1–31) of the date according to…"
   },
   {
     "name": "Date.getUTCDay",
     "url": "/ecmascript-builtins/date-methods/#getutcday",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the day of the week (0 = Sunday … 6 = Saturday) according to…",
-    "returnType": "number"
+    "description": "Returns the day of the week (0 = Sunday … 6 = Saturday) according to…"
   },
   {
     "name": "Date.getUTCHours",
     "url": "/ecmascript-builtins/date-methods/#getutchours",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the hour (0–23) of the date according to universal time (UTC).",
-    "returnType": "number"
+    "description": "Returns the hour (0–23) of the date according to universal time (UTC)."
   },
   {
     "name": "Date.getUTCMinutes",
     "url": "/ecmascript-builtins/date-methods/#getutcminutes",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the minutes (0–59) of the date according to universal time…",
-    "returnType": "number"
+    "description": "Returns the minutes (0–59) of the date according to universal time…"
   },
   {
     "name": "Date.getUTCSeconds",
     "url": "/ecmascript-builtins/date-methods/#getutcseconds",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the seconds (0–59) of the date according to universal time…",
-    "returnType": "number"
+    "description": "Returns the seconds (0–59) of the date according to universal time…"
   },
   {
     "name": "Date.getUTCMilliseconds",
     "url": "/ecmascript-builtins/date-methods/#getutcmilliseconds",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the milliseconds (0–999) of the date according to universal…",
-    "returnType": "number"
+    "description": "Returns the milliseconds (0–999) of the date according to universal…"
   },
   {
     "name": "Date.toTimeString",
     "url": "/ecmascript-builtins/date-methods/#totimestring",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the time portion of the date as a human-readable string.",
-    "returnType": "string"
+    "description": "Returns the time portion of the date as a human-readable string."
   },
   {
     "name": "Date.toLocaleDateString",
@@ -3974,8 +3633,7 @@
     "params": [
       "locales",
       "options"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "Date.UTC",
@@ -3991,8 +3649,7 @@
       "minutes",
       "seconds",
       "milliseconds"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "Date.parse",
@@ -4002,16 +3659,14 @@
     "description": "Parses a date string and returns the numeric timestamp (milliseconds…",
     "params": [
       "dateString"
-    ],
-    "returnType": "number"
+    ]
   },
   {
     "name": "Date.now",
     "url": "/ecmascript-builtins/date-methods/#now",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the current time.",
-    "returnType": "object"
+    "description": "Returns the current time."
   },
   {
     "name": "Object.defineProperty",
@@ -4023,8 +3678,7 @@
       "obj",
       "prop",
       "descriptor"
-    ],
-    "returnType": "object"
+    ]
   },
   {
     "name": "Object.getPrototypeOf",
@@ -4034,8 +3688,7 @@
     "description": "Returns the prototype (internal [[Prototype]]) of the specified…",
     "params": [
       "obj"
-    ],
-    "returnType": "object"
+    ]
   },
   {
     "name": "Function.call",
@@ -4046,8 +3699,7 @@
     "params": [
       "thisArg",
       "arg"
-    ],
-    "returnType": "any"
+    ]
   },
   {
     "name": "Function.apply",
@@ -4058,16 +3710,14 @@
     "params": [
       "thisArg",
       "argsArray"
-    ],
-    "returnType": "any"
+    ]
   },
   {
     "name": "Function.toString",
     "url": "/ecmascript-builtins/function-methods/#tostring",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns a string representing the function.",
-    "returnType": "string"
+    "description": "Returns a string representing the function."
   },
   {
     "name": "Boolean.boolean-coercion",
@@ -4077,8 +3727,7 @@
     "description": "Called as a plain function, Boolean(value) returns a primitive…",
     "params": [
       "value"
-    ],
-    "returnType": "boolean"
+    ]
   },
   {
     "name": "Boolean.boolean-boxed",
@@ -4088,32 +3737,28 @@
     "description": "new Boolean(value) creates a boxed Boolean object (typeof \"object\").",
     "params": [
       "value"
-    ],
-    "returnType": "object"
+    ]
   },
   {
     "name": "Boolean.boolean-prototype",
     "url": "/ecmascript-builtins/boolean/#boolean-prototype",
     "section": "ECMAScript Builtins",
     "type": "property",
-    "description": "Boolean.prototype exists and exposes toString, valueOf and…",
-    "returnType": "object"
+    "description": "Boolean.prototype exists and exposes toString, valueOf and…"
   },
   {
     "name": "Boolean.valueOf",
     "url": "/ecmascript-builtins/boolean/#boolean-prototype",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Defined on Boolean.prototype, but it does NOT unwrap a boxed Boolean…",
-    "returnType": "boolean"
+    "description": "Defined on Boolean.prototype, but it does NOT unwrap a boxed Boolean…"
   },
   {
     "name": "Boolean.toString",
     "url": "/ecmascript-builtins/boolean/#boolean-prototype",
     "section": "ECMAScript Builtins",
     "type": "method",
-    "description": "Returns the string form of a boolean.",
-    "returnType": "string"
+    "description": "Returns the string form of a boolean."
   },
   {
     "name": "Error.Error",
@@ -4123,8 +3768,7 @@
     "description": "The base Error constructor works in SSJS.",
     "params": [
       "message"
-    ],
-    "returnType": "object"
+    ]
   },
   {
     "name": "ErrorTypes.EvalError",
@@ -4134,8 +3778,7 @@
     "description": "The EvalError subtype constructor is present in SSJS.",
     "params": [
       "message"
-    ],
-    "returnType": "object"
+    ]
   },
   {
     "name": "ErrorTypes.RangeError",
@@ -4145,8 +3788,7 @@
     "description": "The RangeError subtype constructor is present in SSJS.",
     "params": [
       "message"
-    ],
-    "returnType": "object"
+    ]
   },
   {
     "name": "ErrorTypes.ReferenceError",
@@ -4156,8 +3798,7 @@
     "description": "The ReferenceError subtype constructor is present in SSJS.",
     "params": [
       "message"
-    ],
-    "returnType": "object"
+    ]
   },
   {
     "name": "ErrorTypes.SyntaxError",
@@ -4167,8 +3808,7 @@
     "description": "The SyntaxError subtype constructor is present in SSJS.",
     "params": [
       "message"
-    ],
-    "returnType": "object"
+    ]
   },
   {
     "name": "ErrorTypes.TypeError",
@@ -4178,8 +3818,7 @@
     "description": "The TypeError subtype constructor is present in SSJS.",
     "params": [
       "message"
-    ],
-    "returnType": "object"
+    ]
   },
   {
     "name": "ErrorTypes.URIError",
@@ -4189,16 +3828,14 @@
     "description": "The URIError subtype constructor is present in SSJS.",
     "params": [
       "message"
-    ],
-    "returnType": "object"
+    ]
   },
   {
     "name": "GlobalValues.undefined",
     "url": "/ecmascript-builtins/global-values/#undefined",
     "section": "ECMAScript Builtins",
     "type": "property",
-    "description": "The global undefined value is available in SSJS.",
-    "returnType": "undefined"
+    "description": "The global undefined value is available in SSJS."
   },
   {
     "name": "Array.copyWithin",
@@ -5139,8 +4776,7 @@
     "description": "Native JavaScript function that converts any value to its string…",
     "params": [
       "value"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "Error",
@@ -5150,8 +4786,7 @@
     "description": "Native JavaScript Error constructor.",
     "params": [
       "message"
-    ],
-    "returnType": "object"
+    ]
   },
   {
     "name": "Base64Encode",
@@ -5161,8 +4796,7 @@
     "description": "Encodes plain text to a Base64 encoded string.",
     "params": [
       "string"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "Base64Decode",
@@ -5172,8 +4806,7 @@
     "description": "Decodes a Base64 encoded string to plain text.",
     "params": [
       "encodedString"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "BeginImpressionRegion",
@@ -5183,8 +4816,7 @@
     "description": "Marks the start of a named impression tracking region within content.",
     "params": [
       "name"
-    ],
-    "returnType": "void"
+    ]
   },
   {
     "name": "EndImpressionRegion",
@@ -5194,8 +4826,7 @@
     "description": "Marks the end of an impression tracking region within content.",
     "params": [
       "closeAll"
-    ],
-    "returnType": "undefined"
+    ]
   },
   {
     "name": "Now",
@@ -5205,8 +4836,7 @@
     "description": "Returns the current server date/time as a Date object (in the account…",
     "params": [
       "useContextTime"
-    ],
-    "returnType": "Date"
+    ]
   },
   {
     "name": "Redirect",
@@ -5217,16 +4847,14 @@
     "params": [
       "url",
       "movedPermanently"
-    ],
-    "returnType": "void"
+    ]
   },
   {
     "name": "GUID",
     "url": "/core-library/guid/",
     "section": "Core Library",
     "type": "function",
-    "description": "Generates a new globally unique identifier as a lowercase canonical…",
-    "returnType": "string"
+    "description": "Generates a new globally unique identifier as a lowercase canonical…"
   },
   {
     "name": "IsEmailAddress",
@@ -5236,8 +4864,7 @@
     "description": "Checks whether a string is a valid email address format.",
     "params": [
       "value"
-    ],
-    "returnType": "boolean"
+    ]
   },
   {
     "name": "IsPhoneNumber",
@@ -5247,8 +4874,7 @@
     "description": "Checks whether a value is a valid North American Numbering Plan…",
     "params": [
       "value"
-    ],
-    "returnType": "boolean"
+    ]
   },
   {
     "name": "Write",
@@ -5258,8 +4884,7 @@
     "description": "Writes text to the HTTP response output.",
     "params": [
       "text"
-    ],
-    "returnType": "void"
+    ]
   },
   {
     "name": "Stringify",
@@ -5269,8 +4894,7 @@
     "description": "Serializes a value to a JSON string.",
     "params": [
       "value"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "Format",
@@ -5281,8 +4905,7 @@
     "params": [
       "textToFormat",
       "formatCode"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "Request",
@@ -5296,48 +4919,42 @@
     "url": "/core-library/request/#members",
     "section": "Core Library",
     "type": "method",
-    "description": "Returns the full URL of the current page request.",
-    "returnType": "string"
+    "description": "Returns the full URL of the current page request."
   },
   {
     "name": "Request.PagePath",
     "url": "/core-library/request/#members",
     "section": "Core Library",
     "type": "method",
-    "description": "Returns the path portion of the current page request.",
-    "returnType": "string"
+    "description": "Returns the path portion of the current page request."
   },
   {
     "name": "Request.Method",
     "url": "/core-library/request/#members",
     "section": "Core Library",
     "type": "method",
-    "description": "Returns the HTTP method (GET, POST, etc.) of the current request.",
-    "returnType": "string"
+    "description": "Returns the HTTP method (GET, POST, etc.) of the current request."
   },
   {
     "name": "Request.ApplicationID",
     "url": "/core-library/request/#members",
     "section": "Core Library",
     "type": "method",
-    "description": "Returns the application ID associated with the current request.",
-    "returnType": "string"
+    "description": "Returns the application ID associated with the current request."
   },
   {
     "name": "Request.PackageID",
     "url": "/core-library/request/#members",
     "section": "Core Library",
     "type": "method",
-    "description": "Returns the package ID associated with the current request.",
-    "returnType": "string"
+    "description": "Returns the package ID associated with the current request."
   },
   {
     "name": "Request.ApplicationBaseURL",
     "url": "/core-library/request/#members",
     "section": "Core Library",
     "type": "method",
-    "description": "Returns the base URL of the application for the current request.",
-    "returnType": "string"
+    "description": "Returns the base URL of the application for the current request."
   },
   {
     "name": "Request.GetQueryStringParameter",
@@ -5347,8 +4964,7 @@
     "description": "Returns the value of a named URL query string parameter for the…",
     "params": [
       "name"
-    ],
-    "returnType": "string"
+    ]
   },
   {
     "name": "Request.GetFormField",
@@ -5358,7 +4974,6 @@
     "description": "Returns the value of a named form field submitted with the current…",
     "params": [
       "name"
-    ],
-    "returnType": "string"
+    ]
   }
 ]

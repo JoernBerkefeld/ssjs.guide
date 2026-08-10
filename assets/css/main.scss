@@ -318,53 +318,178 @@
   }
 }
 
-// ── Function-index A-Z ────────────────────────────────────────────────────────
+// ── Function index (_includes/ssjs-function-index.html) ──────────────────────
 
-.az-index {
-  .az-section {
-    margin-bottom: $space-8;
+.sfi-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-4;
+  align-items: flex-end;
+  margin: $space-6 0 $space-2;
+}
 
-    h2 {
-      font-family: $font-mono;
-      font-size: $text-2xl;
-      font-weight: 700;
-      color: $accent-primary;
-      margin-bottom: $space-4;
-      border-bottom: 1px solid $border-muted;
-      padding-bottom: $space-2;
-    }
+.sfi-control {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+
+  > label {
+    font-size: $text-xs;
+    color: $text-muted;
   }
 
-  .az-list {
-    list-style: none;
-    padding: 0;
-    columns: 2;
-    column-gap: $space-6;
+  select,
+  input[type="search"] {
+    background-color: $bg-elevated;
+    color: $text-primary;
+    border: 1px solid $border-default;
+    border-radius: $radius-md;
+    padding: 0.35em 0.6em;
+    font-size: $text-sm;
 
-    @media (min-width: 768px) {
-      columns: 3;
-    }
-
-    li {
-      break-inside: avoid;
-      margin-bottom: $space-2;
-
-      a {
-        font-family: $font-mono;
-        font-size: $text-sm;
-        color: $text-secondary;
-
-        &:hover {
-          color: $accent-light;
-        }
-
-        .fn-category {
-          font-size: $text-xs;
-          color: $text-muted;
-          font-family: $font-sans;
-          margin-left: $space-2;
-        }
-      }
+    &:focus {
+      outline: none;
+      border-color: $accent-primary;
     }
   }
+}
+
+.sfi-control--search {
+  flex: 1 1 16rem;
+  min-width: 12rem;
+
+  input[type="search"] {
+    width: 100%;
+  }
+}
+
+.sfi-count {
+  color: $text-muted;
+  font-size: $text-sm;
+  margin: $space-3 0 $space-4;
+}
+
+.sfi-empty {
+  background-color: $bg-surface;
+  border: 1px dashed $border-default;
+  border-radius: $radius-md;
+  padding: $space-5;
+  color: $text-secondary;
+}
+
+.sfi-tablewrap {
+  overflow-x: auto;
+}
+
+.sfi-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: $text-sm;
+
+  th,
+  td {
+    text-align: left;
+    vertical-align: top;
+    padding: 0.5em 0.7em;
+    border-bottom: 1px solid $border-muted;
+  }
+
+  th {
+    font-size: $text-xs;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: $text-muted;
+    border-bottom: 1px solid $border-default;
+    white-space: nowrap;
+  }
+
+  td code {
+    font-family: $font-mono;
+  }
+}
+
+.sfi-row.is-hidden {
+  display: none;
+}
+
+// Section label pill.
+.sfi-tag {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  font-size: $text-xs;
+  padding: 0.15em 0.6em;
+  border: 1px solid $border-default;
+  border-radius: $radius-full;
+  background-color: $bg-elevated;
+  color: $text-secondary;
+}
+
+// Runtime-verification chip. Only verified rows carry one.
+.sfi-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  white-space: nowrap;
+  font-size: $text-xs;
+  padding: 0.15em 0.6em;
+  border: 1px solid;
+  border-radius: $radius-full;
+}
+
+.sfi-state--verified {
+  color: $color-success;
+  background-color: rgba($color-success, 0.08);
+  border-color: rgba($color-success, 0.3);
+}
+
+.sfi-flag {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  font-size: $text-xs;
+  padding: 0.1em 0.5em;
+  margin-left: $space-1;
+  border: 1px solid rgba($color-warning, 0.3);
+  border-radius: $radius-full;
+  background-color: rgba($color-warning, 0.08);
+  color: $color-warning;
+}
+
+.sfi-flag--deprecated {
+  border-color: rgba($color-danger, 0.3);
+  background-color: rgba($color-danger, 0.08);
+  color: $color-danger;
+}
+
+.sfi-flag--polyfill {
+  border-color: rgba($color-info, 0.3);
+  background-color: rgba($color-info, 0.08);
+  color: $color-info;
+}
+
+.sfi-desc {
+  color: $text-secondary;
+}
+
+.sfi-polyfill-link {
+  white-space: nowrap;
+  font-size: $text-xs;
+  font-weight: 600;
+  color: $color-info;
+}
+
+.sfi-marker {
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.sfi-marker--partial {
+  font-weight: normal;
+  color: inherit;
+}
+
+.sfi-marker--missing {
+  font-weight: normal;
+  color: inherit;
 }
