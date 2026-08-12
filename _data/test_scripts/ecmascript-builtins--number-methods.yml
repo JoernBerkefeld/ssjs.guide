@@ -747,6 +747,53 @@ parsefloat: |
   assert("workaround parseFloat('42') === 42", parseFloat("42") === 42, true);
   </script>
 
+tolocalestring: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Number.prototype.toLocaleString()
+   *
+   * Proves the runtime behaviour of Number.prototype.toLocaleString on the
+   * SFMC (Jint, ES3-era) engine, captured from a live MCDEV_Training_QA
+   * CloudPage deployment. The exact expected strings below were filled in from
+   * that run and the whole chapter re-run green.
+   *
+   * Proves:
+   *   1. The member exists and is a function.
+   *   2. Calling it returns a string.
+   *   3. The literal value it produces for a representative set of inputs
+   *      (integer, fractional, negative, zero) — recorded verbatim from the
+   *      runtime so the page documents what the engine actually emits, not what
+   *      a browser locale would produce.
+   *   4. Any deviation from the MDN/ECMAScript behaviour (locale grouping) is
+   *      marked "DEV" with the spec expectation in the same line.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " => " + actual + "\n");
+  }
+
+  /* 1 + 2. Shape of the member. */
+  var n = 1234567.89;
+  assert("typeof (1234567.89).toLocaleString is function", String(typeof n.toLocaleString), "function");
+  assert("typeof (1234567.89).toLocaleString() is string", String(typeof n.toLocaleString()), "string");
+
+  /* 3. Literal runtime values (filled from the live run). */
+  assert("(1234567.89).toLocaleString() runtime value", String(n.toLocaleString()), "1234567.89");
+  var i = 1234567;
+  assert("(1234567).toLocaleString() runtime value", String(i.toLocaleString()), "1234567");
+  var neg = -4321;
+  assert("(-4321).toLocaleString() runtime value", String(neg.toLocaleString()), "-4321");
+  var zero = 0;
+  assert("(0).toLocaleString() runtime value", String(zero.toLocaleString()), "0");
+
+  /* 4. DEVIATION — no locale grouping separators are inserted. */
+  assert("DEV (1234567).toLocaleString() has no ',' grouping (spec: '1,234,567' in en-US)", String(i.toLocaleString()).indexOf(",") === -1, true);
+  </script>
+
 issafeinteger: |
   <script runat="server">
   Platform.Load("core", "1.1.5");
