@@ -417,6 +417,16 @@
     // tokens; let them wrap so the Name/Returns columns can't force overflow.
     overflow-wrap: anywhere;
   }
+
+  // Match the function-card typography: name uses the accent colour, the return
+  // type uses the muted colour (see .function-card .fn-name / .fn-return).
+  td:first-child a code {
+    color: $accent-light;
+  }
+
+  td.sfi-ret code {
+    color: $text-muted;
+  }
 }
 
 .sfi-row.is-hidden {

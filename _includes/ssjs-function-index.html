@@ -78,7 +78,6 @@
     <thead>
       <tr>
         <th>Name</th>
-        {%- unless include.section %}<th>Section</th>{% endunless %}
         <th>Returns</th>
         <th>Description</th>
       </tr>
@@ -101,9 +100,6 @@
           {%- if f.differsFromDocs %} <span class="sfi-flag" title="Runtime behaviour differs from the official Salesforce documentation">differs</span>{% endif %}
           {%- if f.polyfill %} <span class="sfi-flag sfi-flag--polyfill" title="A polyfill for it ships in this guide">polyfill</span>{% endif %}
         </td>
-        {%- unless include.section %}
-        <td class="sfi-meta" data-label="Section"><span class="sfi-tag">{{ f.section }}</span></td>
-        {%- endunless %}
         <td class="sfi-ret" data-label="Returns"><code>{{ f.returnType | escape }}</code></td>
         <td class="sfi-desc" data-label="Description">
           {%- if f.status == "partial" -%}
