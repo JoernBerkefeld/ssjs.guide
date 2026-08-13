@@ -94,7 +94,7 @@
           data-deprecated="{{ f.deprecated }}"
           data-differs="{{ f.differsFromDocs }}"
           id="{{ f.anchorId }}">
-        <td>
+        <td data-label="Name">
           <a href="{{ f.url }}"><code>{{ f.name | escape }}</code></a>
           {%- if f.verified %} <span class="sfi-state sfi-state--verified" title="Proven on a live Marketing Cloud CloudPage.">Verified</span>{% endif %}
           {%- if f.deprecated %} <span class="sfi-flag sfi-flag--deprecated" title="Deprecated in the SSJS catalog">deprecated</span>{% endif %}
@@ -102,10 +102,10 @@
           {%- if f.polyfill %} <span class="sfi-flag sfi-flag--polyfill" title="A polyfill for it ships in this guide">polyfill</span>{% endif %}
         </td>
         {%- unless include.section %}
-        <td><span class="sfi-tag">{{ f.section }}</span></td>
+        <td class="sfi-meta" data-label="Section"><span class="sfi-tag">{{ f.section }}</span></td>
         {%- endunless %}
-        <td><code>{{ f.returnType | escape }}</code></td>
-        <td class="sfi-desc">
+        <td class="sfi-ret" data-label="Returns"><code>{{ f.returnType | escape }}</code></td>
+        <td class="sfi-desc" data-label="Description">
           {%- if f.status == "partial" -%}
           <span class="sfi-marker sfi-marker--partial">⚠️ Partial</span> &mdash; {{ f.description | escape }}
           {%- elsif f.status == "missing" -%}

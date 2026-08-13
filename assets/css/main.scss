@@ -377,8 +377,11 @@
   color: $text-secondary;
 }
 
+// Wrap on wide screens; only fall back to horizontal scroll once the viewport
+// is narrow enough that the table collapses into cards (see the media query
+// below), so the scrollbar is a safety net rather than the default.
 .sfi-tablewrap {
-  overflow-x: auto;
+  overflow-x: hidden;
 }
 
 .sfi-table {
@@ -391,7 +394,6 @@
     text-align: left;
     vertical-align: top;
     padding: 0.5em 0.7em;
-    border-bottom: 1px solid $border-muted;
   }
 
   th {
@@ -400,11 +402,20 @@
     letter-spacing: 0.04em;
     color: $text-muted;
     border-bottom: 1px solid $border-default;
-    white-space: nowrap;
+  }
+
+  // The Name column carries the longest content; give it roughly a quarter of
+  // the table so the remaining columns share the rest evenly.
+  th:first-child,
+  td:first-child {
+    width: 25%;
   }
 
   td code {
     font-family: $font-mono;
+    // Long qualified names and object-shape return types are single unbreakable
+    // tokens; let them wrap so the Name/Returns columns can't force overflow.
+    overflow-wrap: anywhere;
   }
 }
 
@@ -470,6 +481,8 @@
 
 .sfi-desc {
   color: $text-secondary;
+  // Unbroken tokens (URLs, identifiers) must not reintroduce horizontal overflow.
+  word-break: break-word;
 }
 
 .sfi-polyfill-link {
@@ -492,4 +505,92 @@
 .sfi-marker--missing {
   font-weight: normal;
   color: inherit;
+}
+
+// On phones the table is unreadable even when wrapped, so each row becomes a
+// stacked info card. The <td> label is drawn from its data-label attribute.
+@media (max-width: 640px) {
+  .sfi-tablewrap {
+    overflow-x: auto;
+  }
+
+  .sfi-table thead {
+    display: none;
+  }
+
+  .sfi-table,
+  .sfi-table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .sfi-row {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 1.25rem;
+    margin-bottom: $space-4;
+    padding: $space-4;
+    background-color: $bg-surface;
+    border: 1px solid $border-muted;
+    border-radius: $radius-md;
+  }
+
+  .sfi-table td {
+    flex: 0 0 100%;
+    padding: $space-1 0;
+    text-align: left;
+  }
+
+  // The name and its return type form the card heading, sharing the first line
+  // ("Rows.Lookup → Rowset"); everything else wraps beneath. Explicit order keeps
+  // that pair first even though Returns sits later in the markup.
+  .sfi-table td:first-child {
+    order: 1;
+    flex: 1 1 auto;
+    margin-bottom: $space-1;
+    font-size: $text-sm;
+  }
+
+  .sfi-table td.sfi-ret {
+    order: 2;
+    flex: 0 0 auto;
+    align-self: baseline;
+  }
+
+  // Return type reads as "→ Type" here (card mode only) to echo a signature; on
+  // desktop the arrow would force the narrow column to wrap.
+  .sfi-ret code::before {
+    content: "\2192\00a0";
+    color: $text-muted;
+  }
+
+  // Full-width, zero-height flex break: forces the meta cell onto a new row so
+  // the heading line is only the name + return type. A shrinking name cell alone
+  // cannot guarantee this — flex would let Section share the line.
+  .sfi-row::after {
+    content: "";
+    order: 3;
+    flex: 0 0 100%;
+    height: 0;
+  }
+
+  .sfi-table td.sfi-meta {
+    order: 4;
+    flex: 0 1 auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sfi-table td.sfi-desc {
+    order: 5;
+  }
+
+  // The meta cell keeps its label on its own line above the value; Name, Returns
+  // (arrow-prefixed) and Description (self-evident) drop theirs.
+  .sfi-table td.sfi-meta::before {
+    content: attr(data-label) ":";
+    margin-bottom: 0.15em;
+    font-weight: 600;
+    color: $text-muted;
+  }
 }
