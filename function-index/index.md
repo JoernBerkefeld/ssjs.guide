@@ -3,6 +3,7 @@ layout: page
 title: Function Index
 description: Complete A–Z index of SSJS functions, methods, and objects documented in this reference — global functions, Platform.Function, Core library, WSProxy, HTTP, and Platform objects.
 nav_order: 12
+feedback: false
 ---
 
 Every API covered in this guide, in one searchable table. **Instance-style Core and WSProxy calls** use placeholders such as `<WSProxyInstance>` for the variable you initialized (for example from `new Script.Util.WSProxy()`). That name is documentation shorthand — it is not a literal prefix like `proxy.` that you must type. ECMAScript built-ins use the standard notation instead, so an instance method reads `Array.prototype.join()`.

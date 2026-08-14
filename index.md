@@ -2,6 +2,7 @@
 layout: default
 title: "ssjs.guide — Server-Side JavaScript for Salesforce Marketing Cloud"
 description: "The complete reference for Server-Side JavaScript (SSJS) in Salesforce Marketing Cloud — functions, platform APIs, recipes, and best practices."
+feedback: false
 ---
 
 <div class="home-hero">

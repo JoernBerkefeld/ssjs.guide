@@ -4,6 +4,7 @@ title: Privacy & Cookie Policy
 description: How ssjs.guide handles cookies, analytics, and your data.
 permalink: /privacy/
 sitemap: false
+feedback: false
 ---
 
 _Last updated: 2026-07-10_
