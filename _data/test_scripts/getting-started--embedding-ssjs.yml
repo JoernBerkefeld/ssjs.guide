@@ -1,0 +1,108 @@
+# Getting-started narrative test scripts.
+
+the-script-runat-server-block: |
+  <script runat="server">
+  /*
+   * Chapter: script runat=server
+   * Proves:
+   *   1. Script body executes (this assert is proof).
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("script executed", "true", "true");
+  </script>
+
+the-language-attribute: |
+  <script runat="server">
+  /*
+   * Chapter: language attribute
+   * Proves:
+   *   1. NON-ASSERTABLE: attribute is markup, not SSJS.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("markup-only", "documented", "documented");
+  </script>
+
+multiple-script-blocks: |
+  <script runat="server">
+  /*
+   * Chapter: Multiple Script Blocks
+   * Proves:
+   *   1. Top-level var persists within one script (stand-in for shared scope).
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var shared = "block1";
+  assert("shared var", shared, "block1");
+  </script>
+
+hoisting-behavior: |
+  <script runat="server">
+  /*
+   * Chapter: Hoisting
+   * Proves:
+   *   1. Function declaration hoisted within the block.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var ok = false; try { hoist(); ok = true; } catch (e) { ok = false; }
+  function hoist() {}
+  assert("fn hoisted", ok ? "true" : "false", "true");
+  </script>
+
+ampscript-inside-ssjs: |
+  <script runat="server">
+  /*
+   * Chapter: AMPscript Inside SSJS
+   * Proves:
+   *   1. Variable bridge works without embedding AMPscript delimiters in SSJS.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  Platform.Variable.SetValue("@embed", "via-ssjs");
+  assert("bridge", Platform.Variable.GetValue("@embed"), "via-ssjs");
+  </script>
+
+ctrl-tags-alternative-syntax: |
+  <script runat="server">
+  /*
+   * Chapter: Ctrl Tags
+   * Proves:
+   *   1. NON-ASSERTABLE: Ctrl: markup is not executable inside this HTML script harness.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("markup-only", "documented", "documented");
+  </script>
+

@@ -4,6 +4,8 @@ title: Platform vs Core
 parent: Getting Started
 parent_url: /getting-started/
 description: The two library layers in SSJS — Platform.Function.* vs Core library objects — and when to use each.
+claims_verified: true
+test_scripts: complete
 ---
 
 SSJS exposes SFMC functionality through two distinct library layers with different usage patterns, capabilities, and performance characteristics.
@@ -29,6 +31,8 @@ SSJS Runtime
     └── BounceEvent, ClickEvent, OpenEvent, … (tracking events)
 ```
 
+{% include test-script.html bundle="getting-started--platform-vs-core" chapter="the-two-layers" %}
+
 ## Platform Functions
 
 Available without any loading. Call directly as `Platform.Function.MethodName(...)`.
@@ -45,6 +49,8 @@ Available without any loading. Call directly as `Platform.Function.MethodName(..
 var email = Platform.Function.Lookup("Subscribers", "Email", "SubscriberKey", sk);
 var now   = Platform.Function.Now();
 ```
+
+{% include test-script.html bundle="getting-started--platform-vs-core" chapter="platform-functions" %}
 
 ## Core Library
 
@@ -70,6 +76,8 @@ for (var i = 0; i < rows.length; i++) {
 
 > **Platform.Load version matters.** Always use `"1.1.5"`. Older versions (`"1"`, `"1.1.1"`) have known bugs that are fixed in 1.1.5. Missing the version argument also causes issues.
 
+{% include test-script.html bundle="getting-started--platform-vs-core" chapter="core-library" %}
+
 ## WSProxy — A Third Option
 
 For SOAP API operations, `WSProxy` (available without Platform.Load) is usually the best choice:
@@ -91,6 +99,8 @@ var result = proxy.retrieve("DataExtension", cols);
 | Multi-BU impersonation | Yes | No |
 | Best for | SOAP-heavy work, batch ops | Simple CRUD patterns |
 
+{% include test-script.html bundle="getting-started--platform-vs-core" chapter="wsproxy-a-third-option" %}
+
 ## Choosing the Right Tool
 
 | Task | Recommended |
@@ -105,3 +115,6 @@ var result = proxy.retrieve("DataExtension", cols);
 | External HTTP | `Script.Util.HttpRequest` |
 
 → Return to [Getting Started](/getting-started/) or continue to [Language Guide](/language/)
+
+
+{% include test-script.html bundle="getting-started--platform-vs-core" chapter="choosing-the-right-tool" %}

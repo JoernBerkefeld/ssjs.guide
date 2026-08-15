@@ -4,6 +4,8 @@ title: Performance
 parent: Best Practices
 parent_url: /best-practices/
 description: SSJS performance best practices — minimize API calls, optimize DE operations, avoid timeout traps, and write efficient loops.
+claims_verified: true
+test_scripts: complete
 ---
 
 SFMC enforces execution time limits on SSJS scripts. CloudPages typically have a **30-second timeout**, and Automation Studio scripts have a **30-minute limit** (but individual script activities may have shorter limits). Understanding and working within these limits is critical.
@@ -43,6 +45,8 @@ var recent = Platform.Function.LookupOrderedRows(
 
 ---
 
+{% include test-script.html bundle="best-practices--performance" chapter="1-minimize-de-round-trips" %}
+
 ## 2. Cache Expensive Results
 
 If you need to use the same DE data multiple times, load it once at the top of the script:
@@ -63,6 +67,8 @@ var apiKey = config["apiKey"];
 ```
 
 ---
+
+{% include test-script.html bundle="best-practices--performance" chapter="2-cache-expensive-results" %}
 
 ## 3. Efficient Loops
 
@@ -94,6 +100,8 @@ for (var i = 0; i < rows.length; i++) {
 ```
 
 ---
+
+{% include test-script.html bundle="best-practices--performance" chapter="3-efficient-loops" %}
 
 ## 4. HTTP Calls Are Expensive
 
@@ -138,7 +146,7 @@ function getAccessToken() {
     var req = new Script.Util.HttpRequest(authUrl);
     req.method = "POST";
     req.contentType = "application/json";
-    req.postData = Stringify({ grant_type: "client_credentials",
+    req.postData = Platform.Function.Stringify({ grant_type: "client_credentials",
                                client_id: clientId, client_secret: clientSecret });
     var resp = req.send();
 
@@ -156,7 +164,7 @@ function getAccessToken() {
         ["service"], ["sfmcRest"],
         ["token", "expires"],
         [token.access_token, formatDate(
-            dateAdd(Now(), lifetimeMinutes, "MI"),
+            dateAdd(Platform.Function.Now(), lifetimeMinutes, "MI"),
             "MM/DD/YYYY HH:mm:ss")]
     );
 
@@ -173,6 +181,8 @@ function formatDate(dateString,dateFormat,timeFormat,isoLocale) {
 ```
 
 ---
+
+{% include test-script.html bundle="best-practices--performance" chapter="4-http-calls-are-expensive" %}
 
 ## 5. Automation Studio Timeout Guard
 
@@ -199,6 +209,8 @@ for (var i = 0; i < rows.length; i++) {
 
 ---
 
+{% include test-script.html bundle="best-practices--performance" chapter="5-automation-studio-timeout-guard" %}
+
 ## 6. String Concatenation in Loops
 
 Building large strings with `+=` in a loop is slow for very large outputs. For large HTML generation:
@@ -224,6 +236,8 @@ Write("</ul>");
 
 ---
 
+{% include test-script.html bundle="best-practices--performance" chapter="6-string-concatenation-in-loops" %}
+
 ## 7. Avoid Unnecessary Platform.Load
 
 `Platform.Load("core", "1.1.5")` has a small overhead. Call it once per page, not multiple times:
@@ -241,6 +255,8 @@ var sub = Subscriber.Init("sub_123");
 
 ---
 
+{% include test-script.html bundle="best-practices--performance" chapter="7-avoid-unnecessary-platform-load" %}
+
 ## 8. Prefer Platform.Function for Single Lookups
 
 For single-row lookups, `Platform.Function.Lookup` is faster than `DataExtension.Init` + `Rows.Retrieve`:
@@ -250,10 +266,13 @@ For single-row lookups, `Platform.Function.Lookup` is faster than `DataExtension
 var email = Platform.Function.Lookup("Contacts", "Email", "Id", contactId);
 
 // Slower for single value (Core initializes more objects)
+Platform.Load("core", "1.1.5");
 var de = DataExtension.Init("Contacts");
 var rows = de.Rows.Retrieve({ Property: "Id", SimpleOperator: "equals", Value: contactId });
 var email = rows[0] ? rows[0].Email : "";
 ```
+
+{% include test-script.html bundle="best-practices--performance" chapter="8-prefer-platform-function-for-single-lookups" %}
 
 ## See Also
 

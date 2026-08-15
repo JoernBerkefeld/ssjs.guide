@@ -4,6 +4,8 @@ title: REST API Calls
 parent: Recipes
 parent_url: /recipes/
 description: Complete patterns for calling external REST APIs and SFMC's own REST API from SSJS — OAuth2 tokens, GET/POST patterns, error handling, and token caching.
+claims_verified: true
+test_scripts: complete
 ---
 
 ## OAuth2 Client Credentials Flow
@@ -36,7 +38,7 @@ function getOAuthToken(authUrl, clientId, clientSecret) {
     }
 
     // Fetch new token
-    var payload = Stringify({
+    var payload = Platform.Function.Stringify({
         grant_type: "client_credentials",
         client_id: clientId,
         client_secret: clientSecret
@@ -80,6 +82,8 @@ function getOAuthToken(authUrl, clientId, clientSecret) {
 
 ---
 
+{% include test-script.html bundle="recipes--rest-api-calls" chapter="oauth2-client-credentials-flow" %}
+
 ## SFMC REST API — Call Journey Entry Event
 
 ```javascript
@@ -105,7 +109,7 @@ var req = new Script.Util.HttpRequest(apiBase + "/interaction/v1/events");
 req.method = "POST";
 req.contentType = "application/json";
 req.setHeader("Authorization", "Bearer " + token);
-req.postData = Stringify(payload);
+req.postData = Platform.Function.Stringify(payload);
 
 var resp = req.send();
 var result = Platform.Function.ParseJSON(String(resp.content) + "");
@@ -113,13 +117,15 @@ var result = Platform.Function.ParseJSON(String(resp.content) + "");
 // statusCode is a CLR value — Number() converts it so === works
 var status = Number(resp.statusCode);
 if (status === 201) {
-    Write(Stringify({ status: "entered", key: subscriberKey }));
+    Write(Platform.Function.Stringify({ status: "entered", key: subscriberKey }));
 } else {
-    throw new Error("Journey entry failed: " + status + " " + Stringify(result));
+    throw new Error("Journey entry failed: " + status + " " + Platform.Function.Stringify(result));
 }
 ```
 
 ---
+
+{% include test-script.html bundle="recipes--rest-api-calls" chapter="sfmc-rest-api-call-journey-entry-event" %}
 
 ## Generic REST Helper
 
@@ -132,7 +138,7 @@ function apiCall(method, url, token, body) {
 
     if (body) {
         req.contentType = "application/json";
-        req.postData = Stringify(body);
+        req.postData = Platform.Function.Stringify(body);
     }
 
     var resp = req.send();
@@ -157,6 +163,8 @@ var contactData = result.data;
 
 ---
 
+{% include test-script.html bundle="recipes--rest-api-calls" chapter="generic-rest-helper" %}
+
 ## External API with Retry
 
 ```javascript
@@ -171,7 +179,7 @@ function callWithRetry(url, method, payload, token, maxRetries) {
             req.setHeader("Authorization", "Bearer " + token);
             if (payload) {
                 req.contentType = "application/json";
-                req.postData = Stringify(payload);
+                req.postData = Platform.Function.Stringify(payload);
             }
             var resp = req.send();
 
@@ -191,6 +199,8 @@ function callWithRetry(url, method, payload, token, maxRetries) {
     throw lastError || new Error("Max retries exceeded for " + url);
 }
 ```
+
+{% include test-script.html bundle="recipes--rest-api-calls" chapter="external-api-with-retry" %}
 
 ## See Also
 

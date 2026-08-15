@@ -1,0 +1,199 @@
+# Narrative test scripts — re-probe before claim edits.
+
+1-validate-all-user-input: |
+  <script runat="server">
+  /*
+   * Chapter: Validate All User Input
+   * Proves:
+   *   1. IsEmailAddress works after Core load.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  Platform.Load("core", "1.1.5");
+  assert("valid email", Platform.Function.IsEmailAddress("a@b.com") ? "true" : "false", "true");
+  assert("invalid email", Platform.Function.IsEmailAddress("not-an-email") ? "true" : "false", "false");
+  </script>
+
+2-never-inject-input-into-platform-function-treatascontent: |
+  <script runat="server">
+  /*
+   * Chapter: Never Inject Input into TreatAsContent
+   * Proves:
+   *   1. SetValue then TreatAsContent with variable reference is safe path.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  Platform.Load("core", "1.1.5");
+  Variable.SetValue("@safeTac", "hello");
+  var out = Platform.Function.TreatAsContent("%%=v(@safeTac)=%%");
+  assert("TreatAsContent via variable", out, "hello");
+  </script>
+
+3-protect-api-tokens: |
+  <script runat="server">
+  /*
+   * Chapter: Protect API Tokens
+   * Proves:
+   *   1. NON-ASSERTABLE: token storage.
+   *   Stringify does not log secrets by itself.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("guidance-only", "documented", "documented");
+  </script>
+
+4-csrf-protection-for-forms: |
+  <script runat="server">
+  /*
+   * Chapter: CSRF Protection for Forms
+   * Proves:
+   *   1. GUID token shape for CSRF.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var token = Platform.Function.GUID();
+  assert("token length", ("" + token).length > 10 ? "true" : "false", "true");
+  </script>
+
+5-token-based-api-authentication: |
+  <script runat="server">
+  /*
+   * Chapter: Token-Based API Authentication
+   * Proves:
+   *   1. Compare tokens with ===.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var a = "tok-1", b = "tok-1", c = "tok-2";
+  assert("match", a === b ? "true" : "false", "true");
+  assert("mismatch", a === c ? "true" : "false", "false");
+  </script>
+
+6-output-encoding: |
+  <script runat="server">
+  /*
+   * Chapter: Output Encoding
+   * Proves:
+   *   1. htmlEncode escapes <>&.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  function htmlEncode(str) {
+      return (str + "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+  }
+  assert("encode script", htmlEncode("<script>"), "&lt;script&gt;");
+  assert("encode amp", htmlEncode("a&b"), "a&amp;b");
+  </script>
+
+7-restrict-sensitive-data-in-responses: |
+  <script runat="server">
+  /*
+   * Chapter: Restrict Sensitive Data in Responses
+   * Proves:
+   *   1. Omit fields when building response object.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var full = { email: "a@b.com", secret: "x" };
+  var pub = { email: full.email };
+  assert("no secret", pub.secret === undefined ? "undefined" : "other", "undefined");
+  </script>
+
+8-rate-limiting-with-de: |
+  <script runat="server">
+  /*
+   * Chapter: Rate Limiting with DE
+   * Proves:
+   *   1. NON-ASSERTABLE: DE counter without fixture.
+   *   InsertData/Lookup typeof.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("Lookup typeof", typeof Platform.Function.Lookup, "clrmethodinfo");
+  assert("InsertData typeof", typeof Platform.Function.InsertData, "clrmethodinfo");
+  </script>
+

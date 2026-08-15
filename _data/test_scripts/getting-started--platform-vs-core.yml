@@ -1,0 +1,92 @@
+# Getting-started narrative test scripts.
+
+the-two-layers: |
+  <script runat="server">
+  /*
+   * Chapter: The Two Layers
+   * Proves:
+   *   1. Platform available; bare DataExtension undefined before Load.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("Platform typeof", typeof Platform, "clr");
+  assert("DataExtension before Load", typeOfThunk(function () { return typeof DataExtension; }), "undefined");
+  </script>
+
+platform-functions: |
+  <script runat="server">
+  /*
+   * Chapter: Platform Functions
+   * Proves:
+   *   1. Platform.Function.Now without Core load.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var now = Platform.Function.Now();
+  assert("Now typeof", typeof now === "string" || typeof now === "object" ? "ok" : typeof now, "ok");
+  </script>
+
+core-library: |
+  <script runat="server">
+  /*
+   * Chapter: Core Library
+   * Proves:
+   *   1. After Load, DataExtension is available.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  Platform.Load("core", "1.1.5");
+  assert("DataExtension after Load", typeOfThunk(function () { return typeof DataExtension; }), "object");
+  </script>
+
+wsproxy-a-third-option: |
+  <script runat="server">
+  /*
+   * Chapter: WSProxy
+   * Proves:
+   *   1. new Script.Util.WSProxy() constructs.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var proxy = new Script.Util.WSProxy();
+  assert("WSProxy object", typeof proxy, "clr");
+  </script>
+
+choosing-the-right-tool: |
+  <script runat="server">
+  /*
+   * Chapter: Choosing the Right Tool
+   * Proves:
+   *   1. Platform.Function.Lookup exists without Core; DataExtension needs Core.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("Lookup typeof", typeof Platform.Function.Lookup, "clrmethodinfo");
+  assert("Platform.Function available without Core", typeof Platform.Function, "clr");
+  </script>
+

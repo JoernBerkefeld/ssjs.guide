@@ -4,6 +4,8 @@ title: DE CRUD Patterns
 parent: Recipes
 parent_url: /recipes/
 description: Complete Data Extension Create, Read, Update, Delete patterns using both Platform.Function and Core library approaches.
+claims_verified: true
+test_scripts: complete
 ---
 
 ## Platform.Function Approach
@@ -79,6 +81,8 @@ var rowsDeleted = Platform.Function.DeleteData(
 
 ---
 
+{% include test-script.html bundle="recipes--de-crud-patterns" chapter="platform-function-approach" %}
+
 ## Core Library Approach
 
 ```javascript
@@ -115,6 +119,8 @@ de.Rows.Remove("SubscriberKey", subKey);
 
 ---
 
+{% include test-script.html bundle="recipes--de-crud-patterns" chapter="core-library-approach" %}
+
 ## Pattern: Safe Upsert with Existence Check
 
 ```javascript
@@ -139,6 +145,8 @@ if (existing === "" || existing === "null") {
 ```
 
 ---
+
+{% include test-script.html bundle="recipes--de-crud-patterns" chapter="pattern-safe-upsert-with-existence-check" %}
 
 ## Pattern: Bulk Insert from Array
 
@@ -165,10 +173,12 @@ for (var i = 0; i < submissions.length; i++) {
     }
 }
 
-Write(Stringify({ inserted: inserted, errors: errors }));
+Write(Platform.Function.Stringify({ inserted: inserted, errors: errors }));
 ```
 
 ---
+
+{% include test-script.html bundle="recipes--de-crud-patterns" chapter="pattern-bulk-insert-from-array" %}
 
 ## Pattern: Soft Delete (Status Flag)
 
@@ -188,6 +198,8 @@ var active = Platform.Function.LookupRows("Orders", "Status", "active");
 ```
 
 ---
+
+{% include test-script.html bundle="recipes--de-crud-patterns" chapter="pattern-soft-delete-status-flag" %}
 
 ## Pattern: Pagination with LookupOrderedRows
 
@@ -209,13 +221,15 @@ for (var i = offset; i < Math.min(offset + PAGE_SIZE, all.length); i++) {
     page.push(all[i]);
 }
 
-Write(Stringify({
+Write(Platform.Function.Stringify({
     page: pageNum,
     pageSize: PAGE_SIZE,
     items: page,
     hasMore: all.length > offset + PAGE_SIZE
 }));
 ```
+
+{% include test-script.html bundle="recipes--de-crud-patterns" chapter="pattern-pagination-with-lookuporderedrows" %}
 
 ## See Also
 

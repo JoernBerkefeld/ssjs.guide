@@ -1,0 +1,127 @@
+# Narrative language page test scripts. Re-probe before claim edits.
+
+try-catch-finally: |
+  <script runat="server">
+  /*
+   * Chapter: try/catch/finally
+   * Proves:
+   *   1. finally runs; call-form message.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var saw = false, msg = "";
+  try { throw Error("Something went wrong"); } catch (e) { msg = "" + e.message; } finally { saw = true; }
+  assert("msg", msg, "Something went wrong"); assert("finally", saw ? "true" : "false", "true");
+  </script>
+
+the-error-object: |
+  <script runat="server">
+  /*
+   * Chapter: Error Object
+   * Proves:
+   *   1. DEV new Error message unset; call-form sets it.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var neo = new Error("boom");
+  assert("DEV new msg unset", neo.message === undefined ? "undefined" : "other", "undefined");
+  assert("String recovers", String(neo).indexOf("boom") >= 0 ? "true" : "false", "true");
+  var call = Error("call-boom");
+  assert("call msg", "" + call.message, "call-boom");
+  </script>
+
+throw: |
+  <script runat="server">
+  /*
+   * Chapter: throw
+   * Proves:
+   *   1. throw Error catchable.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var msg = ""; try { throw Error("x"); } catch (e) { msg = "" + e.message; }
+  assert("thrown", msg, "x");
+  </script>
+
+common-error-patterns: |
+  <script runat="server">
+  /*
+   * Chapter: Common Error Patterns
+   * Proves:
+   *   1. null guard.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var result = null;
+  var safe = (result && result.Email) ? result.Email : "";
+  assert("guard", safe, "");
+  </script>
+
+raiseerror: |
+  <script runat="server">
+  /*
+   * Chapter: RaiseError
+   * Proves:
+   *   1. Platform.Function.RaiseError exists as clrmethodinfo.
+   *   NON-ASSERTABLE on CloudPage: calling RaiseError aborts the page (no PASS after).
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  assert("RaiseError typeof", typeof Platform.Function.RaiseError, "clrmethodinfo");
+  </script>
+
+debugging-errors: |
+  <script runat="server">
+  /*
+   * Chapter: Debugging Errors
+   * Proves:
+   *   1. String(e) usable for new Error.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var e = new Error("boom");
+  assert("String(e) has boom", String(e).indexOf("boom") >= 0 ? "true" : "false", "true");
+  </script>
+

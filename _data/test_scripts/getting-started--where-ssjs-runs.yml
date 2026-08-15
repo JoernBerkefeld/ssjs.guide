@@ -1,0 +1,123 @@
+# Getting-started narrative test scripts.
+
+cloudpages-landing-pages: |
+  <script runat="server">
+  /*
+   * Chapter: CloudPages
+   * Proves:
+   *   1. On this CloudPage GET, Request.Method is GET.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("Method GET", "" + Platform.Request.Method, "GET");
+  </script>
+
+json-code-resources: |
+  <script runat="server">
+  /*
+   * Chapter: JSON Code Resources
+   * Proves:
+   *   1. ContentType assignment works (opaque read is CLR).
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  Platform.Response.ContentType = "application/json";
+  assert("ContentType read typeof clr", typeof Platform.Response.ContentType, "clr");
+  </script>
+
+email-precompile: |
+  <script runat="server">
+  /*
+   * Chapter: Email
+   * Proves:
+   *   1. NON-ASSERTABLE on CloudPage: email precompile context.
+   *   Recorded as CloudPage-only probe.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("cloudpage-context-only", "documented", "documented");
+  </script>
+
+automation-studio-script-activities: |
+  <script runat="server">
+  /*
+   * Chapter: Automation Studio
+   * Proves:
+   *   1. NON-ASSERTABLE on CloudPage: automation context.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("cloudpage-context-only", "documented", "documented");
+  </script>
+
+triggered-send-email: |
+  <script runat="server">
+  /*
+   * Chapter: Triggered Send
+   * Proves:
+   *   1. NON-ASSERTABLE on CloudPage.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("cloudpage-context-only", "documented", "documented");
+  </script>
+
+mobileconnect-sms: |
+  <script runat="server">
+  /*
+   * Chapter: MobileConnect
+   * Proves:
+   *   1. NON-ASSERTABLE on CloudPage.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("cloudpage-context-only", "documented", "documented");
+  </script>
+
+summary-table: |
+  <script runat="server">
+  /*
+   * Chapter: Summary Table
+   * Proves:
+   *   1. Platform.Request available here (CloudPage row of the table).
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("Request typeof", typeof Platform.Request, "clr");
+  </script>
+

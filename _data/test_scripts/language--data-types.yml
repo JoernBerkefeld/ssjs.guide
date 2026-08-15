@@ -1,0 +1,136 @@
+# Narrative language page test scripts. Re-probe before claim edits.
+
+primitive-types: |
+  <script runat="server">
+  /*
+   * Chapter: Primitive Types
+   * Proves:
+   *   1. string/number/boolean/null/undefined basics.
+   *   2. 'false' string is truthy.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  assert("concat", "Hello, " + "World!", "Hello, World!");
+  assert("len", "Hello".length, 5);
+  assert("typeof42", typeof 42, "number");
+  assert("isNaN", isNaN(NaN) ? "true" : "false", "true");
+  assert("isFinite Inf", isFinite(Infinity) ? "true" : "false", "false");
+  assert("typeof null", typeof null, "object");
+  var result = null; assert("===null", result === null ? "true" : "false", "true");
+  var x; assert("undef", typeof x, "undefined");
+  var branch = ""; if ("false") { branch = "Truthy!"; }
+  assert("false-string truthy", branch, "Truthy!");
+  </script>
+
+objects: |
+  <script runat="server">
+  /*
+   * Chapter: Objects
+   * Proves:
+   *   1. dot/bracket/hasOwnProperty.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var subscriber = { key: "abc123", email: "jane@example.com", active: true };
+  assert("dot", subscriber.email, "jane@example.com");
+  assert("bracket", subscriber["key"], "abc123");
+  subscriber.name = "Jane Smith";
+  assert("assign", subscriber.name, "Jane Smith");
+  assert("hasOwn", subscriber.hasOwnProperty("email") ? "true" : "false", "true");
+  </script>
+
+arrays: |
+  <script runat="server">
+  /*
+   * Chapter: Arrays
+   * Proves:
+   *   1. push/pop/slice/join basics.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var fruits = ["apple", "banana", "cherry"];
+  assert("first", fruits[0], "apple");
+  assert("len", fruits.length, 3);
+  fruits.push("date");
+  assert("push len", fruits.length, 4);
+  fruits.pop();
+  var sub = ["apple", "banana", "cherry"].slice(1, 3);
+  assert("slice0", sub[0], "banana");
+  assert("join", ["a", "b"].join(", "), "a, b");
+  </script>
+
+type-conversions: |
+  <script runat="server">
+  /*
+   * Chapter: Type Conversions
+   * Proves:
+   *   1. Number/parseInt/String/Boolean on clean values.
+   *   2. DEV: parseInt("42px") is NaN (browser JS: 42).
+   *   3. parseFloat is IEEE — compare via Math.floor(x*100).
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  assert("Number", Number("42"), 42);
+  assert("parseInt clean", parseInt("42", 10), 42);
+  assert("DEV parseInt('42px') is NaN (browser: 42)", isNaN(parseInt("42px", 10)) ? "true" : "false", "true");
+  assert("parseFloat ~3.14", Math.floor(parseFloat("3.14") * 100), 314);
+  assert("implicit", "5" * 1, 5);
+  assert("String", String(42), "42");
+  assert("concat coerce", 42 + "", "42");
+  assert("toString", (42).toString(), "42");
+  assert("Boolean0", Boolean(0) ? "true" : "false", "false");
+  assert("Boolean empty", Boolean("") ? "true" : "false", "false");
+  assert("Boolean '0'", Boolean("0") ? "true" : "false", "true");
+  </script>
+
+json: |
+  <script runat="server">
+  /*
+   * Chapter: JSON
+   * Proves:
+   *   1. ParseJSON/Stringify round-trip.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var obj = { name: "Jane", n: 1 };
+  var jsonStr = Platform.Function.Stringify(obj);
+  var parsed = Platform.Function.ParseJSON(jsonStr + "");
+  assert("name", parsed.name, "Jane");
+  assert("n", parsed.n, 1);
+  </script>
+

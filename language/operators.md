@@ -4,6 +4,8 @@ title: Operators
 parent: Language Guide
 parent_url: /language/
 description: Arithmetic, comparison, logical, string concatenation, and assignment operators in SFMC SSJS.
+claims_verified: true
+test_scripts: complete
 ---
 
 ## Arithmetic
@@ -25,6 +27,8 @@ n--;   // post-decrement
 --n;   // pre-decrement
 ```
 
+{% include test-script.html bundle="language--operators" chapter="arithmetic" %}
+
 ## String Concatenation
 
 `+` concatenates strings. When mixing types, JavaScript coerces non-strings:
@@ -44,6 +48,8 @@ var html = '<div class="profile">' +
            '<p>' + email + '</p>' +
            '</div>';
 ```
+
+{% include test-script.html bundle="language--operators" chapter="string-concatenation" %}
 
 ## Comparison
 
@@ -73,6 +79,8 @@ null === undefined // false
 ```
 
 **Use strict equality (`===` and `!==`) to avoid subtle type coercion bugs.**
+
+{% include test-script.html bundle="language--operators" chapter="comparison" %}
 
 ## Logical Operators
 
@@ -114,6 +122,8 @@ var count = (options.count !== undefined && options.count !== null)
             : 0;
 ```
 
+{% include test-script.html bundle="language--operators" chapter="logical-operators" %}
+
 ## Ternary Operator
 
 ```javascript
@@ -122,6 +132,8 @@ var message = isLoggedIn ? "Welcome back!" : "Please log in.";
 // Nested (use sparingly — hard to read)
 var label = count === 0 ? "none" : (count === 1 ? "one" : "many");
 ```
+
+{% include test-script.html bundle="language--operators" chapter="ternary-operator" %}
 
 ## Assignment Operators
 
@@ -133,6 +145,8 @@ x *= 4;  // x = x * 4  → 24
 x /= 6;  // x = x / 6  → 4
 x %= 3;  // x = x % 3  → 1
 ```
+
+{% include test-script.html bundle="language--operators" chapter="assignment-operators" %}
 
 ## typeof
 
@@ -154,6 +168,8 @@ if (typeof myVar !== "undefined") {
     // myVar has been declared and assigned
 }
 ```
+
+{% include test-script.html bundle="language--operators" chapter="typeof" %}
 
 ## Bitwise (rarely needed)
 
@@ -184,3 +200,6 @@ if (typeof myVar !== "undefined") {
 ```
 
 `<<` also does not truncate its result to 32 bits (`0x80000000 << 1` returns `4294967296`, not `0`), so bitwise code cannot rely on 32-bit wrap-around.
+
+
+{% include test-script.html bundle="language--operators" chapter="bitwise-rarely-needed" %}

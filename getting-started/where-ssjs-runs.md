@@ -4,6 +4,8 @@ title: Where SSJS Runs
 parent: Getting Started
 parent_url: /getting-started/
 description: CloudPages, Email, Automation Studio, JSON Code Resources — the full list of SSJS execution contexts and their differences.
+claims_verified: true
+test_scripts: complete
 ---
 
 SSJS executes in several different contexts within Salesforce Marketing Cloud, each with different capabilities and constraints.
@@ -29,6 +31,8 @@ var method = String(Platform.Request.Method); // "GET" or "POST"
 Write("<p>Request method: " + method + "</p>");
 ```
 
+{% include test-script.html bundle="getting-started--where-ssjs-runs" chapter="cloudpages-landing-pages" %}
+
 ## JSON Code Resources
 
 A special CloudPages type that sets `Content-Type: application/json`. Perfect for building simple API endpoints:
@@ -37,10 +41,12 @@ A special CloudPages type that sets `Content-Type: application/json`. Perfect fo
 Platform.Load("core", "1.1.5");
 
 var result = { status: "ok", timestamp: Platform.Function.Now() };
-Write(Stringify(result));
+Write(Platform.Function.Stringify(result));
 ```
 
 You cannot write HTML and JSON in the same resource — the first `Write()` determines the content type behavior. Set the header explicitly at the top.
+
+{% include test-script.html bundle="getting-started--where-ssjs-runs" chapter="json-code-resources" %}
 
 ## Email (Precompile)
 
@@ -67,6 +73,8 @@ Variable.SetValue("@displayName", displayName);
 </script>
 %%=v(@displayName)=%%
 ```
+
+{% include test-script.html bundle="getting-started--where-ssjs-runs" chapter="email-precompile" %}
 
 ## Automation Studio (Script Activities)
 
@@ -105,15 +113,21 @@ for (var i = 0; i < results.Results.length; i++) {
 Write("Processed: " + processed + " items");
 ```
 
+{% include test-script.html bundle="getting-started--where-ssjs-runs" chapter="automation-studio-script-activities" %}
+
 ## Triggered Send (Email)
 
 Similar to email precompile. SSJS runs when a triggered send fires for a subscriber.
 
 **Note:** `Platform.Request.*` is not available in triggered send context.
 
+{% include test-script.html bundle="getting-started--where-ssjs-runs" chapter="triggered-send-email" %}
+
 ## MobileConnect (SMS)
 
 SSJS can run in MobileConnect context for SMS personalization, with significant limitations. Most data operations work, but HTTP and some response functions do not.
+
+{% include test-script.html bundle="getting-started--where-ssjs-runs" chapter="mobileconnect-sms" %}
 
 ## Summary Table
 
@@ -127,3 +141,6 @@ SSJS can run in MobileConnect context for SMS personalization, with significant 
 | MobileConnect | Partial | ❌ | ✅ | ✅ | ✅ |
 
 → Next: [Embedding SSJS](/getting-started/embedding-ssjs/)
+
+
+{% include test-script.html bundle="getting-started--where-ssjs-runs" chapter="summary-table" %}

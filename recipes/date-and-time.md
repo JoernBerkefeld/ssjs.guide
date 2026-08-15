@@ -4,6 +4,8 @@ title: Date and Time
 parent: Recipes
 parent_url: /recipes/
 description: Date manipulation patterns in SSJS — formatting, calculating differences, timezone handling, and building date ranges.
+claims_verified: true
+test_scripts: complete
 ---
 
 ## Get Current Date/Time
@@ -30,6 +32,8 @@ var httpDate = formatDate(now, "ddd, DD MMM YYYY", "HH:mm:ss", "en-US") + " GMT"
 
 ---
 
+{% include test-script.html bundle="recipes--date-and-time" chapter="get-current-date-time" %}
+
 ## Date Arithmetic
 
 ```javascript
@@ -54,6 +58,8 @@ var tenMinutesAgo = dateAdd(now, -10, "MI");
 ```
 
 ---
+
+{% include test-script.html bundle="recipes--date-and-time" chapter="date-arithmetic" %}
 
 ## Cookie Expiry Date
 
@@ -84,6 +90,8 @@ Platform.Response.SetCookie("session", token, expiry, true);
 
 ---
 
+{% include test-script.html bundle="recipes--date-and-time" chapter="cookie-expiry-date" %}
+
 ## Timezone Conversion
 
 ```javascript
@@ -103,6 +111,8 @@ Write("Your local time: " + localDisplay);
 ```
 
 ---
+
+{% include test-script.html bundle="recipes--date-and-time" chapter="timezone-conversion" %}
 
 ## Date Range Filter
 
@@ -155,6 +165,8 @@ var result = proxy.retrieve(
 
 ---
 
+{% include test-script.html bundle="recipes--date-and-time" chapter="date-range-filter" %}
+
 ## Format for DE Storage vs Display
 
 ```javascript
@@ -180,6 +192,8 @@ var isoFormat = formatDate(now, "YYYY-MM-DD", "THH:mm:ss", "en-US");
 ```
 
 ---
+
+{% include test-script.html bundle="recipes--date-and-time" chapter="format-for-de-storage-vs-display" %}
 
 ## See Also
 

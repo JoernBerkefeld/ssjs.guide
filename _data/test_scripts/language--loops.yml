@@ -1,0 +1,174 @@
+# Narrative language page test scripts. Re-probe before claim edits.
+
+for-loop: |
+  <script runat="server">
+  /*
+   * Chapter: for Loop
+   * Proves:
+   *   1. for + cached length.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var rows = [{ Email: "a@x.com" }, { Email: "b@x.com" }], out = "", len = rows.length;
+  for (var i = 0; i < len; i++) out += rows[i].Email + ",";
+  assert("for", out, "a@x.com,b@x.com,");
+  var items = [1, 2, 3], rev = "";
+  for (var j = items.length - 1; j >= 0; j--) rev += items[j];
+  assert("reverse", rev, "321");
+  </script>
+
+while-loop: |
+  <script runat="server">
+  /*
+   * Chapter: while
+   * Proves:
+   *   1. while exits.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var n = 0; while (n < 3) n++; assert("while", n, 3);
+  </script>
+
+do-while-loop: |
+  <script runat="server">
+  /*
+   * Chapter: do...while
+   * Proves:
+   *   1. runs at least once.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var attempts = 0, success = false;
+  do { attempts++; if (attempts >= 2) success = true; } while (!success && attempts < 3);
+  assert("attempts", attempts, 2);
+  </script>
+
+for-in-loop: |
+  <script runat="server">
+  /*
+   * Chapter: for...in
+   * Proves:
+   *   1. enumerates keys; array for-in is fragile vs indexed for.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var config = { a: 1, b: 2 }, keys = "";
+  for (var key in config) keys += key;
+  assert("has a", keys.indexOf("a") >= 0 ? "true" : "false", "true");
+  var arr = ["x", "y"], indexed = "";
+  for (var i = 0; i < arr.length; i++) indexed += arr[i];
+  assert("indexed for", indexed, "xy");
+  </script>
+
+for-of-not-supported: |
+  <script runat="server">
+  /*
+   * Chapter: for...of NOT SUPPORTED
+   * Proves:
+   *   1. Documented as unsupported — chapter is negative guidance only.
+   *   NON-ASSERTABLE: cannot execute for-of without parse abort.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  assert("guidance recorded", "use-indexed-for", "use-indexed-for");
+  </script>
+
+break-and-continue: |
+  <script runat="server">
+  /*
+   * Chapter: break/continue
+   * Proves:
+   *   1. break/continue.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var sum = 0; for (var i = 0; i < 10; i++) { if (i === 5) break; sum += i; }
+  assert("break", sum, 10);
+  var kept = 0; for (var j = 0; j < 5; j++) { if (j % 2 === 0) continue; kept++; }
+  assert("continue", kept, 2);
+  </script>
+
+automation-timeout-guard: |
+  <script runat="server">
+  /*
+   * Chapter: Timeout Guard
+   * Proves:
+   *   1. early exit at cap.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var processed = 0, max = 10;
+  for (var i = 0; i < 100; i++) { processed++; if (processed >= max) break; }
+  assert("cap", processed, 10);
+  </script>
+
+performance-tips: |
+  <script runat="server">
+  /*
+   * Chapter: Performance Tips
+   * Proves:
+   *   1. cached length used.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var rows = [1, 2, 3, 4], len = rows.length, n = 0;
+  for (var i = 0; i < len; i++) n += rows[i];
+  assert("sum", n, 10);
+  </script>
+

@@ -1,0 +1,205 @@
+# Narrative language page test scripts. Re-probe before claim edits.
+
+arithmetic: |
+  <script runat="server">
+  /*
+   * Chapter: Arithmetic
+   * Proves:
+   *   1. + - * / % and ++/--.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var a = 10, b = 3;
+  assert("add", a + b, 13);
+  assert("sub", a - b, 7);
+  assert("mul", a * b, 30);
+  assert("div floor*1000", Math.floor((a / b) * 1000), 3333);
+  assert("mod", a % b, 1);
+  var n = 0; n++; assert("inc", n, 1); ++n; assert("preinc", n, 2); n--; assert("dec", n, 1); --n; assert("predec", n, 0);
+  </script>
+
+string-concatenation: |
+  <script runat="server">
+  /*
+   * Chapter: String Concatenation
+   * Proves:
+   *   1. Documented concat coercion.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  assert("hw", "Hello, " + "World", "Hello, World");
+  assert("count", "Count: " + 42, "Count: 42");
+  assert("paren", "Sum: " + (1 + 2), "Sum: 3");
+  assert("ltr", "Sum: " + 1 + 2, "Sum: 12");
+  </script>
+
+comparison: |
+  <script runat="server">
+  /*
+   * Chapter: Comparison
+   * Proves:
+   *   1. Loose vs strict equality.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  assert("loose", 5 == "5" ? "true" : "false", "true");
+  assert("null==undef", null == undefined ? "true" : "false", "true");
+  assert("strict num", 5 === 5 ? "true" : "false", "true");
+  assert("strict mismatch", 5 === "5" ? "true" : "false", "false");
+  assert("null===undef", null === undefined ? "true" : "false", "false");
+  assert("!==", 5 !== "5" ? "true" : "false", "true");
+  assert(">", 5 > 3 ? "true" : "false", "true");
+  assert("str>", "b" > "a" ? "true" : "false", "true");
+  </script>
+
+logical-operators: |
+  <script runat="server">
+  /*
+   * Chapter: Logical Operators
+   * Proves:
+   *   1. && || ! returns.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  assert("and", true && true ? "true" : "false", "true");
+  assert("and last", "a" && "b", "b");
+  assert("and first falsy", "" && "b", "");
+  assert("or first", "a" || "b", "a");
+  assert("or fallback", "" || "b", "b");
+  assert("null or", null || "default", "default");
+  assert("not true", !true ? "true" : "false", "false");
+  assert("not empty", !"" ? "true" : "false", "true");
+  var options = {};
+  var count = (options.count !== undefined && options.count !== null) ? options.count : 0;
+  assert("explicit 0 default", count, 0);
+  </script>
+
+ternary-operator: |
+  <script runat="server">
+  /*
+   * Chapter: Ternary Operator
+   * Proves:
+   *   1. Ternary branches.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  assert("t", true ? "Welcome back!" : "Please log in.", "Welcome back!");
+  assert("f", false ? "Welcome back!" : "Please log in.", "Please log in.");
+  assert("nested", 0 === 0 ? "none" : (1 === 1 ? "one" : "many"), "none");
+  </script>
+
+assignment-operators: |
+  <script runat="server">
+  /*
+   * Chapter: Assignment Operators
+   * Proves:
+   *   1. += -= *= /= %=.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var x = 5; x += 3; assert("+=", x, 8); x -= 2; assert("-=", x, 6); x *= 4; assert("*=", x, 24); x /= 6; assert("/=", x, 4); x %= 3; assert("%=", x, 1);
+  </script>
+
+typeof: |
+  <script runat="server">
+  /*
+   * Chapter: typeof
+   * Proves:
+   *   1. typeof results including null quirk.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  assert("str", typeof "string", "string");
+  assert("num", typeof 42, "number");
+  assert("bool", typeof true, "boolean");
+  assert("undef", typeof undefined, "undefined");
+  assert("null", typeof null, "object");
+  assert("obj", typeof {}, "object");
+  assert("arr", typeof [], "object");
+  assert("fn", typeof function () {}, "function");
+  var myVar = 1;
+  assert("existence check", typeof myVar !== "undefined" ? "true" : "false", "true");
+  </script>
+
+bitwise-rarely-needed: |
+  <script runat="server">
+  /*
+   * Chapter: Bitwise
+   * Proves:
+   *   1. Positive bitwise ops match documented results.
+   *   2. DEV: negative operands throw.
+   *   3. DEV: ~ is broken; -(x+1) works.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  assert("AND", 5 & 3, 1);
+  assert("OR", 5 | 3, 7);
+  assert("XOR", 5 ^ 3, 6);
+  assert("<<", 5 << 1, 10);
+  assert(">>", 5 >> 1, 2);
+  assert(">>>", 5 >>> 0, 5);
+  assertThrows("DEV (-1)|0 throws", function () { return (-1) | 0; });
+  assertThrows("DEV 5&(-1) throws", function () { return 5 & (-1); });
+  assertThrows("DEV 5<<(-1) throws", function () { return 5 << (-1); });
+  var tilde = ~5;
+  assert("DEV ~5 is not -6", tilde === -6 ? "true" : "false", "false");
+  assert("workaround -(5+1)", -(5 + 1), -6);
+  assert("DEV << no 32-bit wrap", (0x80000000 << 1) === 0 ? "true" : "false", "false");
+  </script>
+

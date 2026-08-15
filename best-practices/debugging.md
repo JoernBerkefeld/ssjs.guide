@@ -4,6 +4,8 @@ title: Debugging
 parent: Best Practices
 parent_url: /best-practices/
 description: Practical techniques for debugging SSJS code — from basic Write() tracing to structured error logging and silent error detection.
+claims_verified: true
+test_scripts: complete
 ---
 
 Debugging SSJS is challenging: there is no browser DevTools, no console, and SFMC's native error messages are often unhelpful. This page covers proven techniques for finding and fixing SSJS issues.
@@ -22,7 +24,7 @@ Write("DEBUG apiKey: " + value + "<br>");
 ```javascript
 function debug(label, value) {
     Write("<pre style='background:#111;color:#0f0;padding:8px;font-size:12px'>"
-        + label + ": " + Stringify(value)
+        + label + ": " + Platform.Function.Stringify(value)
         + "</pre>");
 }
 
@@ -38,7 +40,7 @@ var DEBUG = Platform.Request.GetQueryStringParameter("debug") === "1";
 
 function debugWrite(msg, data) {
     if (DEBUG) {
-        Write("<pre>" + msg + ": " + Stringify(data) + "</pre>");
+        Write("<pre>" + msg + ": " + Platform.Function.Stringify(data) + "</pre>");
     }
 }
 
@@ -50,6 +52,8 @@ debugWrite("payload", requestBody);
 
 ---
 
+{% include test-script.html bundle="best-practices--debugging" chapter="1-write-debugging" %}
+
 ## 2. Error Page Analysis
 
 When SFMC shows a generic error page (\"Sorry, we encountered a problem\"), the error is logged in SFMC's native logs. To read them:
@@ -60,6 +64,8 @@ When SFMC shows a generic error page (\"Sorry, we encountered a problem\"), the 
 However, these logs are often truncated. Prefer logging to a DE (see [Error Logging](/best-practices/error-logging/)).
 
 ---
+
+{% include test-script.html bundle="best-practices--debugging" chapter="2-error-page-analysis" %}
 
 ## 3. Testing Execution Contexts
 
@@ -74,6 +80,8 @@ Different execution contexts have different constraints. Test in the right conte
 
 ---
 
+{% include test-script.html bundle="best-practices--debugging" chapter="3-testing-execution-contexts" %}
+
 ## 4. ParseJSON Error Diagnosis
 
 The most common SSJS error is `TypeError: Cannot read property 'X' of undefined` on a `ParseJSON` result. The root cause is usually a `null` or `undefined` HTTP response.
@@ -84,10 +92,12 @@ Write("RAW BODY: [" + rawBody + "]<br>"); // is it empty?
 
 var parsed = Platform.Function.ParseJSON(rawBody + ""); // + "" keeps the argument a string
 Write("PARSED TYPE: " + typeof parsed + "<br>");
-Write("PARSED VALUE: " + Stringify(parsed) + "<br>");
+Write("PARSED VALUE: " + Platform.Function.Stringify(parsed) + "<br>");
 ```
 
 ---
+
+{% include test-script.html bundle="best-practices--debugging" chapter="4-parsejson-error-diagnosis" %}
 
 ## 5. Try/Catch with Write
 
@@ -96,17 +106,19 @@ Wrap suspicious code in try/catch and output the error:
 ```javascript
 try {
     var result = someRiskyOperation();
-    Write("Success: " + Stringify(result));
+    Write("Success: " + Platform.Function.Stringify(result));
 } catch(e) {
     Write("<pre style='color:red'>");
     // String(e) — there is no .stack in this engine, and .message is undefined
-    // for new Error(...). String(e) always yields something usable.
+    // for new Error(/* ... */). String(e) always yields something usable.
     Write("Error: " + String(e) + "\n");
     Write("</pre>");
 }
 ```
 
 ---
+
+{% include test-script.html bundle="best-practices--debugging" chapter="5-try-catch-with-write" %}
 
 ## 6. Diagnosing Blank Pages
 
@@ -120,7 +132,8 @@ A blank CloudPage with no output is almost always a silent runtime error. Common
 **Diagnosis pattern:**
 
 ```javascript
-Write("1: Script started<br>");
+// Use Platform.Response.Write before Core load — bare Write needs Platform.Load
+Platform.Response.Write("1: Script started<br>");
 Platform.Load("core", "1.1.5");
 Write("2: Core loaded<br>");
 
@@ -136,6 +149,8 @@ Write("4: Retrieved " + rows.length + " rows<br>");
 ```
 
 ---
+
+{% include test-script.html bundle="best-practices--debugging" chapter="6-diagnosing-blank-pages" %}
 
 ## 7. Automation Studio Debugging
 
@@ -161,6 +176,8 @@ logStep("complete", "Finished successfully");
 
 ---
 
+{% include test-script.html bundle="best-practices--debugging" chapter="7-automation-studio-debugging" %}
+
 ## 8. Email Context Debugging
 
 In email sends, use AMPscript variable output for debugging — SSJS `Write()` still works:
@@ -172,6 +189,8 @@ Write("<!-- DEBUG: email=" + emailAddr + " subKey=" + subscriberKey + " -->");
 Check the "View Email" preview in Content Builder to see the rendered HTML including debug comments.
 
 ---
+
+{% include test-script.html bundle="best-practices--debugging" chapter="8-email-context-debugging" %}
 
 ## 9. Silent Error Patterns
 
@@ -194,6 +213,8 @@ if (val === "null" || val === "") {
     Write("No record found");
 }
 ```
+
+{% include test-script.html bundle="best-practices--debugging" chapter="9-silent-error-patterns" %}
 
 ## See Also
 

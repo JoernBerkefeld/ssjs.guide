@@ -42,6 +42,57 @@
   anchor: "getvalue"
   body: |
     The official member pages describe string values, require an `@` prefix, and document `SetValue` as void. On a published CloudPage GET, the prefix is optional, names are case-insensitive, numbers and booleans retain their SSJS type between server-side blocks, a never-set variable returns JavaScript `null`, and `SetValue` also returns JavaScript `null`. The variable state is limited to the current request.
+  testScript: |
+    <script runat="server">
+    /*
+     * Differs-from-docs: Platform.Variable.GetValue / SetValue
+     *
+     * Proves:
+     *   1. DEV: @ prefix is optional (official docs: require @).
+     *   2. DEV: names are case-insensitive.
+     *   3. DEV: numbers and booleans retain SSJS type (official docs: string).
+     *   4. DEV: never-set GetValue returns strict JS null (official docs: string).
+     *   5. DEV: SetValue returns strict JS null (official docs: void).
+     *   6. Values set in this request are readable in the same request.
+     *
+     * NON-ASSERTABLE in one GET: cross-request absence (request-local) -
+     * requires a second request after a prior SetValue.
+     *
+     * EXPECTED OUTPUT: every line starts with PASS.
+     */
+
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+    }
+
+    var setAt = Platform.Variable.SetValue("@dfdPlatVarStr", "hello");
+    assert("DEV SetValue with @ returns null (official docs: void)", setAt === null ? "null" : "other", "null");
+
+    var setBare = Platform.Variable.SetValue("dfdPlatVarBare", "bare-value");
+    assert("DEV SetValue without @ returns null (official docs: void)", setBare === null ? "null" : "other", "null");
+    assert("DEV @ optional: bare SetValue readable with @", Platform.Variable.GetValue("@dfdPlatVarBare"), "bare-value");
+    assert("DEV @ optional: @ SetValue readable without @", Platform.Variable.GetValue("dfdPlatVarStr"), "hello");
+
+    Platform.Variable.SetValue("@dfdPlatVarCase", "case-a");
+    Platform.Variable.SetValue("@DFDPLATVARCASE", "case-b");
+    assert("DEV names are case-insensitive (last write wins)", Platform.Variable.GetValue("@dfdPlatVarCase"), "case-b");
+
+    Platform.Variable.SetValue("@dfdPlatVarNum", 42.5);
+    var numVal = Platform.Variable.GetValue("@dfdPlatVarNum");
+    assert("DEV number retains type (official docs: string)", numVal, 42.5);
+    assert("DEV number typeof is number (official docs: string)", "" + (typeof numVal), "number");
+
+    Platform.Variable.SetValue("@dfdPlatVarBool", true);
+    var boolVal = Platform.Variable.GetValue("@dfdPlatVarBool");
+    assert("DEV boolean retains type (official docs: string)", boolVal, true);
+    assert("DEV boolean typeof is boolean (official docs: string)", "" + (typeof boolVal), "boolean");
+
+    var missing = Platform.Variable.GetValue("dfdPlatVarMissing20260815");
+    assert("DEV never-set is strict null (official docs: string)", missing === null ? "null" : "other", "null");
+    assert("DEV never-set typeof is object", "" + (typeof missing), "object");
+
+    assert("same-request read-back after SetValue", Platform.Variable.GetValue("@dfdPlatVarStr"), "hello");
+    </script>
 
 - name: "Variable (bare-name Core alias)"
   url: "/core-library/variable/"
@@ -55,6 +106,48 @@
   anchor: "methods"
   body: |
     The bare-name `Variable` alias (after `Platform.Load("core", "1.1.5")`) shares request-local state with `Platform.Variable`. GetValue preserves number/boolean scalars and returns JavaScript `null` for a never-set name (official docs: string). SetValue returns `undefined` (void-like), which matches the official void wording more closely than `Platform.Variable.SetValue`, which returns JavaScript `null`.
+  testScript: |
+    <script runat="server">
+    Platform.Load("core", "1.1.5");
+
+    /*
+     * Differs-from-docs: Variable (bare-name Core alias)
+     *
+     * Proves:
+     *   1. After Core load, bare Variable shares state with Platform.Variable.
+     *   2. DEV: GetValue preserves number/boolean (official docs: string).
+     *   3. DEV: never-set GetValue returns strict JS null (official docs: string).
+     *   4. DEV: bare SetValue returns undefined; Platform.Variable.SetValue
+     *      returns null (official docs: void for both).
+     *
+     * EXPECTED OUTPUT: every line starts with PASS.
+     */
+
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+    }
+
+    Variable.SetValue("@dfdCoreVarAlias", "from-bare");
+    assert("bare Variable shares Platform.Variable state", Platform.Variable.GetValue("@dfdCoreVarAlias"), "from-bare");
+    Platform.Variable.SetValue("@dfdCoreVarFromPlat", "from-platform");
+    assert("Platform.Variable writes visible via bare Variable", Variable.GetValue("@dfdCoreVarFromPlat"), "from-platform");
+
+    Variable.SetValue("@dfdCoreVarNum", 99);
+    var numVal = Variable.GetValue("@dfdCoreVarNum");
+    assert("DEV GetValue preserves number (official docs: string)", numVal, 99);
+    assert("DEV GetValue number typeof is number (official docs: string)", "" + (typeof numVal), "number");
+
+    Variable.SetValue("@dfdCoreVarBool", false);
+    assert("DEV GetValue preserves boolean (official docs: string)", Variable.GetValue("@dfdCoreVarBool"), false);
+
+    var missing = Variable.GetValue("@dfdCoreVarMissing20260815");
+    assert("DEV never-set is strict null (official docs: string)", missing === null ? "null" : "other", "null");
+
+    var bareRet = Variable.SetValue("@dfdCoreVarRet", "r");
+    var platRet = Platform.Variable.SetValue("@dfdCoreVarRetPlat", "r");
+    assert("DEV bare SetValue returns undefined (official docs: void)", bareRet === undefined ? "undefined" : "other", "undefined");
+    assert("DEV Platform.Variable.SetValue returns null (bare returns undefined)", platRet === null ? "null" : "other", "null");
+    </script>
 
 - name: "Platform.Response"
   url: "/platform-objects/platform-response/"
@@ -68,6 +161,65 @@
   anchor: "platform-response-runtime-differences"
   body: |
     Response mutators including `SetResponseHeader`, `RemoveResponseHeader`, `SetCookie`, and `RemoveCookie` return JavaScript `null`, not `void`. `ContentType` and `CharacterSet` assignments work, but reads and calls expose opaque CLR values instead of the configured strings. In a published CloudPage GET with the named request cookie present, `RemoveCookie` emitted no deletion header. Use `SetCookie(name, "", new Date(1970, 0, 1), true)` to emit an expired cookie; the removal takes effect on a subsequent browser request.
+  testScript: |
+    <script runat="server">
+    /*
+     * Differs-from-docs: Platform.Response
+     *
+     * Proves (body-assertable):
+     *   1. DEV: SetResponseHeader / RemoveResponseHeader / SetCookie /
+     *      RemoveCookie return strict JS null (official docs: void).
+     *   2. ContentType / CharacterSet assignment does not throw.
+     *   3. DEV: ContentType / CharacterSet reads and calls return opaque
+     *      CLR values, not the configured strings.
+     *   4. Expired-cookie workaround SetCookie("", past Date) returns null.
+     *
+     * NON-ASSERTABLE in body alone (use HttpWebRequest AllowAutoRedirect=false):
+     *   - outbound header presence after SetResponseHeader
+     *   - header absence after RemoveResponseHeader
+     *   - Set-Cookie emission / RemoveCookie emitting no deletion header
+     *   - expired-cookie workaround actually clearing on a later request
+     *
+     * EXPECTED OUTPUT: every line starts with PASS.
+     */
+
+    function assert(id, actual, expected) {
+        Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+    }
+    function capture(fn) {
+        try { return { threw: false, value: fn() }; } catch (ex) { return { threw: true, message: "" + ex.message }; }
+    }
+
+    var setHdr = Platform.Response.SetResponseHeader("X-Dfd-Response", "set-value");
+    assert("DEV SetResponseHeader returns null (official docs: void)", setHdr === null ? "null" : "other", "null");
+
+    var remHdr = Platform.Response.RemoveResponseHeader("X-Dfd-Response");
+    assert("DEV RemoveResponseHeader returns null (official docs: void)", remHdr === null ? "null" : "other", "null");
+
+    var setCk = Platform.Response.SetCookie("dfdResponseCookie", "ck-value");
+    assert("DEV SetCookie returns null (official docs: void)", setCk === null ? "null" : "other", "null");
+
+    var remCk = Platform.Response.RemoveCookie("dfdResponseCookie");
+    assert("DEV RemoveCookie returns null (official docs: void)", remCk === null ? "null" : "other", "null");
+
+    Platform.Response.ContentType = "text/plain";
+    Platform.Response.CharacterSet = "UTF-8";
+    var ctRead = capture(function () { return Platform.Response.ContentType; });
+    var ctCall = capture(function () { return Platform.Response.ContentType(); });
+    var csRead = capture(function () { return Platform.Response.CharacterSet; });
+    var csCall = capture(function () { return Platform.Response.CharacterSet(); });
+    assert("ContentType assignment + read does not throw", ctRead.threw ? "threw" : "returned", "returned");
+    assert("DEV ContentType read is CLR (official docs: configured string)", "" + (typeof ctRead.value), "clr");
+    assert("ContentType call does not throw", ctCall.threw ? "threw" : "returned", "returned");
+    assert("DEV ContentType call is CLR (official docs: configured string)", "" + (typeof ctCall.value), "clr");
+    assert("CharacterSet assignment + read does not throw", csRead.threw ? "threw" : "returned", "returned");
+    assert("DEV CharacterSet read is CLR (official docs: configured string)", "" + (typeof csRead.value), "clr");
+    assert("CharacterSet call does not throw", csCall.threw ? "threw" : "returned", "returned");
+    assert("DEV CharacterSet call is CLR (official docs: configured string)", "" + (typeof csCall.value), "clr");
+
+    var fallback = Platform.Response.SetCookie("dfdResponseExpire", "", new Date(1970, 0, 1), true);
+    assert("expired SetCookie workaround returns null", fallback === null ? "null" : "other", "null");
+    </script>
 
 - name: "HTTPHeader (bare-name global)"
   url: "/core-library/httpheader/"

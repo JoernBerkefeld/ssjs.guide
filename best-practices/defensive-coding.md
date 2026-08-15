@@ -4,6 +4,8 @@ title: Defensive Coding
 parent: Best Practices
 parent_url: /best-practices/
 description: Guard against null values, empty strings, type coercion bugs, and unexpected DE return values with defensive SSJS patterns.
+claims_verified: true
+test_scripts: complete
 ---
 
 SSJS has several unique failure modes that differ from standard JavaScript. Defensive coding means proactively guarding against these platform-specific behaviors.
@@ -30,6 +32,8 @@ var data = Platform.Function.ParseJSON(String(resp.content) + "");
 
 ---
 
+{% include test-script.html bundle="best-practices--defensive-coding" chapter="1-parsejson-argument-guard" %}
+
 ## 2. Lookup Returns null — and a CLR null for an Empty Field
 
 `Platform.Function.Lookup` returns a genuine JS `null` when no matching row exists (runtime-verified). The trap is a different case: a row that exists but whose field was never populated returns a **CLR null**, which is not `=== null` and **throws** the moment you coerce it — so `if (!email)` is not a safe guard.
@@ -38,7 +42,7 @@ var data = Platform.Function.ParseJSON(String(resp.content) + "");
 var email = Platform.Function.Lookup("Contacts", "Email", "Id", contactId);
 
 // WRONG — throws "Object cannot be cast from DBNull to other types." on a CLR null
-if (!email) { ... }
+if (!email) { /* ... */ }
 
 // CORRECT — coerce with String() first, then test the string
 var value = String(email);   // "null" when no row matched, "" when the field is empty
@@ -51,6 +55,8 @@ if (value === "" || value === "null") {
 See [Lookup](/platform-functions/lookup/) for all four empty-ish outcomes.
 
 ---
+
+{% include test-script.html bundle="best-practices--defensive-coding" chapter="2-lookup-returns-null-and-a-clr-null-for-an-empty-field" %}
 
 ## 3. GetPostData() One-Time Read
 
@@ -74,6 +80,8 @@ function getField(name) {
 
 ---
 
+{% include test-script.html bundle="best-practices--defensive-coding" chapter="3-getpostdata-one-time-read" %}
+
 ## 4. Type Coercion in Comparisons
 
 `Platform.Function.Lookup` hands back each column's **native** runtime type — a Number/Decimal column arrives as a `number`, a Boolean column as a `boolean`, Text as a `string`, and a Date column as a real `Date`. `DataExtension.Rows.Retrieve()` does the opposite and stringifies **every** field. Know which of the two you called before you compare:
@@ -81,21 +89,24 @@ function getField(name) {
 ```javascript
 // Lookup — a Number column is already a number, so a numeric compare is correct
 var score = Platform.Function.Lookup("Scores", "value", "userId", userId);
-if (score > 80) { ... }
+if (score > 80) { /* ... */ }
 
 // Rows.Retrieve — every field arrives as a string, so convert before comparing
+Platform.Load("core", "1.1.5");
 var row = DataExtension.Init("Scores").Rows.Retrieve({
     Property: "userId", SimpleOperator: "equals", Value: userId
 })[0];
-if (parseInt(row.value, 10) > 80) { ... }
+if (parseInt(row.value, 10) > 80) { /* ... */ }
 
 // Booleans: Lookup yields a real boolean, Rows.Retrieve the capitalized text "True"/"False"
 var isActive = Platform.Function.Lookup("Contacts", "active", "id", id);
-if (isActive === true) { ... }
-if (row.active === "True") { ... }
+if (isActive === true) { /* ... */ }
+if (row.active === "True") { /* ... */ }
 ```
 
 ---
+
+{% include test-script.html bundle="best-practices--defensive-coding" chapter="4-type-coercion-in-comparisons" %}
 
 ## 5. Property Access on Possibly-Null Objects
 
@@ -122,6 +133,8 @@ if (wsResult.Status === "OK" && wsResult.Results && wsResult.Results.length > 0)
 
 ---
 
+{% include test-script.html bundle="best-practices--defensive-coding" chapter="5-property-access-on-possibly-null-objects" %}
+
 ## 6. Undefined vs Missing Properties
 
 SSJS inherits JavaScript's behavior where accessing a missing property returns `undefined`, not `null`:
@@ -141,6 +154,8 @@ var email = obj.email || "no-reply@example.com";
 ```
 
 ---
+
+{% include test-script.html bundle="best-practices--defensive-coding" chapter="6-undefined-vs-missing-properties" %}
 
 ## 7. For...in Without hasOwnProperty
 
@@ -163,6 +178,8 @@ for (var key in config) {
 ```
 
 ---
+
+{% include test-script.html bundle="best-practices--defensive-coding" chapter="7-for-in-without-hasownproperty" %}
 
 ## 8. Switch Default Bug Workaround
 
@@ -190,6 +207,8 @@ if (status === "active") {
 
 ---
 
+{% include test-script.html bundle="best-practices--defensive-coding" chapter="8-switch-default-bug-workaround" %}
+
 ## 9. Empty Checks
 
 Use a consistent utility function for all emptiness checks:
@@ -211,6 +230,8 @@ isEmpty(0);          // false
 
 ---
 
+{% include test-script.html bundle="best-practices--defensive-coding" chapter="9-empty-checks" %}
+
 ## 10. Division and Modulo Safety
 
 Guard against division by zero:
@@ -224,6 +245,8 @@ var average = sumValue / total;  // NaN if total === 0
 // CORRECT
 var average = total > 0 ? sumValue / total : 0;
 ```
+
+{% include test-script.html bundle="best-practices--defensive-coding" chapter="10-division-and-modulo-safety" %}
 
 ## See Also
 

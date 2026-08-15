@@ -1,0 +1,114 @@
+# Narrative recipe test scripts — re-probe before claim edits.
+
+oauth2-client-credentials-flow: |
+  <script runat="server">
+  /*
+   * Chapter: OAuth2 Client Credentials Flow
+   * Proves:
+   *   1. HttpRequest constructs; ContentType settable.
+   *   NON-ASSERTABLE: live token fetch.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var req = new Script.Util.HttpRequest("https://example.com/v2/token");
+  req.method = "POST";
+  req.contentType = "application/json";
+  assert("method POST", "" + req.method, "POST");
+  assert("HttpRequest object", typeof req, "clr");
+  </script>
+
+sfmc-rest-api-call-journey-entry-event: |
+  <script runat="server">
+  /*
+   * Chapter: SFMC REST API Journey Entry
+   * Proves:
+   *   1. Stringify event payload shape.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var payload = { ContactKey: "sk", EventDefinitionKey: "APIEvent-x", Data: { a: 1 } };
+  var s = Platform.Function.Stringify(payload);
+  assert("has ContactKey", s.indexOf("ContactKey") >= 0 ? "true" : "false", "true");
+  </script>
+
+generic-rest-helper: |
+  <script runat="server">
+  /*
+   * Chapter: Generic REST Helper
+   * Proves:
+   *   1. Helper builds HttpRequest without send.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  function apiCall(method, url, token, body) {
+      var req = new Script.Util.HttpRequest(url);
+      req.method = method;
+      req.contentType = "application/json";
+      if (token) req.setHeader("Authorization", "Bearer " + token);
+      // postData is write-only — assignment is fine; never read it (unguarded read → HTTP 422)
+      if (body) req.postData = Platform.Function.Stringify(body);
+      return req;
+  }
+  var r = apiCall("POST", "https://example.com/", "tok", { x: 1 });
+  assert("apiCall returns clr", typeof r, "clr");
+  assert("setHeader exists", typeof r.setHeader, "clrmethodinfo");
+  assert("method POST", "" + r.method, "POST");
+  </script>
+
+external-api-with-retry: |
+  <script runat="server">
+  /*
+   * Chapter: External API with Retry
+   * Proves:
+   *   1. Retry loop counter pattern.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  function shouldRetry(statusCode, attempt, maxRetries) {
+      return attempt < maxRetries && (statusCode >= 500 || statusCode === 429);
+  }
+  assert("retry 500", shouldRetry(500, 0, 3) ? "true" : "false", "true");
+  assert("no retry 400", shouldRetry(400, 0, 3) ? "true" : "false", "false");
+  assert("exhausted", shouldRetry(500, 3, 3) ? "true" : "false", "false");
+  </script>
+

@@ -4,6 +4,8 @@ title: Execution Contexts
 parent: Getting Started
 parent_url: /getting-started/
 description: GET vs POST, ExecutionContextType, ExecutionContextName, and how to detect the execution environment.
+claims_verified: true
+test_scripts: complete
 ---
 
 SSJS exposes information about how the current page was invoked through the `Platform.Request` namespace. Understanding the execution context lets you write a single page that handles both GET and POST scenarios.
@@ -34,6 +36,8 @@ if (method === "POST") {
 </script>
 ```
 
+{% include test-script.html bundle="getting-started--execution-contexts" chapter="executioncontexttype" %}
+
 ## ExecutionContextName
 
 `Platform.Request.GetQueryStringParameter("_pageId")` returns the CloudPages page ID. The system variable `ExecutionContextName` (when available) contains the name of the Automation or context that triggered execution.
@@ -48,6 +52,8 @@ In CloudPages, these built-in names are available:
 | `Platform.Request.GetPostData()` | Entire raw POST body (call only once) |
 | `Platform.Request.GetCookieValue(name)` | Cookie value |
 | `Platform.Request.GetRequestHeader(name)` | HTTP request header |
+
+{% include test-script.html bundle="getting-started--execution-contexts" chapter="executioncontextname" %}
 
 ## Detecting the Environment
 
@@ -69,6 +75,8 @@ if (isWebContext) {
 </script>
 ```
 
+{% include test-script.html bundle="getting-started--execution-contexts" chapter="detecting-the-environment" %}
+
 ## GET Parameters
 
 Read individual query string parameters with `Platform.Request.GetQueryStringParameter()`:
@@ -78,7 +86,7 @@ Read individual query string parameters with `Platform.Request.GetQueryStringPar
 var subscriberKey = Platform.Request.GetQueryStringParameter("sk");
 var campaignId    = Platform.Request.GetQueryStringParameter("cid");
 
-// Parameters not present in the URL return an empty string ""
+// Parameters not present in the URL return null (not an empty string)
 if (!subscriberKey) {
     Platform.Response.Redirect("/error?code=no_sk", false);
 }
@@ -86,6 +94,8 @@ if (!subscriberKey) {
 ```
 
 **Encrypted parameters:** Use AMPscript's `CloudPagesURL()` to generate URLs with encrypted parameters. Decrypt with AMPscript's `DecryptSymmetric()` or rely on SFMC's built-in decryption for `CloudPagesURL`-generated links.
+
+{% include test-script.html bundle="getting-started--execution-contexts" chapter="get-parameters" %}
 
 ## POST Body
 
@@ -120,6 +130,8 @@ if (String(Platform.Request.Method) === "POST") {
 
 `ParseJSON` returns `null` for `null`/`undefined` input rather than erroring — the `+ ""` coercion guards against the case that really throws, a non-string object or array argument.
 
+{% include test-script.html bundle="getting-started--execution-contexts" chapter="post-body" %}
+
 ## Cookies
 
 ```javascript
@@ -141,10 +153,13 @@ function formatDate(dateString,dateFormat,timeFormat,isoLocale) {
     return Platform.Function.TreatAsContent("%%=FormatDate(@formatDate_string, @formatDate_date, @formatDate_time, @formatDate_iso)=%%");
 }
 
-var expiry = dateAdd(Now(), 30, "D");
+var expiry = dateAdd(Platform.Function.Now(), 30, "D");
 var expiryStr = formatDate(expiry, "M/D/YYYY","H:MM:SS");
 Platform.Response.SetCookie("session_token", tokenValue, expiryStr, true);
 // Parameters: name, value, expiration-string, https-only
 ```
 
 → Next: [Platform vs Core](/getting-started/platform-vs-core/)
+
+
+{% include test-script.html bundle="getting-started--execution-contexts" chapter="cookies" %}

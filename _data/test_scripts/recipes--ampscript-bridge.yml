@@ -1,0 +1,160 @@
+# Narrative recipe test scripts — re-probe before claim edits.
+
+reading-ampscript-variables-in-ssjs: |
+  <script runat="server">
+  /*
+   * Chapter: Reading AMPscript Variables in SSJS
+   * Proves:
+   *   1. SetValue/GetValue round-trip (SSJS-side stand-in for AMPscript SET).
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  Platform.Variable.SetValue("@subscriberKey", "sk-1");
+  Platform.Variable.SetValue("@leadScore", 42);
+  assert("GetValue sk", Platform.Variable.GetValue("@subscriberKey"), "sk-1");
+  assert("GetValue score number", Platform.Variable.GetValue("@leadScore"), 42);
+  </script>
+
+passing-ssjs-results-to-ampscript-rendering: |
+  <script runat="server">
+  /*
+   * Chapter: Passing SSJS Results to AMPscript Rendering
+   * Proves:
+   *   1. Tier computation + SetValue.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var score = "90";
+  var tier = "standard";
+  if (parseInt(score, 10) > 80) tier = "premium";
+  if (parseInt(score, 10) > 95) tier = "vip";
+  Platform.Variable.SetValue("@tier", tier);
+  assert("tier premium", Platform.Variable.GetValue("@tier"), "premium");
+  </script>
+
+safe-url-encoding-via-ampscript: |
+  <script runat="server">
+  /*
+   * Chapter: Safe URL Encoding via AMPscript
+   * Proves:
+   *   1. Variable + TreatAsContent URLEncode path.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  Platform.Load("core", "1.1.5");
+  Variable.SetValue("@rawValue", "a b");
+  Platform.Function.TreatAsContent("%%[SET @encoded = URLEncode(@rawValue, 1, 1)]%%");
+  var encoded = Variable.GetValue("@encoded");
+  assert("encoded has percent-or-plus", ("" + encoded).indexOf("%") >= 0 || ("" + encoded).indexOf("+") >= 0 ? "true" : "false", "true");
+  </script>
+
+using-platform-function-treatascontent-safely: |
+  <script runat="server">
+  /*
+   * Chapter: Using TreatAsContent Safely
+   * Proves:
+   *   1. htmlEncode; TreatAsContent via Variable.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  Platform.Load("core", "1.1.5");
+  function htmlEncode(str) {
+      return (str + "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  assert("htmlEncode", htmlEncode("<x>"), "&lt;x&gt;");
+  Variable.SetValue("@tac", "hi");
+  assert("TreatAsContent v()", Platform.Function.TreatAsContent("%%=v(@tac)=%%"), "hi");
+  </script>
+
+reading-subscriber-attributes-in-ssjs: |
+  <script runat="server">
+  /*
+   * Chapter: Reading Subscriber Attributes in SSJS
+   * Proves:
+   *   1. Attribute.GetValue typeof after Core (CloudPage may return empty).
+   *   NON-ASSERTABLE: real send-time personalization strings.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  Platform.Load("core", "1.1.5");
+  assert("Attribute typeof", typeOfThunk(function () { return typeof Attribute; }), "object");
+  assert("GetValue typeof", typeOfThunk(function () { return typeof Attribute.GetValue; }), "function");
+  </script>
+
+json-data-bridge: |
+  <script runat="server">
+  /*
+   * Chapter: JSON Data Bridge
+   * Proves:
+   *   1. Stringify then SetValue then ParseJSON round-trip.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var payload = { a: 1, b: "x" };
+  var json = Platform.Function.Stringify(payload);
+  Platform.Variable.SetValue("@jsonBridge", json);
+  var back = Platform.Function.ParseJSON(Platform.Variable.GetValue("@jsonBridge") + "");
+  assert("round-trip a", back.a, 1);
+  assert("round-trip b", back.b, "x");
+  </script>
+

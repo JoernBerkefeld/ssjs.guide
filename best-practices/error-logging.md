@@ -4,6 +4,8 @@ title: Error Logging
 parent: Best Practices
 parent_url: /best-practices/
 description: Capture and persist SSJS errors to Data Extensions for debugging, monitoring, and alerting — with reusable logging patterns.
+claims_verified: true
+test_scripts: complete
 ---
 
 SFMC's native error handling is minimal and hard to inspect. The most reliable way to debug production issues is to log errors yourself to a Data Extension.
@@ -25,6 +27,8 @@ Create a DE with these columns:
 There is deliberately **no stack-trace column**: the SSJS engine exposes no `.stack` property on any error shape, so such a column could only ever store `undefined`. Capture the error text with `String(e)` instead — it works for engine-raised errors, `new Error(...)` (whose `.message` reads back `undefined`), and call-form `Error(...)` alike.
 
 ---
+
+{% include test-script.html bundle="best-practices--error-logging" chapter="setting-up-an-error-log-de" %}
 
 ## Basic Error Logger
 
@@ -52,6 +56,8 @@ function logError(page, message, requestData, subKey) {
 
 ---
 
+{% include test-script.html bundle="best-practices--error-logging" chapter="basic-error-logger" %}
+
 ## Page-Level Error Wrapper
 
 Wrap your entire CloudPage in a try/catch:
@@ -77,11 +83,11 @@ try {
     // ... rest of logic ...
 
 } catch(e) {
-    // String(e) — .message is undefined for new Error(...) and .stack does not exist
+    // String(e) — .message is undefined for new Error(/* ... */) and .stack does not exist
     logError(PAGE_NAME, String(e), requestSnapshot, "");
 
     Platform.Response.ContentType = "application/json";
-    Write(Stringify({ error: "An error occurred. Please try again." }));
+    Write(Platform.Function.Stringify({ error: "An error occurred. Please try again." }));
 }
 
 function logError(page, message, requestData, subKey) {
@@ -100,6 +106,8 @@ function logError(page, message, requestData, subKey) {
 
 ---
 
+{% include test-script.html bundle="best-practices--error-logging" chapter="page-level-error-wrapper" %}
+
 ## Severity Levels
 
 Use different severity levels for different types of events:
@@ -111,7 +119,7 @@ function log(page, severity, message, data) {
             "AppLog",
             ["LogId", "Timestamp", "Page", "Severity", "Message", "Data"],
             [Platform.Function.GUID(), Platform.Function.Now(), page, severity,
-             (message || "").substring(0, 500), Stringify(data || {}).substring(0, 2000)]
+             (message || "").substring(0, 500), Platform.Function.Stringify(data || {}).substring(0, 2000)]
         );
     } catch(e) {}
 }
@@ -122,6 +130,8 @@ log("payment", "error", "Payment gateway timeout", { gateway: "stripe", elapsed:
 ```
 
 ---
+
+{% include test-script.html bundle="best-practices--error-logging" chapter="severity-levels" %}
 
 ## Automation Studio Logging
 
@@ -148,6 +158,8 @@ logStep("complete", "ok", "All rows processed", processedCount);
 
 ---
 
+{% include test-script.html bundle="best-practices--error-logging" chapter="automation-studio-logging" %}
+
 ## HTTP Error Logging
 
 Log failed API calls with full context:
@@ -159,7 +171,7 @@ function callApi(url, method, payload, token) {
     req.setHeader("Authorization", "Bearer " + token);
     if (payload) {
         req.contentType = "application/json";
-        req.postData = Stringify(payload);
+        req.postData = Platform.Function.Stringify(payload);
     }
 
     var resp;
@@ -185,13 +197,15 @@ function callApi(url, method, payload, token) {
 
 ---
 
+{% include test-script.html bundle="best-practices--error-logging" chapter="http-error-logging" %}
+
 ## Monitoring with Email Alerts
 
 For critical automation failures, send an alert email:
 
 ```javascript
 } catch(e) {
-    // String(e) — .message is undefined for new Error(...) and .stack does not exist
+    // String(e) — .message is undefined for new Error(/* ... */) and .stack does not exist
     logError(SCRIPT_NAME, String(e), "", "");
 
     // Alert the ops team
@@ -212,6 +226,8 @@ For critical automation failures, send an alert email:
     }
 }
 ```
+
+{% include test-script.html bundle="best-practices--error-logging" chapter="monitoring-with-email-alerts" %}
 
 ## See Also
 

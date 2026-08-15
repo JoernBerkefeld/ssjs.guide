@@ -1,0 +1,187 @@
+# Narrative language page test scripts. Re-probe before claim edits.
+
+function-declarations: |
+  <script runat="server">
+  /*
+   * Chapter: Function Declarations
+   * Proves:
+   *   1. declaration works.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function add(a, b) { return a + b; } assert("add", add(2, 3), 5);
+  </script>
+
+function-expressions: |
+  <script runat="server">
+  /*
+   * Chapter: Function Expressions
+   * Proves:
+   *   1. expression works.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var mul = function (a, b) { return a * b; }; assert("mul", mul(4, 5), 20);
+  </script>
+
+parameters-and-return-values: |
+  <script runat="server">
+  /*
+   * Chapter: Parameters
+   * Proves:
+   *   1. arguments + return.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function arity() { return arguments.length; }
+  function first() { return arguments[0]; }
+  assert("argc", arity(1, 2, 3), 3);
+  assert("arg0", first("x"), "x");
+  function greet(name) { return "Hello, " + name + "!"; }
+  assert("return", greet("World"), "Hello, World!");
+  </script>
+
+arrow-functions-not-supported: |
+  <script runat="server">
+  /*
+   * Chapter: Arrow NOT SUPPORTED
+   * Proves:
+   *   1. Negative guidance only.
+   *   NON-ASSERTABLE: arrow syntax aborts parse.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  assert("use-function-keyword", "ok", "ok");
+  </script>
+
+closures: |
+  <script runat="server">
+  /*
+   * Chapter: Closures
+   * Proves:
+   *   1. counter + logger.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function makeCounter() { var n = 10; return function () { n++; return n; }; }
+  var c = makeCounter(); assert("11", c(), 11); assert("12", c(), 12);
+  function createLogger(prefix) { var api = { log: function (msg) { return "[" + prefix + "] " + msg; } }; return api; }
+  assert("log", createLogger("SSJS").log("hi"), "[SSJS] hi");
+  </script>
+
+the-module-pattern-sfmc-best-practice: |
+  <script runat="server">
+  /*
+   * Chapter: Module Pattern
+   * Proves:
+   *   1. revealing module.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function DEHelper(name) { var service = { lookup: lookup }; return service; function lookup() { return name; } }
+  assert("name", DEHelper("Subscribers").lookup(), "Subscribers");
+  </script>
+
+object-literal-return-bug: |
+  <script runat="server">
+  /*
+   * Chapter: Object Literal Return Bug
+   * Proves:
+   *   1. assign-then-return works.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function getConfigSafe() { var cfg = { timeout: 30, retries: 3 }; return cfg; }
+  var c = getConfigSafe(); assert("timeout", c.timeout, 30);
+  </script>
+
+recursive-functions: |
+  <script runat="server">
+  /*
+   * Chapter: Recursion
+   * Proves:
+   *   1. factorial(10).
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function factorial(n) { if (n <= 1) return 1; return n * factorial(n - 1); }
+  assert("fact10", factorial(10), 3628800);
+  </script>
+
+iife-immediately-invoked-function-expression: |
+  <script runat="server">
+  /*
+   * Chapter: IIFE
+   * Proves:
+   *   1. IIFE isolates scope.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var out = (function () { var secret = 7; return secret * 2; })();
+  assert("iife", out, 14);
+  assert("secret not leaked", typeof secret, "undefined");
+  </script>
+

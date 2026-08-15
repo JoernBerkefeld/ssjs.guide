@@ -4,6 +4,8 @@ title: AMPscript Bridge
 parent: Recipes
 parent_url: /recipes/
 description: Patterns for passing data between AMPscript and SSJS — reading AMPscript variables, sharing computation results, and mixing AMPscript rendering with SSJS logic.
+claims_verified: true
+test_scripts: complete
 ---
 
 ## Reading AMPscript Variables in SSJS
@@ -31,6 +33,8 @@ Lead score: %%=v(@leadScore)=%%
 
 ---
 
+{% include test-script.html bundle="recipes--ampscript-bridge" chapter="reading-ampscript-variables-in-ssjs" %}
+
 ## Passing SSJS Results to AMPscript Rendering
 
 ```javascript
@@ -56,6 +60,8 @@ Platform.Variable.SetValue("@discountCode", discountCodes[tier]);
 
 ---
 
+{% include test-script.html bundle="recipes--ampscript-bridge" chapter="passing-ssjs-results-to-ampscript-rendering" %}
+
 ## Safe URL Encoding via AMPscript
 
 AMPscript's `URLEncode` has more encoding options than SSJS:
@@ -67,6 +73,8 @@ var encoded = Variable.GetValue("@encoded");
 ```
 
 ---
+
+{% include test-script.html bundle="recipes--ampscript-bridge" chapter="safe-url-encoding-via-ampscript" %}
 
 ## Using Platform.Function.TreatAsContent Safely
 
@@ -97,6 +105,8 @@ Write(htmlEncode(rendered));
 
 ---
 
+{% include test-script.html bundle="recipes--ampscript-bridge" chapter="using-platform-function-treatascontent-safely" %}
+
 ## Reading Subscriber Attributes in SSJS
 
 ```html
@@ -115,6 +125,8 @@ var city2 = Attribute.GetValue("City");
 ```
 
 ---
+
+{% include test-script.html bundle="recipes--ampscript-bridge" chapter="reading-subscriber-attributes-in-ssjs" %}
 
 ## JSON Data Bridge
 
@@ -145,6 +157,8 @@ Platform.Variable.SetValue("@topProduct", products[0] ? products[0].Name : "");
 We have %%=v(@productCount)=%% featured products.
 Top pick: %%=v(@topProduct)=%%
 ```
+
+{% include test-script.html bundle="recipes--ampscript-bridge" chapter="json-data-bridge" %}
 
 ## See Also
 

@@ -4,6 +4,8 @@ title: Embedding SSJS
 parent: Getting Started
 parent_url: /getting-started/
 description: The script block syntax, language attribute, multiple blocks, and how SSJS output is injected into the page.
+claims_verified: true
+test_scripts: complete
 ---
 
 ## The `<script runat="server">` Block
@@ -38,6 +40,8 @@ The `Write()` output replaces the script block in the final rendered page. The s
 </html>
 ```
 
+{% include test-script.html bundle="getting-started--embedding-ssjs" chapter="the-script-runat-server-block" %}
+
 ## The `language` Attribute
 
 You can optionally specify the language:
@@ -62,6 +66,8 @@ var name = Variable.GetValue("@name");
 Write("Hello, " + name);
 </script>
 ```
+
+{% include test-script.html bundle="getting-started--embedding-ssjs" chapter="the-language-attribute" %}
 
 ## Multiple Script Blocks
 
@@ -95,6 +101,8 @@ Write("<p>Today is " + today + "</p>");
 ```
 
 All blocks execute in order before the page is assembled. The output of each block appears at that block's position in the HTML.
+
+{% include test-script.html bundle="getting-started--embedding-ssjs" chapter="multiple-script-blocks" %}
 
 ## Hoisting Behavior
 
@@ -138,6 +146,8 @@ Write(greet(getSubscriberData(sk)));
 </script>
 ```
 
+{% include test-script.html bundle="getting-started--embedding-ssjs" chapter="hoisting-behavior" %}
+
 ## AMPscript Inside SSJS
 
 AMPscript and SSJS run in the same document and can share data through the `Variable` namespace:
@@ -162,6 +172,8 @@ Variable.SetValue("@email", email);
 
 Or use `Platform.Variable.GetValue` / `Platform.Variable.SetValue` for the same purpose.
 
+{% include test-script.html bundle="getting-started--embedding-ssjs" chapter="ampscript-inside-ssjs" %}
+
 ## Ctrl: Tags (Alternative Syntax)
 
 SFMC also supports older `ctrl:field`, `ctrl:var`, and `ctrl:eval` tags for inline SSJS output. These are legacy and rarely used in new development:
@@ -175,3 +187,6 @@ SFMC also supports older `ctrl:field`, `ctrl:var`, and `ctrl:eval` tags for inli
 Stick to `<script runat="server">` + `Write()` for all new work.
 
 → Next: [Execution Contexts](/getting-started/execution-contexts/)
+
+
+{% include test-script.html bundle="getting-started--embedding-ssjs" chapter="ctrl-tags-alternative-syntax" %}

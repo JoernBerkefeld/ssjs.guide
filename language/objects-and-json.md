@@ -4,6 +4,8 @@ title: Objects & JSON
 parent: Language Guide
 parent_url: /language/
 description: Object literals, property access, iteration, JSON serialization and parsing in SSJS.
+claims_verified: true
+test_scripts: complete
 ---
 
 ## Object Literals
@@ -17,6 +19,8 @@ var person = {
     score:     95.5
 };
 ```
+
+{% include test-script.html bundle="language--objects-and-json" chapter="object-literals" %}
 
 ## Property Access
 
@@ -40,6 +44,8 @@ if ("email" in person) {
 }
 ```
 
+{% include test-script.html bundle="language--objects-and-json" chapter="property-access" %}
+
 ## Nested Objects
 
 ```javascript
@@ -62,6 +68,8 @@ var city = user.profile && user.profile.address && user.profile.address.city;
 city = city || "Unknown";
 ```
 
+{% include test-script.html bundle="language--objects-and-json" chapter="nested-objects" %}
+
 ## Object Iteration
 
 ```javascript
@@ -74,6 +82,8 @@ for (var key in config) {
     }
 }
 ```
+
+{% include test-script.html bundle="language--objects-and-json" chapter="object-iteration" %}
 
 ## Object as a Lookup Map
 
@@ -91,6 +101,8 @@ var code = "A";
 var label = statusLabels[code] || "Unknown";
 Write(label); // "Active"
 ```
+
+{% include test-script.html bundle="language--objects-and-json" chapter="object-as-a-lookup-map" %}
 
 ## Arrays of Objects
 
@@ -113,6 +125,8 @@ for (var i = 0, len = rows.length; i < len; i++) {
 Write("Emails: " + emails.join(", "));
 ```
 
+{% include test-script.html bundle="language--objects-and-json" chapter="arrays-of-objects" %}
+
 ## JSON — Serialization and Parsing
 
 SSJS does **not** have `JSON.stringify` or `JSON.parse`. Use the SFMC equivalents:
@@ -126,7 +140,7 @@ var data = {
     score: 95
 };
 
-var jsonString = Stringify(data);
+var jsonString = Platform.Function.Stringify(data);
 Write(jsonString);
 // {"subscriberKey":"abc123","email":"jane@example.com","score":95}
 ```
@@ -159,7 +173,7 @@ var payload = {
 };
 
 // Serialize to JSON string
-var jsonStr = Stringify(payload);
+var jsonStr = Platform.Function.Stringify(payload);
 
 // Store in DE
 Platform.Function.InsertData("AuditLog", "Payload", jsonStr, "Timestamp", Platform.Function.Now());
@@ -194,6 +208,8 @@ if (data && data.results) {
 
 `String()` is used specifically to convert CLR response objects to JavaScript strings. This is different from `Stringify()` (which produces JSON).
 
+{% include test-script.html bundle="language--objects-and-json" chapter="json-serialization-and-parsing" %}
+
 ## Copying Objects
 
 SSJS has no `Object.assign` or spread syntax. Copy objects manually:
@@ -221,3 +237,6 @@ function merge(target, source) {
     return result;
 }
 ```
+
+
+{% include test-script.html bundle="language--objects-and-json" chapter="copying-objects" %}

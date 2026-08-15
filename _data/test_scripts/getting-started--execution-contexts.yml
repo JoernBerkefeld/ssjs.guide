@@ -1,0 +1,110 @@
+# Getting-started narrative test scripts.
+
+executioncontexttype: |
+  <script runat="server">
+  /*
+   * Chapter: ExecutionContextType (page documents Method here)
+   * Proves:
+   *   1. Method is a CLR value; String()/""+ coerce to "GET" on this CloudPage GET.
+   *   2. Raw === "GET" is false without coercion.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  assert("Method typeof not string", typeof Platform.Request.Method === "string" ? "string" : "clrish", "clrish");
+  assert("raw === GET is false", Platform.Request.Method === "GET" ? "true" : "false", "false");
+  assert("String(Method) is GET", String(Platform.Request.Method), "GET");
+  assert("''+ Method is GET", "" + Platform.Request.Method, "GET");
+  </script>
+
+executioncontextname: |
+  <script runat="server">
+  /*
+   * Chapter: ExecutionContextName
+   * Proves:
+   *   1. GetQueryStringParameter("_pageId") is callable (CloudPage id when present).
+   *   2. Method coerce pattern from the names table.
+   * NON-ASSERTABLE: Automation ExecutionContextName string (not on CloudPage GET).
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  var pageId = Platform.Request.GetQueryStringParameter("_pageId");
+  assert("_pageId typeof string-or-empty", typeof pageId === "string" || pageId === null ? "ok" : typeof pageId, "ok");
+  assert("Method coerce GET", "" + Platform.Request.Method, "GET");
+  </script>
+
+detecting-the-environment: |
+  <script runat="server">
+  /*
+   * Chapter: Detecting the Environment
+   * Proves:
+   *   1. Method is GET on this probe.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("Method", "" + Platform.Request.Method, "GET");
+  </script>
+
+get-parameters: |
+  <script runat="server">
+  /*
+   * Chapter: GET Parameters
+   * Proves:
+   *   1. Missing query param returns null-ish empty.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var missing = Platform.Request.GetQueryStringParameter("gsNoSuchParam20260815");
+  assert("missing param is null (not empty string)", missing === null ? "null" : "other", "null");
+  </script>
+
+post-body: |
+  <script runat="server">
+  /*
+   * Chapter: POST Body
+   * Proves:
+   *   1. GetPostData available; on GET may be empty/null.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("GetPostData typeof", typeof Platform.Request.GetPostData, "clrmethodinfo");
+  </script>
+
+cookies: |
+  <script runat="server">
+  /*
+   * Chapter: Cookies
+   * Proves:
+   *   1. GetCookieValue for missing cookie; SetCookie returns null.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var v = Platform.Request.GetCookieValue("gsNoCookie20260815");
+  assert("missing cookie", v === null || ("" + v) === "null" || v === "" ? "absent" : "present", "absent");
+  var ret = Platform.Response.SetCookie("gsProbeCookie", "1");
+  assert("SetCookie returns null", ret === null ? "null" : "other", "null");
+  </script>
+

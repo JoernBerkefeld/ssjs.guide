@@ -1,0 +1,202 @@
+# Narrative test scripts — re-probe before claim edits.
+
+variables: |
+  <script runat="server">
+  /*
+   * Chapter: Variables
+   * Proves:
+   *   1. var works; MAX_ROWS convention.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var subscriberKey = "sk";
+  var isLoggedIn = false;
+  var MAX_ROWS = 500;
+  assert("var", subscriberKey, "sk");
+  assert("MAX_ROWS", MAX_ROWS, 500);
+  assert("bool", isLoggedIn ? "true" : "false", "false");
+  </script>
+
+functions: |
+  <script runat="server">
+  /*
+   * Chapter: Functions
+   * Proves:
+   *   1. IsEmailAddress via declaration; module pattern return.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  Platform.Load("core", "1.1.5");
+  function validateEmail(email) { return Platform.Function.IsEmailAddress(email); }
+  assert("validateEmail", validateEmail("a@b.com") ? "true" : "false", "true");
+  var FormHandler = (function () {
+      function validate(data) { return !!(data && data.email); }
+      return { validate: validate };
+  })();
+  assert("module validate", FormHandler.validate({ email: "x" }) ? "true" : "false", "true");
+  </script>
+
+script-block-organization: |
+  <script runat="server">
+  /*
+   * Chapter: Script Block Organization
+   * Proves:
+   *   1. Method coerce + Load order pattern.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  Platform.Load("core", "1.1.5");
+  var method = String(Platform.Request.Method);
+  assert("method GET", method, "GET");
+  </script>
+
+naming-conventions: |
+  <script runat="server">
+  /*
+   * Chapter: Naming Conventions
+   * Proves:
+   *   1. camelCase + _prefix helper.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  function _formatName(first, last) { return first + " " + last; }
+  assert("_formatName", _formatName("A", "B"), "A B");
+  </script>
+
+indentation-and-formatting: |
+  <script runat="server">
+  /*
+   * Chapter: Indentation and Formatting
+   * Proves:
+   *   1. NON-ASSERTABLE: style preference.
+   *   One-var-per-line still valid.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var a = 1;
+  var b = 2;
+  assert("sum", a + b, 3);
+  </script>
+
+comments: |
+  <script runat="server">
+  /*
+   * Chapter: Comments
+   * Proves:
+   *   1. Comments do not affect runtime.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  // explanatory
+  assert("runs", 1, 1);
+  </script>
+
+platform-function-aliases: |
+  <script runat="server">
+  /*
+   * Chapter: Platform.Function Aliases
+   * Proves:
+   *   1. Platform.Function.Now without alias; Core Now after Load.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var n1 = Platform.Function.Now();
+  assert("Platform Now", n1 !== null && n1 !== undefined ? "ok" : "bad", "ok");
+  Platform.Load("core", "1.1.5");
+  assert("bare Now typeof", typeOfThunk(function () { return typeof Now; }), "function");
+  </script>
+
+error-handling: |
+  <script runat="server">
+  /*
+   * Chapter: Error Handling
+   * Proves:
+   *   1. try/catch with call-form Error message.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var msg = "";
+  try { throw Error("fail"); } catch (e) { msg = "" + e.message; }
+  assert("msg", msg, "fail");
+  </script>
+

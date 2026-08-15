@@ -1,0 +1,134 @@
+# Narrative recipe test scripts — re-probe before claim edits.
+
+paginated-retrieval-of-all-records: |
+  <script runat="server">
+  /*
+   * Chapter: Paginated Retrieval of All Records
+   * Proves:
+   *   1. WSProxy retrieve/getNextBatch typeof.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var proxy = new Script.Util.WSProxy();
+  assert("retrieve", typeof proxy.retrieve, "clrmethodinfo");
+  assert("getNextBatch", typeof proxy.getNextBatch, "clrmethodinfo");
+  </script>
+
+bulk-upsert-to-a-data-extension: |
+  <script runat="server">
+  /*
+   * Chapter: Bulk Upsert to a Data Extension
+   * Proves:
+   *   1. updateBatch typeof.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var proxy = new Script.Util.WSProxy();
+  assert("updateBatch", typeof proxy.updateBatch, "clrmethodinfo");
+  </script>
+
+multi-bu-iteration: |
+  <script runat="server">
+  /*
+   * Chapter: Multi-BU Iteration
+   * Proves:
+   *   1. setClientId typeof.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var proxy = new Script.Util.WSProxy();
+  assert("setClientId", typeof proxy.setClientId, "clrmethodinfo");
+  </script>
+
+error-safe-loop-pattern: |
+  <script runat="server">
+  /*
+   * Chapter: Error-Safe Loop Pattern
+   * Proves:
+   *   1. Per-item try/catch continues.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var ok = 0, fail = 0, items = [1, 2, 3];
+  for (var i = 0; i < items.length; i++) {
+      try {
+          if (items[i] === 2) throw Error("boom");
+          ok++;
+      } catch (e) { fail++; }
+  }
+  assert("ok", ok, 2);
+  assert("fail", fail, 1);
+  </script>
+
+chunked-batch-processing: |
+  <script runat="server">
+  /*
+   * Chapter: Chunked Batch Processing
+   * Proves:
+   *   1. Chunk array into batches of N.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  function chunk(arr, size) {
+      var out = [], i;
+      for (i = 0; i < arr.length; i += size) {
+          out.push(arr.slice(i, i + size));
+      }
+      return out;
+  }
+  var parts = chunk([1, 2, 3, 4, 5], 2);
+  assert("chunks", parts.length, 3);
+  assert("first len", parts[0].length, 2);
+  assert("last len", parts[2].length, 1);
+  </script>
+

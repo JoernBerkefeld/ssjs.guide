@@ -1,0 +1,121 @@
+# Narrative language page test scripts. Re-probe before claim edits.
+
+if-else: |
+  <script runat="server">
+  /*
+   * Chapter: if / else
+   * Proves:
+   *   1. if/else-if/else.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var grade = "B", out = "";
+  if (grade === "A") out = "A"; else if (grade === "B") out = "B"; else out = "F";
+  assert("elseif", out, "B");
+  </script>
+
+switch: |
+  <script runat="server">
+  /*
+   * Chapter: switch
+   * Proves:
+   *   1. case + default + fall-through.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var status = "inactive", out = "";
+  switch (status) { case "active": out = "Active"; break; case "inactive": out = "Inactive"; break; default: out = "Unknown status"; }
+  assert("inactive", out, "Inactive");
+  var level = "admin", access = "";
+  switch (level) { case "admin": case "superuser": access = "Full access"; break; case "user": access = "Limited access"; break; }
+  assert("DEV empty-case fallthrough skips body for first label (spec: runs)", access === "" ? "empty" : access, "empty");
+  level = "superuser"; access = "";
+  switch (level) { case "admin": case "superuser": access = "Full access"; break; case "user": access = "Limited access"; break; }
+  assert("matching non-empty stacked case runs body", access, "Full access");
+  </script>
+
+ternary: |
+  <script runat="server">
+  /*
+   * Chapter: Ternary
+   * Proves:
+   *   1. Ternary values.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var hour = 9; assert("morning", hour < 12 ? "Good morning" : "Good afternoon", "Good morning");
+  assert("items", 1 === 1 ? "item" : "items", "item");
+  </script>
+
+short-circuit-evaluation: |
+  <script runat="server">
+  /*
+   * Chapter: Short-Circuit
+   * Proves:
+   *   1. && || short-circuit.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var wrote = false; true && (wrote = true); assert("and true", wrote ? "true" : "false", "true");
+  wrote = false; false && (wrote = true); assert("and false", wrote ? "true" : "false", "false");
+  var config = {}; assert("or default", config.timeout || 30, 30);
+  var user = { profile: { firstName: "Ada" } };
+  assert("safe access", user && user.profile && user.profile.firstName, "Ada");
+  </script>
+
+throw-early-return: |
+  <script runat="server">
+  /*
+   * Chapter: Throw / Early Return
+   * Proves:
+   *   1. throw Error (call-form) catchable; early return null.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function processSubscriber(sk) {
+      if (!sk) { throw Error("SubscriberKey is required"); }
+      if (sk === "missing") { return null; }
+      return "ok:" + sk;
+  }
+  var msg = "";
+  try { processSubscriber(""); } catch (e) { msg = "" + e.message; }
+  assert("throw msg", msg, "SubscriberKey is required");
+  assert("early null", processSubscriber("missing") === null ? "null" : "other", "null");
+  assert("ok path", processSubscriber("abc"), "ok:abc");
+  </script>
+

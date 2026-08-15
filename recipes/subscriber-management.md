@@ -4,6 +4,8 @@ title: Subscriber Management
 parent: Recipes
 parent_url: /recipes/
 description: Complete patterns for managing SFMC subscribers — subscribe, unsubscribe, update preferences, and handle global unsubscribes.
+claims_verified: true
+test_scripts: complete
 ---
 
 ## Subscribe to a List
@@ -20,7 +22,7 @@ var listKey = "MainNewsletter_PublicList";
 Platform.Response.ContentType = "application/json";
 
 if (!Platform.Function.IsEmailAddress(email)) {
-    Write(Stringify({ status: 400, statusMessage: "Bad Request", error: "Invalid email" }));
+    Write(Platform.Function.Stringify({ status: 400, statusMessage: "Bad Request", error: "Invalid email" }));
 } else {
     var list = List.Init(listKey);
 
@@ -31,7 +33,7 @@ if (!Platform.Function.IsEmailAddress(email)) {
     }));
 
     if (addStatus !== "OK") {
-        Write(Stringify({ status: 500, statusMessage: "Internal Server Error", error: "Subscription failed" }));
+        Write(Platform.Function.Stringify({ status: 500, statusMessage: "Internal Server Error", error: "Subscription failed" }));
     } else {
         // Profile attributes are written through the subscriber Update payload
         Subscriber.Init(email).Update({ Attributes: { FirstName: firstName } });
@@ -43,12 +45,14 @@ if (!Platform.Function.IsEmailAddress(email)) {
             ["true", Platform.Function.Now()]
         );
 
-        Write(Stringify({ status: "subscribed", email: email }));
+        Write(Platform.Function.Stringify({ status: "subscribed", email: email }));
     }
 }
 ```
 
 ---
+
+{% include test-script.html bundle="recipes--subscriber-management" chapter="subscribe-to-a-list" %}
 
 ## Unsubscribe with Preference Center
 
@@ -101,13 +105,15 @@ Platform.Function.UpdateData("EmailPreferences",
 );
 
 if (failed.length > 0) {
-    Write(Stringify({ status: 500, statusMessage: "Internal Server Error", failedLists: failed }));
+    Write(Platform.Function.Stringify({ status: 500, statusMessage: "Internal Server Error", failedLists: failed }));
 } else {
-    Write(Stringify({ status: "updated" }));
+    Write(Platform.Function.Stringify({ status: "updated" }));
 }
 ```
 
 ---
+
+{% include test-script.html bundle="recipes--subscriber-management" chapter="unsubscribe-with-preference-center" %}
 
 ## Update Subscriber Attributes
 
@@ -132,7 +138,7 @@ if (updates.city) attributes.City = updates.city;
 var updateStatus = String(sub.Update({ Attributes: attributes }));
 
 if (updateStatus !== "OK") {
-    Write(Stringify({ status: 500, statusMessage: "Internal Server Error", error: "Attribute update failed" }));
+    Write(Platform.Function.Stringify({ status: 500, statusMessage: "Internal Server Error", error: "Attribute update failed" }));
 } else {
     // Update preferences DE in parallel
     Platform.Function.UpsertData("SubscriberPreferences",
@@ -141,11 +147,13 @@ if (updateStatus !== "OK") {
         [Platform.Function.Now(), updates.preferredChannel || "email"]
     );
 
-    Write(Stringify({ status: "updated", subscriberKey: updates.subscriberKey }));
+    Write(Platform.Function.Stringify({ status: "updated", subscriberKey: updates.subscriberKey }));
 }
 ```
 
 ---
+
+{% include test-script.html bundle="recipes--subscriber-management" chapter="update-subscriber-attributes" %}
 
 ## Add Subscriber to Multiple Lists
 
@@ -175,10 +183,12 @@ for (var i = 0; i < listKeys.length; i++) {
         }
     }
 }
-Write(Stringify({ status: "subscribed" }));
+Write(Platform.Function.Stringify({ status: "subscribed" }));
 ```
 
 ---
+
+{% include test-script.html bundle="recipes--subscriber-management" chapter="add-subscriber-to-multiple-lists" %}
 
 ## WSProxy: Update Subscriber in All Subscribers
 
@@ -206,6 +216,8 @@ if (result.Status !== "OK") {
     throw new Error("Subscriber update failed: " + result.Results[0].StatusMessage);
 }
 ```
+
+{% include test-script.html bundle="recipes--subscriber-management" chapter="wsproxy-update-subscriber-in-all-subscribers" %}
 
 ## See Also
 

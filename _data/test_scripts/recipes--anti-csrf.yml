@@ -1,0 +1,136 @@
+# Narrative recipe test scripts — re-probe before claim edits.
+
+pattern-overview: |
+  <script runat="server">
+  /*
+   * Chapter: Pattern Overview
+   * Proves:
+   *   1. GUID token + Variable storage pattern.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var token = Platform.Function.GUID();
+  Platform.Variable.SetValue("@csrf", token);
+  assert("token round-trip", Platform.Variable.GetValue("@csrf"), token);
+  </script>
+
+setup-token-storage-de: |
+  <script runat="server">
+  /*
+   * Chapter: Setup Token Storage DE
+   * Proves:
+   *   1. NON-ASSERTABLE: DE schema.
+   *   InsertData/Lookup typeof.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("InsertData", typeof Platform.Function.InsertData, "clrmethodinfo");
+  assert("Lookup", typeof Platform.Function.Lookup, "clrmethodinfo");
+  </script>
+
+step-1-render-the-form: |
+  <script runat="server">
+  /*
+   * Chapter: Step 1 Render the Form
+   * Proves:
+   *   1. GUID non-empty for hidden field.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var token = Platform.Function.GUID();
+  assert("token length", ("" + token).replace(/-/g, "").length >= 32 ? "true" : "false", "true");
+  </script>
+
+step-2-validate-on-submission: |
+  <script runat="server">
+  /*
+   * Chapter: Step 2 Validate on Submission
+   * Proves:
+   *   1. Missing token → 403 shape; mismatch reject.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  Platform.Load("core", "1.1.5");
+  function validateCsrf(posted, expected) {
+      if (!posted) return { status: 403, error: "Missing security token." };
+      if (posted !== expected) return { status: 403, error: "Invalid or expired security token." };
+      return { status: 200 };
+  }
+  var miss = validateCsrf("", "abc");
+  assert("missing 403", miss.status, 403);
+  var bad = validateCsrf("x", "abc");
+  assert("mismatch 403", bad.status, 403);
+  var ok = validateCsrf("abc", "abc");
+  assert("ok 200", ok.status, 200);
+  assert("Stringify 403", Platform.Function.Stringify(miss).indexOf("403") >= 0 ? "true" : "false", "true");
+  </script>
+
+cleanup-expire-old-tokens: |
+  <script runat="server">
+  /*
+   * Chapter: Cleanup Expire Old Tokens
+   * Proves:
+   *   1. dateAdd via TreatAsContent returns a string.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  function dateAdd(timestamp, intervalToAdd, intervalType) {
+      Platform.Variable.SetValue("@dateAdd_ts", timestamp);
+      Platform.Variable.SetValue("@dateAdd_add", intervalToAdd);
+      Platform.Variable.SetValue("@dateAdd_type", intervalType);
+      return Platform.Function.TreatAsContent("%%=DateAdd(@dateAdd_ts, @dateAdd_add, @dateAdd_type)=%%");
+  }
+  var cutoff = dateAdd(Platform.Function.Now(), -30, "MI");
+  assert("cutoff non-empty", ("" + cutoff).length > 0 ? "true" : "false", "true");
+  </script>
+

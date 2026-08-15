@@ -1,0 +1,144 @@
+# Test scripts for /language/variables/
+#
+# Narrative page — claims_verified evidence. Every chapter asserts the
+# documented runtime behaviour (ES3-era var semantics on SFMC Jint).
+
+declaration: |
+  <script runat="server">
+  /*
+   * Chapter: Declaration
+   * Proves:
+   *   1. var accepts string, number, boolean, null, and uninitialized values.
+   *   2. Uninitialized var is undefined.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  var name = "Jane";
+  var count = 42;
+  var active = true;
+  var data = null;
+  var nothing;
+  assert("string value", name, "Jane");
+  assert("number value", count, 42);
+  assert("boolean value", active, true);
+  assert("null value is null", data === null ? "null" : "other", "null");
+  assert("uninitialized is undefined", nothing === undefined ? "undefined" : "other", "undefined");
+  assert("uninitialized typeof undefined", "" + (typeof nothing), "undefined");
+  </script>
+
+scope: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+  /*
+   * Chapter: Scope
+   * Proves:
+   *   1. var inside if is visible outside the block.
+   *   2. for-loop index remains visible after the loop.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  if (true) {
+      var x = 10;
+  }
+  assert("var inside if is visible outside", x, 10);
+  for (var i = 0; i < 3; i++) { /* body */ }
+  assert("for index visible after loop", i, 3);
+  </script>
+
+hoisting: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+  /*
+   * Chapter: Hoisting
+   * Proves:
+   *   1. Function declarations are callable before their source line.
+   *   2. var is hoisted as undefined before assignment, then holds the value.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  var greetOk = false;
+  try { greet(); greetOk = true; } catch (ex) { greetOk = false; }
+  function greet() { /* hoisted */ }
+  assert("function declaration callable before line", greetOk ? "true" : "false", "true");
+  assert("var before assignment is undefined", y === undefined ? "undefined" : "other", "undefined");
+  var y = 5;
+  assert("var after assignment is 5", y, 5);
+  </script>
+
+naming-conventions: |
+  <script runat="server">
+  /*
+   * Chapter: Naming Conventions
+   * Proves:
+   *   1. camelCase locals and UPPER_SNAKE convention constants are valid identifiers.
+   *   2. Underscore-prefixed helpers are callable.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  var subscriberKey = "sk";
+  var emailAddress = "";
+  var rowCount = 0;
+  var MAX_RETRIES = 3;
+  function _formatName(first, last) { return first + " " + last; }
+  assert("camelCase local", subscriberKey, "sk");
+  assert("empty string emailAddress", emailAddress, "");
+  assert("rowCount zero", rowCount, 0);
+  assert("MAX_RETRIES constant-by-convention", MAX_RETRIES, 3);
+  assert("_formatName helper", _formatName("Jane", "Smith"), "Jane Smith");
+  </script>
+
+multiple-variables: |
+  <script runat="server">
+  /*
+   * Chapter: Multiple Variables
+   * Proves:
+   *   1. One-var-per-line and comma-separated declarations both work.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  var first = "Jane";
+  var last = "Smith";
+  var email = "jane@example.com";
+  var a = 1, b = 2, c = 3;
+  assert("first", first, "Jane");
+  assert("last", last, "Smith");
+  assert("email", email, "jane@example.com");
+  assert("comma a", a, 1);
+  assert("comma b", b, 2);
+  assert("comma c", c, 3);
+  </script>
+
+common-pitfalls: |
+  <script runat="server">
+  /*
+   * Chapter: Common Pitfalls
+   * Proves:
+   *   1. Assignment without var creates/overwrites a top-level binding.
+   *   2. Loop var leak: i and rowData remain visible after the loop.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function doSomething() {
+      result = "oops";
+  }
+  doSomething();
+  assert("assignment without var creates top-level", result, "oops");
+  var rows = [1, 2];
+  for (var i = 0; i < rows.length; i++) {
+      var rowData = rows[i];
+  }
+  assert("loop index leaked", i, 2);
+  assert("loop var rowData leaked", rowData, 2);
+  </script>

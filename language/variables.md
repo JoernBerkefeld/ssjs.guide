@@ -4,6 +4,8 @@ title: Variables
 parent: Language Guide
 parent_url: /language/
 description: var declarations, scope, hoisting, and the rules for using variables in SFMC SSJS.
+claims_verified: true
+test_scripts: complete
 ---
 
 ## Declaration
@@ -18,6 +20,8 @@ var data = null;
 var nothing; // undefined
 ```
 
+{% include test-script.html bundle="language--variables" chapter="declaration" %}
+
 ## Scope
 
 Variables declared with `var` have **function scope**, not block scope. A variable declared inside an `if` block or `for` loop is accessible outside that block.
@@ -29,12 +33,14 @@ if (true) {
 Write(x); // 10 — works fine
 
 for (var i = 0; i < 3; i++) {
-    // ...
+    // body
 }
 Write(i); // 3 — i is still accessible here
 ```
 
 In SSJS, the "global scope" within a single `<script runat="server">` block is the top-level scope. Variables declared at the top level of any script block are shared across **all** script blocks on the same page.
+
+{% include test-script.html bundle="language--variables" chapter="scope" %}
 
 ## Hoisting
 
@@ -55,6 +61,8 @@ Write(y); // 5
 ```
 
 **Hoisting across script blocks is NOT guaranteed.** Always place function declarations in the **first** script block on a page.
+
+{% include test-script.html bundle="language--variables" chapter="hoisting" %}
 
 ## Naming Conventions
 
@@ -77,6 +85,8 @@ function _formatName(first, last) {
 }
 ```
 
+{% include test-script.html bundle="language--variables" chapter="naming-conventions" %}
+
 ## Multiple Variables
 
 Declare multiple variables with separate `var` statements (one per variable is most readable and lint-friendly):
@@ -90,6 +100,8 @@ var email  = "jane@example.com";
 // Also valid: comma-separated (harder to diff)
 var a = 1, b = 2, c = 3;
 ```
+
+{% include test-script.html bundle="language--variables" chapter="multiple-variables" %}
 
 ## Common Pitfalls
 
@@ -112,3 +124,5 @@ for (var i = 0; i < rows.length; i++) {
 }
 // rowData and i still accessible here
 ```
+
+{% include test-script.html bundle="language--variables" chapter="common-pitfalls" %}

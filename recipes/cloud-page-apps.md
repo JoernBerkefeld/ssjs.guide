@@ -4,6 +4,8 @@ title: CloudPage Apps
 parent: Recipes
 parent_url: /recipes/
 description: Patterns for building CloudPage applications — request routing, session cookies, multi-step forms, and JSON API endpoints.
+claims_verified: true
+test_scripts: complete
 ---
 
 ## Basic Request Router
@@ -61,6 +63,8 @@ function handlePost(body) {
 ```
 
 ---
+
+{% include test-script.html bundle="recipes--cloud-page-apps" chapter="basic-request-router" %}
 
 ## Session Management
 
@@ -135,6 +139,8 @@ Write("Hello, user " + session.userId);
 
 ---
 
+{% include test-script.html bundle="recipes--cloud-page-apps" chapter="session-management" %}
+
 ## Multi-Step Form
 
 ```javascript
@@ -160,7 +166,7 @@ if (String(Platform.Request.Method) === "POST") {
     Platform.Function.UpdateData("FormSessions",
         ["token"], [sessionToken],
         ["data", "step"],
-        [Stringify(saved), String(step + 1)]
+        [Platform.Function.Stringify(saved), String(step + 1)]
     );
 
     if (step < 3) {
@@ -172,6 +178,8 @@ if (String(Platform.Request.Method) === "POST") {
     }
 }
 ```
+
+{% include test-script.html bundle="recipes--cloud-page-apps" chapter="multi-step-form" %}
 
 ## See Also
 

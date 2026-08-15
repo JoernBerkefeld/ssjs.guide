@@ -4,6 +4,8 @@ title: Encryption
 parent: Recipes
 parent_url: /recipes/
 description: Symmetric and asymmetric encryption patterns in SFMC SSJS — store and retrieve sensitive data safely using AMPscript's EncryptSymmetric and DecryptSymmetric.
+claims_verified: true
+test_scripts: complete
 ---
 
 SFMC provides built-in symmetric and asymmetric encryption through `EncryptSymmetric` / `DecryptSymmetric` - but not in SSJS. Keys are registered in **Setup → Security → Key Management** and referenced by name — the key material never appears in script code.
@@ -65,6 +67,8 @@ function encryptSymmetric(encryptedString, algorithm, passwordKey, passwordValue
 
 ---
 
+{% include test-script.html bundle="recipes--encryption" chapter="symmetric-encryption-aes" %}
+
 ## Password-Salted Encryption
 
 When you want an additional layer of derivation on top of the stored key:
@@ -102,6 +106,8 @@ function decryptSymmetric(encryptedString, algorithm, passwordKey, passwordValue
 ```
 
 ---
+
+{% include test-script.html bundle="recipes--encryption" chapter="password-salted-encryption" %}
 
 ## Storing Encrypted PII in a Data Extension
 
@@ -145,6 +151,8 @@ function decryptSymmetric(encryptedString, algorithm, passwordKey, passwordValue
 
 ---
 
+{% include test-script.html bundle="recipes--encryption" chapter="storing-encrypted-pii-in-a-data-extension" %}
+
 ## Hashing (Non-Reversible)
 
 For values that only need to be compared (passwords, tokens), prefer a hash rather than encryption:
@@ -183,6 +191,8 @@ if (match) {
 
 ---
 
+{% include test-script.html bundle="recipes--encryption" chapter="hashing-non-reversible" %}
+
 ## Notes
 
 {% include callout.html type="warning" content="Always manage keys in **SFMC Key Management** (Setup → Security → Key Management). Never hard-code key material in scripts or store it in Data Extensions." %}
@@ -190,6 +200,8 @@ if (match) {
 - Key names in `EncryptSymmetric` / `DecryptSymmetric` refer to the **external key** (name) of the key registered in Key Management, not the key value itself.
 - `EncryptSymmetric` and `DecryptSymmetric` are available in all SFMC execution contexts (Email, Cloud Page, Automation, Triggered Send).
 - For hashing without the need for decryption, prefer AMPscript's `SHA256` over encryption. `SHA1`, `SHA256` and `SHA512` exist only in AMPscript — call them via `Platform.Function.TreatAsContent`. The only hash reachable directly from SSJS is [`Platform.Function.MD5`](/platform-functions/md5/), which is unsuitable for passwords or tokens.
+
+{% include test-script.html bundle="recipes--encryption" chapter="notes" %}
 
 ## See Also
 

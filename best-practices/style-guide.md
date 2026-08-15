@@ -4,6 +4,8 @@ title: Style Guide
 parent: Best Practices
 parent_url: /best-practices/
 description: SSJS coding style conventions — variable naming, indentation, function organization, and patterns for consistent, readable code.
+claims_verified: true
+test_scripts: complete
 ---
 
 Consistent code style makes SSJS easier to read, review, and debug. These conventions reflect community norms and practical experience.
@@ -18,16 +20,16 @@ var subscriberKey = Platform.Variable.GetValue("@subscriberKey");
 var isLoggedIn = false;
 var MAX_ROWS = 500;
 
-// WRONG — will throw runtime errors
-let subscriberKey = "...";
-const MAX_ROWS = 500;
+// WRONG — will throw runtime errors (do not uncomment)
+// let subscriberKey = "value";
+// const MAX_ROWS = 500;
 ```
 
 Use descriptive names. Avoid single-letter variables outside of short loops.
 
 ```javascript
 // OK for loops
-for (var i = 0; i < rows.length; i++) { ... }
+for (var i = 0; i < rows.length; i++) { /* ... */ }
 
 // Not OK for meaningful data
 var x = Platform.Request.GetFormField("email");  // unclear
@@ -35,6 +37,8 @@ var email = Platform.Request.GetFormField("email");  // clear
 ```
 
 ---
+
+{% include test-script.html bundle="best-practices--style-guide" chapter="variables" %}
 
 ## Functions
 
@@ -70,6 +74,8 @@ var FormHandler = (function() {
 
 ---
 
+{% include test-script.html bundle="best-practices--style-guide" chapter="functions" %}
+
 ## Script Block Organization
 
 Organize your script block in this order:
@@ -103,6 +109,8 @@ if (method === "GET") {
 
 ---
 
+{% include test-script.html bundle="best-practices--style-guide" chapter="script-block-organization" %}
+
 ## Naming Conventions
 
 | Type | Convention | Example |
@@ -114,6 +122,8 @@ if (method === "GET") {
 | DE column access | Match DE column name exactly | `rows[i].SubscriberKey` |
 
 ---
+
+{% include test-script.html bundle="best-practices--style-guide" chapter="naming-conventions" %}
 
 ## Indentation and Formatting
 
@@ -131,6 +141,8 @@ if (condition)
 ```
 
 ---
+
+{% include test-script.html bundle="best-practices--style-guide" chapter="indentation-and-formatting" %}
 
 ## Comments
 
@@ -155,6 +167,8 @@ var data = Platform.Function.ParseJSON(responseBody + "");
 
 ---
 
+{% include test-script.html bundle="best-practices--style-guide" chapter="comments" %}
+
 ## Platform.Function Aliases
 
 When using `InsertData`, `UpdateData`, `UpsertData`, `DeleteData` prefer the full names for clarity:
@@ -170,6 +184,8 @@ Platform.Function.InsertDE("DE", ["col"], ["val"]);
 
 ---
 
+{% include test-script.html bundle="best-practices--style-guide" chapter="platform-function-aliases" %}
+
 ## Error Handling
 
 Always wrap external calls in try/catch:
@@ -182,10 +198,12 @@ try {
 } catch(e) {
     // Log and handle gracefully
     logError("http_request", e.message);
-    Write(Stringify({ status: 502, statusMessage: "Bad Gateway", error: "External API unavailable" }));
+    Write(Platform.Function.Stringify({ status: 502, statusMessage: "Bad Gateway", error: "External API unavailable" }));
     return;
 }
 ```
+
+{% include test-script.html bundle="best-practices--style-guide" chapter="error-handling" %}
 
 ## See Also
 

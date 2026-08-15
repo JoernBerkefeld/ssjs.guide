@@ -4,6 +4,8 @@ title: Error Handling
 parent: Language Guide
 parent_url: /language/
 description: try/catch/finally, throw, Error objects, and error handling patterns for robust SFMC SSJS.
+claims_verified: true
+test_scripts: complete
 ---
 
 ## try / catch / finally
@@ -23,16 +25,18 @@ try {
 All three blocks can be used independently:
 
 ```javascript
-try { ... }
-catch (e) { ... }         // catch only
+try { /* ... */ }
+catch (e) { /* ... */ }         // catch only
 
-try { ... }
-finally { ... }           // no catch — errors still propagate, finally still runs
+try { /* ... */ }
+finally { /* ... */ }           // no catch — errors still propagate, finally still runs
 
-try { ... }
-catch (e) { ... }
-finally { ... }            // full pattern
+try { /* ... */ }
+catch (e) { /* ... */ }
+finally { /* ... */ }            // full pattern
 ```
+
+{% include test-script.html bundle="language--error-handling" chapter="try-catch-finally" %}
 
 ## The Error Object
 
@@ -43,11 +47,13 @@ try {
     throw new Error("Something went wrong");
 } catch (e) {
     Write(e.message);      // "Something went wrong"
-    Write(Stringify(e));   // full object as JSON
+    Write(Platform.Function.Stringify(e));   // full object as JSON
 }
 ```
 
 **Note:** The structure of the caught object depends on what was thrown. SSJS platform errors may not always conform to the standard Error shape.
+
+{% include test-script.html bundle="language--error-handling" chapter="the-error-object" %}
 
 ## throw
 
@@ -76,6 +82,8 @@ try {
 }
 ```
 
+{% include test-script.html bundle="language--error-handling" chapter="throw" %}
+
 ## Common Error Patterns
 
 ### Global Try/Catch Wrapper
@@ -103,7 +111,7 @@ try {
     var isDebug = Platform.Request.GetQueryStringParameter("debug") === "1";
 
     if (isDebug) {
-        Write("<pre>Error: " + Stringify(e) + "</pre>");
+        Write("<pre>Error: " + Platform.Function.Stringify(e) + "</pre>");
     } else {
         Platform.Response.Redirect("/error?code=unexpected", false);
     }
@@ -120,7 +128,7 @@ function logError(context, error) {
             "ErrorLog",
             "Timestamp", Platform.Function.Now(),
             "Context", context,
-            "Message", error.message || Stringify(error),
+            "Message", error.message || Platform.Function.Stringify(error),
             "PageURL", Platform.Request.GetQueryStringParameter("_url") || ""
         );
     } catch (logError) {
@@ -202,6 +210,8 @@ if (errors.length > 0) {
 }
 ```
 
+{% include test-script.html bundle="language--error-handling" chapter="common-error-patterns" %}
+
 ## RaiseError
 
 `Platform.Function.RaiseError()` is an SFMC-specific function that stops execution and logs an error. Unlike `throw`, it can optionally suppress the email send:
@@ -216,6 +226,8 @@ if (!subscriberEmail) {
 
 Use `RaiseError` in email contexts. Use `throw` + `try/catch` in CloudPage contexts.
 
+{% include test-script.html bundle="language--error-handling" chapter="raiseerror" %}
+
 ## Debugging Errors
 
 When you see a blank white page on a CloudPage, it's usually an uncaught error. Enable debug mode:
@@ -228,7 +240,7 @@ try {
     // ... your code
 } catch (e) {
     if (isDebug) {
-        Write("<pre style='color:red'>" + Stringify(e) + "</pre>");
+        Write("<pre style='color:red'>" + Platform.Function.Stringify(e) + "</pre>");
     } else {
         Platform.Response.Redirect("/error", false);
     }
@@ -236,3 +248,6 @@ try {
 ```
 
 See [Debugging](/best-practices/debugging/) for more techniques.
+
+
+{% include test-script.html bundle="language--error-handling" chapter="debugging-errors" %}

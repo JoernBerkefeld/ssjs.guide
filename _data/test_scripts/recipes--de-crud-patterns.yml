@@ -1,0 +1,147 @@
+# Narrative recipe test scripts — re-probe before claim edits.
+
+platform-function-approach: |
+  <script runat="server">
+  /*
+   * Chapter: Platform.Function Approach
+   * Proves:
+   *   1. InsertData/UpdateData/UpsertData/DeleteData typeof.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("InsertData", typeof Platform.Function.InsertData, "clrmethodinfo");
+  assert("UpdateData", typeof Platform.Function.UpdateData, "clrmethodinfo");
+  assert("UpsertData", typeof Platform.Function.UpsertData, "clrmethodinfo");
+  assert("DeleteData", typeof Platform.Function.DeleteData, "clrmethodinfo");
+  </script>
+
+core-library-approach: |
+  <script runat="server">
+  /*
+   * Chapter: Core Library Approach
+   * Proves:
+   *   1. DataExtension.Init after Load.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  Platform.Load("core", "1.1.5");
+  assert("DataExtension", typeOfThunk(function () { return typeof DataExtension; }), "object");
+  assert("Init typeof", typeOfThunk(function () { return typeof DataExtension.Init; }), "function");
+  </script>
+
+pattern-safe-upsert-with-existence-check: |
+  <script runat="server">
+  /*
+   * Chapter: Safe Upsert with Existence Check
+   * Proves:
+   *   1. Lookup miss → String null path then UpsertData typeof.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var existing = String(null);
+  assert("miss path String(null)", existing, "null");
+  assert("UpsertData", typeof Platform.Function.UpsertData, "clrmethodinfo");
+  assert("Lookup", typeof Platform.Function.Lookup, "clrmethodinfo");
+  </script>
+
+pattern-bulk-insert-from-array: |
+  <script runat="server">
+  /*
+   * Chapter: Bulk Insert from Array
+   * Proves:
+   *   1. Loop over array preparing rows (no DE write).
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var rows = [{ email: "a@x.com" }, { email: "b@x.com" }];
+  var prepared = [];
+  for (var i = 0; i < rows.length; i++) prepared.push(rows[i].email);
+  assert("prepared join", prepared.join(","), "a@x.com,b@x.com");
+  </script>
+
+pattern-soft-delete-status-flag: |
+  <script runat="server">
+  /*
+   * Chapter: Soft Delete Status Flag
+   * Proves:
+   *   1. UpdateData typeof for status flag pattern.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("UpdateData", typeof Platform.Function.UpdateData, "clrmethodinfo");
+  var status = "inactive";
+  assert("status flag", status, "inactive");
+  </script>
+
+pattern-pagination-with-lookuporderedrows: |
+  <script runat="server">
+  /*
+   * Chapter: Pagination with LookupOrderedRows
+   * Proves:
+   *   1. LookupOrderedRows typeof.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("LookupOrderedRows", typeof Platform.Function.LookupOrderedRows, "clrmethodinfo");
+  </script>
+

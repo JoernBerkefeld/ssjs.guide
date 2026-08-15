@@ -4,6 +4,8 @@ title: Control Flow
 parent: Language Guide
 parent_url: /language/
 description: if/else, ternary, switch (and its SFMC bug), and branching patterns in SSJS.
+claims_verified: true
+test_scripts: complete
 ---
 
 ## if / else
@@ -61,6 +63,8 @@ var name = Platform.Request.GetQueryStringParameter("name") || "Subscriber";
 var city = (person && person.address && person.address.city) || "Unknown";
 ```
 
+{% include test-script.html bundle="language--control-flow" chapter="if-else" %}
+
 ## switch
 
 The `switch` statement works but has a **known SFMC engine bug**:
@@ -114,20 +118,27 @@ if (!validStatuses[status]) {
 
 ### Fall-through
 
-`switch` fall-through (omitting `break`) works as in standard JavaScript:
+Empty stacked `case` labels do **not** fall through reliably in SFMC SSJS. Matching the *first* empty label leaves the shared body unexecuted:
 
 ```javascript
+var level = "admin";
+var access = "";
 switch (level) {
-    case "admin":
-    case "superuser":
-        // Both "admin" and "superuser" fall through here
-        Write("Full access");
+    case "admin":        // matches here…
+    case "superuser":    // …but the body below does NOT run for "admin"
+        access = "Full access";
         break;
     case "user":
-        Write("Limited access");
+        access = "Limited access";
         break;
 }
+// access is still "" when level === "admin"
+// access is "Full access" when level === "superuser"
 ```
+
+Duplicate the body (or use `if` / a lookup map) instead of relying on empty-case fall-through. See also the related [`default` case bug](/engine-limitations/known-bugs/#switch-default-may-not-execute).
+
+{% include test-script.html bundle="language--control-flow" chapter="switch" %}
 
 ## Ternary
 
@@ -141,13 +152,15 @@ var cssClass = isActive ? "active" : "inactive";
 
 Avoid deeply nested ternaries — they become unreadable quickly.
 
+{% include test-script.html bundle="language--control-flow" chapter="ternary" %}
+
 ## Short-Circuit Evaluation
 
 Use `&&` and `||` for concise conditional execution:
 
 ```javascript
 // Execute only if condition is true
-isDebug && Write("<pre>" + Stringify(data) + "</pre>");
+isDebug && Write("<pre>" + Platform.Function.Stringify(data) + "</pre>");
 
 // Default value
 var timeout = config.timeout || 30;
@@ -155,6 +168,8 @@ var timeout = config.timeout || 30;
 // Safe property access
 var name = user && user.profile && user.profile.firstName;
 ```
+
+{% include test-script.html bundle="language--control-flow" chapter="short-circuit-evaluation" %}
 
 ## Throw / Early Return
 
@@ -185,3 +200,6 @@ try {
     Write("Error: " + e.message);
 }
 ```
+
+
+{% include test-script.html bundle="language--control-flow" chapter="throw-early-return" %}

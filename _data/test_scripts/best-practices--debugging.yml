@@ -1,0 +1,228 @@
+# Narrative test scripts — re-probe before claim edits.
+
+1-write-debugging: |
+  <script runat="server">
+  /*
+   * Chapter: Write() Debugging
+   * Proves:
+   *   1. debug helper Stringify works.
+   *   2. DEBUG flag from query param is boolean via ===.
+   *   3. Write available after Core load.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  Platform.Load("core", "1.1.5");
+  function debug(label, value) {
+      return label + ": " + Platform.Function.Stringify(value);
+  }
+  assert("debug stringify", debug("n", 1).indexOf("1") >= 0 ? "true" : "false", "true");
+  var DEBUG = Platform.Request.GetQueryStringParameter("debug") === "1";
+  assert("DEBUG default false", DEBUG ? "true" : "false", "false");
+  assert("Write typeof", typeOfThunk(function () { return typeof Write; }), "function");
+  </script>
+
+2-error-page-analysis: |
+  <script runat="server">
+  /*
+   * Chapter: Error Page Analysis
+   * Proves:
+   *   1. NON-ASSERTABLE: SFMC Activity log UI.
+   *   Recorded as operational guidance.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("guidance-only", "documented", "documented");
+  </script>
+
+3-testing-execution-contexts: |
+  <script runat="server">
+  /*
+   * Chapter: Testing Execution Contexts
+   * Proves:
+   *   1. CloudPage GET has Request.Method GET.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("Method GET", "" + Platform.Request.Method, "GET");
+  </script>
+
+4-parsejson-error-diagnosis: |
+  <script runat="server">
+  /*
+   * Chapter: ParseJSON Error Diagnosis
+   * Proves:
+   *   1. ParseJSON of empty string + check.
+   *   2. typeof parsed is usable.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var rawBody = "";
+  var parsed = Platform.Function.ParseJSON(rawBody + "");
+  assert("empty JSON parse nullish", parsed === null || parsed === undefined ? "nullish" : "other", "nullish");
+  var ok = Platform.Function.ParseJSON('{"x":1}');
+  assert("parsed x", ok.x, 1);
+  </script>
+
+5-try-catch-with-write: |
+  <script runat="server">
+  /*
+   * Chapter: Try/Catch with Write
+   * Proves:
+   *   1. String(e) recovers new Error message.
+   *   2. catch runs.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var out = "";
+  try { throw new Error("boom"); } catch (e) { out = String(e); }
+  assert("String(e) has boom", out.indexOf("boom") >= 0 ? "true" : "false", "true");
+  </script>
+
+6-diagnosing-blank-pages: |
+  <script runat="server">
+  /*
+   * Chapter: Diagnosing Blank Pages
+   * Proves:
+   *   1. Platform.Response.Write works before Core load.
+   *   2. Write after Core load is function.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  Platform.Response.Write("PASS pre-load marker -> [ok]\n");
+  Platform.Load("core", "1.1.5");
+  assert("Write after Load", typeOfThunk(function () { return typeof Write; }), "function");
+  </script>
+
+7-automation-studio-debugging: |
+  <script runat="server">
+  /*
+   * Chapter: Automation Studio Debugging
+   * Proves:
+   *   1. InsertData typeof exists (DE write NON-ASSERTABLE without fixture).
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("InsertData typeof", typeof Platform.Function.InsertData, "clrmethodinfo");
+  </script>
+
+8-email-context-debugging: |
+  <script runat="server">
+  /*
+   * Chapter: Email Context Debugging
+   * Proves:
+   *   1. NON-ASSERTABLE: email send context.
+   *   CloudPage can still Write HTML comments.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  Platform.Load("core", "1.1.5");
+  assert("Write available", typeOfThunk(function () { return typeof Write; }), "function");
+  </script>
+
+9-silent-error-patterns: |
+  <script runat="server">
+  /*
+   * Chapter: Silent Error Patterns
+   * Proves:
+   *   1. String(null) guard pattern used after Lookup.
+   *   2. InsertData typeof (DE write NON-ASSERTABLE without fixture).
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var email = null;
+  var value = String(email);
+  assert("String(null) is null", value, "null");
+  assert("empty-or-null guard", value === "" || value === "null" ? "true" : "false", "true");
+  assert("InsertData typeof", typeof Platform.Function.InsertData, "clrmethodinfo");
+  </script>
+

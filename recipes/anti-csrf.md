@@ -4,6 +4,8 @@ title: Anti-CSRF
 parent: Recipes
 parent_url: /recipes/
 description: Protect Cloud Page forms against cross-site request forgery using a server-generated token stored in a Data Extension.
+claims_verified: true
+test_scripts: complete
 ---
 
 Cross-site request forgery (CSRF) attacks trick a user's browser into submitting an authenticated request to your Cloud Page without their knowledge. The standard defence is a server-generated, single-use token that is tied to the user's session and verified on submission.
@@ -17,6 +19,8 @@ Cross-site request forgery (CSRF) attacks trick a user's browser into submitting
 
 ---
 
+{% include test-script.html bundle="recipes--anti-csrf" chapter="pattern-overview" %}
+
 ## Setup: Token Storage DE
 
 Create a Data Extension named `CSRFTokens` with these fields:
@@ -28,6 +32,8 @@ Create a Data Extension named `CSRFTokens` with these fields:
 | `CreatedAt` | Date | No |
 
 ---
+
+{% include test-script.html bundle="recipes--anti-csrf" chapter="setup-token-storage-de" %}
 
 ## Step 1 — Render the Form
 
@@ -64,6 +70,8 @@ Platform.Variable.SetValue("@token", token);
 
 ---
 
+{% include test-script.html bundle="recipes--anti-csrf" chapter="step-1-render-the-form" %}
+
 ## Step 2 — Validate on Submission
 
 ```javascript
@@ -73,7 +81,7 @@ var submittedToken = Platform.Request.GetFormField("csrfToken");
 var subKey = Platform.Variable.GetValue("@SubscriberKey");
 
 if (!submittedToken) {
-    Write(Stringify({status: 403, statusMessage: "Forbidden", error: "Missing security token."}));
+    Write(Platform.Function.Stringify({status: 403, statusMessage: "Forbidden", error: "Missing security token."}));
     Platform.Function.RaiseError("Missing CSRF token", true);
 }
 
@@ -84,7 +92,7 @@ var storedKey = String(Platform.Function.Lookup(
 ));
 
 if (storedKey === "" || storedKey === "null" || storedKey !== subKey) {
-    Write(Stringify({status: 403, statusMessage: "Forbidden", error:"Invalid or expired security token."}));
+    Write(Platform.Function.Stringify({status: 403, statusMessage: "Forbidden", error:"Invalid or expired security token."}));
     Platform.Function.RaiseError("CSRF token mismatch", true);
 }
 
@@ -95,6 +103,8 @@ Platform.Function.DeleteData("CSRFTokens", ["Token"], [submittedToken]);
 ```
 
 ---
+
+{% include test-script.html bundle="recipes--anti-csrf" chapter="step-2-validate-on-submission" %}
 
 ## Cleanup: Expire Old Tokens
 
@@ -119,6 +129,8 @@ for (var i = 0; i < stale.Results.length; i++) {
     Platform.Function.DeleteData("CSRFTokens", ["Token"], [stale.Results[i].Token]);
 }
 ```
+
+{% include test-script.html bundle="recipes--anti-csrf" chapter="cleanup-expire-old-tokens" %}
 
 ## See Also
 

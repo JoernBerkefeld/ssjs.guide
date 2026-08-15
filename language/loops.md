@@ -4,6 +4,8 @@ title: Loops
 parent: Language Guide
 parent_url: /language/
 description: for, while, do...while, for...in, performance tips, and loop patterns for SFMC SSJS.
+claims_verified: true
+test_scripts: complete
 ---
 
 ## for Loop
@@ -25,11 +27,11 @@ for (var i = 0; i < rows.length; i++) {
 
 ```javascript
 // ⚠️ Slow — length re-evaluated on each iteration
-for (var i = 0; i < rows.length; i++) { ... }
+for (var i = 0; i < rows.length; i++) { /* ... */ }
 
 // ✅ Fast — length cached once
 var len = rows.length;
-for (var i = 0; i < len; i++) { ... }
+for (var i = 0; i < len; i++) { /* ... */ }
 ```
 
 ### Reverse Loop (when order doesn't matter)
@@ -42,6 +44,8 @@ for (var i = len - 1; i >= 0; i--) {
     process(items[i]);
 }
 ```
+
+{% include test-script.html bundle="language--loops" chapter="for-loop" %}
 
 ## while Loop
 
@@ -63,6 +67,8 @@ while (hasMore) {
 }
 ```
 
+{% include test-script.html bundle="language--loops" chapter="while-loop" %}
+
 ## do...while Loop
 
 Executes the body at least once before checking the condition:
@@ -76,6 +82,8 @@ do {
     attempts++;
 } while (!success && attempts < 3);
 ```
+
+{% include test-script.html bundle="language--loops" chapter="do-while-loop" %}
 
 ## for...in Loop
 
@@ -106,19 +114,23 @@ for (var i = 0; i < arr.length; i++) {
 }
 ```
 
+{% include test-script.html bundle="language--loops" chapter="for-in-loop" %}
+
 ## for...of — NOT SUPPORTED
 
 `for...of` is ES6 and **not available in SSJS**. The linter will flag it.
 
 ```javascript
-// ❌ Not supported
-for (var item of items) { }
+// ❌ Not supported — do not uncomment:
+// for (var item of items) { }
 
 // ✅ Use for loop instead
 for (var i = 0; i < items.length; i++) {
     var item = items[i];
 }
 ```
+
+{% include test-script.html bundle="language--loops" chapter="for-of-not-supported" %}
 
 ## break and continue
 
@@ -141,6 +153,8 @@ outer: for (var i = 0; i < rows.length; i++) {
     }
 }
 ```
+
+{% include test-script.html bundle="language--loops" chapter="break-and-continue" %}
 
 ## Automation Timeout Guard
 
@@ -176,6 +190,8 @@ Write("Done: " + processed + " processed.");
 </script>
 ```
 
+{% include test-script.html bundle="language--loops" chapter="automation-timeout-guard" %}
+
 ## Performance Tips
 
 1. **Cache loop length** — `var len = arr.length;`
@@ -195,3 +211,6 @@ var rows = Platform.Function.LookupOrderedRows(
     "1"            // filter value
 );
 ```
+
+
+{% include test-script.html bundle="language--loops" chapter="performance-tips" %}

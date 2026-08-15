@@ -60,6 +60,28 @@ Write(result);
 
 ---
 
+## switch Empty-Case Fall-Through Skips the Shared Body
+
+**Severity: High** — stacked empty `case` labels do not share the following body the way browser JavaScript does
+
+When several `case` labels share one body and the match is an *empty* leading label, the shared statements never run:
+
+```javascript
+var level = "admin";
+var access = "";
+switch (level) {
+    case "admin":
+    case "superuser":
+        access = "Full access";
+        break;
+}
+// access stays "" for "admin"; it becomes "Full access" only for "superuser"
+```
+
+**Safe workaround:** Duplicate the body under each label, or replace the stack with `if` / a lookup map. Related: [`default` may not execute](#switch-default-may-not-execute).
+
+---
+
 ## Bare-name Recipient Does Not Exist
 
 **Severity: High** — the alias is `undefined`

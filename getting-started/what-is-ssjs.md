@@ -4,6 +4,8 @@ title: What is SSJS?
 parent: Getting Started
 parent_url: /getting-started/
 description: Origins, capabilities, and how SSJS fits into Salesforce Marketing Cloud.
+claims_verified: true
+test_scripts: complete
 ---
 
 Server-Side JavaScript (SSJS) is a scripting language built into Salesforce Marketing Cloud that lets you write JavaScript-like code that executes on the **SFMC server** before content is delivered to a browser or email client.
@@ -13,6 +15,8 @@ Server-Side JavaScript (SSJS) is a scripting language built into Salesforce Mark
 SSJS predates modern JavaScript runtimes significantly. It runs on **JINT** (JavaScript Interpreter for .NET), which implements approximately **ECMAScript 3 with some ES5 additions**. This means you're writing JavaScript as it existed around 2009 — no classes, no arrow functions, no template literals, no destructuring, no modules.
 
 This is not a bug to work around — it's the environment. Understanding this upfront prevents hours of debugging cryptic runtime errors.
+
+{% include test-script.html bundle="getting-started--what-is-ssjs" chapter="origins" %}
 
 ## What SSJS Can Do
 
@@ -24,6 +28,8 @@ SSJS gives you access to things that AMPscript simply cannot do:
 - **SOAP API access** — full SFMC SOAP API via WSProxy (faster than Core library)
 - **Request/response control** — read query strings, POST bodies, headers; set cookies, headers, status codes
 - **Content rendering** — output HTML dynamically, process Content Builder assets
+
+{% include test-script.html bundle="getting-started--what-is-ssjs" chapter="what-ssjs-can-do" %}
 
 ## Comparison with AMPscript
 
@@ -40,6 +46,8 @@ Both AMPscript and SSJS run server-side in SFMC. The choice depends on context:
 | Need both in one page | Use both — they share scope via `Variable.GetValue` / `Variable.SetValue` |
 
 SSJS is **slower than AMPscript** for simple Data Extension lookups in emails because of its overhead. In emails, prefer AMPscript for data retrieval and use SSJS when you genuinely need its capabilities.
+
+{% include test-script.html bundle="getting-started--what-is-ssjs" chapter="comparison-with-ampscript" %}
 
 ## How SSJS Relates to JavaScript
 
@@ -67,6 +75,8 @@ Key absences from the standard JavaScript you know:
 
 See [Engine Limitations](/engine-limitations/) for the complete list.
 
+{% include test-script.html bundle="getting-started--what-is-ssjs" chapter="how-ssjs-relates-to-javascript" %}
+
 ## The Execution Model
 
 When SFMC processes a page or email containing `<script runat="server">`, it:
@@ -82,3 +92,6 @@ This is synchronous, single-threaded execution. There are timeout limits:
 - Emails (precompile): much shorter — keep SSJS in emails minimal
 
 → Next: [Where SSJS Runs](/getting-started/where-ssjs-runs/)
+
+
+{% include test-script.html bundle="getting-started--what-is-ssjs" chapter="the-execution-model" %}

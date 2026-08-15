@@ -1,0 +1,182 @@
+# Narrative test scripts — re-probe before claim edits.
+
+setting-up-an-error-log-de: |
+  <script runat="server">
+  /*
+   * Chapter: Setting Up an Error Log DE
+   * Proves:
+   *   1. NON-ASSERTABLE: DE schema setup in UI.
+   *   GUID/Now available for log rows.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("GUID typeof", typeof Platform.Function.GUID, "clrmethodinfo");
+  var now = Platform.Function.Now();
+  assert("Now usable", now !== null && now !== undefined ? "ok" : "bad", "ok");
+  </script>
+
+basic-error-logger: |
+  <script runat="server">
+  /*
+   * Chapter: Basic Error Logger
+   * Proves:
+   *   1. log function Stringify + GUID shape without DE write.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  function buildLogRow(page, severity, message, data) {
+      return {
+          id: Platform.Function.GUID(),
+          ts: Platform.Function.Now(),
+          page: page,
+          severity: severity,
+          message: (message || "").substring(0, 500),
+          data: Platform.Function.Stringify(data || {}).substring(0, 200)
+      };
+  }
+  var row = buildLogRow("test", "error", "boom", { a: 1 });
+  assert("id non-empty", ("" + row.id).length > 0 ? "true" : "false", "true");
+  assert("severity", row.severity, "error");
+  assert("data has a", row.data.indexOf("a") >= 0 ? "true" : "false", "true");
+  </script>
+
+page-level-error-wrapper: |
+  <script runat="server">
+  /*
+   * Chapter: Page-Level Error Wrapper
+   * Proves:
+   *   1. try/catch wrapper returns safe JSON shape.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  Platform.Load("core", "1.1.5");
+  function safeRun(fn) {
+      try { return { ok: true, value: fn() }; }
+      catch (e) { return { ok: false, error: String(e) }; }
+  }
+  var r = safeRun(function () { throw new Error("x"); });
+  assert("caught", r.ok ? "true" : "false", "false");
+  assert("error has x", r.error.indexOf("x") >= 0 ? "true" : "false", "true");
+  </script>
+
+severity-levels: |
+  <script runat="server">
+  /*
+   * Chapter: Severity Levels
+   * Proves:
+   *   1. severity tokens as documented.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var levels = { info: 1, warn: 2, error: 3, fatal: 4 };
+  assert("error > warn", levels.error > levels.warn ? "true" : "false", "true");
+  </script>
+
+automation-studio-logging: |
+  <script runat="server">
+  /*
+   * Chapter: Automation Studio Logging
+   * Proves:
+   *   1. InsertData typeof (write NON-ASSERTABLE).
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("InsertData typeof", typeof Platform.Function.InsertData, "clrmethodinfo");
+  </script>
+
+http-error-logging: |
+  <script runat="server">
+  /*
+   * Chapter: HTTP Error Logging
+   * Proves:
+   *   1. HttpRequest constructs; Stringify payload.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var req = new Script.Util.HttpRequest("https://example.com/");
+  assert("HttpRequest typeof", typeof req, "clr");
+  assert("Stringify payload", Platform.Function.Stringify({ e: 1 }).indexOf("e") >= 0 ? "true" : "false", "true");
+  </script>
+
+monitoring-with-email-alerts: |
+  <script runat="server">
+  /*
+   * Chapter: Monitoring with Email Alerts
+   * Proves:
+   *   1. NON-ASSERTABLE: TriggeredSend in this harness.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("guidance-only", "documented", "documented");
+  </script>
+

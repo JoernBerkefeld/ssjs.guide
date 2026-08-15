@@ -1,0 +1,79 @@
+# Narrative recipe test scripts — re-probe before claim edits.
+
+basic-request-router: |
+  <script runat="server">
+  /*
+   * Chapter: Basic Request Router
+   * Proves:
+   *   1. Method coerce; 405 JSON shape for wrong method.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  Platform.Load("core", "1.1.5");
+  var method = String(Platform.Request.Method);
+  assert("method GET", method, "GET");
+  var body405 = Platform.Function.Stringify({ status: 405, statusMessage: "Method Not Allowed", error: "Method not allowed" });
+  assert("405 json", body405.indexOf("405") >= 0 ? "true" : "false", "true");
+  </script>
+
+session-management: |
+  <script runat="server">
+  /*
+   * Chapter: Session Management
+   * Proves:
+   *   1. GUID session token; SetCookie returns null.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var token = Platform.Function.GUID();
+  assert("session token", ("" + token).length > 10 ? "true" : "false", "true");
+  var ret = Platform.Response.SetCookie("gsSessionProbe", token);
+  assert("SetCookie null", ret === null ? "null" : "other", "null");
+  </script>
+
+multi-step-form: |
+  <script runat="server">
+  /*
+   * Chapter: Multi-Step Form
+   * Proves:
+   *   1. Step counter + Stringify saved state.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var step = 1;
+  var saved = { name: "Ada" };
+  var next = String(step + 1);
+  assert("next step", next, "2");
+  assert("saved json", Platform.Function.Stringify(saved).indexOf("Ada") >= 0 ? "true" : "false", "true");
+  </script>
+

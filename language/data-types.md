@@ -4,6 +4,8 @@ title: Data Types
 parent: Language Guide
 parent_url: /language/
 description: Strings, numbers, booleans, null, undefined, objects, and arrays in SFMC SSJS.
+claims_verified: true
+test_scripts: complete
 ---
 
 ## Primitive Types
@@ -81,6 +83,8 @@ x === undefined;          // true
 
 **SFMC quirk:** `Platform.Function.Lookup()` returns a genuine `null` when no matching row is found, but a **CLR null** when the row exists and the field is empty — and that value throws on any coercion, so `!result` is unsafe. Wrap the result in `String()` and test for `"null"` or `""`. See [Lookup](/platform-functions/lookup/).
 
+{% include test-script.html bundle="language--data-types" chapter="primitive-types" %}
+
 ## Objects
 
 Plain objects are key-value maps. Use them for structured data.
@@ -114,6 +118,8 @@ for (var prop in subscriber) {
 ```
 
 > **Always use `hasOwnProperty` in `for...in` loops.** SFMC objects may have inherited enumerable properties (like `_type`) that you don't want to process.
+
+{% include test-script.html bundle="language--data-types" chapter="objects" %}
 
 ## Arrays
 
@@ -159,14 +165,16 @@ for (var i = 0; i < arr.length; i++) {
 
 See [Polyfills](/engine-limitations/polyfills/) for ready-to-use Array method implementations.
 
+{% include test-script.html bundle="language--data-types" chapter="arrays" %}
+
 ## Type Conversions
 
 ```javascript
 // String to number
-var n1 = Number("42");    // 42
-var n2 = parseInt("42px"); // 42
-var n3 = parseFloat("3.14"); // 3.14
-var n4 = "5" * 1;         // 5 (implicit)
+var n1 = Number("42");       // 42
+var n2 = parseInt("42", 10); // 42 — argument must already be a clean integer string
+var n3 = parseFloat("3.14"); // ~3.14 (IEEE float; do not compare with === to a decimal literal)
+var n4 = "5" * 1;            // 5 (implicit)
 
 // Number to string
 var s1 = String(42);      // "42"
@@ -180,6 +188,10 @@ var b3 = Boolean("0");    // true (non-empty string!)
 var b4 = !!value;         // double-negation shorthand
 ```
 
+{% include callout.html type="warning" content="Unlike browser JavaScript, `parseInt(\"42px\")` returns `NaN` in SFMC SSJS — the engine does not stop at the first non-digit. Strip units before calling `parseInt`, or use `Number(...)` on a clean numeric string." %}
+
+{% include test-script.html bundle="language--data-types" chapter="type-conversions" %}
+
 ## JSON
 
 SSJS does **not** have `JSON.parse` or `JSON.stringify`. Use the SFMC alternatives:
@@ -190,5 +202,8 @@ var obj = Platform.Function.ParseJSON(jsonString + "");
 // The + "" keeps a non-string value a valid argument — objects/arrays throw
 
 // Serialize object → JSON string
-var jsonStr = Stringify(obj);
+var jsonStr = Platform.Function.Stringify(obj);
 ```
+
+
+{% include test-script.html bundle="language--data-types" chapter="json" %}

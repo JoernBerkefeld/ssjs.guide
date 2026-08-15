@@ -1,0 +1,99 @@
+# Getting-started narrative test scripts.
+
+origins: |
+  <script runat="server">
+  /*
+   * Chapter: Origins
+   * Proves:
+   *   1. Engine is ES3-era: var works; JSON global absent.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var ok = true;
+  assert("var works", ok ? "true" : "false", "true");
+  assert("JSON global absent", typeOfThunk(function () { return typeof JSON; }), "undefined");
+  </script>
+
+what-ssjs-can-do: |
+  <script runat="server">
+  /*
+   * Chapter: What SSJS Can Do
+   * Proves:
+   *   1. Platform.Function.ParseJSON/Stringify available without Core load.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var o = Platform.Function.ParseJSON('{"a":1}');
+  assert("ParseJSON", o.a, 1);
+  assert("Stringify has a", Platform.Function.Stringify(o).indexOf("a") >= 0 ? "true" : "false", "true");
+  assert("WSProxy ctor exists", typeof Script.Util.WSProxy, "clr");
+  </script>
+
+comparison-with-ampscript: |
+  <script runat="server">
+  /*
+   * Chapter: Comparison with AMPscript
+   * Proves:
+   *   1. Platform.Variable bridge exists (shared scope with AMPscript).
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  Platform.Variable.SetValue("@gsCmp", "ssjs");
+  assert("Variable bridge", Platform.Variable.GetValue("@gsCmp"), "ssjs");
+  </script>
+
+how-ssjs-relates-to-javascript: |
+  <script runat="server">
+  /*
+   * Chapter: How SSJS Relates to JavaScript
+   * Proves:
+   *   1. greet example; Write needs Core; no fetch/console.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  function greet(name) { return "Hello, " + name + "!"; }
+  assert("greet", greet("World"), "Hello, World!");
+  assert("console absent", typeOfThunk(function () { return typeof console; }), "undefined");
+  assert("fetch absent", typeOfThunk(function () { return typeof fetch; }), "undefined");
+  Platform.Load("core", "1.1.5");
+  assert("Write after Load", typeOfThunk(function () { return typeof Write; }), "function");
+  </script>
+
+the-execution-model: |
+  <script runat="server">
+  /*
+   * Chapter: The Execution Model
+   * Proves:
+   *   1. Platform.Response.Write appends body text.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("Response.Write available", typeOfThunk(function () { return typeof Platform.Response.Write; }), "clrmethodinfo");
+  Platform.Response.Write("PASS Write marker visible in body -> [ok]\n");
+  </script>
+

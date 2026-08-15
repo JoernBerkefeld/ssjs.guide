@@ -1,0 +1,166 @@
+# Narrative language page test scripts. Re-probe before claim edits.
+
+object-literals: |
+  <script runat="server">
+  /*
+   * Chapter: Object Literals
+   * Proves:
+   *   1. create/access.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var person = { city: "Berlin" }; assert("city", person.city, "Berlin");
+  </script>
+
+property-access: |
+  <script runat="server">
+  /*
+   * Chapter: Property Access
+   * Proves:
+   *   1. dot vs bracket.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var o = { "full-name": "Ada" }; assert("bracket", o["full-name"], "Ada"); o.age = 1; assert("dot set", o.age, 1);
+  </script>
+
+nested-objects: |
+  <script runat="server">
+  /*
+   * Chapter: Nested Objects
+   * Proves:
+   *   1. deep path.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var parsed = { subscriber: { key: "abc" } }; assert("nested", parsed.subscriber.key, "abc");
+  </script>
+
+object-iteration: |
+  <script runat="server">
+  /*
+   * Chapter: Object Iteration
+   * Proves:
+   *   1. for-in + hasOwnProperty.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var config = { a: 1, b: 2 }, n = 0;
+  for (var k in config) { if (config.hasOwnProperty(k)) n++; }
+  assert("own keys", n, 2);
+  </script>
+
+object-as-a-lookup-map: |
+  <script runat="server">
+  /*
+   * Chapter: Lookup Map
+   * Proves:
+   *   1. map label.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var labels = { active: "Active", inactive: "Inactive" };
+  assert("label", labels["active"], "Active");
+  </script>
+
+arrays-of-objects: |
+  <script runat="server">
+  /*
+   * Chapter: Arrays of Objects
+   * Proves:
+   *   1. collect emails.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var rows = [{ Email: "a@x.com" }, { Email: "b@x.com" }], emails = [];
+  for (var i = 0; i < rows.length; i++) emails.push(rows[i]["Email"]);
+  assert("join", emails.join(", "), "a@x.com, b@x.com");
+  </script>
+
+json-serialization-and-parsing: |
+  <script runat="server">
+  /*
+   * Chapter: JSON
+   * Proves:
+   *   1. Stringify/ParseJSON.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var data = { name: "Jane" };
+  var jsonString = Platform.Function.Stringify(data);
+  var obj = Platform.Function.ParseJSON(jsonString + "");
+  assert("name", obj.name, "Jane");
+  </script>
+
+copying-objects: |
+  <script runat="server">
+  /*
+   * Chapter: Copying Objects
+   * Proves:
+   *   1. manual shallow copy.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  var src = { a: 1, b: 2 }, dst = {};
+  for (var k in src) { if (src.hasOwnProperty(k)) dst[k] = src[k]; }
+  dst.a = 9;
+  assert("src unchanged", src.a, 1);
+  assert("dst changed", dst.a, 9);
+  </script>
+

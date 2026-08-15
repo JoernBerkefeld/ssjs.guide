@@ -4,6 +4,8 @@ title: WSProxy Patterns
 parent: Recipes
 parent_url: /recipes/
 description: Common WSProxy patterns — paginated retrieval, bulk upsert, multi-BU iteration, and error-safe loops.
+claims_verified: true
+test_scripts: complete
 ---
 
 Practical patterns for working with [`Script.Util.WSProxy`](/wsproxy/) in production SSJS scripts.
@@ -44,6 +46,8 @@ Write("Total rows: " + allRows.length);
 
 ---
 
+{% include test-script.html bundle="recipes--wsproxy-patterns" chapter="paginated-retrieval-of-all-records" %}
+
 ## Bulk Upsert to a Data Extension
 
 Upsert multiple rows in one call using `SaveAction: "UpdateAdd"`:
@@ -73,6 +77,8 @@ if (result.Status !== "OK") {
 
 ---
 
+{% include test-script.html bundle="recipes--wsproxy-patterns" chapter="bulk-upsert-to-a-data-extension" %}
+
 ## Multi-BU Iteration
 
 Run the same operation across multiple child Business Units from a parent account:
@@ -97,6 +103,8 @@ proxy.resetClientIds();
 ```
 
 ---
+
+{% include test-script.html bundle="recipes--wsproxy-patterns" chapter="multi-bu-iteration" %}
 
 ## Error-Safe Loop Pattern
 
@@ -126,6 +134,8 @@ for (var i = 0; i < items.length; i++) {
 
 ---
 
+{% include test-script.html bundle="recipes--wsproxy-patterns" chapter="error-safe-loop-pattern" %}
+
 ## Chunked Batch Processing
 
 Split a large array into chunks to stay within SFMC's per-request limits:
@@ -143,6 +153,8 @@ for (var c = 0; c < allRows.length; c += chunkSize) {
     }
 }
 ```
+
+{% include test-script.html bundle="recipes--wsproxy-patterns" chapter="chunked-batch-processing" %}
 
 ## See Also
 

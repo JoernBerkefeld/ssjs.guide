@@ -1,0 +1,197 @@
+# Narrative test scripts — re-probe before claim edits.
+
+1-minimize-de-round-trips: |
+  <script runat="server">
+  /*
+   * Chapter: Minimize DE Round-Trips
+   * Proves:
+   *   1. LookupOrderedRows typeof (prefer one call).
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("LookupOrderedRows typeof", typeof Platform.Function.LookupOrderedRows, "clrmethodinfo");
+  assert("LookupRows typeof", typeof Platform.Function.LookupRows, "clrmethodinfo");
+  </script>
+
+2-cache-expensive-results: |
+  <script runat="server">
+  /*
+   * Chapter: Cache Expensive Results
+   * Proves:
+   *   1. In-request cache object pattern.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var cache = {};
+  function getCached(key, fn) {
+      if (cache[key] !== undefined) return cache[key];
+      cache[key] = fn();
+      return cache[key];
+  }
+  var n = 0;
+  getCached("a", function () { n++; return 1; });
+  getCached("a", function () { n++; return 1; });
+  assert("cache hits once", n, 1);
+  assert("cached value", cache.a, 1);
+  </script>
+
+3-efficient-loops: |
+  <script runat="server">
+  /*
+   * Chapter: Efficient Loops
+   * Proves:
+   *   1. Cached length loop.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var rows = [1, 2, 3, 4], len = rows.length, sum = 0;
+  for (var i = 0; i < len; i++) sum += rows[i];
+  assert("sum", sum, 10);
+  </script>
+
+4-http-calls-are-expensive: |
+  <script runat="server">
+  /*
+   * Chapter: HTTP Calls Are Expensive
+   * Proves:
+   *   1. HttpRequest exists; avoid duplicate sends in loop (pattern).
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("HttpRequest ctor", typeof Script.Util.HttpRequest === "function" || typeof Script.Util.HttpRequest === "clr" ? "ok" : typeof Script.Util.HttpRequest, "ok");
+  </script>
+
+5-automation-studio-timeout-guard: |
+  <script runat="server">
+  /*
+   * Chapter: Automation Studio Timeout Guard
+   * Proves:
+   *   1. Cap processed count.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var processed = 0, max = 10;
+  for (var i = 0; i < 100; i++) { processed++; if (processed >= max) break; }
+  assert("cap", processed, 10);
+  </script>
+
+6-string-concatenation-in-loops: |
+  <script runat="server">
+  /*
+   * Chapter: String Concatenation in Loops
+   * Proves:
+   *   1. join after push preferred over += in spirit — push+join works.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var parts = [], i;
+  for (i = 0; i < 3; i++) parts.push("" + i);
+  assert("join", parts.join(","), "0,1,2");
+  </script>
+
+7-avoid-unnecessary-platform-load: |
+  <script runat="server">
+  /*
+   * Chapter: Avoid Unnecessary Platform.Load
+   * Proves:
+   *   1. Single Load then DataExtension available.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  Platform.Load("core", "1.1.5");
+  assert("DataExtension", typeOfThunk(function () { return typeof DataExtension; }), "object");
+  </script>
+
+8-prefer-platform-function-for-single-lookups: |
+  <script runat="server">
+  /*
+   * Chapter: Prefer Platform.Function for Single Lookups
+   * Proves:
+   *   1. Lookup typeof without Core; DataExtension needs Core.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("Lookup typeof", typeof Platform.Function.Lookup, "clrmethodinfo");
+  assert("LookupOrderedRows typeof", typeof Platform.Function.LookupOrderedRows, "clrmethodinfo");
+  </script>
+

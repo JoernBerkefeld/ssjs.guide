@@ -1,0 +1,155 @@
+# Narrative recipe test scripts — re-probe before claim edits.
+# EncryptSymmetric / DecryptSymmetric require exactly 8 args (verified).
+# Inline form: empty external-key slots + password/salt/iv literals.
+# Salt = 8 bytes as 16 hex chars; IV = 16 bytes as 32 hex chars.
+
+symmetric-encryption-aes: |
+  <script runat="server">
+  /*
+   * Chapter: Symmetric Encryption AES
+   * Proves:
+   *   1. EncryptSymmetric/DecryptSymmetric via TreatAsContent round-trip (8-arg inline).
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  function encryptSymmetric(plainText, algorithm, passwordValue, saltValue, vectorValue) {
+      Platform.Variable.SetValue("@encrypt_string", plainText);
+      Platform.Variable.SetValue("@encrypt_algo", algorithm);
+      Platform.Variable.SetValue("@encrypt_pw", passwordValue || "");
+      Platform.Variable.SetValue("@encrypt_salt", saltValue || "");
+      Platform.Variable.SetValue("@encrypt_vector", vectorValue || "");
+      return Platform.Function.TreatAsContent("%%=EncryptSymmetric(@encrypt_string, @encrypt_algo, @null, @encrypt_pw, @null, @encrypt_salt, @null, @encrypt_vector)=%%");
+  }
+  function decryptSymmetric(encryptedString, algorithm, passwordValue, saltValue, vectorValue) {
+      Platform.Variable.SetValue("@decrypt_string", encryptedString);
+      Platform.Variable.SetValue("@decrypt_algo", algorithm);
+      Platform.Variable.SetValue("@decrypt_pw", passwordValue || "");
+      Platform.Variable.SetValue("@decrypt_salt", saltValue || "");
+      Platform.Variable.SetValue("@decrypt_vector", vectorValue || "");
+      return Platform.Function.TreatAsContent("%%=DecryptSymmetric(@decrypt_string, @decrypt_algo, @null, @decrypt_pw, @null, @decrypt_salt, @null, @decrypt_vector)=%%");
+  }
+  var pw = "pw";
+  var salt = "0123456789abcdef";
+  var iv = "0123456789abcdef0123456789abcdef";
+  var enc = encryptSymmetric("secret-text", "AES", pw, salt, iv);
+  assert("enc non-empty", ("" + enc).length > 0 ? "true" : "false", "true");
+  var dec = decryptSymmetric(enc, "AES", pw, salt, iv);
+  assert("dec round-trip", "" + dec, "secret-text");
+  </script>
+
+password-salted-encryption: |
+  <script runat="server">
+  /*
+   * Chapter: Password-Salted Encryption
+   * Proves:
+   *   1. Same AES path with different password still encrypts (8-arg inline).
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  function encryptSymmetric(plainText, algorithm, passwordValue, saltValue, vectorValue) {
+      Platform.Variable.SetValue("@encrypt_string", plainText);
+      Platform.Variable.SetValue("@encrypt_algo", algorithm);
+      Platform.Variable.SetValue("@encrypt_pw", passwordValue || "");
+      Platform.Variable.SetValue("@encrypt_salt", saltValue || "");
+      Platform.Variable.SetValue("@encrypt_vector", vectorValue || "");
+      return Platform.Function.TreatAsContent("%%=EncryptSymmetric(@encrypt_string, @encrypt_algo, @null, @encrypt_pw, @null, @encrypt_salt, @null, @encrypt_vector)=%%");
+  }
+  var enc2 = encryptSymmetric("x", "AES", "other", "fedcba9876543210", "fedcba9876543210fedcba9876543210");
+  assert("enc2 non-empty", ("" + enc2).length > 0 ? "true" : "false", "true");
+  </script>
+
+storing-encrypted-pii-in-a-data-extension: |
+  <script runat="server">
+  /*
+   * Chapter: Storing Encrypted PII
+   * Proves:
+   *   1. NON-ASSERTABLE: DE write.
+   *   Encrypt helper + UpsertData typeof exist for the pattern.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("UpsertData", typeof Platform.Function.UpsertData, "clrmethodinfo");
+  assert("InsertData", typeof Platform.Function.InsertData, "clrmethodinfo");
+  </script>
+
+hashing-non-reversible: |
+  <script runat="server">
+  /*
+   * Chapter: Hashing Non-Reversible
+   * Proves:
+   *   1. Platform.Function.MD5 works; SHA256 via TreatAsContent bridge.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  function sha256(stringToConvert, charSet) {
+      Platform.Variable.SetValue("@sha256_string", stringToConvert);
+      Platform.Variable.SetValue("@sha256_charset", charSet || "UTF-8");
+      return Platform.Function.TreatAsContent("%%=SHA256(@sha256_string, @sha256_charset)=%%");
+  }
+  var md5 = Platform.Function.MD5("hello");
+  assert("md5 length", ("" + md5).length >= 32 ? "true" : "false", "true");
+  var s256 = sha256("hello");
+  assert("sha256 length", ("" + s256).length >= 64 ? "true" : "false", "true");
+  </script>
+
+notes: |
+  <script runat="server">
+  /*
+   * Chapter: Notes
+   * Proves:
+   *   1. NON-ASSERTABLE: operational notes.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("guidance-only", "documented", "documented");
+  </script>

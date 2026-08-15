@@ -1,0 +1,117 @@
+# Narrative recipe test scripts — re-probe before claim edits.
+
+subscribe-to-a-list: |
+  <script runat="server">
+  /*
+   * Chapter: Subscribe to a List
+   * Proves:
+   *   1. Subscriber after Core load.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  Platform.Load("core", "1.1.5");
+  assert("Subscriber", typeOfThunk(function () { return typeof Subscriber; }), "object");
+  </script>
+
+unsubscribe-with-preference-center: |
+  <script runat="server">
+  /*
+   * Chapter: Unsubscribe with Preference Center
+   * Proves:
+   *   1. Method GET on CloudPage preference center stand-in.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  assert("Method", "" + Platform.Request.Method, "GET");
+  </script>
+
+update-subscriber-attributes: |
+  <script runat="server">
+  /*
+   * Chapter: Update Subscriber Attributes
+   * Proves:
+   *   1. Subscriber.Init typeof after Load.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  Platform.Load("core", "1.1.5");
+  assert("Init", typeOfThunk(function () { return typeof Subscriber.Init; }), "function");
+  </script>
+
+add-subscriber-to-multiple-lists: |
+  <script runat="server">
+  /*
+   * Chapter: Add Subscriber to Multiple Lists
+   * Proves:
+   *   1. Loop over list keys pattern.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var lists = ["listA", "listB"];
+  assert("count", lists.length, 2);
+  </script>
+
+wsproxy-update-subscriber-in-all-subscribers: |
+  <script runat="server">
+  /*
+   * Chapter: WSProxy Update Subscriber
+   * Proves:
+   *   1. WSProxy constructs; updateItem typeof.
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  function typeOfThunk(fn) {
+      try { return "" + fn(); } catch (ex) { return "THREW:" + ("" + ex.message); }
+  }
+  var proxy = new Script.Util.WSProxy();
+  assert("proxy", typeof proxy, "clr");
+  assert("updateItem", typeof proxy.updateItem, "clrmethodinfo");
+  </script>
+

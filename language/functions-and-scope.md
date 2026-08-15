@@ -4,6 +4,8 @@ title: Functions & Scope
 parent: Language Guide
 parent_url: /language/
 description: Function declarations, expressions, closures, the module pattern, and scope in SSJS.
+claims_verified: true
+test_scripts: complete
 ---
 
 ## Function Declarations
@@ -19,6 +21,8 @@ function greet(name) {
 }
 ```
 
+{% include test-script.html bundle="language--functions-and-scope" chapter="function-declarations" %}
+
 ## Function Expressions
 
 Assigned to variables — not hoisted:
@@ -30,6 +34,8 @@ var greet = function(name) {
 
 greet("Jane"); // Must be called AFTER the assignment
 ```
+
+{% include test-script.html bundle="language--functions-and-scope" chapter="function-expressions" %}
 
 ## Parameters and Return Values
 
@@ -56,6 +62,8 @@ function sum() {
 sum(1, 2, 3); // 6
 ```
 
+{% include test-script.html bundle="language--functions-and-scope" chapter="parameters-and-return-values" %}
+
 ## Arrow Functions — NOT SUPPORTED
 
 Arrow functions are ES6 and will throw a runtime error:
@@ -69,6 +77,8 @@ var greet  = name => "Hello, " + name;
 var double = function(x) { return x * 2; };
 var greet  = function(name) { return "Hello, " + name; };
 ```
+
+{% include test-script.html bundle="language--functions-and-scope" chapter="arrow-functions-not-supported" %}
 
 ## Closures
 
@@ -93,7 +103,8 @@ Closures are commonly used for configuration objects:
 
 ```javascript
 function createLogger(prefix) {
-    return {
+    // assign then return — avoid returning an object literal directly (see below)
+    var api = {
         log: function(msg) {
             Write("[" + prefix + "] " + msg + "<br>");
         },
@@ -101,12 +112,15 @@ function createLogger(prefix) {
             Write("[" + prefix + " ERROR] " + msg + "<br>");
         }
     };
+    return api;
 }
 
 var logger = createLogger("SSJS");
-logger.log("Starting process...");
+logger.log("Starting process");
 logger.error("Something went wrong");
 ```
+
+{% include test-script.html bundle="language--functions-and-scope" chapter="closures" %}
 
 ## The Module Pattern (SFMC Best Practice)
 
@@ -120,6 +134,7 @@ Because SSJS lacks classes, modules, or proper encapsulation, the **Revealing Mo
  * @returns {{ lookup: Function, upsert: Function }}
  */
 function DEHelper(deName) {
+    Platform.Load("core", "1.1.5"); // required for DataExtension.Init
     var service = {
         lookup: lookup,
         upsert: upsert,
@@ -155,6 +170,8 @@ Key properties of this pattern:
 - Inner functions capture `deName` in closure — no global state needed
 - **Never use `return { method: function() {...} }` directly** — SSJS has a bug where returning an object literal from a function can fail. Use the pattern above (assign to variable, return variable) instead.
 
+{% include test-script.html bundle="language--functions-and-scope" chapter="the-module-pattern-sfmc-best-practice" %}
+
 ## Object Literal Return Bug
 
 This is a known SSJS engine limitation:
@@ -178,6 +195,8 @@ function getConfig() {
 }
 ```
 
+{% include test-script.html bundle="language--functions-and-scope" chapter="object-literal-return-bug" %}
+
 ## Recursive Functions
 
 Recursion works normally, but SSJS has stack limits. Keep recursion depth reasonable (< 100 levels):
@@ -190,6 +209,8 @@ function factorial(n) {
 
 Write(factorial(10)); // 3628800
 ```
+
+{% include test-script.html bundle="language--functions-and-scope" chapter="recursive-functions" %}
 
 ## IIFE (Immediately Invoked Function Expression)
 
@@ -206,3 +227,6 @@ Useful for creating a private scope:
     Platform.Variable.SetValue("@timeout", result);
 })();
 ```
+
+
+{% include test-script.html bundle="language--functions-and-scope" chapter="iife-immediately-invoked-function-expression" %}
