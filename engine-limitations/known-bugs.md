@@ -58,27 +58,48 @@ Write(result);
 
 **ESLint rule:** `sfmc/ssjs-no-switch-default` warns about relying on `default`.
 
+This is the same root cause as [switch has no fall-through](#switch-no-fallthrough): a matched case runs only its own statements, and a no-match path does not reach `default`.
+
 ---
 
-## switch Empty-Case Fall-Through Skips the Shared Body
+## switch Has No Fall-Through (Empty Labels and Break-less Cases) {#switch-no-fallthrough}
 
-**Severity: High** — stacked empty `case` labels do not share the following body the way browser JavaScript does
+**Severity: High** — silently skips shared and cascading case bodies
 
-When several `case` labels share one body and the match is an *empty* leading label, the shared statements never run:
+The SFMC SSJS engine performs **no `switch` fall-through of any kind** — runtime-verified on a live CloudPage. A matched `case` executes only its own statements up to the next `case`/`default`; nothing cascades. Three consequences all fail where browser JavaScript would fall through:
+
+- An **empty leading label** does not share the next label's body — `case "admin": case "superuser": …` runs nothing for `"admin"`.
+- A **break-less body** does not cascade into the following case.
+- A matched case never falls into **`default`**.
+
+Numeric switches behave the same way. Only direct, self-contained matched cases work; this shares one root cause with the [`default` may not execute](#switch-default-may-not-execute) bug below.
 
 ```javascript
 var level = "admin";
 var access = "";
+
+// ❌ empty leading label — the shared body never runs for "admin"
 switch (level) {
     case "admin":
     case "superuser":
         access = "Full access";
         break;
 }
-// access stays "" for "admin"; it becomes "Full access" only for "superuser"
+// access stays "" for "admin"; it is "Full access" only for "superuser"
+
+// ❌ break-less body — does NOT cascade into the next case
+switch (level) {
+    case "admin":
+        access = "Admin";      // runs, but execution stops here
+    case "superuser":
+        access = "Super";      // never reached for "admin"
+        break;
+}
 ```
 
-**Safe workaround:** Duplicate the body under each label, or replace the stack with `if` / a lookup map. Related: [`default` may not execute](#switch-default-may-not-execute).
+**Safe workaround:** Give every case its own break-terminated body (duplicate the shared statements under each label), or replace the switch with `if` / a lookup map.
+
+**ESLint rule:** `sfmc/ssjs-no-switch-fallthrough` flags empty stacked labels and break-less case bodies.
 
 ---
 
