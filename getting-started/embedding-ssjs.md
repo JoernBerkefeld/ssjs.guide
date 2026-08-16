@@ -106,7 +106,7 @@ All blocks execute in order before the page is assembled. The output of each blo
 
 ## Hoisting Behavior
 
-Function declarations are **hoisted** within their script block but **not** across blocks. If you call a function before its block has executed, you'll get a runtime error.
+Function declarations are **hoisted** within their script block but **not** across blocks. Blocks execute top-to-bottom in page order and share one global scope, so a later block can call a function an **earlier** block defined — but an earlier block cannot reach forward to a function only defined **later**. Calling a not-yet-defined function throws `Object expected: <name>`.
 
 ```html
 <script runat="server">
@@ -120,6 +120,8 @@ function greet(name) {
 }
 </script>
 ```
+
+The forward reference throws `Object expected: greet` at the point of the call. The page itself still returns **HTTP 200** — the error surfaces in the rendered body where the failing block would have written, not as a server error. Everything the earlier block wrote before the failing line is still emitted.
 
 **Safe pattern:** Put all function declarations in the **first** script block:
 

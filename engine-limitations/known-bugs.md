@@ -4,6 +4,7 @@ title: Known Bugs
 parent: Engine Limitations
 parent_url: /engine-limitations/
 verification: verified
+test_scripts: complete
 description: Platform-specific SFMC SSJS behaviors that differ from documented or expected behavior — the switch default bug, Rows.Retrieve, GetPostData, and more.
 ---
 
@@ -11,54 +12,63 @@ These are behaviors in SFMC SSJS that are inconsistent with the official documen
 
 {% include callout.html type="info" content="This page covers features that are **broken** or that **do not exist at runtime** despite being officially documented. For working features whose behavior merely differs from the docs (wrong return types, undocumented properties, etc.), see [Differs from Official Docs](/engine-limitations/differs-from-docs/)." %}
 
-## switch default May Not Execute
+## switch break Can Escape a Function (the "default May Not Execute" bug) {#switch-break-escape}
 
-**Severity: High** — can silently skip fallback logic
+**Severity: High** — silently returns `undefined` and skips code after the `switch`
 
-The SFMC SSJS engine has a known bug where the `default` case of a `switch` statement may not execute when no `case` matches.
+Community lore says the `default` case of a `switch` "may not execute" in SFMC SSJS. Live CloudPage probing (Core 1.1.5, `MCDEV_Training_QA`) shows that framing is a **symptom, not the root cause** — and it is misleading. A last-clause `default` on a no-match path executes **reliably**:
 
 ```javascript
-var status = "unknown";
-
-switch (status) {
-    case "active":
-        Write("Active");
-        break;
-    case "inactive":
-        Write("Inactive");
-        break;
-    default:
-        // ⚠️ This MAY NOT execute — SFMC engine bug
-        Write("Unknown status");
+// ✅ default runs normally on a no-match path — no break executes here
+var out = "PRE";
+switch ("unknown") {
+    case "active":   out = "A"; break;
+    case "inactive": out = "I"; break;
+    default:         out = "DEF";   // runs -> out === "DEF"
 }
 ```
 
-**Safe workaround:** Replace `default` with an explicit pre-check or post-check:
+The real defect is in the underlying [Jint](https://github.com/sebastienros/jint) engine's `break` handling: **an executed `break` inside a `switch` that sits inside a function can abnormally complete the function** — the function returns `undefined` and any statements after the `switch` are skipped. When that swallowed code was the caller's fallback (often reached via `default`), it looks like "`default` didn't run", but the trigger is the **executed `break`**, not the `default` keyword.
 
 ```javascript
-// Option 1: Explicit check before switch
-var validStatuses = { active: true, inactive: true };
-if (!validStatuses[status]) {
-    Write("Unknown status");
-} else {
+// ⚠️ break inside a switch inside a function can make the function return undefined
+function classify(status) {
+    var out = "PRE";
     switch (status) {
-        case "active":   Write("Active");   break;
-        case "inactive": Write("Inactive"); break;
+        case "active":   out = "A"; break;   // a matched break can escape the function
+        case "inactive": out = "I"; break;
+        default:         out = "DEF";
     }
+    return out;                              // ⚠️ may be skipped -> caller sees undefined
 }
-
-// Option 2: Initialize result before switch, keep switch case-only
-var result = "Unknown status";
-switch (status) {
-    case "active":   result = "Active";   break;
-    case "inactive": result = "inactive"; break;
-}
-Write(result);
 ```
 
-**ESLint rule:** `sfmc/ssjs-no-switch-default` warns about relying on `default`.
+Probing shows the fault is **intermittent across compilations** — the same source flipped between the correct value and `undefined` on different deploys, while staying perfectly stable within a single request. That flakiness is why the community reports it as "*may* not execute". A top-level `switch` (not wrapped in a function) executed normally in every probe.
 
-This is the same root cause as [switch has no fall-through](#switch-no-fallthrough): a matched case runs only its own statements, and a no-match path does not reach `default`.
+This matches a documented Jint bug: an unlabeled `break` inside a `switch` was not always absorbed, so it "propagated out as a Break completion — skipping statements after the switch and, at function scope, making the body complete abnormally so the function returned undefined" ([jint#2607](https://github.com/sebastienros/jint/pull/2607)). SFMC runs an engine build old enough to still hit this.
+
+**Safe workaround:** avoid relying on a value that has to survive a `break` inside a function-scoped `switch`. Prefer a lookup map or `if`/`else if`, or assign a result variable and `return` it via a path that does not depend on post-`switch` code:
+
+```javascript
+// Option 1: lookup map — no switch, no break, no escape
+function classify(status) {
+    var map = { active: "A", inactive: "I" };
+    return map[status] || "DEF";
+}
+
+// Option 2: if / else if for the fallback
+function classify(status) {
+    if (status === "active")   return "A";
+    if (status === "inactive") return "I";
+    return "DEF";
+}
+```
+
+**ESLint rule:** `sfmc/ssjs-no-switch-default` warns about relying on `default`; treat it as a broader hint to avoid function-scoped `switch`/`break` for critical control flow.
+
+Related: SSJS `switch` also has [no fall-through of any kind](#switch-no-fallthrough) — a separate, consistently reproducible limitation.
+
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="switch-break-escape" %}
 
 ---
 
@@ -70,9 +80,9 @@ The SFMC SSJS engine performs **no `switch` fall-through of any kind** — runti
 
 - An **empty leading label** does not share the next label's body — `case "admin": case "superuser": …` runs nothing for `"admin"`.
 - A **break-less body** does not cascade into the following case.
-- A matched case never falls into **`default`**.
+- A matched case never cascades into a following **`default`** clause.
 
-Numeric switches behave the same way. Only direct, self-contained matched cases work; this shares one root cause with the [`default` may not execute](#switch-default-may-not-execute) bug below.
+Numeric switches behave the same way. Only direct, self-contained matched cases work. This is a distinct issue from the intermittent [`break` escaping a function](#switch-break-escape) above: no-fall-through is consistent and reproducible on every run, whereas the `break`-escape fault is flaky across compilations. What they share is the practical advice — do not depend on `switch` for control flow that must run; use `if` / a lookup map instead.
 
 ```javascript
 var level = "admin";
@@ -101,6 +111,8 @@ switch (level) {
 
 **ESLint rule:** `sfmc/ssjs-no-switch-fallthrough` flags empty stacked labels and break-less case bodies.
 
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="switch-no-fallthrough" %}
+
 ---
 
 ## Bare-name Recipient Does Not Exist
@@ -123,26 +135,7 @@ var v2 = Attribute.GetValue("FirstName");
 
 **Works correctly:** [`Platform.Recipient.GetAttributeValue(...)`](/platform-objects/platform-recipient/), or [`Attribute.GetValue(...)`](/core-library/attribute/) after `Platform.Load`.
 
----
-
-## DataExtension.Rows.Retrieve() on CloudPages — not reproducible
-
-**Status: Retracted** — could not be reproduced under runtime verification
-
-This entry previously claimed that `DataExtension.Rows.Retrieve()` returns empty results on CloudPages and that the `filter` argument is required. **Runtime verification on a live CloudPage disproved both claims**: `de.Rows.Retrieve()` with **no filter** returned all rows, and a filtered call returned the matching rows.
-
-```javascript
-Platform.Load("core", "1.1.5");
-var de = DataExtension.Init("MyDE");
-
-// ✅ Works on CloudPages — returns all rows
-var all = de.Rows.Retrieve();
-
-// ✅ Works on CloudPages — returns matching rows
-var rows = de.Rows.Retrieve({ Property: "Status", SimpleOperator: "equals", Value: "active" });
-```
-
-For the confirmed runtime characteristics of `Rows.Retrieve` / `Rows.Lookup` (string vs typed values, empty-array vs `null` on no match, host-array shape), see [Differs from Official Docs](/engine-limitations/differs-from-docs/) and the [DataExtension.Rows reference](/core-library/dataextension-rows/).
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="bare-name-recipient-does-not-exist" %}
 
 ---
 
@@ -179,6 +172,8 @@ The cache key is the **(data extension, filter)** pair, not the literal argument
 
 Switching to the array form or changing the returned field is therefore **not** a workaround. Structure scripts so each distinct query is issued at most once, and never re-read a row whose absence you queried earlier in the same request. See [Lookup](/platform-functions/lookup/).
 
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="lookup-request-scoped-query-cache" %}
+
 ---
 
 ## GetPostData() Can Only Be Called Once
@@ -198,32 +193,11 @@ var asJson = Platform.Function.ParseJSON(postBody + "");
 var asText = postBody; // reuse the cached value
 ```
 
----
-
-## Direct Object Literal Returns Cause 500
-
-**Severity: Medium** — causes a runtime 500 error
-
-Returning an object literal directly from a function can fail in SSJS:
-
-```javascript
-// ❌ May cause 500 error
-function getConfig() {
-    return { timeout: 30, retries: 3 };
-}
-
-// ✅ Assign to a variable first
-function getConfig() {
-    var config = { timeout: 30, retries: 3 };
-    return config;
-}
-```
-
-**ESLint rule:** `sfmc/ssjs-no-unsupported-syntax` includes a `DirectObjectReturn` check.
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="getpostdata-can-only-be-called-once" %}
 
 ---
 
-## Array.prototype.slice Throws on the No-Argument Form
+## Array.prototype.slice Throws on the No-Argument Form {#array-slice-no-arg-throws}
 
 **Severity: Low** — throws instead of copying
 
@@ -237,9 +211,11 @@ function getConfig() {
 
 Pass an explicit start index — `arr.slice(0)` — to copy the whole array, or use the [slice polyfill](/engine-limitations/polyfills/#array-prototype-slice).
 
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="array-slice-no-arg-throws" %}
+
 ---
 
-## Array.prototype.sort Throws Without a Compare Function
+## Array.prototype.sort Throws Without a Compare Function {#array-sort-no-compare-throws}
 
 **Severity: Low** — throws instead of default sort
 
@@ -253,9 +229,11 @@ Pass an explicit start index — `arr.slice(0)` — to copy the whole array, or 
 
 Always pass an explicit compare function, or use the [sort polyfill](/engine-limitations/polyfills/#array-prototype-sort) if you need the default order.
 
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="array-sort-no-compare-throws" %}
+
 ---
 
-## Array.prototype.splice — splice(start) Throws and the Insert Form Ignores Parameters
+## Array.prototype.splice — splice(start) Throws and the Insert Form Ignores Parameters {#array-splice-bugs}
 
 **Severity: Medium** — throws or silent incorrect behavior
 
@@ -277,9 +255,11 @@ arr.splice(2, 1, 'a');
 
 Use the two-argument delete form `splice(start, arr.length)` in place of `splice(start)`, or the [splice polyfill](/engine-limitations/polyfills/#array-prototype-splice) for the one-argument delete form and any insert.
 
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="array-splice-bugs" %}
+
 ---
 
-## Array.prototype.lastIndexOf Always Returns -1
+## Array.prototype.lastIndexOf Always Returns -1 {#array-lastindexof-always-minus-one}
 
 **Severity: Low** — incorrect result
 
@@ -293,9 +273,11 @@ Use the two-argument delete form `splice(start, arr.length)` in place of `splice
 
 Use the [lastIndexOf polyfill](/engine-limitations/polyfills/#array-prototype-lastindexof).
 
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="array-lastindexof-always-minus-one" %}
+
 ---
 
-## ParseJSON Throws on a Non-String Object/Array (not on null/undefined)
+## ParseJSON Throws on a Non-String Object/Array (not on null/undefined) {#parsejson-throws-non-string-object}
 
 **Severity: Medium** — causes page to error
 
@@ -318,6 +300,8 @@ var safe = Platform.Function.ParseJSON(responseBody + "");
 Always check the return value for `null` rather than relying on a thrown error. See the [ParseJSON reference](/platform-functions/parsejson/) for the full runtime-verified behavior.
 
 **ESLint rule:** `sfmc/ssjs-prefer-parsejson-safe-arg` auto-fixes the string-coercion pattern.
+
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="parsejson-throws-non-string-object" %}
 
 ---
 
@@ -343,6 +327,8 @@ Write(e.ok); // true (boolean property)
 
 Pass a JSON string (or a number when that is intentional). Do not rely on boolean arguments for JSON-boolean semantics.
 
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="parsejson-boolean-arguments-return-clr-true--false" %}
+
 ---
 
 ## HTTPHeader.SetValue Boolean Values Emit CLR `"True"` / `"False"` {#httpheader-setvalue-boolean-clr-true--false}
@@ -363,6 +349,8 @@ HTTPHeader.SetValue("X-Flag", "true");
 ```
 
 Prefer a string (or a number when that is intentional). Do not rely on boolean arguments when clients expect lowercase tokens.
+
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="httpheader-setvalue-boolean-clr-true--false" %}
 
 ---
 
@@ -388,9 +376,11 @@ Write("true");
 
 Use [`Stringify`](/core-library/stringify/) for objects and arrays. Prefer an explicit string when clients or parsers expect lowercase boolean tokens.
 
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="write-clr-tostring" %}
+
 ---
 
-## new on User-Defined Constructors
+## new on User-Defined Constructors {#new-on-user-defined-constructors}
 
 **Severity: Low** — behavior depends on pattern
 
@@ -405,6 +395,8 @@ var svc = MyService(config);
 ```
 
 `new` works reliably with: `Date`, `RegExp`, `Error`, `Object`, `Array`, `WSProxy`, `Script.Util.HttpRequest`.
+
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="new-on-user-defined-constructors" %}
 
 ---
 
@@ -427,6 +419,8 @@ de.Fields.Retrieve(); // real columns
 ```
 
 Note: `Platform.Function.LookupRows` looks up by **Data Extension name**, not External Key — the opposite of Core `DataExtension.Init`.
+
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="dataextension-init-requires-external-key" %}
 
 ---
 
@@ -465,9 +459,11 @@ Two further quirks on the `ENT.` path, both observed with a same-schema local Da
 - A write that omits a column is rejected. `Rows.Add` and `InsertDE` succeeded when every field of the shared DE was supplied and failed when one was left out, while the local control accepted the same partial shapes. Whether the shared DE's columns are flagged required was not established, so treat "always supply every column" as the safe rule rather than a proven engine difference.
 - `Platform.Function.DeleteDE` returns `null` whether or not it deleted anything. Naming only the primary key left the row in place; naming every column with its value removed it. Always verify a delete with a follow-up `LookupRows`.
 
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="ent-prefix-retrieve-empty" %}
+
 ---
 
-## Platform.Load Must Come Before Any Core Usage
+## Platform.Load Must Come Before Any Core Usage {#platform-load-before-core}
 
 **Severity: High** — runtime error
 
@@ -487,9 +483,11 @@ Even declaring a variable that holds a Core object before `Platform.Load` can fa
 
 **ESLint rules:** `sfmc/ssjs-require-platform-load`, `sfmc/ssjs-require-platform-load-order`, `sfmc/ssjs-prefer-platform-load-version`
 
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="platform-load-before-core" %}
+
 ---
 
-## Date.prototype.getMilliseconds Is Off by One
+## Date.prototype.getMilliseconds Is Off by One {#date-getmilliseconds-off-by-one}
 
 **Severity: Low** — incorrect sub-second value
 
@@ -508,9 +506,11 @@ new Date(2020, 0, 1, 0, 0, 0, 777).getMilliseconds(); // 776
 
 Never compare or store sub-second precision from a `Date`. Round to whole seconds, or read milliseconds from `getTime()` arithmetic if you must. The UTC variant `getUTCMilliseconds()` was accurate at the epoch in testing, but treat local millisecond precision as unreliable.
 
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="date-getmilliseconds-off-by-one" %}
+
 ---
 
-## Date.now() Returns a Date Object, Not a Number
+## Date.now() Returns a Date Object, Not a Number {#date-now-returns-date-object}
 
 **Severity: Medium** — type mismatch breaks numeric code
 
@@ -526,9 +526,11 @@ var ms = new Date().getTime();   // number of ms since epoch
 
 Numeric coercion (`Date.now() + 0`) does recover the epoch milliseconds, but prefer `new Date().getTime()`. See [Differs from Official Docs](/engine-limitations/differs-from-docs/#datenow-returns-a-date-object-not-a-number).
 
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="date-now-returns-date-object" %}
+
 ---
 
-## Date.parse() Returns 0 (Never NaN) for Invalid Strings
+## Date.parse() Returns 0 (Never NaN) for Invalid Strings {#date-parse-returns-zero}
 
 **Severity: Medium** — invalid dates silently become 1970-01-01
 
@@ -542,6 +544,8 @@ isNaN(Date.parse("garbage")); // false — bad input looks like 1970-01-01
 ```
 
 Validate date strings yourself before calling `Date.parse()`; do not rely on `NaN` for error detection. Note also that date-only strings parse as **local** midnight, not UTC. See [Differs from Official Docs](/engine-limitations/differs-from-docs/#dateparse-returns-0-never-nan-for-invalid-strings-and-parses-date-only-strings-as-local).
+
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="date-parse-returns-zero" %}
 
 ---
 
@@ -559,6 +563,8 @@ sum.length;
 ```
 
 Track expected arity yourself (a plain variable or constant) rather than reading `fn.length`. Related missing/altered `Function.prototype` members: `fn.name` and `fn.caller` are `undefined`, `fn.toString()` returns `[object Function]` not the source, and `fn.constructor === Function` is `false` — see [Function Methods](/ecmascript-builtins/function-methods/) and [Differs from Official Docs](/engine-limitations/differs-from-docs/#functionprototypetostring-returns-object-function-not-source).
+
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="functionprototypelength-throws" %}
 
 ---
 
@@ -595,13 +601,15 @@ The negative-argument cases are what prove the rule: the argument is not discard
 
 Compare two values at a time — `Math.max(Math.max(a, b), c)` — fold with a loop, or use the [Math.max / Math.min polyfill](/engine-limitations/polyfills/#math-max-min). See [Math Object](/ecmascript-builtins/math/#max) for the full list of `Math` members and which ES6 methods are missing.
 
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="math-max-min-throw" %}
+
 ---
 
 ## Infinity Has an Inverted Sign and Broken Comparisons {#infinity-inverted}
 
 **Severity: Medium** — silent wrong results in numeric edge cases
 
-The global `Infinity` identifier exists (`typeof Infinity` is `"number"`), but the SFMC Jint engine mishandles it. When stringified it shows the **wrong sign**: `String(Infinity)` and `(1/0)` render as `"-infinity"`, while `-Infinity` and `(-1/0)` render as `"infinity"`. Worse, comparisons are also broken — `(Infinity > 0)` and `(1/0 > 0)` both return **`false`** instead of `true` (runtime-verified). `Number.POSITIVE_INFINITY` / `Number.NEGATIVE_INFINITY` do not exist to work around this (both are `undefined` — see [Number Methods](/ecmascript-builtins/number-methods/#constants-es3)).
+The global `Infinity` identifier exists (`typeof Infinity` is `"number"`), but the SFMC Jint engine mishandles it. When stringified it shows the **wrong sign**: `String(Infinity)` and `(1/0)` render as `"-infinity"`, while `-Infinity` and `(-1/0)` render as `"infinity"`. Worse, comparisons are also broken — `(Infinity > 0)` and `(1/0 > 0)` both return **`false`** instead of `true` (runtime-verified). `Number.POSITIVE_INFINITY` / `Number.NEGATIVE_INFINITY` do exist (both are numbers), but they carry the same inverted-sign stringification as `Infinity` itself, so they cannot be used to work around the sign bug (see [Number Methods](/ecmascript-builtins/number-methods/#constants-es3)).
 
 ```javascript
 typeof Infinity;    // "number"
@@ -612,6 +620,8 @@ isFinite(Infinity); // false        — this one is correct
 ```
 
 Avoid relying on `Infinity` semantics. Use `isFinite(x)` to detect non-finite values — it answers correctly for an actual number, though not for a non-numeric string (see [below](#isfinite-true-for-non-numeric-string)) — and never branch on the sign or ordering of an `Infinity` value. See [Number Methods](/ecmascript-builtins/number-methods/#constants-es3).
+
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="infinity-inverted" %}
 
 ---
 
@@ -631,11 +641,11 @@ isFinite(0 / 0);            // false  — correct
 isFinite(Infinity);         // false  — correct
 isFinite(42);               // true   — correct
 isFinite("42");             // true   — correct
-isFinite("");               // true   — correct (ToNumber("") is 0)
+isFinite("");               // true   — but Number("") is NaN here (see workaround caveat below)
 isFinite(null);             // true   — correct (ToNumber(null) is 0)
 ```
 
-Guard untrusted input by coercing explicitly and testing the result, which is unaffected:
+Guard untrusted input by coercing explicitly and testing the result:
 
 ```javascript
 function isFiniteNumber(value) {
@@ -644,7 +654,11 @@ function isFiniteNumber(value) {
 }
 ```
 
+This rejects non-numeric strings correctly (`isFiniteNumber("abc")` is `false`). One engine caveat: `Number("")` is `NaN` here (not `0` as the spec requires), so `isFiniteNumber("")` returns `false` even though the empty string coerces to a finite `0` in standard JavaScript. Treat `""` explicitly before coercing if an empty string must count as `0`.
+
 See [Number Methods](/ecmascript-builtins/number-methods/#isfinite).
+
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="isfinite-true-for-non-numeric-string" %}
 
 ---
 
@@ -661,6 +675,8 @@ typeof ({}).isPrototypeOf;        // "function"  — it appears to exist
 
 Never call `isPrototypeOf`. To test prototype/instance relationships, compare the constructor directly (`obj.constructor === Ctor`) or walk the prototype chain manually. See [Object Methods](/ecmascript-builtins/object-methods/#isprototypeof).
 
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="objectprototypeisprototypeof-hangs" %}
+
 ---
 
 ## Object.prototype.propertyIsEnumerable Always Returns false {#objectprototypepropertyisenumerable-broken}
@@ -676,6 +692,8 @@ o.hasOwnProperty("a");       // true  — use this instead
 ```
 
 See [Object Methods](/ecmascript-builtins/object-methods/#propertyisenumerable) and [Differs from Official Docs](/engine-limitations/differs-from-docs/#objectprototypepropertyisenumerable-broken).
+
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="objectprototypepropertyisenumerable-broken" %}
 
 ---
 
@@ -697,6 +715,8 @@ Test the sign before applying any bitwise operator. This also limits the ES6 `Ma
 
 See [Operators](/language/operators/#bitwise-rarely-needed).
 
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="bitwise-negative-operand-throws" %}
+
 ---
 
 ## Bitwise NOT (~) Returns a Constant {#bitwise-not-broken}
@@ -713,6 +733,8 @@ See [Operators](/language/operators/#bitwise-rarely-needed).
 ```
 
 Never use `~indexOf(…)` as a truthiness idiom; compare against `-1` explicitly. See [Operators](/language/operators/#bitwise-rarely-needed).
+
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="bitwise-not-broken" %}
 
 ---
 
@@ -734,13 +756,15 @@ empty.hasOwnProperty("zzz");          // false — own properties only
 
 See [Reflection](/ecmascript-builtins/reflection/#reflect) and [Keyed Collections](/ecmascript-builtins/keyed-collections/#map).
 
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="in-operator-unreliable" %}
+
 ---
 
 ## TriggeredSend.Add Has No Working Invocation {#triggeredsend-add-no-working-invocation}
 
 **Severity: High** — the documented way to create a triggered send definition never succeeds
 
-`TriggeredSend.Add(properties)` is officially documented and the name resolves at runtime (`typeof TriggeredSend.Add` is `"function"`), but **no working invocation was found**. Every call throws the plain string `Error adding TSD.`, and `TriggeredSend.LastMessage` afterwards is either `An error occurred when attempting to evaluate a SetObjectProperty function call.  See inner exception for details.` (whenever the payload contains a nested object such as `Email`, `List`, or `SendClassification`) or the same `Error adding TSD.` with `LastErrorCode` 17014 / 2 (flat-only payloads). A string argument or a two-argument call also throws `Error adding TSD.` (the `Invalid cast from 'Char' to 'Double'.` cast still appears on `<TriggeredSendInstance>.Update("x")`, not on these Add forms).
+`TriggeredSend.Add(properties)` is officially documented and the name resolves at runtime (`typeof TriggeredSend.Add` is `"function"`), but **no working invocation was found**. Every call throws the plain string `Error adding TSD.`, and `TriggeredSend.LastMessage` afterwards is `An error occurred when attempting to evaluate a SetObjectProperty function call. See inner exception for details.` — including flat-only payloads, where `TriggeredSend.LastErrorCode` is left `undefined` rather than a numeric code. A string argument or a two-argument call also throws `Error adding TSD.` (the `Invalid cast from 'Char' to 'Double'.` cast still appears on `<TriggeredSendInstance>.Update("x")`, not on these Add forms).
 
 Payload shapes swept without a single success: the nested SOAP shape, the documented flat shape (`EmailID`, `ListID`, `SendClassificationID`), dotted keys (`"Email.ID"`), scalar-only payloads, typed Core Library objects from `Email.Init()` / `List.Init()` / `SendClassification.Init()`, and the CLR object returned by `TriggeredSend.Retrieve` with a mutated `CustomerKey`.
 
@@ -768,6 +792,8 @@ var tsd = TriggeredSend.Init("my_tsd");
 The definition created through WSProxy then publishes, starts, sends, pauses, and updates normally through the Core Library instance methods.
 
 **Works correctly:** [WSProxy `createItem`](/wsproxy/createitem/), then [`TriggeredSend.Init`](/core-library/triggeredsend/#init). See also [Differs from Official Docs](/engine-limitations/differs-from-docs/#triggeredsend-add).
+
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="triggeredsend-add-no-working-invocation" %}
 
 ---
 
@@ -801,6 +827,8 @@ Portfolio.Add({
 
 **Works correctly:** [`<PortfolioInstance>.Remove()`](/core-library/portfolio/#instance-remove) followed by [`Portfolio.Add()`](/core-library/portfolio/#add). See also [Differs from Official Docs](/engine-limitations/differs-from-docs/#portfolioinstance-update).
 
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="portfolioinstance-update-no-working-invocation" %}
+
 ---
 
 ## &lt;ContentAreaObjInstance&gt;.Update Creates a Content Area When It Fails {#contentareaobjinstance-update-creates-ghost}
@@ -830,13 +858,15 @@ if (rows && rows.length) {
 
 `ContentAreaObj` is a retired **Classic Content** feature in any case — for new work use the Content Builder Asset REST endpoints instead.
 
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="contentareaobjinstance-update-creates-ghost" %}
+
 ---
 
 ## &lt;DataExtensionInstance&gt;.Fields.UpdateSendableField Reports "OK" for a No-Argument Call {#dataextensionfields-updatesendablefield-false-ok}
 
 **Severity: Low** — a call that changes nothing reports success
 
-[`<DataExtensionInstance>.Fields.UpdateSendableField(deFieldName, subscriberField)`](/core-library/dataextension-fields/#instance-fields-updatesendablefield) returns the string `"Error"` for every other invalid invocation — an unknown data extension field, an unknown subscriber attribute, even a single-argument call. But calling it with **no arguments at all** returns `"OK"` while leaving the existing sendable mapping untouched.
+[`<DataExtensionInstance>.Fields.UpdateSendableField(deFieldName, subscriberField)`](/core-library/dataextension-fields/#instance-fields-updatesendablefield) returns the string `"Error"` only when the **data extension field is unknown** — a single-argument call or an unknown subscriber attribute against a *valid* field still returns `"OK"` and applies the mapping (defaulting the missing attribute). But calling it with **no arguments at all** also returns `"OK"`, while leaving the existing sendable mapping untouched.
 
 A `"OK"` return therefore does not prove a mapping was applied. Pass both arguments explicitly, and read the mapping back through the SOAP API (`DataExtension.SendableDataExtensionField.Name`) when the result matters.
 
@@ -850,6 +880,8 @@ var status = de.Fields.UpdateSendableField();
 // ✅ both arguments, and a real change
 var status = de.Fields.UpdateSendableField("DifferentSubKey", "Subscriber Key");
 ```
+
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="dataextensionfields-updatesendablefield-false-ok" %}
 
 ---
 
@@ -878,6 +910,8 @@ var byKey = list.Subscribers.Retrieve({
 });
 ```
 
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="list-subscribers-retrieve-emailaddress-filter" %}
+
 ---
 
 ## List.Subscribers.Update String Form Fails When Keys Differ {#list-subscribers-update-string-vs-object}
@@ -900,6 +934,8 @@ list.Subscribers.Update(
 );
 ```
 
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="list-subscribers-update-string-vs-object" %}
+
 ## Script.Util.HttpGet Returns No Response Metadata {#script-util-httpget-no-response-metadata}
 
 **Severity: Medium** — documented response properties are never populated
@@ -919,3 +955,5 @@ var resp = req.send();
 Write(resp.contentType); // "application/json; charset=utf-8"
 for (var b in resp.headers) { Write(b); } // "[Content-Type, application/json; charset=utf-8]", ...
 ```
+
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="script-util-httpget-no-response-metadata" %}

@@ -136,7 +136,7 @@ switch (level) {
 // access is "Full access" when level === "superuser"
 ```
 
-Duplicate the body (or use `if` / a lookup map) instead of relying on empty-case fall-through. See also the related [`default` case bug](/engine-limitations/known-bugs/#switch-default-may-not-execute).
+Duplicate the body (or use `if` / a lookup map) instead of relying on empty-case fall-through. See also the related [`switch` break-escape bug](/engine-limitations/known-bugs/#switch-break-escape).
 
 {% include test-script.html bundle="language--control-flow" chapter="switch" %}
 

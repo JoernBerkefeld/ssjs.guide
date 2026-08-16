@@ -66,7 +66,16 @@ var filter = {
         Value: "50"
     }
 };
+
+// LogicalOperator: "OR" is honoured too (runtime-verified on a CloudPage)
+var orFilter = {
+    LeftOperand:  { Property: "Country", SimpleOperator: "equals", Value: "CA" },
+    LogicalOperator: "OR",
+    RightOperand: { Property: "Country", SimpleOperator: "equals", Value: "US" }
+};
 ```
+
+Both `"AND"` and `"OR"` work in a `ComplexFilterPart` on CloudPages — an OR filter really returns the union of both operands and is **not** silently collapsed to AND (runtime-verified: an `OR` across two mutually-exclusive values returns rows matching *either*, not zero). Nest `ComplexFilterPart` objects as operands to combine more than two conditions.
 
 #### Return value
 

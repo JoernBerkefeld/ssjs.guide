@@ -4,6 +4,7 @@ title: Differs from Official Docs
 parent: Engine Limitations
 parent_url: /engine-limitations/
 verification: verified
+test_scripts: complete
 description: Every SSJS function, object, and property whose runtime behavior in the SFMC engine differs from the official Salesforce documentation — return types, required arguments, null vs empty-string results, and more. Each entry is runtime-verified on a live CloudPage.
 ---
 

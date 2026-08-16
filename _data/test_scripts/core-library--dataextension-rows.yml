@@ -54,7 +54,9 @@ instance-rows-retrieve: |
    *      "True"/"False"; Date locale-style "M/D/YYYY h:mm:ss AM/PM"
    *      (not ISO-8601). Official docs / Platform.Function.Lookup* return
    *      typed values.
-   *   5. SimpleFilter and ComplexFilterPart forms work.
+   *   5. SimpleFilter and ComplexFilterPart forms work — including
+   *      LogicalOperator "OR", which returns the union and is NOT collapsed
+   *      to AND (community cookbook wrongly claims DE WHERE is AND-only).
    *   6. On no match returns an empty host array (length 0), not null.
    *
    * EXPECTED OUTPUT: every line starts with PASS.
@@ -145,6 +147,17 @@ instance-rows-retrieve: |
           RightOperand: { Property: "F_Boolean", SimpleOperator: "equals", Value: "true" }
       }).length;
   }), "1");
+
+  /* 5b. ComplexFilterPart OR is honoured and NOT collapsed to AND. r1.F_Text=hello,
+     r2.F_Text=world; an OR across the two distinct values returns BOTH rows (2). If
+     OR were silently ANDed, no single row is both hello and world -> 0. */
+  assert("DEV ComplexFilterPart OR returns the union (community cookbook: no OR)", outcomeOf(function () {
+      return de.Rows.Retrieve({
+          LeftOperand:  { Property: "F_Text", SimpleOperator: "equals", Value: "hello" },
+          LogicalOperator: "OR",
+          RightOperand: { Property: "F_Text", SimpleOperator: "equals", Value: "world" }
+      }).length;
+  }), "2");
 
   /* 6. No match -> empty array, not null. */
   var empty = de.Rows.Retrieve({ Property: "SubKey", SimpleOperator: "equals", Value: "no-such-row-zzz" });

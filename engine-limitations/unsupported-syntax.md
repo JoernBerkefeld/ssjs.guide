@@ -4,12 +4,13 @@ title: Unsupported Syntax
 parent: Engine Limitations
 parent_url: /engine-limitations/
 verification: verified
+test_scripts: complete
 description: 25 ES6+ JavaScript features that cause runtime errors in SFMC SSJS, with safe alternatives for each.
 ---
 
 The SFMC SSJS engine does not support ES6+ syntax. Using any of the following features will cause a **runtime error** (often a blank white page with no diagnostic message).
 
-## let and const
+## let and const {#let-and-const}
 
 ```javascript
 // ❌ Not supported
@@ -21,7 +22,9 @@ var name = "Jane";
 var MAX = 100;  // Use UPPER_CASE by convention to signal "constant"
 ```
 
-## Arrow Functions
+{% include test-script.html bundle="engine-limitations--unsupported-syntax" chapter="let-and-const" %}
+
+## Arrow Functions {#arrow-functions}
 
 ```javascript
 // ❌ Not supported
@@ -35,7 +38,9 @@ var greet  = function(name) { return "Hello, " + name; };
 var fn     = function() { return 42; };
 ```
 
-## Template Literals
+{% include test-script.html bundle="engine-limitations--unsupported-syntax" chapter="arrow-functions" %}
+
+## Template Literals {#template-literals}
 
 ```javascript
 // ❌ Not supported
@@ -47,7 +52,9 @@ var msg  = "Hello, " + name + "! You have " + count + " messages.";
 var html = '<div class="' + cls + '">' + content + '</div>';
 ```
 
-## Classes
+{% include test-script.html bundle="engine-limitations--unsupported-syntax" chapter="template-literals" %}
+
+## Classes {#classes}
 
 ```javascript
 // ❌ Not supported
@@ -72,7 +79,9 @@ function createAnimal(name) {
 }
 ```
 
-## Destructuring
+{% include test-script.html bundle="engine-limitations--unsupported-syntax" chapter="classes" %}
+
+## Destructuring {#destructuring}
 
 ```javascript
 // ❌ Not supported — object destructuring
@@ -89,7 +98,9 @@ var first  = arr[0];
 var second = arr[1];
 ```
 
-## Default Parameters
+{% include test-script.html bundle="engine-limitations--unsupported-syntax" chapter="destructuring" %}
+
+## Default Parameters {#default-parameters}
 
 ```javascript
 // ❌ Not supported
@@ -102,7 +113,9 @@ function greet(name) {
 }
 ```
 
-## Spread Syntax
+{% include test-script.html bundle="engine-limitations--unsupported-syntax" chapter="default-parameters" %}
+
+## Spread Syntax {#spread-syntax}
 
 ```javascript
 // ❌ Not supported
@@ -122,7 +135,9 @@ function merge(a, b) {
 }
 ```
 
-## Rest Parameters
+{% include test-script.html bundle="engine-limitations--unsupported-syntax" chapter="spread-syntax" %}
+
+## Rest Parameters {#rest-parameters}
 
 ```javascript
 // ❌ Not supported
@@ -138,7 +153,9 @@ function sum() {
 }
 ```
 
-## for...of
+{% include test-script.html bundle="engine-limitations--unsupported-syntax" chapter="rest-parameters" %}
+
+## for...of {#for-of}
 
 ```javascript
 // ❌ Not supported
@@ -150,7 +167,9 @@ for (var i = 0; i < items.length; i++) {
 }
 ```
 
-## Async / Await
+{% include test-script.html bundle="engine-limitations--unsupported-syntax" chapter="for-of" %}
+
+## Async / Await {#async-await}
 
 ```javascript
 // ❌ Not supported — SSJS has no Promise/async model
@@ -167,7 +186,9 @@ var resp = req.send(); // Synchronous — no await needed
 var data = Platform.Function.ParseJSON(String(resp.content) + "");
 ```
 
-## Generators
+{% include test-script.html bundle="engine-limitations--unsupported-syntax" chapter="async-await" %}
+
+## Generators {#generators}
 
 ```javascript
 // ❌ Not supported
@@ -180,7 +201,9 @@ function makeCounter() {
 }
 ```
 
-## ES Modules (import/export)
+{% include test-script.html bundle="engine-limitations--unsupported-syntax" chapter="generators" %}
+
+## ES Modules (import/export) {#es-modules}
 
 ```javascript
 // ❌ Not supported
@@ -197,7 +220,9 @@ function DEHelper(deName) {
 }
 ```
 
-## Optional Chaining (?.)
+{% include test-script.html bundle="engine-limitations--unsupported-syntax" chapter="es-modules" %}
+
+## Optional Chaining (?.) {#optional-chaining}
 
 ```javascript
 // ❌ Not supported
@@ -221,7 +246,9 @@ function safeGet(obj, path) {
 var city = safeGet(user, "profile.address.city");
 ```
 
-## Nullish Coalescing (??)
+{% include test-script.html bundle="engine-limitations--unsupported-syntax" chapter="optional-chaining" %}
+
+## Nullish Coalescing (??) {#nullish-coalescing}
 
 ```javascript
 // ❌ Not supported
@@ -234,24 +261,9 @@ var name = user.name || "Subscriber";
 var name = (user.name !== null && user.name !== undefined) ? user.name : "Subscriber";
 ```
 
-## Direct Object Literal Returns
+{% include test-script.html bundle="engine-limitations--unsupported-syntax" chapter="nullish-coalescing" %}
 
-This is an SSJS-specific engine bug (not an ES version issue):
-
-```javascript
-// ❌ May cause a 500 error in SSJS
-function getConfig() {
-    return { timeout: 30, retries: 3 };
-}
-
-// ✅ Assign to variable first, then return
-function getConfig() {
-    var config = { timeout: 30, retries: 3 };
-    return config;
-}
-```
-
-## new on User-Defined Constructors
+## new on User-Defined Constructors {#new-user-defined-constructors}
 
 Using `new` with custom (non-native) constructor functions can fail if the function uses the revealing module pattern (returns an object):
 
@@ -264,3 +276,5 @@ var instance = MyModule(config);
 ```
 
 `new` is safe for: `Date`, `RegExp`, `Error`, `Object`, `Array`, `WSProxy`, `Script.Util.HttpRequest`.
+
+{% include test-script.html bundle="engine-limitations--unsupported-syntax" chapter="new-user-defined-constructors" %}

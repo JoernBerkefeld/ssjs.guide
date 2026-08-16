@@ -1,0 +1,1286 @@
+# Test scripts for /engine-limitations/unsupported-syntax/
+#
+# One key per chapter on the page. Each script is a self-contained SSJS
+# CloudPage snippet that asserts every claim the chapter makes.
+#
+# Unsupported SYNTAX aborts at PARSE time, which blanks the entire page and
+# cannot be wrapped in an inline try/catch. The scripts here therefore compile
+# the offending snippet INDIRECTLY at runtime via eval(...) so the parse error
+# becomes a CATCHABLE runtime throw. eval() is stable only for statement-only
+# strings whose return value is NOT captured; any value is surfaced through an
+# outer-var side effect, never through eval's return value.
+#
+# All scripts were last run green (every line PASS) against a live SFMC
+# CloudPage. Re-run them before changing any claim on the page.
+#
+# AUTHORING RULE: report each assertion on its own Platform.Response.Write
+# call. Concatenating several independent expressions into one Write can
+# interleave their evaluation in the Jint engine and pair labels with the
+# wrong values.
+
+let-and-const: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: let and const
+   *
+   * Proves:
+   *   1. `let` is NOT supported: it fails at parse/compile time. Proven via
+   *      eval indirection so the parse error becomes a CATCHABLE runtime throw
+   *      instead of blanking the whole page. eval("let a = 1;") throws
+   *      "no viable alternative at input '<name>'".
+   *   2. `const` is NOT supported: DEV — unlike `let` it does NOT throw at
+   *      eval-compile time (the keyword is tolerated by the parser), but the
+   *      binding is non-functional and throws "Object reference not set to an
+   *      instance of an object." the moment the const is actually USED in an
+   *      executing expression. Either way `const` causes a runtime error,
+   *      matching the doc claim; the failure mode simply differs from `let`.
+   *   3. The safe alternative `var` eval-compiles and runs WITHOUT throwing and
+   *      yields the expected values (var name = "Jane" -> "Jane";
+   *      var MAX = 100 -> 100).
+   *
+   * TECHNIQUE (eval indirection): unsupported SYNTAX aborts at PARSE time, which
+   * blanks the entire CloudPage — it cannot be wrapped in an inline try/catch in
+   * the same top-level script block. Compiling the offending snippet INDIRECTLY
+   * at runtime via eval(...) turns the parse error into a catchable throw.
+   * eval() is stable here ONLY for statement-only strings whose return value is
+   * NOT captured; capturing eval()'s result or evaluating a trailing expression
+   * string can itself abort the page (observed HTTP 422), so every eval below is
+   * a bare statement string and any value is surfaced through an outer-var side
+   * effect, never through eval's return value.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === ("" + expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. `let` is unsupported — eval-compile throws (catchable via indirection). */
+  assertThrows("let is unsupported (eval('let x = 1;') throws)", function () {
+      eval("let letx = 1;");
+  });
+  assertThrows("let is unsupported for UPPER_CASE names too", function () {
+      eval("let LETMAX = 100;");
+  });
+
+  /* 2. DEV: `const` is unsupported but fails at USE, not at eval-compile. */
+  /* eval-compile of a bare `const` declaration does NOT throw (parser tolerates the keyword). */
+  var constCompiledThrew = false;
+  try { eval("const CY = 1;"); } catch (ex) { constCompiledThrew = true; }
+  assert("DEV const bare-declaration does NOT throw at eval-compile (let DOES; const fails on USE)", constCompiledThrew ? "true" : "false", "false");
+  /* Actually USING a const in an executing expression throws a runtime error -> const is unsupported. */
+  assertThrows("const is unsupported (using const in an executing expr throws runtime error)", function () {
+      eval("outerSink = (function(){ const K = 9; return K; })();");
+  });
+
+  /* 3. The safe alternative `var` eval-compiles and runs, yielding expected values. */
+  /* var does NOT throw at eval-compile. */
+  var varCompiledThrew = false;
+  try { eval("var vv = 41 + 1;"); } catch (ex2) { varCompiledThrew = true; }
+  assert("var alternative eval-compiles WITHOUT throwing", varCompiledThrew ? "true" : "false", "false");
+  /* var name = "Jane" -> "Jane" (doc example), surfaced via outer-var side effect. */
+  var nameOut = "unset";
+  try { eval("nameOut = (function(){ var name = 'Jane'; return name; })();"); } catch (ex3) { nameOut = "THREW"; }
+  assert("var name = 'Jane' yields 'Jane'", nameOut, "Jane");
+  /* var MAX = 100 -> 100 (doc example). */
+  var maxOut = "unset";
+  try { eval("maxOut = (function(){ var MAX = 100; return MAX; })();"); } catch (ex4) { maxOut = "THREW"; }
+  assert("var MAX = 100 yields 100", maxOut, "100");
+  </script>
+
+arrow-functions: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Arrow Functions
+   *
+   * Proves:
+   *   1. Arrow functions are NOT supported: `(x) => x * 2` fails at
+   *      parse/compile time. Proven via eval indirection so the parse error
+   *      becomes a CATCHABLE runtime throw instead of blanking the whole page.
+   *   2. The single-param, no-parens form `name => "Hello, " + name` is ALSO
+   *      unsupported (same eval-compile parse throw).
+   *   3. The zero-param, block-body form `() => { return 42; }` is ALSO
+   *      unsupported (same eval-compile parse throw).
+   *   4. The safe alternative `function` expression eval-compiles and runs
+   *      WITHOUT throwing and yields the documented values:
+   *      function(x){ return x*2; } applied to 21 -> 42;
+   *      function(name){ return "Hello, " + name; } applied to "Jane"
+   *      -> "Hello, Jane"; function(){ return 42; } -> 42.
+   *
+   * TECHNIQUE (eval indirection): unsupported SYNTAX aborts at PARSE time, which
+   * blanks the entire CloudPage — it cannot be wrapped in an inline try/catch in
+   * the same top-level script block. Compiling the offending snippet INDIRECTLY
+   * at runtime via eval(...) turns the parse error into a catchable throw.
+   * eval() is stable here ONLY for statement-only strings whose return value is
+   * NOT captured; capturing eval()'s result or evaluating a trailing expression
+   * string can itself abort the page (observed HTTP 422), so every eval below is
+   * a bare statement string and any value is surfaced through an outer-var side
+   * effect, never through eval's return value.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === ("" + expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. Arrow function `(x) => x * 2` is unsupported — eval-compile throws. */
+  assertThrows("arrow (x) => x * 2 is unsupported (eval throws)", function () {
+      eval("var af1 = (x) => x * 2;");
+  });
+
+  /* 2. Single-param no-parens arrow `name => ...` is unsupported — eval-compile throws. */
+  assertThrows("arrow name => ... (no parens) is unsupported (eval throws)", function () {
+      eval("var af2 = arg => 'Hello, ' + arg;");
+  });
+
+  /* 3. Zero-param block-body arrow `() => { return 42; }` is unsupported — eval-compile throws. */
+  assertThrows("arrow () => { return 42; } is unsupported (eval throws)", function () {
+      eval("var af3 = () => { return 42; };");
+  });
+
+  /* 4. The safe alternative `function` expression eval-compiles and runs. */
+  /* The function-expression alternative does NOT throw at eval-compile. */
+  var fnCompiledThrew = false;
+  try { eval("var fnAlt = function(x){ return x * 2; };"); } catch (ex5) { fnCompiledThrew = true; }
+  assert("function-expression alternative eval-compiles WITHOUT throwing", fnCompiledThrew ? "true" : "false", "false");
+  /* function(x){ return x*2; } applied to 21 -> 42 (doc example: var double). */
+  var doubleOut = "unset";
+  try { eval("doubleOut = (function(x){ return x * 2; })(21);"); } catch (ex6) { doubleOut = "THREW"; }
+  assert("function(x){ return x*2; }(21) yields 42", doubleOut, "42");
+  /* function(name){ return "Hello, " + name; } applied to "Jane" -> "Hello, Jane" (doc example: var greet). */
+  var greetOut = "unset";
+  try { eval("greetOut = (function(name){ return 'Hello, ' + name; })('Jane');"); } catch (ex7) { greetOut = "THREW"; }
+  assert("function(name){ return 'Hello, ' + name; }('Jane') yields 'Hello, Jane'", greetOut, "Hello, Jane");
+  /* function(){ return 42; } -> 42 (doc example: var fn). */
+  var fnOut = "unset";
+  try { eval("fnOut = (function(){ return 42; })();"); } catch (ex8) { fnOut = "THREW"; }
+  assert("function(){ return 42; }() yields 42", fnOut, "42");
+  </script>
+
+template-literals: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Template Literals
+   *
+   * Proves:
+   *   1. Template literals (backtick strings with `${...}` interpolation) are
+   *      NOT supported: they fail at parse/compile time. Proven via eval
+   *      indirection so the parse error becomes a CATCHABLE runtime throw
+   *      instead of blanking the whole page. The interpolating form
+   *      `Hello, ${name}!` and the attribute form `<div class="${cls}">...`
+   *      both eval-throw.
+   *   2. The safe alternative — classic string concatenation with `+` —
+   *      eval-compiles and runs WITHOUT throwing and yields the documented
+   *      strings: "Hello, " + name + "! You have " + count + " messages."
+   *      -> "Hello, Jane! You have 3 messages.";
+   *      '<div class="' + cls + '">' + content + '</div>'
+   *      -> '<div class="box">hi</div>'.
+   *
+   * TECHNIQUE (eval indirection): unsupported SYNTAX aborts at PARSE time, which
+   * blanks the entire CloudPage — it cannot be wrapped in an inline try/catch in
+   * the same top-level script block. Compiling the offending snippet INDIRECTLY
+   * at runtime via eval(...) turns the parse error into a catchable throw.
+   * eval() is stable here ONLY for statement-only strings whose return value is
+   * NOT captured; capturing eval()'s result or evaluating a trailing expression
+   * string can itself abort the page (observed HTTP 422), so every eval below is
+   * a bare statement string and any value is surfaced through an outer-var side
+   * effect, never through eval's return value. A backtick inside a
+   * double-quoted eval string is a plain character to the outer parser; the
+   * inner (indirect) parse is what rejects the template-literal syntax.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === ("" + expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. Interpolating template literal `Hello, ${name}!` is unsupported — eval-compile throws. */
+  assertThrows("template literal with ${} interpolation is unsupported (eval throws)", function () {
+      eval("var tl1 = `Hello, ${name}! You have ${count} messages.`;");
+  });
+  /* 1b. Attribute-embedding template literal is ALSO unsupported — eval-compile throws. */
+  assertThrows("template literal in HTML attribute `<div class=\"${cls}\">` is unsupported (eval throws)", function () {
+      eval("var tl2 = `<div class=\"${cls}\">${content}</div>`;");
+  });
+
+  /* 2. The safe alternative — `+` string concatenation — eval-compiles and runs. */
+  /* The concatenation alternative does NOT throw at eval-compile. */
+  var concatCompiledThrew = false;
+  try { eval("var cc = 'a' + 'b';"); } catch (ex9) { concatCompiledThrew = true; }
+  assert("string-concatenation alternative eval-compiles WITHOUT throwing", concatCompiledThrew ? "true" : "false", "false");
+  /* "Hello, " + name + "! You have " + count + " messages." -> documented string (doc example: var msg). */
+  var msgOut = "unset";
+  try { eval("msgOut = (function(){ var name = 'Jane'; var count = 3; return 'Hello, ' + name + '! You have ' + count + ' messages.'; })();"); } catch (ex10) { msgOut = "THREW"; }
+  assert("'+' concat yields 'Hello, Jane! You have 3 messages.'", msgOut, "Hello, Jane! You have 3 messages.");
+  /* '<div class="' + cls + '">' + content + '</div>' -> documented string (doc example: var html). */
+  var htmlOut = "unset";
+  try { eval("htmlOut = (function(){ var cls = 'box'; var content = 'hi'; return '<div class=\"' + cls + '\">' + content + '</div>'; })();"); } catch (ex11) { htmlOut = "THREW"; }
+  assert("'+' concat yields '<div class=\"box\">hi</div>'", htmlOut, "<div class=\"box\">hi</div>");
+  </script>
+
+classes: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Classes
+   *
+   * Proves:
+   *   1. ES6 `class` syntax (class Animal { constructor(){} speak(){} }) is NOT
+   *      supported. Proven via eval indirection so the failure becomes a CATCHABLE
+   *      runtime throw instead of blanking the whole page. DEV: exactly like `const`
+   *      in the let-and-const chapter, a BARE `class` DECLARATION does NOT throw at
+   *      eval-compile (the parser tolerates the keyword) — but the moment the class
+   *      is actually USED (instantiated with `new`) it throws a runtime NRE
+   *      "Object reference not set to an instance of an object.", so `class` still
+   *      causes a runtime error and is unsupported.
+   *   1b. A `class` EXPRESSION (var Ax = class {...};) throws at eval-compile with
+   *      the parse-level "no viable alternative at input 'class'" message — a
+   *      stricter failure than the declaration form.
+   *   2. The safe alternative `function Animal(name){...}` + `Animal.prototype.speak`
+   *      eval-compiles and runs WITHOUT throwing and yields the documented value:
+   *      new Animal("Rex").speak() -> "Rex speaks".
+   *   3. The module/factory alternative `createAnimal(name)` eval-compiles and runs
+   *      WITHOUT throwing and returns an object whose .speak() yields the documented
+   *      value: createAnimal("Rex").speak() -> "Rex speaks".
+   *
+   * TECHNIQUE (eval indirection): unsupported SYNTAX aborts at PARSE time, which
+   * blanks the entire CloudPage — it cannot be wrapped in an inline try/catch in
+   * the same top-level script block. Compiling the offending snippet INDIRECTLY
+   * at runtime via eval(...) turns the parse error into a catchable throw.
+   * eval() is stable here ONLY for statement-only strings whose return value is
+   * NOT captured; capturing eval()'s result or evaluating a trailing expression
+   * string can itself abort the page (observed HTTP 422), so every eval below is
+   * a bare statement string and any value is surfaced through an outer-var side
+   * effect, never through eval's return value.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === ("" + expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. DEV: a bare `class` DECLARATION does NOT throw at eval-compile (parser tolerates it, like `const`). */
+  var classDeclThrew = false;
+  try { eval("class Animal0 { constructor(name) { this.name = name; } speak() { return this.name + ' speaks'; } }"); } catch (exc0) { classDeclThrew = true; }
+  assert("DEV class bare-declaration does NOT throw at eval-compile (fails on USE; class expr DOES throw)", classDeclThrew ? "true" : "false", "false");
+  /* 1a. USING a class (new Animal(...)) throws a runtime NRE -> class is unsupported. */
+  assertThrows("class is unsupported (instantiating a class with new throws runtime error)", function () {
+      eval("outerSink = (function(){ class Animal4 { constructor(name){ this.name = name; } speak(){ return this.name + ' speaks'; } } return new Animal4('Rex').speak(); })();");
+  });
+  /* 1b. A class EXPRESSION throws at eval-compile with the parse-level "no viable alternative" message. */
+  assertThrows("class expression (var Ax = class {...}) is unsupported (eval-compile throws)", function () {
+      eval("var Ax = class { constructor(n) { this.n = n; } };");
+  });
+
+  /* 2. The safe alternative: constructor function + prototype method eval-compiles and runs. */
+  /* The constructor-function alternative does NOT throw at eval-compile. */
+  var ctorCompiledThrew = false;
+  try { eval("var ctorAlt = function Animal(name){ this.name = name; };"); } catch (exc1) { ctorCompiledThrew = true; }
+  assert("constructor-function alternative eval-compiles WITHOUT throwing", ctorCompiledThrew ? "true" : "false", "false");
+  /* new Animal("Rex").speak() -> "Rex speaks" (doc example: constructor + prototype). */
+  var ctorOut = "unset";
+  try { eval("ctorOut = (function(){ function Animal(name){ this.name = name; } Animal.prototype.speak = function(){ return this.name + ' speaks'; }; return new Animal('Rex').speak(); })();"); } catch (exc2) { ctorOut = "THREW"; }
+  assert("constructor + Animal.prototype.speak yields 'Rex speaks'", ctorOut, "Rex speaks");
+
+  /* 3. The module/factory alternative eval-compiles and runs. */
+  /* The factory alternative does NOT throw at eval-compile. */
+  var factoryCompiledThrew = false;
+  try { eval("var factoryAlt = function createAnimal(name){ return { name: name }; };"); } catch (exc3) { factoryCompiledThrew = true; }
+  assert("factory-pattern alternative eval-compiles WITHOUT throwing", factoryCompiledThrew ? "true" : "false", "false");
+  /* createAnimal("Rex").speak() -> "Rex speaks" (doc example: module/factory pattern). */
+  var factoryOut = "unset";
+  try { eval("factoryOut = (function(){ function createAnimal(name){ var animal = { speak: speak }; return animal; function speak(){ return name + ' speaks'; } } return createAnimal('Rex').speak(); })();"); } catch (exc4) { factoryOut = "THREW"; }
+  assert("createAnimal('Rex').speak() yields 'Rex speaks'", factoryOut, "Rex speaks");
+  </script>
+destructuring: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Destructuring
+   *
+   * Proves:
+   *   1. Object destructuring (`var { name, email } = subscriber;`) is NOT
+   *      supported. Proven via eval indirection so the parse failure becomes a
+   *      CATCHABLE runtime throw instead of blanking the whole page.
+   *   2. Object destructuring with rename/alias (`var { x: alias } = obj;`) is NOT
+   *      supported and throws at eval-compile.
+   *   3. Array destructuring (`var [first, second] = arr;`) is NOT supported and
+   *      throws at eval-compile.
+   *   4. The safe alternative — direct property access
+   *      (`subscriber.name`, `subscriber.email`) and direct index access
+   *      (`arr[0]`, `arr[1]`) — eval-compiles and runs WITHOUT throwing and yields
+   *      the documented values.
+   *
+   * NOTE on the throw message: a destructuring PATTERN in a `var` binding is a
+   * parse-level construct, so the INDIRECT (inner) eval parse rejects it — the
+   * throw surfaces as the parse-level "no viable alternative at input ..." message.
+   * The doc claim only requires that the syntax causes a runtime error; whether the
+   * failure surfaces as a parse "no viable alternative" or a runtime NRE, the claim
+   * (destructuring is unsupported) holds either way.
+   *
+   * TECHNIQUE (eval indirection): unsupported SYNTAX aborts at PARSE time, which
+   * blanks the entire CloudPage — it cannot be wrapped in an inline try/catch in
+   * the same top-level script block. Compiling the offending snippet INDIRECTLY
+   * at runtime via eval(...) turns the parse error into a catchable throw.
+   * eval() is stable here ONLY for statement-only strings whose return value is
+   * NOT captured; capturing eval()'s result or evaluating a trailing-expression
+   * string can itself abort the page (observed HTTP 422), so every eval below is
+   * a bare statement string and any value is surfaced through an outer-var side
+   * effect, never through eval's return value.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === ("" + expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. Object destructuring (var { name, email } = subscriber;) is unsupported. */
+  assertThrows("object destructuring (var { name, email } = obj) is unsupported (eval-compile throws)", function () {
+      eval("outerSink = (function(){ var subscriber = { name: 'Jane', email: 'j@x.com' }; var { name, email } = subscriber; return name + '|' + email; })();");
+  });
+  /* 2. Object destructuring with alias (var { x: alias } = obj;) is unsupported. */
+  assertThrows("object destructuring with alias (var { x: alias } = obj) is unsupported (eval-compile throws)", function () {
+      eval("outerSink = (function(){ var obj = { x: 7 }; var { x: alias } = obj; return alias; })();");
+  });
+  /* 3. Array destructuring (var [first, second] = arr;) is unsupported. */
+  assertThrows("array destructuring (var [first, second] = arr) is unsupported (eval-compile throws)", function () {
+      eval("outerSink = (function(){ var arr = [10, 20]; var [first, second] = arr; return first + '|' + second; })();");
+  });
+
+  /* 4. The safe alternative: direct property/index access eval-compiles and runs. */
+  /* Direct property access does NOT throw at eval-compile. */
+  var accessCompiledThrew = false;
+  try { eval("var accessAlt = (function(){ var s = { name: 'Jane' }; return s.name; })();"); } catch (exa0) { accessCompiledThrew = true; }
+  assert("direct property/index access alternative eval-compiles WITHOUT throwing", accessCompiledThrew ? "true" : "false", "false");
+  /* subscriber.name / subscriber.email direct access yields the documented values. */
+  var objOut = "unset";
+  try { eval("objOut = (function(){ var subscriber = { name: 'Jane', email: 'j@x.com' }; var name = subscriber.name; var email = subscriber.email; return name + '|' + email; })();"); } catch (exa1) { objOut = "THREW"; }
+  assert("direct object access (subscriber.name/subscriber.email) yields 'Jane|j@x.com'", objOut, "Jane|j@x.com");
+  /* arr[0] / arr[1] direct index access yields the documented values. */
+  var arrOut = "unset";
+  try { eval("arrOut = (function(){ var arr = [10, 20]; var first = arr[0]; var second = arr[1]; return first + '|' + second; })();"); } catch (exa2) { arrOut = "THREW"; }
+  assert("direct array index access (arr[0]/arr[1]) yields '10|20'", arrOut, "10|20");
+  </script>
+
+default-parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Default Parameters
+   *
+   * Proves:
+   *   1. Default parameters in a function signature
+   *      (`function greet(name = "Subscriber") { ... }`) are NOT supported: the
+   *      `=` default in the parameter list fails at parse/compile time. Proven
+   *      via eval indirection so the parse failure becomes a CATCHABLE runtime
+   *      throw instead of blanking the whole page. Throw may surface as the
+   *      parse-level "no viable alternative"/"extraneous input" family OR as a
+   *      runtime NRE ("Object reference not set to an instance of an object.");
+   *      either way the syntax causes a runtime error, matching the doc claim.
+   *   2. The safe alternative — assigning the default inside the function body
+   *      (`name = name || "Subscriber";`) — eval-compiles and runs WITHOUT
+   *      throwing and yields the documented values for BOTH a provided arg
+   *      (greet("Jane") -> "Hello, Jane") and an omitted arg
+   *      (greet() -> "Hello, Subscriber").
+   *
+   * TECHNIQUE (eval indirection): unsupported SYNTAX aborts at PARSE time, which
+   * blanks the entire CloudPage — it cannot be wrapped in an inline try/catch in
+   * the same top-level script block. Compiling the offending snippet INDIRECTLY
+   * at runtime via eval(...) turns the parse error into a catchable throw.
+   * eval() is stable here ONLY for statement-only strings whose return value is
+   * NOT captured; capturing eval()'s result or evaluating a trailing-expression
+   * string can itself abort the page (observed HTTP 422), so every eval below is
+   * a bare statement string and any value is surfaced through an outer-var side
+   * effect, never through eval's return value.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === ("" + expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. A default parameter in the function signature is unsupported — eval throws (parse-level or runtime NRE). */
+  assertThrows("default parameter in signature (function greet(name = 'Subscriber')) is unsupported (eval throws)", function () {
+      eval("outerSink = (function(){ function greet(name = 'Subscriber') { return 'Hello, ' + name; } return greet(); })();");
+  });
+  /* 1b. A default parameter is unsupported even when the function is never called (the signature itself is rejected). */
+  assertThrows("default parameter in signature is unsupported even without a call (declaration alone eval throws)", function () {
+      eval("var defFn = function(name = 'Subscriber') { return 'Hello, ' + name; };");
+  });
+
+  /* 2. The safe alternative — `name = name || 'Subscriber';` inside the body — eval-compiles and runs. */
+  /* The in-body-default alternative does NOT throw at eval-compile. */
+  var defCompiledThrew = false;
+  try { eval("var defAlt = function(name){ name = name || 'Subscriber'; return 'Hello, ' + name; };"); } catch (exd0) { defCompiledThrew = true; }
+  assert("in-body-default alternative eval-compiles WITHOUT throwing", defCompiledThrew ? "true" : "false", "false");
+  /* greet("Jane") -> "Hello, Jane" (provided arg, doc example). */
+  var providedOut = "unset";
+  try { eval("providedOut = (function(){ function greet(name){ name = name || 'Subscriber'; return 'Hello, ' + name; } return greet('Jane'); })();"); } catch (exd1) { providedOut = "THREW"; }
+  assert("in-body default with provided arg greet('Jane') yields 'Hello, Jane'", providedOut, "Hello, Jane");
+  /* greet() -> "Hello, Subscriber" (omitted arg falls back to the default, doc example). */
+  var omittedOut = "unset";
+  try { eval("omittedOut = (function(){ function greet(name){ name = name || 'Subscriber'; return 'Hello, ' + name; } return greet(); })();"); } catch (exd2) { omittedOut = "THREW"; }
+  assert("in-body default with omitted arg greet() yields 'Hello, Subscriber'", omittedOut, "Hello, Subscriber");
+  </script>
+
+spread-syntax: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Spread Syntax
+   *
+   * Proves:
+   *   1. Array spread in an array literal (`[...arr1, ...arr2]`) is NOT supported.
+   *      Proven via eval indirection so the parse failure becomes a CATCHABLE
+   *      runtime throw instead of blanking the whole page.
+   *   2. Array copy via spread (`[...arr]`) is NOT supported and throws at eval.
+   *   3. Object spread in an object literal (`{ ...obj1, ...obj2 }`) is NOT
+   *      supported and throws at eval.
+   *   4. The safe array alternative — `arr1.concat(arr2)` — eval-compiles and runs
+   *      WITHOUT throwing and yields the combined array (length + joined values).
+   *   5. The safe object alternative — a manual `merge(a, b)` loop over own keys —
+   *      eval-compiles and runs WITHOUT throwing and yields the union object
+   *      (documented merged values).
+   *
+   * NOTE on the throw message: a `...` spread element is a parse-level construct,
+   * so the INDIRECT (inner) eval parse rejects it — the throw surfaces as the
+   * parse-level "no viable alternative"/"extraneous input" family (same mode as
+   * destructuring/default-parameters). The doc claim only requires that the
+   * syntax causes a runtime error; whether the failure surfaces as a parse
+   * "no viable alternative" or a runtime NRE, the claim (spread is unsupported)
+   * holds either way.
+   *
+   * TECHNIQUE (eval indirection): unsupported SYNTAX aborts at PARSE time, which
+   * blanks the entire CloudPage — it cannot be wrapped in an inline try/catch in
+   * the same top-level script block. Compiling the offending snippet INDIRECTLY
+   * at runtime via eval(...) turns the parse error into a catchable throw.
+   * eval() is stable here ONLY for statement-only strings whose return value is
+   * NOT captured; capturing eval()'s result or evaluating a trailing-expression
+   * string can itself abort the page (observed HTTP 422), so every eval below is
+   * a bare statement string and any value is surfaced through an outer-var side
+   * effect, never through eval's return value.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === ("" + expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. Array spread in an array literal ([...arr1, ...arr2]) is unsupported — eval throws. */
+  assertThrows("array spread in array literal ([...arr1, ...arr2]) is unsupported (eval throws)", function () {
+      eval("outerSink = (function(){ var arr1 = [1, 2]; var arr2 = [3, 4]; var combined = [...arr1, ...arr2]; return combined.length; })();");
+  });
+  /* 2. Array copy via spread ([...arr]) is unsupported — eval throws. */
+  assertThrows("array copy via spread ([...arr]) is unsupported (eval throws)", function () {
+      eval("outerSink = (function(){ var arr = [1, 2, 3]; var copy = [...arr]; return copy.length; })();");
+  });
+  /* 3. Object spread in an object literal ({ ...obj1, ...obj2 }) is unsupported — eval throws. */
+  assertThrows("object spread in object literal ({ ...obj1, ...obj2 }) is unsupported (eval throws)", function () {
+      eval("outerSink = (function(){ var obj1 = { a: 1 }; var obj2 = { b: 2 }; var merged = { ...obj1, ...obj2 }; return merged.a + '|' + merged.b; })();");
+  });
+
+  /* 4. The safe array alternative — arr1.concat(arr2) — eval-compiles and runs. */
+  /* concat does NOT throw at eval-compile. */
+  var concatCompiledThrew = false;
+  try { eval("var concatAlt = (function(){ var a = [1]; var b = [2]; return a.concat(b); })();"); } catch (exs0) { concatCompiledThrew = true; }
+  assert("concat array alternative eval-compiles WITHOUT throwing", concatCompiledThrew ? "true" : "false", "false");
+  /* arr1.concat(arr2) yields the combined array of length 4. */
+  var concatLen = "unset";
+  try { eval("concatLen = (function(){ var arr1 = [1, 2]; var arr2 = [3, 4]; return arr1.concat(arr2).length; })();"); } catch (exs1) { concatLen = "THREW"; }
+  assert("arr1.concat(arr2) yields combined array of length 4", concatLen, "4");
+  /* arr1.concat(arr2) joined yields '1,2,3,4' (the combined values in order). */
+  var concatJoined = "unset";
+  try { eval("concatJoined = (function(){ var arr1 = [1, 2]; var arr2 = [3, 4]; return arr1.concat(arr2).join(','); })();"); } catch (exs2) { concatJoined = "THREW"; }
+  assert("arr1.concat(arr2) joined yields '1,2,3,4'", concatJoined, "1,2,3,4");
+
+  /* 5. The safe object alternative — a manual merge(a, b) loop — eval-compiles and runs. */
+  /* The manual merge loop does NOT throw at eval-compile. */
+  var mergeCompiledThrew = false;
+  try { eval("var mergeAlt = function(a, b){ var result = {}; for (var k in a) { if (a.hasOwnProperty(k)) result[k] = a[k]; } for (var k in b) { if (b.hasOwnProperty(k)) result[k] = b[k]; } return result; };"); } catch (exs3) { mergeCompiledThrew = true; }
+  assert("manual merge(a,b) object alternative eval-compiles WITHOUT throwing", mergeCompiledThrew ? "true" : "false", "false");
+  /* merge({a:1},{b:2}) yields the union object { a:1, b:2 }. */
+  var mergeOut = "unset";
+  try { eval("mergeOut = (function(){ function merge(a, b){ var result = {}; for (var k in a) { if (a.hasOwnProperty(k)) result[k] = a[k]; } for (var k in b) { if (b.hasOwnProperty(k)) result[k] = b[k]; } return result; } var m = merge({ a: 1 }, { b: 2 }); return m.a + '|' + m.b; })();"); } catch (exs4) { mergeOut = "THREW"; }
+  assert("manual merge({a:1},{b:2}) yields union object with a=1,b=2 ('1|2')", mergeOut, "1|2");
+  /* merge lets the second object override overlapping keys (union semantics). */
+  var mergeOverride = "unset";
+  try { eval("mergeOverride = (function(){ function merge(a, b){ var result = {}; for (var k in a) { if (a.hasOwnProperty(k)) result[k] = a[k]; } for (var k in b) { if (b.hasOwnProperty(k)) result[k] = b[k]; } return result; } var m = merge({ a: 1, b: 1 }, { b: 2 }); return m.a + '|' + m.b; })();"); } catch (exs5) { mergeOverride = "THREW"; }
+  assert("manual merge overrides overlapping keys: merge({a:1,b:1},{b:2}) yields a=1,b=2 ('1|2')", mergeOverride, "1|2");
+  </script>
+
+rest-parameters: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Rest Parameters
+   *
+   * Proves:
+   *   1. A rest parameter in a function signature
+   *      (`function sum(...numbers) { ... }`) is NOT supported: the `...` rest
+   *      element in the parameter list fails when the offending snippet is
+   *      compiled indirectly via eval — proven so the parse/compile failure
+   *      becomes a CATCHABLE runtime throw instead of blanking the whole page.
+   *      The throw may surface as the parse-level "no viable alternative"/
+   *      "mismatched input"/"extraneous input" family (same mode as the
+   *      default-parameter and destructuring signatures) OR as a runtime NRE
+   *      ("Object reference not set to an instance of an object."); either way
+   *      the syntax causes a runtime error, matching the doc claim.
+   *   2. The rest-parameter signature is rejected even when the function is
+   *      never called — the signature itself (the `...numbers` binding) is the
+   *      thing the parser cannot accept.
+   *   3. The safe alternative — a no-parameter `function sum() { ... }` that
+   *      iterates the `arguments` object — eval-compiles and runs WITHOUT
+   *      throwing and yields the correct total (sum(1,2,3,4) === 10, and
+   *      sum() === 0 for the empty call).
+   *
+   * NOTE: the doc's "not supported" example ALSO uses `.reduce` and an arrow
+   * function, but the CLAIM under test in this chapter is REST PARAMETERS. The
+   * throwing form below therefore isolates the rest-parameter SIGNATURE
+   * `function sum(...numbers){ ... }` (with an ES3-safe body that does NOT use
+   * arrow/reduce) so the throw is attributable to the rest parameter alone and
+   * not conflated with the separately-documented arrow/reduce chapters.
+   *
+   * TECHNIQUE (eval indirection): unsupported SYNTAX aborts at PARSE time, which
+   * blanks the entire CloudPage — it cannot be wrapped in an inline try/catch in
+   * the same top-level script block. Compiling the offending snippet INDIRECTLY
+   * at runtime via eval(...) turns the parse error into a catchable throw.
+   * eval() is stable here ONLY for statement-only strings whose return value is
+   * NOT captured; capturing eval()'s result or evaluating a trailing-expression
+   * string can itself abort the page (observed HTTP 422), so every eval below is
+   * a bare statement string and any value is surfaced through an outer-var side
+   * effect, never through eval's return value.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === ("" + expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. A rest parameter in the function signature is unsupported — eval throws (parse-level or runtime NRE). Body kept ES3-safe to isolate the rest param from arrow/reduce. */
+  assertThrows("rest parameter in signature (function sum(...numbers)) is unsupported (eval throws)", function () {
+      eval("outerSink = (function(){ function sum(...numbers) { var t = 0; for (var i = 0; i < numbers.length; i++) { t += numbers[i]; } return t; } return sum(1, 2, 3, 4); })();");
+  });
+  /* 1b. A rest parameter is unsupported even when the function is never called (the signature itself is rejected). */
+  assertThrows("rest parameter in signature is unsupported even without a call (declaration alone eval throws)", function () {
+      eval("var restFn = function(...numbers) { return numbers.length; };");
+  });
+
+  /* 2. The safe alternative — a no-param function iterating the `arguments` object — eval-compiles and runs. */
+  /* The arguments-object alternative does NOT throw at eval-compile. */
+  var argsCompiledThrew = false;
+  try { eval("var sumAlt = function(){ var total = 0; for (var i = 0; i < arguments.length; i++) { total += arguments[i]; } return total; };"); } catch (exr0) { argsCompiledThrew = true; }
+  assert("arguments-object alternative eval-compiles WITHOUT throwing", argsCompiledThrew ? "true" : "false", "false");
+  /* sum(1,2,3,4) -> 10 (the arguments loop sums every passed value). */
+  var sumOut = "unset";
+  try { eval("sumOut = (function(){ function sum(){ var total = 0; for (var i = 0; i < arguments.length; i++) { total += arguments[i]; } return total; } return sum(1, 2, 3, 4); })();"); } catch (exr1) { sumOut = "THREW"; }
+  assert("arguments-object sum(1,2,3,4) yields 10", sumOut, "10");
+  /* sum() -> 0 (no arguments: the loop runs zero times, total stays 0). */
+  var sumEmpty = "unset";
+  try { eval("sumEmpty = (function(){ function sum(){ var total = 0; for (var i = 0; i < arguments.length; i++) { total += arguments[i]; } return total; } return sum(); })();"); } catch (exr2) { sumEmpty = "THREW"; }
+  assert("arguments-object sum() with no args yields 0", sumEmpty, "0");
+  </script>
+for-of: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: for...of
+   *
+   * Proves:
+   *   1. A `for...of` loop (`for (var item of items) { process(item); }`) is NOT
+   *      supported: the `of` iteration form fails when the offending snippet is
+   *      compiled indirectly via eval — proven so the parse/compile failure
+   *      becomes a CATCHABLE runtime throw instead of blanking the whole page.
+   *      The throw may surface as the parse-level "no viable alternative"/
+   *      "mismatched input"/"extraneous input" family OR as a runtime NRE
+   *      ("Object reference not set to an instance of an object."); either way
+   *      the syntax causes a runtime error, matching the doc claim.
+   *   2. The `for...of` form is rejected even when the loop body never runs — the
+   *      `of` keyword in the loop header is the thing the parser cannot accept.
+   *   3. The safe alternative — a classic index `for` loop
+   *      (`for (var i = 0; i < items.length; i++) { ... items[i] ... }`) —
+   *      eval-compiles and runs WITHOUT throwing and yields the correct
+   *      accumulation over [1, 2, 3, 4] (sum === 10, and === 0 for an empty
+   *      array).
+   *
+   * TECHNIQUE (eval indirection): unsupported SYNTAX aborts at PARSE time, which
+   * blanks the entire CloudPage — it cannot be wrapped in an inline try/catch in
+   * the same top-level script block. Compiling the offending snippet INDIRECTLY
+   * at runtime via eval(...) turns the parse error into a catchable throw.
+   * eval() is stable here ONLY for statement-only strings whose return value is
+   * NOT captured; capturing eval()'s result or evaluating a trailing-expression
+   * string can itself abort the page (observed HTTP 422), so every eval below is
+   * a bare statement string and any value is surfaced through an outer-var side
+   * effect, never through eval's return value.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === ("" + expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. A for...of loop is unsupported — eval throws (parse-level or runtime NRE). */
+  assertThrows("for...of loop (for (var item of items)) is unsupported (eval throws)", function () {
+      eval("outerSink = (function(){ var items = [1, 2, 3, 4]; var t = 0; for (var item of items) { t += item; } return t; })();");
+  });
+  /* 1b. A for...of loop is unsupported even over an empty array (body never runs) — the `of` header itself is rejected. */
+  assertThrows("for...of loop is unsupported even with an empty array (header alone eval throws)", function () {
+      eval("outerSink = (function(){ var empty = []; var n = 0; for (var item of empty) { n++; } return n; })();");
+  });
+
+  /* 2. The safe alternative — a classic index for loop — eval-compiles and runs. */
+  /* The index-for-loop alternative does NOT throw at eval-compile. */
+  var idxCompiledThrew = false;
+  try { eval("var sumIdx = function(a){ var total = 0; for (var i = 0; i < a.length; i++) { total += a[i]; } return total; };"); } catch (exf0) { idxCompiledThrew = true; }
+  assert("index-for-loop alternative eval-compiles WITHOUT throwing", idxCompiledThrew ? "true" : "false", "false");
+  /* index-for-loop over [1,2,3,4] -> 10 (accumulates every element). */
+  var idxSum = "unset";
+  try { eval("idxSum = (function(){ var items = [1, 2, 3, 4]; var total = 0; for (var i = 0; i < items.length; i++) { total += items[i]; } return total; })();"); } catch (exf1) { idxSum = "THREW"; }
+  assert("index-for-loop over [1,2,3,4] yields 10", idxSum, "10");
+  /* index-for-loop over [] -> 0 (empty array: the loop runs zero times, total stays 0). */
+  var idxEmpty = "unset";
+  try { eval("idxEmpty = (function(){ var items = []; var total = 0; for (var i = 0; i < items.length; i++) { total += items[i]; } return total; })();"); } catch (exf2) { idxEmpty = "THREW"; }
+  assert("index-for-loop over [] yields 0", idxEmpty, "0");
+  </script>
+
+async-await: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Async / Await
+   *
+   * Proves:
+   *   1. `async function` is NOT supported: an async function declaration fails
+   *      when the offending snippet is compiled indirectly via eval — proven so
+   *      the parse/compile failure becomes a CATCHABLE runtime throw instead of
+   *      blanking the whole page. The throw may surface as the parse-level
+   *      "no viable alternative"/"mismatched input" family OR as a runtime NRE
+   *      ("Object reference not set to an instance of an object."); either way
+   *      the syntax causes a runtime error, matching the doc claim (SSJS has no
+   *      Promise/async model).
+   *   2. A bare `await expr;` statement is NOT supported: it eval-throws the same
+   *      way (there is no async context and no Promise to await).
+   *   3. The documented alternative — SSJS HTTP is SYNCHRONOUS: a
+   *      `Script.Util.HttpRequest` object can be constructed with `new` and
+   *      exposes a `send` method that blocks until the response arrives (no
+   *      `await` needed). Proven cheaply WITHOUT a network call:
+   *      typeof Script.Util.HttpRequest is a CLR constructor, `new
+   *      Script.Util.HttpRequest(url)` builds an instance, and the instance's
+   *      `send` member resolves as a CLR method (typeof "clrmethodinfo" — the
+   *      CLR-proxy marker for a callable member; NOT the JS "function" string).
+   *      (A live send() to
+   *      https://ssjs.guide/site-index.json is intentionally NOT made here to
+   *      keep the probe cheap — see NON-ASSERTION below.)
+   *
+   * NON-ASSERTIONS (documented, not asserted):
+   *   - A real synchronous HTTP round-trip (statusCode 200 + parseable content
+   *     from https://ssjs.guide/site-index.json) is NOT exercised in this
+   *     chapter. Reason: a live external send costs ~30s and the synchronous
+   *     blocking behaviour of Script.Util.HttpRequest.send() is already
+   *     runtime-proven in the DB (Script Util Constructors / Script.Util.HttpRequest
+   *     and Promises & Iteration "engine is synchronous"). This chapter proves the
+   *     alternative is CONSTRUCTIBLE and has a send method; end-to-end send() is
+   *     covered by those probes, not re-run here.
+   *
+   * TECHNIQUE (eval indirection): unsupported SYNTAX aborts at PARSE time, which
+   * blanks the entire CloudPage — it cannot be wrapped in an inline try/catch in
+   * the same top-level script block. Compiling the offending snippet INDIRECTLY
+   * at runtime via eval(...) turns the parse error into a catchable throw.
+   * eval() is stable here ONLY for statement-only strings whose return value is
+   * NOT captured; capturing eval()'s result or evaluating a trailing-expression
+   * string can itself abort the page (observed HTTP 422), so every eval below is
+   * a bare statement string and any value is surfaced through an outer-var side
+   * effect, never through eval's return value.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === ("" + expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. `async function` is unsupported — eval throws (parse-level or runtime NRE). */
+  assertThrows("async function declaration is unsupported (eval throws)", function () {
+      eval("outerSink = (function(){ async function fetchData() { return 1; } return typeof fetchData; })();");
+  });
+
+  /* 2. A bare `await expr;` statement is unsupported — eval throws. */
+  assertThrows("bare await expression statement is unsupported (eval throws)", function () {
+      eval("outerSink = (function(){ var x = 1; await x; return x; })();");
+  });
+
+  /* 3. The documented alternative — synchronous SSJS HTTP via Script.Util.HttpRequest. */
+  /* The constructor resolves as a CLR constructor (typeof "clr"). */
+  assert("Script.Util.HttpRequest is a CLR constructor (typeof indexOf 'clr' > -1)", (("" + (typeof Script.Util.HttpRequest)).indexOf("clr") > -1) ? "true" : "false", "true");
+  /* new Script.Util.HttpRequest(url) builds an instance without throwing. */
+  var reqBuilt = "no";
+  var httpReq = null;
+  try { httpReq = new Script.Util.HttpRequest("https://ssjs.guide/site-index.json"); reqBuilt = "yes"; } catch (exh) { reqBuilt = "THREW: " + exh.message; }
+  assert("new Script.Util.HttpRequest(url) builds an instance", reqBuilt, "yes");
+  /* The instance exposes a synchronous, blocking send method (no await needed).
+     A CLR-proxy method reads typeof "clrmethodinfo", not the JS "function" string. */
+  assert("Script.Util.HttpRequest instance has a send CLR method (typeof 'clrmethodinfo')", typeof httpReq.send, "clrmethodinfo");
+  </script>
+
+generators: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Generators
+   *
+   * Proves:
+   *   1. A generator function `function* counter() { ... yield n++; }` is NOT
+   *      supported: the offending snippet, compiled INDIRECTLY via eval, throws.
+   *      The `function*` token (and the `yield` expression) is rejected — the
+   *      throw may surface as the parse-level "no viable alternative"/"mismatched
+   *      input" family OR as a runtime NRE ("Object reference not set to an
+   *      instance of an object."); either way the syntax causes a runtime error,
+   *      matching the doc claim (SSJS has no generator/iterator protocol).
+   *      The generator SIGNATURE is isolated with an ES3-safe body (a fixed
+   *      `yield 0;` — no `let`, no `while(true)`) so the ONLY unsupported token
+   *      under test is `function*` / `yield`, not the doc example's `let`/`while`.
+   *   2. The documented alternative — a closure-based counter `makeCounter()`
+   *      returning `function(){ return n++; }` — eval-compiles and runs WITHOUT
+   *      throwing and yields a sequence: the first call returns 0 and the second
+   *      call returns 1 (the closed-over `n` increments across calls).
+   *
+   * NON-ASSERTIONS (documented, not asserted): none — both the unsupported
+   * generator form and the closure alternative are directly reproducible via eval
+   * indirection, so every documented claim in this chapter is asserted.
+   *
+   * TECHNIQUE (eval indirection): unsupported SYNTAX aborts at PARSE time, which
+   * blanks the entire CloudPage — it cannot be wrapped in an inline try/catch in
+   * the same top-level script block. Compiling the offending snippet INDIRECTLY
+   * at runtime via eval(...) turns the parse error into a catchable throw.
+   * eval() is stable here ONLY for statement-only strings whose return value is
+   * NOT captured; capturing eval()'s result or evaluating a trailing-expression
+   * string can itself abort the page (observed HTTP 422), so every eval below is
+   * a bare statement string and any value is surfaced through an outer-var side
+   * effect (outerSink / countOut), never through eval's return value.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === ("" + expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. A generator function `function* ...` with `yield` is unsupported — eval
+     throws (parse-level 'no viable alternative'/'mismatched input' or runtime NRE).
+     The signature is isolated with an ES3-safe body so only `function*`/`yield`
+     is under test (no `let`, no `while(true)` from the doc example). */
+  assertThrows("generator function `function* counter(){ yield 0; }` is unsupported (eval throws)", function () {
+      eval("outerSink = (function(){ function* counter() { yield 0; } return typeof counter; })();");
+  });
+
+  /* 2. The documented alternative — a closure-based counter — eval-compiles and
+     runs WITHOUT throwing and yields a sequence (first call 0, second call 1). */
+  /* The closure-counter factory + first call eval-compiles without throwing. */
+  var makeThrew = false;
+  try { eval("var mkc = function() { var n = 0; return function() { return n++; }; };"); } catch (exm) { makeThrew = true; }
+  assert("closure-based makeCounter alternative eval-compiles WITHOUT throwing", makeThrew ? "true" : "false", "false");
+  /* First call of the returned counter yields 0. */
+  var countOut = "unset";
+  try { eval("countOut = (function(){ function makeCounter() { var n = 0; return function() { return n++; }; } var c = makeCounter(); return c(); })();"); } catch (exc) { countOut = "THREW"; }
+  assert("closure counter first call yields 0", countOut, "0");
+  /* Second call of the SAME counter instance yields 1 (n increments across calls). */
+  var countOut2 = "unset";
+  try { eval("countOut2 = (function(){ function makeCounter() { var n = 0; return function() { return n++; }; } var c = makeCounter(); c(); return c(); })();"); } catch (exc2) { countOut2 = "THREW"; }
+  assert("closure counter second call yields 1 (sequence)", countOut2, "1");
+  </script>
+
+es-modules: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: ES Modules (import/export)
+   *
+   * Proves:
+   *   1. An ES module `import` statement `import { lookup } from './helpers.js';`
+   *      is NOT supported: the offending snippet, compiled INDIRECTLY via eval,
+   *      throws. The `import` token is rejected — the throw may surface as the
+   *      parse-level "no viable alternative"/"mismatched input" family OR as a
+   *      runtime NRE ("Object reference not set to an instance of an object.");
+   *      either way the syntax causes a runtime error, matching the doc claim
+   *      (SSJS has no module system).
+   *   2. An `export function ...` statement is ALSO unsupported: the offending
+   *      snippet, compiled INDIRECTLY via eval, throws (same failure family).
+   *      The doc's `export function myHelper() { ... }` uses a prose ellipsis;
+   *      the probe uses a VALID body (`export function myHelper(){ return 1; }`)
+   *      so the ONLY unsupported token under test is `export`, not a malformed
+   *      body.
+   *   3. The documented alternative — the module-factory pattern `DEHelper`
+   *      returning an object with a `lookup` method — eval-compiles and runs
+   *      WITHOUT throwing and the returned method yields the expected value. To
+   *      keep the assertion deterministic and cheap, the factory's method is a
+   *      trivial in-script function (returns a fixed value) instead of a real
+   *      Platform.Function.Lookup against a DE; this exercises the exact
+   *      "factory returning an object with a method" shape the doc recommends.
+   *
+   * NON-ASSERTIONS (documented, not asserted): none — both unsupported module
+   * forms and the module-factory alternative are directly reproducible via eval
+   * indirection, so every documented claim in this chapter is asserted.
+   *
+   * TECHNIQUE (eval indirection): unsupported SYNTAX aborts at PARSE time, which
+   * blanks the entire CloudPage — it cannot be wrapped in an inline try/catch in
+   * the same top-level script block. Compiling the offending snippet INDIRECTLY
+   * at runtime via eval(...) turns the parse error into a catchable throw.
+   * eval() is stable here ONLY for statement-only strings whose return value is
+   * NOT captured; capturing eval()'s result or evaluating a trailing-expression
+   * string can itself abort the page (observed HTTP 422), so every eval below is
+   * a bare statement string and any value is surfaced through an outer-var side
+   * effect (outerSink / methodOut), never through eval's return value.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === ("" + expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. An `import { ... } from '...';` statement is unsupported — eval throws
+     (parse-level 'no viable alternative'/'mismatched input' or runtime NRE). */
+  assertThrows("import statement `import { lookup } from './helpers.js';` is unsupported (eval throws)", function () {
+      eval("outerSink = (function(){ import { lookup } from './helpers.js'; return typeof lookup; })();");
+  });
+
+  /* 2. An `export function ...` statement is unsupported — eval throws. The body
+     is valid (`return 1;`) so ONLY the `export` token is under test. */
+  assertThrows("export statement `export function myHelper(){ return 1; }` is unsupported (eval throws)", function () {
+      eval("outerSink = (function(){ export function myHelper(){ return 1; } return typeof myHelper; })();");
+  });
+
+  /* 3. The documented alternative — the module-factory pattern (DEHelper
+     returning an object with a method) — eval-compiles and runs WITHOUT
+     throwing and the returned method yields the expected value. */
+  /* The factory + object-with-method eval-compiles without throwing. */
+  var factoryThrew = false;
+  try { eval("var mkf = function(deName) { return { lookup: function(f){ return f; } }; };"); } catch (exf) { factoryThrew = true; }
+  assert("module-factory alternative eval-compiles WITHOUT throwing", factoryThrew ? "true" : "false", "false");
+  /* Calling the factory's returned method yields the expected value (trivial
+     in-script method kept deterministic; the doc's real form calls
+     Platform.Function.Lookup). */
+  var methodOut = "unset";
+  try { eval("methodOut = (function(){ function DEHelper(deName) { return { lookup: lookup }; function lookup(field) { return deName + ':' + field; } } var h = DEHelper('MyDE'); return h.lookup('Email'); })();"); } catch (exd) { methodOut = "THREW"; }
+  assert("module-factory DEHelper('MyDE').lookup('Email') yields 'MyDE:Email'", methodOut, "MyDE:Email");
+  </script>
+
+optional-chaining: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Optional Chaining (?.)
+   *
+   * Proves:
+   *   1. Optional chaining (`user?.profile?.address?.city`) is NOT supported: the
+   *      `?.` operator fails when the offending snippet is compiled indirectly via
+   *      eval — proven so the parse/compile failure becomes a CATCHABLE runtime
+   *      throw instead of blanking the whole page. The throw may surface as the
+   *      parse-level "no viable alternative"/"mismatched input"/"extraneous input"
+   *      family OR as a runtime NRE ("Object reference not set to an instance of
+   *      an object."); either way the `?.` syntax causes a runtime error, matching
+   *      the doc claim.
+   *   2. The safe alternative — a manual chained `&&`-guard expression
+   *      (`(user && user.profile && user.profile.address) ? ... : undefined`) —
+   *      eval-compiles and runs WITHOUT throwing and yields the nested value when
+   *      the whole path is present AND `undefined` when a mid-path object is
+   *      missing.
+   *   3. The safe alternative — a `safeGet(obj, path)` helper that splits a dotted
+   *      path and walks it with a null guard — eval-compiles and runs WITHOUT
+   *      throwing and yields the nested value when the path is present AND
+   *      `undefined` when the path breaks.
+   *
+   * TECHNIQUE (eval indirection): unsupported SYNTAX aborts at PARSE time, which
+   * blanks the entire CloudPage — it cannot be wrapped in an inline try/catch in
+   * the same top-level script block. Compiling the offending snippet INDIRECTLY
+   * at runtime via eval(...) turns the parse error into a catchable throw.
+   * eval() is stable here ONLY for statement-only strings whose return value is
+   * NOT captured; capturing eval()'s result or evaluating a trailing-expression
+   * string can itself abort the page (observed HTTP 422), so every eval below is
+   * a bare statement string and any value is surfaced through an outer-var side
+   * effect, never through eval's return value.
+   *
+   * NON-ASSERTIONS: none — every documented claim in this chapter (the `?.`
+   * failure and both documented alternatives) is deterministically reproducible.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === ("" + expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. Optional chaining `a?.b` is unsupported — eval throws (parse-level or runtime NRE). */
+  assertThrows("optional chaining user?.profile?.address?.city is unsupported (eval throws)", function () {
+      eval("outerSink = (function(){ var user = { profile: { address: { city: 'Berlin' } } }; return user?.profile?.address?.city; })();");
+  });
+  /* 1b. The single-hop `a?.b` form is unsupported too — the `?.` operator itself is rejected. */
+  assertThrows("optional chaining single-hop a?.b is unsupported (eval throws)", function () {
+      eval("outerSink = (function(){ var a = { b: 1 }; return a?.b; })();");
+  });
+
+  /* 2. Safe alternative — manual chained && guard. */
+  /* The manual && guard alternative does NOT throw at eval-compile. */
+  var andCompiledThrew = false;
+  try { eval("var getCity = function(u){ return (u && u.profile && u.profile.address) ? u.profile.address.city : undefined; };"); } catch (exa0) { andCompiledThrew = true; }
+  assert("manual && guard alternative eval-compiles WITHOUT throwing", andCompiledThrew ? "true" : "false", "false");
+  /* Full path present -> the nested value. */
+  var andPresent = "unset";
+  try { eval("andPresent = (function(){ var user = { profile: { address: { city: 'Berlin' } } }; return (user && user.profile && user.profile.address) ? user.profile.address.city : undefined; })();"); } catch (exa1) { andPresent = "THREW"; }
+  assert("manual && guard yields nested value when path present", andPresent, "Berlin");
+  /* Mid-path object missing -> undefined (the guard short-circuits before the missing hop). */
+  var andMissing = "sentinel";
+  try { eval("andMissing = (function(){ var user = { profile: {} }; var r = (user && user.profile && user.profile.address) ? user.profile.address.city : undefined; return r === undefined ? 'IS_UNDEFINED' : ('' + r); })();"); } catch (exa2) { andMissing = "THREW"; }
+  assert("manual && guard yields undefined when a mid-path object is missing", andMissing, "IS_UNDEFINED");
+
+  /* 3. Safe alternative — safeGet(obj, path) helper walking a dotted path with a null guard. */
+  /* The safeGet helper does NOT throw at eval-compile. */
+  var sgCompiledThrew = false;
+  try { eval("var safeGet = function(obj, path){ var parts = path.split('.'); var current = obj; for (var i = 0; i < parts.length; i++) { if (current == null) return undefined; current = current[parts[i]]; } return current; };"); } catch (exs0) { sgCompiledThrew = true; }
+  assert("safeGet helper eval-compiles WITHOUT throwing", sgCompiledThrew ? "true" : "false", "false");
+  /* Full path present -> the nested value. */
+  var sgPresent = "unset";
+  try { eval("sgPresent = (function(){ function safeGet(obj, path){ var parts = path.split('.'); var current = obj; for (var i = 0; i < parts.length; i++) { if (current == null) return undefined; current = current[parts[i]]; } return current; } var user = { profile: { address: { city: 'Berlin' } } }; return safeGet(user, 'profile.address.city'); })();"); } catch (exs1) { sgPresent = "THREW"; }
+  assert("safeGet(user, 'profile.address.city') yields nested value when path present", sgPresent, "Berlin");
+  /* Path breaks (mid-path object missing) -> undefined (the null guard stops the walk). */
+  var sgMissing = "sentinel";
+  try { eval("sgMissing = (function(){ function safeGet(obj, path){ var parts = path.split('.'); var current = obj; for (var i = 0; i < parts.length; i++) { if (current == null) return undefined; current = current[parts[i]]; } return current; } var user = { profile: {} }; var r = safeGet(user, 'profile.address.city'); return r === undefined ? 'IS_UNDEFINED' : ('' + r); })();"); } catch (exs2) { sgMissing = "THREW"; }
+  assert("safeGet yields undefined when the path breaks", sgMissing, "IS_UNDEFINED");
+  </script>
+
+nullish-coalescing: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Nullish Coalescing (??)
+   *
+   * Proves:
+   *   1. The nullish coalescing operator `user.name ?? "Subscriber"` is NOT
+   *      supported: the `??` operator fails when the offending snippet is compiled
+   *      indirectly via eval — proven so the parse/compile failure becomes a
+   *      CATCHABLE runtime throw instead of blanking the whole page. The throw may
+   *      surface as the parse-level "no viable alternative"/"mismatched
+   *      input"/"extraneous input" family OR as a runtime NRE ("Object reference
+   *      not set to an instance of an object."); either way the `??` syntax causes
+   *      a runtime error, matching the doc claim.
+   *   2. Alternative 1 — the `||` falsy fallback (`user.name || "Subscriber"`) —
+   *      eval-compiles and runs WITHOUT throwing. It returns the original value
+   *      when that value is truthy, but the doc warns it ALSO catches falsy values
+   *      such as "", 0 and false: for a value of "" (empty string) `||` returns the
+   *      fallback "Subscriber", and for a genuinely null value it also returns the
+   *      fallback "Subscriber".
+   *   3. Alternative 2 — the explicit null/undefined check
+   *      (`(user.name !== null && user.name !== undefined) ? user.name : "Subscriber"`)
+   *      — eval-compiles and runs WITHOUT throwing. It only falls back on null /
+   *      undefined: for a value of "" (empty string) it returns the ORIGINAL ""
+   *      (NOT the fallback), and for a genuinely null value it returns the fallback
+   *      "Subscriber".
+   *   4. The DIFFERENCE the doc calls out is demonstrated directly: for the same
+   *      value "" (empty string), `||` returns "Subscriber" while the explicit
+   *      null/undefined check returns the original "". For a genuinely null value
+   *      BOTH return the fallback "Subscriber".
+   *
+   * TECHNIQUE (eval indirection): unsupported SYNTAX aborts at PARSE time, which
+   * blanks the entire CloudPage — it cannot be wrapped in an inline try/catch in
+   * the same top-level script block. Compiling the offending snippet INDIRECTLY
+   * at runtime via eval(...) turns the parse error into a catchable throw.
+   * eval() is stable here ONLY for statement-only strings whose return value is
+   * NOT captured; capturing eval()'s result or evaluating a trailing-expression
+   * string can itself abort the page (observed HTTP 422), so every eval below is
+   * a bare statement string and any value is surfaced through an outer-var side
+   * effect, never through eval's return value.
+   *
+   * NON-ASSERTIONS: none — every documented claim in this chapter (the `??`
+   * failure and both documented alternatives, including the "" difference the doc
+   * highlights) is deterministically reproducible.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === ("" + expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = "" + ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+
+  /* 1. Nullish coalescing `a ?? b` is unsupported — eval throws (parse-level or runtime NRE). */
+  assertThrows("nullish coalescing user.name ?? \"Subscriber\" is unsupported (eval throws)", function () {
+      eval("outerSink = (function(){ var user = { name: 'Jane' }; return user.name ?? 'Subscriber'; })();");
+  });
+
+  /* 2. Alternative 1 — the || falsy fallback. */
+  /* The || fallback alternative does NOT throw at eval-compile. */
+  var orCompiledThrew = false;
+  try { eval("var orGet = function(v){ return v || 'Subscriber'; };"); } catch (exo0) { orCompiledThrew = true; }
+  assert("|| fallback alternative eval-compiles WITHOUT throwing", orCompiledThrew ? "true" : "false", "false");
+  /* Empty string "" is falsy -> || returns the fallback (the caveat the doc warns about). */
+  var orEmpty = "unset";
+  try { eval("orEmpty = (function(){ var name = ''; return name || 'Subscriber'; })();"); } catch (exo1) { orEmpty = "THREW"; }
+  assert("|| returns fallback for \"\" (empty string is falsy, per doc caveat)", orEmpty, "Subscriber");
+  /* Genuinely null -> || returns the fallback. */
+  var orNull = "unset";
+  try { eval("orNull = (function(){ var name = null; return name || 'Subscriber'; })();"); } catch (exo2) { orNull = "THREW"; }
+  assert("|| returns fallback for a null value", orNull, "Subscriber");
+
+  /* 3. Alternative 2 — the explicit null/undefined check. */
+  /* The explicit-check alternative does NOT throw at eval-compile. */
+  var chkCompiledThrew = false;
+  try { eval("var chkGet = function(v){ return (v !== null && v !== undefined) ? v : 'Subscriber'; };"); } catch (exc0) { chkCompiledThrew = true; }
+  assert("explicit null/undefined check alternative eval-compiles WITHOUT throwing", chkCompiledThrew ? "true" : "false", "false");
+  /* Empty string "" is NOT null/undefined -> the explicit check keeps the ORIGINAL "". */
+  var chkEmpty = "sentinel";
+  try { eval("chkEmpty = (function(){ var name = ''; var r = (name !== null && name !== undefined) ? name : 'Subscriber'; return r === '' ? 'IS_EMPTY' : ('' + r); })();"); } catch (exc1) { chkEmpty = "THREW"; }
+  assert("explicit check keeps the original \"\" (does NOT fall back when value is empty string)", chkEmpty, "IS_EMPTY");
+  /* Genuinely null -> the explicit check returns the fallback. */
+  var chkNull = "unset";
+  try { eval("chkNull = (function(){ var name = null; return (name !== null && name !== undefined) ? name : 'Subscriber'; })();"); } catch (exc2) { chkNull = "THREW"; }
+  assert("explicit check returns fallback for a null value", chkNull, "Subscriber");
+
+  /* 4. The DIFFERENCE the doc calls out: for "" the two alternatives disagree. */
+  /* For "" -> || yields the fallback while the explicit check yields the original "". */
+  assert("DIFFERENCE for \"\": || returns fallback but explicit check returns original", orEmpty + " | " + chkEmpty, "Subscriber | IS_EMPTY");
+  /* For a null value -> both alternatives agree on the fallback. */
+  assert("AGREEMENT for null: both || and the explicit check return the fallback", orNull + " | " + chkNull, "Subscriber | Subscriber");
+  </script>
+
+new-user-defined-constructors: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: new on User-Defined Constructors
+   *
+   * Using `new` with a user-defined (non-native) constructor that follows the
+   * REVEALING MODULE PATTERN — i.e. the function explicitly `return`s a service
+   * object instead of assigning to `this` — does NOT behave like standard JS.
+   *
+   * TECHNIQUE (NO eval indirection): this is VALID ES3 syntax — the failure is a
+   * RUNTIME behavior of `new` on a return-object constructor, not a parse error.
+   * So — unlike the parse-abort chapters on this page — it is executed DIRECTLY
+   * in normal functions so the test proves the REAL shipped behavior.
+   *
+   * DEVIATION (why the page says `new MyModule(config)` "may fail"): in spec JS,
+   * when a constructor explicitly returns an OBJECT, `new Ctor()` yields that
+   * returned object (the freshly bound `this` is discarded). This engine does the
+   * OPPOSITE: `new MyModule()` returns the empty `this` and SILENTLY DISCARDS the
+   * explicitly-returned service object — it does NOT throw. Every method/property
+   * of the intended service object is therefore MISSING on the `new`-produced
+   * instance, which is exactly what makes revealing-module constructors "fail"
+   * under `new`. (Reused runtime truth from the known-bugs.md probe of the same
+   * topic — verification-DB subject "Unsupported Syntax" / prior known-bugs run.)
+   *
+   * Proves (HONEST runtime behavior, encoded GREEN):
+   *   1. DEV: `new` on a returned-object constructor does NOT throw; it returns
+   *      the empty `this` (typeof "object") and DISCARDS the returned service, so
+   *      the service's own members are absent on the new-instance
+   *      (spec: `new` would yield the returned service object with members intact).
+   *   2. WORKAROUND (page): call WITHOUT `new` (factory pattern) — the service
+   *      object is returned verbatim with its marker and getCfg() method intact.
+   *   3. `new` is SAFE for the native constructors the page lists — Date, RegExp,
+   *      Error, Object, Array, WSProxy — asserted by BEHAVIOR (instanceof is
+   *      unreliable in this engine). Script.Util.HttpRequest is on the page's
+   *      safe list and is asserted CONSTRUCTIBLE only (a live send is a ~30s
+   *      external call — see NON-ASSERTION below).
+   *
+   * NON-ASSERTION (documented, not asserted): a live Script.Util.HttpRequest
+   * send() round-trip is NOT exercised here to keep the probe cheap (~30s
+   * external call); the blocking synchronous send is already runtime-proven under
+   * the verification-DB subjects "Script Util Constructors" / "Script.Util.HttpRequest".
+   * `new Script.Util.HttpRequest(...)` is asserted CONSTRUCTIBLE (does not throw).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = "" + actual; } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === ("" + expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  /* Revealing module pattern: the constructor explicitly returns a service. */
+  function MyModule(config) {
+      var cfg = config;
+      var service = {};
+      service.getCfg = function () { return cfg; };
+      service.marker = "SERVICE";
+      return service;
+  }
+
+  /* 1. DEV: `new` on a returned-object constructor does NOT throw, but returns
+     the empty `this` and DISCARDS the returned service object (spec: `new`
+     yields the explicitly-returned object). The service's own members are
+     therefore absent on the `new`-produced instance. */
+  var moduleNew = new MyModule("A");
+  assert("DEV new MyModule(config): typeof result is object (empty this, not thrown; spec: returned service)", typeof moduleNew, "object");
+  assert("DEV new MyModule(config): returned service DISCARDED, marker absent (spec: marker='SERVICE')", typeof moduleNew.marker, "undefined");
+  assert("DEV new MyModule(config): getCfg absent on new-instance (spec: function)", typeof moduleNew.getCfg, "undefined");
+
+  /* 2. WORKAROUND (page): call WITHOUT new (factory pattern) — the service
+     object is returned verbatim with all members intact. */
+  var moduleF = MyModule("B");
+  assert("WORKAROUND factory MyModule('B') (no new): marker preserved", moduleF.marker, "SERVICE");
+  assert("WORKAROUND factory MyModule('B') (no new): getCfg() returns config", moduleF.getCfg(), "B");
+
+  /* 3. `new` is SAFE for the native constructors the page lists. Assert by
+     BEHAVIOR (instanceof is unreliable in this engine). */
+  var d = new Date(2024, 0, 15);
+  assert("SAFE new Date(2024,0,15).getFullYear()", d.getFullYear(), "2024");
+  var re = new RegExp("ab+c");
+  assert("SAFE new RegExp('ab+c').test('abbc')", re.test("abbc") ? "yes" : "no", "yes");
+  var er = new Error("m");
+  assert("SAFE new Error('m') is a usable object", (typeof er === "object") ? "yes" : "no", "yes");
+  assert("DEV new Error('m').message is undefined via new-form (spec: own '.message'==='m'; recover with String(err))", typeof er.message, "undefined");
+  assert("SAFE new Error('m') message recovered via String() (documented workaround)", String(er), "m");
+  var o = new Object();
+  o.k = 7;
+  assert("SAFE new Object() holds a property", "" + o.k, "7");
+  var arr = new Array(1, 2, 3);
+  assert("SAFE new Array(1,2,3).length", arr.length, "3");
+  var wsp = new Script.Util.WSProxy();
+  assert("SAFE new Script.Util.WSProxy() reads typeof clr", ("" + (typeof wsp)).indexOf("clr") > -1 ? "yes" : "no", "yes");
+
+  /* Script.Util.HttpRequest: assert CONSTRUCTIBLE only (a live send is a ~30s
+     external call — see NON-ASSERTION in the header). */
+  var reqThrew = false;
+  try {
+      var httpReq = new Script.Util.HttpRequest("https://ssjs.guide/site-index.json");
+  } catch (exh) {
+      reqThrew = true;
+  }
+  assert("SAFE new Script.Util.HttpRequest(url) constructs (does not throw)", reqThrew ? "true" : "false", "false");
+  </script>
