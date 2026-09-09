@@ -6,10 +6,11 @@ parent_url: /ecmascript-builtins/
 description: Array prototype methods and statics in SSJS — which work natively, which are partial, and which are missing, with safe ES3/ES5 alternatives and polyfill links.
 verification: verified
 differs_from_docs: true
-test_scripts: complete
 ---
 
-Each member below is tagged with the ECMAScript edition that standardized it: `(ES3)`, `(ES5)`, or `(ES6)`. Methods that need a polyfill link to [Polyfills](/engine-limitations/polyfills/).
+Each member below is tagged with its ECMAScript edition, using labels such as `ES3`, `ES5`, `ES6`, and year-based labels for later additions. Methods that need a polyfill link to [Polyfills](/engine-limitations/polyfills/).
+
+The new `findLastIndex` assertion scripts derive from runtime evidence dated 2026-09-06 and are statically checked, not executed live. See the shared [native-absence evidence scope](/ecmascript-builtins/#native-absence-scope) for contexts and limits.
 
 ## Status legend
 
@@ -56,6 +57,10 @@ Each member below is tagged with the ECMAScript edition that standardized it: `(
 | [`flat(depth)`](#flat) | ES6 | ❌ Missing | Concatenate nested arrays manually in a loop |
 | [`flatMap(fn)`](#flatmap) | ES6 | ❌ Missing | Build the result with a `for` loop and `push` |
 | [`findLast(fn)`](#findlast) | ES6 | ❌ Missing | Iterate from the end with a `for` loop |
+| [`findLastIndex`](#findlastindex) | ES2023 | ❌ Missing | Not available natively |
+| [`toReversed`](#toreversed) | ES2023 | ❌ Missing | Not available natively |
+| [`toSorted`](#tosorted) | ES2023 | ❌ Missing | Not available natively |
+| [`toSpliced`](#tospliced) | ES2023 | ❌ Missing | Not available natively |
 | [`Array.isArray(value)`](#isarray) | ES5 | ❌ Missing | See Polyfills |
 | [`Array.of(...items)`](#of) | ES6 | ❌ Missing | See Polyfills |
 | [`Array.from(source)`](#from) | ES6 | ❌ Missing | Build the array with a `for` loop over the source |
@@ -491,6 +496,30 @@ for (var i = 0; i < source.length; i++) { arr.push(source[i]); }
 ```
 
 {% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="from" %}
+
+## toReversed / toSorted / toSpliced {#copying-methods}
+
+<a id="toreversed"></a>
+<a id="tosorted"></a>
+<a id="tospliced"></a>
+
+**Missing natively.** `toReversed`, `toSorted` and `toSpliced` are each `undefined` and each direct call throws in the tested contexts.
+
+These findings concern only the three named methods. The existing `slice`, `sort` and `splice` behavior and caveats are unchanged.
+
+Run each test in a separate fresh CloudPage request so Core versions are not mixed.
+
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="unicorn-native-absence-precore" label="Show test script — before Core" %}
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="unicorn-native-absence-core111" label="Show test script — Core 1.1.1" %}
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="unicorn-native-absence-core115" label="Show test script — Core 1.1.5" %}
+
+## findLastIndex {#findlastindex}
+
+**Missing natively.** `findLastIndex` is `undefined` and a direct call with `[1,2,1]` and a predicate matching `1` throws in the tested contexts.
+
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="unicorn-native-absence-findlastindex-precore" label="Show test script — before Core" %}
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="unicorn-native-absence-findlastindex-core111" label="Show test script — Core 1.1.1" %}
+{% include test-script.html bundle="ecmascript-builtins--array-methods" chapter="unicorn-native-absence-findlastindex-core115" label="Show test script — Core 1.1.5" %}
 
 ## See Also
 

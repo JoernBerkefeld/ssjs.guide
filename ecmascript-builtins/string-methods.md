@@ -4,14 +4,13 @@ title: String Methods
 parent: ECMAScript Built-ins
 parent_url: /ecmascript-builtins/
 verification: verified
-test_scripts: complete
 differs_from_docs: true
 redirect_from:
   - /global-functions/string/
 description: The String() constructor/conversion function and String prototype methods in SSJS — which work natively, which are partial, and which are missing, with ES3/ES5-safe alternatives and polyfill links.
 ---
 
-Each member below is tagged with the ECMAScript edition that standardized it: `(ES3)`, `(ES5)`, or `(ES6)`. Methods that need a polyfill link to [Polyfills](/engine-limitations/polyfills/).
+Each member below is tagged with its ECMAScript edition, using labels such as `ES3`, `ES5`, `ES6`, and year-based labels for later additions. Methods that need a polyfill link to [Polyfills](/engine-limitations/polyfills/).
 
 ## The String() constructor {#string-constructor}
 
@@ -57,6 +56,8 @@ The same throw applies to a caught plain object — do not call `String(e)` on o
 
 {% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="string-constructor" %}
 
+The new `matchAll` assertion scripts derive from runtime evidence dated 2026-09-06 and are statically checked, not executed live. See the shared [native-absence evidence scope](/ecmascript-builtins/#native-absence-scope) for contexts and limits.
+
 ## Status legend
 
 | Icon | Meaning |
@@ -85,6 +86,8 @@ The same throw applies to a caught plain object — do not call `String(e)` on o
 | [`match(regexp)`](#match) | ES3 | ⚠️ Partial | Returns `[]` (not `null`) on no match; no `.index` |
 | [`search(regexp)`](#search) | ES3 | ⚠️ Partial | Returns `0` (not `-1`) on no match; unreliable — see Polyfills |
 | [`split(separator, limit)`](#split) | ES3 | ⚠️ Partial | Empty-separator form does not split into chars — see Polyfills |
+| [`matchAll`](#matchall) | ES2020 | ❌ Missing | Not available natively |
+| [`replaceAll`](#replaceall) | ES2021 | ❌ Missing | Not available natively |
 | [`trim()`](#trim) | ES5 | ❌ Missing | See Polyfills |
 | [`substr(start, length)`](#substr) | ES3 | ❌ Missing | Throws at runtime — use `substring`/`slice` or polyfill |
 | [`startsWith(prefix)`](#startswith) | ES6 | ❌ Missing | Use `indexOf(prefix) === 0` or polyfill |
@@ -414,6 +417,26 @@ repeat("ab", 3);   // "ababab"
 ```
 
 {% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="codepointat" %}
+
+## replaceAll {#replaceall}
+
+**Missing natively.** `replaceAll` is `undefined` and a direct call replacing `a` with `x` in `aba` throws in the tested contexts.
+
+This finding concerns `replaceAll`, not the separately documented `replace` method.
+
+Run each test in a separate fresh CloudPage request so Core versions are not mixed.
+
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="unicorn-native-absence-precore" label="Show test script — before Core" %}
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="unicorn-native-absence-core111" label="Show test script — Core 1.1.1" %}
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="unicorn-native-absence-core115" label="Show test script — Core 1.1.5" %}
+
+## matchAll {#matchall}
+
+**Missing natively.** `matchAll` is `undefined` and a direct call on `"aba"` with `/(a)/g` throws in the tested contexts.
+
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="unicorn-native-absence-matchall-precore" label="Show test script — before Core" %}
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="unicorn-native-absence-matchall-core111" label="Show test script — Core 1.1.1" %}
+{% include test-script.html bundle="ecmascript-builtins--string-methods" chapter="unicorn-native-absence-matchall-core115" label="Show test script — Core 1.1.5" %}
 
 ## See Also
 

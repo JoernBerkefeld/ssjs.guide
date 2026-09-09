@@ -24,7 +24,11 @@ SSJS runs on the JINT engine with ES3/ES5 compatibility. Most native ECMAScript 
 
 ## Quick Reference
 
-The **ES** column shows the ECMAScript edition that standardized each member (ES3, ES5, or ES6). Method names link to their full details on the relevant section page.
+The **ES** column shows each member's ECMAScript edition, using ES3, ES5, ES6, and year-based labels for later additions. Non-ECMAScript host APIs are marked N/A. Method names link to their full details on the relevant section page.
+
+<a id="native-absence-scope"></a>
+
+**Native-absence evidence scope.** `Object.fromEntries`, `Array.prototype.toReversed`, `toSorted`, `toSpliced`, `String.prototype.replaceAll`, `Array.prototype.findLastIndex`, `Object.groupBy`, `String.prototype.matchAll`, and `structuredClone` were each `undefined` and direct calls threw in three isolated `MCDEV_Training_QA` Marketing Cloud Engagement CloudPage GET contexts: before Core loading, with Core 1.1.1, and with Core 1.1.5, without polyfills. All nine now link to embedded presence and direct-call assertions. The existing scripts for the first five retain their earlier live-run provenance; the newly derived scripts for `findLastIndex`, `groupBy`, `matchAll`, and `structuredClone` use runtime evidence from 2026-09-06 and have been statically checked, **not executed live**. Expected PASS output for those new scripts is an expectation only. Run each context script alone in a fresh request. This evidence covers native absence, not email execution, successful replacements, or modern method semantics.
 
 ### Array Methods
 
@@ -63,6 +67,10 @@ The **ES** column shows the ECMAScript edition that standardized each member (ES
 | [`Array.prototype.flat(depth)`](/ecmascript-builtins/array-methods/#flat) | ES6 | ❌ Missing | Concatenate nested arrays manually in a loop |
 | [`Array.prototype.flatMap(fn)`](/ecmascript-builtins/array-methods/#flatmap) | ES6 | ❌ Missing | Build the result with a `for` loop and `push` |
 | [`Array.prototype.findLast(fn)`](/ecmascript-builtins/array-methods/#findlast) | ES6 | ❌ Missing | Iterate from the end with a `for` loop |
+| [`Array.prototype.findLastIndex`](/ecmascript-builtins/array-methods/#findlastindex) | ES2023 | ❌ Missing | Not available natively |
+| [`Array.prototype.toReversed`](/ecmascript-builtins/array-methods/#toreversed) | ES2023 | ❌ Missing | Not available natively |
+| [`Array.prototype.toSorted`](/ecmascript-builtins/array-methods/#tosorted) | ES2023 | ❌ Missing | Not available natively |
+| [`Array.prototype.toSpliced`](/ecmascript-builtins/array-methods/#tospliced) | ES2023 | ❌ Missing | Not available natively |
 | [`Array.isArray(val)`](/ecmascript-builtins/array-methods/#isarray) | ES5 | ❌ Missing | See [Polyfills](/engine-limitations/polyfills/#array-isarray) |
 | [`Array.of(...)`](/ecmascript-builtins/array-methods/#of) | ES6 | ❌ Missing | See [Polyfills](/engine-limitations/polyfills/#array-of) |
 | [`Array.from(source)`](/ecmascript-builtins/array-methods/#from) | ES6 | ❌ Missing | Build the array with a `for` loop over the source |
@@ -90,6 +98,8 @@ The **ES** column shows the ECMAScript edition that standardized each member (ES
 | [`String.prototype.toLocaleLowerCase()`](/ecmascript-builtins/string-methods/#tolocalelowercase) | ES3 | ✅ Works | |
 | [`String.prototype.toUpperCase()`](/ecmascript-builtins/string-methods/#touppercase) | ES3 | ✅ Works | |
 | `String.fromCharCode(code)` | ES3 | ✅ Works | Static method |
+| [`String.prototype.matchAll`](/ecmascript-builtins/string-methods/#matchall) | ES2020 | ❌ Missing | Not available natively |
+| [`String.prototype.replaceAll`](/ecmascript-builtins/string-methods/#replaceall) | ES2021 | ❌ Missing | Not available natively |
 | [`String.prototype.trim()`](/ecmascript-builtins/string-methods/#trim) | ES5 | ❌ Missing | See [Polyfills](/engine-limitations/polyfills/#string-prototype-trim) |
 | [`String.prototype.startsWith(sub)`](/ecmascript-builtins/string-methods/#startswith) | ES6 | ❌ Missing | Use `indexOf === 0` or [polyfill](/engine-limitations/polyfills/#string-prototype-startswith) |
 | [`String.prototype.endsWith(sub)`](/ecmascript-builtins/string-methods/#endswith) | ES6 | ❌ Missing | Use `lastIndexOf` or [polyfill](/engine-limitations/polyfills/#string-prototype-endswith) |
@@ -155,7 +165,7 @@ The ES3 `Math` members below work natively; `Math.max` / `Math.min` have argumen
 
 ### Global Functions
 
-Standard ECMAScript global functions (not SFMC-specific) — callable without any namespace.
+Standard ECMAScript global functions (not SFMC-specific) — callable without any namespace. The table also lists `structuredClone`, a host-provided Web API rather than an ECMAScript built-in.
 
 | Function | ES | Status | Notes |
 |----------|----|--------|-------|
@@ -170,6 +180,7 @@ Standard ECMAScript global functions (not SFMC-specific) — callable without an
 | [`decodeURIComponent(str)`](/ecmascript-builtins/global-functions/#decodeuricomponent) | ES3 | ⚠️ Partial | Decodes `+` as a space (form-urlencoded) |
 | [`escape(str)`](/ecmascript-builtins/global-functions/#escape) | ES3 | ❌ Missing | `undefined`; use `encodeURIComponent` |
 | [`unescape(str)`](/ecmascript-builtins/global-functions/#unescape) | ES3 | ❌ Missing | `undefined`; use `decodeURIComponent` |
+| [`structuredClone`](/ecmascript-builtins/global-functions/#structuredclone) | N/A (Web API) | ❌ Missing | Not available natively; host-provided Web API |
 
 ### Global Values
 
@@ -220,6 +231,8 @@ These top-level objects/types postdate the engine's ES3/ES5 baseline and are ent
 | [`Object.keys(obj)`](/ecmascript-builtins/object-methods/#keys) | ES5 | ❌ Missing | Use `for...in` with `hasOwnProperty` |
 | [`Object.values(obj)`](/ecmascript-builtins/object-methods/#values) | ES6 | ❌ Missing | Use `for...in` with `hasOwnProperty` |
 | [`Object.entries(obj)`](/ecmascript-builtins/object-methods/#entries) | ES6 | ❌ Missing | Use `for...in` with `hasOwnProperty` |
+| [`Object.fromEntries`](/ecmascript-builtins/object-methods/#fromentries) | ES2019 | ❌ Missing | Not available natively |
+| [`Object.groupBy`](/ecmascript-builtins/object-methods/#groupby) | ES2024 | ❌ Missing | Not available natively |
 | [`Object.assign(target, ...src)`](/ecmascript-builtins/object-methods/#assign) | ES6 | ❌ Missing | Copy properties manually in a `for...in` loop |
 | [`Object.create(proto)`](/ecmascript-builtins/object-methods/#create) | ES5 | ❌ Missing | Use a constructor function with `new` |
 | [`Object.freeze(obj)`](/ecmascript-builtins/object-methods/#freeze) | ES5 | ❌ Missing | No equivalent — enforce immutability by convention |

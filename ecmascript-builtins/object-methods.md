@@ -7,10 +7,11 @@ permalink: /ecmascript-builtins/object-methods/
 description: Object methods in SSJS — hasOwnProperty, toString, valueOf, defineProperty and getPrototypeOf work; isPrototypeOf hangs the engine, propertyIsEnumerable is broken, and the ES5/ES6 Object statics are missing with for...in alternatives.
 verification: verified
 differs_from_docs: true
-test_scripts: complete
 ---
 
 `hasOwnProperty`, `toString`, `valueOf` (ES3), `Object.defineProperty` and `Object.getPrototypeOf` (ES5) work in SSJS. `Object.prototype.isPrototypeOf` **hangs the engine** and `propertyIsEnumerable` is **broken**. Every other ES5/ES6 `Object` static (`keys`, `values`, `entries`, `assign`, `create`, `freeze`, `getOwnPropertyNames`, …) is **missing** — use `for...in` with `hasOwnProperty`.
+
+The new `Object.groupBy` assertion scripts derive from runtime evidence dated 2026-09-06 and are statically checked, not executed live. See the shared [native-absence evidence scope](/ecmascript-builtins/#native-absence-scope) for contexts and limits.
 
 ## Status legend
 
@@ -34,6 +35,8 @@ test_scripts: complete
 | [`Object.keys(obj)`](#keys) | ES5 | ❌ Missing | `for...in` with `hasOwnProperty` |
 | [`Object.values(obj)`](#values) | ES6 | ❌ Missing | `for...in` with `hasOwnProperty` |
 | [`Object.entries(obj)`](#entries) | ES6 | ❌ Missing | `for...in` with `hasOwnProperty` |
+| [`Object.fromEntries`](#fromentries) | ES2019 | ❌ Missing | Not available natively |
+| [`Object.groupBy`](#groupby) | ES2024 | ❌ Missing | Not available natively |
 | [`Object.assign(target, ...src)`](#assign) | ES6 | ❌ Missing | Copy properties in a `for...in` loop |
 | [`Object.create(proto)`](#create) | ES5 | ❌ Missing | Use a constructor function with a prototype |
 | [`Object.freeze / isFrozen(obj)`](#freeze) | ES5 | ❌ Missing | Cannot enforce immutability — read-only by convention |
@@ -261,6 +264,24 @@ Object.defineProperty(o, "b", { value: 2, enumerable: true });
 `(ES5)` — ❌ Missing. None of the extensibility controls are available; objects always remain extensible at runtime and there is nothing to test.
 
 {% include test-script.html bundle="ecmascript-builtins--object-methods" chapter="extensibility" %}
+
+## fromEntries {#fromentries}
+
+**Missing natively.** `Object.fromEntries` is `undefined` and a direct call with two key/value pairs throws in the tested contexts.
+
+Run each test in a separate fresh CloudPage request so Core versions are not mixed.
+
+{% include test-script.html bundle="ecmascript-builtins--object-methods" chapter="unicorn-native-absence-precore" label="Show test script — before Core" %}
+{% include test-script.html bundle="ecmascript-builtins--object-methods" chapter="unicorn-native-absence-core111" label="Show test script — Core 1.1.1" %}
+{% include test-script.html bundle="ecmascript-builtins--object-methods" chapter="unicorn-native-absence-core115" label="Show test script — Core 1.1.5" %}
+
+## groupBy {#groupby}
+
+**Missing natively.** `Object.groupBy` is `undefined` and a direct call with `[1,2,3]` and an even/odd grouping callback throws in the tested contexts.
+
+{% include test-script.html bundle="ecmascript-builtins--object-methods" chapter="unicorn-native-absence-groupby-precore" label="Show test script — before Core" %}
+{% include test-script.html bundle="ecmascript-builtins--object-methods" chapter="unicorn-native-absence-groupby-core111" label="Show test script — Core 1.1.1" %}
+{% include test-script.html bundle="ecmascript-builtins--object-methods" chapter="unicorn-native-absence-groupby-core115" label="Show test script — Core 1.1.5" %}
 
 ## See Also
 

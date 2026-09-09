@@ -5,13 +5,14 @@ parent: ECMAScript Built-ins
 parent_url: /ecmascript-builtins/
 description: The standard ECMAScript global functions in SSJS — URI encoding/decoding works but with x-www-form-urlencoded quirks (space becomes +, lowercase hex), while the legacy escape/unescape are missing entirely.
 verification: verified
-test_scripts: complete
 differs_from_docs: true
 redirect_from:
     - /global-functions/
 ---
 
 The standard ECMAScript **global URI functions** — `encodeURI`, `encodeURIComponent`, `decodeURI`, `decodeURIComponent` — all exist and are callable without loading Core. However, the SFMC Jint engine **encodes and decodes like `application/x-www-form-urlencoded`, not RFC 3986**: a space becomes `+` (not `%20`), hex escapes are **lowercase** (`%2f`, not `%2F`), and on the way back a literal `+` becomes a space — in both `decodeURI` and `decodeURIComponent`. The legacy Annex-B `escape` / `unescape` functions are **not defined** at all. The numeric globals (`parseInt`, `parseFloat`, `isNaN`, `isFinite`) are documented under [Number Methods](/ecmascript-builtins/number-methods/).
+
+The new `structuredClone` assertion scripts derive from runtime evidence dated 2026-09-06 and are statically checked, not executed live. See the shared [native-absence evidence scope](/ecmascript-builtins/#native-absence-scope) for contexts and limits.
 
 ## Status legend
 
@@ -32,6 +33,7 @@ The standard ECMAScript **global URI functions** — `encodeURI`, `encodeURIComp
 | [`eval(script)`](#eval) | ES3 | ✅ Works | Runs arbitrary source — injection risk; prefer `Platform.Function.ParseJSON` |
 | [`escape(str)`](#escape) | ES3 (Annex B) | ❌ Missing | `undefined`; use `encodeURIComponent` |
 | [`unescape(str)`](#unescape) | ES3 (Annex B) | ❌ Missing | `undefined`; use `decodeURIComponent` |
+| [`structuredClone`](#structuredclone) | N/A (Web API) | ❌ Missing | Not available natively; host-provided Web API |
 
 ---
 
@@ -124,6 +126,14 @@ decodeURIComponent("a%20b");    // use this instead
 ```
 
 {% include test-script.html bundle="ecmascript-builtins--global-functions" chapter="unescape" %}
+
+## structuredClone {#structuredclone}
+
+**Missing natively.** `structuredClone` is `undefined` and a direct call with `{nested:{value:1},items:[2,3]}` throws in the tested contexts. This is a host-provided Web API, not an ECMAScript built-in.
+
+{% include test-script.html bundle="ecmascript-builtins--global-functions" chapter="unicorn-native-absence-structuredclone-precore" label="Show test script — before Core" %}
+{% include test-script.html bundle="ecmascript-builtins--global-functions" chapter="unicorn-native-absence-structuredclone-core111" label="Show test script — Core 1.1.1" %}
+{% include test-script.html bundle="ecmascript-builtins--global-functions" chapter="unicorn-native-absence-structuredclone-core115" label="Show test script — Core 1.1.5" %}
 
 ## See Also
 

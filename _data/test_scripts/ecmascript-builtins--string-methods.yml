@@ -4,13 +4,140 @@
 # CloudPage snippet that asserts every claim the chapter makes — positive,
 # negative, and every documented deviation from the ECMAScript spec.
 #
-# All scripts were last run green (every line PASS) against a live SFMC
-# CloudPage. Re-run them before changing any claim on the page.
+# Except unicorn-native-absence-matchall-{precore,core111,core115},
+# existing scripts were last run green against a live SFMC CloudPage.
+# The three excluded chapters are derived from runtime evidence 2026-09-06;
+# their assertion scripts are statically checked, not executed live.
 #
 # AUTHORING RULE: report each assertion on its own Platform.Response.Write
 # call. Concatenating several independent expressions into one Write can
 # interleave their evaluation in the Jint engine and pair labels with the
 # wrong values.
+
+unicorn-native-absence-matchall-precore: |
+  <script runat="server">
+  /* Chapter: matchAll native absence before Core.
+   * Derived from runtime evidence 2026-09-06; assertion script statically checked, not executed live
+   * Checks: 1. Native member has typeof undefined. 2. Direct call throws.
+   * EXPECTED OUTPUT: two PASS assertion lines (expectation only), plus START/END markers.
+   * Run alone in a fresh CloudPage request without Core or polyfills.
+   */
+  /** Run the isolated chapter. @returns {void} Writes assertion results. */
+  (function () {
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  Platform.Response.Write("START matchAll precore\n");
+  /* 1. Guard the native member lookup. */
+  try {
+      /** Read the native member type. @returns {string} Member type. */
+      var memberType = (function () { return typeof "aba".matchAll; })();
+      assert("DEV matchAll precore typeof undefined (spec: function)", memberType, "undefined");
+  } catch (ex) { Platform.Response.Write("FAIL matchAll precore typeof lookup threw\n"); }
+  /* 2. Invoke only inside the canonical exception helper. */
+  assertThrows("DEV matchAll precore call throws (spec: iterator)",
+      /** Invoke the native member. @returns {object} Iterator if callable. */
+      function () { return "aba".matchAll(/(a)/g); });
+  Platform.Response.Write("END matchAll precore\n");
+  })();
+  </script>
+
+unicorn-native-absence-matchall-core111: |
+  <script runat="server">
+  /* Chapter: matchAll native absence with Core 1.1.1.
+   * Derived from runtime evidence 2026-09-06; assertion script statically checked, not executed live
+   * Checks: 1. Native member has typeof undefined. 2. Direct call throws.
+   * EXPECTED OUTPUT: two PASS assertion lines (expectation only), plus START/END markers.
+   * Run alone in a fresh CloudPage request without other Core versions or polyfills.
+   * Both CORE LOAD OK markers are required; load failure is not member evidence.
+   */
+  /** Run the isolated chapter. @returns {void} Writes assertion results. */
+  (function () {
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  Platform.Response.Write("START matchAll core111\n");
+  /* 1. Load and resolve the member in the same guarded thunk. */
+  try {
+      /** Load Core and read the native member type. @returns {string} Member type. */
+      var memberType = (function () {
+          Platform.Load("core", "1.1.1");
+          Platform.Response.Write("CORE LOAD OK matchAll core111 typeof\n");
+          return typeof "aba".matchAll;
+      })();
+      assert("DEV matchAll core111 typeof undefined (spec: function)", memberType, "undefined");
+  } catch (ex) { Platform.Response.Write("FAIL matchAll core111 load or typeof lookup threw\n"); }
+  /* 2. A failed Core load must not satisfy the call-throws assertion. */
+  assertThrows("DEV matchAll core111 call throws (spec: iterator)",
+      /** Load Core and invoke the native member. @returns {object|undefined} Iterator if callable. */
+      function () {
+          try { Platform.Load("core", "1.1.1"); }
+          catch (ex) { Platform.Response.Write("FAIL matchAll core111 call Core load\n"); return; }
+          Platform.Response.Write("CORE LOAD OK matchAll core111 call\n");
+          return "aba".matchAll(/(a)/g);
+      });
+  Platform.Response.Write("END matchAll core111\n");
+  })();
+  </script>
+
+unicorn-native-absence-matchall-core115: |
+  <script runat="server">
+  /* Chapter: matchAll native absence with Core 1.1.5.
+   * Derived from runtime evidence 2026-09-06; assertion script statically checked, not executed live
+   * Checks: 1. Native member has typeof undefined. 2. Direct call throws.
+   * EXPECTED OUTPUT: two PASS assertion lines (expectation only), plus START/END markers.
+   * Run alone in a fresh CloudPage request without other Core versions or polyfills.
+   * Both CORE LOAD OK markers are required; load failure is not member evidence.
+   */
+  /** Run the isolated chapter. @returns {void} Writes assertion results. */
+  (function () {
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  Platform.Response.Write("START matchAll core115\n");
+  /* 1. Load and resolve the member in the same guarded thunk. */
+  try {
+      /** Load Core and read the native member type. @returns {string} Member type. */
+      var memberType = (function () {
+          Platform.Load("core", "1.1.5");
+          Platform.Response.Write("CORE LOAD OK matchAll core115 typeof\n");
+          return typeof "aba".matchAll;
+      })();
+      assert("DEV matchAll core115 typeof undefined (spec: function)", memberType, "undefined");
+  } catch (ex) { Platform.Response.Write("FAIL matchAll core115 load or typeof lookup threw\n"); }
+  /* 2. A failed Core load must not satisfy the call-throws assertion. */
+  assertThrows("DEV matchAll core115 call throws (spec: iterator)",
+      /** Load Core and invoke the native member. @returns {object|undefined} Iterator if callable. */
+      function () {
+          try { Platform.Load("core", "1.1.5"); }
+          catch (ex) { Platform.Response.Write("FAIL matchAll core115 call Core load\n"); return; }
+          Platform.Response.Write("CORE LOAD OK matchAll core115 call\n");
+          return "aba".matchAll(/(a)/g);
+      });
+  Platform.Response.Write("END matchAll core115\n");
+  })();
+  </script>
 
 string-constructor: |
   <script runat="server">
@@ -996,4 +1123,126 @@ codepointat: |
 
   /* 2. The documented replacement. */
   assert("'A'.charCodeAt(0) is 65", function () { return String("A".charCodeAt(0)); }, "65");
+  </script>
+
+unicorn-native-absence-precore: |
+  <script runat="server">
+  /* Chapter: String.replaceAll native absence before Core.
+   * Proves: 1. typeof is undefined. 2. A direct call throws.
+   * EXPECTED OUTPUT: every assertion line starts with PASS; markers bracket execution.
+   * Run in a fresh CloudPage request without loading Core or installing polyfills.
+   */
+  /** Run the isolated chapter. @returns {void} */
+  (function () {
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  Platform.Response.Write("START String unicorn-native-absence-precore\n");
+  /* 1. Resolve the missing member lazily and report lookup failures separately. */
+  try {
+      /** Read the native member type. @returns {string} */
+      var actual = (function () { return typeof 'aba'.replaceAll; })();
+      assert("DEV String.replaceAll precore typeof undefined (spec: function)", actual, "undefined");
+  } catch (ex) { Platform.Response.Write("FAIL String.replaceAll precore typeof lookup threw\n"); }
+  /* 2. Invoke only inside the canonical exception helper. */
+  assertThrows("DEV String.replaceAll precore call throws (spec: string)",
+      /** Invoke the native member. @returns {string} */
+      function () { return 'aba'.replaceAll('a','x'); });
+  Platform.Response.Write("END String unicorn-native-absence-precore\n");
+  })();
+  </script>
+
+unicorn-native-absence-core111: |
+  <script runat="server">
+  /* Chapter: String.replaceAll native absence with Core 1.1.1.
+   * Proves: 1. typeof is undefined. 2. A direct call throws.
+   * EXPECTED OUTPUT: every assertion line starts with PASS; markers bracket execution.
+   * Run in a fresh CloudPage request without other Core versions or polyfills.
+   * Both CORE LOAD OK markers are required; a load failure is not member evidence.
+   */
+  /** Run the isolated chapter. @returns {void} */
+  (function () {
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  Platform.Response.Write("START String unicorn-native-absence-core111\n");
+  /* 1. Load and resolve in the same thunk. */
+  try {
+      /** Load Core and read the native member type. @returns {string} */
+      var actual = (function () {
+          Platform.Load("core", "1.1.1");
+          Platform.Response.Write("CORE LOAD OK String core111 typeof\n");
+          return typeof 'aba'.replaceAll;
+      })();
+      assert("DEV String.replaceAll core111 typeof undefined (spec: function)", actual, "undefined");
+  } catch (ex) { Platform.Response.Write("FAIL String.replaceAll core111 load or typeof lookup threw\n"); }
+  /* 2. Require the load marker before accepting the caught invocation failure. */
+  assertThrows("DEV String.replaceAll core111 call throws (spec: string)",
+      /** Load Core and invoke the native member. @returns {string} */
+      function () {
+          try { Platform.Load("core", "1.1.1"); }
+          catch (ex) { Platform.Response.Write("FAIL String core111 call Core load\n"); return; }
+          Platform.Response.Write("CORE LOAD OK String core111 call\n");
+          return 'aba'.replaceAll('a','x');
+      });
+  Platform.Response.Write("END String unicorn-native-absence-core111\n");
+  })();
+  </script>
+
+unicorn-native-absence-core115: |
+  <script runat="server">
+  /* Chapter: String.replaceAll native absence with Core 1.1.5.
+   * Proves: 1. typeof is undefined. 2. A direct call throws.
+   * EXPECTED OUTPUT: every assertion line starts with PASS; markers bracket execution.
+   * Run in a fresh CloudPage request without other Core versions or polyfills.
+   * Both CORE LOAD OK markers are required; a load failure is not member evidence.
+   */
+  /** Run the isolated chapter. @returns {void} */
+  (function () {
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  Platform.Response.Write("START String unicorn-native-absence-core115\n");
+  /* 1. Load and resolve in the same thunk. */
+  try {
+      /** Load Core and read the native member type. @returns {string} */
+      var actual = (function () {
+          Platform.Load("core", "1.1.5");
+          Platform.Response.Write("CORE LOAD OK String core115 typeof\n");
+          return typeof 'aba'.replaceAll;
+      })();
+      assert("DEV String.replaceAll core115 typeof undefined (spec: function)", actual, "undefined");
+  } catch (ex) { Platform.Response.Write("FAIL String.replaceAll core115 load or typeof lookup threw\n"); }
+  /* 2. Require the load marker before accepting the caught invocation failure. */
+  assertThrows("DEV String.replaceAll core115 call throws (spec: string)",
+      /** Load Core and invoke the native member. @returns {string} */
+      function () {
+          try { Platform.Load("core", "1.1.5"); }
+          catch (ex) { Platform.Response.Write("FAIL String core115 call Core load\n"); return; }
+          Platform.Response.Write("CORE LOAD OK String core115 call\n");
+          return 'aba'.replaceAll('a','x');
+      });
+  Platform.Response.Write("END String unicorn-native-absence-core115\n");
+  })();
   </script>

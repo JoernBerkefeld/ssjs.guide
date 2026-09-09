@@ -12,6 +12,10 @@ These are behaviors in SFMC SSJS that are inconsistent with the official documen
 
 {% include callout.html type="info" content="This page covers features that are **broken** or that **do not exist at runtime** despite being officially documented. For working features whose behavior merely differs from the docs (wrong return types, undocumented properties, etc.), see [Differs from Official Docs](/engine-limitations/differs-from-docs/)." %}
 
+## Additional native method absences {#additional-native-absences}
+
+[`Object.fromEntries`](/ecmascript-builtins/object-methods/#fromentries), [`Array.prototype.toReversed`](/ecmascript-builtins/array-methods/#toreversed), [`toSorted`](/ecmascript-builtins/array-methods/#tosorted), [`toSpliced`](/ecmascript-builtins/array-methods/#tospliced), and [`String.prototype.replaceAll`](/ecmascript-builtins/string-methods/#replaceall) were absent without polyfills in separate Marketing Cloud Engagement CloudPage requests before Core loading, with Core 1.1.1, and with Core 1.1.5: each member was `undefined` and a direct call threw. The linked reference sections contain the corresponding tests. This evidence does not establish email execution behavior or a replacement implementation.
+
 ## switch break Can Escape a Function (the "default May Not Execute" bug) {#switch-break-escape}
 
 **Severity: High** — silently returns `undefined` and skips code after the `switch`

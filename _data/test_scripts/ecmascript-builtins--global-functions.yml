@@ -4,8 +4,12 @@
 # CloudPage snippet that asserts every claim the chapter makes — positive,
 # negative, and every documented deviation from the ECMAScript spec.
 #
-# All scripts were last run green (every line PASS) against a live SFMC
-# CloudPage. Re-run them before changing any claim on the page.
+# Except unicorn-native-absence-structuredclone-{precore,core111,core115},
+# existing scripts were last run green against a live SFMC CloudPage.
+# The three excluded chapters are derived from runtime evidence 2026-09-06;
+# their assertion scripts are statically checked, not executed live.
+# The excluded chapters use canonical helpers; the legacy helper rule below
+# applies only to the existing chapters.
 #
 # AUTHORING RULE: report each assertion on its own Platform.Response.Write
 # call. Concatenating several independent expressions into one Write can
@@ -14,6 +18,131 @@
 #
 # HELPER RULE: assert() compares with a plain === and never coerces its
 # arguments. Stringify at the CALL SITE instead.
+
+unicorn-native-absence-structuredclone-precore: |
+  <script runat="server">
+  /* Chapter: structuredClone native absence before Core.
+   * Derived from runtime evidence 2026-09-06; assertion script statically checked, not executed live
+   * Checks: 1. Native global has typeof undefined. 2. Direct call throws.
+   * EXPECTED OUTPUT: two PASS assertion lines (expectation only), plus START/END markers.
+   * Run alone in a fresh CloudPage request without Core or polyfills.
+   */
+  /** Run the isolated chapter. @returns {void} Writes assertion results. */
+  (function () {
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  Platform.Response.Write("START structuredClone precore\n");
+  /* 1. Resolve the possibly unbound global only inside a guarded thunk. */
+  try {
+      /** Read the native global type. @returns {string} Global type. */
+      var memberType = (function () { return typeof structuredClone; })();
+      assert("DEV structuredClone precore typeof undefined (Web API: function)", memberType, "undefined");
+  } catch (ex) { Platform.Response.Write("FAIL structuredClone precore typeof lookup threw\n"); }
+  /* 2. Invoke only inside the canonical exception helper. */
+  assertThrows("DEV structuredClone precore call throws (Web API: cloned object)",
+      /** Invoke the native global. @returns {object} Clone if callable. */
+      function () { return structuredClone({nested:{value:1},items:[2,3]}); });
+  Platform.Response.Write("END structuredClone precore\n");
+  })();
+  </script>
+
+unicorn-native-absence-structuredclone-core111: |
+  <script runat="server">
+  /* Chapter: structuredClone native absence with Core 1.1.1.
+   * Derived from runtime evidence 2026-09-06; assertion script statically checked, not executed live
+   * Checks: 1. Native global has typeof undefined. 2. Direct call throws.
+   * EXPECTED OUTPUT: two PASS assertion lines (expectation only), plus START/END markers.
+   * Run alone in a fresh CloudPage request without other Core versions or polyfills.
+   * Both CORE LOAD OK markers are required; load failure is not member evidence.
+   */
+  /** Run the isolated chapter. @returns {void} Writes assertion results. */
+  (function () {
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  Platform.Response.Write("START structuredClone core111\n");
+  /* 1. Load and resolve the global in the same guarded thunk. */
+  try {
+      /** Load Core and read the native global type. @returns {string} Global type. */
+      var memberType = (function () {
+          Platform.Load("core", "1.1.1");
+          Platform.Response.Write("CORE LOAD OK structuredClone core111 typeof\n");
+          return typeof structuredClone;
+      })();
+      assert("DEV structuredClone core111 typeof undefined (Web API: function)", memberType, "undefined");
+  } catch (ex) { Platform.Response.Write("FAIL structuredClone core111 load or typeof lookup threw\n"); }
+  /* 2. A failed Core load must not satisfy the call-throws assertion. */
+  assertThrows("DEV structuredClone core111 call throws (Web API: cloned object)",
+      /** Load Core and invoke the native global. @returns {object|undefined} Clone if callable. */
+      function () {
+          try { Platform.Load("core", "1.1.1"); }
+          catch (ex) { Platform.Response.Write("FAIL structuredClone core111 call Core load\n"); return; }
+          Platform.Response.Write("CORE LOAD OK structuredClone core111 call\n");
+          return structuredClone({nested:{value:1},items:[2,3]});
+      });
+  Platform.Response.Write("END structuredClone core111\n");
+  })();
+  </script>
+
+unicorn-native-absence-structuredclone-core115: |
+  <script runat="server">
+  /* Chapter: structuredClone native absence with Core 1.1.5.
+   * Derived from runtime evidence 2026-09-06; assertion script statically checked, not executed live
+   * Checks: 1. Native global has typeof undefined. 2. Direct call throws.
+   * EXPECTED OUTPUT: two PASS assertion lines (expectation only), plus START/END markers.
+   * Run alone in a fresh CloudPage request without other Core versions or polyfills.
+   * Both CORE LOAD OK markers are required; load failure is not member evidence.
+   */
+  /** Run the isolated chapter. @returns {void} Writes assertion results. */
+  (function () {
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+  function assertThrows(id, fn) {
+      var threw = false, msg = "";
+      try { fn(); } catch (ex) { threw = true; msg = ex.message; }
+      Platform.Response.Write((threw ? "PASS " : "FAIL ") + id + " -> " + (threw ? "threw: " + msg : "did NOT throw") + "\n");
+  }
+  Platform.Response.Write("START structuredClone core115\n");
+  /* 1. Load and resolve the global in the same guarded thunk. */
+  try {
+      /** Load Core and read the native global type. @returns {string} Global type. */
+      var memberType = (function () {
+          Platform.Load("core", "1.1.5");
+          Platform.Response.Write("CORE LOAD OK structuredClone core115 typeof\n");
+          return typeof structuredClone;
+      })();
+      assert("DEV structuredClone core115 typeof undefined (Web API: function)", memberType, "undefined");
+  } catch (ex) { Platform.Response.Write("FAIL structuredClone core115 load or typeof lookup threw\n"); }
+  /* 2. A failed Core load must not satisfy the call-throws assertion. */
+  assertThrows("DEV structuredClone core115 call throws (Web API: cloned object)",
+      /** Load Core and invoke the native global. @returns {object|undefined} Clone if callable. */
+      function () {
+          try { Platform.Load("core", "1.1.5"); }
+          catch (ex) { Platform.Response.Write("FAIL structuredClone core115 call Core load\n"); return; }
+          Platform.Response.Write("CORE LOAD OK structuredClone core115 call\n");
+          return structuredClone({nested:{value:1},items:[2,3]});
+      });
+  Platform.Response.Write("END structuredClone core115\n");
+  })();
+  </script>
 
 encodeuri: |
   <script runat="server">
