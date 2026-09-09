@@ -4006,6 +4006,69 @@
     "description": "Not available in SFMC SSJS (calling it throws)."
   },
   {
+    "name": "String.matchAll",
+    "url": "/ecmascript-builtins/string-methods/#matchall",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Listed return type is reference-only, not observed in SSJS."
+  },
+  {
+    "name": "Global.structuredClone",
+    "url": "/ecmascript-builtins/global-functions/#structuredclone",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Listed return type is reference-only, not observed in SSJS."
+  },
+  {
+    "name": "Object.groupBy",
+    "url": "/ecmascript-builtins/object-methods/#groupby",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Listed return type is reference-only, not observed in SSJS."
+  },
+  {
+    "name": "Array.findLastIndex",
+    "url": "/ecmascript-builtins/array-methods/#findlastindex",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Listed return type is reference-only, not observed in SSJS."
+  },
+  {
+    "name": "Object.fromEntries",
+    "url": "/ecmascript-builtins/object-methods/#fromentries",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Listed return type is reference-only, not observed in SSJS."
+  },
+  {
+    "name": "Array.toReversed",
+    "url": "/ecmascript-builtins/array-methods/#toreversed",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Listed return type is reference-only, not observed in SSJS."
+  },
+  {
+    "name": "Array.toSorted",
+    "url": "/ecmascript-builtins/array-methods/#tosorted",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Listed return type is reference-only, not observed in SSJS."
+  },
+  {
+    "name": "Array.toSpliced",
+    "url": "/ecmascript-builtins/array-methods/#tospliced",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Listed return type is reference-only, not observed in SSJS."
+  },
+  {
+    "name": "String.replaceAll",
+    "url": "/ecmascript-builtins/string-methods/#replaceall",
+    "section": "ECMAScript Builtins",
+    "type": "method",
+    "description": "Listed return type is reference-only, not observed in SSJS."
+  },
+  {
     "name": "Global.escape",
     "url": "/ecmascript-builtins/global-functions/#escape",
     "section": "ECMAScript Builtins",

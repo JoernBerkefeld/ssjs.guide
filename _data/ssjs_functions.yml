@@ -414,6 +414,20 @@
   differsFromDocs: false
   deprecated: false
   description: "Unavailable in SFMC."
+- name: "Array.prototype.findLastIndex()"
+  sortKey: "array.prototype.findlastindex"
+  section: "ECMAScript Builtins"
+  returnType: "number"
+  url: "/ecmascript-builtins/array-methods/#findlastindex"
+  anchorId: "fn-array-prototype-findlastindex"
+  status: "missing"
+  es: "6"
+  polyfill: false
+  polyfillUrl: ""
+  verified: true
+  differsFromDocs: false
+  deprecated: false
+  description: "Listed return type is reference-only, not observed in SSJS."
 - name: "Array.prototype.flat()"
   sortKey: "array.prototype.flat"
   section: "ECMAScript Builtins"
@@ -708,6 +722,48 @@
   differsFromDocs: false
   deprecated: false
   description: "Returns a string representing the array elements, joined by a…"
+- name: "Array.prototype.toReversed()"
+  sortKey: "array.prototype.toreversed"
+  section: "ECMAScript Builtins"
+  returnType: "array"
+  url: "/ecmascript-builtins/array-methods/#toreversed"
+  anchorId: "fn-array-prototype-toreversed"
+  status: "missing"
+  es: "6"
+  polyfill: false
+  polyfillUrl: ""
+  verified: true
+  differsFromDocs: false
+  deprecated: false
+  description: "Listed return type is reference-only, not observed in SSJS."
+- name: "Array.prototype.toSorted()"
+  sortKey: "array.prototype.tosorted"
+  section: "ECMAScript Builtins"
+  returnType: "array"
+  url: "/ecmascript-builtins/array-methods/#tosorted"
+  anchorId: "fn-array-prototype-tosorted"
+  status: "missing"
+  es: "6"
+  polyfill: false
+  polyfillUrl: ""
+  verified: true
+  differsFromDocs: false
+  deprecated: false
+  description: "Listed return type is reference-only, not observed in SSJS."
+- name: "Array.prototype.toSpliced()"
+  sortKey: "array.prototype.tospliced"
+  section: "ECMAScript Builtins"
+  returnType: "array"
+  url: "/ecmascript-builtins/array-methods/#tospliced"
+  anchorId: "fn-array-prototype-tospliced"
+  status: "missing"
+  es: "6"
+  polyfill: false
+  polyfillUrl: ""
+  verified: true
+  differsFromDocs: false
+  deprecated: false
+  description: "Listed return type is reference-only, not observed in SSJS."
 - name: "Array.prototype.unshift()"
   sortKey: "array.prototype.unshift"
   section: "ECMAScript Builtins"
@@ -4656,6 +4712,20 @@
   differsFromDocs: false
   deprecated: false
   description: "Unavailable in SFMC and immutability cannot be enforced; treat the…"
+- name: "Object.fromEntries()"
+  sortKey: "object.fromentries"
+  section: "ECMAScript Builtins"
+  returnType: "object"
+  url: "/ecmascript-builtins/object-methods/#fromentries"
+  anchorId: "fn-object-fromentries"
+  status: "missing"
+  es: "6"
+  polyfill: false
+  polyfillUrl: ""
+  verified: true
+  differsFromDocs: false
+  deprecated: false
+  description: "Listed return type is reference-only, not observed in SSJS."
 - name: "Object.getOwnPropertyDescriptor()"
   sortKey: "object.getownpropertydescriptor"
   section: "ECMAScript Builtins"
@@ -4698,6 +4768,20 @@
   differsFromDocs: false
   deprecated: false
   description: "Returns the prototype (internal [[Prototype]]) of the specified…"
+- name: "Object.groupBy()"
+  sortKey: "object.groupby"
+  section: "ECMAScript Builtins"
+  returnType: "object"
+  url: "/ecmascript-builtins/object-methods/#groupby"
+  anchorId: "fn-object-groupby"
+  status: "missing"
+  es: "6"
+  polyfill: false
+  polyfillUrl: ""
+  verified: true
+  differsFromDocs: false
+  deprecated: false
+  description: "Listed return type is reference-only, not observed in SSJS."
 - name: "Object.isExtensible()"
   sortKey: "object.isextensible"
   section: "ECMAScript Builtins"
@@ -6546,6 +6630,20 @@
   differsFromDocs: true
   deprecated: false
   description: "Matches a string against a regular expression and returns the matches…"
+- name: "String.prototype.matchAll()"
+  sortKey: "string.prototype.matchall"
+  section: "ECMAScript Builtins"
+  returnType: "object"
+  url: "/ecmascript-builtins/string-methods/#matchall"
+  anchorId: "fn-string-prototype-matchall"
+  status: "missing"
+  es: "6"
+  polyfill: false
+  polyfillUrl: ""
+  verified: true
+  differsFromDocs: false
+  deprecated: false
+  description: "Listed return type is reference-only, not observed in SSJS."
 - name: "String.prototype.padEnd()"
   sortKey: "string.prototype.padend"
   section: "ECMAScript Builtins"
@@ -6602,6 +6700,20 @@
   differsFromDocs: false
   deprecated: false
   description: "Returns a new string with matches replaced by a replacement string or…"
+- name: "String.prototype.replaceAll()"
+  sortKey: "string.prototype.replaceall"
+  section: "ECMAScript Builtins"
+  returnType: "string"
+  url: "/ecmascript-builtins/string-methods/#replaceall"
+  anchorId: "fn-string-prototype-replaceall"
+  status: "missing"
+  es: "6"
+  polyfill: false
+  polyfillUrl: ""
+  verified: true
+  differsFromDocs: false
+  deprecated: false
+  description: "Listed return type is reference-only, not observed in SSJS."
 - name: "String.prototype.search()"
   sortKey: "string.prototype.search"
   section: "ECMAScript Builtins"
@@ -6812,6 +6924,20 @@
   differsFromDocs: false
   deprecated: false
   description: "Serializes a value to a JSON string."
+- name: "structuredClone()"
+  sortKey: "structuredclone"
+  section: "ECMAScript Builtins"
+  returnType: "any"
+  url: "/ecmascript-builtins/global-functions/#structuredclone"
+  anchorId: "fn-structuredclone"
+  status: "missing"
+  es: "6"
+  polyfill: false
+  polyfillUrl: ""
+  verified: true
+  differsFromDocs: false
+  deprecated: false
+  description: "Listed return type is reference-only, not observed in SSJS."
 - name: "Subscriber"
   sortKey: "subscriber"
   section: "Core Library"
