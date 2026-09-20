@@ -427,7 +427,7 @@
   verified: true
   differsFromDocs: false
   deprecated: false
-  description: "Listed return type is reference-only, not observed in SSJS."
+  description: "Listed return type is reference-only, not produced in SSJS."
 - name: "Array.prototype.flat()"
   sortKey: "array.prototype.flat"
   section: "ECMAScript Builtins"
@@ -735,7 +735,7 @@
   verified: true
   differsFromDocs: false
   deprecated: false
-  description: "Listed return type is reference-only, not observed in SSJS."
+  description: "Listed return type is reference-only, not produced in SSJS."
 - name: "Array.prototype.toSorted()"
   sortKey: "array.prototype.tosorted"
   section: "ECMAScript Builtins"
@@ -749,7 +749,7 @@
   verified: true
   differsFromDocs: false
   deprecated: false
-  description: "Listed return type is reference-only, not observed in SSJS."
+  description: "Listed return type is reference-only, not produced in SSJS."
 - name: "Array.prototype.toSpliced()"
   sortKey: "array.prototype.tospliced"
   section: "ECMAScript Builtins"
@@ -763,7 +763,7 @@
   verified: true
   differsFromDocs: false
   deprecated: false
-  description: "Listed return type is reference-only, not observed in SSJS."
+  description: "Listed return type is reference-only, not produced in SSJS."
 - name: "Array.prototype.unshift()"
   sortKey: "array.prototype.unshift"
   section: "ECMAScript Builtins"
@@ -1561,7 +1561,7 @@
   verified: true
   differsFromDocs: true
   deprecated: false
-  description: "Runtime-verified: unlike the spec (which returns a Number)…"
+  description: "Unlike the spec (which returns a Number), Date.now() returns a Date…"
 - name: "Date.parse()"
   sortKey: "date.parse"
   section: "ECMAScript Builtins"
@@ -1575,7 +1575,7 @@
   verified: true
   differsFromDocs: true
   deprecated: false
-  description: "Runtime-verified: unlike the spec, an unparseable or invalid string…"
+  description: "Unlike the spec, an unparseable or invalid string (e.g. \"garbage\"…"
 - name: "Date.prototype.getDate()"
   sortKey: "date.prototype.getdate"
   section: "ECMAScript Builtins"
@@ -1953,7 +1953,7 @@
   verified: true
   differsFromDocs: true
   deprecated: false
-  description: "Runtime-verified: with year + month (and beyond) it returns the…"
+  description: "With year + month (and beyond) it returns the correct UTC timestamp…"
 - name: "DateTime.LocalDateToSystemDate()"
   sortKey: "datetime.localdatetosystemdate"
   section: "Core Library"
@@ -4725,7 +4725,7 @@
   verified: true
   differsFromDocs: false
   deprecated: false
-  description: "Listed return type is reference-only, not observed in SSJS."
+  description: "Listed return type is reference-only, not produced in SSJS."
 - name: "Object.getOwnPropertyDescriptor()"
   sortKey: "object.getownpropertydescriptor"
   section: "ECMAScript Builtins"
@@ -4781,7 +4781,7 @@
   verified: true
   differsFromDocs: false
   deprecated: false
-  description: "Listed return type is reference-only, not observed in SSJS."
+  description: "Listed return type is reference-only, not produced in SSJS."
 - name: "Object.isExtensible()"
   sortKey: "object.isextensible"
   section: "ECMAScript Builtins"
@@ -6643,7 +6643,7 @@
   verified: true
   differsFromDocs: false
   deprecated: false
-  description: "Listed return type is reference-only, not observed in SSJS."
+  description: "Listed return type is reference-only, not produced in SSJS."
 - name: "String.prototype.padEnd()"
   sortKey: "string.prototype.padend"
   section: "ECMAScript Builtins"
@@ -6713,7 +6713,7 @@
   verified: true
   differsFromDocs: false
   deprecated: false
-  description: "Listed return type is reference-only, not observed in SSJS."
+  description: "Listed return type is reference-only, not produced in SSJS."
 - name: "String.prototype.search()"
   sortKey: "string.prototype.search"
   section: "ECMAScript Builtins"
@@ -6937,7 +6937,7 @@
   verified: true
   differsFromDocs: false
   deprecated: false
-  description: "Listed return type is reference-only, not observed in SSJS."
+  description: "Listed return type is reference-only, not produced in SSJS."
 - name: "Subscriber"
   sortKey: "subscriber"
   section: "Core Library"
