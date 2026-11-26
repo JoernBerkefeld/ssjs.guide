@@ -48,20 +48,27 @@ A script activity refuses all three AMPscript forms when it is saved, by API and
 
 ## Running AMPscript from a script activity
 
-The save check of a script activity rejects AMPscript, even inside an SSJS string. In a test run, AMPscript still ran when SSJS passed it on at run time:
-
-- `Platform.Function.TreatAsContent()` ran a `%%[ … ]%%` block, an inline `%%=Concat(…)=%%` and a `<script runat="server" language="ampscript">` block, and returned their output. An inline `%%="text"=%%` with a bare string failed, because the inline form needs a function call.
-- `Platform.Function.ContentBlockByKey()` ran the AMPscript in an HTML block and returned its output.
-- After both calls, `Variable.GetValue("@var")` returned the value the AMPscript had set.
-
-Build the delimiters at run time so the save check does not see them:
+The save check of a script activity rejects AMPscript, even inside an SSJS string: `Platform.Function.TreatAsContent('%%[ SET @a1 = "A1-RAN" ]%%')` written like this is refused. In a test run, AMPscript still ran when SSJS built the delimiters at run time:
 
 ```js
 var P = "%" + "%";
-var html = Platform.Function.TreatAsContent(P + '[ SET @greeting = "Hello" ]' + P + P + '=v(@greeting)=' + P);
+var open = "<scr" + "ipt runat=\"server\" language=\"amp" + "script\">";
+var close = "</scr" + "ipt>";
 ```
 
-Or keep the AMPscript in a content block and load it with [`ContentBlockByKey`](/platform-functions/contentblockbykey/). See also [`TreatAsContent`](/platform-functions/treatascontent/).
+These statements ran in the script activity:
+
+| Statement | Result |
+|---|---|
+| `Platform.Function.TreatAsContent(P + '[ SET @a1 = "A1-RAN" ]' + P + P + '=v(@a1)=' + P)` | returned `A1-RAN` |
+| `Variable.GetValue("@a1")` (after the call above) | returned `A1-RAN` |
+| `Platform.Function.TreatAsContent(P + '=Concat("A2", "-RAN")=' + P)` | returned `A2-RAN` |
+| `Platform.Function.TreatAsContent(P + '="A2-RAN"=' + P)` | threw an error: an inline `%%= =%%` expression needs a function call, not a bare string |
+| `Platform.Function.TreatAsContent(open + 'SET @a3 = "A3-RAN"' + close + P + '=v(@a3)=' + P)` | returned `A3-RAN` |
+| `Platform.Function.ContentBlockByKey("cpp-exec-block")`, an HTML block holding `%%[ SET @cb = "CB-RAN" ]%%%%=v(@cb)=%%` | returned `CB-RAN` |
+| `Variable.GetValue("@cb")` (after the call above) | returned `CB-RAN` |
+
+Keeping the AMPscript in a content block and loading it with [`ContentBlockByKey`](/platform-functions/contentblockbykey/) needs no workaround. See also [`TreatAsContent`](/platform-functions/treatascontent/).
 
 ## Send contexts: use AMPscript, not SSJS
 
