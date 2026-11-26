@@ -10,6 +10,8 @@ test_scripts: complete
 
 SSJS has six ways to read a Data Extension, and none of them looks like the SQL you write in an Automation Studio query. This page puts them side by side and shows how a SQL `WHERE` clause turns into each method's filter.
 
+> **Skip the manual mapping:** paste a `SELECT` into the [SQL Converter on sfmc.guide](https://sfmc.guide/tools/sql-converter/) and get the matching WSProxy, Rows.Retrieve and lookup code, or paste lookup code to get the SQL back.
+
 Every example on this page reads the same small `Customers` Data Extension (Name and external key are both `Customers`):
 
 | SubscriberKey | Email | FirstName | Country | Tier | Points | SignupDate | IsActive |

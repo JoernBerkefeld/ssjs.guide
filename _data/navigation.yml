@@ -418,6 +418,8 @@
         url: /recipes/anti-csrf/
       - title: Encryption
         url: /recipes/encryption/
+      - title: Where SSJS & JS Can Be Saved
+        url: /recipes/code-persistence/
 
 - title: Function Index
   url: /function-index/

@@ -22,6 +22,7 @@ Practical, copy-paste-ready patterns for the most common SSJS development scenar
 | [WSProxy Patterns](/recipes/wsproxy-patterns/) | Paginated retrieval, bulk upsert, multi-BU iteration, error-safe loops |
 | [Anti-CSRF](/recipes/anti-csrf/) | Protect CloudPage forms with a server-generated token |
 | [Encryption](/recipes/encryption/) | Store and read sensitive data with symmetric encryption |
+| [Where SSJS and JavaScript Can Be Saved](/recipes/code-persistence/) | Which content types keep SSJS and a client-side `<script>` on save |
 
 ---
 
