@@ -1,0 +1,38 @@
+// ── Result chips ──────────────────────────────────────────────────────────────
+// Coloured result labels in tables (e.g. /recipes/code-persistence/), matching the
+// dark palette of the .crud-chip on sfmc.guide.
+
+@use "variables" as *;
+
+.status-chip {
+  display: inline-block;
+  padding: 0.15em 0.35em;
+  font-size: $text-sm;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  border-radius: $radius-sm;
+
+  &--yes {
+    color: #6fd39c;
+    background: #143225;
+  }
+
+  &--partial {
+    color: #f0c060;
+    background: #3a2d10;
+  }
+
+  &--no {
+    color: #f08a93;
+    background: #3b171b;
+  }
+}
+
+// "API" / "Editor" label on its own line above a chip where the two ways of saving differ
+.status-chip-channel {
+  display: block;
+  margin-top: 0.3em;
+  font-size: $text-xs;
+  color: $text-muted;
+}

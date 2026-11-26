@@ -26,23 +26,23 @@ The two snippets tested were:
 - **SSJS:** `<script runat="server">Platform.Load("core","1");Write("S1");</script>`
 - **Client-side JavaScript:** `<script>console.log("J1");</script>`
 
-**kept** = stored unchanged · **removed** = stored without the snippet, but the save reported success · **rejected** = the save was refused with an error · **escaped** = stored as plain text (`&lt;` instead of `<`). A single result means saving by API and in the editor behaved the same.
+<span class="status-chip status-chip--yes">kept</span> = stored unchanged · <span class="status-chip status-chip--no">removed</span> = stored without the snippet, but the save reported success · <span class="status-chip status-chip--no">rejected</span> = the save was refused with an error · <span class="status-chip status-chip--partial">escaped</span> = stored as plain text (`&lt;` instead of `<`). A single result means saving by API and in the editor behaved the same.
 
 | Type | Editor | SSJS | Client-side `<script>` |
 |---|---|---|---|
-| HTML email | Code view | kept | removed |
-| Template-based email | HTML block in a slot | kept | removed |
-| Text-only email | Text editor | kept | removed |
-| HTML block | Code editor | kept | removed |
-| Code snippet | Code editor | kept | removed |
-| Free form block | HTML Editor tab | kept | removed |
-| Free form block | Content tab (rich text, typed) | API: kept · Editor: escaped | API: removed · Editor: escaped |
-| Text block | HTML Editor tab | kept | removed |
-| Text block | Content tab (rich text, typed) | API: kept · Editor: escaped | API: removed · Editor: escaped |
-| Email template | Code editor (Paste HTML) | kept | removed |
-| CloudPages landing page | Code View | kept | kept |
-| CloudPages code resource (JavaScript, CSS, JSON, text, XML, RSS) | Code resource editor | kept | API: removed · Editor: kept |
-| Automation Studio script activity | Script activity editor | kept | kept |
+| HTML email | Code view | <span class="status-chip status-chip--yes">kept</span> | <span class="status-chip status-chip--no">removed</span> |
+| Template-based email | HTML block in a slot | <span class="status-chip status-chip--yes">kept</span> | <span class="status-chip status-chip--no">removed</span> |
+| Text-only email | Text editor | <span class="status-chip status-chip--yes">kept</span> | <span class="status-chip status-chip--no">removed</span> |
+| HTML block | Code editor | <span class="status-chip status-chip--yes">kept</span> | <span class="status-chip status-chip--no">removed</span> |
+| Code snippet | Code editor | <span class="status-chip status-chip--yes">kept</span> | <span class="status-chip status-chip--no">removed</span> |
+| Free form block | HTML Editor tab | <span class="status-chip status-chip--yes">kept</span> | <span class="status-chip status-chip--no">removed</span> |
+| Free form block | Content tab (rich text, typed) | <span class="status-chip-channel">API</span> <span class="status-chip status-chip--yes">kept</span> <span class="status-chip-channel">Editor</span> <span class="status-chip status-chip--partial">escaped</span> | <span class="status-chip-channel">API</span> <span class="status-chip status-chip--no">removed</span> <span class="status-chip-channel">Editor</span> <span class="status-chip status-chip--partial">escaped</span> |
+| Text block | HTML Editor tab | <span class="status-chip status-chip--yes">kept</span> | <span class="status-chip status-chip--no">removed</span> |
+| Text block | Content tab (rich text, typed) | <span class="status-chip-channel">API</span> <span class="status-chip status-chip--yes">kept</span> <span class="status-chip-channel">Editor</span> <span class="status-chip status-chip--partial">escaped</span> | <span class="status-chip-channel">API</span> <span class="status-chip status-chip--no">removed</span> <span class="status-chip-channel">Editor</span> <span class="status-chip status-chip--partial">escaped</span> |
+| Email template | Code editor (Paste HTML) | <span class="status-chip status-chip--yes">kept</span> | <span class="status-chip status-chip--no">removed</span> |
+| CloudPages landing page | Code View | <span class="status-chip status-chip--yes">kept</span> | <span class="status-chip status-chip--yes">kept</span> |
+| CloudPages code resource (JavaScript, CSS, JSON, text, XML, RSS) | Code resource editor | <span class="status-chip status-chip--yes">kept</span> | <span class="status-chip-channel">API</span> <span class="status-chip status-chip--no">removed</span> <span class="status-chip-channel">Editor</span> <span class="status-chip status-chip--yes">kept</span> |
+| Automation Studio script activity | Script activity editor | <span class="status-chip status-chip--yes">kept</span> | <span class="status-chip status-chip--yes">kept</span> |
 
 A script activity refuses all three AMPscript forms when it is saved, by API and in the editor.
 
@@ -72,7 +72,7 @@ Keeping the AMPscript in a content block and loading it with [`ContentBlockByKey
 
 ## Send contexts: use AMPscript, not SSJS
 
-Sender profiles, the subject, preheader, CC and BCC of an email send, and the title, message and custom keys of push and SMS messages are filled in per recipient when the message goes out. On a production business unit we looked at, all of these fields held AMPscript and none held SSJS; this part was not tested. Salesforce's [SSJS overview](https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_serverSideJavaScript.html) advises AMPscript or the SSJS Platform functions for email messages and the SSJS Core library only for landing pages and applications. In Journey Builder on that business unit, only send activities held AMPscript, in their message fields. The full list is on [sfmc.guide](https://sfmc.guide/engagement/code-persistence/#ampscript-in-send-contexts).
+Sender profiles, the subject, preheader, CC and BCC of an email send, and the title, message and custom keys of push and SMS messages are filled in per recipient when the message goes out, and you can use AMPscript in them; this part was not tested. Salesforce's [SSJS overview](https://developer.salesforce.com/docs/marketing/marketing-cloud/guide/ssjs_serverSideJavaScript.html) advises AMPscript or the SSJS Platform functions for email messages and the SSJS Core library only for landing pages and applications. In Journey Builder, send activities generally take AMPscript in their message fields; other activity types don't. More examples are on [sfmc.guide](https://sfmc.guide/engagement/code-persistence/#ampscript-in-send-contexts).
 
 ## See Also
 
