@@ -298,6 +298,7 @@ Value-confirmed `RegExp` members — see [Regular Expressions](/ecmascript-built
 
 | Method / Property | ES | Status | Notes |
 |-------------------|----|--------|-------|
+| [`new RegExp(pattern, flags)`](/ecmascript-builtins/regular-expressions/#constructor-flags) | ES3 | ⚠️ Partial | `flags` argument ignored — use a literal, or lower-case both sides |
 | [`RegExp.prototype.test(string)`](/ecmascript-builtins/regular-expressions/#test) | ES3 | ✅ Works | |
 | [`RegExp.prototype.exec(string)`](/ecmascript-builtins/regular-expressions/#exec) | ES3 | ⚠️ Partial | Full match `result[0]`, `.index`, `.input` work, but capture groups `result[1]+` are `undefined` and `result.length` is always 3; `lastIndex` does not advance |
 | [`RegExp.prototype.source`](/ecmascript-builtins/regular-expressions/#source) | ES3 | ✅ Works | |
@@ -340,5 +341,5 @@ The native `JSON` object is unavailable — see [JSON](/ecmascript-builtins/json
 | [Object Methods](/ecmascript-builtins/object-methods/) | `hasOwnProperty`, `defineProperty`, and missing Object statics |
 | [Function Methods](/ecmascript-builtins/function-methods/) | Native `call` / `apply`, the `arguments` object and `Function()` constructor, the `bind` (`bindFn`) helper, and the broken `.length` / `.name` / `toString` / `constructor` members |
 | [Date Methods](/ecmascript-builtins/date-methods/) | Value-confirmed `Date` getters, string conversions, and `Date.UTC` |
-| [Regular Expressions](/ecmascript-builtins/regular-expressions/) | `RegExp` `test`, `exec`, and the `source` / `global` / `lastIndex` accessors (`ignoreCase` / `multiline` are `undefined` in SFMC) |
+| [Regular Expressions](/ecmascript-builtins/regular-expressions/) | `RegExp` `test`, `exec`, and the `source` / `global` / `lastIndex` accessors (`ignoreCase` / `multiline` are `undefined` in SFMC; the constructor ignores its `flags` argument) |
 | [JSON](/ecmascript-builtins/json/) | `JSON.parse` / `JSON.stringify` are unavailable — use `Platform.Function.ParseJSON` / `Platform.Function.Stringify` |

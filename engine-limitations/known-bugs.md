@@ -119,6 +119,64 @@ switch (level) {
 
 ---
 
+## A String Literal Ending in an Escaped Backslash Aborts the Page {#string-literal-trailing-backslash}
+
+**Severity: High** — the whole CloudPage fails with HTTP 422 before a single line runs, with no error message
+
+A string literal whose **last character is an escaped backslash** is valid JavaScript but can kill the page. Each of these, alone in an otherwise working CloudPage, returned HTTP 422 and no output at all:
+
+```javascript
+var a = "\\";       // ❌ HTTP 422
+var b = '\\';       // ❌ single quotes too
+var c = "a\\";      // ❌ any text before the backslash
+var d = "\\\\";     // ❌ two backslashes at the end
+```
+
+The same backslash anywhere **except** right before the closing quote is fine:
+
+```javascript
+var e = "\\a";      // ✅ backslash first, text after it
+var f = "a\\b";     // ✅ backslash in the middle
+var g = "\\ ";      // ✅ a character after it — even a space
+var h = /\\/;       // ✅ regex literal
+// var i = "\\";    ✅ inside a // comment
+```
+
+The value is not the problem — when the page does run, `"\\"` is correctly one backslash. The failure happens while the script is read: some step before the JavaScript parser seems to take the closing `\"` for an escaped quote, so the string looks unterminated. Whether the page then fails depends on the quotes that follow: in testing, adding any later `"` — even inside a comment — let the same line run. Do not rely on that; treat every string that ends in an escaped backslash as fatal.
+
+**Safe workaround:** build the backslash with `String.fromCharCode(92)`:
+
+```javascript
+var BS = String.fromCharCode(92);   // one backslash
+var path = "Content Builder" + BS + folderName;
+var escaped = "a" + BS;             // ends in a backslash, no literal needed
+```
+
+This hits code that escapes characters for a regex or a JSON string — `source += "\\" + c;` inside a helper function failed the same way. Keep a `BS` variable instead.
+
+{% include test-script.html bundle="engine-limitations--known-bugs" chapter="string-literal-trailing-backslash" %}
+
+---
+
+## The RegExp Constructor Ignores Its Flags {#regexp-constructor-flags-ignored}
+
+**Severity: High** — silent wrong results: case-insensitive checks reject valid input, global replaces stop after the first match
+
+`new RegExp(pattern, flags)` and `RegExp(pattern, flags)` build a working pattern but **drop the `flags` argument** without an error. The `g`, `i` and `m` flags only work in literal syntax.
+
+```javascript
+new RegExp("^gold$", "i").test("Gold");      // false — expected true
+"a1a2".replace(new RegExp("a", "g"), "x");   // "x1a2" — expected "x1x2"
+new RegExp("a", "g").global;                 // false — expected true
+/^gold$/i.test("Gold");                      // true — the literal works
+```
+
+**Safe workaround:** use a literal when the pattern is static. For a dynamic case-insensitive match, lower-case both the pattern text and the subject (`new RegExp("^" + term.toLowerCase() + "$").test(input.toLowerCase())`); for a dynamic global replace of plain text, use `str.split(text).join(replacement)`. Details, and the SFMC-only inline `(?i)` / `(?m)` options, are on [Regular Expressions](/ecmascript-builtins/regular-expressions/#constructor-flags) and in [Differs from Official Docs](/engine-limitations/differs-from-docs/#regexp-constructor-flags-ignored).
+
+{% include test-script.html bundle="ecmascript-builtins--regular-expressions" chapter="constructor-flags" %}
+
+---
+
 ## Bare-name Recipient Does Not Exist
 
 **Severity: High** — the alias is `undefined`

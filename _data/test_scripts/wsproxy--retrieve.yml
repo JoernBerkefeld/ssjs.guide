@@ -545,3 +545,97 @@ notes: |
   /* Cleanup. */
   assert("cleanup: fixture data extension deleted", "" + proxy.deleteBatch("DataExtension", [{ CustomerKey: deKey }]).Status, "OK");
   </script>
+
+many-columns: |
+  <script runat="server">
+  /*
+   * Chapter: Retrieve many columns from a DE
+   *
+   * Creates the "Customers" fixture Data Extension (Name = external key),
+   * runs the page example VERBATIM, asserts its results, then deletes the
+   * fixture again.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function byText(a, b) { return a < b ? -1 : (a > b ? 1 : 0); }
+  function sortedKeys(r) {
+      var k = [];
+      for (var x = 0; x < r.Results.length; x++) {
+          var p = r.Results[x].Properties;
+          for (var y = 0; y < p.length; y++) { if (("" + p[y].Name) === "SubscriberKey") { k.push("" + p[y].Value); } }
+      }
+      k.sort(byText);
+      return k.join(",");
+  }
+  Platform.Load("core", "1.1.5");
+
+  /* --- fixture --- */
+  var fxProxy = new Script.Util.WSProxy();
+  try { fxProxy.deleteBatch("DataExtension", [{ CustomerKey: "Customers" }]); } catch (fxE) {}
+  var fxCreate = fxProxy.createItem("DataExtension", {
+      Name: "Customers", CustomerKey: "Customers",
+      Fields: [
+          { Name: "SubscriberKey", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true },
+          { Name: "Email", FieldType: "EmailAddress" },
+          { Name: "FirstName", FieldType: "Text", MaxLength: 50 },
+          { Name: "LastName", FieldType: "Text", MaxLength: 50 },
+          { Name: "Country", FieldType: "Text", MaxLength: 2 },
+          { Name: "Tier", FieldType: "Text", MaxLength: 20 },
+          { Name: "Points", FieldType: "Number" },
+          { Name: "SignupDate", FieldType: "Date" },
+          { Name: "IsActive", FieldType: "Boolean" }
+      ]
+  });
+  var fxDE = DataExtension.Init("Customers");
+  var fxRows = [
+      ["C001", "anna@example.com", "Anna", "Becker", "DE", "Gold", 1200, "2023-02-01", true],
+      ["C002", "ben@example.com", "Ben", "Clark", "US", "Silver", 300, "2024-05-10", true],
+      ["C003", "carla@example.org", "Carla", "Diaz", "ES", "Gold", 950, "2024-07-20", false],
+      ["C004", "dirk@example.com", "Dirk", "Engel", "DE", "Bronze", 40, "2025-01-05", true],
+      ["C005", "eva@example.com", "Eva", "Fischer", "DE", "Gold", 2100, "2025-03-15", true],
+      ["C006", "finn@example.net", "Finn", "Graham", "US", "Bronze", 0, "2025-09-30", false],
+      ["C007", "gus@example.de", "Gus", "Hansen", "FR", null, 10, "2026-01-10", false]
+  ];
+  for (var fxI = 0; fxI < fxRows.length; fxI++) {
+      var fx = fxRows[fxI];
+      var fxRow = { SubscriberKey: fx[0], Email: fx[1], FirstName: fx[2], LastName: fx[3], Country: fx[4], Points: fx[6], SignupDate: fx[7], IsActive: fx[8] };
+      if (fx[5] !== null) { fxRow.Tier = fx[5]; }
+      fxDE.Rows.Add(fxRow);
+  }
+  assert("fixture created", "" + fxCreate.Status, "OK");
+
+  /* --- page example (verbatim) --- */
+  var proxy = new Script.Util.WSProxy();
+  var columns = ["SubscriberKey", "Email", "FirstName", "LastName", "Country", "Tier", "Points", "SignupDate", "IsActive"];
+  var result = proxy.retrieve("DataExtensionObject[Customers]", columns, {
+      Property: "Country", SimpleOperator: "equals", Value: "DE"
+  });
+
+  // result.Results[i].Properties holds one { Name, Value } pair per requested column,
+  // in the order of the columns array; every Value is a string
+  var first = result.Results[0].Properties;
+  var pairs = [];
+  for (var j = 0; j < first.length; j++) {
+      pairs.push(first[j].Name + "=" + first[j].Value);
+  }
+
+  /* --- assertions --- */
+  assert("Status OK", "" + result.Status, "OK");
+  assert("three DE rows", sortedKeys(result), "C001,C004,C005");
+  assert("9 requested columns -> 9 properties per row", "" + first.length, "9");
+  assert("one Name=Value pair per column", "" + pairs.length, "9");
+  assert("properties follow the requested order (first)", "" + first[0].Name, "SubscriberKey");
+  assert("properties follow the requested order (last)", "" + first[8].Name, "IsActive");
+  assert("Number value is a string", typeof result.Results[0].Properties[6].Value, "string");
+  var wide = proxy.retrieve("DataExtensionObject[Customers]", columns.concat([]).reverse());
+  assert("reversed column list is honoured", "" + wide.Results[0].Properties[0].Name, "IsActive");
+  assert("unfiltered retrieve returns every row with all columns", "" + wide.Results.length + "/" + wide.Results[0].Properties.length, "7/9");
+  var typo = proxy.retrieve("DataExtensionObject[Customers]", ["SubscriberKey", "Emial"]);
+  assert("unknown column: Status carries the error", ("" + typo.Status).indexOf("Emial do not match") > -1 ? "true" : "false", "true");
+
+  /* --- cleanup --- */
+  assert("fixture deleted", "" + fxProxy.deleteBatch("DataExtension", [{ CustomerKey: "Customers" }]).Status, "OK");
+  </script>

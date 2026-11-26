@@ -123,5 +123,6 @@ var rows = Platform.Function.LookupOrderedRows(
 <ul>
   <li><a href="/platform-functions/lookup/">Lookup</a></li>
   <li><a href="/platform-functions/lookuprows/">LookupRows</a></li>
+  <li><a href="/recipes/querying-data/">Querying Data Extensions</a></li>
 </ul>
 </div>

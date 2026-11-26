@@ -6,13 +6,13 @@ parent_url: /ecmascript-builtins/
 permalink: /ecmascript-builtins/regular-expressions/
 redirect_from:
     - /language/regular-expressions/
-description: RegExp in SSJS — creation, flags, test, exec, and the source/global/lastIndex accessors, with the SFMC engine quirks for capture groups, lastIndex, ignoreCase, multiline, and instanceof.
+description: RegExp in SSJS — creation, flags, test, exec, and the source/global/lastIndex accessors, with the SFMC engine quirks for the ignored constructor flags, capture groups, lastIndex, ignoreCase, multiline, and instanceof.
 verification: verified
 differs_from_docs: true
 test_scripts: complete
 ---
 
-Regular expressions work in SSJS using the ES3/ES5 `RegExp` API. Literal and constructor syntax both work, and `test`, `String.match`, `String.replace` (including `$1` back-references and function replacers), and `String.split` behave as expected. A few accessors, `exec`'s capture-group / `lastIndex` behavior, `instanceof RegExp`, and `String.search`'s return index differ from the spec — those are flagged below. Every fact on this page has been proven against live SFMC CloudPage runtime output.
+Regular expressions work in SSJS using the ES3/ES5 `RegExp` API. Literal and constructor syntax both build working patterns, but **the constructor ignores its flags argument** — `new RegExp("x", "i")` is still case-sensitive (see [Constructor flags are ignored](#constructor-flags)). `test`, `String.match`, `String.replace` (including `$1` back-references and function replacers), and `String.split` behave as expected. A few accessors, `exec`'s capture-group / `lastIndex` behavior, `instanceof RegExp`, and `String.search`'s return index differ from the spec — those are flagged below. Every fact on this page has been proven against live SFMC CloudPage runtime output.
 
 ## Status legend
 
@@ -26,6 +26,7 @@ Regular expressions work in SSJS using the ES3/ES5 `RegExp` API. Literal and con
 
 | Member | ES | Status | Notes |
 |--------|----|--------|-------|
+| [`new RegExp(pattern, flags)`](#constructor-flags) | ES3 | ⚠️ Partial | The pattern works; the `flags` argument (`g`, `i`, `m`) is silently ignored, also without `new` |
 | [`RegExp.prototype.test(string)`](#test) | ES3 | ✅ Works | Most reliable way to check for a match |
 | [`RegExp.prototype.exec(string)`](#exec) | ES3 | ⚠️ Partial | Full match `result[0]`, `result.index`, and `result.input` work; capture groups `result[1]+` are `undefined` and `lastIndex` does not advance |
 | [`RegExp.prototype.source`](#source) | ES3 | ✅ Works | Pattern text without slashes or flags |
@@ -45,10 +46,13 @@ var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 var digitsOnly   = /^\d+$/;
 var noSpaces     = /\s/g;
 
-// Constructor syntax (for dynamic patterns)
+// Constructor syntax (for dynamic patterns) — pass the pattern only
 var fieldName = "email";
-var dynamicPattern = new RegExp(fieldName + "=([^&]+)", "i");
+var dynamicPattern = new RegExp(fieldName + "=([^&]+)");
+dynamicPattern.test("?email=jane%40x.com");   // true
 ```
+
+Do not pass flags to the constructor: SFMC drops them without an error, so `new RegExp(fieldName + "=([^&]+)", "i")` still does not match `"?EMAIL=…"`. See [Constructor flags are ignored](#constructor-flags) for the workarounds.
 
 {% include test-script.html bundle="ecmascript-builtins--regular-expressions" chapter="creating-regexp" %}
 
@@ -67,7 +71,50 @@ var text = "Hello World hello";
 text.match(/hello/gi); // ["Hello", "hello"] (global + case-insensitive)
 ```
 
+The flags only take effect in **literal** syntax (`/…/gim`). Passed as the second argument of `RegExp`, they are ignored — see the next chapter.
+
 {% include test-script.html bundle="ecmascript-builtins--regular-expressions" chapter="flags" %}
+
+## Constructor flags are ignored {#constructor-flags}
+
+`(ES3)` — ⚠️ Partial. `new RegExp(pattern, flags)` builds a working pattern, but the engine **drops the `flags` argument without an error**. The result behaves exactly like `new RegExp(pattern)`:
+
+- `i` — matching stays case-sensitive.
+- `g` — `String.replace` replaces only the first match, and `.global` is `false`.
+- `m` — `^` and `$` still match only at the start and end of the whole string.
+
+The same happens when you call `RegExp(pattern, flags)` without `new`, when you combine flags (`"gi"`), and when you pass a flagged literal (`new RegExp(/gold/i)`). An invalid flag string such as `"zz"` does not throw either.
+
+{% include differs-from-mdn.html content="MDN specifies that the second argument of `RegExp(pattern, flags)` sets the `g`, `i` and `m` flags (and throws a `SyntaxError` for an invalid flag); the SFMC engine silently ignores it, so the constructed pattern is always case-sensitive, non-global and single-line." link="#regexp-constructor-flags-ignored" %}
+
+```javascript
+// ❌ flags passed to the constructor do nothing
+new RegExp("^gold$", "i").test("Gold");            // false (standard JS: true)
+"a1a2".replace(new RegExp("a", "g"), "x");         // "x1a2" (standard JS: "x1x2")
+new RegExp("^beta", "m").test("alpha\nbeta");      // false (standard JS: true)
+
+// ✅ the same flags in literal syntax work
+/^gold$/i.test("Gold");                            // true
+"a1a2".replace(/a/g, "x");                         // "x1x2"
+/^beta/m.test("alpha\nbeta");                      // true
+```
+
+**Workarounds:**
+
+- **Static pattern** — use the literal: `/^gold$/i` instead of `new RegExp("^gold$", "i")`.
+- **Dynamic case-insensitive match** — lower-case both the pattern text and the subject:
+
+  ```javascript
+  var term = "GoLd";
+  var re = new RegExp("^" + term.toLowerCase() + "$");
+  re.test("GOLD".toLowerCase());   // true
+  ```
+
+  Lower-casing the subject also lower-cases anything you capture from it — read the original string by index if you need the original case.
+- **Dynamic global replace of plain text** — `split` + `join` replaces every occurrence: `"a1a2".split("a").join("x")` yields `"x1x2"`.
+- **Engine-specific inline options** — the pattern text itself may start with `(?i)`, `(?m)` or `(?im)`: `new RegExp("(?i)^gold$").test("GOLD")` is `true` in SFMC. This is **not** JavaScript syntax (standard engines throw a `SyntaxError`), so code using it only runs in SFMC; there is no inline equivalent of `g`.
+
+{% include test-script.html bundle="ecmascript-builtins--regular-expressions" chapter="constructor-flags" %}
 
 ---
 

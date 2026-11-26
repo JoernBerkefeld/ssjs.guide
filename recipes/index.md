@@ -16,8 +16,12 @@ Practical, copy-paste-ready patterns for the most common SSJS development scenar
 | [AMPscript Bridge](/recipes/ampscript-bridge/) | Passing data between AMPscript and SSJS |
 | [REST API Calls](/recipes/rest-api-calls/) | OAuth2 tokens, GET/POST patterns, error handling |
 | [DE CRUD Patterns](/recipes/de-crud-patterns/) | Complete CRUD with both Platform.Function and Core |
+| [Querying Data Extensions](/recipes/querying-data/) | Every DE read method side by side, plus SQL `WHERE` → SSJS filter |
 | [Subscriber Management](/recipes/subscriber-management/) | Subscribe, unsubscribe, update preferences |
 | [Date and Time](/recipes/date-and-time/) | Formatting, calculations, timezone handling |
+| [WSProxy Patterns](/recipes/wsproxy-patterns/) | Paginated retrieval, bulk upsert, multi-BU iteration, error-safe loops |
+| [Anti-CSRF](/recipes/anti-csrf/) | Protect CloudPage forms with a server-generated token |
+| [Encryption](/recipes/encryption/) | Store and read sensitive data with symmetric encryption |
 
 ---
 

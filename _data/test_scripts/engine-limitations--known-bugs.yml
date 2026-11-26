@@ -353,6 +353,66 @@ switch-no-fallthrough: |
   assert("H3 map 'guest' -> ''", classifyMap("guest"), "");
   </script>
 
+string-literal-trailing-backslash: |
+  <script runat="server">
+  /*
+   * Chapter: A String Literal Ending in an Escaped Backslash Aborts the Page
+   *
+   * Proves:
+   *   1. A backslash escape that is NOT the last character of the literal
+   *      parses and yields the right value: backslash first, backslash in the
+   *      middle, and backslash followed by a space.
+   *   2. A regex literal matching one backslash parses and works.
+   *   3. A // comment that contains the fatal form does not break the page
+   *      (the comment line below this header is part of the proof).
+   *   4. WORKAROUND String.fromCharCode(92) yields exactly one backslash
+   *      (char code 92), and concatenation can end a string with it.
+   *
+   * NOT ASSERTED (they cannot be): the fatal forms themselves. A literal whose
+   * last character is an escaped backslash makes the whole page return
+   * HTTP 422 before any statement runs, so it can never print a PASS line.
+   * Each was proven in its own minimal page: double quotes, single quotes,
+   * text before the backslash, and two escaped backslashes at the end.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, actual, expected) {
+      var got;
+      try { got = String(actual); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === String(expected) ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  // var fatal = "\\";   (point 3: inside a line comment this is harmless)
+
+  /* 1. Backslash escapes that are not the last character. */
+  var first = "\\a";
+  assert("1a '\\\\a' has length 2", first.length, "2");
+  assert("1b '\\\\a' starts with char code 92", first.charCodeAt(0), "92");
+  var middle = "a\\b";
+  assert("1c 'a\\\\b' has length 3", middle.length, "3");
+  assert("1d 'a\\\\b' has char code 92 at index 1", middle.charCodeAt(1), "92");
+  var spaced = "\\ ";
+  assert("1e backslash plus space has length 2", spaced.length, "2");
+  assert("1f backslash plus space starts with char code 92", spaced.charCodeAt(0), "92");
+
+  /* 2. Regex literal for one backslash. */
+  var bsRe = /\\/;
+  assert("2a regex literal source is two characters", bsRe.source.length, "2");
+  assert("2b regex literal matches 'a\\\\b'", bsRe.test(middle) ? "true" : "false", "true");
+
+  /* 4. Workaround — String.fromCharCode(92). */
+  var BS = String.fromCharCode(92);
+  assert("4a fromCharCode(92) has length 1", BS.length, "1");
+  assert("4b fromCharCode(92) is char code 92", BS.charCodeAt(0), "92");
+  assert("4c fromCharCode(92) equals the escape inside a literal", (BS === middle.charAt(1)) ? "true" : "false", "true");
+  var trailing = "folder" + BS;
+  assert("4d concatenation ends a string with a backslash", trailing.charCodeAt(trailing.length - 1), "92");
+  assert("4e the trailing-backslash string has length 7", trailing.length, "7");
+  assert("4f split on the backslash variable", middle.split(BS).length, "2");
+  </script>
+
 bare-name-recipient-does-not-exist: |
   <script runat="server">
   /*

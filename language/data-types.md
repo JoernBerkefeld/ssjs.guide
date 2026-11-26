@@ -23,6 +23,8 @@ var withQuote = "He said \"hello\"";
 var withTab = "col1\tcol2";
 ```
 
+{% include callout.html type="warning" content="Never end a string literal with an escaped backslash (`'\\'`, `'a\\'`): the whole CloudPage fails with HTTP 422 before any line runs. Build the backslash with `String.fromCharCode(92)` instead. See [Known Bugs](/engine-limitations/known-bugs/#string-literal-trailing-backslash)." %}
+
 String length:
 
 ```javascript

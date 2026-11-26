@@ -5334,14 +5334,14 @@
   returnType: "RegExp"
   url: "/ecmascript-builtins/regular-expressions/"
   anchorId: "fn-regexp"
-  status: "ok"
+  status: "partial"
   es: "3"
   polyfill: false
   polyfillUrl: ""
   verified: true
-  differsFromDocs: false
+  differsFromDocs: true
   deprecated: false
-  description: "Creates a regular expression object for pattern matching."
+  description: "In the SFMC engine the flags argument is ignored: the constructed…"
 - name: "instanceof RegExp"
   sortKey: "regexp.instanceof"
   section: "ECMAScript Builtins"

@@ -311,6 +311,7 @@ if (existing.length === 0) {
 <ul>
   <li><a href="/core-library/dataextension/">DataExtension.Init</a></li>
   <li><a href="/platform-functions/lookuprows/">Platform.Function.LookupRows</a></li>
+  <li><a href="/recipes/querying-data/">Querying Data Extensions</a></li>
   <li><a href="/engine-limitations/differs-from-docs/">Differs from Docs — Rows return types</a></li>
 </ul>
 </div>

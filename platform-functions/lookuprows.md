@@ -149,5 +149,6 @@ var date  = row["CreatedDate"];
   <li><a href="/platform-functions/lookuporderedrows/">LookupOrderedRows</a></li>
   <li><a href="/core-library/dataextension-rows/">DataExtension.Rows.Retrieve</a></li>
   <li><a href="/recipes/de-crud-patterns/">DE CRUD Patterns</a></li>
+  <li><a href="/recipes/querying-data/">Querying Data Extensions</a></li>
 </ul>
 </div>

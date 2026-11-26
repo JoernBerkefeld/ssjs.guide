@@ -115,6 +115,28 @@ var result = proxy.retrieve(
 var rows = result.Results;
 ```
 
+### Retrieve many columns from a DE
+
+Every column in the `columns` array comes back on each row, in the order you list them — runtime-tested with up to 30 columns.
+
+```javascript
+var proxy = new Script.Util.WSProxy();
+var columns = ["SubscriberKey", "Email", "FirstName", "LastName", "Country", "Tier", "Points", "SignupDate", "IsActive"];
+var result = proxy.retrieve("DataExtensionObject[Customers]", columns, {
+    Property: "Country", SimpleOperator: "equals", Value: "DE"
+});
+
+// result.Results[i].Properties holds one { Name, Value } pair per requested column,
+// in the order of the columns array; every Value is a string
+var first = result.Results[0].Properties;
+var pairs = [];
+for (var j = 0; j < first.length; j++) {
+    pairs.push(first[j].Name + "=" + first[j].Value);
+}
+```
+
+{% include test-script.html bundle="wsproxy--retrieve" chapter="many-columns" label="Show test script — many columns" %}
+
 ### Retrieve a subscriber
 
 ```javascript
@@ -190,6 +212,8 @@ while (data.HasMoreRows) {
 - Pass `{ BatchSize: n }` as the 4th (`retrieveOptions`) argument to force a smaller page size (1–2,500; larger values are ignored). The `retrieveOptions.BatchSize` argument is runtime-verified to page cleanly on a published CloudPage.
 - A paged `retrieve` returns `Status: "MoreDataAvailable"` until the final page, which returns `Status: "OK"`.
 - The `DataExtensionObject[CustomerKey]` syntax is used for retrieving rows from a specific DE. Replace `CustomerKey` with the DE's external key.
+- A Data Extension retrieve returns every column you request, in the requested order (runtime-tested with up to 30 columns). An unknown column name does not throw; `Status` carries the error text instead (e.g. `"Error: The Request Property(s) Emial do not match with the fields of DataExtensionObject retrieve"`).
+- A `ComplexFilterPart` can be nested to combine more than two conditions; left- and right-nested chains of up to seven conditions and a balanced tree of six conditions applied every condition. For a side-by-side comparison with the `Lookup` functions and a SQL-to-filter table, see [Querying Data Extensions](/recipes/querying-data/).
 
 {% include test-script.html bundle="wsproxy--retrieve" chapter="notes" %}
 
@@ -200,5 +224,6 @@ while (data.HasMoreRows) {
 <ul>
   <li><a href="/wsproxy/getnextbatch/">proxy.getNextBatch</a></li>
   <li><a href="/wsproxy/createitem/">proxy.createItem</a></li>
+  <li><a href="/recipes/querying-data/">Querying Data Extensions</a></li>
 </ul>
 </div>

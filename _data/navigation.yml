@@ -406,6 +406,8 @@
         url: /recipes/rest-api-calls/
       - title: DE CRUD Patterns
         url: /recipes/de-crud-patterns/
+      - title: Querying Data Extensions
+        url: /recipes/querying-data/
       - title: Subscriber Management
         url: /recipes/subscriber-management/
       - title: WSProxy Patterns

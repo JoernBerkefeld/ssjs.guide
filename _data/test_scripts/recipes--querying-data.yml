@@ -1,0 +1,757 @@
+# Test scripts for /recipes/querying-data/
+#
+# One key per chapter. Every script creates the "Customers" fixture Data
+# Extension (Name = external key), runs the page example VERBATIM, asserts
+# its result and deletes the fixture again.
+#
+# All scripts were last run green (every line PASS) on a live SFMC CloudPage
+# on 2026-11-25. Re-run them before changing any claim on the page.
+#
+# Array sort() needs an explicit compare function in this engine (byText).
+
+which-method: |
+  <script runat="server">
+  /*
+   * Chapter: Which method should I use?
+   *
+   * Creates the "Customers" fixture Data Extension (Name = external key),
+   * runs the page example VERBATIM, asserts its results, then deletes the
+   * fixture again.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function byText(a, b) { return a < b ? -1 : (a > b ? 1 : 0); }
+  function sortedKeys(r) {
+      var k = [];
+      for (var x = 0; x < r.Results.length; x++) {
+          var p = r.Results[x].Properties;
+          for (var y = 0; y < p.length; y++) { if (("" + p[y].Name) === "SubscriberKey") { k.push("" + p[y].Value); } }
+      }
+      k.sort(byText);
+      return k.join(",");
+  }
+  Platform.Load("core", "1.1.5");
+
+  /* --- fixture --- */
+  var fxProxy = new Script.Util.WSProxy();
+  try { fxProxy.deleteBatch("DataExtension", [{ CustomerKey: "Customers" }]); } catch (fxE) {}
+  var fxCreate = fxProxy.createItem("DataExtension", {
+      Name: "Customers", CustomerKey: "Customers",
+      Fields: [
+          { Name: "SubscriberKey", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true },
+          { Name: "Email", FieldType: "EmailAddress" },
+          { Name: "FirstName", FieldType: "Text", MaxLength: 50 },
+          { Name: "LastName", FieldType: "Text", MaxLength: 50 },
+          { Name: "Country", FieldType: "Text", MaxLength: 2 },
+          { Name: "Tier", FieldType: "Text", MaxLength: 20 },
+          { Name: "Points", FieldType: "Number" },
+          { Name: "SignupDate", FieldType: "Date" },
+          { Name: "IsActive", FieldType: "Boolean" }
+      ]
+  });
+  var fxDE = DataExtension.Init("Customers");
+  var fxRows = [
+      ["C001", "anna@example.com", "Anna", "Becker", "DE", "Gold", 1200, "2023-02-01", true],
+      ["C002", "ben@example.com", "Ben", "Clark", "US", "Silver", 300, "2024-05-10", true],
+      ["C003", "carla@example.org", "Carla", "Diaz", "ES", "Gold", 950, "2024-07-20", false],
+      ["C004", "dirk@example.com", "Dirk", "Engel", "DE", "Bronze", 40, "2025-01-05", true],
+      ["C005", "eva@example.com", "Eva", "Fischer", "DE", "Gold", 2100, "2025-03-15", true],
+      ["C006", "finn@example.net", "Finn", "Graham", "US", "Bronze", 0, "2025-09-30", false],
+      ["C007", "gus@example.de", "Gus", "Hansen", "FR", null, 10, "2026-01-10", false]
+  ];
+  for (var fxI = 0; fxI < fxRows.length; fxI++) {
+      var fx = fxRows[fxI];
+      var fxRow = { SubscriberKey: fx[0], Email: fx[1], FirstName: fx[2], LastName: fx[3], Country: fx[4], Points: fx[6], SignupDate: fx[7], IsActive: fx[8] };
+      if (fx[5] !== null) { fxRow.Tier = fx[5]; }
+      fxDE.Rows.Add(fxRow);
+  }
+  assert("fixture created", "" + fxCreate.Status, "OK");
+
+  /* --- page example (verbatim) --- */
+  Platform.Load("core", "1.1.5");
+  var customers = DataExtension.Init("Customers");
+  var proxy = new Script.Util.WSProxy();
+
+  // The same miss ("XX" matches no row) through every method
+  var a = Platform.Function.Lookup("Customers", "FirstName", "Country", "XX");
+  var b = Platform.Function.LookupRows("Customers", "Country", "XX");
+  var c = Platform.Function.LookupOrderedRows("Customers", 0, "Points DESC", "Country", "XX");
+  var d = customers.Rows.Lookup(["Country"], ["XX"]);
+  var e = customers.Rows.Retrieve({ Property: "Country", SimpleOperator: "equals", Value: "XX" });
+  var f = proxy.retrieve("DataExtensionObject[Customers]", ["SubscriberKey"],
+      { Property: "Country", SimpleOperator: "equals", Value: "XX" });
+  // a, b, c and d are null; e.length and f.Results.length are 0
+
+  // The same Number column through a typed and a string-returning method
+  var typed = Platform.Function.LookupRows("Customers", "SubscriberKey", "C001")[0].Points;
+  var text = customers.Rows.Retrieve({ Property: "SubscriberKey", SimpleOperator: "equals", Value: "C001" })[0].Points;
+  // typed is the number 1200, text is the string "1200"
+
+  /* --- assertions --- */
+  assert("Lookup miss returns null", a === null ? "true" : "false", "true");
+  assert("LookupRows miss returns null", b === null ? "true" : "false", "true");
+  assert("LookupOrderedRows miss returns null", c === null ? "true" : "false", "true");
+  assert("Rows.Lookup miss returns null", d === null ? "true" : "false", "true");
+  assert("Rows.Retrieve miss returns an empty collection", "" + e.length, "0");
+  assert("WSProxy miss returns Status OK", "" + f.Status, "OK");
+  assert("WSProxy miss returns no Results", "" + f.Results.length, "0");
+  assert("LookupRows returns a Number column as number", typeof typed, "number");
+  assert("LookupRows Number value", "" + typed, "1200");
+  assert("Rows.Retrieve returns a Number column as string", typeof text, "string");
+  assert("Rows.Retrieve Number value", "" + text, "1200");
+
+  /* --- cleanup --- */
+  assert("fixture deleted", "" + fxProxy.deleteBatch("DataExtension", [{ CustomerKey: "Customers" }]).Status, "OK");
+  </script>
+
+sql-to-filter: |
+  <script runat="server">
+  /*
+   * Chapter: From SQL WHERE to an SSJS filter
+   *
+   * Creates the "Customers" fixture Data Extension (Name = external key),
+   * runs the page example VERBATIM, asserts its results, then deletes the
+   * fixture again.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function byText(a, b) { return a < b ? -1 : (a > b ? 1 : 0); }
+  function sortedKeys(r) {
+      var k = [];
+      for (var x = 0; x < r.Results.length; x++) {
+          var p = r.Results[x].Properties;
+          for (var y = 0; y < p.length; y++) { if (("" + p[y].Name) === "SubscriberKey") { k.push("" + p[y].Value); } }
+      }
+      k.sort(byText);
+      return k.join(",");
+  }
+  Platform.Load("core", "1.1.5");
+
+  /* --- fixture --- */
+  var fxProxy = new Script.Util.WSProxy();
+  try { fxProxy.deleteBatch("DataExtension", [{ CustomerKey: "Customers" }]); } catch (fxE) {}
+  var fxCreate = fxProxy.createItem("DataExtension", {
+      Name: "Customers", CustomerKey: "Customers",
+      Fields: [
+          { Name: "SubscriberKey", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true },
+          { Name: "Email", FieldType: "EmailAddress" },
+          { Name: "FirstName", FieldType: "Text", MaxLength: 50 },
+          { Name: "LastName", FieldType: "Text", MaxLength: 50 },
+          { Name: "Country", FieldType: "Text", MaxLength: 2 },
+          { Name: "Tier", FieldType: "Text", MaxLength: 20 },
+          { Name: "Points", FieldType: "Number" },
+          { Name: "SignupDate", FieldType: "Date" },
+          { Name: "IsActive", FieldType: "Boolean" }
+      ]
+  });
+  var fxDE = DataExtension.Init("Customers");
+  var fxRows = [
+      ["C001", "anna@example.com", "Anna", "Becker", "DE", "Gold", 1200, "2023-02-01", true],
+      ["C002", "ben@example.com", "Ben", "Clark", "US", "Silver", 300, "2024-05-10", true],
+      ["C003", "carla@example.org", "Carla", "Diaz", "ES", "Gold", 950, "2024-07-20", false],
+      ["C004", "dirk@example.com", "Dirk", "Engel", "DE", "Bronze", 40, "2025-01-05", true],
+      ["C005", "eva@example.com", "Eva", "Fischer", "DE", "Gold", 2100, "2025-03-15", true],
+      ["C006", "finn@example.net", "Finn", "Graham", "US", "Bronze", 0, "2025-09-30", false],
+      ["C007", "gus@example.de", "Gus", "Hansen", "FR", null, 10, "2026-01-10", false]
+  ];
+  for (var fxI = 0; fxI < fxRows.length; fxI++) {
+      var fx = fxRows[fxI];
+      var fxRow = { SubscriberKey: fx[0], Email: fx[1], FirstName: fx[2], LastName: fx[3], Country: fx[4], Points: fx[6], SignupDate: fx[7], IsActive: fx[8] };
+      if (fx[5] !== null) { fxRow.Tier = fx[5]; }
+      fxDE.Rows.Add(fxRow);
+  }
+  assert("fixture created", "" + fxCreate.Status, "OK");
+
+  /* --- page example (verbatim) --- */
+  // SQL:  WHERE Country IN ('DE', 'ES') AND Points >= 500
+  var filter = {
+      LeftOperand: { Property: "Country", SimpleOperator: "IN", Value: ["DE", "ES"] },
+      LogicalOperator: "AND",
+      RightOperand: { Property: "Points", SimpleOperator: "greaterThanOrEqual", Value: "500" }
+  };
+
+  var proxy = new Script.Util.WSProxy();
+  var result = proxy.retrieve("DataExtensionObject[Customers]", ["SubscriberKey", "Points"], filter);
+  // result.Results holds the rows C001, C003 and C005
+
+  /* --- assertions --- */
+  assert("example: Status OK", "" + result.Status, "OK");
+  assert("example: rows matched", sortedKeys(result), "C001,C003,C005");
+  function wsKeys(flt) {
+      try {
+          var r = proxy.retrieve("DataExtensionObject[Customers]", ["SubscriberKey"], flt);
+          return ("" + r.Status) === "OK" ? sortedKeys(r) : "STATUS:" + r.Status;
+      } catch (wsErr) {
+          return "THREW:" + ("" + wsErr.message);
+      }
+  }
+  assert("SQL equal: equals", wsKeys({ Property: "Tier", SimpleOperator: "equals", Value: "Gold" }), "C001,C003,C005");
+  assert("SQL not-equal: notEquals", wsKeys({ Property: "Country", SimpleOperator: "notEquals", Value: "US" }), "C001,C003,C004,C005,C007");
+  assert("SQL greater: greaterThan", wsKeys({ Property: "Points", SimpleOperator: "greaterThan", Value: "1200" }), "C005");
+  assert("SQL greater-or-equal: greaterThanOrEqual", wsKeys({ Property: "Points", SimpleOperator: "greaterThanOrEqual", Value: "1200" }), "C001,C005");
+  assert("SQL less: lessThan", wsKeys({ Property: "Points", SimpleOperator: "lessThan", Value: "300" }), "C004,C006,C007");
+  assert("SQL less-or-equal: lessThanOrEqual", wsKeys({ Property: "Points", SimpleOperator: "lessThanOrEqual", Value: "300" }), "C002,C004,C006,C007");
+  assert("LIKE contains", wsKeys({ Property: "Email", SimpleOperator: "like", Value: "example.com" }), "C001,C002,C004,C005");
+  assert("like ignores where % stands (nna% still finds anna)", wsKeys({ Property: "Email", SimpleOperator: "like", Value: "nna%" }), "C001");
+  assert("like ignores where % stands (%ann still finds anna)", wsKeys({ Property: "Email", SimpleOperator: "like", Value: "%ann" }), "C001");
+  assert("IN list", wsKeys({ Property: "Country", SimpleOperator: "IN", Value: ["DE", "ES"] }), "C001,C003,C004,C005");
+  assert("BETWEEN", wsKeys({ Property: "Points", SimpleOperator: "between", Value: ["100", "1000"] }), "C002,C003");
+  assert("IS NULL", wsKeys({ Property: "Tier", SimpleOperator: "isNull", Value: "" }), "C007");
+  assert("IS NOT NULL", wsKeys({ Property: "Tier", SimpleOperator: "isNotNull", Value: "" }), "C001,C002,C003,C004,C005,C006");
+  assert("date greaterThan", wsKeys({ Property: "SignupDate", SimpleOperator: "greaterThan", Value: "2024-12-31" }), "C004,C005,C006,C007");
+  assert("boolean equals true", wsKeys({ Property: "IsActive", SimpleOperator: "equals", Value: "true" }), "C001,C002,C004,C005");
+  assert("OR", wsKeys({ LeftOperand: { Property: "Tier", SimpleOperator: "equals", Value: "Silver" }, LogicalOperator: "OR", RightOperand: { Property: "Country", SimpleOperator: "equals", Value: "ES" } }), "C002,C003");
+  assert("existsInString is rejected via Status", wsKeys({ Property: "Email", SimpleOperator: "existsInString", Value: "example" }).indexOf("STATUS:Error") === 0 ? "true" : "false", "true");
+  var rr = DataExtension.Init("Customers").Rows.Retrieve(filter);
+  var rrKeys = []; for (var q = 0; q < rr.length; q++) { rrKeys.push("" + rr[q].SubscriberKey); } rrKeys.sort(byText);
+  assert("Rows.Retrieve takes the same filter object", rrKeys.join(","), "C001,C003,C005");
+  function rrFilterKeys(flt) {
+      try {
+          var rs = DataExtension.Init("Customers").Rows.Retrieve(flt);
+          var k = [];
+          for (var z = 0; z < rs.length; z++) { k.push("" + rs[z].SubscriberKey); }
+          k.sort(byText);
+          return k.join(",");
+      } catch (rrErr) {
+          return "THREW:" + ("" + rrErr.message);
+      }
+  }
+  assert("Rows.Retrieve SQL equal: equals", rrFilterKeys({ Property: "Tier", SimpleOperator: "equals", Value: "Gold" }), "C001,C003,C005");
+  assert("Rows.Retrieve SQL not-equal: notEquals", rrFilterKeys({ Property: "Country", SimpleOperator: "notEquals", Value: "US" }), "C001,C003,C004,C005,C007");
+  assert("Rows.Retrieve SQL greater: greaterThan", rrFilterKeys({ Property: "Points", SimpleOperator: "greaterThan", Value: "1200" }), "C005");
+  assert("Rows.Retrieve SQL greater-or-equal: greaterThanOrEqual", rrFilterKeys({ Property: "Points", SimpleOperator: "greaterThanOrEqual", Value: "1200" }), "C001,C005");
+  assert("Rows.Retrieve SQL less: lessThan", rrFilterKeys({ Property: "Points", SimpleOperator: "lessThan", Value: "300" }), "C004,C006,C007");
+  assert("Rows.Retrieve SQL less-or-equal: lessThanOrEqual", rrFilterKeys({ Property: "Points", SimpleOperator: "lessThanOrEqual", Value: "300" }), "C002,C004,C006,C007");
+  assert("Rows.Retrieve LIKE contains", rrFilterKeys({ Property: "Email", SimpleOperator: "like", Value: "example.com" }), "C001,C002,C004,C005");
+  assert("Rows.Retrieve like ignores where % stands", rrFilterKeys({ Property: "Email", SimpleOperator: "like", Value: "nna%" }), "C001");
+  assert("Rows.Retrieve IN list", rrFilterKeys({ Property: "Country", SimpleOperator: "IN", Value: ["DE", "ES"] }), "C001,C003,C004,C005");
+  assert("Rows.Retrieve BETWEEN", rrFilterKeys({ Property: "Points", SimpleOperator: "between", Value: ["100", "1000"] }), "C002,C003");
+  assert("Rows.Retrieve IS NULL", rrFilterKeys({ Property: "Tier", SimpleOperator: "isNull", Value: "" }), "C007");
+  assert("Rows.Retrieve IS NOT NULL", rrFilterKeys({ Property: "Tier", SimpleOperator: "isNotNull", Value: "" }), "C001,C002,C003,C004,C005,C006");
+  assert("Rows.Retrieve date greaterThan", rrFilterKeys({ Property: "SignupDate", SimpleOperator: "greaterThan", Value: "2024-12-31" }), "C004,C005,C006,C007");
+  assert("Rows.Retrieve boolean equals true", rrFilterKeys({ Property: "IsActive", SimpleOperator: "equals", Value: "true" }), "C001,C002,C004,C005");
+  assert("Rows.Retrieve OR", rrFilterKeys({ LeftOperand: { Property: "Tier", SimpleOperator: "equals", Value: "Silver" }, LogicalOperator: "OR", RightOperand: { Property: "Country", SimpleOperator: "equals", Value: "ES" } }), "C002,C003");
+
+  /* --- cleanup --- */
+  assert("fixture deleted", "" + fxProxy.deleteBatch("DataExtension", [{ CustomerKey: "Customers" }]).Status, "OK");
+  </script>
+
+lookup: |
+  <script runat="server">
+  /*
+   * Chapter: One value: Lookup
+   *
+   * Creates the "Customers" fixture Data Extension (Name = external key),
+   * runs the page example VERBATIM, asserts its results, then deletes the
+   * fixture again.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function byText(a, b) { return a < b ? -1 : (a > b ? 1 : 0); }
+  function sortedKeys(r) {
+      var k = [];
+      for (var x = 0; x < r.Results.length; x++) {
+          var p = r.Results[x].Properties;
+          for (var y = 0; y < p.length; y++) { if (("" + p[y].Name) === "SubscriberKey") { k.push("" + p[y].Value); } }
+      }
+      k.sort(byText);
+      return k.join(",");
+  }
+  Platform.Load("core", "1.1.5");
+
+  /* --- fixture --- */
+  var fxProxy = new Script.Util.WSProxy();
+  try { fxProxy.deleteBatch("DataExtension", [{ CustomerKey: "Customers" }]); } catch (fxE) {}
+  var fxCreate = fxProxy.createItem("DataExtension", {
+      Name: "Customers", CustomerKey: "Customers",
+      Fields: [
+          { Name: "SubscriberKey", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true },
+          { Name: "Email", FieldType: "EmailAddress" },
+          { Name: "FirstName", FieldType: "Text", MaxLength: 50 },
+          { Name: "LastName", FieldType: "Text", MaxLength: 50 },
+          { Name: "Country", FieldType: "Text", MaxLength: 2 },
+          { Name: "Tier", FieldType: "Text", MaxLength: 20 },
+          { Name: "Points", FieldType: "Number" },
+          { Name: "SignupDate", FieldType: "Date" },
+          { Name: "IsActive", FieldType: "Boolean" }
+      ]
+  });
+  var fxDE = DataExtension.Init("Customers");
+  var fxRows = [
+      ["C001", "anna@example.com", "Anna", "Becker", "DE", "Gold", 1200, "2023-02-01", true],
+      ["C002", "ben@example.com", "Ben", "Clark", "US", "Silver", 300, "2024-05-10", true],
+      ["C003", "carla@example.org", "Carla", "Diaz", "ES", "Gold", 950, "2024-07-20", false],
+      ["C004", "dirk@example.com", "Dirk", "Engel", "DE", "Bronze", 40, "2025-01-05", true],
+      ["C005", "eva@example.com", "Eva", "Fischer", "DE", "Gold", 2100, "2025-03-15", true],
+      ["C006", "finn@example.net", "Finn", "Graham", "US", "Bronze", 0, "2025-09-30", false],
+      ["C007", "gus@example.de", "Gus", "Hansen", "FR", null, 10, "2026-01-10", false]
+  ];
+  for (var fxI = 0; fxI < fxRows.length; fxI++) {
+      var fx = fxRows[fxI];
+      var fxRow = { SubscriberKey: fx[0], Email: fx[1], FirstName: fx[2], LastName: fx[3], Country: fx[4], Points: fx[6], SignupDate: fx[7], IsActive: fx[8] };
+      if (fx[5] !== null) { fxRow.Tier = fx[5]; }
+      fxDE.Rows.Add(fxRow);
+  }
+  assert("fixture created", "" + fxCreate.Status, "OK");
+
+  /* --- page example (verbatim) --- */
+  var firstName = Platform.Function.Lookup("Customers", "FirstName", "Email", "eva@example.com");
+  var points = Platform.Function.Lookup("Customers", "Points", ["Country", "Tier"], ["US", "Silver"]);
+  var missing = Platform.Function.Lookup("Customers", "FirstName", "Email", "nobody@example.com");
+
+  if (missing === null) {
+      // no row matched
+  }
+
+  /* --- assertions --- */
+  assert("single-column filter", "" + firstName, "Eva");
+  assert("two-column AND filter", "" + points, "300");
+  assert("Number column is typed", typeof points, "number");
+  assert("miss returns null", missing === null ? "true" : "false", "true");
+
+  /* --- cleanup --- */
+  assert("fixture deleted", "" + fxProxy.deleteBatch("DataExtension", [{ CustomerKey: "Customers" }]).Status, "OK");
+  </script>
+
+lookuprows: |
+  <script runat="server">
+  /*
+   * Chapter: All matching rows: LookupRows
+   *
+   * Creates the "Customers" fixture Data Extension (Name = external key),
+   * runs the page example VERBATIM, asserts its results, then deletes the
+   * fixture again.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function byText(a, b) { return a < b ? -1 : (a > b ? 1 : 0); }
+  function sortedKeys(r) {
+      var k = [];
+      for (var x = 0; x < r.Results.length; x++) {
+          var p = r.Results[x].Properties;
+          for (var y = 0; y < p.length; y++) { if (("" + p[y].Name) === "SubscriberKey") { k.push("" + p[y].Value); } }
+      }
+      k.sort(byText);
+      return k.join(",");
+  }
+  Platform.Load("core", "1.1.5");
+
+  /* --- fixture --- */
+  var fxProxy = new Script.Util.WSProxy();
+  try { fxProxy.deleteBatch("DataExtension", [{ CustomerKey: "Customers" }]); } catch (fxE) {}
+  var fxCreate = fxProxy.createItem("DataExtension", {
+      Name: "Customers", CustomerKey: "Customers",
+      Fields: [
+          { Name: "SubscriberKey", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true },
+          { Name: "Email", FieldType: "EmailAddress" },
+          { Name: "FirstName", FieldType: "Text", MaxLength: 50 },
+          { Name: "LastName", FieldType: "Text", MaxLength: 50 },
+          { Name: "Country", FieldType: "Text", MaxLength: 2 },
+          { Name: "Tier", FieldType: "Text", MaxLength: 20 },
+          { Name: "Points", FieldType: "Number" },
+          { Name: "SignupDate", FieldType: "Date" },
+          { Name: "IsActive", FieldType: "Boolean" }
+      ]
+  });
+  var fxDE = DataExtension.Init("Customers");
+  var fxRows = [
+      ["C001", "anna@example.com", "Anna", "Becker", "DE", "Gold", 1200, "2023-02-01", true],
+      ["C002", "ben@example.com", "Ben", "Clark", "US", "Silver", 300, "2024-05-10", true],
+      ["C003", "carla@example.org", "Carla", "Diaz", "ES", "Gold", 950, "2024-07-20", false],
+      ["C004", "dirk@example.com", "Dirk", "Engel", "DE", "Bronze", 40, "2025-01-05", true],
+      ["C005", "eva@example.com", "Eva", "Fischer", "DE", "Gold", 2100, "2025-03-15", true],
+      ["C006", "finn@example.net", "Finn", "Graham", "US", "Bronze", 0, "2025-09-30", false],
+      ["C007", "gus@example.de", "Gus", "Hansen", "FR", null, 10, "2026-01-10", false]
+  ];
+  for (var fxI = 0; fxI < fxRows.length; fxI++) {
+      var fx = fxRows[fxI];
+      var fxRow = { SubscriberKey: fx[0], Email: fx[1], FirstName: fx[2], LastName: fx[3], Country: fx[4], Points: fx[6], SignupDate: fx[7], IsActive: fx[8] };
+      if (fx[5] !== null) { fxRow.Tier = fx[5]; }
+      fxDE.Rows.Add(fxRow);
+  }
+  assert("fixture created", "" + fxCreate.Status, "OK");
+
+  /* --- page example (verbatim) --- */
+  var rows = Platform.Function.LookupRows("Customers", ["Country", "Tier"], ["DE", "Gold"]);
+  var count = rows === null ? 0 : rows.length;   // null, not [], when nothing matches
+
+  for (var i = 0; i < count; i++) {
+      var name = rows[i].FirstName;
+      var points = rows[i].Points;   // a number
+  }
+
+  /* --- assertions --- */
+  assert("two matching rows", "" + count, "2");
+  var lrKeys = []; for (var q = 0; q < count; q++) { lrKeys.push("" + rows[q].SubscriberKey); } lrKeys.sort(byText);
+  assert("the DE + Gold rows", lrKeys.join(","), "C001,C005");
+  assert("Points is a number", typeof rows[0].Points, "number");
+  assert("no match returns null", Platform.Function.LookupRows("Customers", ["Country", "Tier"], ["US", "Gold"]) === null ? "true" : "false", "true");
+
+  /* --- cleanup --- */
+  assert("fixture deleted", "" + fxProxy.deleteBatch("DataExtension", [{ CustomerKey: "Customers" }]).Status, "OK");
+  </script>
+
+lookuporderedrows: |
+  <script runat="server">
+  /*
+   * Chapter: Sorted and limited: LookupOrderedRows
+   *
+   * Creates the "Customers" fixture Data Extension (Name = external key),
+   * runs the page example VERBATIM, asserts its results, then deletes the
+   * fixture again.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function byText(a, b) { return a < b ? -1 : (a > b ? 1 : 0); }
+  function sortedKeys(r) {
+      var k = [];
+      for (var x = 0; x < r.Results.length; x++) {
+          var p = r.Results[x].Properties;
+          for (var y = 0; y < p.length; y++) { if (("" + p[y].Name) === "SubscriberKey") { k.push("" + p[y].Value); } }
+      }
+      k.sort(byText);
+      return k.join(",");
+  }
+  Platform.Load("core", "1.1.5");
+
+  /* --- fixture --- */
+  var fxProxy = new Script.Util.WSProxy();
+  try { fxProxy.deleteBatch("DataExtension", [{ CustomerKey: "Customers" }]); } catch (fxE) {}
+  var fxCreate = fxProxy.createItem("DataExtension", {
+      Name: "Customers", CustomerKey: "Customers",
+      Fields: [
+          { Name: "SubscriberKey", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true },
+          { Name: "Email", FieldType: "EmailAddress" },
+          { Name: "FirstName", FieldType: "Text", MaxLength: 50 },
+          { Name: "LastName", FieldType: "Text", MaxLength: 50 },
+          { Name: "Country", FieldType: "Text", MaxLength: 2 },
+          { Name: "Tier", FieldType: "Text", MaxLength: 20 },
+          { Name: "Points", FieldType: "Number" },
+          { Name: "SignupDate", FieldType: "Date" },
+          { Name: "IsActive", FieldType: "Boolean" }
+      ]
+  });
+  var fxDE = DataExtension.Init("Customers");
+  var fxRows = [
+      ["C001", "anna@example.com", "Anna", "Becker", "DE", "Gold", 1200, "2023-02-01", true],
+      ["C002", "ben@example.com", "Ben", "Clark", "US", "Silver", 300, "2024-05-10", true],
+      ["C003", "carla@example.org", "Carla", "Diaz", "ES", "Gold", 950, "2024-07-20", false],
+      ["C004", "dirk@example.com", "Dirk", "Engel", "DE", "Bronze", 40, "2025-01-05", true],
+      ["C005", "eva@example.com", "Eva", "Fischer", "DE", "Gold", 2100, "2025-03-15", true],
+      ["C006", "finn@example.net", "Finn", "Graham", "US", "Bronze", 0, "2025-09-30", false],
+      ["C007", "gus@example.de", "Gus", "Hansen", "FR", null, 10, "2026-01-10", false]
+  ];
+  for (var fxI = 0; fxI < fxRows.length; fxI++) {
+      var fx = fxRows[fxI];
+      var fxRow = { SubscriberKey: fx[0], Email: fx[1], FirstName: fx[2], LastName: fx[3], Country: fx[4], Points: fx[6], SignupDate: fx[7], IsActive: fx[8] };
+      if (fx[5] !== null) { fxRow.Tier = fx[5]; }
+      fxDE.Rows.Add(fxRow);
+  }
+  assert("fixture created", "" + fxCreate.Status, "OK");
+
+  /* --- page example (verbatim) --- */
+  // The three German customers with the most points
+  var top3 = Platform.Function.LookupOrderedRows("Customers", 3, "Points DESC", "Country", "DE");
+
+  // All active customers, sorted by tier, then by points (count 0 = no limit)
+  var active = Platform.Function.LookupOrderedRows("Customers", 0, "Tier ASC, Points DESC", "IsActive", "true");
+
+  /* --- assertions --- */
+  function inOrder(arr) { var k = []; for (var q = 0; q < arr.length; q++) { k.push("" + arr[q].SubscriberKey); } return k.join(","); }
+  assert("top 3 by Points DESC", inOrder(top3), "C005,C001,C004");
+  assert("Tier ASC, Points DESC", inOrder(active), "C004,C005,C001,C002");
+
+  /* --- cleanup --- */
+  assert("fixture deleted", "" + fxProxy.deleteBatch("DataExtension", [{ CustomerKey: "Customers" }]).Status, "OK");
+  </script>
+
+rows-lookup: |
+  <script runat="server">
+  /*
+   * Chapter: Core library: Rows.Lookup
+   *
+   * Creates the "Customers" fixture Data Extension (Name = external key),
+   * runs the page example VERBATIM, asserts its results, then deletes the
+   * fixture again.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function byText(a, b) { return a < b ? -1 : (a > b ? 1 : 0); }
+  function sortedKeys(r) {
+      var k = [];
+      for (var x = 0; x < r.Results.length; x++) {
+          var p = r.Results[x].Properties;
+          for (var y = 0; y < p.length; y++) { if (("" + p[y].Name) === "SubscriberKey") { k.push("" + p[y].Value); } }
+      }
+      k.sort(byText);
+      return k.join(",");
+  }
+  Platform.Load("core", "1.1.5");
+
+  /* --- fixture --- */
+  var fxProxy = new Script.Util.WSProxy();
+  try { fxProxy.deleteBatch("DataExtension", [{ CustomerKey: "Customers" }]); } catch (fxE) {}
+  var fxCreate = fxProxy.createItem("DataExtension", {
+      Name: "Customers", CustomerKey: "Customers",
+      Fields: [
+          { Name: "SubscriberKey", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true },
+          { Name: "Email", FieldType: "EmailAddress" },
+          { Name: "FirstName", FieldType: "Text", MaxLength: 50 },
+          { Name: "LastName", FieldType: "Text", MaxLength: 50 },
+          { Name: "Country", FieldType: "Text", MaxLength: 2 },
+          { Name: "Tier", FieldType: "Text", MaxLength: 20 },
+          { Name: "Points", FieldType: "Number" },
+          { Name: "SignupDate", FieldType: "Date" },
+          { Name: "IsActive", FieldType: "Boolean" }
+      ]
+  });
+  var fxDE = DataExtension.Init("Customers");
+  var fxRows = [
+      ["C001", "anna@example.com", "Anna", "Becker", "DE", "Gold", 1200, "2023-02-01", true],
+      ["C002", "ben@example.com", "Ben", "Clark", "US", "Silver", 300, "2024-05-10", true],
+      ["C003", "carla@example.org", "Carla", "Diaz", "ES", "Gold", 950, "2024-07-20", false],
+      ["C004", "dirk@example.com", "Dirk", "Engel", "DE", "Bronze", 40, "2025-01-05", true],
+      ["C005", "eva@example.com", "Eva", "Fischer", "DE", "Gold", 2100, "2025-03-15", true],
+      ["C006", "finn@example.net", "Finn", "Graham", "US", "Bronze", 0, "2025-09-30", false],
+      ["C007", "gus@example.de", "Gus", "Hansen", "FR", null, 10, "2026-01-10", false]
+  ];
+  for (var fxI = 0; fxI < fxRows.length; fxI++) {
+      var fx = fxRows[fxI];
+      var fxRow = { SubscriberKey: fx[0], Email: fx[1], FirstName: fx[2], LastName: fx[3], Country: fx[4], Points: fx[6], SignupDate: fx[7], IsActive: fx[8] };
+      if (fx[5] !== null) { fxRow.Tier = fx[5]; }
+      fxDE.Rows.Add(fxRow);
+  }
+  assert("fixture created", "" + fxCreate.Status, "OK");
+
+  /* --- page example (verbatim) --- */
+  Platform.Load("core", "1.1.5");
+  var customers = DataExtension.Init("Customers");   // external key
+
+  // The two German customers with the most points
+  var topTwo = customers.Rows.Lookup(["Country"], ["DE"], 2, "Points DESC");
+
+  // Several columns, joined with AND
+  var activeGermans = customers.Rows.Lookup(["Country", "IsActive"], ["DE", true]);
+
+  /* --- assertions --- */
+  function inOrder2(arr) { var k = []; for (var q = 0; q < arr.length; q++) { k.push("" + arr[q].SubscriberKey); } return k.join(","); }
+  assert("limit 2 with Points DESC", inOrder2(topTwo), "C005,C001");
+  assert("ascending without DESC", inOrder2(customers.Rows.Lookup(["Country"], ["DE"], 2, "Points")), "C004,C001");
+  var agKeys = []; for (var q2 = 0; q2 < activeGermans.length; q2++) { agKeys.push("" + activeGermans[q2].SubscriberKey); } agKeys.sort(byText);
+  assert("two-column AND filter", agKeys.join(","), "C001,C004,C005");
+  assert("Points is a number", typeof activeGermans[0].Points, "number");
+
+  /* --- cleanup --- */
+  assert("fixture deleted", "" + fxProxy.deleteBatch("DataExtension", [{ CustomerKey: "Customers" }]).Status, "OK");
+  </script>
+
+rows-retrieve: |
+  <script runat="server">
+  /*
+   * Chapter: Core library: Rows.Retrieve
+   *
+   * Creates the "Customers" fixture Data Extension (Name = external key),
+   * runs the page example VERBATIM, asserts its results, then deletes the
+   * fixture again.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function byText(a, b) { return a < b ? -1 : (a > b ? 1 : 0); }
+  function sortedKeys(r) {
+      var k = [];
+      for (var x = 0; x < r.Results.length; x++) {
+          var p = r.Results[x].Properties;
+          for (var y = 0; y < p.length; y++) { if (("" + p[y].Name) === "SubscriberKey") { k.push("" + p[y].Value); } }
+      }
+      k.sort(byText);
+      return k.join(",");
+  }
+  Platform.Load("core", "1.1.5");
+
+  /* --- fixture --- */
+  var fxProxy = new Script.Util.WSProxy();
+  try { fxProxy.deleteBatch("DataExtension", [{ CustomerKey: "Customers" }]); } catch (fxE) {}
+  var fxCreate = fxProxy.createItem("DataExtension", {
+      Name: "Customers", CustomerKey: "Customers",
+      Fields: [
+          { Name: "SubscriberKey", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true },
+          { Name: "Email", FieldType: "EmailAddress" },
+          { Name: "FirstName", FieldType: "Text", MaxLength: 50 },
+          { Name: "LastName", FieldType: "Text", MaxLength: 50 },
+          { Name: "Country", FieldType: "Text", MaxLength: 2 },
+          { Name: "Tier", FieldType: "Text", MaxLength: 20 },
+          { Name: "Points", FieldType: "Number" },
+          { Name: "SignupDate", FieldType: "Date" },
+          { Name: "IsActive", FieldType: "Boolean" }
+      ]
+  });
+  var fxDE = DataExtension.Init("Customers");
+  var fxRows = [
+      ["C001", "anna@example.com", "Anna", "Becker", "DE", "Gold", 1200, "2023-02-01", true],
+      ["C002", "ben@example.com", "Ben", "Clark", "US", "Silver", 300, "2024-05-10", true],
+      ["C003", "carla@example.org", "Carla", "Diaz", "ES", "Gold", 950, "2024-07-20", false],
+      ["C004", "dirk@example.com", "Dirk", "Engel", "DE", "Bronze", 40, "2025-01-05", true],
+      ["C005", "eva@example.com", "Eva", "Fischer", "DE", "Gold", 2100, "2025-03-15", true],
+      ["C006", "finn@example.net", "Finn", "Graham", "US", "Bronze", 0, "2025-09-30", false],
+      ["C007", "gus@example.de", "Gus", "Hansen", "FR", null, 10, "2026-01-10", false]
+  ];
+  for (var fxI = 0; fxI < fxRows.length; fxI++) {
+      var fx = fxRows[fxI];
+      var fxRow = { SubscriberKey: fx[0], Email: fx[1], FirstName: fx[2], LastName: fx[3], Country: fx[4], Points: fx[6], SignupDate: fx[7], IsActive: fx[8] };
+      if (fx[5] !== null) { fxRow.Tier = fx[5]; }
+      fxDE.Rows.Add(fxRow);
+  }
+  assert("fixture created", "" + fxCreate.Status, "OK");
+
+  /* --- page example (verbatim) --- */
+  Platform.Load("core", "1.1.5");
+  var customers = DataExtension.Init("Customers");
+
+  var goldOrSilver = customers.Rows.Retrieve({
+      LeftOperand: { Property: "Tier", SimpleOperator: "equals", Value: "Gold" },
+      LogicalOperator: "OR",
+      RightOperand: { Property: "Tier", SimpleOperator: "equals", Value: "Silver" }
+  });
+
+  // Every value comes back as a string: "1200", not 1200
+  var total = 0;
+  for (var i = 0; i < goldOrSilver.length; i++) {
+      total += Number(goldOrSilver[i].Points);
+  }
+
+  /* --- assertions --- */
+  assert("Gold or Silver rows", "" + goldOrSilver.length, "4");
+  assert("Points is a string", typeof goldOrSilver[0].Points, "string");
+  assert("sum of points", "" + total, "4550");
+  assert("no match returns an empty collection", "" + customers.Rows.Retrieve({ Property: "Tier", SimpleOperator: "equals", Value: "Platinum" }).length, "0");
+
+  /* --- cleanup --- */
+  assert("fixture deleted", "" + fxProxy.deleteBatch("DataExtension", [{ CustomerKey: "Customers" }]).Status, "OK");
+  </script>
+
+wsproxy: |
+  <script runat="server">
+  /*
+   * Chapter: WSProxy: choose columns, combine many conditions
+   *
+   * Creates the "Customers" fixture Data Extension (Name = external key),
+   * runs the page example VERBATIM, asserts its results, then deletes the
+   * fixture again.
+   *
+   * EXPECTED OUTPUT: every line starts with PASS.
+   */
+  function assert(id, actual, expected) {
+      Platform.Response.Write((actual === expected ? "PASS " : "FAIL ") + id + " -> [" + actual + "]\n");
+  }
+  function byText(a, b) { return a < b ? -1 : (a > b ? 1 : 0); }
+  function sortedKeys(r) {
+      var k = [];
+      for (var x = 0; x < r.Results.length; x++) {
+          var p = r.Results[x].Properties;
+          for (var y = 0; y < p.length; y++) { if (("" + p[y].Name) === "SubscriberKey") { k.push("" + p[y].Value); } }
+      }
+      k.sort(byText);
+      return k.join(",");
+  }
+  Platform.Load("core", "1.1.5");
+
+  /* --- fixture --- */
+  var fxProxy = new Script.Util.WSProxy();
+  try { fxProxy.deleteBatch("DataExtension", [{ CustomerKey: "Customers" }]); } catch (fxE) {}
+  var fxCreate = fxProxy.createItem("DataExtension", {
+      Name: "Customers", CustomerKey: "Customers",
+      Fields: [
+          { Name: "SubscriberKey", FieldType: "Text", MaxLength: 50, IsPrimaryKey: true, IsRequired: true },
+          { Name: "Email", FieldType: "EmailAddress" },
+          { Name: "FirstName", FieldType: "Text", MaxLength: 50 },
+          { Name: "LastName", FieldType: "Text", MaxLength: 50 },
+          { Name: "Country", FieldType: "Text", MaxLength: 2 },
+          { Name: "Tier", FieldType: "Text", MaxLength: 20 },
+          { Name: "Points", FieldType: "Number" },
+          { Name: "SignupDate", FieldType: "Date" },
+          { Name: "IsActive", FieldType: "Boolean" }
+      ]
+  });
+  var fxDE = DataExtension.Init("Customers");
+  var fxRows = [
+      ["C001", "anna@example.com", "Anna", "Becker", "DE", "Gold", 1200, "2023-02-01", true],
+      ["C002", "ben@example.com", "Ben", "Clark", "US", "Silver", 300, "2024-05-10", true],
+      ["C003", "carla@example.org", "Carla", "Diaz", "ES", "Gold", 950, "2024-07-20", false],
+      ["C004", "dirk@example.com", "Dirk", "Engel", "DE", "Bronze", 40, "2025-01-05", true],
+      ["C005", "eva@example.com", "Eva", "Fischer", "DE", "Gold", 2100, "2025-03-15", true],
+      ["C006", "finn@example.net", "Finn", "Graham", "US", "Bronze", 0, "2025-09-30", false],
+      ["C007", "gus@example.de", "Gus", "Hansen", "FR", null, 10, "2026-01-10", false]
+  ];
+  for (var fxI = 0; fxI < fxRows.length; fxI++) {
+      var fx = fxRows[fxI];
+      var fxRow = { SubscriberKey: fx[0], Email: fx[1], FirstName: fx[2], LastName: fx[3], Country: fx[4], Points: fx[6], SignupDate: fx[7], IsActive: fx[8] };
+      if (fx[5] !== null) { fxRow.Tier = fx[5]; }
+      fxDE.Rows.Add(fxRow);
+  }
+  assert("fixture created", "" + fxCreate.Status, "OK");
+
+  /* --- page example (verbatim) --- */
+  var proxy = new Script.Util.WSProxy();
+  var columns = ["SubscriberKey", "Email", "FirstName", "LastName", "Country", "Tier", "Points", "SignupDate", "IsActive"];
+
+  // SQL: WHERE Country = 'DE' AND Points >= 100 AND IsActive = 1 AND SignupDate > '2022-12-31'
+  var filter = {
+      LeftOperand: {
+          LeftOperand: { Property: "Country", SimpleOperator: "equals", Value: "DE" },
+          LogicalOperator: "AND",
+          RightOperand: { Property: "Points", SimpleOperator: "greaterThanOrEqual", Value: "100" }
+      },
+      LogicalOperator: "AND",
+      RightOperand: {
+          LeftOperand: { Property: "IsActive", SimpleOperator: "equals", Value: "true" },
+          LogicalOperator: "AND",
+          RightOperand: { Property: "SignupDate", SimpleOperator: "greaterThan", Value: "2022-12-31" }
+      }
+  };
+  var result = proxy.retrieve("DataExtensionObject[Customers]", columns, filter);
+
+  // Each result row is a list of { Name, Value } pairs; turn it into a plain object
+  var rows = [];
+  for (var i = 0; i < result.Results.length; i++) {
+      var props = result.Results[i].Properties;
+      var row = {};
+      for (var j = 0; j < props.length; j++) {
+          row[props[j].Name] = props[j].Value;
+      }
+      rows.push(row);
+  }
+  // rows[0].FirstName, rows[0].Points (a string), ...
+
+  /* --- assertions --- */
+  assert("Status OK", "" + result.Status, "OK");
+  assert("four conditions applied", sortedKeys(result), "C001,C005");
+  assert("all 9 requested columns returned", "" + result.Results[0].Properties.length, "9");
+  assert("columns come back in the requested order", "" + result.Results[0].Properties[8].Name, "IsActive");
+  assert("rows converted to objects", "" + rows.length, "2");
+  assert("Points is a string", typeof rows[0].Points, "string");
+  assert("Boolean value text is True", (rows[0].IsActive === "True") ? "true" : "false", "true");
+
+  /* --- cleanup --- */
+  assert("fixture deleted", "" + fxProxy.deleteBatch("DataExtension", [{ CustomerKey: "Customers" }]).Status, "OK");
+  </script>

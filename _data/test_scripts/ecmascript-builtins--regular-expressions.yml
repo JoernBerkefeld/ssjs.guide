@@ -24,8 +24,12 @@ creating-regexp: |
    *   1. Literal syntax produces a working RegExp — the chapter's three
    *      literals (email, digits-only, whitespace-global) each carry the
    *      documented pattern text and match as intended.
-   *   2. Constructor syntax with a dynamically assembled pattern string and a
-   *      flag argument produces an equivalent working RegExp.
+   *   2. Constructor syntax with a dynamically assembled pattern string (and
+   *      no flags argument) produces an equivalent working RegExp.
+   *   3. DEVIATION marked "DEV": the chapter's warning — adding "i" as the
+   *      second constructor argument does NOT make the pattern
+   *      case-insensitive (spec: it does). Details in the constructor-flags
+   *      chapter.
    *
    * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
    * longer matches the documented claim and the page must be revised.
@@ -51,11 +55,93 @@ creating-regexp: |
 
   /* 2. Constructor syntax with a dynamic pattern. */
   var fieldName = "email";
-  var dynamicPattern = new RegExp(fieldName + "=([^&]+)", "i");
+  var dynamicPattern = new RegExp(fieldName + "=([^&]+)");
 
   assert("constructor builds the dynamic source", function () { return String(dynamicPattern.source); }, "email=([^&]+)");
   assert("constructor pattern matches", function () { return dynamicPattern.test("?email=jane%40x.com") ? "true" : "false"; }, "true");
   assert("constructor pattern does not match unrelated text", function () { return dynamicPattern.test("?name=jane") ? "true" : "false"; }, "false");
+
+  /* 3. DEVIATION — the "i" flags argument is ignored. */
+  assert("DEV new RegExp(src, 'i') does not match upper-case EMAIL (spec: true)", function () { return new RegExp(fieldName + "=([^&]+)", "i").test("?EMAIL=jane") ? "true" : "false"; }, "false");
+  </script>
+
+constructor-flags: |
+  <script runat="server">
+  Platform.Load("core", "1.1.5");
+
+  /*
+   * Chapter: Constructor flags are ignored
+   *
+   * Proves:
+   *   1. DEVIATION marked "DEV": the i flag passed as the second argument of
+   *      new RegExp(pattern, flags) is ignored — matching stays
+   *      case-sensitive in both directions and for an unanchored pattern
+   *      (spec: case-insensitive). The pattern itself works (control).
+   *   2. DEVIATION marked "DEV": the g flag is ignored — String.replace
+   *      replaces only the first match and .global is false (spec: all
+   *      matches replaced, .global true).
+   *   3. DEVIATION marked "DEV": the m flag is ignored — ^ and $ do not match
+   *      at inner line boundaries (spec: they do).
+   *   4. DEVIATION marked "DEV": combined flags ("gi"), RegExp(...) called
+   *      without new, and a flagged literal passed as the pattern lose their
+   *      flags the same way; an invalid flag string does not throw (spec:
+   *      SyntaxError).
+   *   5. The same flags in literal syntax work (controls for 1-3).
+   *   6. The documented workarounds work: static literal, lower-casing both
+   *      sides, split+join for a global plain-text replace, and the
+   *      engine-specific inline options (?i), (?m) and (?im).
+   *
+   * EXPECTED OUTPUT: every line starts with PASS. A FAIL means the runtime no
+   * longer matches the documented claim and the page must be revised.
+   */
+
+  function assert(id, fn, expected) {
+      var got;
+      try { got = fn(); } catch (ex) { got = "THREW: " + ex.message; }
+      Platform.Response.Write((got === expected ? "PASS " : "FAIL ") + id + " -> [" + got + "]\n");
+  }
+
+  var lines = "alpha\nbeta";
+
+  /* 1. DEVIATION — i is ignored. */
+  assert("DEV new RegExp('^gold$','i').test('Gold') is false (spec: true)", function () { return new RegExp("^gold$", "i").test("Gold") ? "true" : "false"; }, "false");
+  assert("DEV new RegExp('^GOLD$','i').test('gold') is false (spec: true)", function () { return new RegExp("^GOLD$", "i").test("gold") ? "true" : "false"; }, "false");
+  assert("DEV new RegExp('gold','i').test('xGOLDx') is false (spec: true)", function () { return new RegExp("gold", "i").test("xGOLDx") ? "true" : "false"; }, "false");
+  assert("control new RegExp('gold','i').test('gold') is true", function () { return new RegExp("gold", "i").test("gold") ? "true" : "false"; }, "true");
+  assert("DEV new RegExp('a','i').ignoreCase is undefined (spec: true)", function () { return String(typeof new RegExp("a", "i").ignoreCase); }, "undefined");
+
+  /* 2. DEVIATION — g is ignored. */
+  assert("DEV 'a1a2'.replace(new RegExp('a','g'),'x') is 'x1a2' (spec: 'x1x2')", function () { return String("a1a2".replace(new RegExp("a", "g"), "x")); }, "x1a2");
+  assert("DEV new RegExp('a','g').global is false (spec: true)", function () { return new RegExp("a", "g").global ? "true" : "false"; }, "false");
+
+  /* 3. DEVIATION — m is ignored. */
+  assert("DEV new RegExp('^beta','m').test(lines) is false (spec: true)", function () { return new RegExp("^beta", "m").test(lines) ? "true" : "false"; }, "false");
+  assert("DEV new RegExp('alpha$','m').test(lines) is false (spec: true)", function () { return new RegExp("alpha$", "m").test(lines) ? "true" : "false"; }, "false");
+
+  /* 4. DEVIATION — every other way of passing flags to the constructor. */
+  assert("DEV 'Aa'.replace(new RegExp('a','gi'),'x') is 'Ax' (spec: 'xx')", function () { return String("Aa".replace(new RegExp("a", "gi"), "x")); }, "Ax");
+  assert("DEV RegExp('^gold$','i').test('Gold') without new is false (spec: true)", function () { return RegExp("^gold$", "i").test("Gold") ? "true" : "false"; }, "false");
+  assert("DEV 'a1a2'.replace(RegExp('a','g'),'x') without new is 'x1a2' (spec: 'x1x2')", function () { return String("a1a2".replace(RegExp("a", "g"), "x")); }, "x1a2");
+  assert("DEV RegExp('^beta','m').test(lines) without new is false (spec: true)", function () { return RegExp("^beta", "m").test(lines) ? "true" : "false"; }, "false");
+  assert("DEV new RegExp(/gold/i).test('Gold') is false (spec: true)", function () { return new RegExp(/gold/i).test("Gold") ? "true" : "false"; }, "false");
+  assert("DEV new RegExp('gold','zz') does not throw (spec: SyntaxError)", function () { return new RegExp("gold", "zz").test("gold") ? "true" : "false"; }, "true");
+
+  /* 5. Literal syntax honours the same flags. */
+  assert("literal /^gold$/i.test('Gold') is true", function () { return /^gold$/i.test("Gold") ? "true" : "false"; }, "true");
+  assert("literal 'a1a2'.replace(/a/g,'x') is 'x1x2'", function () { return String("a1a2".replace(/a/g, "x")); }, "x1x2");
+  assert("literal /a/g.global is true", function () { return /a/g.global ? "true" : "false"; }, "true");
+  assert("literal /^beta/m.test(lines) is true", function () { return /^beta/m.test(lines) ? "true" : "false"; }, "true");
+  assert("literal 'Aa'.replace(/a/gi,'x') is 'xx'", function () { return String("Aa".replace(/a/gi, "x")); }, "xx");
+
+  /* 6. Workarounds. */
+  var term = "GoLd";
+  assert("workaround lower-case both sides matches 'GOLD'", function () { return new RegExp("^" + term.toLowerCase() + "$").test("GOLD".toLowerCase()) ? "true" : "false"; }, "true");
+  assert("workaround lower-case both sides still rejects 'silver'", function () { return new RegExp("^" + term.toLowerCase() + "$").test("SILVER".toLowerCase()) ? "true" : "false"; }, "false");
+  assert("workaround split+join replaces every occurrence", function () { return "a1a2".split("a").join("x"); }, "x1x2");
+  assert("workaround inline (?i) matches 'GOLD'", function () { return new RegExp("(?i)^gold$").test("GOLD") ? "true" : "false"; }, "true");
+  assert("workaround inline (?i) still rejects 'silver'", function () { return new RegExp("(?i)^gold$").test("silver") ? "true" : "false"; }, "false");
+  assert("workaround inline (?m) matches a later line start", function () { return new RegExp("(?m)^beta").test(lines) ? "true" : "false"; }, "true");
+  assert("workaround inline (?im) combines both", function () { return new RegExp("(?im)^BETA").test(lines) ? "true" : "false"; }, "true");
   </script>
 
 flags: |

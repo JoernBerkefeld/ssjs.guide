@@ -198,6 +198,7 @@ var val = Platform.Function.Lookup("my-de-external-key", "FieldName", "ID", "123
 <ul>
   <li><a href="/platform-functions/lookuprows/">LookupRows</a></li>
   <li><a href="/platform-functions/lookuporderedrows/">LookupOrderedRows</a></li>
+  <li><a href="/recipes/querying-data/">Querying Data Extensions</a></li>
   <li><a href="/platform-functions/insertdata/">InsertData</a></li>
   <li><a href="/platform-functions/upsertdata/">UpsertData</a></li>
   <li><a href="/core-library/dataextension-rows/">DataExtension.Rows (Core library)</a></li>
